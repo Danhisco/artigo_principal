@@ -16,7 +16,7 @@ editor_options:
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=FALSE)
+knitr::opts_chunk$set(echo = TRUE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE)
 # pacotes
 library(doMC)
 library(raster)
@@ -41,7 +41,7 @@ df_dados <- read_csv(file = "./dados/df_dados_disponiveis.csv") |>
 #### 1o Passo
 ##### calcular a proporção de cobertura vegetal para cada extensão espacial
 
-```{r calcular a prop CV para cada extensão espacial}
+```{r calcular a prop CV para cada extensão espacial,eval=FALSE}
 f_pEscalas <- function(df){
   df_p <- data.frame(p = NA, lado_km = NA)
   m_full <- raster(df$tif.path) |> raster::as.matrix()
@@ -64,9 +64,28 @@ write_csv(x = select(df_pEscalas,Ntotal,S_obs,p:SiteCode),
 ```
 
 #### 2o Passo
-##### Ajustar os modelos para cada um mesmo lado_km
+##### Ajustar os modelos para um mesmo lado_km
 
 ```{r 2o passo}
+df_se <- read_csv("./dados/csv/df_EscalaEfeito.csv")
+f_glm.nb <- function(data_){
+  md_ <- MASS::glm.nb(S_obs ~ p + I(p^2) + offset(log(Ntotal)), data = data_)
+}
+registerDoMC(3)
+l_md <- dlply(df_se,"lado_km",f_glm.nb,.parallel = TRUE)
+```
 
+#### 3o Passo
+##### Calcular o peso de evidência por lado_km
+
+```{r 3o passo,results='hide'}
+teste <- Weights(AICc(l_md))
+
+df_averageSE <- print(AICctab(l_md,weights=TRUE)) %>% 
+  as.data.frame()
+df_averageSE$lado_km <- row.names(df_averageSE) %>% as.numeric()
+df_averageSE$weight <- as.numeric(as.character(df_averageSE$weight))
+df_averageSE$dAICc <- as.numeric(as.character(df_averageSE$dAICc))
+(raio_medio <- round(weighted.mean(x = df_averageSE$raio_paisagem,w = df_averageSE$weight),1))
 ```
 
