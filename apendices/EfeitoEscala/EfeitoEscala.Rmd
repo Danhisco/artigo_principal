@@ -63,3 +63,10 @@ write_csv(x = select(df_pEscalas,Ntotal,S_obs,p:SiteCode),
           file = "./dados/csv/df_EscalaEfeito.csv")
 ```
 
+#### 2o Passo
+##### Ajustar os modelos para cada um mesmo lado_km
+
+```{r 2o passo}
+
+```
+
