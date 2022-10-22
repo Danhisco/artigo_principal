@@ -1,0 +1,182 @@
+---
+title: "Paisagens Greg"
+author: "Danilo Pereira Mori"
+date: "2022-10-12"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE)
+```
+
+```{r pacotes,eval=TRUE,include=TRUE}
+library(doMC)
+library(ggpubr)
+library(imager)
+library(cowplot)
+library(raster)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(plyr)
+library(dplyr)
+select <- dplyr::select
+```
+
+
+
+```{r dados}
+# dados
+df_sitios_greg <- read_csv("./resultados_e_SI/df_Greg_SitesAnoAmostragem.csv") |> 
+  mutate(year_bestProxy = as.numeric(year_bestProxy))
+df_sitios_greg$year_bestProxy[is.na(df_sitios_greg$year_bestProxy)] <- 2012.5
+df_tif <- data.frame(tif.name = list.files(path="./dados_para_iniciar_artigo/paisagens_greg_mapbiomas6/",pattern = ".tif",full.names=T)) |> 
+  mutate(SiteCode = str_extract(tif.name,"(?<=\\/\\/).*?(?=_MB6)"),
+         type = str_extract(tif.name,"(?<=\\_MB6\\_).*?(?=\\.tif)"),
+         across(SiteCode:type,factor)) |> 
+  left_join(df_sitios_greg,by="SiteCode") |> mutate(diff_yBestproxy_y2000 = year_bestProxy - 2000) |> 
+  filter(type=="natfor")
+```
+
+## Ano de Amostragem 2000
+### mapbiomas 6 e landsat8 mesmo ano
+
+Em verde os pixels classificados como floresta natural pelo mapbiomas6 ou com cobertura vegetal >= 70 no landsat8
+
+
+
+```{r difrenca entre idade das paisagens nula, fig.height=3.75}
+# dados
+df_plot <- df_tif |> filter(diff_yBestproxy_y2000 == 0)
+# funções
+# leitura padronizada de rasters
+f_dataRaster <- function(path_raster,label){
+  raster(path_raster) |> 
+    as.data.frame(xy=TRUE) |> 
+    drop_na() |> 
+    rename(value=3) |> 
+    mutate(label = label,
+           value = ifelse(value %in% c(0,1),value,value/100),
+           value = ifelse(value>=0.7,1,0)) 
+}
+# gráficos para plotar 
+f_ggplotRaster <- function(data){
+  ggplot(data) +
+  geom_tile(aes(x=x,y=y,fill=value)) +
+  scale_fill_gradientn(colours = rev(terrain.colors(10))) +
+  coord_cartesian(expand = FALSE) +
+  theme_bw() + labs(x="",y="") + theme(legend.position="none") + facet_wrap(~label)
+}
+# for loop
+for(i in 1:nrow(df_plot)){
+  df <- df_plot[i,]
+  ## rasters individuais
+  l_data <- list()
+  l_data[[1]] <- f_dataRaster(path_raster = df$tif.name, label = "mapbiomas6")
+  v_path.landsat8 <- paste0("./dados_para_iniciar_artigo/paisagens_atualizadas/ref",df$refID,"_NA_",df$ordem,".tif")
+  l_data[[2]] <- f_dataRaster(path_raster = v_path.landsat8, label = "landsat8")
+  ## gráficos
+  l_p <- llply(l_data,f_ggplotRaster)
+  # v_top <- paste0(df$SiteCode,", sample year: ",df$year_bestProxy)
+  grid.arrange(grobs=l_p,ncol=2,top=df$SiteCode)
+}
+```
+
+## Padronização dos recortes de paisagem para o formato do Treeco: 800 x 800 pixels
+
+```{r padronizacao dos recortes de paisagem para o formato de TreeCo}
+df_tif
+# dimensões dos raster
+f_rasterDim <- function(tif_path){
+  dim(raster(tif_path))
+}
+doMC::registerDoMC(3)
+df_audR <- ldply(df_tif$tif.name,f_rasterDim,.parallel = TRUE)
+df_audR |> summary()
+```
+
+```{r padronização da extensão do raster,fig.width=10,fig.height=4.1}
+# função
+f_crop <- function(df){
+  r_novo <- raster(df$tif.name)
+  v_path <- paste0("./dados_para_iniciar_artigo/paisagens_atualizadas/ref",df$refID,"_NA_",df$ordem,".tif")
+  r_antigo <- raster(v_path)
+  r_padronizado <- crop(x=r_novo,y=extent(r_antigo))
+  v_path_write <- paste0("./dados_para_iniciar_artigo/paisagens_mapbiomas6_padronizadas/",df$SiteCode,".tif")
+  writeRaster(x = r_padronizado, filename = v_path_write,overwrite=T)
+}
+registerDoMC(3)
+a_ply(df_tif,1,f_crop,.parallel = TRUE)
+# l_data <- list()
+# l_data[[1]] <- r_novo |> as.data.frame(xy=TRUE) |> rename(value=3)
+# l_data[[2]] <- r_antigo |> as.data.frame(xy=TRUE) |> rename(value=3)
+# l_data[[3]] <- r_padronizado |> as.data.frame(xy=TRUE) |> rename(value=3)
+# f_ggplotRaster <- function(data){
+#   ggplot(data) +
+#   geom_tile(aes(x=x,y=y,fill=value)) +
+#   scale_fill_gradientn(colours = rev(terrain.colors(10))) +
+#   coord_cartesian(expand = FALSE) +
+#   theme_bw() + labs(x="",y="") + theme(legend.position="bottom") #+ facet_wrap(~label)
+# }
+# l_p <- llply(l_data,f_ggplotRaster)
+# grid.arrange(grobs=l_p,nrow=1,top=df$SiteCode)
+```
+
+```{r auditoria padronizacao das paisagens}
+df_aud <- data.frame(tif.name = list.files(path="./dados_para_iniciar_artigo/paisagens_mapbiomas6_padronizadas/",
+                                           pattern = ".tif",full.names=T)) |> 
+  mutate(SiteCode = str_extract(tif.name,"(?<=\\/\\/).*?(?=\\.tif)"),
+         SiteCode = factor(SiteCode))
+df_naoPadronizadas <- anti_join(x=df_tif,y=df_aud,by="SiteCode")
+a_ply(df_naoPadronizadas,1,f_crop)
+#
+# funções
+# leitura padronizada de rasters
+f_dataRaster <- function(path_raster){
+  raster(path_raster) |> 
+    as.data.frame(xy=TRUE) |> 
+    drop_na() |> 
+    rename(value=3) |> 
+    mutate(value = ifelse(value %in% c(0,1),value,value/100),
+           value = ifelse(value>=0.7,1,0)) 
+}
+# gráficos para plotar 
+f_ggplotRaster <- function(data){
+  ggplot(data) +
+  geom_tile(aes(x=x,y=y,fill=value)) +
+  scale_fill_gradientn(colours = rev(terrain.colors(10))) +
+  coord_cartesian(expand = FALSE) +
+  theme_bw() + labs(x="",y="") + theme(legend.position="none") 
+}
+#
+df <- df_naoPadronizadas[1,]
+f_plot <- function(df){
+  r_plot <- f_dataRaster(df$tif.name)
+  f_ggplotRaster(r_plot)
+  f_crop(df)
+}
+a_ply(df_naoPadronizadas,1,f_plot)
+
+
+
+for(i in 1:nrow(df_naoPadronizadas)){
+  df <- df_naoPadronizadas[i,]
+  ## rasters individuais
+  l_data <- list()
+  l_data[[1]] <- f_dataRaster(path_raster = df$tif.name)
+  v_path.landsat8 <- paste0("./dados_para_iniciar_artigo/paisagens_atualizadas/ref",df$refID,"_NA_",df$ordem,".tif")
+  l_data[[2]] <- f_dataRaster(path_raster = v_path.landsat8, label = "landsat8")
+  ## gráficos
+  l_p <- llply(l_data,f_ggplotRaster)
+  # v_top <- paste0(df$SiteCode,", sample year: ",df$year_bestProxy)
+  grid.arrange(grobs=l_p,ncol=2,top=df$SiteCode)
+}
+
+```
+
+###

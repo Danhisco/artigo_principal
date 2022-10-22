@@ -1,0 +1,1522 @@
+---
+title: "Apêndice 1: obtenção dos dados"
+author: "Mori, Danilo"
+date: "29/10/2019"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+editor_options: 
+  chunk_output_type: console
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=FALSE)
+```
+
+```{r pacotes,eval=TRUE,include=TRUE}
+library(sads)
+library(ggpubr)
+library(imager)
+library(OpenImageR)
+library(cowplot)
+library(twosamples)
+library(doMC)
+library(raster)
+library(GUILDS)
+library(bbmle)
+library(magrittr)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(plyr)
+library(dplyr)
+select <- dplyr::select
+```
+
+
+```{r preparacao dos dados, echo=FALSE,eval=FALSE, include=FALSE}
+## SAD obs
+df_SAD.obs <- read.csv(file="/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/abundances.csv",
+                       header = TRUE,as.is = TRUE)
+# df_SAD.obs$SiteCode %<>% as.factor() 
+df_SAD.obs %>% filter(SiteCode == "SPcamp1")
+v_Sites <- df_SAD.obs %>% filter(N == 0.5 | N == 0.05) %>% .$SiteCode %>% unique
+# f_summarise <- function(v_){ # falsos positivos e falsos nefativos, não funcionou
+#   length(table(v_%%1==0))==1
+# }
+df_SAD.obs %<>% 
+  filter(species.correct != "Mortas" & !(SiteCode %in% v_Sites)) %>% 
+  select(SiteCode,species.correct,N) %>% 
+  ddply("SiteCode",summarise,
+        Ntotal = sum(N), S_obs = length(species.correct))
+
+´## tif
+df_tif <- Sys.glob("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/paisagens_atualizadas/*.tif") %>% 
+  gsub("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/paisagens_atualizadas/","",.) %>%
+  adply(.,1,function(x) unname( unlist( strsplit(x, "_NA_", fixed = TRUE) ) ),.id = NULL) %>% 
+  mutate(refID = gsub("ref","",V1),ordem=gsub(".tif","",V2)) %>% dplyr::select(refID,ordem) 
+df_tif$tif.name <- Sys.glob("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/paisagens_atualizadas/*.tif") #%>% #caminho dos .tif
+## references
+# df_references %>% names
+df_references <- read.csv(file="/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/references_TreeCo.csv",
+                          as.is = TRUE,header =T, na.strings = c("","NA")) %>% 
+   dplyr::select(SiteCode,refID,status,ordem,status_diagnostico,confiabilidade,method,state,arrangement,samples,effort_ha,dbh_cutoff,UC_area_ha, Unidade_de_conservacao,frag_area,forest_size,domain,forest_type,forest_subtype,forest_succession,forest_age,year_data,year)
+## merge
+### columns class
+df_references$ordem <- as.character(df_references$ordem)
+df_dados <- inner_join(x = inner_join(x = df_references,
+                                      y = df_SAD.obs,
+                                      by = "SiteCode"),
+                       y = df_tif, 
+                       by = c("ordem","refID"))
+#
+df_SADs.disponiveis <- inner_join(x = df_references,y = df_SAD.obs,by = "SiteCode")
+write.csv(df_SADs.disponiveis,
+          "./dados_para_iniciar_artigo/df_SADs_disponiveis.csv",
+          row.names = FALSE)
+
+# write.csv(df_dados,
+#           "./dados_para_iniciar_artigo/df_dados_disponiveis.csv",
+#           row.names = FALSE)
+```
+
+
+#### Janela de Código 1: 
+Aplicação de filtro nos dados disponíveis na base de dados TreeCo (Lima et al. 2015).  
+
+```{r janela de codigo 1,eval=TRUE,echo=TRUE}
+### dados
+df_dados.brutos <- read.csv("./dados_para_iniciar_artigo/df_SADs_disponiveis.csv",
+                     header = TRUE,as.is = TRUE)
+### filtro geral
+df_1ofiltro <- df_dados.brutos %>% filter(method=="parcelas" &
+                                         grepl("*contiguous*",arrangement) & 
+                                        effort_ha>=1 &
+                                         grepl("*yes*",status) & 
+                                         grepl("ok*",status_diagnostico) &
+                                         grepl("Atlantic_Forest*",domain) &
+                                        dbh_cutoff %in% c("PBH>=15.0cm","PBH>=15.7cm",
+                                                          "DBH>=5.0cm","DGH>=5.0cm","DBH>5.0cm",
+                                                          "DBH>=4.8cm",
+                                                          "DBH>=5.0cm&H>300cm","DBH>=5.0cm&H>500cm", 
+                                                          "DGH30>=5.0cm"))
+### filtro universidades e campi
+df_filtro.UC <- df_1ofiltro %>% 
+  filter(UC_area_ha >= 1000 | 
+         Unidade_de_conservacao %in% c("UC Protecao Integral","universities and research centers"))
+### filtro estados
+df_filtro.estate <- filter(df_1ofiltro,state %in% c("RJ","RS") & year >= 1990)
+df_filtro.estate %<>% rbind(.,filter(df_1ofiltro,state %in% c("BA","GO","MS") & year >= 2000))
+df_filtro.estate %<>% rbind(.,filter(df_1ofiltro,!(state %in% c("BA","GO","MS","RJ","RS")) & year >= 1995))
+### unindo e salvando
+df_dados <- rbind(df_filtro.UC,df_filtro.estate) %>% 
+  distinct()
+### atualizando referencias de pastas - REFAZER
+# df_dados$tif.name <- gsub("/home/danilo/Documentos/Doutorado/artigo_mestrado/paisagens_atualizadas",
+#                           "/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/paisagens_atualizadas", 
+#                           df_dados$tif.name)
+### tabela para Greg
+df_LatLong <- read.csv(file="/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/references_TreeCo.csv",
+                          as.is = TRUE,header =T, na.strings = c("","NA")) %>% 
+   dplyr::select(SiteCode,matches("^(lat|long)$|_correct$"))
+
+df_Sites_e_AnoAmostragem <- df_1ofiltro |> 
+  mutate(year_bestProxy = ifelse(is.na(year_data),year,year_data)) |> 
+  select(SiteCode, refID, ordem, year_bestProxy) |> 
+  left_join(.,
+            y=df_LatLong,
+            by="SiteCode")
+
+### escrever os dados na tabela SI 1
+write.csv(df_dados,
+          "/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/resultados_e_SI/tabelaSI1.csv",
+          row.names = FALSE)
+write.csv(df_1ofiltro,
+          "/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/resultados_e_SI/tabelaSI2.csv",
+          row.names = FALSE)
+write.csv(df_Sites_e_AnoAmostragem,
+          "./resultados_e_SI/df_Greg_SitesAnoAmostragem.csv",
+          row.names=F)
+#
+library(googledrive)
+drive_find(pattern = "df_Greg_SitesAnoAmostragem.csv")
+```
+
+
+
+```{r auditoria janela de código 1,eval=FALSE,echo=FALSE}
+df_dados <- read_csv("./resultados_e_SI/tabelaSI1.csv")
+df_dados %>% 
+  mutate(tif.name = paste0("./dados_para_iniciar_artigo/paisagens_greg_mapbiomas6/"))
+```
+
+### Janela de Código entre 1 e 2:
+avaliação do trabalho do Greg:
+
+fontes:
+https://stackoverflow.com/questions/6109882/regex-match-all-characters-between-two-strings
+
+
+```{r avaliação do trabalho do Greg,fig.width=18,fig.height=7}
+# dados
+df_sitios_greg <- read_csv("./resultados_e_SI/df_Greg_SitesAnoAmostragem.csv") |> 
+  mutate(year_bestProxy = as.numeric(year_bestProxy))
+df_sitios_greg$year_bestProxy[is.na(df_sitios_greg$year_bestProxy)] <- 2012.5
+df_tif <- data.frame(tif.name = list.files(path="./dados_para_iniciar_artigo/paisagens_greg_mapbiomas6/",pattern = ".tif",full.names=T)) |> 
+  mutate(SiteCode = str_extract(tif.name,"(?<=\\/\\/).*?(?=_MB6)"),
+         type = str_extract(tif.name,"(?<=\\_MB6\\_).*?(?=\\.tif)"),
+         across(SiteCode:type,factor)) |> 
+  left_join(df_sitios_greg,by="SiteCode") |> mutate(diff_yBestproxy_y2000 = year_bestProxy - 2000) |> 
+  filter(type=="natfor")
+# comparação de alguns casos
+
+
+
+
+
+#
+df_plot <- df_tif |> 
+  filter(!(diff_yBestproxy_y2000 %in% c(min(diff_yBestproxy_y2000),max(diff_yBestproxy_y2000)))) |> 
+  sample_n(18)
+df_plot <- df_plot[sample(1:107,18),] |> 
+  unnest() |> 
+  rbind(filter(df_tif,diff_yBestproxy_y2000 %in% c(min(diff_yBestproxy_y2000),max(diff_yBestproxy_y2000)))) |> 
+  arrange(diff_yBestproxy_y2000) |> 
+  filter()
+## código base:
+df <- df_plot[1:2,]
+df_raster1 <- raster(df$tif.name[1])
+df_raster2 <- raster(df$tif.name[2]) |> raster::as.data.frame(xy=T)
+l_p <- list()
+l_p[[1]] <-  ggplot(df_raster2, aes(x=x,y=y,fill=SPjabo1_MB6_natfor)) +
+  geom_tile() +
+  # scale_fill_gradientn(colours = terrain.colors(10)) +
+  theme_bw() + labs(title="com NA",x="",y="") + theme(legend.position="bottom")
+l_p[[2]] <-  ggplot(drop_na(df_raster2), aes(x=x,y=y,fill=SPjabo1_MB6_natfor)) +
+  geom_tile() +
+  # scale_fill_gradientn(colours = terrain.colors(10)) +
+  theme_bw() + labs(title="sem NA",x="",y="") + theme(legend.position="bottom")
+df_raster2_antigo <- raster(paste0("./dados_para_iniciar_artigo/paisagens_atualizadas/ref",
+                                   df$refID[2],"_NA_",df$ordem[2],".tif")) |> raster::as.data.frame(xy=TRUE)
+dim(df_raster2_antigo)
+l_p[[3]] <- ggplot(df_raster2_antigo, aes(x=x,y=y,fill=ref1048_NA_1583)) +
+  geom_tile() +
+  # scale_fill_gradientn(colours = terrain.colors(10)) +
+  theme_bw() + labs(title="TreeCo (valores entre 0 e 1), raster year = 2000",x="",y="") + theme(legend.position="bottom")
+grid.arrange(grobs=l_p,ncol=3,top=paste0(df$SiteCode[2]," ,NatFor file, Sample Year = ",df$year_bestProxy[2]))
+```
+
+
+
+
+#### Janela de Código 2:
+Procedimento do efeito de escala:  
+a) calculo de p para cada valor de raio;  
+b) ajuste de glm.nb para cada conjunto de dados;  
+c) média ponderada pelo peso de evidência da comparação de todos os glm.nb ajustados.  
+
+  
+```{r janela de codigo 2 _ scale of effect, echo=TRUE,results="hide",eval=TRUE,cache=TRUE}
+# dados brutos
+df_se <- left_join(y=df_dados,
+                   x=expand.grid(SiteCode = df_dados$SiteCode,
+                                 raio_km = c(seq(sqrt(max(df_dados$effort_ha)*0.01)+0.1,
+                                               12,by = 0.1),12) ),
+                   by="SiteCode") %>% 
+  group_by(tif.name) %>% nest()
+df_se$resultado <- vector("list",length = nrow(df_se))
+# rotina
+registerDoMC(2)
+for(i in 1:nrow(df_se)){
+  # raster de paisagem (landsat8 Hansen et al. 2013)
+  raster_ <- raster(df_se$tif.name[i])
+  mat_raster <- matrix(data = getValues(raster_)/100)
+  dim(mat_raster) <- dim(raster_)[1:2]
+  # função para o calculo da cobertura da paisagem local
+  f_p <- function(raio_KM){
+    # 1 pixel = 30x30m
+    # raio = metade do lado da paisagem local
+    raio_pixels <- round(raio_KM * 1000 / 30)
+    raio_max <- nrow(mat_raster)/2
+    local_land <- mat_raster[(raio_max+1-raio_pixels):(raio_max+raio_pixels),
+                             (raio_max+1-raio_pixels):(raio_max+raio_pixels)]
+    # proporção de cobertura vegetal
+    v_p <- sum(local_land,na.rm = NULL)/length(local_land)
+    # para cada raio pedido há a proporção de cobertura calculada e o raio efetivo que depende do tamanho do pixel
+    df_ <- data.frame(p=v_p,raio_efetivo.KM=raio_pixels*30/1000)
+    return(df_)
+  }
+  # dados para a f_p
+  df_se$resultado[i][[1]] <- adply(df_se$data[i][[1]]$raio_km,1,f_p,.id = NULL,.parallel = TRUE)
+}
+# dados por raio
+df_se %<>% unnest(cols = c(data,resultado)) %>% as.data.frame()
+# ajuste de modelos aos dados
+library(MASS)
+f_glm.nb <- function(data_){
+  md_ <- glm.nb(S_obs ~ p + I(p^2) + offset(log(Ntotal)), data = data_)
+}
+registerDoMC(3)
+l_md <- dlply(df_se,"raio_km",f_glm.nb,.parallel = TRUE)
+# média ponderada dos raios pelo peso de evidência
+df_averageSE <- print(AICctab(l_md,weights=TRUE)) %>% 
+  as.data.frame()
+df_averageSE$raio_paisagem <- row.names(df_averageSE) %>% as.numeric()
+df_averageSE$weight <- as.numeric(as.character(df_averageSE$weight))
+df_averageSE$dAICc <- as.numeric(as.character(df_averageSE$dAICc))
+(raio_medio <- round(weighted.mean(x = df_averageSE$raio_paisagem,w = df_averageSE$weight),1))
+## salvar o csv da escala de efeito
+write.csv(df_averageSE,
+          "/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/resultados_e_SI/df_escalaEfeito_peso.csv",
+          row.names = FALSE)
+```
+  
+  O raio médio = `r raio_medio`  (5.1km) portanto lado 10.2km e área total de 10404 hectares
+  
+#### Janela de Código 3:
+Tratamento do Raster de Paisagem:   
+a) recorte de paisagem: raio_medio  
+b) ajuste da resolução  
+c) conversão pixel c [0,100] -> ifelse(pixel>=0.7 habitat, matrix)  
+d) paisagem local + comunidade local quadrada  
+  
+
+
+```{r janela de codigo 3 - tratamento do raster,echo=TRUE,eval=FALSE}
+####################################
+### a) recorte da paisagem
+####################################
+func_tif.png <- function(file){
+  raster <- raster(file)
+  mat_raster <- matrix(data = getValues(raster)/100)
+  dim(mat_raster) <- dim(raster)[1:2]
+  raio_max <- nrow(mat_raster)/2
+  raio_pixels <- round(raio_medio * 1000 / 30)
+  local_land <- mat_raster[(raio_max+1-raio_pixels):(raio_max+raio_pixels),
+                           (raio_max+1-raio_pixels):(raio_max+raio_pixels)]
+  file_path <- gsub(".tif",".png", file) 
+  file_path <- gsub("paisagens_atualizadas","1A.P_MOVER/dados_brutos", file_path) 
+  squash::savemat(x = mat_raster, filename = file_path) # png
+}
+registerDoMC(3)
+a_ply(df_dados$tif.name,1,func_tif.png,.parallel = TRUE)
+####################################
+### b) ajuste de resolução
+####################################
+df_dados %<>% mutate(png.name = gsub("paisagens_atualizadas/","",gsub(".tif",".png",tif.name)),
+                     DA=Ntotal/effort_ha)
+v_A.paisagem <- 100 * ( (raio_medio * 2) ^ 2 ) 
+func_png.ajust <- function(file, densidade, A_landscape=v_A.paisagem){ # atualizar para o pacote 'magick'
+  system(paste(
+    "convert ",file, " -resize ", densidade*A_landscape,"@ ", file,  
+    sep = ""
+  ))
+}
+registerDoMC(3)
+a_ply(df_dados,1,function(x) func_png.ajust(file = x$png.name, densidade = x$DA), .parallel = TRUE)
+####################################
+### c) e d) pixel -> ifelse(p>=0.7,"habitat","matrix"); comunidade local
+####################################
+## função para criar área quadrada central: comunidade local
+f_area.simulada <- function(matriz, N, index_janela=8/4){
+  # Janela de observação
+  d <- ceiling(sqrt(N)*index_janela)
+  l <- ceiling(dim(matriz)[1]/2)
+  c <- ceiling(dim(matriz)[2]/2)
+  m_temp <- matriz[(l-d):(l+d),(c-d):(c+d)]
+  if(length(m_temp[m_temp==1]) < N) { 
+    stop("habitat insuficiente na janela de observação")
+  } else if (length(m_temp[m_temp==1]) == N) { 
+    stop("area amostral igual janela de observacao")
+  } else { 
+    col_cresc <- which(m_temp==m_temp, arr.ind = T)
+    col_decre <- col_cresc[dim(col_cresc)[1]:1,]
+    row_cresc <- col_cresc[order(col_cresc[,1],decreasing = FALSE),] 
+    row_decre <- row_cresc[dim(col_cresc)[1]:1,] 
+    ciclo <- (dim(m_temp)[1]-1)/2
+    l_mat_index <- list()
+    dim_temp <- dim(m_temp)[1]
+    for(i in 1:ciclo){
+      a1 <- col_cresc[col_cresc[,"col"]==i,]
+      b1 <- row_cresc[row_cresc[,"row"]==dim_temp+1-i,]
+      c1 <- col_decre[col_decre[,"col"]==dim_temp+1-i,]
+      d1 <- row_decre[row_decre[,"row"]==i,]
+      l_mat_index[[i]] <- do.call(rbind,list(a1,b1,c1,d1))
+    }
+    l_mat_index[[(dim_temp+1)/2]] <- col_cresc[col_cresc[,"col"]==(dim_temp+1)/2,]
+    mat_ref <- unique(do.call(rbind, l_mat_index))
+    length_ref <- length(m_temp[mat_ref][m_temp[mat_ref]==1])
+    m_temp[mat_ref][m_temp[mat_ref]==1][(1+length_ref-N):length_ref] <- 2
+    matriz[(l-d):(l+d),(c-d):(c+d)] <- m_temp
+    return(matriz)
+  }
+}
+## habitat/matrix
+f_mat.tri <- function(png, abund){
+  janela <- matrix(1,3,3) 
+  raster <- raster(png)
+  mat <- matrix(getValues(raster)/255, ncol = ncol(raster), nrow = nrow(raster))
+  raster_binario <- raster( matrix(nrow = nrow(mat), ncol = ncol(mat), sapply(mat, function(x) ifelse(x >= 0.7, 1, 0)) ) ) 
+  func_focal <- function(x) ifelse(sum(x[x==1]) >= 5, 1, x[5])
+  binario.focal <- as.matrix( focal(raster_binario, janela, func_focal, pad=TRUE, padvalues = 0))
+  mat_tri <- try(f_area.simulada(matriz = binario.focal, N = abund))
+  if(class(mat_tri) == "matrix"){ 
+    try(write.table(x = mat_tri, 
+                    file = gsub(".png",".txt", png),
+                    sep = " ", row.names = FALSE, col.names = FALSE))
+  }
+}
+df_dados$png.name %<>% as.character
+registerDoMC(3)
+a_ply(df_dados,1,function(X) f_mat.tri(png = X$png.name,abund = X$Ntotal),.parallel = TRUE)
+
+###################################
+############## 1out20 #############
+###################################
+# esta paisagem não estava centrada na área amostral
+# faltava colunas
+f_mat.tri(png = df_dados$png.name[df_dados$SiteCode=="MGuberl7"],abund = df_dados$Ntotal[df_dados$SiteCode=="MGuberl7"])
+###################################
+############## 1out20 #############
+###################################
+
+####################################
+### e) NA remove
+####################################
+### dados
+df_txt <- Sys.glob("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/dados_brutos/*.txt") %>%
+  gsub("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/dados_brutos/","",.) %>%
+  adply(.,1,function(x) unname( unlist( strsplit(x, "_NA_", fixed = TRUE) ) ),.id = NULL) %>%
+  mutate(refID = gsub("ref","",V1),ordem=gsub(".txt","",V2)) %>%
+  dplyr::select(refID,ordem)
+df_txt$txt.name <- Sys.glob("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/dados_brutos/*.txt")
+# merge
+df_dados$ordem <- as.character(df_dados$ordem)
+df_dados$refID <- as.character(df_dados$refID)
+df_auditoria <- inner_join(x=df_txt,
+                           y=df_dados,
+                           by=c("ordem","refID"))
+### funcao
+f_NA_zero <- function(path_){
+  mat_paisagem <- read.table(file=path_,header = FALSE)
+  mat_paisagem[is.na(mat_paisagem)] <- 0
+  write.table(x = mat_paisagem,file = path_,sep = " ", row.names = FALSE, col.names = FALSE)
+}
+registerDoMC(3)
+a_ply(df_auditoria$txt.name,1,f_NA_zero,.parallel = TRUE)
+
+###################################
+############## 1out20 #############
+###################################
+# esta paisagem não estava centrada na área amostral
+# faltava colunas
+f_NA_zero(path_ = df_auditoria$txt.name[df_auditoria$SiteCode == "MGuberl7"])
+
+###################################
+############## 1out20 #############
+###################################
+```
+
+        
+#### Figura 1     
+
+ __Legenda:__ Janela de observação da comunidade local. Branco = matriz; Laranja = habitat disponível na paisagem; Verde = habitat disponível na comunidade local.  
+    
+
+```{r figura 1 auditoria janela de codigo 3,eval=TRUE,echo=FALSE,fig.align='center',cache=TRUE,fig.width=8,fig.height=40}
+# df_ da pasta
+df_txt <- Sys.glob("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/*.txt") %>%
+  gsub("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/","",.) %>%
+  adply(.,1,function(x) unname( unlist( strsplit(x, "_NA_", fixed = TRUE) ) ),.id = NULL) %>%
+  mutate(refID = gsub("ref","",V1),ordem=gsub(".txt","",V2)) %>%
+  dplyr::select(refID,ordem)
+#   
+# 
+# 
+# df_txt <- dplyr::select(dplyr::mutate(plyr::adply(gsub("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/dados_brutos/","",
+#      Sys.glob("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/dados_brutos/*.txt")),
+#      1,function(x) unname( unlist( strsplit(x, "_NA_", fixed = TRUE) ) ),.id = NULL),
+#      refID = gsub("ref","",V1),ordem=gsub(".txt","",V2)),refID,ordem)
+# 
+# gsub("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/dados_brutos/","",
+#      Sys.glob("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/dados_brutos/*.txt"))
+
+
+df_txt$txt.name <- Sys.glob("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/*.txt") #%>% #caminho dos .tif
+# df_ input
+# df_dados %>% names
+df_dados$ordem <- as.character(df_dados$ordem)
+df_dados$refID <- as.character(df_dados$refID)
+# merge
+df_auditoria <- inner_join(x=df_txt,
+                           y=df_dados,
+                           by=c("ordem","refID"))
+# df_auditoria %>% dim 
+# 91/105 raster tratados 
+# Os raster tratados estão com a resolução ajustada corretamente?
+# v_A.paisagem <- 100 * ( (raio_medio * 2) ^ 2 ) 
+# df_auditoria %<>% mutate(DA=Ntotal/effort_ha, 
+#                          res_esp = v_A.paisagem * DA)
+# f_adply <- function(path){
+#   # path <- df_auditoria$txt.name[1]
+#   paisagem <- as.matrix(read.table(path,header = TRUE,sep = " ",as.is = FALSE))
+#   res_ <- length(paisagem)
+#   return(res_)
+# }
+# registerDoMC(3)
+# df_auditoria %<>% 
+#   adply(.,1,function(X) f_adply(path=X$txt.name),.parallel = TRUE,.id = NULL) %>% 
+#   rename(res_obs = V1) %>% 
+#   mutate(diff_res = (res_esp-res_obs)/res_esp)
+# x11()
+# ggplot(df_auditoria,aes(x=res_esp,y=diff_res)) +
+#   geom_point()
+# resolução esta adequada
+
+## Pq alguns sítios não tiveram o raster tratado?
+df_auditoria2 <- df_dados %>% 
+  mutate(png.name = gsub("paisagens_atualizadas","1A.P_MOVER/dados_brutos",gsub(".tif",".png",tif.name)) ) %>% 
+  filter(!(SiteCode %in% df_auditoria$SiteCode))
+
+# for(i in 2:nrow(df_auditoria2)){
+# i <- 6 #6
+# png <- df_auditoria2$png.name[i]
+# abund <- df_auditoria2$Ntotal[i]
+# janela <- matrix(1,3,3) 
+# raster <- raster(png)
+# mat <- matrix(getValues(raster)/255, ncol = ncol(raster), nrow = nrow(raster))
+# raster_binario <- raster( matrix(nrow = nrow(mat), ncol = ncol(mat), sapply(mat, function(x) ifelse(x >= 0.7, 1, 0)) ) ) 
+# func_focal <- function(x) ifelse(sum(x[x==1]) >= 5, 1, x[5])
+# binario.focal <- as.matrix( focal(raster_binario, janela, func_focal, pad=TRUE, padvalues = 0))
+# mat_tri <- try(f_area.simulada(matriz = binario.focal, N = abund,index_janela = 8/4))
+# if(class(mat_tri) == "matrix"){ 
+#   try(write.table(x = mat_tri, 
+#                   file = gsub(".png",".txt", png),
+#                   sep = " ", row.names = FALSE, col.names = FALSE))
+# }
+
+
+
+
+# rotina final Janela de Código 3
+# f_mat.tri <- function(png, abund){
+par(mfrow=c(21,5))
+# par(mfrow=c(1,1))
+for(i in 1:nrow(df_auditoria)){
+# i <- 1 #nrow = 9
+par(mar=c(0.2,0.2,1.2,0.2))
+N <- df_auditoria$Ntotal[i]
+paisagem <- as.matrix(read.table(df_auditoria$txt.name[i],header = TRUE,sep = " ",as.is = FALSE))
+# janela de observação:
+d <- ceiling(sqrt(N)*(6/4))  # metade do lado do janela de observação
+l <- ceiling(dim(paisagem)[1]/2) # linha central da paisagem
+c <- ceiling(dim(paisagem)[2]/2) # coluna central da paisagem
+# janela de observação:
+janela_observao <- paisagem[(l-d):(l+d),(c-d):(c+d)]
+#visualização
+image(janela_observao,main=paste0(df_auditoria$SiteCode[i]," N=",df_auditoria$Ntotal[i]),col=terrain.colors(12,rev = TRUE),axes=FALSE)
+}
+```
+
+
+
+#### Janela de Código 4:  
+__Adequação do Raster__
+Códigos usados para aglomerar o habitat da comunidade local:  
+
+
+
+```{r Janela de Código 4 _ conserto e descarte de rasters, eval=FALSE,echo=TRUE}
+v_Sites__conserto <- c("MGlavr6","MGlavr3")
+# v_Sites__conserto <- "MGuberl7"
+df_auditoria2 <- df_auditoria %>% filter(SiteCode %in% v_Sites__conserto)
+#########
+par(mar=c(0.2,0.2,1.2,0.2))
+i <- 1 #nrow = 5
+N <- df_auditoria2$Ntotal[i]
+paisagem <- as.matrix(read.table(df_auditoria2$txt.name[i],header = TRUE,sep = " ",as.is = FALSE))
+# janela de observação:
+d <- ceiling(sqrt(N)*(4/4))  # metade do lado do janela de observação
+l <- ceiling(dim(paisagem)[1]/2) # linha central da paisagem
+c <- ceiling(dim(paisagem)[2]/2) # coluna central da paisagem
+# janela de observação:
+janela_observao <- paisagem[(l-d):(l+d),(c-d):(c+d)]
+###############################
+########### região para remover
+###############################
+## objetos
+#visualização
+image(janela_observao,main=df_auditoria2$SiteCode[i],col=terrain.colors(12,rev = TRUE))
+coordenada_ <- locator(1) %>% unlist()
+l_ <- round(coordenada_[1]*nrow(janela_observao))
+c_ <- round(coordenada_[2]*ncol(janela_observao))
+n_ <- 10
+## auditoria visual
+image(janela_observao[(l_-n_):(l_+n_),(c_-n_):(c_+n_)],
+      main=df_auditoria2$SiteCode[i],col=terrain.colors(12,rev = TRUE))
+## para aqueles sem o habitat central como 1:
+# janela_observao[(l_-n_):(l_+n_),(c_-n_):(c_+n_)] <- 2
+## janela de conversao de 2->1
+# Primeira vez
+p_arrumar <- janela_observao[(l_-n_):(l_+n_),(c_-n_):(c_+n_)]
+rm_ <- p_arrumar[p_arrumar==2] %>% length()
+p_arrumar[p_arrumar==2] <- 1
+janela_observao[(l_-n_):(l_+n_),(c_-n_):(c_+n_)] <- p_arrumar
+# Outras vezes
+p_arrumar <- janela_observao[(l_-n_):(l_+n_),(c_-n_):(c_+n_)]
+rm_ <- rm_ + length(p_arrumar[p_arrumar==2]) 
+p_arrumar[p_arrumar==2] <- 1
+janela_observao[(l_-n_):(l_+n_),(c_-n_):(c_+n_)] <- p_arrumar
+######################################
+########### região para incluir 1 -> 2
+######################################
+##
+image(janela_observao)
+coordenada_ <- locator(1) %>% unlist()
+l_ <- round(coordenada_[1]*nrow(janela_observao))
+c_ <- round(coordenada_[2]*ncol(janela_observao))
+n_ <- 2
+janela_observao[(l_-n_):(l_+n_),(c_-n_):(c_+n_)] #  %>% image # habitat_local <- 
+# habitat_local[habitat_local==1] %>% length() > rm_
+# para aqules com ponto central = 1
+# janela_observao[l_+1,c_] <- 1
+# exemplo: o ponto de inicío é [4,4] e o ponto l_,c_ é [3,3], portanto l_+1,c_+1:
+p_inicio <- c(l_,c_)
+# correr pela ___ até o ponto:
+image(janela_observao)
+coordenada_ <- locator(1) %>% unlist()
+l_ <- round(coordenada_[1]*nrow(janela_observao))
+c_ <- round(coordenada_[2]*ncol(janela_observao))
+n_ <- 2
+janela_observao[(l_-n_):(l_+n_),(c_-n_):(c_+n_)] # %>% image
+p_final <- c(l_,c_)
+# trocando 1 -> 2
+p_rm_ <- janela_observao[p_inicio[1]:p_final[1],p_inicio[2]:p_final[2]] %>% length()
+# if
+p_rm_ < rm_
+ janela_observao[p_inicio[1]:p_final[1],p_inicio[2]:p_final[2]] <- 2
+ rm_ <- rm_ - p_rm_
+# else
+ janela_observao[p_inicio[1]:p_final[1],p_inicio[2]:p_final[2]][1:rm_] <- 2
+## outro
+# pontos_p_marcar <- janela_observao[p_inicio[1]:p_final[1],pwrite.table(paisagem,
+            # file=df_auditoria2$txt.name[i],
+# _inicio[2]:p_final[2]]
+# pontos_p_marcar[pontos_p_marcar==1][1:length(rm_)] <- 2
+# janela_observao[p_inicio[1]:p_final[1],p_inicio[2]:p_final[2]] <- pontos_p_marcar
+# image(janela_observao)
+# auditoria e gravar
+par(mfrow=c(1,2))
+image(paisagem[(l-d):(l+d),(c-d):(c+d)],
+      main=paste(df_auditoria2$SiteCode[i], "before"),
+      col=terrain.colors(12,rev = TRUE),axes=FALSE)
+image(janela_observao,
+      main=paste(df_auditoria2$SiteCode[i], "after"),
+      col=terrain.colors(12,rev = TRUE),axes=FALSE)
+paisagem[(l-d):(l+d),(c-d):(c+d)] <- janela_observao
+par(mfrow=c(1,1))
+image(paisagem,main=df_auditoria2$SiteCode[i],col=terrain.colors(12,rev = TRUE),axes=TRUE)
+write.table(paisagem,
+            file=df_auditoria2$txt.name[i],
+            row.names = FALSE,col.names = FALSE)
+```
+  
+    
+     
+      
+#### Figura 2:
+
+__Legenda :__ Sítios consertados
+
+```{r figura 2 sitios consertados,eval=TRUE,echo=FALSE,fig.align='center',fig.height=2,cache=FALSE,eval=FALSE}
+df_auditoria2 <- df_auditoria %>% filter(SiteCode %in% v_Sites__conserto)
+df_auditoria2 <- df_auditoria %>% filter(SiteCode == "MGuberl7")
+par(mfrow=c(1,5))
+for(i in 1:nrow(df_auditoria2)){
+# i <- 1 #nrow = 9
+par(mar=c(0.2,0.2,1.2,0.2))
+N <- df_auditoria2$Ntotal[i]
+paisagem <- as.matrix(read.table(df_auditoria2$txt.name[i],header = TRUE,sep = " ",as.is = FALSE))
+# janela de observação:
+d <- ceiling(sqrt(N)*(6/4))  # metade do lado do janela de observação
+l <- ceiling(dim(paisagem)[1]/2) # linha central da paisagem
+c <- ceiling(dim(paisagem)[2]/2) # coluna central da paisagem
+# janela de observação:
+janela_observao <- paisagem[(l-d):(l+d),(c-d):(c+d)]
+#visualização
+image(janela_observao,main=paste0(df_auditoria2$SiteCode[i]," N=",df_auditoria2$Ntotal[i]),col=terrain.colors(12,rev = TRUE),axes=FALSE)
+image(paisagem)
+}
+#
+
+```
+
+
+
+#### Configuração Espacial do Habitat da paisagem do sítio de amostragem
+
+```{r}
+# par(mfrow=c(1,5))
+for(i in 1:nrow(df_auditoria)){
+# i <- 1 #nrow = 9
+par(mar=c(0.2,0.2,1.2,0.2))
+paisagem <- as.matrix(read.table(df_auditoria$txt.name[i],header = TRUE,sep = " ",as.is = FALSE))
+image(paisagem,main=paste0(df_auditoria$SiteCode[i]," N=",df_auditoria$Ntotal[i]),col=terrain.colors(12,rev = TRUE),axes=FALSE)
+}
+#
+```
+
+```{r}
+#
+paisagem_txt <- as.matrix(read.table(df_auditoria$txt.name[df_auditoria$SiteCode == "MGuberl7"],header = TRUE,sep = " ",as.is = FALSE))
+#
+png_path <- df_auditoria$txt.name[df_auditoria$SiteCode == "MGuberl7"] %>% gsub(".txt",".png",.)
+png_file <- readImage(png_path)
+png_file %>% dim
+paisagem_txt %>% dim
+
+par(mfrow=c(1,2))
+image(paisagem_txt)
+image(png_file)
+#
+```
+
+
+
+#### Janela de Código 5:
+Distância média de dispersão por k:
+
+```{r janela de codigo 5,eval=FALSE,echo=TRUE}
+## funções
+library(rmutil)
+library(lamW)
+qkernel<- function(sigma, kernel, p, density=20852/50, npoints = 1e5){
+    kernel <- match.arg(kernel, choices=c("normal","gaussian","laplace","uniform"))
+    d_ind_MA  <- 100/sqrt(density)
+    if(kernel=="laplace"){
+        b_laplace <- sigma / sqrt(2)
+        X_laplace <- d_ind_MA * round(rlaplace(npoints, s=b_laplace) / d_ind_MA)
+        Y_laplace <- d_ind_MA * round(rlaplace(npoints, s=b_laplace) / d_ind_MA)
+        dist_laplace <- sqrt(X_laplace^2+Y_laplace^2)
+        result <- quantile(dist_laplace, p)
+    }
+    if(kernel=="normal"|kernel=="gaussian"){
+        b_norm <- sigma
+        X_norm <- d_ind_MA * round(rnorm(npoints, sd=b_norm) / d_ind_MA)
+        Y_norm <- d_ind_MA * round(rnorm(npoints, sd=b_norm) / d_ind_MA)
+        dist_norm <- sqrt(X_norm^2+Y_norm^2)
+        result <- quantile(dist_norm, p)
+    }
+    if(kernel=="uniform"){
+        b_unif <- sigma/2 # sigma correspondente ao range da distribuição uniforme
+        X_unif <- d_ind_MA * round(runif(npoints, min = -b_unif, max = b_unif) / d_ind_MA)
+        Y_unif <- d_ind_MA * round(runif(npoints, min = -b_unif, max = b_unif) / d_ind_MA)
+        dist_unif <- sqrt(X_unif^2+Y_unif^2)
+        result <- quantile(dist_unif, p)
+    }
+    return(unname(result))
+}
+sigkernel <- function(kernel, p, distance, density=20852/50,
+                      npoints =1e5, sigma.min = 1, sigma.max= 100){
+    f1 <- function(x) distance - qkernel(x, kernel, p, density, npoints)
+    uniroot( f1 , lower = sigma.min, upper = sigma.max)
+}
+## estimativa
+# dados
+df_auditoria %<>% filter(SiteCode != "MGlavr4")
+percentil <- c(0.99,seq(0.95,0.05,-0.05))
+df_simulacao <- left_join(x=df_auditoria,
+                          y=expand.grid(SiteCode = df_auditoria$SiteCode, k = percentil),
+                          by="SiteCode")
+
+df_simulacao$kernel_type <- "laplace"
+df_simulacao$kernel_code <- "2"
+df_simulacao %<>% mutate(DA=Ntotal/effort_ha, # densidade desconsiderando as espécies mortas
+                         dist_0 = 100/sqrt(DA)) # distância entre indivíduos vizinhos
+df_simulacao$d <- NA
+df_simulacao$kernel_type <- as.character(df_simulacao$kernel_type)
+# funcao para paralelizar
+func_llply <- function(i,data_frame=df_simulacao){
+  df_temp <- data_frame
+  sigma <- sigkernel(kernel = df_temp[i,"kernel_type"],
+                     p = df_temp[i,"k"],
+                     distance = df_temp[i,"dist_0"],
+                     density = df_temp[i,"DA"],
+                     sigma.min=1e-6,
+                     sigma.max=1e6)$root
+}
+registerDoMC(3)
+replica.sim <- as.list(1:dim(df_simulacao)[1])
+resultados <- llply(.data = replica.sim, .fun = func_llply, .parallel = TRUE)
+df_simulacao$d <- unlist(resultados)
+```
+  
+    
+#### Janela de Código 6:
+Cálculo da proporção de habitat na paisagem (p):
+
+```{r janela de codigo 6}
+f_tree.cover <- function(file_path){
+  mat_paisagem <- read.table(file=file_path,sep=" ",header=TRUE)
+  tree.cover <- as.vector(mat_paisagem)
+  tree.cover <- tree.cover[!is.na(tree.cover)]
+  p <- 1 - length(tree.cover[tree.cover==0])/length(tree.cover)
+  return(p)
+}
+df_ <- df_simulacao %>% select(SiteCode,txt.name) %>% distinct()
+registerDoMC(2)
+df_$p <- aaply(df_$txt.name,1,f_tree.cover,.parallel = TRUE)
+df_simulacao <- left_join(x = select(df_simulacao,-p),
+                          y = select(df_,-txt.name),
+                          by="SiteCode")
+# df_simulacao <- df_simulacao %>% select(-p.y)
+# names(df_simulacao)[8] <- "p"
+```
+
+
+#### Janela de Código 7:
+função para rodar a simulação coalescente  
+
+```{r janela de codigo 7,echo=TRUE,eval=TRUE}
+dinamica_coalescente <- function(U, S=0, N_simul, seed, disp_range, disp_kernel, landscape){
+  # Runs coalescent simulations for a given heterogeneous landscape
+  #
+  # Parameters:
+  # U: speciation rate
+  # S: observed richness (integer) - used to fit the value of U, or set to
+  #       0 (default) if that is not desired
+  # N_simul: number of simulations
+  # seed: seed of the RNG (an integer)
+  # disp_range: width of the dispersal kernel
+  # disp_kernel: an integer corresponding to the type of dispersal kernel. One of
+  #               0: uniform
+  #               1: normal
+  #               2: Laplacian
+  # landscape: either a filename containing the landscape data, or a
+  #   bidimensional R array or matrix.
+  #   TODO: describe the format of the input - trinary matrix)
+  #
+  # Returns:
+  # r: an array of dimension N_simul x landscape dimensions, that is, each
+  #   r[i.,] is a bidimensional array of the same shape as the landscape.
+  #   Each site is labeled according to the identity of the species occupying
+  #   that site.
+  # U_est: estimated speciation rate. This is returned only if input parameter S > 0
+  if (is.character(landscape)){
+    l <- as.matrix(read.table(landscape))
+    infile <- landscape
+    land_dims <- dim(l)
+  } else {
+    land_dims <- dim(landscape)
+    infile <- tempfile()
+    # input file *must* be clean: no comments, headers or anything
+    write.table(landscape, infile, col.names=F, row.names=F)
+  }
+  outfile <- tempfile()
+  repeat {
+    system(paste('./dinamica_coalescente', land_dims[1], land_dims[2], U, S, N_simul,
+                 seed, disp_range, disp_kernel, infile, outfile))
+    if (file.exists(outfile) || S == 0)
+      break
+    U <- U/10.
+    print(paste("Decreasing value of U to", U))
+    # set some lowest boundary here so simulations don't take forever
+    if (U < 1e-20){
+      print("Richness value too low, giving up...")
+      return(NULL)
+    }
+  }
+  r <- as.matrix(read.table(outfile))
+  # transpose each grid, as output is written along lines but R reads it along columns
+  # TODO: I thought I got it right, but it was wrong... please DO re-check
+  #r <- aperm(r, c(1,3,2))
+
+  # recover estimated speciation rate
+  if (S > 0){
+    out_con <- file(outfile)
+    U_line <- strsplit(readLines(out_con, 2)[2], ' ')[[1]]
+    close(out_con)
+    U_est <- as.double(U_line[length(U_line)])
+    return(list(r = r, U_est = U_est))
+  }
+  return(r)
+}
+```
+
+
+#### Janela de Código 8:
+Estimativa de U
+
+
+
+```{r janela de codigo 8}
+# replicas
+n_rep.U <- 10
+func1 <- function(x,replicas=n_rep.U) {
+  x$U <- NA
+  x <- x[rep(1:dim(x)[1],each=replicas),]
+}
+# nomes
+df_simulacao$txt.name <- gsub("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/",
+                              "/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/",
+                              df_simulacao$txt.name)
+df_simulacao.U <- df_simulacao %>% func1()
+
+####################
+# simulacao
+# valores de k
+k_factor <- unique(df_simulacao.U$k)
+registerDoMC(2)
+for(a in 1:length(k_factor)){
+  df_simU <- df_simulacao.U %>% dplyr::filter(k == k_factor[a])
+  op <- options(digits.secs=6)
+  funcao_imigracao <- function(i,df_temp=df_simU){
+    aviao <- list()
+    aviao <- dinamica_coalescente(U = 1.25e-06,
+                                  S = df_temp[i,"S_obs"],
+                                  N_simul = 1,
+                                  seed = as.numeric(Sys.time()),
+                                  disp_range = df_temp[i,"d"],
+                                  disp_kernel = df_temp[i,"kernel_code"],
+                                  landscape = df_temp[i,"txt.name"])
+    return(aviao$U_est)
+  }
+  replica.sim <- as.list(1:dim(df_simU)[1])
+  sim.coal_U <- llply(.data = replica.sim, .fun = funcao_imigracao, .parallel = TRUE)
+  df_simU[,"U"] <- unlist(sim.coal_U)
+  write.csv(df_simU,
+            file=paste0("./U/","df_simU__k",k_factor[a],".csv"),row.names = FALSE)
+}
+
+
+###########################
+######## 10out2020 ########
+###########################
+df_simU <- df_simulacao.U %>% filter(SiteCode == "MGuberl7") %>% as.data.frame()
+op <- options(digits.secs=6)
+funcao_imigracao <- function(i,df_temp=df_simU){
+  aviao <- list()
+  aviao <- dinamica_coalescente(U = 1.25e-06,
+                                S = df_temp[i,"S_obs"],
+                                N_simul = 1,
+                                seed = as.numeric(Sys.time()),
+                                disp_range = df_temp[i,"d"],
+                                disp_kernel = df_temp[i,"kernel_code"],
+                                landscape = df_temp[i,"txt.name"])
+  return(aviao$U_est)
+}
+replica.sim <- as.list(1:dim(df_simU)[1])
+registerDoMC(2)
+sim.coal_U <- llply(.data = replica.sim, .fun = funcao_imigracao, .parallel = TRUE)
+df_simU[,"U"] <- unlist(sim.coal_U)
+df_simU_MGuberl7 <- df_simU
+```
+
+1out2020
+
+# 0) Erro:
+./dinamica_coalescente: error while loading shared libraries: libgsl.so.19: cannot open shared object file: No such file or directory
+
+# 1) instalação da biblioteca
+sudo apt-get install libgsl-dev
+
+# 2) erro persiste; 
+
+# 3) procurando pelo arquivo 
+sudo find / -name "libgsl.so.*"
+# obtenho:
+find: ‘/run/user/1000/doc’: Permissão negada
+find: ‘/run/user/1000/gvfs’: Permissão negada
+/usr/lib/x86_64-linux-gnu/libgsl.so.23.1.0
+/usr/lib/x86_64-linux-gnu/libgsl.so.23
+# portanto não existe esta biblioteca mesmo depois de instalar
+
+# 4) refiz o arquivo do programa coalescente via 'make' e agora obtenho o erro:
+Erro: arquivo de dados contém 0 entradas, esperado 1
+- no código do programa coalescente há uma sessão sobre isso:
+if(! (landscape_file >> network->barrier[i])){
+            cout << "Erro: arquivo de dados contém " << i << " entradas, esperado " << network->N << endl;
+            exit(EXIT_FAILURE);
+
+# 5) o problema era que o arquivo de entrada na função não era do tipo charactere, ao inves era um tibble
+
+# 6) estas 200 simulações foram rápidas de se fazer
+
+  
+#### Janela de Código 9:
+Conversão de Parâmetros:
+
+
+```{r janela de codigo 9,echo=TRUE,eval=TRUE}
+# Síntese dos dados para U
+df_U <- map_df(Sys.glob("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/simulacao_codigos_e_resultados/U/*.csv"), read_csv)
+df_simulacao <-  inner_join(x=distinct(dplyr::select(df_U, SiteCode, k, Ntotal, S_obs, kernel_code, DA, d, p, txt.name)),
+                            y=ddply(df_U,c("SiteCode","k"),summarise,U_med = mean(U), U_var = var(U)),
+                            by=c("SiteCode","k"))
+############################
+######## 10out2020 #########
+############################
+df_pMudar <- df_simulacao %>% filter(SiteCode == "MGuberl7") %>% 
+  select(-U_med, -U_var)
+df_novo <- inner_join(x=distinct(dplyr::select(df_pMudar, SiteCode, k, Ntotal, S_obs, kernel_code, DA, d, p, txt.name)),
+                            y=ddply(df_simU_MGuberl7,c("SiteCode","k"),summarise,U_med = mean(U), U_var = var(U)),
+                            by=c("SiteCode","k"))
+# df_pMudar <- df_simulacao %>% filter(SiteCode == "MGuberl7")
+# plot(df_novo$U_var ~ df_pMudar$U_var)
+# 
+df_simulacao <- rbind.fill(filter(df_simulacao,SiteCode != "MGuberl7"),df_novo)
+############################
+######## 10out2020 #########
+############################
+# conversão de parâmetros
+df_simulacao %<>% 
+  mutate(J_M = 10404 * DA * p,
+         L_plot = sqrt( 10000 * (Ntotal/DA) ),
+         m = d * (1 - exp( -sqrt(2) * (L_plot/d) ) ) / ( sqrt(2) * L_plot ), #eq 4
+         m_ = m * p / ( 1 - (1-p)*m ),#eq 5
+         I =  m_ * (Ntotal-1)/(1-m_), #Etienne 2005
+         theta = U_med * ( J_M - 1 ) / (1-U_med) ) #Vallade & Houshmandzadeh (2003) 
+n_rep.SAD <- 100
+# arrumar diretorio
+df_simulacao$txt.name <- gsub("/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao","/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo",df_simulacao$txt.name)
+write.csv(df_simulacao,file = "/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/simulacao_codigos_e_resultados/df_simulacao.csv",row.names = FALSE)
+```
+
+
+#### Figura 3:
+Gráficos Exploratórios dos parâmetros dos modelos neutros:
+
+
+```{r figura 3 - relacao dos parametros,echo=FALSE,eval=TRUE,fig.width=10,cache=TRUE}
+#
+df_simulacao$k_factor <- factor(df_simulacao$k,levels=as.character(sort(unique(df_simulacao$k)))[20:1])
+levels(df_simulacao$k_factor)[19] <- "0.10"
+#
+l_p <- list()
+l_p[[1]] <- ggplot(df_simulacao,aes(x=k_factor,y=d)) +
+  geom_point(alpha=0.3) + 
+  geom_jitter(alpha=0.3) + 
+  geom_boxplot(alpha=0.6) +
+  labs(x="k (proportion)",y="d (meters)")
+l_p[[2]] <- ggplot(df_simulacao,aes(x=k_factor,y=U_med)) +
+  geom_point(alpha=0.3) + 
+  geom_line(alpha=0.3,aes(group=SiteCode)) +
+  geom_boxplot(alpha=0.6) +
+  labs(x="k (proportion)",y="U (prob./colonization event)")
+l_p[[3]] <- ggplot(df_simulacao,aes(x=d,y=m)) + 
+  geom_point(alpha=0.3) + labs(x="d (meters)",y="m (probability)")
+l_p[[4]] <- ggplot(df_simulacao,aes(x=p,y=m_)) + 
+  geom_point(alpha=0.3) + labs(x="proportion tree cover",y="m' (probability)")
+l_p[[5]] <- ggplot(df_simulacao,aes(x=U_med,y=theta)) + 
+  geom_point(alpha=0.3) + labs(x="U (prob./colonization event)",y="theta")
+mat_layout <- rbind(c(1,1,1,2,2,2),
+                    c(1,1,1,2,2,2),
+                    c(3,3,4,4,5,5),
+                    c(3,3,4,4,5,5))
+grid.arrange(l_p[[1]],l_p[[2]],l_p[[3]],l_p[[4]],l_p[[5]],
+             layout_matrix=mat_layout)
+
+```
+
+
+#### Janela de Código 10:
+SAD predita MNEE:
+
+
+```{r janela de codigo 10}
+f_simulacao <- function(i,df_=df_simulacao){
+  X <- df_[i,] %>% as.data.frame()
+  mat_sim <- dinamica_coalescente(U = X[,"U_med"],
+                                  S = 0,
+                                  N_simul = n_rep.SAD,
+                                  seed = as.numeric(Sys.time()),
+                                  disp_range = X[,"d"],
+                                  disp_kernel = X[,"kernel_code"],
+                                  landscape = X[,"txt.name"])
+  df_SAD.replica <- bind_rows(alply(mat_sim,1,function(Y) data.frame(N = sort(as.integer(table(Y))) ) ),
+                              .id = "replica")
+  df_SAD.replica %<>% 
+    mutate(SiteCode = X$SiteCode, MN = "EE", k = X$k)
+  path.file <- paste0("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/simulacao_codigos_e_resultados/SADs_preditas/",
+                      X[,"SiteCode"],
+                      "_k",X[,"k"],
+                      "_EE.csv")
+  write.csv(df_SAD.replica,
+            file = path.file,
+            row.names = FALSE)
+}
+registerDoMC(2)
+simulacao <- as.list(1:dim(df_simulacao)[1])
+l_ply(simulacao,f_simulacao,.parallel = TRUE)
+```
+
+Inicio da simulação: 14h38  
+
+A janela de código a seguir foi necessário quando fiz uma simulação e não foi possível conclui-la por falta de espaço
+
+```{r para compensar a falta de espaco durante a simulacao, eval=FALSE,echo=FALSE}
+df_SADreplicas <- Sys.glob("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/simulacao_codigos_e_resultados/SADs_preditas/*.csv") %>% 
+  gsub("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/simulacao_codigos_e_resultados/SADs_preditas/","",.) %>% 
+  gsub("_EE.csv","",.) %>% 
+  adply(.,1,function(x) unname( unlist( strsplit(x,"_k",fixed = TRUE))),.id = NULL) %>% 
+  rename(SiteCode = V1,k = V2)
+
+df_simulacao %>% dim
+df_simulacao$k %>% class
+df_simulacao$SiteCode %>% class
+df_SADreplicas$SiteCode %>% class
+
+df_SADreplicas$k <- as.numeric(df_SADreplicas$k)
+# df_SADreplicas$k %>% unique
+
+df_simulacaoDenovo <- anti_join(x=df_simulacao,
+                                y=df_SADreplicas,
+                                by=c("SiteCode","k"))
+
+###
+
+paisagem <- read.table(X[,"txt.name"]) %>% as.matrix
+image(paisagem)
+
+
+f_simulacao <- function(i,df_=df_simulacaoDenovo){
+  # X <- df_simulacao %>% as.data.frame() %>% filter(SiteCode == "MGvico16" & k == 0.75)
+  X <- df_[1,]
+  mat_sim <- dinamica_coalescente(U = X[,"U_med"],
+                                  S = 0,
+                                  N_simul = n_rep.SAD,
+                                  seed = as.numeric(Sys.time()),
+                                  disp_range = X[,"d"],
+                                  disp_kernel = X[,"kernel_code"],
+                                  landscape = X[,"txt.name"])
+  df_SAD.replica <- bind_rows(alply(mat_sim,1,function(Y) data.frame(N = sort(as.integer(table(Y))) ) ),
+                              .id = "replica")
+  df_SAD.replica %<>% 
+    mutate(SiteCode = X$SiteCode, MN = "EE", k = X$k)
+  path.file <- paste0("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/simulacao_codigos_e_resultados/SADs_preditas/",
+                      X[,"SiteCode"],
+                      "_k",X[,"k"],
+                      "_EE.csv")
+  write.csv(df_SAD.replica,
+            file = path.file,
+            row.names = FALSE)
+}
+registerDoMC(3)
+simulacao <- as.list(1:dim(df_simulacaoDenovo)[1])
+l_ply(simulacao,f_simulacao,.parallel = TRUE)
+```
+
+    
+  
+#### Janela de Código 11:
+SAD predita MNEI:
+    
+```{r janela de codigo 11}
+# simulação
+f_Etienne <- function(theta_,I_,J_){
+  df_ <- data.frame(N=generate.ESF(theta=theta_,I=I_,J=J_))
+}
+f_simulacaoEI <- function(i,df_=df_simulacao){
+  # i <- 1
+  # n_rep.SAD <- 100
+  df_name <- df_[i,] %>% as.data.frame
+  df_SAD.replica <- bind_rows(rerun(.n=n_rep.SAD,f_Etienne(theta_ = df_name$theta, I_ = df_name$I, J_ = df_name$Ntotal)),
+                      .id="replica")
+  df_SAD.replica %<>% 
+    mutate(SiteCode = df_name$SiteCode, MN = "EI", k = df_name$k)
+  path.file <- paste0("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/SADs_preditas/",
+                      df_name[,"SiteCode"],
+                      "_k",df_name[,"k"],
+                      "_EI.csv")
+  write.csv(df_SAD.replica,
+            file = path.file,
+            row.names = FALSE)
+  }
+registerDoMC(3)
+simulacao <- as.list(1:dim(df_simulacao)[1])
+l_ply(simulacao,f_simulacaoEI,.parallel = TRUE)
+```
+
+#### Eq 5 de Hu et al. 2007 como representante de MNEI:
+
+```{r transformar as SADs preditas em classes de abundância e contabilizar as classes,message=FALSE,warning=FALSE}
+# dados para simular:
+df_resultados <- read_csv("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/Support Information/df_dados_Hu2007.csv")
+df_resultados %<>% 
+  mutate(J_M = 1713.96 * DA * p, # 4.14x4.14km2 = 1713.96 ha
+         L = sqrt( 10000 * (Ntotal/DA) ),
+         # eq 8, Contas de Coutinho:
+         m = ((d^2)/(L^2)) *(L*sqrt(2)/d - 1/2 + (1-L * sqrt(2)/d) * exp(-L*sqrt(2)/d) - exp(-2*sqrt(2)*L/d)/2), 
+         m_ = m * p / ( 1 - (1-p)*m ),#eq 5
+         ratio_J_JM = Ntotal/J_M)
+# dados disponíveis:
+df_SAD.predita <- data.frame(path=
+                               list.files(path = "../simulacao_codigos_e_resultados/SADs_preditas/",
+                                                    pattern = "_EE.csv")) |> 
+  extract(path,c("SiteCode","k","MN"),"^([[:alnum:]]+)_k(0.[0-9]*)_([a-zA-Z]{2}).csv$",remove=FALSE)
+df_SAD.predita %<>% mutate(k=factor(k))
+df_resultados %<>% mutate(k=factor(k))
+df_SAD.predita <- left_join(x=select(df_SAD.predita,-MN),
+                            y=df_resultados,
+                            by=c("SiteCode","k"))
+#
+# X <- df_SAD.predita %>% filter(path=="BAlenc4_k0.9_EE.csv")
+f_ExpRich_EEeEI <- function(X){
+  # EE
+  df_SADrep <- read_csv(file = paste0("../simulacao_codigos_e_resultados/SADs_preditas/",X$path)) 
+  f_ <- function(Y){
+    df_ <- table(Y$N) %>% as.data.frame() %>% rename(N=Var1,EE=Freq)
+  }
+  df_SADrep %<>% mutate(replica=factor(replica)) %>%
+      ddply(.,"replica",f_) %>% mutate(N=as.numeric(N),x=N/X$Ntotal)
+  # EI
+  source("../R_funcoes/f_eq5_HUetal2007.R")
+  df_SADrep$EI <- sapply(df_SADrep$x,f_eq5_HUetal2007, 
+                         speciation = X$U_med, migration_rate = X$m_, JL = X$Ntotal, JM=X$J_M)
+  # save sd_SADrep
+  write_csv(df_SADrep,file=paste0("../simulacao_codigos_e_resultados/SADs_preditas/",gsub("EE","EEeEI",x=X$path)))
+  # summary
+  df_ <- df_SADrep %>% ddply(.,"replica",summarise,
+                      S_EE=sum(EE),S_EI=sum(EI),
+                      x_max=max(x)) %>% select(-replica) %>%
+    apply(.,2,mean) %>% t %>% as.data.frame() %>% rename()
+  cbind(X,df_)
+}
+df_SAD.predita <- adply(df_SAD.predita,1,f_ExpRich_EEeEI)
+```
+
+Houve erro:
+"Error in integrate(f1, 1/JM, 1) : a limit is NA or NaN"
+
+```{r}
+df_auditoria <- data.frame(path=
+                             list.files(path = "../simulacao_codigos_e_resultados/SADs_preditas/",
+                                                    pattern = "EEeEI.csv")) |> 
+  extract(path,c("SiteCode","k"),"^([[:alnum:]]+)_k(0.[0-9]*)_[a-zA-Z]*.csv$",remove=FALSE) %>% 
+  rename(path_feito=path)
+df_auditoria$auditoria <- "OK"
+df_auditoria <- full_join(x=mutate(df_SAD.predita,ordem=1:nrow(df_SAD.predita)),
+                          y=df_auditoria,
+                          by=c("SiteCode","k"))
+```
+
+
+#### Janela de Código 12:
+Comparação das SAD pelo teste KS bootstrap:
+
+```{r dados para janela de codigo 12,echo=FALSE,eval=FALSE}
+### dados
+## SAD obs
+df_SAD.obs <- read.csv(file="/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/abundances.csv",
+                       header = TRUE,as.is = TRUE)
+df_SAD.obs %<>% filter(SiteCode %in% unique(df_resultados$SiteCode))
+# f_write <- function(df_){
+#   df_tWrite <- df_[,c("SiteCode","species.correct","N")]
+#   path_ <- paste0("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/SAD_observada/SADobs_",
+#                   df_tWrite$SiteCode[1],".csv")
+#   write.csv(df_tWrite,path_,row.names = FALSE)
+# }
+# registerDoMC(3)
+# d_ply(df_SAD.obs,"SiteCode",f_write,.parallel = TRUE)
+df_SAD.obs %<>% group_by(SiteCode) %>% nest %>% rename(SAD_obs=data)
+## SAD replica
+df_SADreplica <- Sys.glob("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/simulacao_codigos_e_resultados/SADs_preditas/*.csv") %>% 
+  gsub("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/simulacao_codigos_e_resultados/SADs_preditas/","",.) %>% 
+  gsub(".csv","",.) %>%  #gsub("_EI.csv","",.) %>%
+  adply(.,1,function(x) unname( unlist( strsplit(x,"_k",fixed = TRUE))),.id = NULL) %>% 
+  rename(SiteCode = V1,k = V2)
+df_SADreplica$MN <- adply(df_SADreplica$k,1,function(x) unname( unlist( strsplit(x,"_",fixed = TRUE))),.id = NULL)$V2
+df_SADreplica$k <- adply(df_SADreplica$k,1,function(x) unname( unlist( strsplit(x,"_",fixed = TRUE))),.id = NULL)$V1
+df_SADreplica$file_path <- Sys.glob("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/simulacao_codigos_e_resultados/SADs_preditas/*.csv")
+df_SADreplica %<>% group_by(SiteCode) %>% nest %>% rename(SAD_MN=data)
+## merge
+df_SADs <- inner_join(y=df_SADreplica,
+                      x=df_SAD.obs,
+                      by="SiteCode")
+```
+
+
+
+```{r janela de codigo 12}
+### rotina
+df_resultados$resultados <- vector("list",length = nrow(df_resultados))
+registerDoMC(3)
+for(i in 1:nrow(df_resultados)){
+  X <- df_resultados[i,]
+  v_SADobs <- X$SAD_obs[[1]]$N
+  f_KS <- function(v_obs=v_SADobs,v_MN,boots=200){
+    testeKS <- ks_test(a=v_obs,b = v_MN, nboots = boots)
+    a <- data.frame(D_KSboot=testeKS[1],p.valor_KSboot=testeKS[2])
+    a$S_SAD.predita <- length(v_MN)
+    a$S_SAD.obs <- length(v_obs)
+    return(a)
+  }
+  df_predicao <- X$SAD_MN[[1]] %>% as.data.frame()
+  f_resultados <- function(path_df,parallel_=FALSE){
+    # path_df <- df_predicao$file_path[27]
+    df_SAD.MN <- read.csv(path_df,header = TRUE,as.is = TRUE)
+    df_return <- ddply(df_SAD.MN,"replica",function(Y) f_KS(v_MN=Y$N),.parallel = parallel_)
+    df_return %<>% mutate(SiteCode = df_SAD.MN$SiteCode[1], 
+                          MN = df_SAD.MN$MN[1], 
+                          k = df_SAD.MN$k[1])
+    return(df_return)
+  }
+  df_resultados$resultados[[i]] <- adply(df_predicao,1,
+                       function(line) f_resultados(path_df = line$file_path),.parallel = TRUE)
+}
+for(i in 1:nrow(df_resultados)){
+  df_resultados$resultados[[i]]$replica <- as.character(df_resultados$resultados[[i]]$replica)
+}
+df_replicas <- df_resultados %>% rename(Site = SiteCode) %>% 
+  select(resultados) %>% unnest(cols=c(resultados)) %>% as.data.frame() %>% 
+  select(SiteCode,MN,k,replica,D_KSboot,p.valor_KSboot,S_SAD.predita,S_SAD.obs)
+write.csv(df_replicas,
+          file="/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/resultados/df_replicas.csv",
+          row.names = FALSE)
+```
+
+
+#### Figura 4:  
+Avaliação da auto-coerência do teste KS bootstrap por replica:  
+
+    
+```{r summarise replicas teste KS figura 4,echo=FALSE,eval=TRUE,cache=TRUE}
+#
+df_replicas <- read.csv("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/resultados/df_replicas.csv",
+                        header = TRUE,as.is = TRUE)
+df_replicas %<>% mutate(diff_S = (S_SAD.predita - S_SAD.obs)/S_SAD.obs)
+#
+l_p <- list()
+l_p[[1]] <- ggplot(df_replicas,aes(x=D_KSboot,y=p.valor_KSboot)) +
+  geom_point(alpha=0.3) +
+  labs(x="statistic D",y="p-valor",title = "by replica")
+l_p[[2]] <- ggplot(df_replicas,aes(x=diff_S,y=p.valor_KSboot)) +
+  geom_point(alpha=0.3) +
+  labs(x="diffS = (S_MN - S_obs) / S_obs",y="p-valor")
+#
+alpha <- 0.05
+f_maxRank <- function(obs,predito){
+  max_rank <- max(c(obs,predito))
+  return(max_rank)
+}
+registerDoMC(3)
+df_resultados <- ddply(df_replicas,c("MN","k","SiteCode"),summarise,
+                       D_mean = mean(D_KSboot), D_var = var(D_KSboot),
+                       p.value_mean = mean(p.valor_KSboot),p.value_var = var(p.valor_KSboot),
+                       S.MN_mean = mean(S_SAD.predita), S.MN_var = var(S_SAD.predita),
+                       S.obs_mean = mean(S_SAD.obs),S.obs_var = var(S_SAD.obs),
+                       diffS_mean = mean(diff_S),diffS_var = var(diff_S),
+                       n_nRef = sum(p.valor_KSboot>=alpha), n_Ref = sum(p.valor_KSboot<alpha),
+                       max_rank = f_maxRank(obs=S_SAD.obs,predito=S_SAD.predita),
+                       .parallel = TRUE)
+#
+l_p[[3]] <- ggplot(df_resultados,aes(y=n_nRef,x=p.value_mean)) +
+  geom_point(alpha=0.3) +
+  labs(x="mean p-value",y="number of non-refuted SADs",title = "by simulation battery")
+l_p[[4]] <- ggplot(df_resultados,aes(y=n_nRef,x=diffS_mean)) +
+  geom_point(alpha=0.3) +
+  labs(x="mean diffS",y="number of non-refuted SADs")
+l_p[[5]] <- ggplot(df_resultados,aes(x=p.value_mean,y=p.value_var)) +
+  geom_point(alpha=0.3) +
+  labs(x="mean p-value",y="var p-value")
+l_p[[6]] <- ggplot(df_resultados,aes(x=diffS_mean,y=diffS_var)) +
+  geom_point(alpha=0.3) +
+  labs(x="mean diffS",y="var diffS")
+#
+grid.arrange(l_p[[1]],l_p[[2]],l_p[[3]],l_p[[4]],l_p[[5]],l_p[[6]],
+             layout_matrix=matrix(1:6,byrow=FALSE,nrow=2))
+```
+    
+```{r write df resultados final,echo=FALSE,eval=FALSE}
+#
+##
+df_SADobs <- data.frame(SiteCode = Sys.glob("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/SAD_observada/SADs_obs/*.csv") %>% 
+  gsub("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/SAD_observada/SADs_obs/","",.) %>% 
+  gsub(".csv","",.) %>% gsub("SADobs_","",.),
+                        path_SADobs = Sys.glob("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/SAD_observada/SADs_obs/*.csv"))
+df_SADobs$SiteCode <- as.character(df_SADobs$SiteCode)
+df_SADobs$path_SADobs <- as.character(df_SADobs$path_SADobs)
+##
+df_SADreplica <- Sys.glob("~/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/SADs_preditas/*.csv") %>% 
+  gsub("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/SADs_preditas/","",.) %>% 
+  gsub(".csv","",.) %>%  #gsub("_EI.csv","",.) %>%
+  adply(.,1,function(x) unname( unlist( strsplit(x,"_k",fixed = TRUE))),.id = NULL) %>% 
+  rename(SiteCode = V1,k = V2)
+df_SADreplica$MN <- adply(df_SADreplica$k,1,function(x) unname( unlist( strsplit(x,"_",fixed = TRUE))),.id = NULL)$V2
+df_SADreplica$k <- adply(df_SADreplica$k,1,function(x) unname( unlist( strsplit(x,"_",fixed = TRUE))),.id = NULL)$V1
+df_SADreplica$file_path <- Sys.glob("~/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/SADs_preditas/*.csv")
+#
+df_simulacao$SiteCode %>% class == df_resultados$SiteCode %>% class
+df_simulacao$k %>% class == df_resultados$k %>% class
+df_resultados_final <- left_join(x=df_resultados,
+                                 y=df_simulacao,
+                                 by=c("SiteCode","k"))
+df_SADreplica$k %>% class == df_resultados_final$k %>% class
+df_SADreplica$k <- as.numeric(df_SADreplica$k)
+df_SADreplica$MN %>% class == df_resultados_final$MN %>% class
+df_resultados_final <- inner_join(x=df_resultados_final,
+                                  y=df_SADreplica,
+                                  by=c("SiteCode","k","MN"))
+df_resultados_final <- left_join(x=df_resultados_final,
+                                 y=df_SADobs,
+                                 by="SiteCode")
+#
+df_resultados_final %<>% 
+  mutate(d_Lplot = d/L_plot,
+         k_1 = 1-k) %>% 
+  rename(path_SADrep = file_path) %>% 
+  select(SiteCode, MN, k, k_1, d, d_Lplot, p, 
+         n_nRef, diffS_mean, U_med, 
+         Ntotal, S_obs, DA, max_rank,
+         m, m_, I, theta, 
+         diffS_var, U_var,
+         txt.name, path_SADrep, path_SADobs)
+df_resultados_final$k <- as.character(df_resultados_final$k)
+df_resultados_final %>% str
+#
+write.csv(df_resultados_final,
+          "/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/resultados/df_resultados.csv",
+          row.names = FALSE)
+```
+
+
+
+#### Anexo 1:  
+Configuração Espacial utilizada na simulação de MNEE e para estimar a proporção de habitat na paisagem:
+
+
+
+
+#### Anexo 2:
+Distribuição de Abundância observada e predita para cada modelo neutro e proporção de propágulos até a vizinhança imediata da árvore progenitora:
+
+```{r anexo 2 - criacao figuras,echo=FALSE,eval=FALSE,cache=TRUE}
+# dados
+df_resultados <- read.csv("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/resultados/df_resultados.csv",
+                          header = TRUE,as.is = TRUE) %>% 
+  arrange(desc(k))
+df_resultados$k_f <- as.character(df_resultados$k)
+df_resultados$k_f[df_resultados$k_f=="0.0999999999999999"] <- "0.10"
+# levels(df_resultados$k)[19] <- "0.10"
+df_resultados %<>% 
+  mutate(title_quadriculo = paste0("k=",k_f," nRef=",n_nRef," diffS_mean=",round(diffS_mean,3)))
+#
+
+# versão antiga
+# for(s in 9){
+s <- 103
+f_pngSAD <- function(df_dados){
+  X <- df_dados
+  # SAD observada
+  df_SADobs <- rad(read.csv(X[1,"path_SADobs"],header = TRUE)[,"N"])
+  df_SADobs <- data.frame(rank = df_SADobs$rank, abund = df_SADobs$abund)
+  # MNEE
+  df_ <- X %>% filter(MN=="EE")
+  df_SAD_MN <- map_df(df_$path_SADrep,read_csv) %>% 
+    as.data.frame() %>% ddply(.,.(replica,SiteCode,MN,k),function(X) rad(X$N)) %>% 
+    arrange(desc(k))
+  df_SAD_MN <- left_join(x=df_SAD_MN,
+                         y=select(df_,SiteCode,MN,k,title_quadriculo),
+                         by=c("SiteCode","MN","k"))
+p_EE <- ggplot( df_SAD_MN, aes(x = rank, y = abund) ) + 
+      geom_line(alpha=0.3,aes(group=replica)) +
+      geom_line(data = df_SADobs,aes(y=abund,x=rank),color="red",size=0.7) +
+      theme_light() + 
+      labs(title = paste0(df_SAD_MN$SiteCode[1]," MN=",df_SAD_MN$MN[1])) +
+      scale_y_continuous(trans="log10") +
+      facet_wrap(~title_quadriculo,ncol=5,scales="free")
+  # MNEI
+  df_ <- X %>% filter(MN=="EI")
+  df_SAD_MN <- map_df(df_$path_SADrep,read_csv) %>% 
+    as.data.frame() %>% ddply(.,.(replica,SiteCode,MN,k),function(X) rad(X$N)) %>% 
+    arrange(desc(k))
+  df_SAD_MN <- left_join(x=df_SAD_MN,
+                         y=select(df_,SiteCode,MN,k,title_quadriculo),
+                         by=c("SiteCode","MN","k"))
+p_EI <- ggplot( df_SAD_MN, aes(x = rank, y = abund) ) + 
+      geom_line(alpha=0.3,aes(group=replica)) +
+      geom_line(data = df_SADobs,aes(y=abund,x=rank),color="red",size=0.7) +
+      theme_light() + 
+      labs(title = paste0(df_SAD_MN$SiteCode[1]," MN=",df_SAD_MN$MN[1])) +
+      scale_y_continuous(trans="log10") +
+      facet_wrap(~title_quadriculo,ncol=5,scales="free")
+p_plot <- as_ggplot(grid.arrange(p_EE,p_EI,ncol=1))
+png(paste0("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/figuras/SADs_",
+             unique(df_resultados$SiteCode)[s],".png"),
+      width = 980, height = 1200)
+p_plot
+dev.off()
+}
+  X <- df_resultados %>% filter(SiteCode == unique(df_resultados$SiteCode)[s])
+  #
+  df_SADobs <- rad(read.csv(X[1,"path_SADobs"],header = TRUE)[,"N"])
+  df_SADobs <- data.frame(rank = df_SADobs$rank, abund = df_SADobs$abund)
+  # MNEE
+  df_ <- X %>% filter(MN=="EE")
+  df_SAD_MN <- map_df(df_$path_SADrep,read_csv) %>% 
+    as.data.frame() %>% ddply(.,.(replica,SiteCode,MN,k),function(X) rad(X$N)) %>% 
+    arrange(desc(k))
+  df_SAD_MN <- left_join(x=df_SAD_MN,
+                         y=select(df_,SiteCode,MN,k,title_quadriculo),
+                         by=c("SiteCode","MN","k"))
+p_EE <- ggplot( df_SAD_MN, aes(x = rank, y = abund) ) + 
+      geom_line(alpha=0.3,aes(group=replica)) +
+      geom_line(data = df_SADobs,aes(y=abund,x=rank),color="red",size=0.7) +
+      theme_light() + 
+      labs(title = paste0(df_SAD_MN$SiteCode[1]," MN=",df_SAD_MN$MN[1])) +
+      scale_y_continuous(trans="log10") +
+      facet_wrap(~title_quadriculo,ncol=5,scales="free")
+  # MNEI
+  df_ <- X %>% filter(MN=="EI")
+  df_SAD_MN <- map_df(df_$path_SADrep,read_csv) %>% 
+    as.data.frame() %>% ddply(.,.(replica,SiteCode,MN,k),function(X) rad(X$N)) %>% 
+    arrange(desc(k))
+  df_SAD_MN <- left_join(x=df_SAD_MN,
+                         y=select(df_,SiteCode,MN,k,title_quadriculo),
+                         by=c("SiteCode","MN","k"))
+p_EI <- ggplot( df_SAD_MN, aes(x = rank, y = abund) ) + 
+      geom_line(alpha=0.3,aes(group=replica)) +
+      geom_line(data = df_SADobs,aes(y=abund,x=rank),color="red",size=0.7) +
+      theme_light() + 
+      labs(title = paste0(df_SAD_MN$SiteCode[1]," MN=",df_SAD_MN$MN[1])) +
+      scale_y_continuous(trans="log10") +
+      facet_wrap(~title_quadriculo,ncol=5,scales="free")
+p_plot <- as_ggplot(grid.arrange(p_EE,p_EI,ncol=1))
+png(paste0("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/figuras/SADs_",
+             unique(df_resultados$SiteCode)[s],".png"),
+      width = 980, height = 1200)
+p_plot
+dev.off()
+
+# do.call("grid.arrange",c(l_p,ncol=1))
+```
+
+```{r anexo 2 plot das figuras,echo=FALSE,eval=FALSE}
+#
+df_plot <- data.frame(SiteCode =Sys.glob("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/figuras/*.png") %>% 
+  gsub("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/figuras/SADs_","",.) %>% gsub(".png","",.),
+  png_path = Sys.glob("/home/danilo/Documentos/Doutorado/artigo_mestrado/1A.P_MOVER/simulacao/figuras/*.png"))
+df_plot$png_path <- as.character(df_plot$png_path)
+  
+  
+  # %>% 
+  # adply(.,1,function(x) unname( unlist( strsplit(x,"_",fixed = TRUE))),.id = NULL) %>% 
+  # rename(SiteCode = V1,MN = V2)
+#
+par(mar=c(0.2,0.2,0.2,0.2))
+for(i in 1:nrow(df_plot)){
+  png_file <- readImage(df_plot$png_path[i])
+  # dim(png_file)
+  imageShow(png_file)
+}
+```
+

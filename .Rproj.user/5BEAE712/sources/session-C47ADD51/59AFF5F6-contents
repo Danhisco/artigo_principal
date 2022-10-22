@@ -1,0 +1,65 @@
+---
+title: Determinação da extensão espacial da paisagem local
+authors:
+  - name: Danilo Pereira Mori
+    affiliation: LET - IBUSP
+bibliography: references.bib
+biblio-style: unsrt
+output: rticles::arxiv_article
+editor_options: 
+  chunk_output_type: console
+---
+
+## Introdução
+
+<p> Aqui determino a extensão espacial da paisagem local ao redor da parcela amostrada usando a análise de escala de efeito (REF). A análise de escala de efeito se baseia em determinar a extensão espacial da paisagem local que maximiza o peso de evidência da regressão entre o número de espécies na parcela e a proporção de cobertura vegetal dos 109 sítios de amostragens selecionados na base TreeCo. Primeiro calculamos a proporção de cobertura vegetal para paisagens locais quadradas em que variamos a extensão espacial da paisagem. Fizemos uma sequência de extensões espaciais somando 0.12 km no lado da paisagem. A menor paisagem apresentou 0.3km de lado,  aproximadamente o lado da maior parcela caso ela fosse quadrada (área de  10.24 ha, lado de 0.32 km). E a maior extensão espacial apresentou 11 km de lado. Ao todo foram 108 extensões espaciais. Então é calculado o peso de evidência da regressão para cada extensão espacial. Aquela extensão que atribuir maior peso de evidência será selecionada para determinar a extensão espacial da paisagem local.</p>  
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=FALSE)
+# pacotes
+library(doMC)
+library(raster)
+library(bbmle)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(plyr)
+library(dplyr)
+select <- dplyr::select
+# dados
+getwd()
+df_dados <- read_csv(file = "./dados/df_dados_disponiveis.csv") |> 
+  mutate(year_bestProxy = ifelse(is.na(year_data),year,year_data),
+         tif.path = list.files(path="./dados/paisagens_mapbiomas6_padronizadas/",pattern = ".tif",full.names=T)) |> 
+  select(SiteCode,effort_ha,year_bestProxy,Ntotal,S_obs,tif.path)
+```
+
+#### 1o Passo
+##### calcular a proporção de cobertura vegetal para cada extensão espacial
+
+```{r calcular a prop CV para cada extensão espacial}
+f_pEscalas <- function(df){
+  df_p <- data.frame(p = NA, lado_km = NA)
+  m_full <- raster(df$tif.path) |> raster::as.matrix()
+  i_centro <- m_full |> nrow()/2
+  v_last_i <- (i_centro-5+2)/2
+  for(i in 1:v_last_i){
+    v_add <- 5+2*(i-1)
+    m_i <- m_full[(i_centro+1-v_add):(i_centro+v_add),
+                  (i_centro+1-v_add):(i_centro+v_add)]
+    df_p[i,] <- c(length(m_i[m_i==1])/length(m_i),
+                     nrow(m_i) * 30/1000)
+  }
+  df_p$SiteCode <- df$SiteCode
+  return(df_p)
+}
+registerDoMC(3)
+df_pEscalas <- adply(df_dados,1,f_pEscalas,.id = "SiteCode",.parallel = TRUE)
+write_csv(x = select(df_pEscalas,Ntotal,S_obs,p:SiteCode),
+          file = "./dados/csv/df_EscalaEfeito.csv")
+```
+
