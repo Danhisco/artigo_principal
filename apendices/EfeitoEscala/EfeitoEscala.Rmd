@@ -3,16 +3,17 @@ title: Determinação da extensão espacial da paisagem local
 authors:
   - name: Danilo Pereira Mori
     affiliation: LET - IBUSP
-bibliography: references.bib
-biblio-style: unsrt
-output: rticles::arxiv_article
+# bibliography: references.bib
+# biblio-style: unsrt
+# output: rticles::arxiv_article
+output: html_document
 editor_options: 
   chunk_output_type: console
 ---
 
 ## Introdução
 
-<p> Aqui determino a extensão espacial da paisagem local ao redor da parcela amostrada usando a análise de escala de efeito (REF). A análise de escala de efeito se baseia em determinar a extensão espacial da paisagem local que maximiza o peso de evidência da regressão entre o número de espécies na parcela e a proporção de cobertura vegetal dos 109 sítios de amostragens selecionados na base TreeCo. Primeiro calculamos a proporção de cobertura vegetal para paisagens locais quadradas em que variamos a extensão espacial da paisagem. Fizemos uma sequência de extensões espaciais somando 0.12 km no lado da paisagem. A menor paisagem apresentou 0.3km de lado,  aproximadamente o lado da maior parcela caso ela fosse quadrada (área de  10.24 ha, lado de 0.32 km). E a maior extensão espacial apresentou 11 km de lado. Ao todo foram 108 extensões espaciais. Então é calculado o peso de evidência da regressão para cada extensão espacial. Aquela extensão que atribuir maior peso de evidência será selecionada para determinar a extensão espacial da paisagem local.</p>  
+<p> Aqui determino a extensão espacial da paisagem local ao redor da parcela amostrada usando a análise de escala de efeito (REF). A análise de escala de efeito se baseia em determinar a extensão espacial da paisagem local que maximiza o peso de evidência da regressão entre o número de espécies na parcela e a proporção de cobertura vegetal dos 109 sítios de amostragens selecionados na base TreeCo. Primeiro calculamos a proporção de cobertura vegetal para paisagens locais quadradas em que variamos a extensão espacial da paisagem. Fizemos uma sequência de extensões espaciais somando 0.12 km no lado da paisagem. A menor paisagem apresentou 0.3km de lado,  aproximadamente o lado da maior parcela caso ela fosse quadrada (área de  10.24 ha, lado de 0.32 km). E a maior extensão espacial apresentou 22.26 km de lado. Ao todo foram 184 extensões espaciais. Então é calculado o peso de evidência da regressão para cada extensão espacial. Aquela extensão que atribuir maior peso de evidência será selecionada para determinar a extensão espacial da paisagem local.</p>  
 
 
 ```{r setup, include=FALSE}
@@ -38,8 +39,7 @@ df_dados <- read_csv(file = "./dados/df_dados_disponiveis.csv") |>
   select(SiteCode,effort_ha,year_bestProxy,Ntotal,S_obs,tif.path)
 ```
 
-#### 1o Passo
-##### calcular a proporção de cobertura vegetal para cada extensão espacial
+### calcular a proporção de cobertura vegetal para cada extensão espacial
 
 ```{r calcular a prop CV para cada extensão espacial,eval=FALSE}
 f_pEscalas <- function(df){
@@ -63,8 +63,14 @@ write_csv(x = select(df_pEscalas,Ntotal,S_obs,p:SiteCode),
           file = "./dados/csv/df_EscalaEfeito.csv")
 ```
 
-#### 2o Passo
-##### Ajustar os modelos para um mesmo lado_km
+### Ajustar os modelos para um mesmo lado_km
+
+S_obs = riqueza observada na parcela;  
+  
+p = proporção de cobertura vegetal;  
+  
+Ntotal = número de indivíduos vivos na parcela;  
+  
 
 ```{r 2o passo}
 df_se <- read_csv("./dados/csv/df_EscalaEfeito.csv")
@@ -75,24 +81,31 @@ registerDoMC(3)
 l_md <- dlply(df_se,"lado_km",f_glm.nb,.parallel = TRUE)
 ```
 
-#### 3o Passo
-##### Calcular o peso de evidência por lado_km
+### Calcular o peso de evidência por lado da paisagem local (km)
 
 ```{r 3o passo,results='hide'}
-teste <- MuMIn::Weights(MuMIn::AICc(l_md))
-
 df_averageSE <- print(AICctab(l_md,weights=TRUE),min.weight=10^(-10)) %>% 
   as.data.frame()
 df_averageSE$lado_km <- row.names(df_averageSE) %>% as.numeric()
 df_averageSE$weight <- as.numeric(as.character(df_averageSE$weight))
 df_averageSE$dAICc <- as.numeric(as.character(df_averageSE$dAICc))
-(raio_medio <- round(weighted.mean(x = df_averageSE$lado_km,w = df_averageSE$weight),1))
-df_averageSE |> filter(weight==max(df_averageSE$weight))
+```
+  
+    
+### Selecionar o lado da paisagem local que atribuiu maior peso de evidência
+
+```{r 4o passo,echo=FALSE}
+v_lado_max_weight <- df_averageSE |> filter(weight==max(df_averageSE$weight)) |> pull(lado_km)
+df_averageSE |> 
+  ggplot(aes(x=lado_km,y=weight)) +
+  geom_line() +
+  labs(title = paste0("O maior weight foi no maior lado = ",v_lado_max_weight,"km"))
 ```
 
-### Figura p ~ lado(km)
 
-```{r}
+### Avaliação
+
+```{r figura p por lado da paisagem,echo=FALSE,fig.width=10,fig.height=6}
 # df_se |> 
 #   mutate(log_SN = log(S_obs/Ntotal)) |> 
 #   filter(lado_km == max(df_se$lado_km)) |> 
@@ -105,22 +118,26 @@ l_p[[1]] <- df_se |>
   group_by(lado_km) |> 
   summarise(var_p = var(p)) |> 
   ggplot(aes(x=lado_km,y=var_p)) +
-  geom_point()
+  geom_point() + labs(y="var(p)")
 l_p[[2]] <- df_se |> 
   ggplot(aes(x=lado_km,y=p)) + 
-  geom_point(alpha=0.4) +
-  geom_line(aes(group=SiteCode)) +
+  geom_point(alpha=0.4,size=0.4) +
+  geom_line(aes(group=SiteCode),size=0.4) +
   scale_y_continuous(breaks = seq(0,1,by=0.1))
 v_levels <- df_se |> 
   group_by(SiteCode) |> 
   summarise(p_change=max(p) - min(p)) |> 
   arrange(p_change) |> pull(SiteCode)
 l_p[[3]] <- df_se |> 
-  # arrange(factor(SiteCode,levels=v_levels)) |> 
   ggplot(aes(x=SiteCode,y=p)) +
-  geom_point(aes(color=lado_km),alpha=0.3) +
-  scale_x_discrete(limits=v_levels)
-grid.arrange(grobs=l_p[2:1],ncol=1,
-             layout_matrix=matrix(c(1,2,2,2),ncol=1)) #
+  geom_point(aes(color=lado_km),alpha=0.3,size=0.4) +
+  scale_x_discrete(limits=v_levels) + theme(axis.text.x = element_blank(),axis.ticks.x = element_blank())
+grid.arrange(grobs=l_p,ncol=1,top="%CV (p) em função da mudança do lado da paisagem",
+             layout_matrix=rbind(c(NA,NA,1,1,NA,NA),
+                                 c(2,2,2,3,3,3),
+                                 c(2,2,2,3,3,3)))
 ```
+
+__Figura 1__ Proporção de cobertura vegetal (%CV) em relação ao lado da paisagem (lado_km). SiteCode = código da paisagem. 
+
 
