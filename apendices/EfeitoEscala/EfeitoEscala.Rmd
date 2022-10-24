@@ -39,7 +39,19 @@ df_dados <- read_csv(file = "./dados/df_dados_disponiveis.csv") |>
   select(SiteCode,effort_ha,year_bestProxy,Ntotal,S_obs,tif.path)
 ```
 
-### calcular a proporção de cobertura vegetal para cada extensão espacial
+#### Análise exploratória variáveis primárias: S_obs e Ntotal
+
+```{r análise exploratória variáveis primárias Sobs e Ntotal,echo=FALSE}
+df_dados |> 
+  ggplot(aes(x=Ntotal,y=S_obs)) + 
+  # geom_smooth() +
+  geom_point(alpha=0.5) + 
+  labs(title="S_obs = Riqueza observada; Ntotal = total indivíduos")
+```
+
+__Figura 1__ Análise exploratória variáveis primárias: riqueza observada (S_obs) e número total de indivíduos (Ntotal)
+
+### 1o Passo: calcular a proporção de cobertura vegetal para cada extensão espacial
 
 ```{r calcular a prop CV para cada extensão espacial,eval=FALSE}
 f_pEscalas <- function(df){
@@ -63,7 +75,7 @@ write_csv(x = select(df_pEscalas,Ntotal,S_obs,p:SiteCode),
           file = "./dados/csv/df_EscalaEfeito.csv")
 ```
 
-### Ajustar os modelos para um mesmo lado_km
+### 2o Passo: Ajustar os modelos para um mesmo lado_km
 
 S_obs = riqueza observada na parcela;  
   
@@ -71,17 +83,27 @@ p = proporção de cobertura vegetal;
   
 Ntotal = número de indivíduos vivos na parcela;  
   
+lado_km = lado da paisagem ao redor em km;  
+  
+SiteCode = código do sítio de observação, cada sítio possui um mapa de paisagem.  
+  
+__tabela 1__ Tabela usada na análise de escala de efeito, primeiros 6 valores.  
+
+```{r df se head, echo=FALSE}
+df_se <- read_csv("./dados/csv/df_EscalaEfeito.csv")
+df_se |> arrange(lado_km) |> head()
+```
+
 
 ```{r 2o passo}
-df_se <- read_csv("./dados/csv/df_EscalaEfeito.csv")
 f_glm.nb <- function(data_){
-  md_ <- MASS::glm.nb(S_obs ~ p + I(p^2) + I(p^3) + offset(log(Ntotal)), data = data_)
+  md_ <- MASS::glm.nb(S_obs ~ poly(p, 3) + log(Ntotal), data = data_)
 }
 registerDoMC(3)
 l_md <- dlply(df_se,"lado_km",f_glm.nb,.parallel = TRUE)
 ```
 
-### Calcular o peso de evidência por lado da paisagem local (km)
+### 3o Passo: Calcular o peso de evidência por lado da paisagem local (km)
 
 ```{r 3o passo,results='hide'}
 df_averageSE <- print(AICctab(l_md,weights=TRUE),min.weight=10^(-10)) %>% 
@@ -92,7 +114,7 @@ df_averageSE$dAICc <- as.numeric(as.character(df_averageSE$dAICc))
 ```
   
     
-### Selecionar o lado da paisagem local que atribuiu maior peso de evidência
+### 4o Passo: Selecionar o lado da paisagem local que atribuiu maior peso de evidência
 
 ```{r 4o passo,echo=FALSE}
 v_lado_max_weight <- df_averageSE |> filter(weight==max(df_averageSE$weight)) |> pull(lado_km)
@@ -102,8 +124,33 @@ df_averageSE |>
   labs(title = paste0("O maior weight foi no maior lado = ",v_lado_max_weight,"km"))
 ```
 
+__Figura 2__ Peso de evidência pelo lado da paisagem local.
 
 ### Avaliação
+
+#### Gráficos Exploratórios das preditoras para o lado selecionado
+
+```{r graf exp lado selecionado,echo=FALSE}
+df_data <- df_se |> 
+  filter(lado_km == 22.26) |> 
+  mutate(log_S = log(S_obs))
+f_ggplot <- function(y){
+  ggplot(df_data,aes(x=p,y=.data[[y]])) +
+    geom_smooth(color="red") +
+    geom_point(aes(color=log(Ntotal))) + 
+    theme_minimal() +
+    theme(legend.position = "bottom")
+}
+# f_ggplot(y="log_SN")
+l_p <- alply(c("S_obs","log_S"),1,f_ggplot)
+grid.arrange(grobs=l_p,ncol=2,top="Smooth: Riqueza observada(S) e log(S) ~ p, lado paisagem = 22.26")
+```
+
+__Figura 3__ Gráficos Exploratórios das preditoras do modelo mais plausível, quando %CV(p) é calculado usando o maior lado da paisagem.
+
+
+#### Como a %CV varia com o lado da paisagem? 
+
 
 ```{r figura p por lado da paisagem,echo=FALSE,fig.width=10,fig.height=6}
 # df_se |> 
@@ -138,6 +185,35 @@ grid.arrange(grobs=l_p,ncol=1,top="%CV (p) em função da mudança do lado da pa
                                  c(2,2,2,3,3,3)))
 ```
 
-__Figura 1__ Proporção de cobertura vegetal (%CV) em relação ao lado da paisagem (lado_km). SiteCode = código da paisagem. 
+__Figura 4__ Proporção de cobertura vegetal (%CV) em relação ao lado da paisagem (lado_km). SiteCode = código da paisagem. 
+
+
+#### Como está o ajuste do modelo que atribuiu maior peso de evidência?
+
+```{r}
+md_ee <- l_md[[as.character(v_lado_max_weight)]]
+summary(md_ee)
+```
+
+
+```{r dharma residuals modelo com maior peso de evidência}
+res.Dharma <- DHARMa::simulateResiduals(md_ee,n = 250,refit = FALSE)
+plot(res.Dharma)
+```
+
+__figura 5__ Resíduos quantilícos (DHARMa) do modelo mais plausível. 
+
+
+```{r predito contra observado, echo=FALSE}
+df_plot <- df_se |> 
+  filter(lado_km == 22.26) |> 
+  mutate(log_S = log(S_obs))
+df_plot$fit <- predict(md_ee,type = "response",newdata=df_data)
+df_plot |> 
+  ggplot(aes(x=S_obs,y=fit)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  geom_abline(slope=1,intercept = 0,color="red")
+```
 
 
