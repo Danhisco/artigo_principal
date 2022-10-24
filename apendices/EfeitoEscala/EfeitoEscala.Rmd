@@ -146,7 +146,7 @@ l_p <- alply(c("S_obs","log_S"),1,f_ggplot)
 grid.arrange(grobs=l_p,ncol=2,top="Smooth: Riqueza observada(S) e log(S) ~ p, lado paisagem = 22.26")
 ```
 
-__Figura 3__ Gráficos Exploratórios das preditoras do modelo mais plausível, quando %CV(p) é calculado usando o maior lado da paisagem.
+__Figura 3__ Gráficos Exploratórios das preditoras do modelo mais plausível, quando %CV(p) é calculado usando o maior lado da paisagem. Em vermelho uma funçõa loess considerando apenas p como preditora.
 
 
 #### Como a %CV varia com o lado da paisagem? 
@@ -196,7 +196,7 @@ summary(md_ee)
 ```
 
 
-```{r dharma residuals modelo com maior peso de evidência}
+```{r dharma residuals modelo com maior peso de evidência,echo=FALSE}
 res.Dharma <- DHARMa::simulateResiduals(md_ee,n = 250,refit = FALSE)
 plot(res.Dharma)
 ```
@@ -212,8 +212,8 @@ df_plot$fit <- predict(md_ee,type = "response",newdata=df_data)
 df_plot |> 
   ggplot(aes(x=S_obs,y=fit)) +
   geom_point() +
-  geom_smooth(method = "lm") +
+  geom_smooth(method = "lm",formula="y~0+x") +
   geom_abline(slope=1,intercept = 0,color="red")
 ```
 
-
+__figura 6__ Predito pelo modelo mais plausível e observado. Em vermelho reta 1:1; em azul a regressão linear entre predito e observado. 
