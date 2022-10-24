@@ -217,3 +217,17 @@ df_plot |>
 ```
 
 __figura 6__ Predito pelo modelo mais plausível e observado. Em vermelho reta 1:1; em azul a regressão linear entre predito e observado. 
+
+```{r predito por p quando Ntotal é igual a mediana,echo=FALSE}
+df_data <- df_se |> 
+  filter(lado_km == 22.26) |> 
+  mutate(log_S = log(S_obs))
+df_plot <- data.frame(p=df_data$p, Ntotal=median(df_data$Ntotal))
+df_plot$fit <- predict(md_ee,type="response",newdata=df_plot)
+df_plot |> 
+  ggplot(aes(x=p,y=fit)) + 
+  geom_line() +
+  labs(y="Riqueza predita",title=paste0("Ntotal = median(Ntotal observado)=",median(df_data$Ntotal)))
+```
+
+__figura 7__ Riqueza predita quando Ntotal é mantido constante no valor mediano.
