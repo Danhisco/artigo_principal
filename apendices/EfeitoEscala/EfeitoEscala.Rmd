@@ -165,11 +165,11 @@ l_p[[1]] <- df_se |>
   group_by(lado_km) |> 
   summarise(var_p = var(p)) |> 
   ggplot(aes(x=lado_km,y=var_p)) +
-  geom_point() + labs(y="var(p)")
+  geom_point(size=0.4,alpha=0.4) + labs(y="var(p)")
 l_p[[2]] <- df_se |> 
   ggplot(aes(x=lado_km,y=p)) + 
-  geom_point(alpha=0.4,size=0.4) +
-  geom_line(aes(group=SiteCode),size=0.4) +
+  geom_point(alpha=0.2,size=0.2) +
+  geom_line(aes(group=SiteCode),size=0.2,alpha=0.2) +
   scale_y_continuous(breaks = seq(0,1,by=0.1))
 v_levels <- df_se |> 
   group_by(SiteCode) |> 
@@ -177,7 +177,7 @@ v_levels <- df_se |>
   arrange(p_change) |> pull(SiteCode)
 l_p[[3]] <- df_se |> 
   ggplot(aes(x=SiteCode,y=p)) +
-  geom_point(aes(color=lado_km),alpha=0.3,size=0.4) +
+  geom_point(aes(color=lado_km),alpha=0.3,size=0.2) +
   scale_x_discrete(limits=v_levels) + theme(axis.text.x = element_blank(),axis.ticks.x = element_blank())
 grid.arrange(grobs=l_p,ncol=1,top="%CV (p) em função da mudança do lado da paisagem",
              layout_matrix=rbind(c(NA,NA,1,1,NA,NA),
@@ -189,8 +189,10 @@ __Figura 4__ Proporção de cobertura vegetal (%CV) em relação ao lado da pais
 
 
 #### Como está o ajuste do modelo que atribuiu maior peso de evidência?
-
-```{r}
+  
+__tabela 1__ Sumário do modelo mais plausível, lado da paisagm = 22.26 km  
+  
+```{r sumário modelo mais plausível, echo=FALSE}
 md_ee <- l_md[[as.character(v_lado_max_weight)]]
 summary(md_ee)
 ```
