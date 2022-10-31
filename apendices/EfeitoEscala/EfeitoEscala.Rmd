@@ -75,6 +75,36 @@ write_csv(x = select(df_pEscalas,Ntotal,S_obs,p:SiteCode),
           file = "./dados/csv/df_EscalaEfeito.csv")
 ```
 
+## análise de escala de efeito
+
+Para determinar a extensão espacial da escala de paisagem 
+
+```{r preparacao raster para MNEE, echo=FALSE}
+# sítios
+df_sitios <- read_csv("./dados/csv/df_EscalaEfeito.csv") |> 
+  filter(lado_km == 16.02) |> arrange(p) |> 
+  mutate(tif.path = paste0("dados/paisagens_mapbiomas6_padronizadas//",SiteCode,".tif"))
+# sítios para escala de efeito
+df_SoE <- df_sitios |> head(n=5) |> rbind(filter(df_sitios,p == max(df_sitios$p)))
+# ajuste da resolução da imagem
+f_resolution <- function(df){
+  m_raster <- as.matrix(raster(df$tif.path))
+  i_centro <- nrow(m_raster)/2
+  i_ladoKm <- df$lado_km * 1000/60
+  m_i <- m_raster[(i_centro+1-i_ladoKm):(i_centro+i_ladoKm),
+                  (i_centro+1-i_ladoKm):(i_centro+i_ladoKm)]
+  png::writePNG()
+
+  
+}
+
+```
+
+
+# Support Information
+
+## análise de escala padrão
+
 ### 2o Passo: Ajustar os modelos para um mesmo lado_km
 
 S_obs = riqueza observada na parcela;  
@@ -87,13 +117,10 @@ lado_km = lado da paisagem ao redor em km;
   
 SiteCode = código do sítio de observação, cada sítio possui um mapa de paisagem.  
   
-__tabela 1__ Tabela usada na análise de escala de efeito, primeiros 6 valores.  
 
-```{r df se head, echo=FALSE}
-df_se <- read_csv("./dados/csv/df_EscalaEfeito.csv")
-df_se |> arrange(lado_km) |> head()
-```
+### análise de escala padrão
 
+Na análise de escala de efeito padrão, um GLM binomial negativo, descrevendo a riqueza observada em função de um polinômio da cobertura vegetal (p) e do log do número de indivíduos na amostra, é ajustado para cada lado da paisagem. Essa abordagem apresenta alguns problemas pois não ocnsidera: a colinearidade dos valores de p entre lados da paisagem e a autocorrelação espacial entre sítios próximos (REF). Contudo, essa ainda é a abordagem mais executada (REF) e foi usada aqui para comparar com a seleção da escala de efeito que fizemos via simulação de MNEE.
 
 ```{r 2o passo}
 f_glm.nb <- function(data_){
