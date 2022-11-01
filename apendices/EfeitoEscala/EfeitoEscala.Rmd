@@ -79,25 +79,102 @@ write_csv(x = select(df_pEscalas,Ntotal,S_obs,p:SiteCode),
 
 Para determinar a extensão espacial da escala de paisagem 
 
-```{r preparacao raster para MNEE, echo=FALSE}
+```{r dados para analise de escala de efeito usando MNEE,echo=FALSE}
 # sítios
+df_DA <- read_csv("dados/df_dados_disponiveis.csv") |> select(SiteCode,effort_ha)
 df_sitios <- read_csv("./dados/csv/df_EscalaEfeito.csv") |> 
   filter(lado_km == 16.02) |> arrange(p) |> 
-  mutate(tif.path = paste0("dados/paisagens_mapbiomas6_padronizadas//",SiteCode,".tif"))
+  inner_join(df_DA,by="SiteCode") |> 
+  mutate(tif.path = paste0("dados/paisagens_mapbiomas6_padronizadas//",SiteCode,".tif"),
+         DA = Ntotal/effort_ha)
 # sítios para escala de efeito
 df_SoE <- df_sitios |> head(n=5) |> rbind(filter(df_sitios,p == max(df_sitios$p)))
-# ajuste da resolução da imagem
-f_resolution <- function(df){
+```
+
+
+```{r funções para ajuste do mapa de cobertura vegetal para as simulacoes de MNEE, echo=TRUE,eval=FALSE}
+## funções
+# função para ajustar resolução de um arquivo png
+func_png.ajust <- function(file, densidade){ # atualizar para o pacote 'magick'
+  system(paste(
+    "convert ",file, " -resize ", densidade*A_landscape,"@ ", file,  
+    sep = ""
+  ))
+}
+# função para desenhar a área amostral quadrada com N indivíduos
+f_area.simulada <- function(matriz, N, index_janela=8/4){
+  # Janela de observação
+  matriz[matriz>=0.7] <- 1
+  matriz[matriz<0.7] <- 0
+  d <- ceiling(sqrt(N)*index_janela)
+  l <- ceiling(dim(matriz)[1]/2)
+  c <- ceiling(dim(matriz)[2]/2)
+  m_temp <- matriz[(l-d):(l+d),(c-d):(c+d)]
+  if(length(m_temp[m_temp==1]) < N) { 
+    stop("habitat insuficiente na janela de observação")
+  } else if (length(m_temp[m_temp==1]) == N) { 
+    stop("area amostral igual janela de observacao")
+  } else { 
+    col_cresc <- which(m_temp==m_temp, arr.ind = T)
+    col_decre <- col_cresc[dim(col_cresc)[1]:1,]
+    row_cresc <- col_cresc[order(col_cresc[,1],decreasing = FALSE),] 
+    row_decre <- row_cresc[dim(col_cresc)[1]:1,] 
+    ciclo <- (dim(m_temp)[1]-1)/2
+    l_mat_index <- list()
+    dim_temp <- dim(m_temp)[1]
+    for(i in 1:ciclo){
+      a1 <- col_cresc[col_cresc[,"col"]==i,]
+      b1 <- row_cresc[row_cresc[,"row"]==dim_temp+1-i,]
+      c1 <- col_decre[col_decre[,"col"]==dim_temp+1-i,]
+      d1 <- row_decre[row_decre[,"row"]==i,]
+      l_mat_index[[i]] <- do.call(rbind,list(a1,b1,c1,d1))
+    }
+    l_mat_index[[(dim_temp+1)/2]] <- col_cresc[col_cresc[,"col"]==(dim_temp+1)/2,]
+    mat_ref <- unique(do.call(rbind, l_mat_index))
+    length_ref <- length(m_temp[mat_ref][m_temp[mat_ref]==1])
+    m_temp[mat_ref][m_temp[mat_ref]==1][(1+length_ref-N):length_ref] <- 2
+    matriz[(l-d):(l+d),(c-d):(c+d)] <- m_temp
+    return(matriz)
+  }
+}
+# função que aplica as duas funções anteriores e salva o resultado em .txt
+f_landscape_for_MNEE <- function(df){
   m_raster <- as.matrix(raster(df$tif.path))
   i_centro <- nrow(m_raster)/2
   i_ladoKm <- df$lado_km * 1000/60
   m_i <- m_raster[(i_centro+1-i_ladoKm):(i_centro+i_ladoKm),
                   (i_centro+1-i_ladoKm):(i_centro+i_ladoKm)]
-  png::writePNG()
-
-  
+  png.path <- tempfile(fileext = ".png")
+  png::writePNG(image = m_i,target = png.path)
+  A_landscape <- (df$lado_km ^ 2) * 100
+  func_png.ajust(file=png.path,densidade = df$DA)
+  m_png <-  png::readPNG(png.path) |> as.matrix()
+  mat_tri <- try(f_area.simulada(matriz = m_png, N = df$Ntotal))
+  if(is.matrix(mat_tri)){ 
+    try(write.table(x = mat_tri, 
+                    file = paste0("dados/simulacao//",df$SiteCode,".txt"),
+                    sep = " ", row.names = FALSE, col.names = FALSE))
+  } else{print("f_area.simulada: not a matrix")}
+  unlink(png.path)
 }
+```
 
+```{r rotina para processar as paisagens e auditoria,eval=FALSE}
+a_ply(df_SoE,1,f_landscape_for_MNEE)
+```
+
+```{r}
+#####
+v_files <- list.files(path = "dados/simulacao",pattern = ".txt",full.names = T)
+f_auditoria <- function(path_name){
+  m <- read_table(file = path_name) |> as.matrix()
+  d <- ceiling(sqrt(2500)*2)
+  l <- ceiling(dim(m)[1]/2)
+  c <- ceiling(dim(m)[2]/2)
+  m_temp <- m[(l-d):(l+d),(c-d):(c+d)]
+  image(m_temp)
+}
+sapply(v_files,f_auditoria)
 ```
 
 
