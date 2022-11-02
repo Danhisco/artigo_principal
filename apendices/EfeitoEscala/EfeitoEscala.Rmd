@@ -182,7 +182,7 @@ df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",patter
   mutate(SiteCode = str_extract(txt.path,"(?<=o\\/).*?(?=.txt)")) |> 
   inner_join(select(df_SoE,-tif.path),by = "SiteCode")
 ```
-```{r auditoria das paisagens,eval=FALSE}
+```{r auditoria das paisagens,eval=FALSE,echo=FALSE}
 f_auditoria <- function(path_name){
   m <- read_table(file = path_name) |> as.matrix()
   d <- ceiling(sqrt(2500)*2)
@@ -243,8 +243,7 @@ f_nova_parcela <- function(df){
   return(paisagem)
 }
 ```
-
-```{r}
+```{r salvar paisagens com as parcelas corrigidas,echo=FALSE,eval=FALSE}
 # v_Sites__conserto <- "MGuberl7"
 df_correcao <- df_auditoria |> filter(SiteCode == "PRipir")
 m_paisagem_corrigida <- f_nova_parcela(df_correcao)
