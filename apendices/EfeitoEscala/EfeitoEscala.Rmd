@@ -34,14 +34,19 @@ df_dados <- read_csv(file = "./dados/df_dados_disponiveis.csv") |>
 df_se_completo <- read_csv("./dados/csv/df_EscalaEfeito.csv")
 df_se <- df_se_completo |> 
   filter(lado_km == 16.02) |> arrange(p) |> 
-  inner_join(df_DA,by="SiteCode") |> 
+  inner_join(select(df_dados,SiteCode,effort_ha,tif.path),by="SiteCode") |> 
   mutate(tif.path = paste0("dados/paisagens_mapbiomas6_padronizadas//",SiteCode,".tif"),
-         DA = Ntotal/effort_ha) |> 
-  head(n=5) |> rbind(filter(df_sitios,p == max(df_sitios$p)))
+         DA = Ntotal/effort_ha) |>
+  filter(p > 0.99 | p < 0.073) |> head()
 # df_auditoria dos recortes de paisagens padronizados para MNEE na
 df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",pattern = ".txt",full.names = T)) |> 
   mutate(SiteCode = str_extract(txt.path,"(?<=o\\/).*?(?=.txt)")) |> 
   inner_join(select(df_se,-tif.path),by = "SiteCode")
+# df dados para simulação
+# df_sim <- read_csv("dados/df_simulacao.csv") |> 
+#   left_join(x=df_se,y=.,by=SiteCode)
+# função que encapsula o programa coalescente em C++
+source(file = "source/dinamica_coalescente.R")
 ```
  
 ## Introdução
@@ -242,6 +247,10 @@ write.table(x = m_paisagem_corrigida,
 ```
 
 ## Códigos para estimar U nas diferentes extensões espaciais
+
+```{r eval=FALSE}
+
+```
 
 
 
