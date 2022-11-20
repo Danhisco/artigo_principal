@@ -26,16 +26,72 @@ library(readr)
 library(stringr)
 library(plyr)
 library(dplyr)
-# df_se_completo
-df_se_completo <- read_csv("./dados/csv/df_EscalaEfeito.csv")
-# df_auditoria dos recortes de paisagens padronizados para MNEE
-df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",pattern = ".txt",full.names = T)) |> 
-  mutate(SiteCode = str_extract(txt.path,"(?<=o\\/).*?(?=.txt)")) |> 
+# df_dados
+df_dados <- read_csv("dados/df_dados_disponiveis.csv") |> 
+  select(SiteCode, effort_ha, Ntotal, S_obs) |> 
   inner_join(data.frame(tif.path = list.files(path="dados/paisagens_mapbiomas6_padronizadas",pattern=".tif",full.names=T),
-                        SiteCode = str_extract(list.files(path="dados/paisagens_mapbiomas6_padronizadas",pattern=".tif",full.names=T),
-                                               "(?<=as\\/).*?(?=.tif)")),
+                        SiteCode = str_extract(list.files(path="dados/paisagens_mapbiomas6_padronizadas",
+                                                          pattern=".tif",full.names=T),"(?<=as\\/).*?(?=.tif)")),
              by = "SiteCode")
+# df_se_completo
+df_se_completo <- read_csv("dados/csv/df_EscalaEfeito.csv")
+# df_selecao_sitios
+df_selecaoSitios <- df_pEscalas |> 
+  filter(lado_km>=15.99 & lado_km<=16.02) |>  # como alguns raster tem 743 linhas e outros 744
+  arrange(p) |> head(n=5)
+# df_auditoria dos recortes de paisagens padronizados para MNEE
+# df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",pattern = ".txt",full.names = T)) |> 
+#   mutate(SiteCode = str_extract(txt.path,"(?<=o\\/).*?(?=.txt)")) |> 
+#   inner_join(data.frame(tif.path = list.files(path="dados/paisagens_mapbiomas6_padronizadas",pattern=".tif",full.names=T),
+#                         SiteCode = str_extract(list.files(path="dados/paisagens_mapbiomas6_padronizadas",pattern=".tif",full.names=T),
+#                                                "(?<=as\\/).*?(?=.tif)")),
+             # by = "SiteCode")
 ```
+
+## Como a proporção de cobertura vegetal varia com a extensão espacial da paisagem?
+
+```{r calcular a prop CV para cada extensão espacial,eval=FALSE}
+f_pEscalas <- function(df){
+  df_p <- data.frame(p = NA, lado_km = NA)
+  m_full <- raster(df$tif.path) |> raster::as.matrix()
+  v_last_i <- (nrow(m_full) - 11)/2
+  for(i in 1:v_last_i){
+    m_i <- m_full[i:(nrow(m_full)-i),
+                  i:(nrow(m_full)-i)]
+    df_p[i,] <- c(length(m_i[m_i!=0])/length(m_i),
+                  nrow(m_i) * 30/1000)
+  }
+  df_p <- na.omit(df_p)
+  df_p$SiteCode <- df$SiteCode
+  return(df_p)
+}
+registerDoMC(3)
+df_pEscalas <- adply(df_dados,1,f_pEscalas,.id = "SiteCode",.parallel = TRUE)
+write_csv(x = select(df_pEscalas,Ntotal,S_obs,p:SiteCode),
+          file = "./dados/csv/df_EscalaEfeito.csv")
+```
+
+
+```{r}
+df_se_completo |> 
+  ggplot(aes(x=lado_km,y=p)) + 
+  geom_point(alpha=0.2,size=0.2) +
+  geom_line(aes(group=SiteCode),size=0.2,alpha=0.2) +
+  scale_y_continuous(breaks = seq(0,1,by=0.1))
+```
+
+```{r}
+df_selecaoSitios <- df_pEscalas |> filter(lado_km>=15.99 & lado_km<=16.02) |> arrange(p)
+df <- df_selecaoSitios |> head(n=5)
+for(i in 1:nrow(df)){
+  m <- raster(df$tif.path[i]) |> raster::as.matrix()
+  image(m,main=df$SiteCode[i])
+  abline(h=0.5)
+  abline(v=0.5)
+}  
+```
+
+
 
 ## Códigos para mapas de cobertura vegetal para a simulação coalescente de MNEE.
 
