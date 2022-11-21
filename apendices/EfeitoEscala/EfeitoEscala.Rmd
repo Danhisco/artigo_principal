@@ -24,27 +24,14 @@ library(stringr)
 library(tidyr)
 library(plyr)
 library(dplyr)
-select <- dplyr::select
-# df_dados disponiveis
-df_dados <- read_csv(file = "./dados/df_dados_disponiveis.csv") |> 
-  mutate(year_bestProxy = ifelse(is.na(year_data),year,year_data),
-         tif.path = list.files(path="./dados/paisagens_mapbiomas6_padronizadas/",pattern = ".tif",full.names=T)) |> 
-  select(SiteCode,effort_ha,year_bestProxy,Ntotal,S_obs,tif.path)
-# df_se_completa e df_se
-df_se_completo <- read_csv("./dados/csv/df_EscalaEfeito.csv")
-df_se <- df_se_completo |> 
-  filter(lado_km == 16.02) |> arrange(p) |> 
-  inner_join(select(df_dados,SiteCode,effort_ha,tif.path),by="SiteCode") |> 
-  mutate(tif.path = paste0("dados/paisagens_mapbiomas6_padronizadas//",SiteCode,".tif"),
-         DA = Ntotal/effort_ha) |>
-  filter(p > 0.99 | p < 0.073) |> head()
-# df_auditoria dos recortes de paisagens padronizados para MNEE na
-df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",pattern = ".txt",full.names = T)) |> 
-  mutate(SiteCode = str_extract(txt.path,"(?<=o\\/).*?(?=.txt)")) |> 
-  inner_join(select(df_se,-tif.path),by = "SiteCode")
 # df dados para simulação
-# df_sim <- read_csv("dados/df_simulacao.csv") |> 
-#   left_join(x=df_se,y=.,by=SiteCode)
+df_sim <- read_csv("dados/df_simulacao.csv")
+# df_se_completa e df_se
+df_se_completo <- read_csv("./dados/csv/df_p_extensoes.csv")
+df_se <- data.frame(txt.file = list.files(path = "dados/simulacao",pattern = ".txt"),
+                    SiteCode = str_extract(list.files(path = "dados/simulacao",pattern = ".txt"),".*?(?=.txt)")) |> 
+  inner_join(select(filter(df_sim,k==0.05),SiteCode,d,S_obs),by="SiteCode")
+  # |> select(SiteCode, lado_km, p, Ntotal, S_obs,d,txt.file)
 # função que encapsula o programa coalescente em C++
 source(file = "source/dinamica_coalescente.R")
 ```
@@ -90,166 +77,14 @@ Primeiro calculamos a proporção de cobertura vegetal para paisagens locais qua
 
 # Support Information
 
-## Códigos para mapas de cobertura vegetal para a simulação coalescente de MNEE.
-
-```{r funções para ajuste do mapa de cobertura vegetal para as simulacoes de MNEE, echo=TRUE,eval=FALSE}
-## funções
-# função para ajustar resolução de um arquivo png
-func_png.ajust <- function(file, densidade){ # atualizar para o pacote 'magick'
-  system(paste(
-    "convert ",file, " -resize ", densidade*A_landscape,"@ ", file,  
-    sep = ""
-  ))
-}
-# função para desenhar a área amostral quadrada com N indivíduos
-f_area.simulada <- function(matriz, N, coordenada_central=TRUE,index_janela=8/4){
-  # determinação da matriz para aplicçaão da rotina: usar a coordenada central do tif ou uma janela com nova coordenada central?
-  if(coordenada_central){
-    l <- ceiling(dim(matriz)[1]/2)
-    c <- ceiling(dim(matriz)[2]/2)
-    d <- ceiling(sqrt(N)*index_janela)
-    m_temp <- matriz[(l-d):(l+d),(c-d):(c+d)]
-  } else{
-      m_temp <- matriz
-    }
-  # Janela de preparo é suficiente para criar a área da parcela?
-  if(length(m_temp[m_temp==1]) < N) { 
-    stop("habitat insuficiente na janela de observação")
-  } else if (length(m_temp[m_temp==1]) == N) { 
-    stop("area amostral igual janela de observacao")
-  } else { # caso seja adequado, use esse código antigo e misterioso:
-    col_cresc <- which(m_temp==m_temp, arr.ind = T)
-    col_decre <- col_cresc[dim(col_cresc)[1]:1,]
-    row_cresc <- col_cresc[order(col_cresc[,1],decreasing = FALSE),] 
-    row_decre <- row_cresc[dim(col_cresc)[1]:1,] 
-    ciclo <- (dim(m_temp)[1]-1)/2
-    l_mat_index <- list()
-    dim_temp <- dim(m_temp)[1]
-    for(i in 1:ciclo){
-      a1 <- col_cresc[col_cresc[,"col"]==i,]
-      b1 <- row_cresc[row_cresc[,"row"]==dim_temp+1-i,]
-      c1 <- col_decre[col_decre[,"col"]==dim_temp+1-i,]
-      d1 <- row_decre[row_decre[,"row"]==i,]
-      l_mat_index[[i]] <- do.call(rbind,list(a1,b1,c1,d1))
-    }
-    l_mat_index[[(dim_temp+1)/2]] <- col_cresc[col_cresc[,"col"]==(dim_temp+1)/2,]
-    mat_ref <- unique(do.call(rbind, l_mat_index))
-    length_ref <- length(m_temp[mat_ref][m_temp[mat_ref]==1])
-    m_temp[mat_ref][m_temp[mat_ref]==1][(1+length_ref-N):length_ref] <- 2
-  }
-  # se tiver usado a coordenada central então retorne a paisagem completa
-  if(coordenada_central){
-   matriz[(l-d):(l+d),(c-d):(c+d)] <- m_temp
-   return(matriz)
-  } else{ # se tiver usado a janela centrada em outra coordenada, apenas a matrix de trabalho
-     return(m_temp)
-   }
-}
-# função que aplica as duas funções anteriores e salva o resultado em .txt
-f_landscape_for_MNEE <- function(df){
-  # leitura e preparo da paisagem .tif
-  m_raster <- as.matrix(raster(df$tif.path))
-  i_centro <- nrow(m_raster)/2
-  i_ladoKm <- df$lado_km * 1000/60
-  m_i <- m_raster[(i_centro+1-i_ladoKm):(i_centro+i_ladoKm),
-                  (i_centro+1-i_ladoKm):(i_centro+i_ladoKm)]
-  # escrita da paisagem no temporario .png
-  png.path <- tempfile(fileext = ".png")
-  png::writePNG(image = m_i,target = png.path)
-  # processamento para MNEE
-  A_landscape <- (df$lado_km ^ 2) * 100
-  func_png.ajust(file=png.path,densidade = df$DA)
-  m_png <-  png::readPNG(png.path) |> as.matrix()
-  m_png[m_png>=0.7] <- 1
-  m_png[m_png<0.7] <- 0
-  mat_tri <- try(f_area.simulada(matriz = m_png, N = df$Ntotal))
-  # salvamento no formato .txt
-  if(is.matrix(mat_tri)){ 
-    try(write.table(x = mat_tri, 
-                    file = paste0("dados/simulacao//",df$SiteCode,".txt"),
-                    sep = " ", row.names = FALSE, col.names = FALSE))
-  } else{print("f_area.simulada: not a matrix")}
-  unlink(png.path)
-}
-```
-
-```{r rotina para processar as paisagens,eval=FALSE}
-a_ply(df_SoE,1,f_landscape_for_MNEE)
-```
-
-```{r auditoria das paisagens,eval=FALSE,echo=FALSE}
-f_auditoria <- function(path_name){
-  m <- read_table(file = path_name) |> as.matrix()
-  d <- ceiling(sqrt(2500)*2)
-  l <- ceiling(dim(m)[1]/2)
-  c <- ceiling(dim(m)[2]/2)
-  m_temp <- m[(l-d):(l+d),(c-d):(c+d)]
-  image(m_temp,main=str_extract(path_name,"(?<=cao\\/).*?(?=\\.txt)"))
-}
-sapply(df_auditoria$txt.path,f_auditoria)
-```
-
-```{r aglomeração do habitat na parcela local,echo=TRUE,eval=FALSE}
-# funções
-f_nova_parcela <- function(df){
-  par(mar=c(0.2,0.2,1.2,0.2),
-      mfrow=c(1,1))
-  N <- df$Ntotal
-  paisagem <- read_table(file = df$txt.path) |> as.matrix()
-  # janela de observação
-  d <- ceiling(sqrt(N)*(8/4))  # metade do lado do janela de observação
-  l <- ceiling(dim(paisagem)[1]/2) # linha central da paisagem
-  c <- ceiling(dim(paisagem)[2]/2) # coluna central da paisagem
-  m_janela_original <- paisagem[(l-d):(l+d),(c-d):(c+d)]
-  m_janela_original[round(nrow(m_janela_original)/2,0),round(ncol(m_janela_original)/2,0)] <- 1.5
-  # visualização
-  image(m_janela_original,col=terrain.colors(12,rev = TRUE))
-  abline(h=0.5)
-  abline(v=0.5)
-  # remoção da parcela original
-  m_janela_nova <- m_janela_original
-  m_janela_nova[m_janela_nova>1] <- 1
-  paisagem[(l-d):(l+d),(c-d):(c+d)] <- m_janela_nova
-  # locator
-  coordenada_ <- locator(1) |> unlist()
-  l2 <- round(coordenada_[1]*nrow(m_janela_nova)) #linha
-  c2 <- round(coordenada_[2]*ncol(m_janela_nova)) #coluna
-  #
-  m_janela_nova[round(nrow(m_janela_nova)/2,0),round(ncol(m_janela_nova)/2,0)] <- 1.5
-  m_janela_nova[l2,c2] <- 1.5
-  image(m_janela_nova)
-  l1 <- round(nrow(m_janela_nova)/2,0)
-  c1 <- round(ncol(m_janela_nova)/2,0)
-  add_l = l2-l1
-  add_c = c2-c1
-  # nova parcela
-  m_nova_parcela <- paisagem[(l+add_l-d):(l+add_l+d),(c+add_c-d):(c+add_c+d)]
-  # função para desenhar nova parcela
-  m_nova_parcela <- f_area.simulada(matriz = m_nova_parcela,
-                                    N = df$Ntotal,
-                                    coordenada_central = FALSE)
-  paisagem[(l+add_l-d):(l+add_l+d),(c+add_c-d):(c+add_c+d)] <- m_nova_parcela
-  # print da mudança
-  par(mfrow=c(1,2))
-  image(m_janela_original,main=df$SiteCode)
-  m_nova_parcela <- paisagem[(l-d):(l+d),(c-d):(c+d)]
-  image(m_nova_parcela,main="deslocada do centro")
-  #
-  return(paisagem)
-}
-```
-```{r salvar paisagens com as parcelas corrigidas,echo=FALSE,eval=FALSE}
-df_correcao <- df_auditoria |> filter(SiteCode == "PRipir")
-m_paisagem_corrigida <- f_nova_parcela(df_correcao)
-write.table(x = m_paisagem_corrigida,
-            file = df_correcao$txt.path,
-            sep = " ", row.names = FALSE, col.names = FALSE)
-```
 
 ## Códigos para estimar U nas diferentes extensões espaciais
 
-```{r eval=FALSE}
-
+```{r codigos para estimar U, eval=FALSE}
+setwd("dados/simulacao")
+registerDoMC(3)
+df_U <- adply(df_se,1,f_SoE_MNEE,.id = "SiteCode",.parallel = TRUE)
+write_csv(df_U,file="../csv/df_Urep.csv")
 ```
 
 
@@ -276,27 +111,6 @@ __Figura 1__ Análise exploratória variáveis primárias: riqueza observada (S_
 
 ### 1o Passo: calcular a proporção de cobertura vegetal para cada extensão espacial
 
-```{r calcular a prop CV para cada extensão espacial,eval=FALSE}
-f_pEscalas <- function(df){
-  df_p <- data.frame(p = NA, lado_km = NA)
-  m_full <- raster(df$tif.path) |> raster::as.matrix()
-  i_centro <- nrow(m_full)/2
-  v_last_i <- (i_centro-5+2)/2
-  for(i in 1:v_last_i){
-    v_add <- 5+2*(i-1)
-    m_i <- m_full[(i_centro+1-v_add):(i_centro+v_add),
-                  (i_centro+1-v_add):(i_centro+v_add)]
-    df_p[i,] <- c(length(m_i[m_i==1])/length(m_i),
-                  nrow(m_i) * 30/1000)
-  }
-  df_p$SiteCode <- df$SiteCode
-  return(df_p)
-}
-registerDoMC(3)
-df_pEscalas <- adply(df_dados,1,f_pEscalas,.id = "SiteCode",.parallel = TRUE)
-write_csv(x = select(df_pEscalas,Ntotal,S_obs,p:SiteCode),
-          file = "./dados/csv/df_EscalaEfeito.csv")
-```
 
 
 Para determinar a extensão espacial da escala de paisagem 
