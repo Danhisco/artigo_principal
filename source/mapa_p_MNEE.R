@@ -1,7 +1,7 @@
 library(raster)
 library(png)
 # função para ajustar resolução de um arquivo png
-func_png.ajust <- function(file, densidade){ # atualizar para o pacote 'magick'
+func_png.ajust <- function(file, densidade, A_landscape){ # atualizar para o pacote 'magick'
   system(paste(
     "convert ",file, " -resize ", densidade*A_landscape,"@ ", file,  
     sep = ""
@@ -53,7 +53,7 @@ f_area.simulada <- function(matriz, N, coordenada_central=TRUE,index_janela=8/4)
 }
 # função que aplica as duas funções anteriores e salva o resultado em .txt
 f_landscape_for_MNEE <- function(df,txt_repo = "dados/simulacao//"){
-  # df precisa de:
+  # colunas de df:
   # @ tif.path: caminho para o arquivo .tif com o mapa completo da paisagem ao redor
   # @ lado_km: númerico que indica a dimensão da extensão esspacial, por exemplo, 16.02 (km) 
   # @ DA: densidade óbservada na parcela 
@@ -69,16 +69,17 @@ f_landscape_for_MNEE <- function(df,txt_repo = "dados/simulacao//"){
   #
   # leitura e preparo da paisagem .tif
   m_raster <- as.matrix(raster(df$tif.path))
-  i_centro <- nrow(m_raster)/2
-  i_ladoKm <- df$lado_km * 1000/60
-  m_i <- m_raster[(i_centro+1-i_ladoKm):(i_centro+i_ladoKm),
-                  (i_centro+1-i_ladoKm):(i_centro+i_ladoKm)]
+  v_landExt <- df$lado_km * 1000/30
+  i_row <- (nrow(m_full)-v_landExt)/2
+  i_col <- (ncol(m_full)-v_landExt)/2
+  m_i <- m_raster[(floor(i_row)+1):(nrow(m_full) - ceiling(i_row)),
+                  (floor(i_col)+1):(ncol(m_full) - ceiling(i_col))]
   # escrita da paisagem no temporario .png
   png.path <- tempfile(fileext = ".png")
   writePNG(image = m_i,target = png.path)
   # processamento para MNEE
-  A_landscape <- (df$lado_km ^ 2) * 100
-  func_png.ajust(file=png.path,densidade = df$DA) # função que ajusta a resolução
+  A_land <- (df$lado_km ^ 2) * 100
+  func_png.ajust(file=png.path, densidade = df$DA, A_landscape = A_land) # função que ajusta a resolução
   m_png <-  png::readPNG(png.path) |> as.matrix()
   m_png[m_png>=0.7] <- 1 # o ajuste da resolução cria, 
   m_png[m_png<0.7] <- 0  # valores entre 0 e 1
@@ -90,4 +91,52 @@ f_landscape_for_MNEE <- function(df,txt_repo = "dados/simulacao//"){
                     sep = " ", row.names = FALSE, col.names = FALSE))
   } else{print("f_area.simulada: not a matrix")}
   unlink(png.path)
+}
+# função que aglomera a parcela em um novo local
+f_nova_parcela <- function(df){
+  N <- df$Ntotal
+  paisagem1 <- read_table(file = df$txt.path) |> as.matrix()
+  v <- FALSE
+  while(!v){
+    paisagem <- paisagem1
+    par(mar=c(0.2,0.2,1.2,0.2),mfrow=c(1,1))
+    # janela de observação
+    d <- ceiling(sqrt(N)*(8/4))  # metade do lado do janela de observação
+    l <- ceiling(dim(paisagem)[1]/2) # linha central da paisagem
+    c <- ceiling(dim(paisagem)[2]/2) # coluna central da paisagem
+    m_janela_original <- paisagem[(l-d):(l+d),(c-d):(c+d)]
+    m_janela_original[round(nrow(m_janela_original)/2,0),round(ncol(m_janela_original)/2,0)] <- 1.5
+    # visualização
+    image(m_janela_original,col=terrain.colors(12,rev = TRUE))
+    abline(h=0.5)
+    abline(v=0.5)
+    # remoção da parcela original
+    m_janela_nova <- m_janela_original
+    m_janela_nova[m_janela_nova>1] <- 1
+    paisagem[(l-d):(l+d),(c-d):(c+d)] <- m_janela_nova
+    # locator
+    coordenada_ <- locator(1) |> unlist()
+    l2 <- round(coordenada_[1]*nrow(m_janela_nova)) #linha
+    c2 <- round(coordenada_[2]*ncol(m_janela_nova)) #coluna
+    l1 <- round(nrow(m_janela_nova)/2,0)
+    c1 <- round(ncol(m_janela_nova)/2,0)
+    add_l = l2-l1
+    add_c = c2-c1
+    # nova parcela
+    m_nova_parcela <- paisagem[(l+add_l-d):(l+add_l+d),(c+add_c-d):(c+add_c+d)]
+    # função para desenhar nova parcela
+    m_nova_parcela <- f_area.simulada(matriz = m_nova_parcela,
+                                      N = df$Ntotal,
+                                      coordenada_central = FALSE)
+    paisagem[(l+add_l-d):(l+add_l+d),(c+add_c-d):(c+add_c+d)] <- m_nova_parcela
+    # print da mudança
+    par(mfrow=c(1,2))
+    image(m_janela_original,main=df$SiteCode)
+    m_nova_parcela <- paisagem[(l-d):(l+d),(c-d):(c+d)]
+    image(m_nova_parcela,main="deslocada do centro")
+    v <- askYesNo("Salva? Se não, tentarei novamente; ou cancele")
+    if(is.na(v)) stop("parcela atual mantida")
+    }
+  #
+  return(paisagem)
 }
