@@ -1,5 +1,5 @@
 ---
-title: Determinação da extensão espacial da paisagem local
+title: Análise de escala de efeito usando MNEE
 authors:
   - name: Danilo Pereira Mori
     affiliation: LET - IBUSP
@@ -11,7 +11,7 @@ editor_options:
   chunk_output_type: console
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE)
+knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE)
 # pacotes
 library(doMC)
 library(raster)
@@ -26,24 +26,30 @@ library(plyr)
 library(dplyr)
 # df dados para simulação
 df_sim <- read_csv("dados/df_simulacao.csv")
-# df_se_completa e df_se
+# df_se_completa: p (%CV) para diferentes extensões espaciais (máximo lado = 22.26 km, min = 0.36 km)
 df_se_completo <- read_csv("./dados/csv/df_p_extensoes.csv")
-df_se <- data.frame(txt.file = list.files(path = "dados/simulacao",pattern = ".txt"),
-                    SiteCode = str_extract(list.files(path = "dados/simulacao",pattern = ".txt"),".*?(?=.txt)")) |> 
-  inner_join(select(filter(df_sim,k==0.05),SiteCode,d,S_obs),by="SiteCode")
-  # |> select(SiteCode, lado_km, p, Ntotal, S_obs,d,txt.file)
+# df_se: 5 sítios com a menor extensão espacial da
+df_se <- data.frame(txt.file = list.files(path = "dados/simulacao",pattern = ".txt",full.names = T),
+                    SiteCode = str_extract(list.files(path = "dados/simulacao",pattern = ".txt",full.names = T),
+                                           "(?<=ao\\/).*?(?=.txt)")) |> 
+  inner_join(select(filter(df_sim,k==0.05),SiteCode,d,S_obs,tif.path),by="SiteCode")
+# df_Urep 
+df_Urep <- read_csv("dados/csv/df_Urep.csv")
 # função que encapsula o programa coalescente em C++
 source(file = "source/dinamica_coalescente.R")
+source(file = "source/SoE_MNEE.R")
 ```
  
 ## Introdução
 
-<p> Busco Determinar a extensão espacial da paisagem local ao redor da parcela amostrada. Comparo duas abordagens. Primeiro, estimarei a taxa U no cenário de limitação à dispersão __per capita__ mais brando em 6 paisagens (a com menor perda de habitat e as 5 com maior perda). Esse método será usado para determinar aquela extensão espacial em que o valor de U para de reduriz. A extensão espacial que estabilizar a estimativa de U indica que a maior porção de contribuição dos indivíduos da paisagem ao redor à chuva de propágulos que pode repor a diversidade local foi atingida. Por conta do pressuposto de soma zero de MNEE, ou seja, toda morte é reposta por um nascimento, dessa forma a probabilidade das unidades de matriz serem sorteadas como parentais é redistribuída para as unidades de habitat remanescente. Então esparamos que a extensão espacial da paisagem ao redor que irá estabilizar a estimativa de U no cenário de limitação à dispersão mais brando deve ser maior quanto menor a proporção de cobertura vegetal. Assim, as paisagens de menor proporção de cobertura vegetal devem indicar extensão espacial suficiente em valores superiores à da paisagem com maior proporção de cobertura vegetal. Segundo, faço a análise de escala de efeito como proposto por Jackson & Fahrig (2015), utilizarei a abordagem mais comum - apesar das limitações (REF), em que se estima aquela extensão espacial que maximiza o peso de evidência da regressão binomial negativa da riqueza local pelo polinômio de terceiro grau da cobertura vegetal e do log do número de indivíduos. PUtkker et al (2020) em análise similar para a Floresta Atlântica encontrou a extensão espacial de cerca de 4x4km. As duas abordagens pressupõe que a paisagem ao redor é a área que pode fornecer propágulos para a paisagem ao redor com maior frequência (REF ECO LET), porém a primeira abordagem pressupõe explicitamente a dinâmica ecológica idealizada usada para comparar as hipóteses investigadas, enquanto a segunda utiliza outro arcabouço teórico. Assim, Optei por não usar a análise de escala de efeito para determinar a escala espacial da paisagem ao redor para comparar as hipóteses investigadas.</p>
+<p> Busco Determinar a extensão espacial da paisagem local ao redor da parcela amostrada. Comparo duas abordagens. Primeiro, estimarei a taxa U no cenário de limitação à dispersão __per capita__ mais brando em 5 paisagens (com maior perda). Esse método será usado para determinar aquela extensão espacial em que o valor de U para de reduriz. A extensão espacial que estabilizar a estimativa de U indica que a maior porção de contribuição dos indivíduos da paisagem ao redor à chuva de propágulos que pode repor a diversidade local foi atingida. Por conta do pressuposto de soma zero de MNEE, ou seja, toda morte é reposta por um nascimento, dessa forma a probabilidade das unidades de matriz serem sorteadas como parentais é redistribuída para as unidades de habitat remanescente. Então esparamos que a extensão espacial da paisagem ao redor que irá estabilizar a estimativa de U no cenário de limitação à dispersão mais brando deve ser maior quanto menor a proporção de cobertura vegetal. Assim, as paisagens de menor proporção de cobertura vegetal devem indicar extensão espacial suficiente em valores superiores à da paisagem com maior proporção de cobertura vegetal. Segundo, faço a análise de escala de efeito como proposto por Jackson & Fahrig (2015), utilizarei a abordagem mais comum - apesar das limitações (REF), em que se estima aquela extensão espacial que maximiza o peso de evidência da regressão binomial negativa da riqueza local pelo polinômio de terceiro grau da cobertura vegetal e do log do número de indivíduos. PUtkker et al (2020) em análise similar para a Floresta Atlântica encontrou a extensão espacial de cerca de 4x4km. As duas abordagens pressupõe que a paisagem ao redor é a área que pode fornecer propágulos para a paisagem ao redor com maior frequência (REF ECO LET), porém a primeira abordagem pressupõe explicitamente a dinâmica ecológica idealizada usada para comparar as hipóteses investigadas, enquanto a segunda utiliza outro arcabouço teórico. Assim, Optei por não usar a análise de escala de efeito para determinar a escala espacial da paisagem ao redor para comparar as hipóteses investigadas.</p>
 
-### Como a proporção de cobertura vegetal varia com a extensão espacial da paisagem?
+### Métodos
+
+<p>Primeiro calculamos a proporção de cobertura vegetal para paisagens locais quadradas em que variamos a extensão espacial da paisagem (Figura 1). Fizemos uma sequência de extensões espaciais somando 0.06 km no lado da paisagem inicial. A menor paisagem apresentou 0.36km de lado,  aproximadamente o lado da maior parcela caso ela fosse quadrada (área de  10.24 ha, lado de 0.32 km). E a maior extensão espacial apresentou 22.26 km de lado. Esse conjunto de dados foi usado na análise de escala de efeito. Para A determinação da extensão espacial com MNEE utilizamos 6 extensões espaciais (lado da paisagem em km: `r round(16.02/(2^(0:5)),2)`) e as 5 paisagens com menor cobertura vegetal quando a paisagem apresenta lado de 16.02km (Figura 2).</p> 
 
 
-```{r figura p por lado da paisagem,echo=FALSE,fig.width=10,fig.height=6}
+```{r figura 1 p por lado da paisagem,fig.width=8,fig.height=4}
 l_p <- list()
 l_p[[1]] <- df_se_completo |>
   group_by(lado_km) |> 
@@ -63,155 +69,228 @@ l_p[[3]] <- df_se_completo |>
   ggplot(aes(x=SiteCode,y=p)) +
   geom_point(aes(color=lado_km),alpha=0.3,size=0.2) +
   scale_x_discrete(limits=v_levels) + theme(axis.text.x = element_blank(),axis.ticks.x = element_blank())
-grid.arrange(grobs=l_p,ncol=1,top="%CV (p) em função da mudança do lado da paisagem",
-             layout_matrix=rbind(c(NA,NA,1,1,NA,NA),
-                                 c(2,2,2,3,3,3),
-                                 c(2,2,2,3,3,3)))
+grid.arrange(grobs=l_p[-1],ncol=2,top="%CV (p) em função da mudança do lado da paisagem")
+# layout_matrix=rbind(c(NA,NA,1,1,NA,NA),
+#                                  c(2,2,2,3,3,3),
+#                                  c(2,2,2,3,3,3))
 ```
 
 __Figura 1__ Como a proporção de cobertura vegetal varia com a extensão espacial da paisagem ao redor?
 
-
-Primeiro calculamos a proporção de cobertura vegetal para paisagens locais quadradas em que variamos a extensão espacial da paisagem. Fizemos uma sequência de extensões espaciais somando 0.12 km no lado da paisagem inicial. A menor paisagem apresentou 0.3km de lado,  aproximadamente o lado da maior parcela caso ela fosse quadrada (área de  10.24 ha, lado de 0.32 km). E a maior extensão espacial apresentou 22.26 km de lado. Ao todo foram 184 extensões espaciais. Esse conjunto de dados foi usado na análise de escala de efeito. Para A determinação da extensão espacial com MNEE utilizamos 6 extensões espaciais (lado da paisagem em km: `r round(16.02/(2^0:5,2)`).</p>  
-
-
-# Support Information
-
-
-## Códigos para estimar U nas diferentes extensões espaciais
-
-```{r codigos para estimar U, eval=FALSE}
-setwd("dados/simulacao")
-registerDoMC(3)
-df_U <- adply(df_se,1,f_SoE_MNEE,.id = "SiteCode",.parallel = TRUE)
-write_csv(df_U,file="../csv/df_Urep.csv")
-```
-
-
-
-
-
-## Códigos para análise de escala de efeito
-
-Essa abordagem apresenta alguns problemas pois não ocnsidera: a colinearidade dos valores de p entre lados da paisagem e a autocorrelação espacial entre sítios próximos (REF). Contudo, essa ainda é a abordagem mais executada (REF) e foi usada aqui para comparar com a seleção da escala de efeito que fizemos via simulação de MNEE.
-
-
-
-#### Análise exploratória variáveis primárias: S_obs e Ntotal
-
-```{r análise exploratória variáveis primárias Sobs e Ntotal,echo=FALSE}
-df_dados |> 
-  ggplot(aes(x=Ntotal,y=S_obs)) + 
-  # geom_smooth() +
-  geom_point(alpha=0.5) + 
-  labs(title="S_obs = Riqueza observada; Ntotal = total indivíduos")
-```
-
-__Figura 1__ Análise exploratória variáveis primárias: riqueza observada (S_obs) e número total de indivíduos (Ntotal)
-
-### 1o Passo: calcular a proporção de cobertura vegetal para cada extensão espacial
-
-
-
-Para determinar a extensão espacial da escala de paisagem 
-
-```{r 2o passo}
-f_glm.nb <- function(data_){
-  md_ <- MASS::glm.nb(S_obs ~ poly(p, 3) + log(Ntotal), data = data_)
+ 
+```{r figura 2 mapa das paisagens que foram usadas na estimativa de SoE por MNEE,fig.width=8,fig.height=6}
+df <- df_se
+v_landExt <- 16.02 * 1000/30 # the maximum landscape extension simulated, pixel = 30x30m2
+par(mfrow=c(2,3))
+for(i in 1:nrow(df)){
+  m_full <- raster(df$tif.path[i]) |> raster::as.matrix()
+  index <- (nrow(m_full)-v_landExt)/2
+  m <- m_full[(index+1):(nrow(m_full) - index),
+              (index+1):(nrow(m_full) - index)]
+  image(m,main=df$SiteCode[i])
+  abline(h=0.5)
+  abline(v=0.5)
+  # print(dim(m))
 }
-registerDoMC(3)
-l_md <- dlply(df_se,"lado_km",f_glm.nb,.parallel = TRUE)
 ```
 
-### 3o Passo: Calcular o peso de evidência por lado da paisagem local (km)
+<p> __Figura 2__ Mapa das paisagens usadas para estimar o efeito da escala por MNEE quando a paisagem possui lado 16.02km: essas são as 5 com menor cobertura vegetal.</p>
 
-```{r 3o passo,results='hide'}
-df_averageSE <- print(AICctab(l_md,weights=TRUE),min.weight=10^(-10)) %>% 
-  as.data.frame()
-df_averageSE$lado_km <- row.names(df_averageSE) %>% as.numeric()
-df_averageSE$weight <- as.numeric(as.character(df_averageSE$weight))
-df_averageSE$dAICc <- as.numeric(as.character(df_averageSE$dAICc))
-```
+#### Processamento dos rasters do mapbiomas6  
+
+<p>Para simular MNEE é necessário: 
   
-    
-### 4o Passo: Selecionar o lado da paisagem local que atribuiu maior peso de evidência
+i) ajustar a resolução (mapa original 30x30m) tal que a densidade de pixels é igual a densidade de indivíduos na parcela; 
+  
+ii) considerar unidades de habitat os pixels com valores maiores do 0.7, no mapa original há apenas 0s e 1s, mas após o aumento da resolução há a inclusão de valores intermediários; 
+  
+iii) desenhar a parcela no centro do mapa, trocando N (número total de indivíduos na parcela) valores 1s por 2s (posições iniciais das linhagens monitoradas na simulação coalescente); 
 
-```{r 4o passo,echo=FALSE}
-v_lado_max_weight <- df_averageSE |> filter(weight==max(df_averageSE$weight)) |> pull(lado_km)
-df_averageSE |> 
-  ggplot(aes(x=lado_km,y=weight)) +
-  geom_line() +
-  labs(title = paste0("O maior weight foi no maior lado = ",v_lado_max_weight,"km"))
-```
+iv) caso não seja possível desenhar uma parcela quadrada centrada na coordenda central, desloquei a parcela para algum local próximo dentro do fragmento amostrado.</p>
 
-__Figura 2__ Peso de evidência pelo lado da paisagem local.
 
-### Avaliação
-
-#### Gráficos Exploratórios das preditoras para o lado selecionado
-
-```{r graf exp lado selecionado,echo=FALSE}
-df_data <- df_se |> 
-  filter(lado_km == 22.26) |> 
-  mutate(log_S = log(S_obs))
-f_ggplot <- function(y){
-  ggplot(df_data,aes(x=p,y=.data[[y]])) +
-    geom_smooth(color="red") +
-    geom_point(aes(color=log(Ntotal))) + 
-    theme_minimal() +
-    theme(legend.position = "bottom")
+```{r figura 3 detalhe da vizinhança da parcela,message=FALSE,warning=FALSE,fig.width=8,fig.height=6}
+f_auditoria <- function(path_name){
+  m <- read_table(file = path_name) |> as.matrix()
+  d <- ceiling(sqrt(2500)*2)
+  l <- ceiling(dim(m)[1]/2)
+  c <- ceiling(dim(m)[2]/2)
+  m_temp <- m[(l-d):(l+d),(c-d):(c+d)]
+  image(m_temp,main=str_extract(path_name,"(?<=cao\\/).*?(?=\\.txt)"))
 }
-# f_ggplot(y="log_SN")
-l_p <- alply(c("S_obs","log_S"),1,f_ggplot)
-grid.arrange(grobs=l_p,ncol=2,top="Smooth: Riqueza observada(S) e log(S) ~ p, lado paisagem = 22.26")
+par(mfrow=c(2,3))
+a_ply(df_se$txt.file,1,f_auditoria)
+# sapply(df_se$txt.file,f_auditoria)
 ```
 
-__Figura 3__ Gráficos Exploratórios das preditoras do modelo mais plausível, quando %CV(p) é calculado usando o maior lado da paisagem. Em vermelho uma funçõa loess considerando apenas p como preditora.
+<p>__Figura 3__ Vizinhança imediata das parcelas simuladas. Em vermelho as unidades de habitat da parcela, em amarelo as unidades de habitat e em branco a matriz.</p>
 
-#### Como está o ajuste do modelo que atribuiu maior peso de evidência?
-  
-__tabela 1__ Sumário do modelo mais plausível, lado da paisagm = 22.26 km  
-  
-```{r sumário modelo mais plausível, echo=FALSE}
-md_ee <- l_md[[as.character(v_lado_max_weight)]]
-summary(md_ee)
+## Estimativa de U para diferentes extensões espaciais
+
+
+```{r figura 4 Umed por lado da paisagem,fig.width=8,fig.height=6}
+# df_U <- cbind(df_Urep[,1:6],
+#               Umed = apply(df_Urep[,7:11], 1, mean),
+#               Ucv = apply(df_Urep[,7:11], 1, sd))
+df_Urep |> 
+  pivot_longer(cols=7:11,names_to = "n", values_to = "U") |> 
+  inner_join(select(filter(df_sim,k==0.05),SiteCode, Ntotal, effort_ha),by="SiteCode") |> 
+  mutate(DA = Ntotal/effort_ha,
+         label = paste(SiteCode,S_obs,Ntotal,DA,sep = ", ")) |> 
+  ggplot(aes(x=lado_km,y=U,color=p)) +
+  # geom_boxplot(aes(group=lado_km)) +
+  # geom_jitter(aes(group=lado_km)) +
+  geom_smooth(method="loess",formula = "y ~ x",se=F,alpha=0.1,color="red",size=0.8) +
+  geom_point(alpha=0.4,size=1.5) +
+  scale_x_continuous(trans='log2',breaks = round(16.02/2^(5:0),0)) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(title="SiteCode, riqueza, número de indivíduos, densidade",
+       x = "lado da paisagem (km)",
+       y = "taxa U estimada") +
+  facet_wrap(~label,ncol = 3)
 ```
 
+<p> __Figura 4__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x). Pontos representam 5 réplicas por bateria de simulação. A simulação coalescente foi feita pressupondo que apenas 5% dos propágulos permanecem até a vizihança imediata do progenitor (100/sqrt(densidade indivíduos)).</p>
 
-```{r dharma residuals modelo com maior peso de evidência,echo=FALSE}
-res.Dharma <- DHARMa::simulateResiduals(md_ee,n = 250,refit = FALSE)
-plot(res.Dharma)
-```
+<!-- # Support Information -->
 
-__figura 5__ Resíduos quantilícos (DHARMa) do modelo mais plausível. 
+<!-- ## Códigos para estimar U nas diferentes extensões espaciais -->
+
+<!-- <p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p> -->
+
+<!-- ```{r codigos para estimar U, eval=FALSE} -->
+<!-- setwd("dados/simulacao") -->
+<!-- registerDoMC(3) -->
+<!-- df_U <- adply(df_se,1,f_SoE_MNEE,.id = "SiteCode",.parallel = TRUE) -->
+<!-- write_csv(df_U,file="../csv/df_Urep.csv") -->
+<!-- ``` -->
 
 
-```{r predito contra observado, echo=FALSE}
-df_plot <- df_se |> 
-  filter(lado_km == 22.26) |> 
-  mutate(log_S = log(S_obs))
-df_plot$fit <- predict(md_ee,type = "response",newdata=df_data)
-df_plot |> 
-  ggplot(aes(x=S_obs,y=fit)) +
-  geom_point() +
-  geom_smooth(method = "lm",formula="y~0+x") +
-  geom_abline(slope=1,intercept = 0,color="red")
-```
 
-__figura 6__ Predito pelo modelo mais plausível e observado. Em vermelho reta 1:1; em azul a regressão linear entre predito e observado. 
 
-```{r predito por p quando Ntotal é igual a mediana,echo=FALSE}
-df_data <- df_se |> 
-  filter(lado_km == 22.26) |> 
-  mutate(log_S = log(S_obs))
-df_plot <- data.frame(p=df_data$p, Ntotal=median(df_data$Ntotal))
-df_plot$fit <- predict(md_ee,type="response",newdata=df_plot)
-df_plot |> 
-  ggplot(aes(x=p,y=fit)) + 
-  geom_line() +
-  labs(y="Riqueza predita",title=paste0("Ntotal = median(Ntotal observado)=",median(df_data$Ntotal)))
-```
 
-__figura 7__ Riqueza predita quando Ntotal é mantido constante no valor mediano.
+<!-- ## Códigos para análise de escala de efeito -->
+
+<!-- Essa abordagem apresenta alguns problemas pois não ocnsidera: a colinearidade dos valores de p entre lados da paisagem e a autocorrelação espacial entre sítios próximos (REF). Contudo, essa ainda é a abordagem mais executada (REF) e foi usada aqui para comparar com a seleção da escala de efeito que fizemos via simulação de MNEE. -->
+
+
+
+<!-- #### Análise exploratória variáveis primárias: S_obs e Ntotal -->
+
+<!-- ```{r análise exploratória variáveis primárias Sobs e Ntotal,echo=FALSE} -->
+<!-- df_dados |>  -->
+<!--   ggplot(aes(x=Ntotal,y=S_obs)) +  -->
+<!--   # geom_smooth() + -->
+<!--   geom_point(alpha=0.5) +  -->
+<!--   labs(title="S_obs = Riqueza observada; Ntotal = total indivíduos") -->
+<!-- ``` -->
+
+<!-- __Figura 1__ Análise exploratória variáveis primárias: riqueza observada (S_obs) e número total de indivíduos (Ntotal) -->
+
+<!-- ### 1o Passo: calcular a proporção de cobertura vegetal para cada extensão espacial -->
+
+
+
+<!-- Para determinar a extensão espacial da escala de paisagem  -->
+
+<!-- ```{r 2o passo} -->
+<!-- f_glm.nb <- function(data_){ -->
+<!--   md_ <- MASS::glm.nb(S_obs ~ poly(p, 3) + log(Ntotal), data = data_) -->
+<!-- } -->
+<!-- registerDoMC(3) -->
+<!-- l_md <- dlply(df_se,"lado_km",f_glm.nb,.parallel = TRUE) -->
+<!-- ``` -->
+
+<!-- ### 3o Passo: Calcular o peso de evidência por lado da paisagem local (km) -->
+
+<!-- ```{r 3o passo,results='hide'} -->
+<!-- df_averageSE <- print(AICctab(l_md,weights=TRUE),min.weight=10^(-10)) %>%  -->
+<!--   as.data.frame() -->
+<!-- df_averageSE$lado_km <- row.names(df_averageSE) %>% as.numeric() -->
+<!-- df_averageSE$weight <- as.numeric(as.character(df_averageSE$weight)) -->
+<!-- df_averageSE$dAICc <- as.numeric(as.character(df_averageSE$dAICc)) -->
+<!-- ``` -->
+
+
+<!-- ### 4o Passo: Selecionar o lado da paisagem local que atribuiu maior peso de evidência -->
+
+<!-- ```{r 4o passo,echo=FALSE} -->
+<!-- v_lado_max_weight <- df_averageSE |> filter(weight==max(df_averageSE$weight)) |> pull(lado_km) -->
+<!-- df_averageSE |>  -->
+<!--   ggplot(aes(x=lado_km,y=weight)) + -->
+<!--   geom_line() + -->
+<!--   labs(title = paste0("O maior weight foi no maior lado = ",v_lado_max_weight,"km")) -->
+<!-- ``` -->
+
+<!-- __Figura 2__ Peso de evidência pelo lado da paisagem local. -->
+
+<!-- ### Avaliação -->
+
+<!-- #### Gráficos Exploratórios das preditoras para o lado selecionado -->
+
+<!-- ```{r graf exp lado selecionado,echo=FALSE} -->
+<!-- df_data <- df_se |>  -->
+<!--   filter(lado_km == 22.26) |>  -->
+<!--   mutate(log_S = log(S_obs)) -->
+<!-- f_ggplot <- function(y){ -->
+<!--   ggplot(df_data,aes(x=p,y=.data[[y]])) + -->
+<!--     geom_smooth(color="red") + -->
+<!--     geom_point(aes(color=log(Ntotal))) +  -->
+<!--     theme_minimal() + -->
+<!--     theme(legend.position = "bottom") -->
+<!-- } -->
+<!-- # f_ggplot(y="log_SN") -->
+<!-- l_p <- alply(c("S_obs","log_S"),1,f_ggplot) -->
+<!-- grid.arrange(grobs=l_p,ncol=2,top="Smooth: Riqueza observada(S) e log(S) ~ p, lado paisagem = 22.26") -->
+<!-- ``` -->
+
+<!-- __Figura 3__ Gráficos Exploratórios das preditoras do modelo mais plausível, quando %CV(p) é calculado usando o maior lado da paisagem. Em vermelho uma funçõa loess considerando apenas p como preditora. -->
+
+<!-- #### Como está o ajuste do modelo que atribuiu maior peso de evidência? -->
+
+<!-- __tabela 1__ Sumário do modelo mais plausível, lado da paisagm = 22.26 km   -->
+
+<!-- ```{r sumário modelo mais plausível, echo=FALSE} -->
+<!-- md_ee <- l_md[[as.character(v_lado_max_weight)]] -->
+<!-- summary(md_ee) -->
+<!-- ``` -->
+
+
+<!-- ```{r dharma residuals modelo com maior peso de evidência,echo=FALSE} -->
+<!-- res.Dharma <- DHARMa::simulateResiduals(md_ee,n = 250,refit = FALSE) -->
+<!-- plot(res.Dharma) -->
+<!-- ``` -->
+
+<!-- __figura 5__ Resíduos quantilícos (DHARMa) do modelo mais plausível.  -->
+
+
+<!-- ```{r predito contra observado, echo=FALSE} -->
+<!-- df_plot <- df_se |>  -->
+<!--   filter(lado_km == 22.26) |>  -->
+<!--   mutate(log_S = log(S_obs)) -->
+<!-- df_plot$fit <- predict(md_ee,type = "response",newdata=df_data) -->
+<!-- df_plot |>  -->
+<!--   ggplot(aes(x=S_obs,y=fit)) + -->
+<!--   geom_point() + -->
+<!--   geom_smooth(method = "lm",formula="y~0+x") + -->
+<!--   geom_abline(slope=1,intercept = 0,color="red") -->
+<!-- ``` -->
+
+<!-- __figura 6__ Predito pelo modelo mais plausível e observado. Em vermelho reta 1:1; em azul a regressão linear entre predito e observado.  -->
+
+<!-- ```{r predito por p quando Ntotal é igual a mediana} -->
+<!-- df_data <- df_se |>  -->
+<!--   filter(lado_km == 22.26) |>  -->
+<!--   mutate(log_S = log(S_obs)) -->
+<!-- df_plot <- data.frame(p=df_data$p, Ntotal=median(df_data$Ntotal)) -->
+<!-- df_plot$fit <- predict(md_ee,type="response",newdata=df_plot) -->
+<!-- df_plot |>  -->
+<!--   ggplot(aes(x=p,y=fit)) +  -->
+<!--   geom_line() + -->
+<!--   labs(y="Riqueza predita",title=paste0("Ntotal = median(Ntotal observado)=",median(df_data$Ntotal))) -->
+<!-- ``` -->
+
+<!-- __figura 7__ Riqueza predita quando Ntotal é mantido constante no valor mediano. -->
 
 
