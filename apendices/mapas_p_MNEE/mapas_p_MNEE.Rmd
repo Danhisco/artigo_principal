@@ -139,24 +139,17 @@ f_correcao(df_correcao)
 f_p_txt_tif <- function(df){
   m_txt <- read.table(df$txt.path) |> as.matrix()
   m_tif <- raster(df$tif.path) |> as.matrix()
-  i_centro <- nrow(m_tif)/2
-  i_ladoKm <- 16.02 * 1000/60
-  m_i <- m_tif[(i_centro+1-i_ladoKm):(i_centro+i_ladoKm),
-               (i_centro+1-i_ladoKm):(i_centro+i_ladoKm)]
+  v_landExt <- df$lado_km[1] * 1000/30
+  index <- (nrow(m_tif)-v_landExt)/2
+  m <- m_tif[(floor(index)+1):(nrow(m_tif) - ceiling(index)),
+             (floor(index)+1):(nrow(m_tif) - ceiling(index))]
   p_txt <- 100*length(m_txt[m_txt!=0])/length(m_txt)
-  p_tif <- 100*length(m_i[m_i!=0])/length(m_i)
+  p_tif <- 100*length(m[m!=0])/length(m)
   data.frame(df$SiteCode,p_txt,p_tif)
 }
 registerDoMC(3)
 df_auditoria <- adply(df_auditoria,1,f_p_txt_tif,.parallel = T)
-df_auditoria |> mutate(diff_p = p_txt - p_tif > 2.5)
-f_image_raster <- function(df){
-  m_raster <- raster(df$tif.path) |> as.matrix()
-  i_centro <- nrow(m_tif)/2
-  i_ladoKm <- 16.02 * 1000/60
-  m_i <- m_tif[(i_centro+1-i_ladoKm):(i_centro+i_ladoKm),
-               (i_centro+1-i_ladoKm):(i_centro+i_ladoKm)]
-  image(m_i)
-}
+df_auditoria |> mutate(diff_p = p_txt - p_tif > 1) |> select(SiteCode,p_txt:diff_p)
 ```
+
 
