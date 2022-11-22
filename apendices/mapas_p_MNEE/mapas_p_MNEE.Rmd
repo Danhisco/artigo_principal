@@ -38,13 +38,15 @@ df_se_completo <- read_csv("dados/csv/df_p_extensoes.csv")
 # df_selecao_sitios
 df_sitios_se <- df_se_completo |> 
   filter(lado_km>=15.99 & lado_km<=16.02) |>  # como alguns raster tem 743 linhas e outros 744
-  arrange(p) |> head(n=5) |> 
+  arrange(p) |> head(n=25) |> 
   inner_join(select(df_dados,-Ntotal,-S_obs),by="SiteCode") |> 
   mutate(DA = Ntotal/effort_ha)
 # df_auditoria dos recortes de paisagens padronizados para MNEE
 df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",pattern = ".txt",full.names = T)) |>
   mutate(SiteCode = str_extract(txt.path,"(?<=o\\/).*?(?=.txt)")) |>
   inner_join(df_sitios_se,by="SiteCode")
+# funções necessárias:
+source("source/mapa_p_MNEE.R")
 ```
 
 ## Como a proporção de cobertura vegetal varia com a extensão espacial da paisagem?
@@ -64,7 +66,7 @@ f_pEscalas <- function(df){
   return(df_p)
 }
 registerDoMC(3)
-df_pEscalas <- adply(df_dados,1,f_pEscalas,.id = "SiteCode",.parallel = TRUE)
+df_se_completo <- adply(df_dados,1,f_pEscalas,.id = "SiteCode",.parallel = TRUE)
 write_csv(x = select(df_pEscalas,Ntotal,S_obs,p:SiteCode),
           file = "./dados/csv/df_p_extensoes.csv")
 ```
@@ -78,21 +80,21 @@ df_se_completo |>
 
 <p> __Figura 1__ Proporção de cobertura vegetal em função da extensão espacial da paisagem ao redor.</p>
 
-#### Os 5 sítios com menor proporção de cobertura vegetal quando o lado da paisagem possui 16.02 km
+#### Os 25 sítios com menor proporção de cobertura vegetal quando o lado da paisagem possui 16.02 km
 
 ```{r auditoria dos sitios selecionados para o estudo do efeito de escala - tif, echo=FALSE,eval=TRUE}
 df <- df_sitios_se
 v_landExt <- df$lado_km[1] * 1000/30 # the maximum landscape extension simulated, pixel = 30x30m2
-par(mfrow=c(2,3))
+# par(mfrow=c(5,5))
 for(i in 1:nrow(df)){
   m_full <- raster(df$tif.path[i]) |> raster::as.matrix()
   index <- (nrow(m_full)-v_landExt)/2
   m <- m_full[(index+1):(nrow(m_full) - index),
               (index+1):(nrow(m_full) - index)]
-  image(m,main=df$SiteCode[i])
+  image(m,main=paste(df$SiteCode[i],", p =",round(df$p[i],3)))
   abline(h=0.5)
   abline(v=0.5)
-  print(dim(m))
+  # print(dim(m))
 }  
 ```
 
@@ -102,7 +104,7 @@ for(i in 1:nrow(df)){
 ```{r rotina para processar as paisagens,eval=FALSE}
 source("source/mapa_p_MNEE.R")
 registerDoMC(2)
-a_ply(df_sitios_se,1,f_landscape_for_MNEE,) # lado_km = 16.02
+a_ply(df_sitios_se[-(1:5),],1,f_landscape_for_MNEE,) # lado_km = 16.02
 ```
 
 ```{r auditoria das paisagens,eval=FALSE,echo=FAlSE,eval=TRUE}
@@ -114,28 +116,39 @@ f_auditoria <- function(path_name){
   m_temp <- m[(l-d):(l+d),(c-d):(c+d)]
   image(m_temp,main=str_extract(path_name,"(?<=cao\\/).*?(?=\\.txt)"))
 }
-par(mfrow=c(2,3))
-sapply(df_auditoria$txt.path,f_auditoria)
+# par(mfrow=c(2,3))
+df <- df_auditoria |> filter(SiteCode %in% df_sitios_se$SiteCode[-(1:5)])
+a_ply(df$txt.path,1,f_auditoria)
 ```
   
     
 __Figura 2__ Vizinhança imediata da parcela dos 5 sítios com menor cobertura vegetal
-  
+
+### Em algum sítio não é possível desenhar uma parcela quadrada?
+
+Sim o sítio de MGlavr4 não é possível desenhar uma parcela quadrada:
+
+![MGlavr4](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/apendices/mapas_p_MNEE/sitio_removido.png)
+
+
 ### Precisa corrigir alguma parcela central?
+
+"RScach4", "RScach2", "PRipir", "MGmadre4", "MGlavr6", "MGlavr3"
   
 ```{r salvar paisagens com as parcelas corrigidas,echo=FALSE,eval=FALSE}
-df_correcao <-  df_auditoria |> filter(SiteCode == "PRrico3")
+df_correcao <-  df_auditoria |> filter(SiteCode %in% c("RScach4", "RScach2", "PRipir", "MGmadre4", "MGlavr6"))
 f_correcao <- function(df){
   m_paisagem_corrigida <- f_nova_parcela(df)
   write.table(x = m_paisagem_corrigida,
                 file = df$txt.path,
                 sep = " ", row.names = FALSE, col.names = FALSE)
+  par(mfrow=c(1,1))
 }
-# a_ply(df_correcao,1,f_correcao)
-f_correcao(df_correcao)
+a_ply(df_correcao,1,f_correcao)
+# f_correcao(df_correcao)
 ```
 
-```{r comparação das paisagens no txt e no tif}
+```{r comparação das paisagens no txt e no tif,eval=FALSE,echo=FALSE}
 f_p_txt_tif <- function(df){
   m_txt <- read.table(df$txt.path) |> as.matrix()
   m_tif <- raster(df$tif.path) |> as.matrix()
@@ -152,4 +165,5 @@ df_auditoria <- adply(df_auditoria,1,f_p_txt_tif,.parallel = T)
 df_auditoria |> mutate(diff_p = p_txt - p_tif > 1) |> select(SiteCode,p_txt:diff_p)
 ```
 
-
+![exemplo de parcela corrigida](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/apendices/mapas_p_MNEE/exemplo_redesenho_parcela.png)
+__Figura __ Exemplo de parcela redesenhada
