@@ -26,15 +26,15 @@ library(plyr)
 library(dplyr)
 # df dados para simulação
 df_sim <- read_csv("dados/df_simulacao.csv")
+# df_Urep 
+df_Urep <- read_csv("dados/csv/df_Urep.csv")
 # df_se_completa: p (%CV) para diferentes extensões espaciais (máximo lado = 22.26 km, min = 0.36 km)
 df_se_completo <- read_csv("./dados/csv/df_p_extensoes.csv")
 # df_se: 5 sítios com a menor extensão espacial da
-df_se <- data.frame(txt.file = list.files(path = "dados/simulacao",pattern = ".txt",full.names = T),
-                    SiteCode = str_extract(list.files(path = "dados/simulacao",pattern = ".txt",full.names = T),
-                                           "(?<=ao\\/).*?(?=.txt)")) |> 
+df_se <- data.frame(txt.file = list.files(path = "dados/simulacao",pattern = ".txt"), #,full.names = T
+                    SiteCode = str_extract(list.files(path = "dados/simulacao",pattern = ".txt"), #,full.names = T
+                                           ".*?(?=.txt)")) |> #(?<=ao\\/)
   inner_join(select(filter(df_sim,k==0.05),SiteCode,d,S_obs,tif.path),by="SiteCode")
-# df_Urep 
-df_Urep <- read_csv("dados/csv/df_Urep.csv")
 # função que encapsula o programa coalescente em C++
 source(file = "source/dinamica_coalescente.R")
 source(file = "source/SoE_MNEE.R")
@@ -81,7 +81,7 @@ __Figura 1__ Como a proporção de cobertura vegetal varia com a extensão espac
 ```{r figura 2 mapa das paisagens que foram usadas na estimativa de SoE por MNEE,fig.width=8,fig.height=6}
 df <- df_se
 v_landExt <- 16.02 * 1000/30 # the maximum landscape extension simulated, pixel = 30x30m2
-par(mfrow=c(2,3))
+par(mfrow=c(5,5))
 for(i in 1:nrow(df)){
   m_full <- raster(df$tif.path[i]) |> raster::as.matrix()
   index <- (nrow(m_full)-v_landExt)/2
@@ -153,18 +153,21 @@ df_Urep |>
 
 <p> __Figura 4__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x). Pontos representam 5 réplicas por bateria de simulação. A simulação coalescente foi feita pressupondo que apenas 5% dos propágulos permanecem até a vizihança imediata do progenitor (100/sqrt(densidade indivíduos)).</p>
 
-<!-- # Support Information -->
+# Support Information
 
-<!-- ## Códigos para estimar U nas diferentes extensões espaciais -->
+## Códigos para estimar U nas diferentes extensões espaciais
 
-<!-- <p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p> -->
+<p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p>
 
-<!-- ```{r codigos para estimar U, eval=FALSE} -->
-<!-- setwd("dados/simulacao") -->
-<!-- registerDoMC(3) -->
-<!-- df_U <- adply(df_se,1,f_SoE_MNEE,.id = "SiteCode",.parallel = TRUE) -->
-<!-- write_csv(df_U,file="../csv/df_Urep.csv") -->
-<!-- ``` -->
+```{r codigos para estimar U, eval=FALSE}
+setwd("dados/simulacao")
+df_se1 <- df_se |> filter(!(SiteCode %in% unique(df_Urep$SiteCode)))
+registerDoMC(3)
+df_U <- adply(df_se1,1,f_SoE_MNEE,.id = "SiteCode",.parallel = TRUE)
+df_Urep <- rbind(select(df_U,-tif.path),df_Urep)
+registerDoMC(3)
+write_csv(df_Urep,file="../csv/df_Urep.csv")
+```
 
 
 
