@@ -133,7 +133,7 @@ a_ply(df_se$txt.file,1,f_auditoria)
 
 ```{r figura 4 Umed por lado da paisagem,fig.width=10,fig.height=8}
 df_Urep |> 
-  pivot_longer(cols=7:11,names_to = "n", values_to = "U") |> 
+  pivot_longer(cols=8:12,names_to = "n", values_to = "U") |> 
   inner_join(select(filter(df_sim,k==0.05),SiteCode, Ntotal, effort_ha),by="SiteCode") |> 
   mutate(DA = Ntotal/effort_ha,
          label = paste(SiteCode,S_obs,Ntotal,round(DA,1),sep = ", ")) |> 
@@ -154,23 +154,8 @@ df_Urep |>
 <p> __Figura 4__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x). Pontos representam 5 réplicas por bateria de simulação. A simulação coalescente foi feita pressupondo que apenas 5% dos propágulos permanecem até a vizihança imediata do progenitor (100/sqrt(densidade indivíduos)).</p>
 
 
-<!-- # Support Information -->
-
-## Códigos para estimar U nas diferentes extensões espaciais
-
-<p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p>
-
-```{r codigos para estimar U, eval=FALSE}
-setwd("dados/simulacao")
-registerDoMC(2)
-df_U <- adply(df_se[1:24,],1,f_SoE_MNEE,.id = "SiteCode",.parallel = TRUE)
-# df_Urep <- rbind(select(df_U,-tif.path),df_Urep)
-write_csv(df_U,file="../csv/df_Urep.csv")
-```
-
-
-```{r processameto de df_Urep,eval=FALSE}
-df_Urep <- read_csv("../csv/df_Urep.csv")
+```{r figura 5 Udiff}
+# df_Urep <- read_csv("../csv/df_Urep.csv")
 df_U <- cbind(df_Urep[,1:7],
               Umed = apply(df_Urep[,8:12], 1, mean),
               Usd = apply(df_Urep[,8:12], 1, sd)) |> 
@@ -179,12 +164,28 @@ df_U <- cbind(df_Urep[,1:7],
   mutate(Udiff = Umed - first(Umed))
 df_U |> 
   ggplot(aes(x=lado_km,y=Udiff,color=p,group=SiteCode)) +
-  geom_point(alpha=0.4) +
-  geom_line(alpha=0.4) +
+  geom_point() +
+  geom_line() +
+  labs(title="Udiff = U - U_16x16km2") +
   scale_x_continuous(trans='log2',breaks = round(16.02/2^(5:0),0)) +
   theme_minimal()
-  
 ```
+
+<p> __Figura 4__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x). Pontos representam 5 réplicas por bateria de simulação. A simulação coalescente foi feita pressupondo que apenas 5% dos propágulos permanecem até a vizihança imediata do progenitor (100/sqrt(densidade indivíduos)).</p>
+
+<!-- # Support Information -->
+
+<!-- ## Códigos para estimar U nas diferentes extensões espaciais -->
+
+<!-- <p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p> -->
+
+<!-- ```{r codigos para estimar U, eval=FALSE} -->
+<!-- setwd("dados/simulacao") -->
+<!-- registerDoMC(2) -->
+<!-- df_U <- adply(df_se[1:24,],1,f_SoE_MNEE,.id = "SiteCode",.parallel = TRUE) -->
+<!-- # df_Urep <- rbind(select(df_U,-tif.path),df_Urep) -->
+<!-- write_csv(df_U,file="../csv/df_Urep.csv") -->
+<!-- ``` -->
 
 
 
