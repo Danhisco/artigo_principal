@@ -31,8 +31,11 @@ df_Urep <- read_csv("dados/csv/df_Urep.csv")
 # df_se_completa: p (%CV) para diferentes extensões espaciais (máximo lado = 22.26 km, min = 0.36 km)
 df_se_completo <- read_csv("./dados/csv/df_p_extensoes.csv")
 # df_se: 5 sítios com a menor extensão espacial da
-df_se <- data.frame(txt.file = list.files(path = "dados/simulacao",pattern = ".txt"), #,full.names = T
-                    SiteCode = str_extract(list.files(path = "dados/simulacao",pattern = ".txt"), #,full.names = T
+# setwd("../..")
+df_se <- data.frame(txt.file = list.files(path = "dados/simulacao",
+                                          pattern = ".txt"), 
+                    SiteCode = str_extract(list.files(path = "dados/simulacao",
+                                                      pattern = ".txt"),
                                            ".*?(?=.txt)")) |> #(?<=ao\\/)
   inner_join(select(filter(df_sim,k==0.05),SiteCode,d,S_obs,tif.path),by="SiteCode")
 # função que encapsula o programa coalescente em C++
@@ -78,16 +81,16 @@ grid.arrange(grobs=l_p[-1],ncol=2,top="%CV (p) em função da mudança do lado d
 __Figura 1__ Como a proporção de cobertura vegetal varia com a extensão espacial da paisagem ao redor?
 
  
-```{r figura 2 mapa das paisagens que foram usadas na estimativa de SoE por MNEE,fig.width=8,fig.height=6}
+```{r figura 2 mapa das paisagens que foram usadas na estimativa de SoE por MNEE,fig.width=8,fig.height=8}
 df <- df_se
 v_landExt <- 16.02 * 1000/30 # the maximum landscape extension simulated, pixel = 30x30m2
-par(mfrow=c(5,5))
+par(mar=c(0.2,0.2,2.2,0.2),mfrow=c(5,5))
 for(i in 1:nrow(df)){
   m_full <- raster(df$tif.path[i]) |> raster::as.matrix()
   index <- (nrow(m_full)-v_landExt)/2
   m <- m_full[(index+1):(nrow(m_full) - index),
               (index+1):(nrow(m_full) - index)]
-  image(m,main=df$SiteCode[i])
+  image(m,main=df$SiteCode[i],axes=FALSE)
   abline(h=0.5)
   abline(v=0.5)
   # print(dim(m))
@@ -109,16 +112,16 @@ iii) desenhar a parcela no centro do mapa, trocando N (número total de indivíd
 iv) caso não seja possível desenhar uma parcela quadrada centrada na coordenda central, desloquei a parcela para algum local próximo dentro do fragmento amostrado.</p>
 
 
-```{r figura 3 detalhe da vizinhança da parcela,message=FALSE,warning=FALSE,fig.width=8,fig.height=6}
+```{r figura 3 detalhe da vizinhança da parcela,message=FALSE,warning=FALSE,fig.width=10,fig.height=8}
 f_auditoria <- function(path_name){
   m <- read_table(file = path_name) |> as.matrix()
   d <- ceiling(sqrt(2500)*2)
   l <- ceiling(dim(m)[1]/2)
   c <- ceiling(dim(m)[2]/2)
   m_temp <- m[(l-d):(l+d),(c-d):(c+d)]
-  image(m_temp,main=str_extract(path_name,"(?<=cao\\/).*?(?=\\.txt)"))
+  image(m_temp,main=str_extract(path_name,"(?<=cao\\/).*?(?=\\.txt)"),axes=FALSE)
 }
-par(mfrow=c(2,3))
+par(mar=c(0.2,0.2,2.2,0.2),mfrow=c(5,5))
 a_ply(df_se$txt.file,1,f_auditoria)
 # sapply(df_se$txt.file,f_auditoria)
 ```
@@ -128,15 +131,12 @@ a_ply(df_se$txt.file,1,f_auditoria)
 ## Estimativa de U para diferentes extensões espaciais
 
 
-```{r figura 4 Umed por lado da paisagem,fig.width=8,fig.height=6}
-# df_U <- cbind(df_Urep[,1:6],
-#               Umed = apply(df_Urep[,7:11], 1, mean),
-#               Ucv = apply(df_Urep[,7:11], 1, sd))
+```{r figura 4 Umed por lado da paisagem,fig.width=10,fig.height=8}
 df_Urep |> 
   pivot_longer(cols=7:11,names_to = "n", values_to = "U") |> 
   inner_join(select(filter(df_sim,k==0.05),SiteCode, Ntotal, effort_ha),by="SiteCode") |> 
   mutate(DA = Ntotal/effort_ha,
-         label = paste(SiteCode,S_obs,Ntotal,DA,sep = ", ")) |> 
+         label = paste(SiteCode,S_obs,Ntotal,round(DA,1),sep = ", ")) |> 
   ggplot(aes(x=lado_km,y=U,color=p)) +
   # geom_boxplot(aes(group=lado_km)) +
   # geom_jitter(aes(group=lado_km)) +
@@ -148,12 +148,13 @@ df_Urep |>
   labs(title="SiteCode, riqueza, número de indivíduos, densidade",
        x = "lado da paisagem (km)",
        y = "taxa U estimada") +
-  facet_wrap(~label,ncol = 3)
+  facet_wrap(~label,ncol = 5)
 ```
 
 <p> __Figura 4__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x). Pontos representam 5 réplicas por bateria de simulação. A simulação coalescente foi feita pressupondo que apenas 5% dos propágulos permanecem até a vizihança imediata do progenitor (100/sqrt(densidade indivíduos)).</p>
 
-# Support Information
+
+<!-- # Support Information -->
 
 ## Códigos para estimar U nas diferentes extensões espaciais
 
@@ -161,14 +162,29 @@ df_Urep |>
 
 ```{r codigos para estimar U, eval=FALSE}
 setwd("dados/simulacao")
-df_se1 <- df_se |> filter(!(SiteCode %in% unique(df_Urep$SiteCode)))
-registerDoMC(3)
-df_U <- adply(df_se1,1,f_SoE_MNEE,.id = "SiteCode",.parallel = TRUE)
-df_Urep <- rbind(select(df_U,-tif.path),df_Urep)
-registerDoMC(3)
-write_csv(df_Urep,file="../csv/df_Urep.csv")
+registerDoMC(2)
+df_U <- adply(df_se[1:24,],1,f_SoE_MNEE,.id = "SiteCode",.parallel = TRUE)
+# df_Urep <- rbind(select(df_U,-tif.path),df_Urep)
+write_csv(df_U,file="../csv/df_Urep.csv")
 ```
 
+
+```{r processameto de df_Urep,eval=FALSE}
+df_Urep <- read_csv("../csv/df_Urep.csv")
+df_U <- cbind(df_Urep[,1:7],
+              Umed = apply(df_Urep[,8:12], 1, mean),
+              Usd = apply(df_Urep[,8:12], 1, sd)) |> 
+  select(-tif.path) |> 
+  group_by(SiteCode) |> 
+  mutate(Udiff = Umed - first(Umed))
+df_U |> 
+  ggplot(aes(x=lado_km,y=Udiff,color=p,group=SiteCode)) +
+  geom_point(alpha=0.4) +
+  geom_line(alpha=0.4) +
+  scale_x_continuous(trans='log2',breaks = round(16.02/2^(5:0),0)) +
+  theme_minimal()
+  
+```
 
 
 
