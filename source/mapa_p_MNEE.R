@@ -70,10 +70,10 @@ f_landscape_for_MNEE <- function(df,txt_repo = "dados/simulacao//"){
   # leitura e preparo da paisagem .tif
   m_raster <- as.matrix(raster(df$tif.path))
   v_landExt <- df$lado_km * 1000/30
-  i_row <- (nrow(m_full)-v_landExt)/2
-  i_col <- (ncol(m_full)-v_landExt)/2
-  m_i <- m_raster[(floor(i_row)+1):(nrow(m_full) - ceiling(i_row)),
-                  (floor(i_col)+1):(ncol(m_full) - ceiling(i_col))]
+  i_row <- (nrow(m_raster)-v_landExt)/2
+  i_col <- (ncol(m_raster)-v_landExt)/2
+  m_i <- m_raster[(floor(i_row)+1):(nrow(m_raster) - ceiling(i_row)),
+                  (floor(i_col)+1):(ncol(m_raster) - ceiling(i_col))]
   # escrita da paisagem no temporario .png
   png.path <- tempfile(fileext = ".png")
   writePNG(image = m_i,target = png.path)
