@@ -44,10 +44,13 @@ df_se <- data.frame(txt.file = list.files(path = "dados/simulacao",
 df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv") |> 
   select(-d) |> 
   inner_join(x=select(df_sim,SiteCode,d,k),by="SiteCode")
-# df_Unull
+## df_Unull
 df_Unull <- list.files(path = "dados/csv/U_nullLand_16km/",pattern = ".csv",full.names = T) |> 
   map_df(~read_csv(.)) |> 
-  inner_join(x=distinct(select(df_sim,SiteCode:S_obs)),by="SiteCode") |> 
+  inner_join(x=distinct(select(df_sim,SiteCode:S_obs)),by="SiteCode")
+df_Unull <- cbind(df_Unull[,1:6],
+                  Umed = apply(df_Unull[,7:10], 1, mean),
+                  Usd = apply(df_Unull[,7:10], 1, sd)) |> 
   mutate(DA = Ntotal / effort_ha)
 # df_Urep 
 # df_Urep <- list.files(path = "dados/csv/SoE",pattern = "_null.csv",full.names = T) |> 
@@ -79,11 +82,52 @@ df_auditoria <- data.frame(csv.file = list.files(path="dados/csv/SoE",pattern = 
  
 ## Introdução
 
-<p> O objetivo é determinar a extensão espacial da paisagem local ao redor da parcela amostrada. Comparo duas abordagens. Primeiro, estimarei a taxa U no cenário de limitação à dispersão __per capita__ mais brando em 5 paisagens (com maior perda). Esse método será usado para determinar aquela extensão espacial em que o valor de U para de reduriz. A extensão espacial que estabilizar a estimativa de U indica que a maior porção de contribuição dos indivíduos da paisagem ao redor à chuva de propágulos que pode repor a diversidade local foi atingida. Por conta do pressuposto de soma zero de MNEE, ou seja, toda morte é reposta por um nascimento, dessa forma a probabilidade das unidades de matriz serem sorteadas como parentais é redistribuída para as unidades de habitat remanescente. Então esparamos que a extensão espacial da paisagem ao redor que irá estabilizar a estimativa de U no cenário de limitação à dispersão mais brando deve ser maior quanto menor a proporção de cobertura vegetal. Assim, as paisagens de menor proporção de cobertura vegetal devem indicar extensão espacial suficiente em valores superiores à da paisagem com maior proporção de cobertura vegetal. Segundo, faço a análise de escala de efeito como proposto por Jackson & Fahrig (2015), utilizarei a abordagem mais comum - apesar das limitações (REF), em que se estima aquela extensão espacial que maximiza o peso de evidência da regressão binomial negativa da riqueza local pelo polinômio de terceiro grau da cobertura vegetal e do log do número de indivíduos. PUtkker et al (2020) em análise similar para a Floresta Atlântica encontrou a extensão espacial de cerca de 4x4km. As duas abordagens pressupõe que a paisagem ao redor é a área que pode fornecer propágulos para a paisagem ao redor com maior frequência (REF ECO LET), porém a primeira abordagem pressupõe explicitamente a dinâmica ecológica idealizada usada para comparar as hipóteses investigadas, enquanto a segunda utiliza outro arcabouço teórico. Assim, Optei por não usar a análise de escala de efeito para determinar a escala espacial da paisagem ao redor para comparar as hipóteses investigadas.</p>
+<p> O objetivo é determinar a extensão espacial da paisagem local ao redor da parcela amostrada. Comparo duas abordagens. 
+estimarei a taxa U no cenário de limitação à dispersão __per capita__ mais brando em 5 paisagens (com maior perda). Esse método será usado para determinar aquela extensão espacial em que o valor de U para de reduriz. A extensão espacial que estabilizar a estimativa de U indica que a maior porção de contribuição dos indivíduos da paisagem ao redor à chuva de propágulos que pode repor a diversidade local foi atingida. Por conta do pressuposto de soma zero de MNEE, ou seja, toda morte é reposta por um nascimento, dessa forma a probabilidade das unidades de matriz serem sorteadas como parentais é redistribuída para as unidades de habitat remanescente. Então esparamos que a extensão espacial da paisagem ao redor que irá estabilizar a estimativa de U no cenário de limitação à dispersão mais brando deve ser maior quanto menor a proporção de cobertura vegetal. Assim, as paisagens de menor proporção de cobertura vegetal devem indicar extensão espacial suficiente em valores superiores à da paisagem com maior proporção de cobertura vegetal. Segundo, faço a análise de escala de efeito como proposto por Jackson & Fahrig (2015), utilizarei a abordagem mais comum - apesar das limitações (REF), em que se estima aquela extensão espacial que maximiza o peso de evidência da regressão binomial negativa da riqueza local pelo polinômio de terceiro grau da cobertura vegetal e do log do número de indivíduos. PUtkker et al (2020) em análise similar para a Floresta Atlântica encontrou a extensão espacial de cerca de 4x4km. As duas abordagens pressupõe que a paisagem ao redor é a área que pode fornecer propágulos para a paisagem ao redor com maior frequência (REF ECO LET), porém a primeira abordagem pressupõe explicitamente a dinâmica ecológica idealizada usada para comparar as hipóteses investigadas, enquanto a segunda utiliza outro arcabouço teórico. Assim, Optei por não usar a análise de escala de efeito para determinar a escala espacial da paisagem ao redor para comparar as hipóteses investigadas.</p>
 
-```{r}
 
+
+```{r figura 1 variaveis }
+df_plot <- df_se |>
+  mutate(sorteio_site = ifelse(SiteCode %in% unique(df_Unull$SiteCode),"SoE","non SoE"),
+         DA = Ntotal / effort_ha)
+l_p <- list()
+l_p[[1]] <- df_plot |> 
+  ggplot(aes(x=DA,y=S_obs,color=sorteio_site)) +
+  geom_point(alpha=0.8) +
+  scale_color_manual(values=c("black","red"),name="SoE: 36 sites") +
+  labs(x="density (individuals / ha)", y="spp richness",title="106 sítios selecionados") +
+  theme(legend.position = "bottom")
+l_p[[2]] <- df_sim |> 
+  ggplot(aes(x=k,y=d,group=k)) +
+  geom_jitter() +
+  geom_boxplot() +
+  labs(x = "k = % de propágulos até a vizinhança imediata do progenitor",
+       y = "d = desvio-padrão da função de dispersão (dist. de Laplace)",
+       title = "Cenários de limitação de dispersão simulados")
+grid.arrange(grobs=l_p,ncol=2)
 ```
+
+<p> __Figura 1__ Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE).</p>
+
+
+```{r figura 2 U para todo k em paisagens nulas na maior escala investigada,fig.width=8,fig.height=8}
+df_plot <- df_Unull |> 
+  arrange(S_obs) |> 
+  mutate(label = paste(SiteCode,S_obs,Ntotal,round(DA,0),sep = ", "))
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k,y=Umed)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "U estimado por cenário de dispersão em paisagens nulas de lado 16 km",
+       subtitle = "label = SiteCode, S, N, DA; free y axis; reverse x axis") +
+  geom_vline(xintercept = c(0.25, 0.1,0.05),color="red",alpha=0.4) +
+  scale_x_reverse() +
+  facet_wrap(~label, ncol=6,scales="free_y")
+```
+
+<p> __Figura 2__ U estimado (eixo y) por cenário de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km). Os pontos representam a média de 4 réplicas e as linhas. Os paineis estão separados por sítios de amostragem, cujo mapa de cobertura vegetal foi artificialmente mudado para remover a matriz. As linhas em vermelhor representam os cenários de limitação de dispersão usados na análise de escala de efeito usada a partir de MNEE, k = 0.25, 0.10 e 0.05. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão simulada. </p>
 
 
 
