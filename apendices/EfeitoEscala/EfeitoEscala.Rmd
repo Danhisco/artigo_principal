@@ -104,9 +104,8 @@ download_file(file ="relatorio_final.Rmd",
  
 ## Introdução
 
-<p> O objetivo é determinar a extensão espacial da paisagem local ao redor da parcela amostrada. Comparo duas abordagens. 
-estimarei a taxa U no cenário de limitação à dispersão __per capita__ mais brando em 5 paisagens (com maior perda). Esse método será usado para determinar aquela extensão espacial em que o valor de U para de reduriz. A extensão espacial que estabilizar a estimativa de U indica que a maior porção de contribuição dos indivíduos da paisagem ao redor à chuva de propágulos que pode repor a diversidade local foi atingida. Por conta do pressuposto de soma zero de MNEE, ou seja, toda morte é reposta por um nascimento, dessa forma a probabilidade das unidades de matriz serem sorteadas como parentais é redistribuída para as unidades de habitat remanescente. Então esparamos que a extensão espacial da paisagem ao redor que irá estabilizar a estimativa de U no cenário de limitação à dispersão mais brando deve ser maior quanto menor a proporção de cobertura vegetal. Assim, as paisagens de menor proporção de cobertura vegetal devem indicar extensão espacial suficiente em valores superiores à da paisagem com maior proporção de cobertura vegetal. Segundo, faço a análise de escala de efeito como proposto por Jackson & Fahrig (2015), utilizarei a abordagem mais comum - apesar das limitações (REF), em que se estima aquela extensão espacial que maximiza o peso de evidência da regressão binomial negativa da riqueza local pelo polinômio de terceiro grau da cobertura vegetal e do log do número de indivíduos. PUtkker et al (2020) em análise similar para a Floresta Atlântica encontrou a extensão espacial de cerca de 4x4km. As duas abordagens pressupõe que a paisagem ao redor é a área que pode fornecer propágulos para a paisagem ao redor com maior frequência (REF ECO LET), porém a primeira abordagem pressupõe explicitamente a dinâmica ecológica idealizada usada para comparar as hipóteses investigadas, enquanto a segunda utiliza outro arcabouço teórico. Assim, Optei por não usar a análise de escala de efeito para determinar a escala espacial da paisagem ao redor para comparar as hipóteses investigadas.</p>
-
+<p> Para comparar os modelos neutros é necessário primeiro determinar a extensão espacial da paisagem ao redor. Não há consenso em como estimar uma extensão espacial da paisagem ao redor comum às parcelas reunidas para estudo. Aqui vamos usar MNEE para estimar a extensão espacial. Em paisagens infinitas e sem perda de habitat, espera-se que a taxa U necessária para manter uma determinada riqueza na parcela apresente padrão não linear (May et al. 2011). Em cenários de limitação à dispersão severa a  taxa U estimada deve ser pequena, pois a perda de espécies deve ser pequena, uma vez que a maior parte das substituições ocorre entre indivíduos de uma mesma espécie devido à elevada agregação de coespecíficos. Com o aumento da capacidade de dispersão a perda de espécies deve aumentar ao passo que a substituição de coespécies diminui, aumentando a perda de espécies por deriva ecológica. O aumento da erosão de espécies com o aumento da capacidade de dispersão não se mantem quando outras subpopulações mais distantes da parcela repõem espécies perdidas localmente. Para determinar a extensão espacial adequada da paisagem vamos buscar aquela extensão espacial que não limite a redução da taxa U em cenários de limitação à dispersão brandos. Então vamos pressupor que não há perda de cobertura vegetal na paisagem, desse modo a possível estabilização de U não deve ser resultado do isolamento do habitat da parcela na paisagem.  </p>
+<p> Nossa proposta se baseia na taxa U, colonização de novas espécies na paisagem por evento de nascimento, estimada para obter a riqueza observada na parcela dado um cenário de limitação à dispersão e mapa de cobertura vegetal. Primeiro vamos avaliar como a estimativa de U varia com a redução da limitação de dispersão quando a paisagem apresenta a maior extensão considerada (16x16km2) e não há perda de habitat. Dos 106 sítios selecionados para a comparação dos modelos neutros, 36 foram sorteados e selecionados para avaliar qual a extensão espacial suficiente para comparar os modelos neutros. Esses 36 sítios incluem os extremos da riqueza de espécies e densidade de indivíduos observada e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (figura 1). A partir do perfil de como U varia em função do cenário de limitação de dispersão nas paisagens sem perda de habitat e na maior extensão espacial, selecionamos 3 cenários de limitação à dispersão mais brandos para avaliar se alguma sub extensão espacial da paisagem ao redor é suficiente para comparar os modelos (Figura 2). Aquela subescala que acumular a maior parte da variação pode ser candidata como extensão espacial da paisagem apropriada para comparar os modelos neutros. As subescalas avaliadas variaram de 0.5 km de lado até 16 km de lado, totalizando 6 escalas espaciais.</p>
 
 
 ```{r figura 1 variaveis }
@@ -134,7 +133,6 @@ grid.arrange(grobs=l_p,ncol=2)
 
 <p> __Figura 1__ a) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). b) Cenários de limitação de dispersão simulados, códigos para gerar simular o desvio padrão correspondente ao k em 'source/qkernel_e_sigkernel.R'.</p>
 
-
 ```{r figura 2 U para todo k em paisagens nulas na maior escala investigada,fig.width=8,fig.height=8}
 df_plot <- df_Unull |> 
   arrange(S_obs) |> 
@@ -155,18 +153,8 @@ df_plot |>
 
 
 
+#### Resultados
 
-
-#### Análise de Escala de Efeito usando MNEE
-
-##### Sorteio dos sítios ao longo do gradiente de riqueza de espécies e densidade de indivíduos
-
-```{r df sorteios sitios, eval=FALSE}
-df_sorteio_sitios <- df |> 
-  filter(S_obs %in% sample(size = 15,df$S_obs) | DA %in% sample(size = 15,df$DA)) |> 
-  rbind(filter(df,S_obs %in% range(df$S_obs) | DA %in% range(df$DA))) |>  distinct()
-write_csv(df_sorteio_sitios,file = "dados/csv/df_sorteio_sitios.csv")
-```
 
 
 
@@ -201,7 +189,6 @@ iii) desenhar a parcela no centro do mapa, trocando N (número total de indivíd
 
 iv) caso não seja possível desenhar uma parcela quadrada centrada na coordenda central, desloquei a parcela para algum local próximo dentro do fragmento amostrado.</p>
 
-
 ```{r figura 3 detalhe da vizinhança da parcela,message=FALSE,warning=FALSE,fig.width=10,fig.height=8}
 f_auditoria <- function(path_name){
   m <- read_table(file = path_name) |> as.matrix()
@@ -219,7 +206,6 @@ a_ply(df_se$txt.file,1,f_auditoria)
 <p>__Figura 3__ Vizinhança imediata das parcelas simuladas. Em vermelho as unidades de habitat da parcela, em amarelo as unidades de habitat e em branco a matriz.</p>
 
 ## Estimativa de U para diferentes extensões espaciais
-
 
 ```{r figura 4 Umed por lado da paisagem,fig.width=10,fig.height=8}
 df_plot <- df_Urep |> 
@@ -241,7 +227,6 @@ df_plot |>
 ```
 
 <p> __Figura 4__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x). Pontos representam 5 réplicas por bateria de simulação. A simulação coalescente foi feita pressupondo que apenas 5% dos propágulos permanecem até a vizihança imediata do progenitor (100/sqrt(densidade indivíduos)).</p>
-
 
 ```{r figura 5 Udiff}
 # df_Urep <- read_csv("../csv/df_Urep.csv")
@@ -284,7 +269,6 @@ df_U |>
 grid.arrange(grobs=l_p,nrow=1)
 ```
 
-
 # Support Information
 
 ## Códigos para estimar U nas diferentes extensões espaciais
@@ -307,7 +291,6 @@ df_sorteio_sitios$txt.file <- gsub(".txt","_null.txt",df_sorteio_sitios$txt.file
 d_ply(df_sorteio_sitios,"SiteCode",f_siteU,.parallel = TRUE)
 ```
 
-
 ```{r codigos para estimar U SoE, eval=FALSE}
 setwd("dados/simulacao")
 df_sorteio_sitios$txt.file <- gsub(".txt","_null.txt",df_sorteio_sitios$txt.file)
@@ -329,7 +312,6 @@ f_csv <- function(path.csv){
 v_logical <- sapply(v_csv.path[-1],f_csv)
 system("du -s dados/csv/SoE/")
 ```
-
 
 Distribuição da diferença de U entre escalas consecutivas,
 
@@ -384,7 +366,6 @@ Padronização:
 <!-- df_averageSE$dAICc <- as.numeric(as.character(df_averageSE$dAICc)) -->
 <!-- ``` -->
 
-
 <!-- ### 4o Passo: Selecionar o lado da paisagem local que atribuiu maior peso de evidência -->
 
 <!-- ```{r 4o passo,echo=FALSE} -->
@@ -428,14 +409,12 @@ Padronização:
 <!-- summary(md_ee) -->
 <!-- ``` -->
 
-
 <!-- ```{r dharma residuals modelo com maior peso de evidência,echo=FALSE} -->
 <!-- res.Dharma <- DHARMa::simulateResiduals(md_ee,n = 250,refit = FALSE) -->
 <!-- plot(res.Dharma) -->
 <!-- ``` -->
 
 <!-- __figura 5__ Resíduos quantilícos (DHARMa) do modelo mais plausível.  -->
-
 
 <!-- ```{r predito contra observado, echo=FALSE} -->
 <!-- df_plot <- df_se |>  -->
@@ -465,4 +444,9 @@ Padronização:
 
 <!-- __figura 7__ Riqueza predita quando Ntotal é mantido constante no valor mediano. -->
 
-
+```{r df sorteios sitios, eval=FALSE}
+df_sorteio_sitios <- df |> 
+  filter(S_obs %in% sample(size = 15,df$S_obs) | DA %in% sample(size = 15,df$DA)) |> 
+  rbind(filter(df,S_obs %in% range(df$S_obs) | DA %in% range(df$DA))) |>  distinct()
+write_csv(df_sorteio_sitios,file = "dados/csv/df_sorteio_sitios.csv")
+```
