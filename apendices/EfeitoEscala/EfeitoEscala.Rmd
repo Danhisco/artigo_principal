@@ -52,7 +52,13 @@ df_Unull <- cbind(df_Unull[,1:6],
                   Umed = apply(df_Unull[,7:10], 1, mean),
                   Usd = apply(df_Unull[,7:10], 1, sd)) |> 
   mutate(DA = Ntotal / effort_ha)
-# df_Urep 
+# df_Usoe
+df_Usoe <- list.files(path="dados/csv/SoE",pattern = ".csv",full.names = TRUE) |> 
+  map_df(~read_csv(.)) |> 
+  inner_join(x=mutate(select(df_sorteio_sitios,-k),DA=Ntotal/effort_ha),by="SiteCode")
+df_Usoe <- cbind(select(df_Usoe,SiteCode:k),
+                 Umed = apply(select(df_Usoe,-(SiteCode:k)), 1, mean),
+                 Usd = apply(select(df_Usoe,-(SiteCode:k)), 1, mean))
 # df_Urep <- list.files(path = "dados/csv/SoE",pattern = "_null.csv",full.names = T) |> 
 #   map_df(~read_csv(.)) |> 
 #   inner_join(x=select(df_sorteio_sitios,-txt.file),by="SiteCode")
@@ -79,6 +85,22 @@ df_auditoria <- data.frame(csv.file = list.files(path="dados/csv/SoE",pattern = 
   anti_join(x=df_sorteio_sitios,by="SiteCode") |> 
   inner_join(distinct(select(df_sim,SiteCode,tif.path)),by="SiteCode")
 ```
+
+```{r trackdown}
+library(trackdown)
+# 1a vez:
+upload_file(file="apendices/EfeitoEscala/EfeitoEscala.Rmd",
+            gpath = "mestrado/DaniloPMori-artigo_mestrado/")
+# both overwrite: 
+# overwrite the current google drive file with the current Rmd:
+update_file(file ="relatorio_final.Rmd",
+            gpath = "mestrado/disciplinas/BIE5716/",
+            hide_code = TRUE)
+# overwrite the current Rmd with the current google drive 
+download_file(file ="relatorio_final.Rmd",
+              gpath = "mestrado/disciplinas/BIE5716/")
+```
+
  
 ## Introdução
 
@@ -96,7 +118,9 @@ l_p[[1]] <- df_plot |>
   ggplot(aes(x=DA,y=S_obs,color=sorteio_site)) +
   geom_point(alpha=0.8) +
   scale_color_manual(values=c("black","red"),name="SoE: 36 sites") +
-  labs(x="density (individuals / ha)", y="spp richness",title="106 sítios selecionados") +
+  labs(x="density (individuals / ha)", 
+       y="spp richness",
+       title="a) 106 sítios selecionados") +
   theme(legend.position = "bottom")
 l_p[[2]] <- df_sim |> 
   ggplot(aes(x=k,y=d,group=k)) +
@@ -104,11 +128,11 @@ l_p[[2]] <- df_sim |>
   geom_boxplot() +
   labs(x = "k = % de propágulos até a vizinhança imediata do progenitor",
        y = "d = desvio-padrão da função de dispersão (dist. de Laplace)",
-       title = "Cenários de limitação de dispersão simulados")
+       title = "c) Cenários de limitação de dispersão simulados")
 grid.arrange(grobs=l_p,ncol=2)
 ```
 
-<p> __Figura 1__ Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE).</p>
+<p> __Figura 1__ a) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). b) Cenários de limitação de dispersão simulados, códigos para gerar simular o desvio padrão correspondente ao k em 'source/qkernel_e_sigkernel.R'.</p>
 
 
 ```{r figura 2 U para todo k em paisagens nulas na maior escala investigada,fig.width=8,fig.height=8}
@@ -127,33 +151,15 @@ df_plot |>
   facet_wrap(~label, ncol=6,scales="free_y")
 ```
 
-<p> __Figura 2__ U estimado (eixo y) por cenário de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km). Os pontos representam a média de 4 réplicas e as linhas. Os paineis estão separados por sítios de amostragem, cujo mapa de cobertura vegetal foi artificialmente mudado para remover a matriz. As linhas em vermelhor representam os cenários de limitação de dispersão usados na análise de escala de efeito usada a partir de MNEE, k = 0.25, 0.10 e 0.05. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão simulada. </p>
+<p> __Figura 2__ U estimado (eixo y) por cenário de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km). Os pontos representam a média de 4 réplicas e as linhas. Os paineis estão separados por sítios de amostragem, cujo mapa de cobertura vegetal foi artificialmente mudado para remover a matriz. As linhas em vermelhor representam os cenários de limitação de dispersão usados na análise de escala de efeito usada a partir de MNEE, k = 0.25, 0.10 e 0.05. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão simulada. S = riqueza da espécie, N = número de indivíduos, DA = densidade de indivíduos.</p>
 
 
 
-### Métodos
+
 
 #### Análise de Escala de Efeito usando MNEE
 
 ##### Sorteio dos sítios ao longo do gradiente de riqueza de espécies e densidade de indivíduos
-
-```{r}
-# gráficos exploratórios
-df <- df_se |> mutate(DA = Ntotal / effort_ha)
-l_p <- list()
-l_p[[1]] <- df |> ggplot(aes(x=DA,y=S_obs)) +
-  geom_point() +
-  geom_smooth(se=FALSE) +
-  geom_smooth(method="lm",se=FALSE,color="red")
-l_p[[2]] <- l_p[[1]] +
-  scale_y_continuous(trans="log10") +
-  scale_x_continuous(trans="log10")
-grid.arrange(grobs=l_p,ncol=2)
-# sítios sorteados
-#
-# v_diffS <- adply(df,1,f_sample)
-  # sapply(df$S_obs, function(x) x - runif(30,min = min(df$S_obs), max = max(df$S_obs)) )
-```
 
 ```{r df sorteios sitios, eval=FALSE}
 df_sorteio_sitios <- df |> 
@@ -279,48 +285,11 @@ grid.arrange(grobs=l_p,nrow=1)
 ```
 
 
-
-
-<!-- #### Análise de Ecala de Efeito Padrão -->
-
-<!-- <p>Primeiro calculamos a proporção de cobertura vegetal para paisagens locais quadradas em que variamos a extensão espacial da paisagem (Figura 1). Fizemos uma sequência de extensões espaciais somando 0.06 km no lado da paisagem inicial. A menor paisagem apresentou 0.36km de lado,  aproximadamente o lado da maior parcela caso ela fosse quadrada (área de  10.24 ha, lado de 0.32 km). E a maior extensão espacial apresentou 22.26 km de lado. Esse conjunto de dados foi usado na análise de escala de efeito. -->
-
-
-<!-- ```{r figura 1 p por lado da paisagem,fig.width=8,fig.height=4} -->
-<!-- l_p <- list() -->
-<!-- l_p[[1]] <- df_se_completo |> -->
-<!--   group_by(lado_km) |>  -->
-<!--   summarise(var_p = var(p)) |>  -->
-<!--   ggplot(aes(x=lado_km,y=var_p)) + -->
-<!--   geom_point(size=0.4,alpha=0.4) + labs(y="var(p)") -->
-<!-- l_p[[2]] <- df_se_completo |>  -->
-<!--   ggplot(aes(x=lado_km,y=p)) +  -->
-<!--   geom_point(alpha=0.2,size=0.2) + -->
-<!--   geom_line(aes(group=SiteCode),size=0.2,alpha=0.2) + -->
-<!--   scale_y_continuous(breaks = seq(0,1,by=0.1)) -->
-<!-- v_levels <- df_se_completo |>  -->
-<!--   group_by(SiteCode) |>  -->
-<!--   summarise(p_change=max(p) - min(p)) |>  -->
-<!--   arrange(p_change) |> pull(SiteCode) -->
-<!-- l_p[[3]] <- df_se_completo |>  -->
-<!--   ggplot(aes(x=SiteCode,y=p)) + -->
-<!--   geom_point(aes(color=lado_km),alpha=0.3,size=0.2) + -->
-<!--   scale_x_discrete(limits=v_levels) + theme(axis.text.x = element_blank(),axis.ticks.x = element_blank()) -->
-<!-- grid.arrange(grobs=l_p[-1],ncol=2,top="%CV (p) em função da mudança do lado da paisagem") -->
-<!-- # layout_matrix=rbind(c(NA,NA,1,1,NA,NA), -->
-<!-- #                                  c(2,2,2,3,3,3), -->
-<!-- #                                  c(2,2,2,3,3,3)) -->
-<!-- ``` -->
-
-<!-- __Figura x__ Como a proporção de cobertura vegetal varia com a extensão espacial da paisagem ao redor? -->
-
-
-
 # Support Information
 
-<!-- ## Códigos para estimar U nas diferentes extensões espaciais -->
+## Códigos para estimar U nas diferentes extensões espaciais
 
-<!-- <p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p> -->
+<p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p>
 
 ```{r codigos para estimar U para uma mesma extensao espacial e diferentes k,eval=FALSE}
 setwd("dados/simulacao")
@@ -341,9 +310,10 @@ d_ply(df_sorteio_sitios,"SiteCode",f_siteU,.parallel = TRUE)
 
 ```{r codigos para estimar U SoE, eval=FALSE}
 setwd("dados/simulacao")
+df_sorteio_sitios$txt.file <- gsub(".txt","_null.txt",df_sorteio_sitios$txt.file)
+df_se <- df_sorteio_sitios |> filter(k %in% unique(df_sim$k)[c(16,19)])
 registerDoMC(2)
-df_U <- a_ply(df_sorteio_sitios,1,f_SoE_MNEE_null,.parallel = TRUE)
-f_SoE_MNEE_null(df)
+a_ply(df_se,1,f_SoE_MNEE_null,.parallel = TRUE)
 ```
 
 ```{r arrumando os dados do SoE para k05,eval=FALSE}
@@ -359,7 +329,6 @@ f_csv <- function(path.csv){
 v_logical <- sapply(v_csv.path[-1],f_csv)
 system("du -s dados/csv/SoE/")
 ```
-
 
 
 Distribuição da diferença de U entre escalas consecutivas,
