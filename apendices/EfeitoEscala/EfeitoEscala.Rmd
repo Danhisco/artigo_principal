@@ -24,7 +24,7 @@ library(stringr)
 library(tidyr)
 library(plyr)
 library(dplyr)
-# função que encapsula o programa coalescente em C++
+# funções
 source("source/dinamica_coalescente.R")
 source("source/SoE_MNEE.R")
 source("source/f_z.R")
@@ -35,7 +35,7 @@ df_se_completo <- read_csv("./dados/csv/df_p_extensoes.csv")
 # df_se: 5 sítios com a menor extensão espacial da
 # setwd("../..")
 df_se <- data.frame(txt.file = list.files(path = "dados/simulacao",
-                                          pattern = ".txt"), 
+                                          pattern = ".txt"),
                     SiteCode = str_extract(list.files(path = "dados/simulacao",
                                                       pattern = ".txt"),
                                            ".*?(?=.txt)")) |> #(?<=ao\\/)
@@ -43,27 +43,32 @@ df_se <- data.frame(txt.file = list.files(path = "dados/simulacao",
 # df_sorteio_sitios
 df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv") |> 
   select(-d) |> 
-  inner_join(select(filter(df_sim,k==unique(df_sim$k)[19]),SiteCode,d,k),by="SiteCode")
-# df_Urep 
-df_Urep <- list.files(path = "dados/csv/SoE",pattern = "_null.csv",full.names = T) |> 
+  inner_join(x=select(df_sim,SiteCode,d,k),by="SiteCode")
+# df_Unull
+df_Unull <- list.files(path = "dados/csv/U_nullLand_16km/",pattern = ".csv",full.names = T) |> 
   map_df(~read_csv(.)) |> 
-  inner_join(x=select(df_sorteio_sitios,-txt.file),by="SiteCode")
+  inner_join(x=distinct(select(df_sim,SiteCode:S_obs)),by="SiteCode") |> 
+  mutate(DA = Ntotal / effort_ha)
+# df_Urep 
+# df_Urep <- list.files(path = "dados/csv/SoE",pattern = "_null.csv",full.names = T) |> 
+#   map_df(~read_csv(.)) |> 
+#   inner_join(x=select(df_sorteio_sitios,-txt.file),by="SiteCode")
 # df_U
-df_U <- cbind(df_Urep[,1:8],
-              Umed = apply(df_Urep[,9:12], 1, mean),
-              Usd = apply(df_Urep[,9:12], 1, sd)) |> 
-  group_by(SiteCode) |> 
-  arrange(lado_km)
+# df_U <- cbind(df_Urep[,1:8],
+#               Umed = apply(df_Urep[,9:12], 1, mean),
+#               Usd = apply(df_Urep[,9:12], 1, sd)) |> 
+#   group_by(SiteCode) |> 
+#   arrange(lado_km)
 # df_U$Umed.z <- f_z(df_U$Umed)
 # df <- df_U |> filter(SiteCode == "MGipia1")
-f_lag.U <- function(df){
-  v_Udiff <- max(df$Umed) - df$Umed[nrow(df)]
-  df$Ulag <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
-  df$Ucsum <- cumsum(df$Ulag)
-  # df$Ulag3 <- c((df$Umed[1:(nrow(df)-3)] - df$Umed[4:nrow(df)])/df$Umed[nrow(df)],NA,NA,NA)
-  return(df)
-}
-df_U <- ddply(df_U,"SiteCode",f_lag.U) |> arrange(lado_km)
+# f_lag.U <- function(df){
+#   v_Udiff <- max(df$Umed) - df$Umed[nrow(df)]
+#   df$Ulag <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
+#   df$Ucsum <- cumsum(df$Ulag)
+#   # df$Ulag3 <- c((df$Umed[1:(nrow(df)-3)] - df$Umed[4:nrow(df)])/df$Umed[nrow(df)],NA,NA,NA)
+#   return(df)
+# }
+# df_U <- ddply(df_U,"SiteCode",f_lag.U) |> arrange(lado_km)
 # df_auditoria
 df_auditoria <- data.frame(csv.file = list.files(path="dados/csv/SoE",pattern = "_null.csv",full.names = T),
                            SiteCode = str_extract(list.files(path="dados/csv/SoE",pattern = "_null.csv",full.names = T),
@@ -74,9 +79,11 @@ df_auditoria <- data.frame(csv.file = list.files(path="dados/csv/SoE",pattern = 
  
 ## Introdução
 
-<p> Busco Determinar a extensão espacial da paisagem local ao redor da parcela amostrada. Comparo duas abordagens. Primeiro, estimarei a taxa U no cenário de limitação à dispersão __per capita__ mais brando em 5 paisagens (com maior perda). Esse método será usado para determinar aquela extensão espacial em que o valor de U para de reduriz. A extensão espacial que estabilizar a estimativa de U indica que a maior porção de contribuição dos indivíduos da paisagem ao redor à chuva de propágulos que pode repor a diversidade local foi atingida. Por conta do pressuposto de soma zero de MNEE, ou seja, toda morte é reposta por um nascimento, dessa forma a probabilidade das unidades de matriz serem sorteadas como parentais é redistribuída para as unidades de habitat remanescente. Então esparamos que a extensão espacial da paisagem ao redor que irá estabilizar a estimativa de U no cenário de limitação à dispersão mais brando deve ser maior quanto menor a proporção de cobertura vegetal. Assim, as paisagens de menor proporção de cobertura vegetal devem indicar extensão espacial suficiente em valores superiores à da paisagem com maior proporção de cobertura vegetal. Segundo, faço a análise de escala de efeito como proposto por Jackson & Fahrig (2015), utilizarei a abordagem mais comum - apesar das limitações (REF), em que se estima aquela extensão espacial que maximiza o peso de evidência da regressão binomial negativa da riqueza local pelo polinômio de terceiro grau da cobertura vegetal e do log do número de indivíduos. PUtkker et al (2020) em análise similar para a Floresta Atlântica encontrou a extensão espacial de cerca de 4x4km. As duas abordagens pressupõe que a paisagem ao redor é a área que pode fornecer propágulos para a paisagem ao redor com maior frequência (REF ECO LET), porém a primeira abordagem pressupõe explicitamente a dinâmica ecológica idealizada usada para comparar as hipóteses investigadas, enquanto a segunda utiliza outro arcabouço teórico. Assim, Optei por não usar a análise de escala de efeito para determinar a escala espacial da paisagem ao redor para comparar as hipóteses investigadas.</p>
+<p> O objetivo é determinar a extensão espacial da paisagem local ao redor da parcela amostrada. Comparo duas abordagens. Primeiro, estimarei a taxa U no cenário de limitação à dispersão __per capita__ mais brando em 5 paisagens (com maior perda). Esse método será usado para determinar aquela extensão espacial em que o valor de U para de reduriz. A extensão espacial que estabilizar a estimativa de U indica que a maior porção de contribuição dos indivíduos da paisagem ao redor à chuva de propágulos que pode repor a diversidade local foi atingida. Por conta do pressuposto de soma zero de MNEE, ou seja, toda morte é reposta por um nascimento, dessa forma a probabilidade das unidades de matriz serem sorteadas como parentais é redistribuída para as unidades de habitat remanescente. Então esparamos que a extensão espacial da paisagem ao redor que irá estabilizar a estimativa de U no cenário de limitação à dispersão mais brando deve ser maior quanto menor a proporção de cobertura vegetal. Assim, as paisagens de menor proporção de cobertura vegetal devem indicar extensão espacial suficiente em valores superiores à da paisagem com maior proporção de cobertura vegetal. Segundo, faço a análise de escala de efeito como proposto por Jackson & Fahrig (2015), utilizarei a abordagem mais comum - apesar das limitações (REF), em que se estima aquela extensão espacial que maximiza o peso de evidência da regressão binomial negativa da riqueza local pelo polinômio de terceiro grau da cobertura vegetal e do log do número de indivíduos. PUtkker et al (2020) em análise similar para a Floresta Atlântica encontrou a extensão espacial de cerca de 4x4km. As duas abordagens pressupõe que a paisagem ao redor é a área que pode fornecer propágulos para a paisagem ao redor com maior frequência (REF ECO LET), porém a primeira abordagem pressupõe explicitamente a dinâmica ecológica idealizada usada para comparar as hipóteses investigadas, enquanto a segunda utiliza outro arcabouço teórico. Assim, Optei por não usar a análise de escala de efeito para determinar a escala espacial da paisagem ao redor para comparar as hipóteses investigadas.</p>
 
+```{r}
 
+```
 
 
 
@@ -271,14 +278,31 @@ grid.arrange(grobs=l_p,nrow=1)
 
 <!-- <p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p> -->
 
-```{r codigos para estimar U, eval=FALSE}
+```{r codigos para estimar U para uma mesma extensao espacial e diferentes k,eval=FALSE}
+setwd("dados/simulacao")
+f_siteU <- function(df,replicas=4,csv.repo="../csv/U_nullLand_16km/"){
+  l_dfU <- list()
+  for(i in 1:nrow(df)){
+    v_U <- replicate(n=replicas,f_simU(df = df[i,]))
+    l_dfU[[i]] <- cbind(select(df[i,],-(txt.file:DA)),matrix(v_U,nrow = 1))
+  }
+  df_write <- rbind.fill(l_dfU)
+  write_csv(df_write,file = paste0(csv.repo,df$SiteCode[1],".csv"))
+}
+registerDoMC(2)
+df_sorteio_sitios$txt.file <- gsub(".txt","_null.txt",df_sorteio_sitios$txt.file)
+d_ply(df_sorteio_sitios,"SiteCode",f_siteU,.parallel = TRUE)
+```
+
+
+```{r codigos para estimar U SoE, eval=FALSE}
 setwd("dados/simulacao")
 registerDoMC(2)
 df_U <- a_ply(df_sorteio_sitios,1,f_SoE_MNEE_null,.parallel = TRUE)
 f_SoE_MNEE_null(df)
 ```
 
-```{r arrumando os dados do SoE para k05}
+```{r arrumando os dados do SoE para k05,eval=FALSE}
 v_csv.path <- list.files(path = "dados/csv/SoE", pattern = "_null.csv",full.names = T)
 v_k <- unique(df_sim$k)
 f_csv <- function(path.csv){
