@@ -21,7 +21,9 @@ f_SoE_MNEE <- function(df,n_escalas=6,n_replicas=4){
     p <- length(m_sim[m_sim!=0])/length(m_sim)
     v_U <- replicate(n=n_replicas,f_simCoalescente(land_name = m_sim))
     l_df_U[[i]] <- cbind(data.frame(SiteCode = df$SiteCode,
-                                    lado_km=16.02/(2^(i-1)),p),
+                                    lado_km=16.02/(2^(i-1)),
+                                    k=df$k,
+                                    p=p),
                          matrix(v_U,nrow=1))
   }
   df_write <- rbind.fill(l_df_U)
@@ -34,7 +36,6 @@ f_SoE_MNEE_null <- function(df,n_escalas=6,n_replicas=4){
     v$U_est
   }
   m_full <- read.table(df$txt.file) |> as.matrix()
-  m_full[m_full==0] <- 1
   l_df_U <- list()
   for(i in 1:n_escalas){
     index <- (nrow(m_full)-nrow(m_full)/(2^(i-1)) )/2
@@ -42,7 +43,8 @@ f_SoE_MNEE_null <- function(df,n_escalas=6,n_replicas=4){
                     (floor(index)+1):(nrow(m_full)-ceiling(index))]
     v_U <- replicate(n=n_replicas,f_simCoalescente(land_name = m_sim))
     l_df_U[[i]] <- cbind(data.frame(SiteCode = df$SiteCode,
-                                    lado_km=16.02/(2^(i-1))),
+                                    lado_km=16.02/(2^(i-1)),
+                                    k=df$k),
                          matrix(v_U,nrow=1))
   }
   df_write <- rbind.fill(l_df_U)

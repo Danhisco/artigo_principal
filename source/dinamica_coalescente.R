@@ -43,7 +43,7 @@ dinamica_coalescente <- function(U, S=0, N_simul, disp_range, landscape, seed = 
         # set some lowest boundary here so simulations don't take forever
         if (U < 1e-5){
             print("Richness value too low, giving up...")
-            return(NA)
+            return(NULL)
         }
     }
     r <- as.matrix(read.table(outfile))
@@ -77,4 +77,12 @@ rec_distribuicao_espacial <- function(r, landscape){
     # matrix first
     l[l==2] <- r
     return(l)
+}
+f_simU <- function(df){
+  v <- dinamica_coalescente(U = 1.25e-06, 
+                            S=df$S_obs, 
+                            disp_range = df$d, 
+                            N_simul=1,
+                            landscape = df$txt.file)
+  v$U_est
 }
