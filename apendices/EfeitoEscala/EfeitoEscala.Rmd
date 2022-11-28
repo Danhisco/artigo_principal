@@ -43,16 +43,15 @@ df_Unull <- cbind(df_Unull[,1:6],
                   Usd = apply(df_Unull[,7:10], 1, sd)) |> 
   mutate(DA = Ntotal / effort_ha)
 # df_Usoe
-df_Usoe <- list.files(path="dados/csv/SoE",pattern = ".csv",full.names = TRUE) |> 
-  map_df(~read_csv(.)) |> 
-  inner_join(x=mutate(select(df_sorteio_sitios,-k),DA=Ntotal/effort_ha),by="SiteCode")
+df_Usoe <- read_csv("dados/csv/df_Usoe.csv")
 df_Usoe <- cbind(select(df_Usoe,SiteCode:k),
                  Umed = apply(select(df_Usoe,-(SiteCode:k)), 1, mean),
-                 Usd = apply(select(df_Usoe,-(SiteCode:k)), 1, mean))
-
+                 Usd = apply(select(df_Usoe,-(SiteCode:k)), 1, mean)) |>
+  inner_join(x=distinct(select(df_sim,SiteCode,Ntotal,S_obs,effort_ha)),by="SiteCode") |> 
+  mutate(DA = Ntotal / effort_ha)
 ```
 
-```{r trackdown}
+```{r trackdown,eval=FALSE}
 library(trackdown)
 # 1a vez:
 upload_file(file="apendices/EfeitoEscala/EfeitoEscala.Rmd",
@@ -121,22 +120,23 @@ df_plot |>
 #### Resultados
 
 ```{r figura 3 Umed por lado da paisagem,fig.width=10,fig.height=8}
-df_plot <- df_Urep |> 
-  pivot_longer(cols=8:11,names_to = "n", values_to = "U") |> 
-  arrange(S_obs,DA) |> 
+df_plot <- df_Usoe |> 
+  arrange(S_obs) |> 
   mutate(label = paste(SiteCode,S_obs,Ntotal,round(DA,1),sep = ", ")) 
 df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
+df_plot$k <- factor(round(df_plot$k,2))
 df_plot |>
-  ggplot(aes(x=lado_km,y=U),color=S_obs) +
-  geom_smooth(method="loess",formula = "y ~ x",se=F,alpha=0.1,color="red",size=0.8) +
+  ggplot(aes(x=lado_km,y=Umed,color=k,group=k)) +
+  # geom_smooth(method="loess",formula = "y ~ x",se=F,alpha=0.1,color="red",size=0.8) +
   geom_point(alpha=0.4,size=1.5) +
+  geom_line() +
   scale_x_continuous(trans='log2',breaks = round(16.02/2^(5:0),0)) +
   theme_minimal() +
-  theme(legend.position = "bottom") +
+  # theme(legend.position = "bottom") +
   labs(title="SiteCode, riqueza, número de indivíduos ,densidade",
        x = "lado da paisagem (km)",
        y = "taxa U estimada") +
-  facet_wrap(~label,ncol = 6)
+  facet_wrap(~label,ncol = 6,scales="free_y")
 ```
 
 <p> __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x). Pontos representam 5 réplicas por bateria de simulação. A simulação coalescente foi feita pressupondo que apenas 5% dos propágulos permanecem até a vizihança imediata do progenitor (100/sqrt(densidade indivíduos)).</p>
