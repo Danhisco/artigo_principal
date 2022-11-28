@@ -58,12 +58,12 @@ upload_file(file="apendices/EfeitoEscala/EfeitoEscala.Rmd",
             gpath = "mestrado/DaniloPMori-artigo_mestrado/")
 # both overwrite: 
 # overwrite the current google drive file with the current Rmd:
-update_file(file ="relatorio_final.Rmd",
-            gpath = "mestrado/disciplinas/BIE5716/",
+update_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
+            gpath = "mestrado/DaniloPMori-artigo_mestrado/",
             hide_code = TRUE)
 # overwrite the current Rmd with the current google drive 
-download_file(file ="relatorio_final.Rmd",
-              gpath = "mestrado/disciplinas/BIE5716/")
+download_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
+              gpath = "mestrado/DaniloPMori-artigo_mestrado/")
 ```
 
  
@@ -139,7 +139,26 @@ df_plot |>
   facet_wrap(~label,ncol = 6,scales="free_y")
 ```
 
-<p> __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x). Pontos representam 5 réplicas por bateria de simulação. A simulação coalescente foi feita pressupondo que apenas 5% dos propágulos permanecem até a vizihança imediata do progenitor (100/sqrt(densidade indivíduos)).</p>
+<p> __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para 3 cenários de limitação de dispersão (cor dos pontos e linhas, k = 0.05, 0.10 e 0.25). Pontos representam a média de 4 réplicas por bateria de simulação.</p>
+
+
+
+```{r}
+# df <- df_Usoe |> filter(SiteCode == "MGipia1")
+f_lag.U <- function(df){
+  v_Udiff <- max(df$Umed) - df$Umed[nrow(df)]
+  df$Ulag <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
+  df$Ucsum <- cumsum(df$Ulag)
+  # df$Ulag3 <- c((df$Umed[1:(nrow(df)-3)] - df$Umed[4:nrow(df)])/df$Umed[nrow(df)],NA,NA,NA)
+  return(df)
+}
+df_U <- ddply(df_U,"SiteCode",f_lag.U) |> arrange(lado_km)
+```
+
+
+
+
+#######
 
 ```{r figura 5 Udiff}
 # df_Urep <- read_csv("../csv/df_Urep.csv")
