@@ -34,6 +34,12 @@ df_sim <- read_csv("dados/df_simulacao.csv")
 df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv") |> 
   select(-d) |> 
   inner_join(x=select(df_sim,SiteCode,d,k),by="SiteCode")
+# v_sim_sites: se precisar é só mover as paisagens de volta ou incluir um programa coalescente na outra pasta
+## acabei perdendo a mão e deletei as paisagens nulas de ambas situações, mas tudo bem faz mais em mapas_...Rmd
+# v_sim_sites <- list.files(path="dados/simulacao",pattern = "_null.txt")
+# file.copy(from=paste0("dados/simulacao/",v_sim_sites),
+#           to=paste0("dados/paisagens_SoE_MNEE/",v_sim_sites))
+# file.remove("dados/simulacao/")
 ## df_Unull
 df_Unull <- list.files(path = "dados/csv/U_nullLand_16km/",pattern = ".csv",full.names = T) |> 
   map_df(~read_csv(.)) |> 
@@ -43,7 +49,8 @@ df_Unull <- cbind(df_Unull[,1:6],
                   Usd = apply(df_Unull[,7:10], 1, sd)) |> 
   mutate(DA = Ntotal / effort_ha)
 # df_Usoe
-df_Usoe <- read_csv("dados/csv/df_Usoe.csv")
+df_Usoe_completo <- read_csv("dados/csv/df_Usoe.csv")
+df_Usoe <- df_Usoe_completo
 df_Usoe <- cbind(select(df_Usoe,SiteCode:k),
                  Umed = apply(select(df_Usoe,-(SiteCode:k)), 1, mean),
                  Usd = apply(select(df_Usoe,-(SiteCode:k)), 1, mean)) |>
@@ -69,12 +76,13 @@ download_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
  
 ## Introdução
 
-<p> Para comparar os modelos neutros é necessário primeiro determinar a extensão espacial da paisagem ao redor. Não há consenso em como estimar uma extensão espacial da paisagem ao redor comum às parcelas reunidas para estudo. Aqui vamos usar MNEE para estimar a extensão espacial. Em paisagens infinitas e sem perda de habitat, espera-se que a taxa U necessária para manter uma determinada riqueza na parcela apresente padrão não linear (May et al. 2011). Em cenários de limitação à dispersão severa a  taxa U estimada deve ser pequena, pois a perda de espécies deve ser pequena, uma vez que a maior parte das substituições ocorre entre indivíduos de uma mesma espécie devido à elevada agregação de coespecíficos. Com o aumento da capacidade de dispersão a perda de espécies deve aumentar ao passo que a substituição de coespécies diminui, aumentando a perda de espécies por deriva ecológica. O aumento da erosão de espécies com o aumento da capacidade de dispersão não se mantem quando outras subpopulações mais distantes da parcela repõem espécies perdidas localmente. Para determinar a extensão espacial adequada da paisagem vamos buscar aquela extensão espacial que não limite a redução da taxa U em cenários de limitação à dispersão brandos. Então vamos pressupor que não há perda de cobertura vegetal na paisagem, desse modo a possível estabilização de U não deve ser resultado do isolamento do habitat da parcela na paisagem.  </p>
-<p> Nossa proposta se baseia na taxa U, colonização de novas espécies na paisagem por evento de nascimento, estimada para obter a riqueza observada na parcela dado um cenário de limitação à dispersão e mapa de cobertura vegetal. Primeiro vamos avaliar como a estimativa de U varia com a redução da limitação de dispersão quando a paisagem apresenta a maior extensão considerada (16x16km2) e não há perda de habitat. Dos 106 sítios selecionados para a comparação dos modelos neutros, 36 foram sorteados e selecionados para avaliar qual a extensão espacial suficiente para comparar os modelos neutros. Esses 36 sítios incluem os extremos da riqueza de espécies e densidade de indivíduos observada e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (figura 1). A partir do perfil de como U varia em função do cenário de limitação de dispersão nas paisagens sem perda de habitat e na maior extensão espacial, selecionamos 3 cenários de limitação à dispersão mais brandos para avaliar se alguma sub extensão espacial da paisagem ao redor é suficiente para comparar os modelos (Figura 2). Aquela subescala que acumular a maior parte da variação pode ser candidata como extensão espacial da paisagem apropriada para comparar os modelos neutros. As subescalas avaliadas variaram de 0.5 km de lado até 16 km de lado, totalizando 6 escalas espaciais.</p>
+<p> Para comparar os modelos neutros é necessário primeiro determinar a extensão espacial da paisagem ao redor (REF). Não há consenso em como estimar uma extensão espacial da paisagem ao redor comum às parcelas reunidas para estudo (REF). Aqui vamos usar MNEE para estimar a extensão espacial. Em paisagens infinitas e sem perda de habitat, espera-se que a taxa U necessária para manter uma determinada riqueza na parcela apresente padrão não linear (May et al. 2011). Em cenários de limitação à dispersão severa a  taxa U estimada deve ser pequena, pois a perda de espécies deve ser pequena, uma vez que a maior parte das substituições ocorre entre indivíduos de uma mesma espécie devido à elevada agregação de coespecíficos. Com o aumento da capacidade de dispersão a perda de espécies deve aumentar ao passo que a substituição de coespécies diminui, aumentando a perda de espécies por deriva ecológica. O aumento da erosão de espécies com o aumento da capacidade de dispersão não se mantem quando outras subpopulações mais distantes da parcela repõem espécies perdidas localmente. Para determinar a extensão espacial adequada da paisagem vamos buscar aquela extensão espacial que não limite a redução da taxa U em cenários de limitação à dispersão brandos. Então vamos pressupor que não há perda de cobertura vegetal na paisagem, desse modo a possível estabilização de U não deve ser resultado do isolamento do habitat da parcela na paisagem.  </p>
+<p> Nossa proposta se baseia na taxa U, colonização de novas espécies na paisagem por evento de nascimento, estimada para obter a riqueza observada na parcela dado um cenário de limitação à dispersão e mapa de cobertura vegetal. Primeiro vamos avaliar como a estimativa de U varia com a redução da limitação de dispersão quando a paisagem apresenta a maior extensão considerada (16x16km2) e não há perda de habitat. Dos 106 sítios selecionados para a comparação dos modelos neutros, 36 foram sorteados e selecionados para avaliar qual a extensão espacial suficiente para comparar os modelos neutros. Esses 36 sítios incluem os extremos da riqueza de espécies e densidade de indivíduos observada e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (figura 1a). 
+Para cada sítio simulamos 20 cenários de limitação de dispersão (Figura 1b), com isso é possível avaliar se a extensão de 16x16 km2 é suficiente para obter o padrão qualitativo observado em paisagens infinitas (Figura 2). Então selecionamos, selecionamos 3 cenários de limitação à dispersão mais brandos (Figura 2) para avaliar se alguma sub extensão espacial da paisagem ao redor é suficiente para comparar os modelos. Aquela subescala que acumular a maior parte da variação pode ser candidata como extensão espacial da paisagem apropriada para comparar os modelos neutros. As subescalas avaliadas variaram de 0.5 km de lado até 16 km de lado, totalizando 6 escalas espaciais. </p>
 
-
-```{r figura 1 variaveis de controle e cenarios de limitacao de dispersao}
-df_plot <- df_se |>
+```{r figura 1 variaveis de controle e cenarios de limitacao de dispersao,fig.height=4}
+df_plot <- df_sim |>
+  filter(k==0.05) |> 
   mutate(sorteio_site = ifelse(SiteCode %in% unique(df_Unull$SiteCode),"SoE","non SoE"),
          DA = Ntotal / effort_ha)
 l_p <- list()
@@ -92,13 +100,15 @@ l_p[[2]] <- df_sim |>
   geom_boxplot() +
   labs(x = "k = % de propágulos até a vizinhança imediata do progenitor",
        y = "d = desvio-padrão da função de dispersão (dist. de Laplace)",
-       title = "c) Cenários de limitação de dispersão simulados")
+       title = "b) 20 cenários de limitação de dispersão simulados")
 grid.arrange(grobs=l_p,ncol=2)
 ```
 
 <p> __Figura 1__ a) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). b) Cenários de limitação de dispersão simulados, códigos para gerar simular o desvio padrão correspondente ao k em 'source/qkernel_e_sigkernel.R'.</p>
 
-```{r figura 2 U para todo k em paisagens nulas na maior escala investigada,fig.width=8,fig.height=8}
+<p> Para mais detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal.</p>
+
+```{r figura 2 U para todo k em paisagens nulas na maior escala investigada,fig.width=12,fig.height=7}
 df_plot <- df_Unull |> 
   arrange(S_obs) |> 
   mutate(label = paste(SiteCode,S_obs,Ntotal,round(DA,0),sep = ", "))
@@ -117,9 +127,11 @@ df_plot |>
 <p> __Figura 2__ U estimado (eixo y) por cenário de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km). Os pontos representam a média de 4 réplicas e as linhas. Os paineis estão separados por sítios de amostragem, cujo mapa de cobertura vegetal foi modificado para remover a matriz. As linhas em vermelho representam os cenários de limitação de dispersão usados na análise de escala de efeito usada a partir de MNEE, k = 0.25, 0.10 e 0.05. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão simulada. S = riqueza da espécie, N = número de indivíduos, DA = densidade de indivíduos.</p>
 
 
-#### Resultados
 
-```{r figura 3 Umed por lado da paisagem,fig.width=10,fig.height=8}
+
+#### Taxa U estimada para 3 cenários de limitação de dispersão brando em 6 subescalas da paisagem local
+
+```{r figura 3 Umed por lado da paisagem,fig.width=13,fig.height=8}
 df_plot <- df_Usoe |> 
   arrange(S_obs) |> 
   mutate(label = paste(SiteCode,S_obs,Ntotal,round(DA,1),sep = ", ")) 
@@ -133,89 +145,86 @@ df_plot |>
   scale_x_continuous(trans='log2',breaks = round(16.02/2^(5:0),0)) +
   theme_minimal() +
   # theme(legend.position = "bottom") +
-  labs(title="SiteCode, riqueza, número de indivíduos ,densidade",
+  labs(title = "U estimado nos 3 cenários de dispersão em diferentes subescalas da paisagem ao redor",
+       subtitle="facet label = Site code, riqueza, número de indivíduos ,densidade; free y axis",
        x = "lado da paisagem (km)",
        y = "taxa U estimada") +
   facet_wrap(~label,ncol = 6,scales="free_y")
 ```
 
-<p> __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para 3 cenários de limitação de dispersão (cor dos pontos e linhas, k = 0.05, 0.10 e 0.25). Pontos representam a média de 4 réplicas por bateria de simulação.</p>
+<p> __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para 3 cenários de limitação de dispersão (cor dos pontos e linhas, k = 0.05, 0.10 e 0.25). Pontos representam a média de 4 réplicas por bateria de simulação. Eixo y varia entre paineis</p>
+
+<p> A taxa U estimada teve um padrão de diminuir com o aumento da extensão espacial da paisagem, apesar de variar entre sítios e cenários de limitação de dispersão (Figura 3). O aumento da limitaçã à dispersão (de k = 0.05 dos propágulos permanece na vizinhança imediata do progenitor para k = 0.25) reduz a sensibilidade ao aumento da extensão espacial, pois para todos os sítios a taxa U no cenário de limitação mais severo é superior ao segundo mais severo e este ao cenário mais brando de limitação de dispersão (Figura 3). Em alguns casos a taxa U estimada no cenário de limitação mais severo tem um perfil similar aos dois mais brandos, enquanto em outros a taxa estabiliza em escalas menores  (Figura 3). A resposta de U em função da variação da escala parece depender também da riqueza de espécies, número total de indivíduos amostrado e da densidade de indivíduos (Figura SI 1 - INCLUIR A AMPLITUDE DE VARIAÇÃO DE U NOMINALMENTE NA LEGENDA).</p>
+
+<p> Para comparar os sítios utilizei um protocolo de transformações na taxa U. O valor médio foi obtido das replicas de uma bateria de simulações. Então, por sítio e cenário de limitação de dispersão, a diferença das médias de escalas consecutivas foi dividida pela diferença entre os valores extremos para o conjunto de todas as escalas (Ulag1). Dessa forma, avaliamos a mudança da taxa U com a variação da escala (Figura 4a). De maneira geral, U diminui cada vez menos com a escala, então os valores extremos de U tendem a ser os valores extremos de escala; mas em alguns casos, onde houve a estabilização da taxa U em escalas mais baixas, também houve maior variação de modo que o menor valor podem ser escalas intermedárias (e.g. SPpesmD para k=0.25), apesar de serem valores próximos com os da maior escala (Figura 3). Então o acumulo de Ulag1 em escalas consecutivas informa quanta variação na taxa U foi acumulada até determinada escala (Figura 4b).</p> 
 
 
 
-```{r}
-# df <- df_Usoe |> filter(SiteCode == "MGipia1")
+```{r figura 4 Ulag1 e cumulative Ulag1,fig.height=8,fig.width=8}
+# dados e função
+df_Usoe <- df_Usoe |> arrange(lado_km)
 f_lag.U <- function(df){
-  v_Udiff <- max(df$Umed) - df$Umed[nrow(df)]
-  df$Ulag <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
-  df$Ucsum <- cumsum(df$Ulag)
-  # df$Ulag3 <- c((df$Umed[1:(nrow(df)-3)] - df$Umed[4:nrow(df)])/df$Umed[nrow(df)],NA,NA,NA)
+  v_Udiff <- diff(range(df$Umed))
+  df$Ulag1 <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
+  df$Ucsum <- cumsum(df$Ulag1)
   return(df)
 }
-df_U <- ddply(df_U,"SiteCode",f_lag.U) |> arrange(lado_km)
-```
-
-
-
-
-#######
-
-```{r figura 5 Udiff}
-# df_Urep <- read_csv("../csv/df_Urep.csv")
-df_U |> 
-  ggplot(aes(x=lado_km,y=Udiff,group=SiteCode)) +
-  geom_point() +
-  geom_line() +
-  labs(title="Udiff = U - U_16x16km2") +
-  scale_x_continuous(trans='log2',breaks = round(16.02/2^(5:0),0)) +
-  theme_minimal()
-```
-
-<p> __Figura 4__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x). Pontos representam 5 réplicas por bateria de simulação. A simulação coalescente foi feita pressupondo que apenas 5% dos propágulos permanecem até a vizihança imediata do progenitor (100/sqrt(densidade indivíduos)).</p>
-
-```{r figura 5 reducao percentual de U entre escalas}
+registerDoMC(3)
+df_U <- ddply(df_Usoe,c("SiteCode","k"),f_lag.U,.parallel = TRUE)
+# gráficos
 # plot(density(na.omit(df_U$Ulag)))
 df_U$lado_factor <- factor(df_U$lado_km,labels=c(paste(16/(2^(5:1)),"->",16/(2^(4:0))),NA))
+df_U$k_factor <- factor(round(df_U$k,2))
 l_p <- list()
-l_p[[1]]<- df_U |>
+l_p[[1]] <- df_U |>
   drop_na() |>
-  # mutate(class_S = cut(S_obs,breaks = 6)) |> 
-  ggplot(aes(x=lado_factor, y = Ulag)) +
+  filter(Ulag1>=0) |> 
+  ggplot(aes(x=lado_factor,y=Ulag1,fill=k_factor)) +
+  geom_point(position=position_jitterdodge(),alpha=0.3) +
   geom_boxplot() +
-  geom_point() +
-  geom_line(aes(group=SiteCode)) +
-  labs(x="mudança de escala",y="U_i - U_i+1 / (U_inicial - U_final)",title="Contribuição para a redução geral")
-l_p[[2]]<- df_U |>
+  labs(x="mudança de escala",
+       y="U_i - U_i+1 / (U_inicial - U_final)",
+       title="a) Ulag1") +
+  facet_wrap(~k_factor,ncol=3)
+l_p[[2]] <- df_U |>
   drop_na() |>
-  # mutate(class_S = cut(S_obs,breaks = 6)) |> 
-  ggplot(aes(x=lado_factor, y = Ucsum)) +
+  filter(Ulag1>=0) |> 
+  ggplot(aes(x=lado_factor, y = Ucsum, fill=k_factor)) +
+  geom_point(position=position_jitterdodge(),alpha=0.3) +
   geom_boxplot() +
-  geom_point() +
-  geom_line(aes(group=SiteCode)) +
-  labs(x="mudança de escala",y="U_i - U_i+1 / (U_i - U_final)",title="Contribuição acumulativa para a redução geral")
-df_U |> 
-  group_by(SiteCode) |> 
-  mutate(Urange = max(Umed) - min(Umed)) |> 
-  select(SiteCode,Urange,S_obs) |> distinct()
-
-grid.arrange(grobs=l_p,nrow=1)
+  labs(x="mudança de escala",
+       y="U_i - U_i+1 / (U_i - U_final)",
+       title="b) cumulative Ulag1") +
+  facet_wrap(~k_factor,ncol=3)
+grid.arrange(grobs=l_p,nrow=2)
 ```
 
-# Support Information
+<p> __Figura 4__ Taxa U com lag de 1 entre escalas consecutivas. No painél 'a' os valores calculados para cada mudança de escala, no painel 'b' o valor acumulado." 
 
-Distribuição da diferença de U entre escalas consecutivas,
+## Support Information
 
-Padronização:
-1) transformação z: ( Umed - mean(Umed) ) / sd(Umed)
-2) subtração pelo valor da maior escala
-3) diferença entre escalas padronizada pela diferença geral do sítio: i+1 - i / (inicial - final) 
-4) distribuição de valores das diferenças entre escalas 
+```{r figura SI 1 amplitude de U em funcao das variaveis de controle Sobs e DA,fig.height=3,fig.width=8}
+df_Usoe$k_factor <- factor(round(df_Usoe$k,2))
+l_p <- list()
+l_p[[1]] <- df_Usoe |> 
+  ggplot(aes(x=S_obs,y=Umed,color=DA)) +
+  geom_smooth(method="lm",se=F) +
+  geom_line(aes(group=SiteCode),alpha=0.4) +
+  geom_point(size=2,aes(shape=k_factor))
+l_p[[2]] <- df_Usoe |> 
+  ggplot(aes(x=DA,y=Umed,color=S_obs)) +
+  geom_smooth(method="lm",se=F) +
+  geom_line(aes(group=SiteCode),alpha=0.4) +
+  geom_point(size=2,aes(shape=k_factor))
+grid.arrange(grobs=l_p,ncol=2)
+```
+
+<p> __Figura SI1__ Amplitude da taxa U estimada em função da densidade de indivíduos (DA) e da riqueza de espécies (S_obs). </p>
 
 
+<!-- ## Códigos para estimar U nas diferentes extensões espaciais -->
 
-## Códigos para estimar U nas diferentes extensões espaciais
-
-<p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p>
+<!-- <p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p> -->
 
 ```{r codigos para estimar U para uma mesma extensao espacial e diferentes k,eval=FALSE}
 setwd("dados/simulacao")
@@ -254,7 +263,6 @@ f_csv <- function(path.csv){
 v_logical <- sapply(v_csv.path[-1],f_csv)
 system("du -s dados/csv/SoE/")
 ```
-
 
 ```{r df sorteios sitios, eval=FALSE}
 df_sorteio_sitios <- df |> 
