@@ -76,9 +76,10 @@ download_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
  
 ## Introdução
 
-<p> Para comparar os modelos neutros é necessário primeiro determinar a extensão espacial da paisagem ao redor (REF). Não há consenso em como estimar uma extensão espacial da paisagem ao redor comum às parcelas reunidas para estudo (REF). Aqui vamos usar MNEE para estimar a extensão espacial. Em paisagens infinitas e sem perda de habitat, espera-se que a taxa U necessária para manter uma determinada riqueza na parcela apresente padrão não linear (May et al. 2011). Em cenários de limitação à dispersão severa a  taxa U estimada deve ser pequena, pois a perda de espécies deve ser pequena, uma vez que a maior parte das substituições ocorre entre indivíduos de uma mesma espécie devido à elevada agregação de coespecíficos. Com o aumento da capacidade de dispersão a perda de espécies deve aumentar ao passo que a substituição de coespécies diminui, aumentando a perda de espécies por deriva ecológica. O aumento da erosão de espécies com o aumento da capacidade de dispersão não se mantem quando outras subpopulações mais distantes da parcela repõem espécies perdidas localmente. Para determinar a extensão espacial adequada da paisagem vamos buscar aquela extensão espacial que não limite a redução da taxa U em cenários de limitação à dispersão brandos. Então vamos pressupor que não há perda de cobertura vegetal na paisagem, desse modo a possível estabilização de U não deve ser resultado do isolamento do habitat da parcela na paisagem.  </p>
-<p> Nossa proposta se baseia na taxa U, colonização de novas espécies na paisagem por evento de nascimento, estimada para obter a riqueza observada na parcela dado um cenário de limitação à dispersão e mapa de cobertura vegetal. Primeiro vamos avaliar como a estimativa de U varia com a redução da limitação de dispersão quando a paisagem apresenta a maior extensão considerada (16x16km2) e não há perda de habitat. Dos 106 sítios selecionados para a comparação dos modelos neutros, 36 foram sorteados e selecionados para avaliar qual a extensão espacial suficiente para comparar os modelos neutros. Esses 36 sítios incluem os extremos da riqueza de espécies e densidade de indivíduos observada e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (figura 1a). 
-Para cada sítio simulamos 20 cenários de limitação de dispersão (Figura 1b), com isso é possível avaliar se a extensão de 16x16 km2 é suficiente para obter o padrão qualitativo observado em paisagens infinitas (Figura 2). Então selecionamos, selecionamos 3 cenários de limitação à dispersão mais brandos (Figura 2) para avaliar se alguma sub extensão espacial da paisagem ao redor é suficiente para comparar os modelos. Aquela subescala que acumular a maior parte da variação pode ser candidata como extensão espacial da paisagem apropriada para comparar os modelos neutros. As subescalas avaliadas variaram de 0.5 km de lado até 16 km de lado, totalizando 6 escalas espaciais. </p>
+<p> Para comparar os modelos neutros é necessário primeiro determinar a extensão espacial da paisagem ao redor (REF), pois os modelos neutros derivados da HAH (MNEI extremo e brando) requerem que o pool de propágulos da paisagem ao redor seja pré delimitados (Fahrig 2021/20222 Reply to Sauro 2021/2022 J Biogeo) e o modelo neutro derivado de HCH (MNEE) requer paisagem ao redor da parcela suficiente para que a simulação coalescente não seja restringinda pela extensão espacial da paisagem (Thompson et al. 2019/2020 Rcoalescent package paper). Não há consenso em como estimar uma extensão espacial da paisagem ao redor comum às parcelas reunidas para estudo (REF). </p>
+<p> Nossa proposta se baseia na taxa U, colonização de novas espécies na paisagem por evento de nascimento, estimada por MNEE para obter a riqueza observada na parcela dado um cenário de limitação à dispersão e mapa de cobertura vegetal. Em paisagens infinitas e sem perda de habitat, espera-se que a taxa U necessária para manter uma determinada riqueza na parcela apresente padrão não linear (May et al. 2011). Em cenários de limitação à dispersão severa a  taxa U estimada deve ser pequena, pois a perda de espécies deve ser pequena, uma vez que a maior parte das substituições ocorre entre indivíduos de uma mesma espécie devido à elevada agregação de coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies deve aumentar ao passo que a substituição de coespecíficos diminui, aumentando a perda de espécies por deriva ecológica. O aumento da erosão de espécies com o aumento da capacidade de dispersão não se mantem sempre, ao passo que outras subpopulações mais distantes da parcela podem repor espécies perdidas localmente, fazendo com que a perda de espécies local seja parcialmente compensada pela dispersão de propágulos da paisagem ao redor em cenários de limitação de dispersão brandos. Para determinar a extensão espacial adequada da paisagem vamos buscar aquela extensão espacial que não limite a redução da taxa U em cenários de limitação à dispersão brandos. Então vamos pressupor que não há perda de cobertura vegetal na paisagem, desse modo a possível estabilização de U não pode ser resultado do isolamento do habitat da parcela na paisagem.  </p>
+<p> Primeiro vamos avaliar como a estimativa de U varia com a redução da limitação de dispersão quando a paisagem apresenta a maior extensão considerada (16x16km2) e não há perda de habitat. Dessa forma avaliamos se a maior extensão considerada é suficiente para obter o padrão não linear esperado em paisagens infinitas. E depois vamos selecionar alguns cenários de limitação à dispersão brandos para avaliar como a taxa U varia com a redução da extensão espacial. </p>
+<p> Dos 106 sítios selecionados para a comparação dos modelos neutros, 36 foram sorteados e selecionados para avaliar qual a extensão espacial suficiente para comparar os modelos neutros. Esses 36 sítios incluem os extremos da riqueza de espécies e densidade de indivíduos observada e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (figura 1a). Para cada sítio simulamos 20 cenários de limitação de dispersão (Figura 1b e Figura 2). Então selecionamos 3 cenários de limitação à dispersão mais brandos (Figura 2) para avaliar se alguma sub extensão espacial da paisagem ao redor é suficiente para comparar os modelos neutros. As subescalas avaliadas variaram de 0.5 km de lado até 16 km de lado, totalizando 6 escalas espaciais da paisagem ao redor. Aquela subescala que acumular a maior parte da variação pode ser candidata como extensão espacial da paisagem apropriada para comparar os modelos neutros. </p>
 
 ```{r figura 1 variaveis de controle e cenarios de limitacao de dispersao,fig.height=4}
 df_plot <- df_sim |>
@@ -98,15 +99,13 @@ l_p[[2]] <- df_sim |>
   ggplot(aes(x=k,y=d,group=k)) +
   geom_jitter() +
   geom_boxplot() +
-  labs(x = "k = % de propágulos até a vizinhança do progenitor",
-       y = "d = SD função de dispersão (dist. de Laplace)",
-       title = "b) 20 cenários de limitação de dispersão simulados")
+  labs(x = "k",
+       y = "d",
+       title = "b) cenários de dispersão")
 grid.arrange(grobs=l_p,ncol=2)
 ```
 
-<p> __Figura 1__ a) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). b) Cenários de limitação de dispersão simulados, códigos para gerar simular o desvio padrão correspondente ao k em 'source/qkernel_e_sigkernel.R'.</p>
-
-<p> Para mais detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal.</p>
+<p> __Figura 1__ a) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). b) Cenários de limitação de dispersão simulados. k = proporção de propágulos que permanece até a vizinhança imediata (distância média entre indivíduos); d = desvio padrão da função de dispersão com distribuição de Laplace. Para detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal.</p>
 
 ```{r figura 2 U para todo k em paisagens nulas na maior escala investigada,fig.width=12,fig.height=7}
 df_plot <- df_Unull |> 
@@ -124,12 +123,12 @@ df_plot |>
   facet_wrap(~label, ncol=6,scales="free_y")
 ```
 
-<p> __Figura 2__ U estimado (eixo y) por cenário de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km). Os pontos representam a média de 4 réplicas e as linhas. Os paineis estão separados por sítios de amostragem, cujo mapa de cobertura vegetal foi modificado para remover a matriz. As linhas em vermelho representam os cenários de limitação de dispersão usados na análise de escala de efeito usada a partir de MNEE, k = 0.25, 0.10 e 0.05. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão simulada. S = riqueza da espécie, N = número de indivíduos, DA = densidade de indivíduos.</p>
+<p> __Figura 2__ U estimado (eixo y) por cenário de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km). Os pontos representam a média de 4 réplicas e as linhas ligam pontos de um mesmo sítio de amostragem. Os paineis estão separados por sítios de amostragem, cujo mapa de cobertura vegetal foi modificado para ter apenas unidades de habitat. As linhas em vermelho representam os cenários de limitação de dispersão usados na análise de escala de efeito, k = 0.25, 0.10 e 0.05. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão simulada. S = riqueza da espécie, N = número de indivíduos, DA = densidade de indivíduos.</p>
 
 
 
 
-#### Taxa U estimada para 3 cenários de limitação de dispersão brando em 6 subescalas da paisagem local
+### Taxa U e a variação na extensão espacial da paisagem local
 
 ```{r figura 3 Umed por lado da paisagem,fig.width=13,fig.height=8}
 df_plot <- df_Usoe |> 
@@ -154,11 +153,9 @@ df_plot |>
 
 <p> __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para 3 cenários de limitação de dispersão (cor dos pontos e linhas, k = 0.05, 0.10 e 0.25). Pontos representam a média de 4 réplicas por bateria de simulação. Eixo y varia entre paineis</p>
 
-<p> A taxa U estimada teve um padrão de diminuir com o aumento da extensão espacial da paisagem, apesar de variar entre sítios e cenários de limitação de dispersão (Figura 3). O aumento da limitaçã à dispersão (de k = 0.05 dos propágulos permanece na vizinhança imediata do progenitor para k = 0.25) reduz a sensibilidade ao aumento da extensão espacial, pois para todos os sítios a taxa U no cenário de limitação mais severo é superior ao segundo mais severo e este ao cenário mais brando de limitação de dispersão (Figura 3). Em alguns casos a taxa U estimada no cenário de limitação mais severo tem um perfil similar aos dois mais brandos, enquanto em outros a taxa estabiliza em escalas menores  (Figura 3). A resposta de U em função da variação da escala parece depender também da riqueza de espécies, número total de indivíduos amostrado e da densidade de indivíduos (Figura SI 1 - INCLUIR A AMPLITUDE DE VARIAÇÃO DE U NOMINALMENTE NA LEGENDA).</p>
+<p> A taxa U estimada apresenta padrão de diminuir com o aumento da extensão espacial da paisagem, apesar de variar entre sítios e cenários de limitação de dispersão (Figura 3). O aumento da limitaçã à dispersão (de k = 0.05 dos propágulos permanece na vizinhança imediata do progenitor para k = 0.25) reduz a sensibilidade ao aumento da extensão espacial, pois para todos os sítios a taxa U no cenário de limitação mais severo é superior ao segundo mais severo e este ao cenário mais brando de limitação de dispersão (Figura 3). Em alguns casos a taxa U estimada no cenário de limitação mais severo tem um perfil similar aos dois mais brandos, enquanto em outros a taxa estabiliza em escalas menores para cenários de limitação mais brandos (Figura 3). A resposta de U em função da variação da escala parece depender também da riqueza de espécies, número total de indivíduos amostrado e da densidade de indivíduos (Figura SI 1 - INCLUIR A AMPLITUDE DE VARIAÇÃO DE U NOMINALMENTE NA LEGENDA).</p>
 
-<p> Para comparar os sítios utilizei um protocolo de transformações na taxa U. O valor médio foi obtido das replicas de uma bateria de simulações. Então, por sítio e cenário de limitação de dispersão, a diferença das médias de escalas consecutivas foi dividida pela diferença entre os valores extremos para o conjunto de todas as escalas (Ulag1). Dessa forma, avaliamos a mudança da taxa U com a variação da escala (Figura 4a). De maneira geral, U diminui cada vez menos com a escala, então os valores extremos de U tendem a ser os valores extremos de escala; mas em alguns casos, onde houve a estabilização da taxa U em escalas mais baixas, também houve maior variação de modo que o menor valor podem ser escalas intermedárias (e.g. SPpesmD para k=0.25), apesar de serem valores próximos com os da maior escala (Figura 3). Então o acumulo de Ulag1 em escalas consecutivas informa quanta variação na taxa U foi acumulada até determinada escala (Figura 4b).</p> 
-
-
+<p> Para comparar os sítios utilizei um protocolo de transformações na taxa U. O valor médio foi obtido das replicas de uma bateria de simulações. Então, por sítio e cenário de limitação de dispersão, a diferença das médias de escalas consecutivas foi dividida pela diferença entre os valores extremos para o conjunto de todas as escalas (Ulag1). Dessa forma, avaliamos a mudança da taxa U com a variação da escala (Figura 4). De maneira geral, U diminui cada vez menos com a escala, então os valores extremos de U tendem a ser os valores extremos de escala; mas em alguns casos, onde houve a estabilização da taxa U em escalas mais baixas, também houve maior variação de modo que o menor valor podem ser escalas intermedárias (e.g. SPpesmD para k=0.25), apesar de serem valores próximos com os da maior escala (Figura 3). Então o acumulo de Ulag1 em escalas consecutivas pode informar quanta variação na taxa U foi acumulada até determinada escala (Figura 4b).</p> 
 
 ```{r figura 4 Ulag1 e cumulative Ulag1,fig.height=8,fig.width=8}
 # dados e função
@@ -183,7 +180,7 @@ l_p[[1]] <- df_U |>
   geom_point(position=position_jitterdodge(),alpha=0.3) +
   geom_boxplot() +
   labs(x="mudança de escala",
-       y="U_i - U_i+1 / (U_inicial - U_final)",
+       y="U_i - U_i+1 / diff(range(U))",
        title="a) Ulag1") +
   facet_wrap(~k_factor,ncol=3)
 l_p[[2]] <- df_U |>
@@ -193,15 +190,24 @@ l_p[[2]] <- df_U |>
   geom_point(position=position_jitterdodge(),alpha=0.3) +
   geom_boxplot() +
   labs(x="mudança de escala",
-       y="U_i - U_i+1 / (U_i - U_final)",
+       y="sum( U_i - U_i+1 / diff(range(U)) )",
        title="b) cumulative Ulag1") +
   facet_wrap(~k_factor,ncol=3)
 grid.arrange(grobs=l_p,nrow=2)
 ```
 
-<p> __Figura 4__ Taxa U com lag de 1 entre escalas consecutivas. No painél 'a' os valores calculados para cada mudança de escala, no painel 'b' o valor acumulado." 
+<p> __Figura 4__ Taxa U com lag de 1 entre escalas consecutivas. No conjunto de paineis em 'a' os valores calculados para cada mudança de escala, em 'b' o valor acumulado. Os subpainíeis estão dividos pelo cenário de limitação de dispersão.</p>
 
-## Support Information
+<p> Quanto maior a dupla de escalas consecutivas menor o valor de Ulag1, apesar de existir variação entre cenários de limitação de dispersão (figura 4). A amplitude de valores de Ulag1 aumenta com a limitação de dispersão (figura 4a), por exemplo, nas simulações em que k=0.25 a primeira mudança de escala (de 0.5 km para 1 km) pode variar entre 80% e 30% de toda a variação da taxa U com o aumento da escala; enquanto para k=0.10 e 0.05 essa mudança de escala representa em geral até 40% de variação na taxa U (Figura 4a). O Ulag1 acumulado dos cenários mais brandos de limitação (k=0.10 e 0.05) chega aos 90% quando passamos para a escala de 8 km (Figura 4b); enquanto no cenário de limitação mais brando esse valor pode ser observado quando passamos para a escala de 4 km, com mais da metade dos sítios, ou de 2 km, com menos de um quarto dos sítios (Figura 4b).</p>
+
+## Discussão
+IDEIAS:
+- Na maior extensão espacial considerada da paisagem local (16x16km2) observamos um padrão que é qualitativamente similar ao esperado em paisagens infinitas (May et al. 2011), assim pressupomos que a maior extensão espacial é a referência de menor valor da taxa U para uma determinada bateria de simulações (cenário de limitação de dispersão, riqueza de espécies, número de indivíduos na parcela e densidade de indivíduos na paisagem).
+- Dado a natureza não truncada da função de dispersão, a extensão espacial da paisagem que estabiliza a taxa U estimada em cenários de limitação de dispersão muito brandos (e.g. k=0.05) pode ser superior à maior extensão simulada (16x16km2) - aqui não fizemos essa avaliação, porém em todos os sítios a taxa de U no cenário mais brando está na mesma ordem de magnitude do primeiro cenário, possibilitando o padrão não linear.  
+- A riqueza de espécies, número de indivíduos na parcela e densidade de indivíduos na paisagem influencia na magnitude da estimativa de U e da variação de U em função da limitação de dispersão e da extensão espacial da paisagem (Figuras 2, 3 e 4).
+- Nosso método para avaliar a extensão espacial que acumula a maior variação da taxa U, padroniza a amplitude de valores de um sítio como diferença total para aquela sítio, possibilitando a comparação de sítios com diferentes amplitudes de valores. 
+
+### Support Information
 
 ```{r figura SI 1 amplitude de U em funcao das variaveis de controle Sobs e DA,fig.height=3,fig.width=8}
 df_Usoe$k_factor <- factor(round(df_Usoe$k,2))
@@ -220,7 +226,6 @@ grid.arrange(grobs=l_p,ncol=2)
 ```
 
 <p> __Figura SI1__ Amplitude da taxa U estimada em função da densidade de indivíduos (DA) e da riqueza de espécies (S_obs). </p>
-
 
 <!-- ## Códigos para estimar U nas diferentes extensões espaciais -->
 
