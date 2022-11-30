@@ -98,8 +98,8 @@ l_p[[2]] <- df_sim |>
   ggplot(aes(x=k,y=d,group=k)) +
   geom_jitter() +
   geom_boxplot() +
-  labs(x = "k = % de propágulos até a vizinhança imediata do progenitor",
-       y = "d = desvio-padrão da função de dispersão (dist. de Laplace)",
+  labs(x = "k = % de propágulos até a vizinhança do progenitor",
+       y = "d = SD função de dispersão (dist. de Laplace)",
        title = "b) 20 cenários de limitação de dispersão simulados")
 grid.arrange(grobs=l_p,ncol=2)
 ```
