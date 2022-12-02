@@ -1,14 +1,17 @@
 ---
-title: Análise de escala de efeito usando MNEE
-authors:
-  - name: Danilo Pereira Mori
-    affiliation: LET - IBUSP
-# bibliography: references.bib
-# biblio-style: unsrt
-# output: rticles::arxiv_article
-output: html_document
-editor_options: 
+title: "Efeito de escala"
+author: 
+  - Danilo Pereira Mori, Laboratório de Ecologia Teórica (IBUSP)
+date: "2022-08-20"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    extra_dependencies: ["tabu"]
+  html_document: default
+editor_options:
   chunk_output_type: console
+# bibliography: citations.bib
+csl: plos.csl
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE)
