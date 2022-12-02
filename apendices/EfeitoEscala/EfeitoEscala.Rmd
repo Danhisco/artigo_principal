@@ -210,6 +210,12 @@ IDEIAS:
 - A riqueza de espécies, número de indivíduos na parcela e densidade de indivíduos na paisagem influencia na magnitude da estimativa de U e da variação de U em função da limitação de dispersão e da extensão espacial da paisagem (Figuras 2, 3 e 4).
 - Nosso método para avaliar a extensão espacial que acumula a maior variação da taxa U, padroniza a amplitude de valores de um sítio como diferença total para aquela sítio, possibilitando a comparação de sítios com diferentes amplitudes de valores. 
 
+
+
+- Outros trabalhos na Floresta Atlântica utilizam a extensão espacial de cerca de 4x4 km2. Nessa escala observamos que a taxa U pode ser superestimada em até 20% (quando comparado com paisagens de 16x16 km2) no cenário de maior capacidade de dispersão (k=0.05), por conta da restrição espacial da paisagem ao redor. Esse efeito deve ser observado em paisagens com pouca perda de habitat e bem funcionalmente conectados. A superestimava da taxa U na escala de 4x4 km2 compensa a redução da contribuição de propágulos para a reposição de espécies perdidas localmente que estariam presentes em paisagens de 16x16 km2
+
+
+
 ### Support Information
 
 ```{r figura SI 1 amplitude de U em funcao das variaveis de controle Sobs e DA,fig.height=3,fig.width=8}
