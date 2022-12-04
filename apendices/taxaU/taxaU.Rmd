@@ -1,0 +1,48 @@
+---
+title: "taxaU"
+author: "Danilo Pereira Mori"
+date: "2022-12-04"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval = FALSE)
+# pacotes
+library(doMC)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(plyr)
+library(dplyr)
+# dados
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  mutate(txt.path = gsub("dados/simulacao/","",txt.path))
+# funções
+source("source/dinamica_coalescente.R")
+```
+
+```{r f taxaU}
+setwd("dados/simulacao")
+f_taxaU <- function(df,n_replicas=10){
+  f_simCoalescente <- function(X){
+    v <- dinamica_coalescente(U = 1.25e-06, S=X$S_obs, disp_range = X$d, N_simul=1,landscape = X$txt.path)
+    v$U_est
+  }
+  l_dfU <- list()
+  for(i in 1:nrow(df)){
+    v_U <- replicate(n=n_replicas,f_simCoalescente(X = df[i,]))
+    l_dfU[[i]] <- cbind(select(df[i,],SiteCode,k,d),
+                        matrix(v_U,nrow=1))
+  }
+  df_write <- rbind.fill(l_dfU)
+  write_csv(df_write,file = paste0("../csv/taxaU/",df$SiteCode[1],".csv"))
+}
+registerDoMC(3)
+d_ply(df_sim,"SiteCode",f_taxaU,.parallel = TRUE)
+```
+
