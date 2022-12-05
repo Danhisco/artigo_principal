@@ -19,9 +19,20 @@ library(stringr)
 library(tidyr)
 library(plyr)
 library(dplyr)
-# dados
+# df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   mutate(txt.path = gsub("dados/simulacao/","",txt.path))
+# df_Urep
+df_Urep <- list.files(path = "dados/csv/taxaU",pattern = ".csv",full.names = T) |> 
+  map_df(~read_csv(.))
+df_U <- df_Urep |> 
+  pivot_longer(cols = 4:13,names_to = "n",values_to = "U") |> 
+  group_by(SiteCode,k) |> 
+  summarise(Umed = mean(U),
+            Usd = sd(U),
+            Umin = min(U),
+            Umax = max(U)) |> 
+  inner_join(x=df_sim,by=c("SiteCode","k"))
 # funções
 source("source/dinamica_coalescente.R")
 ```
@@ -44,5 +55,13 @@ f_taxaU <- function(df,n_replicas=10){
 }
 registerDoMC(3)
 d_ply(df_sim,"SiteCode",f_taxaU,.parallel = TRUE)
+```
+
+```{r}
+df_U |> 
+  ggplot(aes(x=d,y=Umed)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~SiteCode, ncol=6,scales="free_y")
 ```
 
