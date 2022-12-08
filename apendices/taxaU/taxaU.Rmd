@@ -17,6 +17,10 @@ library(readr)
 library(purrr)
 library(stringr)
 library(tidyr)
+library(insight)
+library(bbmle)
+library(DHARMa)
+library(lme4)
 library(plyr)
 library(dplyr)
 # df_sim
@@ -102,10 +106,10 @@ __Figura 1__ Média da taxa U estimada pelo desvio padrão da função de disper
 
 ### Análise Estatística de U
 
-Proposta:
-i) transformar U para escala logito
-ii) fazer seleção de modelos usando LMER para avaliar quais os possíveis offsets: S_obs, razão A_J / A_M, A_J, DA
-iii) avaliar a melhor estrutura do GAMM 
+<p>Proposta:</p>
+<p>i) transformar U para escala logito</p>
+<p>ii) fazer seleção de modelos usando LMER para avaliar quais os possíveis offsets: S_obs, razão A_J / A_M, A_J, DA</p>
+<p>iii) avaliar a melhor estrutura do GAMM </p>
 
 ```{r Umed selecao de offset,echo=T}
 # dados
@@ -119,15 +123,34 @@ df_Ulogit <- df_U |>
   mutate(Ulogit = log(Umed/(1-Umed)),
          Areas_ratio = effort_ha / 1600,
          DA = Ntotal / effort_ha,
+         logS.z = f_z(log(S_obs)),
          S.z = f_z(S_obs),
          DA.z = f_z(DA),
          Areas.z = f_z(Areas_ratio))
+# gráficos
+v_names <- set_names(names(df_Ulogit)[16:19])
+# próximo: fazer gráficos exploratórios 
+```
+
+
+```{r modelos para offsets,eval=TRUE,echo=TRUE}
 # modelos
 l_md <- list()
-l_md[[1]] <- lmer(Ulogit ~ )
-lmer_U <- lmer(log10_U ~ log10_Sobs + (1|SiteCode),data=df_U)
+l_md[[1]] <- lmer(Ulogit ~ S.z + Areas.z + DA.z + (1|SiteCode), data=df_Ulogit)
+l_md[[2]] <- update(l_md[[1]], . ~ . -Areas.z)
+l_md[[3]] <- update(l_md[[1]], . ~ . -DA.z)
+l_md[[4]] <- update(l_md[[2]], . ~ . -DA.z)
+f_nameModel <- function(md){
+  paste(unlist(find_predictors(md)),collapse = " + ")
+}
+names(l_md) <-laply(l_md,f_nameModel)
+AICctab(l_md,weights=T)
+```
 
 
+```{r DHARMa residuals, eval=TRUE}
+p_plot <- simulateResiduals(l_md[[1]],n=1000)
+plot(p_plot)
 ```
 
 
