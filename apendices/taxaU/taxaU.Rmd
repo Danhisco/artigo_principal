@@ -8,7 +8,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,eval = FALSE)
+knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
 # pacotes
 library(doMC)
 library(gridExtra)
@@ -23,10 +23,9 @@ library(dplyr)
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   mutate(txt.path = gsub("dados/simulacao/","",txt.path))
 # df_Urep
-df_Urep <- list.files(path = "dados/csv/taxaU",pattern = ".csv",full.names = T) |> 
-  map_df(~read_csv(.))
+df_Urep <- read_csv("dados/csv/df_Urep.csv")
 df_U <- df_Urep |> 
-  pivot_longer(cols = 4:13,names_to = "n",values_to = "U") |> 
+  pivot_longer(cols = `1`:`10`,names_to = "n",values_to = "U") |> 
   group_by(SiteCode,k) |> 
   summarise(Umed = mean(U),
             Usd = sd(U),
@@ -37,11 +36,13 @@ df_U <- df_Urep |>
 source("source/dinamica_coalescente.R")
 ```
 
-```{r f taxaU}
+### Estimativa da taxa U
+
+```{r estimativa de taxa U, echo=TRUE}
 setwd("dados/simulacao")
-f_taxaU <- function(df,n_replicas=10){
+f_taxaU <- function(df,n_replicas=10, Umin = 1.25e-08){
   f_simCoalescente <- function(X){
-    v <- dinamica_coalescente(U = 1.25e-06, S=X$S_obs, disp_range = X$d, N_simul=1,landscape = X$txt.path)
+    v <- dinamica_coalescente(U = Umin, S=X$S_obs, disp_range = X$d, N_simul=1,landscape = X$txt.path)
     v$U_est
   }
   l_dfU <- list()
@@ -57,11 +58,76 @@ registerDoMC(3)
 d_ply(df_sim,"SiteCode",f_taxaU,.parallel = TRUE)
 ```
 
-```{r}
-df_U |> 
+```{r taxa U para SCarar - sitio com NAs quando Umin igual a 1.25e-06}
+setwd("dados/simulacao")
+m <- as.matrix(read.table("SCarar.txt"))
+image(m)
+df <- filter(df_sim,SiteCode == "SCarar")
+X_i <- df[1,]
+f_taxaU2 <- function(df, n_replicas=10, Umin=1.25e-08, diminuir=5, parallel=TRUE, n_cores=3){
+  f_simCoalescente <- function(X){
+    v <- dinamica_coalescente(U = Umin, S=X$S_obs, disp_range = X$d, N_simul=1,landscape = X$txt.path, decay = diminuir)
+    if(any(is.na(v))){
+      return(NA)
+    } else{
+      return(v$U_est)
+      }
+  }
+  f_write <- function(X_i){
+    v_U <- replicate(n=n_replicas,f_simCoalescente(X = X_i))
+    df_write <- cbind(select(X_i,SiteCode,k,d),
+                        matrix(v_U,nrow=1))
+    write_csv(df_write,file = paste0("../csv/taxaU/",X_i$SiteCode,"_k",round(X_i$k,2),".csv"))
+  }
+  registerDoMC(n_cores)
+  a_ply(df,1,f_write,.parallel = TRUE)
+}
+f_taxaU(filter(df_sim,SiteCode == "SCarar"))
+```
+
+
+```{r fig 1 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=18,fig.width=15}
+df_plot <- df_U |> 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2), " ,S=",S_obs))
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
+df_plot |> 
   ggplot(aes(x=d,y=Umed)) +
   geom_point() +
   geom_line() +
-  facet_wrap(~SiteCode, ncol=6,scales="free_y")
+  facet_wrap(~label, ncol=6,scales="free_y")
 ```
+
+__Figura 1__ Média da taxa U estimada pelo desvio padrão da função de dispersão, média de 10 réplicas. p = proporção de cobertura vegetal, S = riqueza de espécies.
+
+### Análise Estatística de U
+
+Proposta:
+i) transformar U para escala logito
+ii) fazer seleção de modelos usando LMER para avaliar quais os possíveis offsets: S_obs, razão A_J / A_M, A_J, DA
+iii) avaliar a melhor estrutura do GAMM 
+
+```{r Umed selecao de offset,echo=T}
+# dados
+f_z <- function(x){
+  m <- base::mean(x,na.rm=FALSE)
+  sd <- sd(x,na.rm=FALSE)
+  (x-m)/sd
+}
+df_Ulogit <- df_U |> 
+  drop_na() |> 
+  mutate(Ulogit = log(Umed/(1-Umed)),
+         Areas_ratio = effort_ha / 1600,
+         DA = Ntotal / effort_ha,
+         S.z = f_z(S_obs),
+         DA.z = f_z(DA),
+         Areas.z = f_z(Areas_ratio))
+# modelos
+l_md <- list()
+l_md[[1]] <- lmer(Ulogit ~ )
+lmer_U <- lmer(log10_U ~ log10_Sobs + (1|SiteCode),data=df_U)
+
+
+```
+
 
