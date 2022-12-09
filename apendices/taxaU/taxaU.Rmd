@@ -120,15 +120,25 @@ f_z <- function(x){
 }
 df_Ulogit <- df_U |> 
   drop_na() |> 
-  mutate(Ulogit = log(Umed/(1-Umed)),
-         Areas_ratio = effort_ha / 1600,
+  mutate(Areas_ratio = effort_ha / 1600,
          DA = Ntotal / effort_ha,
+         Ulogit = log(Umed/(1-Umed)),
          logS.z = f_z(log(S_obs)),
          S.z = f_z(S_obs),
+         logDA.z = f_z(log(DA)),
          DA.z = f_z(DA),
+         logAreas.z = f_z(log(Areas_ratio)),
+         effort.z = f_z(effort_ha),
+         log_effort.z = f_z(log(effort_ha)),
          Areas.z = f_z(Areas_ratio))
 # gráficos
-v_names <- set_names(names(df_Ulogit)[16:19])
+df_Ulogit |> 
+  select(Ulogit:Areas.z,effort.z) |> 
+  pivot_longer(-Ulogit,names_to = "preditoras",values_to = "values") |> 
+  ggplot(aes(x=values,y=Ulogit)) +
+  geom_point() +
+  geom_smooth(se=F,method = "loess",formula = "y~x") +
+  facet_wrap(~preditoras,ncol=2,scales="free_x")
 # próximo: fazer gráficos exploratórios 
 ```
 
@@ -136,10 +146,10 @@ v_names <- set_names(names(df_Ulogit)[16:19])
 ```{r modelos para offsets,eval=TRUE,echo=TRUE}
 # modelos
 l_md <- list()
-l_md[[1]] <- lmer(Ulogit ~ S.z + Areas.z + DA.z + (1|SiteCode), data=df_Ulogit)
-l_md[[2]] <- update(l_md[[1]], . ~ . -Areas.z)
-l_md[[3]] <- update(l_md[[1]], . ~ . -DA.z)
-l_md[[4]] <- update(l_md[[2]], . ~ . -DA.z)
+l_md[[1]] <- lmer(Ulogit ~ S.z + DA.z + (1|SiteCode), data=df_Ulogit)
+l_md[[2]] <- update(l_md[[1]], . ~ . -DA.z)
+l_md[[3]] <- lmer(Ulogit ~ logS.z + logDA.z + (1|SiteCode), data=df_Ulogit)
+l_md[[4]] <- update(l_md[[3]], . ~ . -logDA.z)
 f_nameModel <- function(md){
   paste(unlist(find_predictors(md)),collapse = " + ")
 }
@@ -149,8 +159,9 @@ AICctab(l_md,weights=T)
 
 
 ```{r DHARMa residuals, eval=TRUE}
-p_plot <- simulateResiduals(l_md[[1]],n=1000)
+p_plot <- simulateResiduals(l_md[["logS.z + logDA.z"]],n=1000)
 plot(p_plot)
+plot(density(df_Ulogit$Umed))
 ```
 
 
