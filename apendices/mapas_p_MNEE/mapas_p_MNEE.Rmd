@@ -16,7 +16,7 @@ text-align: justify}
 </style>
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE)
+knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=FALSE)
 # pacotes
 library(doMC)
 library(raster)
@@ -29,22 +29,33 @@ library(dplyr)
 # df_dados
 df_dados <- read_csv("dados/df_dados_disponiveis.csv") |> 
   select(SiteCode, effort_ha, Ntotal, S_obs) |> 
-  inner_join(data.frame(tif.path = list.files(path="dados/paisagens_mapbiomas6_padronizadas",pattern=".tif",full.names=T),
-                        SiteCode = str_extract(list.files(path="dados/paisagens_mapbiomas6_padronizadas",
-                                                          pattern=".tif",full.names=T),"(?<=as\\/).*?(?=.tif)")),
+  inner_join(data.frame(tif.path = list.files(path="dados/paisagens/paisagens_mapbiomas6_padronizadas",
+                                              pattern=".tif",full.names=T),
+                        SiteCode = str_extract(list.files(path="dados/paisagens/paisagens_mapbiomas6_padronizadas",
+                                                    pattern=".tif",full.names=T),
+                                               "(?<=as\\/).*?(?=.tif)")),
              by = "SiteCode")
+# df_sim
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  filter(k==0.99) |> select(-(k:d)) |> distinct()
 # df_se_completo
 df_se_completo <- read_csv("dados/csv/df_p_extensoes.csv")
 # df_selecao_sitios
 df_sitios_se <- df_se_completo |> 
-  filter(lado_km>=15.99 & lado_km<=16.02) |>  # como alguns raster tem 743 linhas e outros 744
-  arrange(p) |> head(n=25) |> 
+  # como alguns raster tem 743 linhas e outros 744
+  filter(lado_km>=15.99 & lado_km<=16.02 & SiteCode !="MGlavr4") |>  
+  arrange(p) |> 
   inner_join(select(df_dados,-Ntotal,-S_obs),by="SiteCode") |> 
   mutate(DA = Ntotal/effort_ha)
 # df_auditoria dos recortes de paisagens padronizados para MNEE
-df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",pattern = ".txt",full.names = T)) |>
-  mutate(SiteCode = str_extract(txt.path,"(?<=o\\/).*?(?=.txt)")) |>
-  inner_join(df_sitios_se,by="SiteCode")
+# setwd("../..")
+# df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",
+#                                                  pattern = ".txt",
+#                                                  full.names = T)) |>
+#   mutate(SiteCode = str_extract(txt.path,"(?<=o\\/).*?(?=.txt)")) |>
+  # inner_join(df_dados,by="SiteCode")
+# paisagens sorteadas para usar em SoE
+df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv")
 # funções necessárias:
 source("source/mapa_p_MNEE.R")
 ```
@@ -91,7 +102,7 @@ for(i in 1:nrow(df)){
   index <- (nrow(m_full)-v_landExt)/2
   m <- m_full[(index+1):(nrow(m_full) - index),
               (index+1):(nrow(m_full) - index)]
-  image(m,main=paste(df$SiteCode[i],", p =",round(df$p[i],3)))
+  image(m,main=paste0(df$SiteCode[i],", p =",round(df$p[i],3)))
   abline(h=0.5)
   abline(v=0.5)
   # print(dim(m))
@@ -101,11 +112,14 @@ for(i in 1:nrow(df)){
 
 ### Mapas de cobertura vegetal adequados para MNEE.
 
+
 ```{r rotina para processar as paisagens,eval=FALSE}
-source("source/mapa_p_MNEE.R")
-registerDoMC(2)
-a_ply(df_sitios_se[-(1:5),],1,f_landscape_for_MNEE,) # lado_km = 16.02
+df_sitios <- anti_join(df_sitios_se,df_auditoria,by = "SiteCode")
+a_ply(df_sitios,1,f_landscape_for_MNEE) # lado_km = 16.02
 ```
+
+<!-- pesquisar: x$.self$finalize() -->
+<!-- registerDoMC(2) # não tem memória RAM suficiente -->
 
 ```{r auditoria das paisagens,eval=FALSE,echo=FAlSE,eval=TRUE}
 f_auditoria <- function(path_name){
@@ -117,8 +131,11 @@ f_auditoria <- function(path_name){
   image(m_temp,main=str_extract(path_name,"(?<=cao\\/).*?(?=\\.txt)"))
 }
 # par(mfrow=c(2,3))
-df <- df_auditoria |> filter(SiteCode %in% df_sitios_se$SiteCode[-(1:5)])
+df <- df_auditoria #|> filter(SiteCode %in% df_sitios_se$SiteCode[-(1:5)])
 a_ply(df$txt.path,1,f_auditoria)
+f_auditoria(df_null[1,"txt.file"])
+df_auditoria |> filter(SiteCode == "SCtimbe1") |> pull(txt.path) |> f_auditoria()
+for(i in 1:nrow(df_auditoria)) f_auditoria(df_auditoria$txt.path[i])
 ```
   
     
@@ -126,17 +143,22 @@ __Figura 2__ Vizinhança imediata da parcela dos 5 sítios com menor cobertura v
 
 ### Em algum sítio não é possível desenhar uma parcela quadrada?
 
+1a leva:  
 Sim o sítio de MGlavr4 não é possível desenhar uma parcela quadrada:
 
 ![MGlavr4](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/apendices/mapas_p_MNEE/sitio_removido.png)
 
+2a leva:
+"RSmorr1", 
 
 ### Precisa corrigir alguma parcela central?
 
-"RScach4", "RScach2", "PRipir", "MGmadre4", "MGlavr6", "MGlavr3"
-  
+1a leva: "RScach4", "RScach2", "PRipir", "MGmadre4", "MGlavr6", "MGlavr3"
+2a leva: "SPpesm6", "RSsetape", "PRvent", 
+
+
 ```{r salvar paisagens com as parcelas corrigidas,echo=FALSE,eval=FALSE}
-df_correcao <-  df_auditoria |> filter(SiteCode %in% c("RScach4", "RScach2", "PRipir", "MGmadre4", "MGlavr6"))
+df_correcao <-  df_auditoria |> filter(SiteCode %in% c("SPpesm6", "RSsetape", "PRvent"))
 f_correcao <- function(df){
   m_paisagem_corrigida <- f_nova_parcela(df)
   write.table(x = m_paisagem_corrigida,
@@ -167,3 +189,114 @@ df_auditoria |> mutate(diff_p = p_txt - p_tif > 1) |> select(SiteCode,p_txt:diff
 
 ![exemplo de parcela corrigida](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/apendices/mapas_p_MNEE/exemplo_redesenho_parcela.png)
 __Figura __ Exemplo de parcela redesenhada
+
+#### auditoria do tamanho do arquivo
+
+```{r}
+df_auditoria$file_size = sapply(df_auditoria$txt.path,function(x) round(file.size(x)/1000,2))
+df <- df_auditoria |> filter(file_size<1000)
+f_txt_lowSize <- function(df){
+  m <- read.table(df$txt.file) |> as.matrix()
+}
+```
+
+#### código para modificar a maior quantidade de memória usada pelo ImageMagick
+
+- Encontrar o arquivo:
+sudo find / -name "policy.xml"
+- Editar o arquivo yml que configura o ImageMagick:
+sudo gedit /etc/ImageMagick-6/policy.xml
+
+## paisagens nulas
+
+```{r}
+setwd("dados/simulacao")
+f_nullLand <- function(path.txt){
+  m_tab <- read.table(path.txt) |> as.matrix()
+  m_tab[m_tab==0] <- 1
+  write.table(m_tab,file = gsub(".txt","_null.txt",path.txt),col.names = FALSE,row.names = FALSE)
+}
+df_sorteio_sitios$txt.file <- gsub("_null.txt",".txt",df_sorteio_sitios$txt.file)
+registerDoMC(2)
+a_ply(unique(df_sorteio_sitios$txt.file),1,f_nullLand,.parallel = TRUE)
+```
+
+## recorte das paisagens de 16.02x16.02km2 para 4x4km2
+
+```{r recorte da paisagem para 4x4 km2, eval=FALSE}
+f_recorte4x4 <- function(df){
+  m_16x16 <- as.matrix(read.table(df$txt.path))
+  index <- (nrow(m_16x16) - nrow(m_16x16)/4)/2
+  m_4x4 <- m_16x16[(floor(index)+1):(nrow(m_16x16) - ceiling(index)),
+                   (floor(index)+1):(nrow(m_16x16) - ceiling(index))]
+  write.table(m_4x4,file = df$txt.path,col.names = F, row.names = F)
+  v_p <- length(m_4x4[m_4x4!=0])/length(m_4x4)
+  df <- select(df,SiteCode, txt.path)
+  df$p <- v_p
+  return(df)
+}
+df_p_4x4 <- adply(df_auditoria,1,f_recorte4x4)
+# plot(density(df_p_4x4$p))
+
+f_auditoria <- function(df){
+  m <- read_table(df$txt.path) |> as.matrix()
+  image(m,main=paste0(df$SiteCode,", p=",round(df$p,3)),axes=FALSE)
+}
+par(mar=c(0.2,0.2,2.2,0.2))
+a_ply(df_p_4x4,1,f_auditoria)
+
+f_auditoria2 <- function(df){
+  m <- read_table(df$txt.path) |> as.matrix()
+  df$p_aud <- length(m[m!=0]) / length(m)
+  return(df)
+}
+# registerDoMC(3)
+df_aud <- adply(df_p_4x4,1,f_auditoria2)
+#
+df_sim <- read_csv("dados/df_simulacao.csv")
+df_sim <- df_sim |> select(-tif.path) |> 
+  inner_join(x=select(df_aud,SiteCode,txt.path,p),by="SiteCode")
+write_csv(df_sim,file = "dados/df_simulacao.csv")
+```   
+
+## png das paisagens
+
+```{r png das paisagens de 4x4 km2}
+f_landscape <- function(df){
+  m <- as.matrix(read.table(paste0("dados/simulacao/",df$txt.path)))
+  image(m,axes=F,main=paste0(df$SiteCode,", S=",df$S_obs,", p=",round(df$p,3)),zlim=c(0,2))
+}
+par(mar=c(0.2,0.2,2.2,0.2),mfrow=c(3,5))
+a_ply(df_plot,1,f_landscape)
+```
+
+
+
+######################### avaliar se algo é necessário:
+#### Processamento dos rasters do mapbiomas6  
+
+<p>Para simular MNEE é necessário: 
+  
+i) ajustar a resolução (mapa original 30x30m) tal que a densidade de pixels é igual a densidade de indivíduos na parcela; 
+  
+ii) considerar unidades de habitat os pixels com valores maiores do 0.7, no mapa original há apenas 0s e 1s, mas após o aumento da resolução há a inclusão de valores intermediários; 
+  
+iii) desenhar a parcela no centro do mapa, trocando N (número total de indivíduos na parcela) valores 1s por 2s (posições iniciais das linhagens monitoradas na simulação coalescente); 
+
+iv) caso não seja possível desenhar uma parcela quadrada centrada na coordenda central, desloquei a parcela para algum local próximo dentro do fragmento amostrado.</p>
+
+```{r figura 3 detalhe da vizinhança da parcela,message=FALSE,warning=FALSE,fig.width=10,fig.height=8}
+f_auditoria <- function(path_name){
+  m <- read_table(file = path_name) |> as.matrix()
+  d <- ceiling(sqrt(2500)*2)
+  l <- ceiling(dim(m)[1]/2)
+  c <- ceiling(dim(m)[2]/2)
+  m_temp <- m[(l-d):(l+d),(c-d):(c+d)]
+  image(m_temp,main=str_extract(path_name,"(?<=cao\\/).*?(?=\\.txt)"),axes=FALSE)
+}
+par(mar=c(0.2,0.2,2.2,0.2),mfrow=c(5,5))
+a_ply(df_se$txt.file,1,f_auditoria)
+# sapply(df_se$txt.file,f_auditoria)
+```
+
+<p>__Figura 3__ Vizinhança imediata das parcelas simuladas. Em vermelho as unidades de habitat da parcela, em amarelo as unidades de habitat e em branco a matriz.</p>
