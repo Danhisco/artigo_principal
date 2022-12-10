@@ -104,6 +104,21 @@ df_plot |>
 
 __Figura 1__ Média da taxa U estimada pelo desvio padrão da função de dispersão, média de 10 réplicas. p = proporção de cobertura vegetal, S = riqueza de espécies.
 
+Sítios para olhar:
+
+```{r auditoria dos sítios que apresentam padrão adiverso}
+v_sitios <- c("RScach4","PEalia","MGubera","MSdour","SPitir1","RSgaur","PRsapo","PRdiam3","RSfaxi","RSvsol","SPcara3","PRanto11","PRanto8","SPeec1","SPpecb1")
+# v_missingSite <- v_sitios[!(v_sitios %in% df_plot$SiteCode)]
+df_plot <- df_sim |> filter(SiteCode %in% v_sitios & k == 0.99)
+f_landscape <- function(df){
+  m <- as.matrix(read.table(paste0("dados/simulacao/",df$txt.path)))
+  image(m,axes=F,main=paste0(df$SiteCode,", S=",df$S_obs,", p=",round(df$p,3)),zlim=c(0,2))
+}
+par(mar=c(0.2,0.2,2.2,0.2),mfrow=c(3,5))
+a_ply(df_plot,1,f_landscape)
+```
+
+
 ### Análise Estatística de U
 
 <p>Proposta:</p>
