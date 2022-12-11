@@ -11,6 +11,7 @@ editor_options:
 knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
 # pacotes
 library(doMC)
+library(grid)
 library(gridExtra)
 library(ggplot2)
 library(readr)
@@ -93,12 +94,23 @@ f_taxaU(filter(df_sim,SiteCode == "SCarar"))
 ```{r fig 1 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=18,fig.width=15}
 df_plot <- df_U |> 
   arrange(p) |> 
-  mutate(label = paste0(SiteCode,", p=",round(p,2), " ,S=",S_obs))
-df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
-df_plot |> 
-  ggplot(aes(x=d,y=Umed)) +
-  geom_point() +
-  geom_line() +
+  inner_join(mutate(data.frame(png.path = list.files(path = "dados/paisagens/png_land_sim",
+                                              pattern=".png",full.names=T)),
+                    SiteCode = str_extract(png.path,"(?<=im\\/).*?(?=\\.png)")),
+             by = "SiteCode")
+  # mutate(label = paste0(SiteCode,", p=",round(p,2), " ,S=",S_obs))
+# df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
+f_plot <- function(df){
+  img <- png::readPNG(system.file("img",df$png.path[1],package = "png"))
+  g <- rasterGrob(img,interpolate = T)
+  ggplot(df,aes(x=d,y=Umed)) +
+    annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +
+    geom_point() +
+    geom_errorbar(aes(ymin=Umin,ymax=Umax)) +
+    geom_line()
+}
+
+   +
   facet_wrap(~label, ncol=6,scales="free_y")
 ```
 
