@@ -263,12 +263,20 @@ write_csv(df_sim,file = "dados/df_simulacao.csv")
 
 ```{r png das paisagens de 4x4 km2}
 f_landscape <- function(df){
-  m <- as.matrix(read.table(paste0("dados/simulacao/",df$txt.path)))
-  image(m,axes=F,main=paste0(df$SiteCode,", S=",df$S_obs,", p=",round(df$p,3)),zlim=c(0,2))
+  m <- as.matrix(read.table(df$txt.path))
+  png(filename = paste0("dados/paisagens/png_land_sim/",df$SiteCode,".png"),height = 430)
+  par(mar=c(0.2,0.2,2.2,0.2))
+  image(m,axes=F,main=paste0(df$SiteCode,
+                             ", S=",df$S_obs,
+                             ", Area J=", df$effort_ha,
+                             ", DA=",round(df$Ntotal/df$effort_ha,3),
+                             ", p=",round(df$p,3)),
+        zlim=c(0,2),
+        col=terrain.colors(12,rev = TRUE))
+  dev.off()
 }
-par(mar=c(0.2,0.2,2.2,0.2),mfrow=c(3,5))
-a_ply(df_plot,1,f_landscape)
-```
+a_ply(df_sim,1,f_landscape)
+1```
 
 
 
