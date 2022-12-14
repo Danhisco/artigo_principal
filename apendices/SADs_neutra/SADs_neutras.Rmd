@@ -45,6 +45,12 @@ df_U <- df_Urep |>
   group_by(SiteCode,k) |> 
   summarise(Umed = mean(U)) |> 
   inner_join(x=select(df_sim,SiteCode, k, txt.path, d),by=c("SiteCode","k"))
+# df_SADrep
+df_SADrep <- mutate(data.frame(
+  SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE",
+                           pattern = ".csv",full.names = T)),
+  SADobs.path = gsub("neutras/MNEE","observadas",SADrep.path),
+  SiteCode = str_extract(SADrep.path,"(?<=EE\\/).*?(?=.csv)"))
 # funções
 source("source/dinamica_coalescente.R")
 ```
@@ -71,6 +77,13 @@ d_ply(filter(df_U,SiteCode != "BAjuss"),"SiteCode",f_sadMNEE,.parallel = TRUE)
 ## Comparação com a SAD observada
 
 ```{r MNEE comparação com a SAD observada}
+f_KS <- function(v_obs=v_SADobs,v_MN,boots=200){
+    testeKS <- ks_test(a=v_obs,b = v_MN, nboots = boots)
+    a <- data.frame(D_KSboot=testeKS[1],p.valor_KSboot=testeKS[2])
+    a$S_SAD.predita <- length(v_MN)
+    a$S_SAD.obs <- length(v_obs)
+    return(a)
+}
 
 ```
 
