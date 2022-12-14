@@ -1,0 +1,92 @@
+---
+title: "SADs neutras"
+author: "Mori, Danilo"
+date: "19/11/2022"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+editor_options: 
+  chunk_output_type: console
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
+# pacotes
+library(twosamples)
+library(sads)
+library(doMC)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(insight)
+library(bbmle)
+library(DHARMa)
+library(lme4)
+library(plyr)
+library(dplyr)
+# dados
+# df_sim
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  mutate(txt.path = gsub("dados/simulacao/","",txt.path))
+# df_Urep
+df_Urep <- read_csv("dados/csv/df_Urep.csv")
+df_U <- df_Urep |> 
+  drop_na() |> 
+  pivot_longer(cols = `1`:`10`,names_to = "n",values_to = "U") |> 
+  group_by(SiteCode,k) |> 
+  summarise(Umed = mean(U)) |> 
+  inner_join(x=select(df_sim,SiteCode, k, txt.path, d),by=c("SiteCode","k"))
+# funções
+source("source/dinamica_coalescente.R")
+```
+
+# MNEE
+
+## Simulação das SADs por sítio de amostragem
+
+```{r MNEE simulação das SADs por sítio de amostragem e k}
+setwd("dados/simulacao/")
+f_sadMNEE <- function(df, n_replicas=100){
+  land_path <- df$txt.path[1]
+  f_simCoalescente <- function(X){
+    dinamica_coalescente(U = X$Umed, S=0, disp_range = X$d, N_simul=n_replicas,landscape = land_path)
+  }
+  m_SADreplicas <- adply(df,1,f_simCoalescente)
+  write_csv(select(m_SADreplicas,-(txt.path:Umed)),
+            file = paste0("../csv/SADs_neutras/MNEE/",df$SiteCode[1],".csv"))
+}
+registerDoMC(3)
+d_ply(filter(df_U,SiteCode != "BAjuss"),"SiteCode",f_sadMNEE,.parallel = TRUE)
+```
+
+## Comparação com a SAD observada
+
+```{r MNEE comparação com a SAD observada}
+
+```
+
+# abundance.csv para SAD observada para cada sítio amostrado
+
+```{r abundance para SAD por SiteCode}
+df_abundance <- 
+  read.csv("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/abundances.csv",
+           header = TRUE,as.is = TRUE)
+df_SADobs <- df_abundance |> 
+  filter(SiteCode %in% unique(df_sim$SiteCode)) |> 
+  select(SiteCode, species.correct, N)
+f_SADobs <- function(df){
+  write_csv(select(df,-SiteCode),
+            file = paste0("../csv/SADs_observadas/",df$SiteCode[1],".csv"))
+}
+d_ply(df_SADobs,"SiteCode",f_SADobs)
+```
+
