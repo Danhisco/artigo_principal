@@ -1,4 +1,4 @@
-dinamica_coalescente <- function(U, S=0, N_simul, disp_range, landscape, seed = as.numeric(Sys.time()), disp_kernel = 2){
+dinamica_coalescente <- function(U, S=0, N_simul, disp_range, landscape, seed = as.numeric(Sys.time()), disp_kernel = 2, decay = 2){
     # Runs coalescent simulations for a given heterogeneous landscape
     #
     # Parameters:
@@ -38,12 +38,12 @@ dinamica_coalescente <- function(U, S=0, N_simul, disp_range, landscape, seed = 
                  seed, disp_range, disp_kernel, infile, outfile))
         if (file.exists(outfile) || S == 0)
             break
-        U <- U/2.
+        U <- U/decay
         print(paste("Decreasing value of U to", U))
         # set some lowest boundary here so simulations don't take forever
-        if (U < 1e-5){
+        if (U < 1e-9){
             print("Richness value too low, giving up...")
-            return(NULL)
+            return(NA)
         }
     }
     r <- as.matrix(read.table(outfile))
