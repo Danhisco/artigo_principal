@@ -51,8 +51,11 @@ df_SADrep <- mutate(data.frame(
                            pattern = ".csv",full.names = T)),
   SADobs.path = gsub("neutras/MNEE","observadas",SADrep.path),
   SiteCode = str_extract(SADrep.path,"(?<=EE\\/).*?(?=.csv)"))
+# df_KSrep
+df_KSrep <- read_csv("dados/csv/df_KSrep.csv")
 # funções
 source("source/dinamica_coalescente.R")
+source("source/2samples_testes.R")
 ```
 
 # MNEE
@@ -76,15 +79,16 @@ d_ply(filter(df_U,SiteCode != "BAjuss"),"SiteCode",f_sadMNEE,.parallel = TRUE)
 
 ## Comparação com a SAD observada
 
-```{r MNEE comparação com a SAD observada}
-f_KS <- function(v_obs=v_SADobs,v_MN,boots=200){
-    testeKS <- ks_test(a=v_obs,b = v_MN, nboots = boots)
-    a <- data.frame(D_KSboot=testeKS[1],p.valor_KSboot=testeKS[2])
-    a$S_SAD.predita <- length(v_MN)
-    a$S_SAD.obs <- length(v_obs)
-    return(a)
-}
+```{r MNEE comparação com a SAD observada usadn o teste KS}
+registerDoMC(3)
+df_KSrep <- adply(df_SADrep,1,f_KSrep,.parallel = TRUE)
+write_csv(select(df_KSrep,SiteCode:p.value),file = "dados/csv/df_KSrep.csv")
+```
 
+```{r MNEE comparação com a SAD observada usando o teste DTS} 
+registerDoMC(3)
+df_DTSrep <- adply(df_SADrep,1,f_DTSrep,.parallel = TRUE)
+write_csv(select(df_DTSrep,SiteCode:p.value),file = "dados/csv/df_DTSrep.csv")
 ```
 
 # abundance.csv para SAD observada para cada sítio amostrado
