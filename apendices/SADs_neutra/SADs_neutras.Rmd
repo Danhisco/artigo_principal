@@ -51,8 +51,8 @@ df_SADrep <- mutate(data.frame(
                            pattern = ".csv",full.names = T)),
   SADobs.path = gsub("neutras/MNEE","observadas",SADrep.path),
   SiteCode = str_extract(SADrep.path,"(?<=EE\\/).*?(?=.csv)"))
-# df_KSrep
-df_KSrep <- read_csv("dados/csv/df_KSrep.csv")
+# df_resultMNEE
+df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 # funções
 source("source/dinamica_coalescente.R")
 source("source/2samples_testes.R")
@@ -79,17 +79,57 @@ d_ply(filter(df_U,SiteCode != "BAjuss"),"SiteCode",f_sadMNEE,.parallel = TRUE)
 
 ## Comparação com a SAD observada
 
+### teste Kolmogorov-Smirnov 2 samples bootstrap
+
 ```{r MNEE comparação com a SAD observada usadn o teste KS}
 registerDoMC(3)
 df_KSrep <- adply(df_SADrep,1,f_KSrep,.parallel = TRUE)
-write_csv(select(df_KSrep,SiteCode:p.value),file = "dados/csv/df_KSrep.csv")
+write_csv(select(df_KSrep,SiteCode:p.value),file = "dados/csv/resultados_MN/MNEE/df_KSrep.csv")
 ```
 
+### teste DTS    
+  
 ```{r MNEE comparação com a SAD observada usando o teste DTS} 
 registerDoMC(3)
 df_DTSrep <- adply(df_SADrep,1,f_DTSrep,.parallel = TRUE)
-write_csv(select(df_DTSrep,SiteCode:p.value),file = "dados/csv/df_DTSrep.csv")
+write_csv(select(df_DTSrep,SiteCode:p.value),file = "dados/csv/resultados_MN/MNEE/df_DTSrep.csv")
 ```
+
+### riqueza de espécies das SADs preditas
+
+```{r riqueza de espécies das SADs preditas}
+registerDoMC(2)
+df_Srep <- adply(df_SADrep,1,f_Srep,.parallel = TRUE)
+write_csv(select(df_Srep,SiteCode:S),file = "dados/csv/resultados_MN/MNEE/df_Srep.csv")
+```
+
+### summarise nCong e Riqueza média
+
+```{r summarise resultados de MNEE para df_resultMNEE}
+# df_KSrep
+df_KSrep <- read_csv("dados/csv/resultados_MN/MNEE/df_KSrep.csv")
+# df_DTSrep
+df_DTSrep <- read_csv("dados/csv/resultados_MN/MNEE/df_DTSrep.csv")
+# df_Srep
+df_Srep <- read_csv("dados/csv/resultados_MN/MNEE/df_Srep.csv")
+#
+df_resultMNEE <- df_DTSrep |> 
+  group_by(SiteCode, k) |> 
+  summarise(nCongDTS = sum(p.value>0.05))
+df_resultMNEE <- df_KSrep |> 
+  group_by(SiteCode, k) |> 
+  summarise(nCongKS = sum(p.value>0.05)) |> 
+  inner_join(x=df_resultMNEE,by=c("SiteCode","k"))
+df_resultMNEE <- df_Srep |> 
+  group_by(SiteCode, k) |>
+  summarise(Smed = mean(S),
+            Ssd = sd(S),
+            Smin = min(S),
+            Smax = max(S)) |> 
+  inner_join(x=df_resultMNEE,by=c("SiteCode","k"))
+write_csv(df_resultMNEE,file = "dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
+```
+
 
 # abundance.csv para SAD observada para cada sítio amostrado
 
