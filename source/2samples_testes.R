@@ -9,7 +9,7 @@
 # exemplo de uso:
 ## df_KSrep <- adply(df_SADrep,1,f_ksObsRep,.parallel = TRUE)
 #
-f_ksObsRep <- function(df){
+f_KSrep <- function(df){
   # dados
   SADobs <- read_csv(df$SADobs.path) |> arrange(N) |> pull(N)
   m_SADrep <- read.csv(df$SADrep.path)
@@ -43,5 +43,14 @@ f_DTSrep <- function(df){
   }
   # rotina
   df_return$p.value <- apply(as.matrix(m_SADrep[,-(1:2)]),1,f_rep)
+  return(df_return)
+}
+#
+# EXTRA: riqueza de espécies das SADs réplicas
+f_Srep <- function(df){
+  m_SADrep <- read_csv(df$SADrep.path)
+  df_return <- m_SADrep[,1:2]
+  f_S <- function(X) length(table(X))
+  df_return$S <- apply(as.matrix(m_SADrep[,-(1:2)]),1,f_S)
   return(df_return)
 }
