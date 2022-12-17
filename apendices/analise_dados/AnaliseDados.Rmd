@@ -1,5 +1,5 @@
 ---
-title: "SADs neutras"
+title: "Análise Dados"
 author: "Mori, Danilo"
 date: "19/11/2022"
 output: 
@@ -18,7 +18,6 @@ text-align: justify}
 ```{r setup,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
 # pacotes
-library(twosamples)
 library(sads)
 library(doMC)
 library(gridExtra)
@@ -34,6 +33,45 @@ library(lme4)
 library(plyr)
 library(dplyr)
 # dados
+# df_resultMNEE
+df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
+# df_sim
+df_sim <- read_csv("dados/df_simulacao.csv")
+# df_ad
+df_ad <- inner_join(x=df_resultMNEE,y=select(df_sim,-txt.path),by=c("SiteCode","k"))
+```
+
+### Qual a relação entre o número de SADs congruentes segundo o teste KS e o teste DTS?
+
+```{r relacao nCong teste KS e teste DTS}
+df_ad |> 
+  ggplot(aes(x=nCongKS,y=nCongDTS,group=SiteCode)) +
+  geom_smooth(method = "lm",se=F,color="blue",alpha=0.4,formula = "y~x") +
+  geom_point(alpha=0.1) +
+  geom_line(alpha=0.1) +
+  geom_abline(slope = 1,intercept = 0,color="red")
+df_ad |> 
+  select(SiteCode:nCongKS) |> 
+  pivot_longer(cols=nCongDTS:nCongKS,names_to = "variaveis",values_to = "nCong") |> 
+  ggplot(aes(x=variaveis,y=nCong)) +
+  geom_jitter() +
+  geom_boxplot()
+df_ad |> 
+  mutate(diffS = (S_obs - Smed) / S_obs ) |> 
+  pivot_longer(cols=nCongDTS:nCongKS,names_to = "variaveis",values_to = "nCong") |> 
+  ggplot(aes(x=diffS,y=nCong)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~variaveis,ncol=2)
+df_ad |> 
+  mutate(diffTestes = nCongKS - nCongDTS) |> 
+  ggplot(aes(x=S_obs,y=diffTestes)) +
+  geom_point() +
+  geom_smooth()
+```
+
+
+```{r}
 
 ```
 
