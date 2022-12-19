@@ -1,0 +1,74 @@
+---
+title: "SADs neutras"
+author: "Mori, Danilo"
+date: "19/11/2022"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+editor_options: 
+  chunk_output_type: console
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup, include=F}
+knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
+# pacotes
+library(doMC)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(insight)
+library(bbmle)
+library(DHARMa)
+library(lme4)
+library(plyr)
+library(dplyr)
+# dados
+df_dados.brutos <- read_csv("dados/df_SADs_disponiveis.csv")
+# references
+df_LatLong <- read_csv("dados/references_TreeCo.csv") |> 
+  select(SiteCode,matches("^(lat|long)$|_correct$"))
+```
+
+## Filtros aplicados aos trabalhos:
+
+<p>
+Trabalhos com parcelas contíguas de pelo menos 1 ha em que todos os indivíduos vivos com pelo menos 4.8 cm de diametro foram identificados no nível da morfoespécie na Floresta Atlântica e estão com morfoespécies e coordenada central auditadas.
+</p>
+
+```{r filtro geral}
+# filtro geral
+df_filtro <- df_dados.brutos  |> filter(method=="parcelas" &
+                                          grepl("*contiguous*",arrangement) & 
+                                          effort_ha>=1 &
+                                          grepl("*yes*",status) & 
+                                          grepl("ok*",status_diagnostico) &
+                                          grepl("Atlantic_Forest*",domain) &
+                                          dbh_cutoff %in% c("PBH>=15.0cm","PBH>=15.7cm",
+                                                            "DBH>=5.0cm","DGH>=5.0cm","DBH>5.0cm",
+                                                            "DBH>=4.8cm",
+                                                            "DBH>=5.0cm&H>300cm","DBH>=5.0cm&H>500cm", 
+                                                            "DGH30>=5.0cm"))
+# coordenada central
+df_Sites_e_AnoAmostragem <- df_filtro |> 
+  mutate(year_bestProxy = ifelse(is.na(year_data),year,year_data)) |> 
+  left_join(y=df_LatLong,by="SiteCode")
+# write df_dados_disponiveis
+write_csv(df_Sites_e_AnoAmostragem,"dados/df_dados_disponiveis.csv")
+```
+
+
+## Riqueza e Número de indivíduos das SADs observadas
+
+```{r riqueza e número de indivíduos das SADs observadas}
+
+```
+
