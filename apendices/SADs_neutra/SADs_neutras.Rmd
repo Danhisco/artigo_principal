@@ -131,19 +131,33 @@ write_csv(df_resultMNEE,file = "dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 ```
 
 
-# abundance.csv para SAD observada para cada sítio amostrado
+### Comparação SAD acumulada e predita
 
-```{r abundance para SAD por SiteCode}
-df_abundance <- 
-  read.csv("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/abundances.csv",
-           header = TRUE,as.is = TRUE)
-df_SADobs <- df_abundance |> 
-  filter(SiteCode %in% unique(df_sim$SiteCode)) |> 
-  select(SiteCode, species.correct, N)
-f_SADobs <- function(df){
-  write_csv(select(df,-SiteCode),
-            file = paste0("../csv/SADs_observadas/",df$SiteCode[1],".csv"))
-}
-d_ply(df_SADobs,"SiteCode",f_SADobs)
+```{r}
+df_SADacumuladas <- df_SADrep |> filter(SiteCode %in% (df_SiteCodes$SiteCode))
+df <- df_SADacumuladas[1,]
 ```
+
+
+```{r comparação SAD acumulada e predita}
+f_SADacumulada <- function(df){
+  m_SADrep <- read_csv(df$SADrep.path)
+  f_SAD <- function(X){
+    v_SADrep <- unname(sort(table(as.matrix(X[,-(1:2)])),decreasing = T))
+    cbind(X[,1:2],v_SADrep)
+  }
+  rename(adply(m_SADrep,1,f_SAD,.expand = F),n=X1,sp.name=Var1)
+}
+df_SADobs <- read_csv(df$SADobs.path)
+ggplot(df_return,aes(x=Freq)) +
+  stat_ecdf(alpha=0.4,aes(group=n)) +
+  facet_wrap(~k,ncol=5) +
+  stat_ecdf(data=df_SADobs,aes(x=N),color="red") +
+  scale_x_continuous(limits = range(df_SADobs$N))
+df_return |> 
+  group_by(n) |> 
+  summarise(max_freq = min(Freq)) |> summary()
+```
+
+
 
