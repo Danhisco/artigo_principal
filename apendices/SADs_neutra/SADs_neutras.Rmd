@@ -34,9 +34,15 @@ library(lme4)
 library(plyr)
 library(dplyr)
 # dados
+# df_p
+df_p <- read_csv("dados/df_p.csv")
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
-  mutate(txt.path = gsub("dados/simulacao/","",txt.path))
+  select(-tif.path) |> 
+  inner_join(y=mutate(
+    data.frame(txt.path = list.files(path="dados/simulacao",pattern=".txt")),
+    SiteCode = str_extract(txt.path,".*?(?=.txt)")),
+    by="SiteCode")
 # df_Urep
 df_Urep <- read_csv("dados/csv/df_Urep.csv")
 df_U <- df_Urep |> 
@@ -44,13 +50,15 @@ df_U <- df_Urep |>
   pivot_longer(cols = `1`:`10`,names_to = "n",values_to = "U") |> 
   group_by(SiteCode,k) |> 
   summarise(Umed = mean(U)) |> 
-  inner_join(x=select(df_sim,SiteCode, k, txt.path, d),by=c("SiteCode","k"))
+  inner_join(x=select(df_sim,SiteCode, k, d,txt.path),by=c("SiteCode","k"))
 # df_SADrep
 df_SADrep <- mutate(data.frame(
   SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE",
                            pattern = ".csv",full.names = T)),
   SADobs.path = gsub("neutras/MNEE","observadas",SADrep.path),
   SiteCode = str_extract(SADrep.path,"(?<=EE\\/).*?(?=.csv)"))
+# df_repMNEE
+df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
 # df_resultMNEE
 df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 # funções
@@ -87,96 +95,47 @@ df_repMNEE <- adply(df_SADrep,1,f_resultsMN,.parallel = TRUE)
 write_csv(select(df_repMNEE,SiteCode:S), file = "dados/csv/resultados_MN/MNEE/df_repMNEE")
 ```
 
-
-### teste Kolmogorov-Smirnov 2 samples bootstrap
-
-```{r MNEE comparação com a SAD observada usadn o teste KS}
-registerDoMC(2)
-df_KSrep <- adply(df_SADrep,1,f_KSrep,.parallel = TRUE)
-write_csv(select(df_KSrep,SiteCode:p.value),file = "dados/csv/resultados_MN/MNEE/df_KSrep.csv")
-```
-
-### teste DTS    
-  
-```{r MNEE comparação com a SAD observada usando o teste DTS} 
-registerDoMC(3)
-df_DTSrep <- adply(df_SADrep,1,f_DTSrep,.parallel = TRUE)
-write_csv(select(df_DTSrep,SiteCode:p.value),file = "dados/csv/resultados_MN/MNEE/df_DTSrep.csv")
-```
-
-### riqueza de espécies das SADs preditas
-
-```{r riqueza de espécies das SADs preditas}
-registerDoMC(3)
-df_Srep <- adply(df_SADrep,1,f_Srep,.parallel = TRUE)
-write_csv(select(df_Srep,SiteCode:S),file = "dados/csv/resultados_MN/MNEE/df_Srep.csv")
-```
-
-### summarise nCong e Riqueza média
-
-```{r arrumar os csv pois não fiz com o df_U deste Rmd que contém menos colunas}
-f_arrumar <- function(df){
-  m_SADrep <- read_csv(df$SADrep.path)
-  df_write <- m_SADrep |> select(-(effort_ha:S_obs),-(d:Umax))
-  write_csv(x = df_write, file = df$SADrep.path)
-}
-registerDoMC(2)
-a_ply(df_SADrep,1,f_arrumar,.parallel = T)
-```
-
-
 ```{r summarise resultados de MNEE para df_resultMNEE}
-# df_KSrep
-df_KSrep <- read_csv("dados/csv/resultados_MN/MNEE/df_KSrep.csv")
-# df_DTSrep
-df_DTSrep <- read_csv("dados/csv/resultados_MN/MNEE/df_DTSrep.csv")
-# df_Srep
-df_Srep <- read_csv("dados/csv/resultados_MN/MNEE/df_Srep.csv")
-#
-df_resultMNEE <- df_DTSrep |> 
-  group_by(SiteCode, k) |> 
-  summarise(nCongDTS = sum(p.value>0.05))
-df_resultMNEE <- df_KSrep |> 
-  group_by(SiteCode, k) |> 
-  summarise(nCongKS = sum(p.value>0.05)) |> 
-  inner_join(x=df_resultMNEE,by=c("SiteCode","k"))
-df_resultMNEE <- df_Srep |> 
-  group_by(SiteCode, k) |>
-  summarise(Smed = mean(S),
+df_resultMNEE <- df_repMNEE |> 
+  group_by(SiteCode,k) |> 
+  summarise(nCongKS = sum(p.KS>0.05),
+            nCongDTS = sum(p.DTS>0.05),
+            Smed = mean(S),
             Ssd = sd(S),
             Smin = min(S),
-            Smax = max(S)) |> 
-  inner_join(x=df_resultMNEE,by=c("SiteCode","k"))
+            Smax = max(S))
+df_resultMNEE <- df_resultMNEE |> 
+  inner_join(x=df_p,by="SiteCode")
 write_csv(df_resultMNEE,file = "dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 ```
 
-
 ### Comparação SAD acumulada e predita
-
-```{r}
-df_SADacumuladas <- df_SADrep |> filter(SiteCode %in% (df_SiteCodes$SiteCode))
-df <- df_SADacumuladas[1,]
-```
 
 
 ```{r comparação SAD acumulada e predita}
-f_SADacumulada <- function(df){
-  m_SADrep <- read_csv(df$SADrep.path)
+df_plot <- inner_join(df_resultMNEE,df_SADrep,by="SiteCode") |> 
+  left_join(y=distinct(select(df_sim,SiteCode:S_obs)),by="SiteCode")
+# df <- df_plot |> filter(SiteCode == "BAjuss")
+f_SADacumulada <- function(df,parallel=TRUE){
+  # dados
+  m_SADrep <- read_csv(df$SADrep.path[1])
+  df_SADobs <- read_csv(df$SADobs.path[1])
+  # subfunção
   f_SAD <- function(X){
     v_SADrep <- unname(sort(table(as.matrix(X[,-(1:2)])),decreasing = T))
     cbind(X[,1:2],v_SADrep)
   }
-  rename(adply(m_SADrep,1,f_SAD,.expand = F),n=X1,sp.name=Var1)
+  # rotina
+  df_return <- rename(adply(m_SADrep,1,f_SAD,.expand = F),n=X1,sp.name=Var1)
+  # labels
+  
+  # gráfico
+  ggplot(df_return,aes(x=Freq)) +
+    stat_ecdf(alpha=0.4,aes(group=n)) +
+    facet_wrap(~k,ncol=5) +
+    stat_ecdf(data=df_SADobs,aes(x=N),color="red") +
+    scale_x_continuous(limits = range(df_SADobs$N))
 }
-df_SADobs <- read_csv(df$SADobs.path)
-ggplot(df_return,aes(x=Freq)) +
-  stat_ecdf(alpha=0.4,aes(group=n)) +
-  facet_wrap(~k,ncol=5) +
-  stat_ecdf(data=df_SADobs,aes(x=N),color="red") +
-  scale_x_continuous(limits = range(df_SADobs$N))
-df_return |> 
-  group_by(n) |> 
-  summarise(max_freq = min(Freq)) |> summary()
 ```
 
 
