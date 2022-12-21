@@ -74,15 +74,24 @@ f_sadMNEE <- function(df, n_replicas=100){
             file = paste0("../csv/SADs_neutras/MNEE/",df$SiteCode[1],".csv"))
 }
 registerDoMC(3)
-d_ply(filter(df_U,SiteCode != "BAjuss"),"SiteCode",f_sadMNEE,.parallel = TRUE)
+d_ply(df_U,"SiteCode",f_sadMNEE,.parallel = TRUE)
 ```
 
 ## Comparação com a SAD observada
 
+### Resultados gerais testes KS, DTS e a contagem de espécies
+
+```{r testes KS DTS e S}
+registerDoMC(3)
+df_repMNEE <- adply(df_SADrep,1,f_resultsMN,.parallel = TRUE)
+write_csv(select(df_repMNEE,SiteCode:S), file = "dados/csv/resultados_MN/MNEE/df_repMNEE")
+```
+
+
 ### teste Kolmogorov-Smirnov 2 samples bootstrap
 
 ```{r MNEE comparação com a SAD observada usadn o teste KS}
-registerDoMC(3)
+registerDoMC(2)
 df_KSrep <- adply(df_SADrep,1,f_KSrep,.parallel = TRUE)
 write_csv(select(df_KSrep,SiteCode:p.value),file = "dados/csv/resultados_MN/MNEE/df_KSrep.csv")
 ```
@@ -98,12 +107,23 @@ write_csv(select(df_DTSrep,SiteCode:p.value),file = "dados/csv/resultados_MN/MNE
 ### riqueza de espécies das SADs preditas
 
 ```{r riqueza de espécies das SADs preditas}
-registerDoMC(2)
+registerDoMC(3)
 df_Srep <- adply(df_SADrep,1,f_Srep,.parallel = TRUE)
 write_csv(select(df_Srep,SiteCode:S),file = "dados/csv/resultados_MN/MNEE/df_Srep.csv")
 ```
 
 ### summarise nCong e Riqueza média
+
+```{r arrumar os csv pois não fiz com o df_U deste Rmd que contém menos colunas}
+f_arrumar <- function(df){
+  m_SADrep <- read_csv(df$SADrep.path)
+  df_write <- m_SADrep |> select(-(effort_ha:S_obs),-(d:Umax))
+  write_csv(x = df_write, file = df$SADrep.path)
+}
+registerDoMC(2)
+a_ply(df_SADrep,1,f_arrumar,.parallel = T)
+```
+
 
 ```{r summarise resultados de MNEE para df_resultMNEE}
 # df_KSrep
