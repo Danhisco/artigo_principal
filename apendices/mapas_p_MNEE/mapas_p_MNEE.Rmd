@@ -39,23 +39,23 @@ df_dados <- read_csv("dados/df_dados_disponiveis.csv") |>
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   filter(k==0.99) |> select(-(k:d)) |> distinct()
 # df_se_completo
-df_se_completo <- read_csv("dados/csv/df_p_extensoes.csv")
+# df_se_completo <- read_csv("dados/csv/df_p_extensoes.csv")
 # df_selecao_sitios
-df_sitios_se <- df_se_completo |> 
-  # como alguns raster tem 743 linhas e outros 744
-  filter(lado_km>=15.99 & lado_km<=16.02 & SiteCode !="MGlavr4") |>  
-  arrange(p) |> 
-  inner_join(select(df_dados,-Ntotal,-S_obs),by="SiteCode") |> 
-  mutate(DA = Ntotal/effort_ha)
+# df_sitios_se <- df_se_completo |> 
+#   # como alguns raster tem 743 linhas e outros 744
+#   filter(lado_km>=15.99 & lado_km<=16.02 & SiteCode !="MGlavr4") |>  
+#   arrange(p) |> 
+#   inner_join(select(df_dados,-Ntotal,-S_obs),by="SiteCode") |> 
+#   mutate(DA = Ntotal/effort_ha)
 # df_auditoria dos recortes de paisagens padronizados para MNEE
 # setwd("../..")
-# df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",
-#                                                  pattern = ".txt",
-#                                                  full.names = T)) |>
-#   mutate(SiteCode = str_extract(txt.path,"(?<=o\\/).*?(?=.txt)")) |>
-  # inner_join(df_dados,by="SiteCode")
+df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",
+                                                 pattern = ".txt",
+                                                 full.names = T)) |>
+  mutate(SiteCode = str_extract(txt.path,"(?<=o\\/).*?(?=.txt)")) |>
+  inner_join(df_dados,by="SiteCode")
 # paisagens sorteadas para usar em SoE
-df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv")
+# df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv")
 # funções necessárias:
 source("source/mapa_p_MNEE.R")
 ```
@@ -114,9 +114,25 @@ for(i in 1:nrow(df)){
 
 
 ```{r rotina para processar as paisagens,eval=FALSE}
-df_sitios <- anti_join(df_sitios_se,df_auditoria,by = "SiteCode")
+# df_sitios <- anti_join(df_sitios_se,df_auditoria,by = "SiteCode")
+df_sitios <- df_dados |> 
+  mutate(lado_km = 4,
+         DA = Ntotal / effort_ha)
 a_ply(df_sitios,1,f_landscape_for_MNEE) # lado_km = 16.02
 ```
+
+```{r df_p}
+f_p <- function(df){
+  m_land <- read.table(df$txt.path) |> as.matrix()
+  length(m_land[m_land!=0])/length(m_land)
+}
+df_p <- adply(df_auditoria,1,f_p)
+df_p |> 
+  rename(p=V1) |> 
+  select(SiteCode,p) |> 
+  write_csv(file = "dados/df_p.csv")
+```
+
 
 <!-- pesquisar: x$.self$finalize() -->
 <!-- registerDoMC(2) # não tem memória RAM suficiente -->
@@ -132,10 +148,11 @@ f_auditoria <- function(path_name){
 }
 # par(mfrow=c(2,3))
 df <- df_auditoria #|> filter(SiteCode %in% df_sitios_se$SiteCode[-(1:5)])
-a_ply(df$txt.path,1,f_auditoria)
-f_auditoria(df_null[1,"txt.file"])
-df_auditoria |> filter(SiteCode == "SCtimbe1") |> pull(txt.path) |> f_auditoria()
-for(i in 1:nrow(df_auditoria)) f_auditoria(df_auditoria$txt.path[i])
+a_ply(df$txt.path[1:10],1,f_auditoria)
+f_auditoria(df$txt.path[93])
+# f_auditoria(df_null[1,"txt.file"])
+# df_auditoria |> filter(SiteCode == "SCtimbe1") |> pull(txt.path) |> f_auditoria()
+# for(i in 1:nrow(df_auditoria)) f_auditoria(df_auditoria$txt.path[i])
 ```
   
     
@@ -148,17 +165,13 @@ Sim o sítio de MGlavr4 não é possível desenhar uma parcela quadrada:
 
 ![MGlavr4](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/apendices/mapas_p_MNEE/sitio_removido.png)
 
-2a leva:
-"RSmorr1", 
-
 ### Precisa corrigir alguma parcela central?
 
-1a leva: "RScach4", "RScach2", "PRipir", "MGmadre4", "MGlavr6", "MGlavr3"
-2a leva: "SPpesm6", "RSsetape", "PRvent", 
+"SPpesm6", "RScach4", "RScach2", "PRvent", "PRrico3", "PRipir", "MGmadre4", "MGlavr6", "MGlavr3", "MGlavr2"
 
 
 ```{r salvar paisagens com as parcelas corrigidas,echo=FALSE,eval=FALSE}
-df_correcao <-  df_auditoria |> filter(SiteCode %in% c("SPpesm6", "RSsetape", "PRvent"))
+df_correcao <-  df_auditoria |> filter(SiteCode %in% c("SPpesm6", "RScach4", "RScach2", "PRvent", "PRrico3", "PRipir", "MGmadre4", "MGlavr6", "MGlavr3", "MGlavr2"))
 f_correcao <- function(df){
   m_paisagem_corrigida <- f_nova_parcela(df)
   write.table(x = m_paisagem_corrigida,
@@ -276,7 +289,7 @@ f_landscape <- function(df){
   dev.off()
 }
 a_ply(df_sim,1,f_landscape)
-1```
+```
 
 
 
