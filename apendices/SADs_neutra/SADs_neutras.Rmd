@@ -116,10 +116,10 @@ write_csv(df_resultMNEE,file = "dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 df_plot <- inner_join(df_resultMNEE,df_SADrep,by="SiteCode") |> 
   left_join(y=distinct(select(df_sim,SiteCode:S_obs)),by="SiteCode")
 # df <- df_plot |> filter(SiteCode == "BAjuss")
-f_SADacumulada <- function(df,parallel=TRUE){
+f_plot.SADacumulada <- function(df,parallel=TRUE){
   # dados
   m_SADrep <- read_csv(df$SADrep.path[1])
-  m_SADrep$k <- factor(m_SADrep$k)
+  m_SADrep$k <- factor(m_SADrep$k,levels=unique(m_SADrep$k))
   df_SADobs <- read_csv(df$SADobs.path[1])
   # subfunção
   f_SAD <- function(X){
@@ -128,7 +128,7 @@ f_SADacumulada <- function(df,parallel=TRUE){
   }
   # rotina
   registerDoMC(3)
-  df_return <- rename(adply(m_SADrep,1,f_SAD,.expand = F,.parallel = TRUE),n=X1,sp.name=Var1)
+  df_return <- rename(adply(m_SADrep,1,f_SAD,.expand = F,.parallel = parallel),n=X1,sp.name=Var1)
   # labels
   v_labels <- c(paste0("k=",round(df$k,2),
                        "; KS=",df$nCongKS,
@@ -141,15 +141,22 @@ f_SADacumulada <- function(df,parallel=TRUE){
                    ", Ntotal=",df$Ntotal[1],
                    ", Sobs=",df$S_obs[1])
   # gráfico
-  ggplot(df_return,aes(x=Freq)) +
+  p <- ggplot(df_return,aes(x=Freq)) +
     stat_ecdf(alpha=0.4,aes(group=n)) +
     facet_wrap(~k,ncol=5,labeller = as_labeller(v_labels)) +
     stat_ecdf(data=df_SADobs,aes(x=N),color="red") +
     coord_cartesian(xlim = range(df_SADobs$N),expand = FALSE) +
     scale_x_continuous(breaks=seq(min(df_SADobs$N),max(df_SADobs$N),by=10)) +
     labs(y="",x="indivíduos",
-         title=v_title)
+         title=v_title) +
+    theme_minimal()
+  print(p)
+  ggsave(filename = paste0("dados/csv/resultados_MN/MNEE/png_SADsAcumuladas/",df$SiteCode[1],".png"),
+         plot = p, width = 11.04, height = 5.864)
 }
+f_plot.SADacumulada(filter(df_plot,SiteCode=="BAjuss"))
+
+d_ply(df_plot,"SiteCode",f_plot.SADacumulada)
 ```
 
 
