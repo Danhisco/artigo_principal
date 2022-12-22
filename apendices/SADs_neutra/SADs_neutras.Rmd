@@ -116,7 +116,7 @@ write_csv(df_resultMNEE,file = "dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 df_plot <- inner_join(df_resultMNEE,df_SADrep,by="SiteCode") |> 
   left_join(y=distinct(select(df_sim,SiteCode:S_obs)),by="SiteCode")
 # df <- df_plot |> filter(SiteCode == "BAjuss")
-f_plot.SADacumulada <- function(df,parallel=TRUE,repo="dados/csv/resultados_MN/MNEE/png_SADsAcumuladas/"){
+f_plot.SADacumulada <- function(df,parallel=TRUE,repo="figuras/SADS_acumuladas/"){
   # dados
   m_SADrep <- read_csv(df$SADrep.path[1])
   m_SADrep$k <- factor(m_SADrep$k,levels=unique(m_SADrep$k))
@@ -127,21 +127,26 @@ f_plot.SADacumulada <- function(df,parallel=TRUE,repo="dados/csv/resultados_MN/M
     cbind(X[,1:2],v_SADrep)
   }
   # rotina
-  registerDoMC(3)
+  registerDoMC(2)
   df_return <- rename(adply(m_SADrep,1,f_SAD,.expand = F,.parallel = parallel),n=X1,sp.name=Var1)
   # labels
-  v_labels <- c(paste0("k=",round(df$k,2),
-                       "; KS=",df$nCongKS,
-                       "; DTS=",df$nCongDTS,
-                       "; <Srep>=",round(df$Smed,2)))
+  v_labels <- paste0("k=",round(df$k,2),
+                     "\nKS=",df$nCongKS,
+                     " DTS=",df$nCongDTS,
+                     " <Srep>=",round(df$Smed,2))
   names(v_labels) <- df$k
+  # df_text <- data.frame(text = paste0("KS=",df$nCongKS,
+  #                                     "\nDTS=",df$nCongDTS,
+  #                                     "\n<Srep>=",round(df$Smed,2),
+  #                                     "\nSrep_sd=",round(df$Ssd,2)),
+  #                       k = df$k)
   v_title = paste0(df$SiteCode[1],
                    ", p=",round(df$p[1],2),
                    ", plot=",df$effort_ha[1],"ha",
                    ", Ntotal=",df$Ntotal[1],
                    ", Sobs=",df$S_obs[1])
   # gráfico
-  p <- ggplot(df_return,aes(x=Freq)) +
+  ggplot(df_return,aes(x=Freq)) +
     stat_ecdf(alpha=0.4,aes(group=n)) +
     facet_wrap(~k,ncol=5,labeller = as_labeller(v_labels)) +
     stat_ecdf(data=df_SADobs,aes(x=N),color="red") +
@@ -149,7 +154,13 @@ f_plot.SADacumulada <- function(df,parallel=TRUE,repo="dados/csv/resultados_MN/M
     scale_x_continuous(breaks=seq(min(df_SADobs$N),max(df_SADobs$N),by=10)) +
     labs(y="",x="indivíduos",
          title=v_title) +
-    theme_minimal()
+    theme_minimal() 
+  #+
+    # geom_text(data = df_text,
+    #           aes(x=-Inf,y=-Inf,label=text),
+    #           hjust = -1.6,
+    #           vjust = -0.2,
+    #           size=5)
   png(paste0(repo,df$SiteCode[1],".png"),width = 11.04, height = 5.864,units="in",res=500)
   print(p)
   dev.off()
