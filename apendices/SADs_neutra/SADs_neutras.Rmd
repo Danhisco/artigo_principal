@@ -116,7 +116,7 @@ write_csv(df_resultMNEE,file = "dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 df_plot <- inner_join(df_resultMNEE,df_SADrep,by="SiteCode") |> 
   left_join(y=distinct(select(df_sim,SiteCode:S_obs)),by="SiteCode")
 # df <- df_plot |> filter(SiteCode == "BAjuss")
-f_plot.SADacumulada <- function(df,parallel=TRUE){
+f_plot.SADacumulada <- function(df,parallel=TRUE,repo="dados/csv/resultados_MN/MNEE/png_SADsAcumuladas/"){
   # dados
   m_SADrep <- read_csv(df$SADrep.path[1])
   m_SADrep$k <- factor(m_SADrep$k,levels=unique(m_SADrep$k))
@@ -150,9 +150,9 @@ f_plot.SADacumulada <- function(df,parallel=TRUE){
     labs(y="",x="indivíduos",
          title=v_title) +
     theme_minimal()
+  png(paste0(repo,df$SiteCode[1],".png"),width = 11.04, height = 5.864,units="in",res=500)
   print(p)
-  ggsave(filename = paste0("dados/csv/resultados_MN/MNEE/png_SADsAcumuladas/",df$SiteCode[1],".png"),
-         plot = p, width = 11.04, height = 5.864)
+  dev.off()
 }
 f_plot.SADacumulada(filter(df_plot,SiteCode=="BAjuss"))
 
