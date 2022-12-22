@@ -119,6 +119,7 @@ df_plot <- inner_join(df_resultMNEE,df_SADrep,by="SiteCode") |>
 f_SADacumulada <- function(df,parallel=TRUE){
   # dados
   m_SADrep <- read_csv(df$SADrep.path[1])
+  m_SADrep$k <- factor(m_SADrep$k)
   df_SADobs <- read_csv(df$SADobs.path[1])
   # subfunção
   f_SAD <- function(X){
@@ -126,15 +127,28 @@ f_SADacumulada <- function(df,parallel=TRUE){
     cbind(X[,1:2],v_SADrep)
   }
   # rotina
-  df_return <- rename(adply(m_SADrep,1,f_SAD,.expand = F),n=X1,sp.name=Var1)
+  registerDoMC(3)
+  df_return <- rename(adply(m_SADrep,1,f_SAD,.expand = F,.parallel = TRUE),n=X1,sp.name=Var1)
   # labels
-  
+  v_labels <- c(paste0("k=",round(df$k,2),
+                       "; KS=",df$nCongKS,
+                       "; DTS=",df$nCongDTS,
+                       "; <Srep>=",round(df$Smed,2)))
+  names(v_labels) <- df$k
+  v_title = paste0(df$SiteCode[1],
+                   ", p=",round(df$p[1],2),
+                   ", plot=",df$effort_ha[1],"ha",
+                   ", Ntotal=",df$Ntotal[1],
+                   ", Sobs=",df$S_obs[1])
   # gráfico
   ggplot(df_return,aes(x=Freq)) +
     stat_ecdf(alpha=0.4,aes(group=n)) +
-    facet_wrap(~k,ncol=5) +
+    facet_wrap(~k,ncol=5,labeller = as_labeller(v_labels)) +
     stat_ecdf(data=df_SADobs,aes(x=N),color="red") +
-    scale_x_continuous(limits = range(df_SADobs$N))
+    coord_cartesian(xlim = range(df_SADobs$N),expand = FALSE) +
+    scale_x_continuous(breaks=seq(min(df_SADobs$N),max(df_SADobs$N),by=10)) +
+    labs(y="",x="indivíduos",
+         title=v_title)
 }
 ```
 
