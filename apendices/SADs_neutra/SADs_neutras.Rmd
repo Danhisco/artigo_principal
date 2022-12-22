@@ -135,11 +135,7 @@ f_plot.SADacumulada <- function(df,parallel=TRUE,repo="figuras/SADS_acumuladas/"
                      " DTS=",df$nCongDTS,
                      " <Srep>=",round(df$Smed,2))
   names(v_labels) <- df$k
-  # df_text <- data.frame(text = paste0("KS=",df$nCongKS,
-  #                                     "\nDTS=",df$nCongDTS,
-  #                                     "\n<Srep>=",round(df$Smed,2),
-  #                                     "\nSrep_sd=",round(df$Ssd,2)),
-  #                       k = df$k)
+  
   v_title = paste0(df$SiteCode[1],
                    ", p=",round(df$p[1],2),
                    ", plot=",df$effort_ha[1],"ha",
