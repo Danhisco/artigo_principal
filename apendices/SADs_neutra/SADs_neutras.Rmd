@@ -21,6 +21,7 @@ knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
 library(twosamples)
 library(sads)
 library(doMC)
+library(ggpmisc)
 library(gridExtra)
 library(ggplot2)
 library(readr)
@@ -116,7 +117,7 @@ write_csv(df_resultMNEE,file = "dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 df_plot <- inner_join(df_resultMNEE,df_SADrep,by="SiteCode") |> 
   left_join(y=distinct(select(df_sim,SiteCode:S_obs)),by="SiteCode")
 # df <- df_plot |> filter(SiteCode == "BAjuss")
-f_plot.SADacumulada <- function(df,parallel=TRUE,repo="figuras/SADS_acumuladas/"){
+f_plot.SADacumulada <- function(df,parallel=TRUE,repo="figuras/SADs_acumuladas/"){
   # dados
   m_SADrep <- read_csv(df$SADrep.path[1])
   m_SADrep$k <- factor(m_SADrep$k,levels=unique(m_SADrep$k))
@@ -130,20 +131,27 @@ f_plot.SADacumulada <- function(df,parallel=TRUE,repo="figuras/SADS_acumuladas/"
   registerDoMC(2)
   df_return <- rename(adply(m_SADrep,1,f_SAD,.expand = F,.parallel = parallel),n=X1,sp.name=Var1)
   # labels
-  v_labels <- paste0("k=",round(df$k,2),
-                     "\nKS=",df$nCongKS,
-                     " DTS=",df$nCongDTS,
-                     " <Srep>=",round(df$Smed,2))
+  v_labels <- paste0("k=",round(df$k,2))
   names(v_labels) <- df$k
-  
+  # tabelas inseridas
+  df_text.table <- df |> 
+    select(k:Ssd) |> 
+    mutate(Smed = round(Smed,2),
+           Ssd = round(Ssd,2)) |> 
+    pivot_longer(-k,names_to="variáveis") |> 
+    group_by(k) |> 
+    nest() |> 
+    mutate(x=0.95,y=0.50)
+  # title
   v_title = paste0(df$SiteCode[1],
                    ", p=",round(df$p[1],2),
                    ", plot=",df$effort_ha[1],"ha",
                    ", Ntotal=",df$Ntotal[1],
                    ", Sobs=",df$S_obs[1])
   # gráfico
-  ggplot(df_return,aes(x=Freq)) +
+  p <- ggplot(df_return,aes(x=Freq)) +
     stat_ecdf(alpha=0.4,aes(group=n)) +
+    geom_table_npc(data=df_text.table,aes(npcx = x, npcy = y, label = data)) +
     facet_wrap(~k,ncol=5,labeller = as_labeller(v_labels)) +
     stat_ecdf(data=df_SADobs,aes(x=N),color="red") +
     coord_cartesian(xlim = range(df_SADobs$N),expand = FALSE) +
@@ -151,18 +159,10 @@ f_plot.SADacumulada <- function(df,parallel=TRUE,repo="figuras/SADS_acumuladas/"
     labs(y="",x="indivíduos",
          title=v_title) +
     theme_minimal() 
-  #+
-    # geom_text(data = df_text,
-    #           aes(x=-Inf,y=-Inf,label=text),
-    #           hjust = -1.6,
-    #           vjust = -0.2,
-    #           size=5)
-  png(paste0(repo,df$SiteCode[1],".png"),width = 11.04, height = 5.864,units="in",res=500)
+  png(paste0(repo,df$SiteCode[1],".png"),width = 13.8, height = 7.33,units="in",res=500)
   print(p)
   dev.off()
 }
-f_plot.SADacumulada(filter(df_plot,SiteCode=="BAjuss"))
-
 d_ply(df_plot,"SiteCode",f_plot.SADacumulada)
 ```
 
