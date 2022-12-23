@@ -1,0 +1,68 @@
+---
+title: "SADs neutras"
+author: "Mori, Danilo"
+date: "19/11/2022"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+editor_options: 
+  chunk_output_type: console
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
+# pacotes
+library(twosamples)
+library(sads)
+library(doMC)
+library(ggpmisc)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(insight)
+library(bbmle)
+library(DHARMa)
+library(lme4)
+library(plyr)
+library(dplyr)
+# dados
+# df_p
+df_p <- read_csv("dados/df_p.csv")
+# df_sim
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  select(-tif.path)
+# df_SADrep
+df_SADrep <- mutate(data.frame(
+  SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE",
+                           pattern = ".csv",full.names = T)),
+  SiteCode = str_extract(SADrep.path,"(?<=EE\\/).*?(?=.csv)")) |> 
+  inner_join(df_sim,by="SiteCode") |> 
+  inner_join(df_p,by="SiteCode")
+```
+
+# Introdução
+
+Os testes calculam o valor p, a probabilidade de obter um valor da estatística de interesse tão extremo quanto aquela observada dado que a hipótese nula é verdadeira. A hipótese nula afirma que as SADs são amostras de uma mesma distribuição teóricas. Para as SADs réplicas de uma mesma bateria de simulações a hipótese nula é verdadeira, portanto, essas SADs podem ser usadas para avaliar se os possíveis vieses dos testes usados, KS e DTS, com relação às possíveis variáveis de interesse: Ntotal, p, S máxima do par, diffS do par de SADs amostradas. A expectativa é que todo par de SADs replicas de uma mesma bateria de simulação sempre tenha probabilidade próxima de 1 de ter um valor p>0.05. 
+
+# Métodos
+
+Obtenção dos dados. para cada bateria de simulações, formei 200 pares únicos entre réplicas e comparei usando o teste KS e o teste DTS. A formação dos pares únicos seguiu o protocolo: selecionar as SADs réplicas com indices de 1 até 20, então para cada uma foram sorteadas 10 indices acima de seu próprio indice. Contabilizei o número de comparações em que o valor p > 0.05 por bateria de simulações.
+
+Utilizei modelos binomiais para descrever a probabilidade das SADs réplicas serem congruentes entre si.
+
+```{r obtencao dos dados}
+f_comparacaoSADSrep <- function(df){
+  
+}
+```
+
+
