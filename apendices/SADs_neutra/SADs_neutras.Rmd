@@ -65,6 +65,7 @@ df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 # funções
 source("source/dinamica_coalescente.R")
 source("source/2samples_testes.R")
+source("source/f_plotSADacumula.R")
 ```
 
 # MNEE
@@ -118,6 +119,20 @@ df_plot <- inner_join(df_resultMNEE,df_SADrep,by="SiteCode") |>
   left_join(y=distinct(select(df_sim,SiteCode:S_obs)),by="SiteCode")
 d_ply(df_plot,"SiteCode",f_plot.SADacumulada)
 ```
+
+Qual o comportamento geral?
+
+Casos em que 
+DTS parece ser melhor: BAlenc4,
+
+KS parece ser melhor: MGlavr2, MGlavr3, MGlavr6, MGubera, MGuberl1, MGuberl3, MGuberl5, MGuberl6, MGuberl7,MGvico3, MGvico4, MGvico16, PEcabo2, PEcaru1, PEsvfer,PRanto5, PRanto7, PRanto8, PRanto9, PRanto10, PRanto11, PRanto14, PRdiam2, PRdiam3, PRipir, PRrico1, PRrico3, PRtiba1, PRvent, RJpnrj, RScach1, RScach3, RScach4, RScama, RSfaxi, RSgaur, RSpet1, RSrioz1, RSsetape, RSsmar4, RSvsol, SCcric1, SCorle, SCserra4, SCside, SCside1, SCside4, SCsjo1, SPcara3, SPeec1, SPeec4, SPeec5, SPjabo1, SPpecb1, SPpesmD, SPpesmH, SPpesmK, SPpesmL, SPpesmN,      
+
+os dois são ruins: MGmadre4, MSdour, PEmata2, PRanto6, PRanto12, PRdiam4, PRsapo, RScach2, RScamb1, RScris, RSmaqu4, SCvolta1, SCvolta2, SPitir1, SPpei1, SPpesm6, SPpesmA, SPpesmB, SPpesmF, 
+
+os dois são semelhantes: BAjuss, BAuruc, ESsoor, MGipia1, MGvico1, MSjatei, PEalia, PEbrejo, PRanto4, PRanto13, PRanto15, PRtele, RSmorr1, RSsini, SCilho, SCilho2, SCtimbe1, SPcana1, SPcara1, SPigua1, SPpesmC, SPpesmE, SPpesmI, SPpesmJ, SPpesmM, SPpesmS, SPpesmU, 
+
+Comentários:
+não é simples fazer essa classificação, em alguns casos (SiteCode) ambos parecem ser ruins, pois acertam em alguns k e erram em outros. E ser melhor não implica em ser bom em si.  
 
 
 
