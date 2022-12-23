@@ -39,7 +39,7 @@ library(dplyr)
 df_p <- read_csv("dados/df_p.csv")
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
-  select(-tif.path)
+  select(-(tif.path:d)) |> distinct()
 # df_SADrep
 df_SADrep <- mutate(data.frame(
   SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE",
@@ -59,10 +59,26 @@ Obtenção dos dados. para cada bateria de simulações, formei 200 pares único
 
 Utilizei modelos binomiais para descrever a probabilidade das SADs réplicas serem congruentes entre si.
 
-```{r obtencao dos dados}
+```{r obtencao dos dados,echo=TRUE}
 f_comparacaoSADSrep <- function(df){
-  
+  m_SADrep <- read_csv(df$SADrep.path)
+  df_comparacao <- adply(1:20,1,function(X) data.frame(y=sample((X+1):100,size = 10,replace = F)),.expand = F,.id="x") |> 
+    mutate(x = as.numeric(as.character(x)))
+  f_k <- function(df_bateria){
+    f_rep <- function(df_i,df_SADbateria=df_bateria){
+    v_x <- unname(sort(table(as.matrix(df_SADbateria[df_i$x,-(1:2)]))))
+    v_y <- unname(sort(table(as.matrix(df_SADbateria[df_i$y,-(1:2)]))))
+    p.KS <- ks_test(a=v_x,b=v_y,nboots = 1000)[2]
+    p.DTS <- dts_test(a=v_x,b=v_y,nboots = 1000,keep.boots = F)[2]
+    data.frame(p.KS,p.DTS,row.names = "")
+    }
+    adply(df_comparacao,1,f_rep)
+  }
+  ddply(m_SADrep,"k",f_k)
 }
+registerDoMC(3)
+df_comparacaoTestesSADs <- adply(select(df_SADrep,SADrep.path:SiteCode),1,f_comparacaoSADSrep,.parallel = TRUE)
+write_csv(df_comparacaoTestesSADs,"dados/csv/df_comparacaoTestesSADs.csv")
 ```
 
 
