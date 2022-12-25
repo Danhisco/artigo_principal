@@ -128,7 +128,7 @@ df_testeSADs |>
 
 ### Segundo testes: comparação quando a hipótese nula não é verdadeira
 
-```{r}
+```{r comparacao onde a hipotese nula nao e igual}
 f_comparacao2 <- function(df,repo="dados/csv/avaliacao_testesSADs/"){
   m_SADrep <- read_csv(df$SADrep.path)
   df_x <- m_SADrep |> filter(k==0.99) |> sample_n(size=10)
@@ -149,13 +149,7 @@ f_comparacao2 <- function(df,repo="dados/csv/avaliacao_testesSADs/"){
   write_csv(cbind(SiteCode = df$SiteCode,df_write),
             file = paste0(repo,df$SiteCode,"_2.csv"))
 }
-
-
-f_rename <- function(path){
-  df_write <- read_csv(path)
-  file.remove(path)
-  write_csv(df_write,file = gsub("\\.csv","_1.csv",path))
-}
-sapply(list.files("dados/csv/avaliacao_testesSADs",full.names = T), f_rename)
+registerDoMC(3)
+a_ply(sample_n(df_SADrep,size=30),1,f_comparacao2,.parallel = T)
 ```
 
