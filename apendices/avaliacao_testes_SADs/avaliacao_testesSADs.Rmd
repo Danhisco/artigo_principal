@@ -55,9 +55,9 @@ Os testes calculam o valor p, a probabilidade de obter um valor da estatística 
 
 # Métodos
 
-Obtenção dos dados. para cada bateria de simulações, formei 200 pares únicos entre réplicas e comparei usando o teste KS e o teste DTS. A formação dos pares únicos seguiu o protocolo: selecionar as SADs réplicas com indices de 1 até 20, então para cada uma foram sorteadas 10 indices acima de seu próprio indice. Contabilizei o número de comparações em que o valor p > 0.05 por bateria de simulações.
+Obtenção dos dados. Para cada bateria de simulações, formei 200 pares únicos entre réplicas e comparei usando o teste KS e o teste DTS. A formação dos pares únicos seguiu o protocolo: selecionar as SADs réplicas com indices de 1 até 20, então para cada uma foram sorteadas 10 indices acima de seu próprio indice. Contabilizei o número de comparações em que o valor p > 0.05 por bateria de simulações.
 
-Utilizei modelos binomiais para descrever a probabilidade das SADs réplicas serem congruentes entre si.
+
 
 ```{r obtencao dos dados,echo=TRUE}
 f_comparacao_testesSAD <- function(df,repo="dados/csv/avaliacao_testesSADs/"){
@@ -77,7 +77,7 @@ f_comparacao_testesSAD <- function(df,repo="dados/csv/avaliacao_testesSADs/"){
     adply(df_comparacao,1,f_rep)
   }
   df_write <- ddply(m_SADrep,"k",f_k)
-  write_csv(cbind(SiteCode = df$SiteCode, df_write),file = paste0(repo,df$SiteCode,".csv"))
+  write_csv(cbind(SiteCode = df$SiteCode, df_write),file = paste0(repo,df$SiteCode,"_1.csv"))
 }
 registerDoMC(3)
 a_ply(df_SADrep[sample(1:nrow(df_SADrep),30,replace = F),],1,f_comparacao_testesSAD,.parallel = TRUE)
@@ -124,5 +124,38 @@ df_testeSADs |>
   # geom_smooth() +
   facet_grid(respostas~preditoras,scales="free_x")
   
+```
+
+### Segundo testes: comparação quando a hipótese nula não é verdadeira
+
+```{r}
+f_comparacao2 <- function(df,repo="dados/csv/avaliacao_testesSADs/"){
+  m_SADrep <- read_csv(df$SADrep.path)
+  df_x <- m_SADrep |> filter(k==0.99) |> sample_n(size=10)
+  df_y <- m_SADrep |> filter(k==0.05) |> sample_n(size=10)
+  f_rep <- function(df_i){
+    v_x <- unname(sort(table(as.matrix(df_i[,-(1:2)]))))
+    f_testes <- function(df_y.i){
+      v_y <- unname(sort(table(as.matrix(df_y.i[,-(1:2)]))))
+      v_p.KS<- ks_test(a=v_x,b=v_y,nboots = 1000)[2]
+      v_p.DTS <- dts_test(a=v_x,b=v_y,nboots = 1000)[2]
+      v_S.x <- length(v_x)
+      v_S.y <- length(v_y)
+      data.frame(v_p.KS,v_p.DTS,v_S.x,v_S.y,row.names = "")
+    }
+    adply(df_y,1,f_testes,.expand = F,.id = "k005")
+  }
+  df_write <- adply(df_x,1,f_rep,.expand = F,.id = "k099")
+  write_csv(cbind(SiteCode = df$SiteCode,df_write),
+            file = paste0(repo,df$SiteCode,"_2.csv"))
+}
+
+
+f_rename <- function(path){
+  df_write <- read_csv(path)
+  file.remove(path)
+  write_csv(df_write,file = gsub("\\.csv","_1.csv",path))
+}
+sapply(list.files("dados/csv/avaliacao_testesSADs",full.names = T), f_rename)
 ```
 
