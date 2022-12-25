@@ -60,9 +60,9 @@ Obtenção dos dados. para cada bateria de simulações, formei 200 pares único
 Utilizei modelos binomiais para descrever a probabilidade das SADs réplicas serem congruentes entre si.
 
 ```{r obtencao dos dados,echo=TRUE}
-f_comparacaoSADSrep <- function(df){
+f_comparacao_testesSAD <- function(df,repo="dados/csv/avaliacao_testesSADs/"){
   m_SADrep <- read_csv(df$SADrep.path)
-  df_comparacao <- adply(1:20,1,function(X) data.frame(y=sample((X+1):100,size = 10,replace = F)),.expand = F,.id="x") |> 
+  df_comparacao <- adply(1:10,1,function(X) data.frame(y=sample((X+1):100,size = 10,replace = F)),.expand = F,.id="x") |> 
     mutate(x = as.numeric(as.character(x)))
   f_k <- function(df_bateria){
     f_rep <- function(df_i,df_SADbateria=df_bateria){
@@ -70,15 +70,41 @@ f_comparacaoSADSrep <- function(df){
     v_y <- unname(sort(table(as.matrix(df_SADbateria[df_i$y,-(1:2)]))))
     p.KS <- ks_test(a=v_x,b=v_y,nboots = 1000)[2]
     p.DTS <- dts_test(a=v_x,b=v_y,nboots = 1000,keep.boots = F)[2]
-    data.frame(p.KS,p.DTS,row.names = "")
+    S_x <- length(v_x)
+    S_y <- length(v_y)
+    data.frame(p.KS,p.DTS,S_x,S_y,row.names = "")
     }
     adply(df_comparacao,1,f_rep)
   }
-  ddply(m_SADrep,"k",f_k)
+  df_write <- ddply(m_SADrep,"k",f_k)
+  write_csv(cbind(SiteCode = df$SiteCode, df_write),file = paste0(repo,df$SiteCode,".csv"))
 }
 registerDoMC(3)
-df_comparacaoTestesSADs <- adply(select(df_SADrep,SADrep.path:SiteCode),1,f_comparacaoSADSrep,.parallel = TRUE)
-write_csv(df_comparacaoTestesSADs,"dados/csv/df_comparacaoTestesSADs.csv")
+a_ply(df_SADrep[sample(1:nrow(df_SADrep),30,replace = F),],1,f_comparacao_testesSAD,.parallel = TRUE)
 ```
 
+```{r sintese dos dados}
+# dados
+df_rep <- list.files(path="dados/csv/avaliacao_testesSADs",full.names = T) |> 
+  map_df(~read_csv(.))
+df_testeSADs <- df_rep |> 
+  mutate(diffS = S_x - S_y) |> 
+  group_by(SiteCode,k) |> 
+  summarise(nCongKS = sum(p.KS>0.05),
+            nCongDTS = sum(p.KS>0.05),
+            diffSmed = mean(diffS),
+            diffSsd = sd(diffS)) |> 
+  inner_join(x=df_sim,by="SiteCode") |> 
+  inner_join(x=df_p,by="SiteCode")
+# gráficos
+df_testeSADs |> 
+  select(-effort_ha,-S_obs,-diffSsd) |> 
+  pivot_longer(cols = c(p,Ntotal,diffSmed),names_to="preditoras",values_to="v_pred") |>
+  pivot_longer(cols = nCongKS:nCongDTS,names_to="respostas",values_to="v_resp") |> 
+  ggplot(aes(x=v_pred,y=v_resp,color=respostas)) +
+  geom_point(alpha=0.4) +
+  # geom_smooth() +
+  facet_wrap(~preditoras,nrow=1,scales="free_x")
+  
+```
 
