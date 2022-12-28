@@ -38,7 +38,28 @@ df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv")
 # df_ad
-df_ad <- inner_join(x=df_resultMNEE,y=select(df_sim,-tif.path),by=c("SiteCode","k"))
+df_ad <- inner_join(x=select(df_resultMNEE,-(Smed:Smax)),y=select(df_sim,-tif.path),by=c("SiteCode","k")) |> 
+  mutate(log10.Sobs = log(S_obs,10),
+         log10.N = log(Ntotal,10),
+         d.Lplot = d / sqrt(10000*effort_ha)) 
+# padronização
+df_ad$k <- factor(round(df_ad$k,2),levels=round(unique(df_ad$k),2)[20:1])
+f_z <- function(x) (x-mean(x))/sd(x)
+df_teste <- apply(select(df_ad,Ntotal:d.Lplot), 2, f_z,simplify = T) 
+  
+  df_ad |>  
+  mutate(Ntotal:d.Lplot, f_z)
+
+
+df_resultados.z <- as.data.frame(
+  apply(
+    df_resultados[,
+                  c("p","Ntotal","log10_Sobs","k_1","d_Lplot","d","log10_d","modulo_diffS")],
+    2,f_z))
+names(df_resultados.z) <- sapply(names(df_resultados.z), function(x) paste0(x,".z"))
+df_resultados %<>% cbind(.,df_resultados.z) %>% 
+  select(-k_1,-k_1.z)
+
 ```
 
 # MNEE com mapas contemporaneos
@@ -113,5 +134,8 @@ Notas:
 
 ### Seleção da estrutura aleatória e variável de dispersão
 
+```{r}
+
+```
 
 
