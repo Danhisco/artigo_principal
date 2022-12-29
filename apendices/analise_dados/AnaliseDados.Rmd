@@ -39,14 +39,14 @@ df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 df_sim <- read_csv("dados/df_simulacao.csv")
 # df_ad
 f_z <- function(x) (x-mean(x))/sd(x)
-df_ad <- inner_join(x=select(df_resultMNEE,-(Smed:Smax)),
+df_ad <- inner_join(x=select(df_resultMNEE,-(Ssd:Smax)),
                     y=select(df_sim,-tif.path),
                     by=c("SiteCode","k")) |> 
   mutate(log10.Sobs = log(S_obs,10),
          log10.N = log(Ntotal,10),
          d.Lplot = d / sqrt(10000*effort_ha),
          k = factor(round(k,2),levels=round(k,2)[20:1]),
-         across(Ntotal:d.Lplot,f_z,.names = "{.col}_z")) 
+         across(c(p,Ntotal:d.Lplot),f_z,.names = "{.col}_z")) 
 ```
 
 # MNEE com mapas contemporaneos
@@ -121,8 +121,11 @@ Notas:
 
 ### Seleção da estrutura aleatória e variável de dispersão
 
-```{r}
-
+```{r selecao estrutura aleatoria}
+df_md <- df_ad |> select(SiteCode,k,nCongKS,p_z,d_z,d.Lplot_z)
+f_randomEffects <- function(df){
+  if(v)
+}
 ```
 
 
