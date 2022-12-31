@@ -196,9 +196,14 @@ f_randomEffects <- function(disp_var,df=df_md){
   }
   return(l_md)
 }
-registerDoMC(2)
-l_md <- alply(c("k","d","d.Lplot","log(d)","log(d.Lplot)"),1,f_randomEffects,.parallel = T,.expand = F)
-l_md <- unlist(unname(l_md),recursive = F)
+# registerDoMC(2)
+# l_md <- alply(c("k","d","d.Lplot","log(d)","log(d.Lplot)"),1,f_randomEffects,.parallel = T,.expand = F)
+l_md <- f_randomEffects(disp_var = "k")
+l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * k + (1|SiteCode),
+          data=df_md, family = "binomial",
+          control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
+l_md_RE_MNEE <- unlist(unname(l_md),recursive = F)
+l_md_RE_MNEE <- unlist(l_md,recursive = F)
 save(l_md,file = "dados/Rdata/l_md_RE_MNEE.Rdata")
 ```
 
@@ -208,6 +213,7 @@ v_reFit <- lapply(l_md[sapply(l_md, is, "merMod")],
   unlist()
 # registerDoMC(3)
 l_md_allFit <- llply(l_md[v_reFit],allFit,.parallel = F)
+l <- unlist(l_md_allFit,recursive = F)
 f_aud_l_md <- function(l){
   v_aud <- lapply(l[sapply(l, is, "merMod")], 
                   \(x) x@optinfo$conv$lme4$messages) |> 
@@ -217,7 +223,7 @@ f_aud_l_md <- function(l){
 ```
 
 ```{r dHARMa residuos md_MNEE_RE}
-p_plot <- DHARMa::simulateResiduals(l_md[[3]],n=1000)
+p_plot <- DHARMa::simulateResiduals(l_md_RE_MNEE[[3]],n=1000)
 plot(p_plot)
 md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(k_cont_z,2) + (poly(k_cont_z,2)|SiteCode),
           data=df_ad, family = "binomial",
