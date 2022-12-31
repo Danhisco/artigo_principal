@@ -43,9 +43,10 @@ df_ad <- inner_join(x=select(df_resultMNEE,-(Ssd:Smax)),
                     y=select(df_sim,-tif.path),
                     by=c("SiteCode","k")) |>
   mutate(d.Lplot = d / sqrt(10000*effort_ha),
-         across(Ntotal:d.Lplot,log,.names="log_{.col}"),
+         k_cont = k,
          k = factor(round(k,2),levels=round(k,2)[20:1]),
-         across(c(p,Ntotal:log_d.Lplot),f_z,.names = "{.col}_z")) |> 
+         across(Ntotal:d.Lplot,log,.names="log_{.col}"),
+         across(c(p,k_cont,Ntotal:log_d.Lplot),f_z,.names = "{.col}_z")) |> 
   select(-(d.Lplot:log_d.Lplot))
 ```
 
@@ -148,49 +149,84 @@ f_randomEffects <- function(disp_var,df=df_md){
     l_md <- list()
     l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * k + (1|SiteCode),
           data=df, family = "binomial",
-          control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
-    names(l_md) <- "k + 1|Site"
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
+    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(k_cont_z,2) + (1|SiteCode),
+          data=df, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
+    l_md[[3]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(k_cont_z,2) + (poly(k_cont_z,2)|SiteCode),
+          data=df, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
+    names(l_md) <- c("k + 1|Site","k_cont^2 + 1|Site","k_cont^2 + k_cont^2|Site")
   } else if(disp_var == "d"){
     l_md <- list()
     l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(d_z,2) + (1|SiteCode),
           data=df, family = "binomial",
-          control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- update(l_md[[1]], . ~ ., -(1|SiteCode) + (poly(d_z,2)|SiteCode))
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
+    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(d_z,2) + (poly(d_z,2)|SiteCode),
+          data=df, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
     names(l_md) <- c("d^2 + 1|Site", "d^2 + d^2|Site")
   } else if(disp_var == "d.Lplot"){
     l_md <- list()
     l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(d.Lplot_z,2) + (1|SiteCode),
           data=df, family = "binomial",
-          control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- update(l_md[[1]], . ~ ., -(1|SiteCode) + (poly(d.Lplot_z,2)|SiteCode))
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
+    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(d.Lplot_z,2) + (poly(d.Lplot_z,2)|SiteCode),
+          data=df, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
     names(l_md) <- c("d.Lplot^2 + 1|Site", "d.Lplot^2 + d.Lplot^2|Site")
   } else if(disp_var == "log(d)"){
     l_md <- list()
     l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(log_d_z,2) + (1|SiteCode),
           data=df, family = "binomial",
-          control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- update(l_md[[1]], . ~ ., -(1|SiteCode) + (poly(log_d_z,2)|SiteCode))
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
+    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(log_d_z,2) + (poly(log_d_z,2)|SiteCode),
+          data=df, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
     names(l_md) <- c("log(d)^2 + 1|Site", "log(d)^2 + log(d)^2|Site")
   } else if(disp_var == "log(d.Lplot)"){
     l_md <- list()
     l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(log_d.Lplot_z,2) + (1|SiteCode),
           data=df, family = "binomial",
-          control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- update(l_md[[1]], . ~ ., -(1|SiteCode) + (poly(log_d.Lplot_z,2)|SiteCode))
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
+    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(log_d.Lplot_z,2) + (poly(log_d.Lplot_z,2)|SiteCode),
+          data=df, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
     names(l_md) <- c("log(d.Lplot)^2 + 1|Site", "log(d.Lplot)^2 + log(d.Lplot)^2|Site")
   }
   return(l_md)
 }
-registerDoMC(3)
+registerDoMC(2)
 l_md <- alply(c("k","d","d.Lplot","log(d)","log(d.Lplot)"),1,f_randomEffects,.parallel = T,.expand = F)
 l_md <- unlist(unname(l_md),recursive = F)
+save(l_md,file = "dados/Rdata/l_md_RE_MNEE.Rdata")
+```
+
+```{r auditoria dos modelos ajustados l_md_RE_MNEE}
+v_reFit <- lapply(l_md[sapply(l_md, is, "merMod")],
+                  function(x) !is.null(x@optinfo$conv$lme4$messages)) |> 
+  unlist()
+# registerDoMC(3)
+l_md_allFit <- llply(l_md[v_reFit],allFit,.parallel = F)
+f_aud_l_md <- function(l){
+  v_aud <- lapply(l[sapply(l, is, "merMod")], 
+                  \(x) x@optinfo$conv$lme4$messages) |> 
+    unlist()
+  l[v_aud]
+} 
+```
+
+```{r dHARMa residuos md_MNEE_RE}
+p_plot <- DHARMa::simulateResiduals(l_md[[3]],n=1000)
+plot(p_plot)
+md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(k_cont_z,2) + (poly(k_cont_z,2)|SiteCode),
+          data=df_ad, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
+MuMIn::r.squaredGLMM(md_MNEE)
+```
+
+```{r AICctab md_MNEE_RE}
+load("dados/Rdata/l_md_RE_MNEE.Rdata")
 AICctab(l_md,weights=T)
 ```
-
-```{r}
-teste <- allFit(l_md[[1]])
-teste.OK <- sapply(teste, is, "merMod")
-lapply(teste[teste.OK],function(x) x@optinfo$conv$lme4$messages)
-```
-
 
