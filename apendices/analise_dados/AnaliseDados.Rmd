@@ -41,12 +41,12 @@ df_sim <- read_csv("dados/df_simulacao.csv")
 f_z <- function(x) (x-mean(x))/sd(x)
 df_ad <- inner_join(x=select(df_resultMNEE,-(Ssd:Smax)),
                     y=select(df_sim,-tif.path),
-                    by=c("SiteCode","k")) |> 
-  mutate(log10.Sobs = log(S_obs,10),
-         log10.N = log(Ntotal,10),
-         d.Lplot = d / sqrt(10000*effort_ha),
+                    by=c("SiteCode","k")) |>
+  mutate(d.Lplot = d / sqrt(10000*effort_ha),
+         across(Ntotal:d.Lplot,log,.names="log_{.col}"),
          k = factor(round(k,2),levels=round(k,2)[20:1]),
-         across(c(p,Ntotal:d.Lplot),f_z,.names = "{.col}_z")) 
+         across(c(p,Ntotal:log_d.Lplot),f_z,.names = "{.col}_z")) |> 
+  select(-(d.Lplot:log_d.Lplot))
 ```
 
 # MNEE com mapas contemporaneos
@@ -94,7 +94,7 @@ df_ad |>
 <p> 2) o teste DTS apresenta um erro maior quando a hipótese nula é falsa (comparação de réplicas de um mesmo sítio quando k=0.99 e k=0.05), porém o teste KS apresenta um erro de 47%; ainda vou mostrar para o PI esses resultados, talvez precise complementar essa segunda comparação. 
 <p> CONCLUSÃO) Minha decisão é continuar com o teste KS pois no visual ele se sai melhor, apesar de ambos apresentarem problemas. </p>
 
-### nCongKS ~ d|SiteCode
+### Gráficos Exploratórios
 
 ```{r figura 2 nCongKS d SiteCode,fig.width=10, fig.height=27,eval=TRUE}
 df_plot <- df_ad |> mutate(title = paste0(SiteCode, " p=",round(p,digits = 3))) |>  arrange(p)
@@ -118,14 +118,79 @@ Notas:
     
 2) em outros casos acontece o mesmo tipo de erro: nas áreas que mais chama a atenção é aquela em que pode existir maior variabilidade. Penso se isso não deveria aumentar o número de SADs réplicas. 
 
+```{r graf exp MNEE,eval=T,fig.height=12}
+l_p <- list()
+l_p[[1]] <- df_ad |> 
+  ggplot(aes(x=p,y=nCongKS)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~k,ncol=4) +
+  labs(subtitle="~ p +(~k)")
+l_p[[2]] <- df_ad |> 
+  mutate(p_class = cut(p,12)) |> 
+  ggplot(aes(x=d,y=nCongKS)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~p_class,ncol=3) +
+  labs(subtitle="~ d +(~p_cut)")
+grid.arrange(grobs=l_p,ncol=1)
+```
+
+__Figura 3__ gráficos exploratórios efeitos fixos
+
 
 ### Seleção da estrutura aleatória e variável de dispersão
 
-```{r selecao estrutura aleatoria}
-df_md <- df_ad |> select(SiteCode,k,nCongKS,p_z,d_z,d.Lplot_z)
-f_randomEffects <- function(df){
-  if(v)
+```{r selecao estrutura aleatoria, echo=T,eval=F}
+df_md <- df_ad |> select(SiteCode,k,nCongKS,p_z:log_d.Lplot_z)
+f_randomEffects <- function(disp_var,df=df_md){
+  if(disp_var == "k"){
+    l_md <- list()
+    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * k + (1|SiteCode),
+          data=df, family = "binomial",
+          control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
+    names(l_md) <- "k + 1|Site"
+  } else if(disp_var == "d"){
+    l_md <- list()
+    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(d_z,2) + (1|SiteCode),
+          data=df, family = "binomial",
+          control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
+    l_md[[2]] <- update(l_md[[1]], . ~ ., -(1|SiteCode) + (poly(d_z,2)|SiteCode))
+    names(l_md) <- c("d^2 + 1|Site", "d^2 + d^2|Site")
+  } else if(disp_var == "d.Lplot"){
+    l_md <- list()
+    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(d.Lplot_z,2) + (1|SiteCode),
+          data=df, family = "binomial",
+          control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
+    l_md[[2]] <- update(l_md[[1]], . ~ ., -(1|SiteCode) + (poly(d.Lplot_z,2)|SiteCode))
+    names(l_md) <- c("d.Lplot^2 + 1|Site", "d.Lplot^2 + d.Lplot^2|Site")
+  } else if(disp_var == "log(d)"){
+    l_md <- list()
+    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(log_d_z,2) + (1|SiteCode),
+          data=df, family = "binomial",
+          control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
+    l_md[[2]] <- update(l_md[[1]], . ~ ., -(1|SiteCode) + (poly(log_d_z,2)|SiteCode))
+    names(l_md) <- c("log(d)^2 + 1|Site", "log(d)^2 + log(d)^2|Site")
+  } else if(disp_var == "log(d.Lplot)"){
+    l_md <- list()
+    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(log_d.Lplot_z,2) + (1|SiteCode),
+          data=df, family = "binomial",
+          control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
+    l_md[[2]] <- update(l_md[[1]], . ~ ., -(1|SiteCode) + (poly(log_d.Lplot_z,2)|SiteCode))
+    names(l_md) <- c("log(d.Lplot)^2 + 1|Site", "log(d.Lplot)^2 + log(d.Lplot)^2|Site")
+  }
+  return(l_md)
 }
+registerDoMC(3)
+l_md <- alply(c("k","d","d.Lplot","log(d)","log(d.Lplot)"),1,f_randomEffects,.parallel = T,.expand = F)
+l_md <- unlist(unname(l_md),recursive = F)
+AICctab(l_md,weights=T)
+```
+
+```{r}
+teste <- allFit(l_md[[1]])
+teste.OK <- sapply(teste, is, "merMod")
+lapply(teste[teste.OK],function(x) x@optinfo$conv$lme4$messages)
 ```
 
 
