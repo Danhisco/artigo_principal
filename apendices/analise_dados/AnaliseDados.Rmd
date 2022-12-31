@@ -142,7 +142,7 @@ __Figura 3__ gráficos exploratórios efeitos fixos
 
 ### Seleção da estrutura aleatória e variável de dispersão
 
-```{r selecao estrutura aleatoria, echo=T,eval=F}
+```{r selecao estrutura aleatoria}
 df_md <- df_ad |> select(SiteCode,k,nCongKS,p_z:log_d.Lplot_z)
 f_randomEffects <- function(disp_var,df=df_md){
   if(disp_var == "k"){
@@ -204,7 +204,7 @@ l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * k + (1|SiteCode),
           control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
 l_md_RE_MNEE <- unlist(unname(l_md),recursive = F)
 l_md_RE_MNEE <- unlist(l_md,recursive = F)
-save(l_md,file = "dados/Rdata/l_md_RE_MNEE.Rdata")
+save(l_md_RE_MNEE,file = "dados/Rdata/l_md_RE_MNEE.Rdata")
 ```
 
 ```{r auditoria dos modelos ajustados l_md_RE_MNEE}
@@ -222,17 +222,41 @@ f_aud_l_md <- function(l){
 } 
 ```
 
-```{r dHARMa residuos md_MNEE_RE}
+__Tabela 1__ Peso de evidência dos modelos cheios
+
+```{r AICctab md_MNEE_RE, eval=TRUE}
+load("dados/Rdata/l_md_RE_MNEE.Rdata")
+AICctab(l_md_RE_MNEE,weights=T)
+```
+
+
+```{r dHARMa residuos md_MNEE_RE,eval=TRUE,cache=TRUE}
 p_plot <- DHARMa::simulateResiduals(l_md_RE_MNEE[[3]],n=1000)
 plot(p_plot)
+```
+
+__Figura 4__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
+
+```{r Quantile-quantile plot random effects,eval=TRUE}
+df_ranef <- ranef(l_md_RE_MNEE[[3]])$SiteCode 
+df_ranef$SiteCode <- row.names(df_ranef)
+row.names(df_ranef) <- NULL
+df_ranef |> 
+  pivot_longer(-SiteCode) |>
+  ggplot(aes(sample=value)) + 
+  stat_qq(alpha=0.3) + stat_qq_line(alpha=0.3,col="red") +
+  facet_wrap(~name,scales="free",ncol=3)
+```
+
+__Figura 5__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
+
+__Tabela 1__ Coeficiente de determinação marginal e condicional do modelo cheio selecionado para nCongKS de MNEE
+
+```{r R2m e R2c md_MNEE_RE,cache=TRUE,eval=TRUE}
 md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(k_cont_z,2) + (poly(k_cont_z,2)|SiteCode),
           data=df_ad, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-MuMIn::r.squaredGLMM(md_MNEE)
-```
-
-```{r AICctab md_MNEE_RE}
-load("dados/Rdata/l_md_RE_MNEE.Rdata")
-AICctab(l_md,weights=T)
+df_R2_RE_MNEE <- MuMIn::r.squaredGLMM(md_MNEE)
+kableExtra::kable(df_R2_RE_MNEE)
 ```
 
