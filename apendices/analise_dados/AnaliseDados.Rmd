@@ -26,6 +26,7 @@ library(readr)
 library(purrr)
 library(stringr)
 library(tidyr)
+library(MuMIn)
 library(insight)
 library(bbmle)
 library(DHARMa)
@@ -147,63 +148,69 @@ df_md <- df_ad |> select(SiteCode,k,nCongKS,p_z:log_d.Lplot_z)
 f_randomEffects <- function(disp_var,df=df_md){
   if(disp_var == "k"){
     l_md <- list()
-    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * k + (1|SiteCode),
+    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * k + (1|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(k_cont_z,2) + (1|SiteCode),
+    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(k_cont_z,2,raw=T) + (1|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[3]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(k_cont_z,2) + (poly(k_cont_z,2)|SiteCode),
+    l_md[[3]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                         poly(p_z,2,raw=T) * poly(k_cont_z,2,raw=T) + (poly(k_cont_z,2,raw=T)|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
     names(l_md) <- c("k + 1|Site","k_cont^2 + 1|Site","k_cont^2 + k_cont^2|Site")
   } else if(disp_var == "d"){
     l_md <- list()
-    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(d_z,2) + (1|SiteCode),
+    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(d_z,2,raw=T) + (1|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(d_z,2) + (poly(d_z,2)|SiteCode),
+    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                         poly(p_z,2,raw=T) * poly(d_z,2,raw=T) + (poly(d_z,2,raw=T)|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
     names(l_md) <- c("d^2 + 1|Site", "d^2 + d^2|Site")
   } else if(disp_var == "d.Lplot"){
     l_md <- list()
-    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(d.Lplot_z,2) + (1|SiteCode),
+    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                         poly(p_z,2,raw=T) * poly(d.Lplot_z,2,raw=T) + (1|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(d.Lplot_z,2) + (poly(d.Lplot_z,2)|SiteCode),
+    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                         poly(p_z,2,raw=T) * poly(d.Lplot_z,2,raw=T) + (poly(d.Lplot_z,2,raw=T)|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
     names(l_md) <- c("d.Lplot^2 + 1|Site", "d.Lplot^2 + d.Lplot^2|Site")
   } else if(disp_var == "log(d)"){
     l_md <- list()
-    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(log_d_z,2) + (1|SiteCode),
+    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(log_d_z,2,raw=T) + (1|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(log_d_z,2) + (poly(log_d_z,2)|SiteCode),
+    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                         poly(p_z,2,raw=T) * poly(log_d_z,2,raw=T) + (poly(log_d_z,2,raw=T)|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
     names(l_md) <- c("log(d)^2 + 1|Site", "log(d)^2 + log(d)^2|Site")
   } else if(disp_var == "log(d.Lplot)"){
     l_md <- list()
-    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(log_d.Lplot_z,2) + (1|SiteCode),
+    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(log_d.Lplot_z,2,raw=T) + (1|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(log_d.Lplot_z,2) + (poly(log_d.Lplot_z,2)|SiteCode),
+    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                         poly(p_z,2,raw=T) * poly(log_d.Lplot_z,2,raw=T) + (poly(log_d.Lplot_z,2,raw=T)|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
     names(l_md) <- c("log(d.Lplot)^2 + 1|Site", "log(d.Lplot)^2 + log(d.Lplot)^2|Site")
   }
   return(l_md)
 }
-# registerDoMC(2)
-# l_md <- alply(c("k","d","d.Lplot","log(d)","log(d.Lplot)"),1,f_randomEffects,.parallel = T,.expand = F)
-l_md <- f_randomEffects(disp_var = "k")
-l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * k + (1|SiteCode),
-          data=df_md, family = "binomial",
-          control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
+registerDoMC(3)
+l_md <- alply(c("k","d","d.Lplot","log(d)","log(d.Lplot)"),1,f_randomEffects,.parallel = T,.expand = F)
+# l_md <- f_randomEffects(disp_var = "k")
+# l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * k + (1|SiteCode),
+#           data=df_md, family = "binomial",
+#           control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
 l_md_RE_MNEE <- unlist(unname(l_md),recursive = F)
-l_md_RE_MNEE <- unlist(l_md,recursive = F)
+# l_md_RE_MNEE <- unlist(l_md,recursive = F)
 save(l_md_RE_MNEE,file = "dados/Rdata/l_md_RE_MNEE.Rdata")
 ```
 
@@ -231,14 +238,14 @@ AICctab(l_md_RE_MNEE,weights=T)
 
 
 ```{r dHARMa residuos md_MNEE_RE,eval=TRUE,cache=TRUE}
-p_plot <- DHARMa::simulateResiduals(l_md_RE_MNEE[[3]],n=1000)
+p_plot <- DHARMa::simulateResiduals(l_md_RE_MNEE[[5]],n=1000)
 plot(p_plot)
 ```
 
 __Figura 4__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
 
 ```{r Quantile-quantile plot random effects,eval=TRUE}
-df_ranef <- ranef(l_md_RE_MNEE[[3]])$SiteCode 
+df_ranef <- ranef(l_md_RE_MNEE[[5]])$SiteCode 
 df_ranef$SiteCode <- row.names(df_ranef)
 row.names(df_ranef) <- NULL
 df_ranef |> 
@@ -250,13 +257,56 @@ df_ranef |>
 
 __Figura 5__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
 
+
+```{r figura 6 observado e predito pelo modelo médio de nCongKS MNEE, eval=T,fig.height=4}
+# dados
+df_md <- l_md_RE_MNEE[[5]]@frame
+df_md$nCong_observado <- df_md$`cbind(nCongKS, 100 - nCongKS)`[,1]
+df_md$nCong_predito <- predict(l_md_RE_MNEE[[5]],type="response") * 100
+# graficos
+ggplot(df_md,aes(x=nCong_observado,y=nCong_predito)) +
+  geom_smooth(method = "lm",aes(group=SiteCode),se=FALSE,alpha=0.3) +
+  geom_abline(slope = 1,intercept = 0,col="red",alpha=0.8,size=2) +
+  geom_point(alpha=0.3) +
+  labs(x="sum(p-value>0.05) observado",
+       y="sum(p-value>0.05) predito",
+       subtitle="Modelo Cheio") +
+  coord_cartesian(expand = F)
+```
+
+__Figura 6__ Observado e predito pelo modelo cheio selecionado 
+
 __Tabela 1__ Coeficiente de determinação marginal e condicional do modelo cheio selecionado para nCongKS de MNEE
 
 ```{r R2m e R2c md_MNEE_RE,cache=TRUE,eval=TRUE}
-md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * poly(k_cont_z,2) + (poly(k_cont_z,2)|SiteCode),
+md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(k_cont_z,2,raw=T) + (poly(k_cont_z,2,raw=T)|SiteCode),
           data=df_ad, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
 df_R2_RE_MNEE <- MuMIn::r.squaredGLMM(md_MNEE)
 kableExtra::kable(df_R2_RE_MNEE)
+```
+
+
+### Predição Modelo Médio MNEE RE nCongKS
+
+```{r modelo médio MNEE RE nCongKS}
+# todas as combinações de modelo do modelo cheio
+registerDoMC(3)
+l_md.dredge_nCongKS_MNEE <- llply(dredge(md_MNEE,trace = FALSE,evaluate=FALSE), eval,.parallel = TRUE)
+save(l_md.dredge_nCongKS_MNEE,file = "dados/Rdata/l_md_dredge_nCongKS_MNEE.Rdata")
+```
+
+__tabela 2__ Sub modelos derivados do modelo cheio com maior peso de evidência 
+
+```{r tabela 2 peso de evidência dos modelos em ordem decrescente,results='hide' }
+load("dados/Rdata/l_md_dredge_nCongKS_MNEE.Rdata")
+# AICctab
+df_tableGLMM <- print(AICctab(l_md.dredge_nCongKS_MNEE,weights=TRUE)) %>% 
+  as.data.frame()
+df_tableGLMM$model_code <- row.names(df_tableGLMM)
+df_tableGLMM$weight <- as.character(df_tableGLMM$weight)
+df_tableGLMM$dAICc <- as.numeric(as.character(df_tableGLMM$dAICc))
+rownames(df_tableGLMM) <- NULL
+df_tableGLMM <- df_tableGLMM[,c(4,1:3)]
 ```
 
