@@ -27,6 +27,7 @@ library(purrr)
 library(stringr)
 library(tidyr)
 library(MuMIn)
+library(AICcmodavg)
 library(insight)
 library(bbmle)
 library(DHARMa)
@@ -279,7 +280,7 @@ __Figura 6__ Observado e predito pelo modelo cheio selecionado
 __Tabela 1__ Coeficiente de determinação marginal e condicional do modelo cheio selecionado para nCongKS de MNEE
 
 ```{r R2m e R2c md_MNEE_RE,cache=TRUE,eval=TRUE}
-md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(k_cont_z,2,raw=T) + (poly(k_cont_z,2,raw=T)|SiteCode),
+md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(d_z,2,raw=T) + (poly(d_z,2,raw=T)|SiteCode),
           data=df_ad, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
 df_R2_RE_MNEE <- MuMIn::r.squaredGLMM(md_MNEE)
@@ -308,5 +309,19 @@ df_tableGLMM$weight <- as.character(df_tableGLMM$weight)
 df_tableGLMM$dAICc <- as.numeric(as.character(df_tableGLMM$dAICc))
 rownames(df_tableGLMM) <- NULL
 df_tableGLMM <- df_tableGLMM[,c(4,1:3)]
+```
+
+
+```{r model averaging MNEE  MuMIn e AICcmodavg}
+# Model Averaging for SiteCode predictions
+mdAvg_nCongMNEE_MuMIn <- model.avg(l_md.dredge_nCongKS_MNEE)
+save(mdAvg_nCongMNEE_MuMIn,file="dados/Rdata/mdAvg_nCongMNEE_MuMIn.Rdata")
+# Model Averaging for new data predictions
+df_pred <- expand.grid(SiteCode=levels(df_ad$SiteCode)[1],
+                       d_z=seq(min(df_ad$d_z),max(df_ad$d_z),length=40),
+                       p_z=seq(min(df_ad$p_z),max(df_ad$p_z),length=200))
+mdAvg_nCongMNEE_AICcmodavg <- modavgPred(l_md.dredge_nCongKS_MNEE,newdata = df_pred) %>%
+  cbind(df_pred)
+save(mdAvg_nCongMNEE_AICcmodavg,file="dados/Rdata/mdAvg_nCongMNEE_AICcmodavg.Rdata")
 ```
 
