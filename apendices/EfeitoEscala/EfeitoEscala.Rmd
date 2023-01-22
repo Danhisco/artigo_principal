@@ -44,12 +44,13 @@ df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv") |>
 #           to=paste0("dados/paisagens_SoE_MNEE/",v_sim_sites))
 # file.remove("dados/simulacao/")
 ## df_Unull
-df_Unull <- list.files(path = "dados/csv/U_nullLand_16km/",pattern = ".csv",full.names = T) |> 
-  map_df(~read_csv(.)) |> 
-  inner_join(x=distinct(select(df_sim,SiteCode:S_obs)),by="SiteCode")
-df_Unull <- cbind(df_Unull[,1:6],
-                  Umed = apply(df_Unull[,7:10], 1, mean),
-                  Usd = apply(df_Unull[,7:10], 1, sd)) |> 
+df_Unull.rep <- list.files(path = "dados/csv/U_nullLand_16km/",pattern = ".csv",full.names = T) |> 
+  map_df(~read_csv(.)) 
+df_Unull <- df_Unull.rep |> 
+  pivot_longer(cols=`1`:`4`, names_to = "n", values_to = "U") |> 
+  group_by(SiteCode, k) |> 
+  summarise(Umed = mean(U), Usd = sd(U)) |> 
+  inner_join(x=distinct(select(df_sim,SiteCode,p:S_obs)),by="SiteCode") |> 
   mutate(DA = Ntotal / effort_ha)
 # df_Usoe
 df_Usoe_completo <- read_csv("dados/csv/df_Usoe.csv")
@@ -80,6 +81,13 @@ download_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
 ## Introdução
 
 <p> Para comparar os modelos neutros é necessário primeiro determinar a extensão espacial da paisagem ao redor (REF), pois os modelos neutros derivados da HAH (MNEI extremo e brando) requerem que o pool de propágulos da paisagem ao redor seja pré delimitados (Fahrig 2021/20222 Reply to Sauro 2021/2022 J Biogeo) e o modelo neutro derivado de HCH (MNEE) requer paisagem ao redor da parcela suficiente para que a simulação coalescente não seja restringinda pela extensão espacial da paisagem (Thompson et al. 2019/2020 Rcoalescent package paper). Não há consenso em como estimar uma extensão espacial da paisagem ao redor comum às parcelas reunidas para estudo (REF). </p>
+
+<p> 
+</p>
+
+
+
+
 <p> Nossa proposta se baseia na taxa U, colonização de novas espécies na paisagem por evento de nascimento, estimada por MNEE para obter a riqueza observada na parcela dado um cenário de limitação à dispersão e mapa de cobertura vegetal. Em paisagens infinitas e sem perda de habitat, espera-se que a taxa U necessária para manter uma determinada riqueza na parcela apresente padrão não linear (May et al. 2011). Em cenários de limitação à dispersão severa a  taxa U estimada deve ser pequena, pois a perda de espécies deve ser pequena, uma vez que a maior parte das substituições ocorre entre indivíduos de uma mesma espécie devido à elevada agregação de coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies deve aumentar ao passo que a substituição de coespecíficos diminui, aumentando a perda de espécies por deriva ecológica. O aumento da erosão de espécies com o aumento da capacidade de dispersão não se mantem sempre, ao passo que outras subpopulações mais distantes da parcela podem repor espécies perdidas localmente, fazendo com que a perda de espécies local seja parcialmente compensada pela dispersão de propágulos da paisagem ao redor em cenários de limitação de dispersão brandos. Para determinar a extensão espacial adequada da paisagem vamos buscar aquela extensão espacial que não limite a redução da taxa U em cenários de limitação à dispersão brandos. Então vamos pressupor que não há perda de cobertura vegetal na paisagem, desse modo a possível estabilização de U não pode ser resultado do isolamento do habitat da parcela na paisagem.  </p>
 <p> Primeiro vamos avaliar como a estimativa de U varia com a redução da limitação de dispersão quando a paisagem apresenta a maior extensão considerada (16x16km2) e não há perda de habitat. Dessa forma avaliamos se a maior extensão considerada é suficiente para obter o padrão não linear esperado em paisagens infinitas. E depois vamos selecionar alguns cenários de limitação à dispersão brandos para avaliar como a taxa U varia com a redução da extensão espacial. </p>
 <p> Dos 106 sítios selecionados para a comparação dos modelos neutros, 36 foram sorteados e selecionados para avaliar qual a extensão espacial suficiente para comparar os modelos neutros. Esses 36 sítios incluem os extremos da riqueza de espécies e densidade de indivíduos observada e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (figura 1a). Para cada sítio simulamos 20 cenários de limitação de dispersão (Figura 1b e Figura 2). Então selecionamos 3 cenários de limitação à dispersão mais brandos (Figura 2) para avaliar se alguma sub extensão espacial da paisagem ao redor é suficiente para comparar os modelos neutros. As subescalas avaliadas variaram de 0.5 km de lado até 16 km de lado, totalizando 6 escalas espaciais da paisagem ao redor. Aquela subescala que acumular a maior parte da variação pode ser candidata como extensão espacial da paisagem apropriada para comparar os modelos neutros. </p>
@@ -235,6 +243,14 @@ grid.arrange(grobs=l_p,ncol=2)
 ```
 
 <p> __Figura SI1__ Amplitude da taxa U estimada em função da densidade de indivíduos (DA) e da riqueza de espécies (S_obs). </p>
+
+
+### Mapas de Cobertura Vegetal usados (4x4km2)
+
+```{r}
+
+```
+
 
 <!-- ## Códigos para estimar U nas diferentes extensões espaciais -->
 
