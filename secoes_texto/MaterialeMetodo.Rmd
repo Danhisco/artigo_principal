@@ -1,13 +1,107 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+```{r trackdown rotine, include=FALSE}
+# pacotes
+library(trackdown)
+# both overwrite: 
+# overwrite the current google drive file with the current Rmd:
+# upload_file(file="secoes_texto/introducao/introducao.Rmd",
+#             gpath="mestrado/artigo_principal/secoes_texto/",
+#             hide_code=TRUE)
+update_file(file ="relatorio_final.Rmd",
+            gpath = "mestrado/disciplinas/BIE5716/",
+            hide_code = TRUE)
+# overwrite the current Rmd with the current google drive 
+download_file(file ="relatorio_final.Rmd",
+              gpath = "mestrado/disciplinas/BIE5716/")
+```
+
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=FALSE)
+# pacotes adicionais´
+library(doMC)
+library(readr)
+library(gridExtra)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(stringr)
+library(plyr)
+library(dplyr)
+# dados disponíveis
+df_dados <- read_csv(file = "dados/df_dados_disponiveis.csv")
+df_sim <- read_csv("dados/df_simulacao.csv")
+```
 
 ## Materiais e Método
 
-- Selecionamos na base de dados TreeCo inventários florestais que amostraram em parcela única pelo menos 1ha de floresta, com alta confiabilidade taxonômica dos indivíduos com DBH>=5.0cm e da coordenada central da parcela, totalizando 109 sítios (mediana da área da parcela é XX ha).  
-- Usamos mapas de cobertura vegetal contemporâneos aos inventários florestais na base de dados REF XXXX. 
-- Um desafio de implementar esses modelos é definir a extensão espacial da paisagem ao redor que deve fornecendo a maior parte dos propágulos para a parcela (Jackson & Fahrig 2015).
+### Sítios selecionados e cenários de limitação de dispersão
+
+- Selecionamos na base de dados TreeCo inventários florestais que amostraram em parcela única pelo menos 1ha de floresta, com alta confiabilidade taxonômica dos indivíduos arbóreos com DBH>=5.0cm e da coordenada central da parcela, totalizando 109 sítios (figura 1). As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (figura 1a). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrado mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação mediano foi 2007 (figura 1b).
+- Os cenários de limitação de dispersão __per capita__ foram modelados usando a distribuição de Laplace (exponencial espelhada) para selecionar a distância de dispersão com dois sorteios independentes ortogonais (Rosindell et al. 2008, Thompson et al. 2019). Os 20 cenários de limitação de dispersão foram controlados pela proporção de propágulos que permanece até a vizinhança imediata da planta progenitora, a distância até o vizinho imediato. Então quanto menor a densidade de indivíduos, maior a distância entre indivíduos; assim o parâmetro que controla o desvio-padrão da distribuição de Laplace aumenta com a densidade (figura 1c).
+
+
+
+```{r fig 1 - sitios amostrados e cenário de limitação de dispersao}
+df_plot <- df_dados |> 
+  select(SiteCode, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
+l_p <- list()
+l_p[[1]] <- df_plot |> 
+  ggplot(aes(y=lat,x=long)) +
+  geom_point(alpha=0.5) +
+  theme_light() +
+  labs(subtitle = "a)")
+v_labels <- c("effort_ha" = "plot area (ha)",
+              "Ntotal" = "número de indivíduos amostrado",
+              "S_obs" = "riqueza de espécies observada",
+              "year_bestProxy" = "ano de amostragem ou publicação")
+df_plot[grep("\\_",df_plot$year_bestProxy),"year_bestProxy"] <- "2012.5"
+l_p[[2]] <- df_plot |>
+  mutate(year_bestProxy = as.numeric(year_bestProxy)) |> 
+  pivot_longer(effort_ha:year_bestProxy) |> 
+  ggplot(aes(x=name,y=value)) +
+  geom_jitter(alpha=0.4) +
+  geom_boxplot() +
+  labs(x="",y="",subtitle="b)") +
+  facet_wrap(~name,ncol=1,scales="free", labeller = as_labeller(v_labels), strip.position = "bottom") +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        strip.background = element_blank(),
+        strip.placement = "outside") +
+  coord_flip()
+l_p[[3]] <- df_sim |> 
+  mutate(DA = Ntotal / effort_ha) |> 
+  ggplot(aes(x=k,y=d,color=DA,group=k)) +
+  geom_jitter() +
+  geom_boxplot() +
+  labs(subtitle = "c)",
+       y = "SD da dist. de Laplace usada na função de dispersão",
+       x = "proporção de propágulos até a vizinhança imediata do progenitor") +
+  theme_light()
+grid.arrange(grobs=l_p,ncol=3)
+```
+
+__Figura 1__ Sítios selecionados e cenários de limitação de dispersão simulados. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) cenários de limitação de dispersão: desvio-padrão da distribuição de laplace (eixo y), e a proporção de propágulos que permanece até a distância imediata (até o vizinho imediato), quanto menor a densidade de indivíduos (DA) maior a distância entre vizinhos e por isso maior o desvio padrão para obter a mesma proporção de propágulos até a vizinhança imediata.
+
+
 
 ### determinação da extensão espacial da paisagem ao redor 
+
+- Um desafio para implementar os 6 modelos para descrever a SAD em função da dispersão de indivíduos entre parcela e paisagem local é definir a extensão espacial da paisagem ao redor que pode fornecer propágulos para a parcela (Jackson & Fahrig 2015). Pois os modelos sem espaço e de espaço implícito requerem que o pool de propágulos da paisagem ao redor seja pré delimitados (Fahrig 2021/20222 Reply to Sauro 2021/2022 J Biogeo) e os modelo de espaço explícito requerem um tamanho minímo da paisagem ao redor, para que a construção da árvore genealógica da comunidade (glossário, Thompson et al. 2019/2020 Rcoalescent package paper) não seja restringida pela extensão espacial da paisagem, mas sim pela limitação de dispersão. A análise de escala de efeito (Jackson & Fahrig 2015) propõe que a extensão espacial adequada é aquela que maximiza a relação entre o padrão de biodiversidade local estudado e a variável de interesse, por exemplo, a proporção de cobertura vegetal na paisagem. Essa abordagem tem sido adotada em diversos estudos, apesar da forma mais simples que não considera a correlação entre locais próximos e na variação da variável preditora ter problemas (REF 2018?). Optamos por não utiliza-la pois ela pressupõe que existe equilíbrio da resposta ecológica à heterogeneidade contemporânea da paisagem. A extensão espacial da paisagem determina a extensão do gradiente de proporção de cobertura vegetal e a posição dos sítios nesse gradiente (figura 2).
+
+- RELAÇÃO ENTRE CAPACIDADE DE DISPERSÃO E EXTENSÃO ESPACIAL DA PAISAGEM
+
+trabalhos que investigaram os indivíduos arbóreos da Floresta Atlântica consideraram paisagens de cerca de 4 por 4 km2, extensão determinada  (Lima et al. 2020; Puttker et al. 2021). Aqui optamos por utilizar essa extensão também,  utilizaram tanto revisão bibliográfica sobre a capacidade de dispersão das espécies arbóreas (revisado por Lima et al. 2020 SI) ou pela análise de escala de efeito ()
+
+- A função de dispersão se baseia em uma distribuição de probabilidades 
 - A predição dos modelos espacialmente explícitos depende de uma extensão espacial mínima, que não seja muito pequena para restringir a construção da árvore genealógica na simulação coalescente (THOMPSON PACOTE R 2021). 
-- Os modelos espacialmente implícitos e sem espaço dependem de uma extensão espacial ótima, englobando a maior parte das áreas que fornecem propágulos para a parcela.
+- Os modelos espacialmente implícitos e sem espaço dependem de uma extensão espacial ótima, uma vez que a paisagem defini o pool de 
+
+
+englobando a maior parte das áreas que fornecem propágulos para a parcela.
 
 
 
