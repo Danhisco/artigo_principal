@@ -34,6 +34,7 @@ library(dplyr)
 # dados disponíveis
 df_dados <- read_csv(file = "dados/df_dados_disponiveis.csv")
 df_sim <- read_csv("dados/df_simulacao.csv")
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
 ```
 
 ## Materiais e Método
@@ -41,7 +42,7 @@ df_sim <- read_csv("dados/df_simulacao.csv")
 ### Sítios selecionados e cenários de limitação de dispersão
 
 - Selecionamos na base de dados TreeCo inventários florestais que amostraram em parcela única pelo menos 1ha de floresta, com alta confiabilidade taxonômica dos indivíduos arbóreos com DBH>=5.0cm e da coordenada central da parcela, totalizando 109 sítios (figura 1). As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (figura 1a). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrado mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação mediano foi 2007 (figura 1b).
-- Os cenários de limitação de dispersão __per capita__ foram modelados usando a distribuição de Laplace (exponencial espelhada) para selecionar a distância de dispersão com dois sorteios independentes ortogonais (Rosindell et al. 2008, Thompson et al. 2019). Os 20 cenários de limitação de dispersão foram controlados pela proporção de propágulos que permanece até a vizinhança imediata da planta progenitora, a distância até o vizinho imediato. Então quanto menor a densidade de indivíduos, maior a distância entre indivíduos; assim o parâmetro que controla o desvio-padrão da distribuição de Laplace aumenta com a densidade (figura 1c).
+- Os cenários de limitação de dispersão __per capita__ foram modelados com a distribuição de Laplace (exponencial espelhada) para sortear a distância de dispersão (dois sorteios ortogonais independentes) (Rosindell et al. 2008, Thompson et al. 2019). Os 20 cenários de limitação de dispersão foram controlados pela proporção de propágulos que permanece até a vizinhança imediata da planta progenitora, a distância até o vizinho imediato. Então quanto menor a densidade de indivíduos, maior a distância entre indivíduos; assim o parâmetro que controla o desvio-padrão da distribuição de Laplace aumenta com a densidade (figura 1c).
 
 
 
@@ -90,7 +91,56 @@ __Figura 1__ Sítios selecionados e cenários de limitação de dispersão simul
 
 ### determinação da extensão espacial da paisagem ao redor 
 
-- Um desafio para implementar os 6 modelos para descrever a SAD em função da dispersão de indivíduos entre parcela e paisagem local é definir a extensão espacial da paisagem ao redor que pode fornecer propágulos para a parcela (Jackson & Fahrig 2015). Pois os modelos sem espaço e de espaço implícito requerem que o pool de propágulos da paisagem ao redor seja pré delimitados (Fahrig 2021/20222 Reply to Sauro 2021/2022 J Biogeo) e os modelo de espaço explícito requerem um tamanho minímo da paisagem ao redor, para que a construção da árvore genealógica da comunidade (glossário, Thompson et al. 2019/2020 Rcoalescent package paper) não seja restringida pela extensão espacial da paisagem, mas sim pela limitação de dispersão. A análise de escala de efeito (Jackson & Fahrig 2015) propõe que a extensão espacial adequada é aquela que maximiza a relação entre o padrão de biodiversidade local estudado e a variável de interesse, por exemplo, a proporção de cobertura vegetal na paisagem. Essa abordagem tem sido adotada em diversos estudos, apesar da forma mais simples que não considera a correlação entre locais próximos e na variação da variável preditora ter problemas (REF 2018?). Optamos por não utiliza-la pois ela pressupõe que existe equilíbrio da resposta ecológica à heterogeneidade contemporânea da paisagem. A extensão espacial da paisagem determina a extensão do gradiente de proporção de cobertura vegetal e a posição dos sítios nesse gradiente (figura 2).
+- Um desafio para implementar os 6 modelos para descrever a SAD em função da dispersão de indivíduos entre parcela e paisagem local é definir a extensão espacial da paisagem ao redor que pode fornecer propágulos para a parcela (Jackson & Fahrig 2015??REFs).
+- A extensão espacial da paisagem determina a amplitude do gradiente de proporção de cobertura vegetal ao redor dos sítios de estudo e a posição dos sítios nesse gradiente (figura 2).
+- Os modelos sem espaço e de espaço implícito requerem que o pool de propágulos da paisagem ao redor seja pré delimitados, portanto precisam de uma extensão adequada (Fahrig 2021/20222 Reply to Sauro 2021/2022 J Biogeo).
+- Os modelo de espaço explícito requerem um tamanho minímo da paisagem ao redor, para que a construção da árvore genealógica da comunidade (glossário, Thompson et al. 2019/2020 Rcoalescent package paper) não seja restringida pela extensão espacial da paisagem, mas sim pela limitação de dispersão. 
+- A análise de escala de efeito (Jackson & Fahrig 2015) propõe que a extensão espacial adequada é aquela que maximiza o peso de evidência da associação estatística entre o padrão de biodiversidade local estudado e a variável de interesse, por exemplo, a proporção de cobertura vegetal na paisagem. 
+- Essa abordagem tem sido adotada em diversos estudos, apesar da forma mais comum, que não considera a correlação entre locais próximos e na variação da variável preditora, não ser a mais adequada (REF 2018?). Optamos por não utilizar a análise de escala de efeito (Jackson & Fahrig 2015), pois ela pressupõe que existe equilíbrio da resposta ecológica à heterogeneidade contemporânea da paisagem. 
+
+```{r figura 2 p pelas extensões espaciais}
+df_p_extensoes |> 
+  ggplot(aes(x=lado_km,y=p)) + 
+  geom_point(alpha=0.2,size=0.2) +
+  geom_line(aes(group=SiteCode),linewidth=0.2,alpha=0.2) +
+  labs(x="lado da paisagem quadrada (km)",y="proporção de cobertura vegetal",
+       subtitle="Mudança na extensão espacial da paisagem e a proporção de cobertura vegetal") +
+  scale_y_continuous(breaks = seq(0,1,by=0.1)) +
+  coord_cartesian(expand = F) +
+  theme_light()
+```
+
+__Figura 2__ Mudança na extensão espacial da paisagem a proporção de cobertura vegetal. Cada ponto representa a proporção de cobertura vegetal (eixo y) para aquela determinada extensão espacial da paisagem ao redor (eixo x), as linhas ligam pontos para um mesmo sítio de amostragem. Detalhes do procedimento em SI.
+
+### Modelos Neutros
+
+Todos os modelos neutros utilizam uma abordagem coalescente, onde se retrocede no tempo para reconstruir a trajetória de cada indivíduo na área amostral até o primeiro progenitor que surgiu na paisagem, criando árvores genealógicas da comunidade (Azaele et al. 2016, Thompson et al. 2021 Package ref). A abordagem pressupõe que apenas um indivíduo pode colonizar uma unidade de habitat por vez e toda morte é reposta pelo nascimento de um indivíduo adulto (pressuposto de soma zero). O objetivo das simulações dos modelos é obter a identidade (o nome da espécie) de cada indivíduo presente na área da parcela. A todo evento de nascimento há a probabilidade U de que o nascimento ocorra de uma nova espécie na paisagem. Nos 1-U casos é sorteado um indivíduo presente na paisagem (parcela e paisagem ao redor) como progenitor. Nos modelos neutros espacialmente explícitos é sorteado um progenitor centrando a função de dispersão no habitat vago e sorteando posições até obter uma unidade de habitat. Nos modelos espacialmente implícitos também há o soteio de posições para selecionar uma unidade de habitat, se a posição sorteada está dentro da parcela, então um sorteio é feito entre os indivíduos da parcela para definir o progenitor; caso o sorteio seja na paisagem ao redor, então um sorteio é feito entre os indivíduos da paisagem ao redor. Nos modelos sem espaço não há o uso da função de dispersão, sortea-se o progenitor entre os indivíduos remanescentes na paisagem (parcela e paisagem ao redor). Com essa abordagem é possível predizer SADs pressuposto equilíbrio dinâmico na paisagem local, situação onde as extinções de espécies na paisagem por deriva ecológica são equivalentes à colonização de novas espécies na paisagem (descrita pela taxa U). 
+
+Em paisagens infinitas e sem perda de habitat, espera-se que a taxa U necessária para manter uma determinada riqueza na parcela apresente padrão não linear no modelo espacialmente explícito (May et al. 2011). Em cenários de limitação à dispersão severa a taxa U estimada deve ser pequena, pois a perda de espécies deve ser pequena, uma vez que a maior parte das substituições ocorre entre indivíduos de uma mesma espécie devido à elevada agregação de coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies deve aumentar ao passo que a substituição de coespecíficos diminui, aumentando a perda de espécies por deriva ecológica. O aumento da erosão de espécies com o aumento da capacidade de dispersão não se mantem sempre, ao passo que outras subpopulações mais distantes da parcela podem repor espécies perdidas localmente, fazendo com que a perda de espécies local seja parcialmente compensada pela dispersão de propágulos da paisagem ao redor em cenários de limitação de dispersão brandos. 
+
+
+
+Para determinar a extensão espacial adequada da paisagem vamos buscar aquela extensão espacial que não limite a redução da taxa U em cenários de limitação à dispersão brandos. Então vamos pressupor que não há perda de cobertura vegetal na paisagem, desse modo a possível estabilização de U não pode ser resultado do isolamento do habitat da parcela na paisagem (Thompson et al. 2019 Eco Let).
+
+
+### Extensão espacial da paisagem ao redor
+
+Justificativa Lima et al. 2020:
+- to extract 4×4 km landscapes centred on the verified coordinates of each survey.
+- We assumed a scale of effect16 of 2 km, given that the extent of processes affecting tree populations, such as species dispersal and forest edge effects, generally do not exceed 1‒3 km17–22
+Refs:
+17) Laurance, W. F. et al. The fate of Amazonian forest fragments: A 32-year investigation. Biol. Conserv. 144, 56–67 (2011).
+18) Holbrook, K. K. M. & Smith, T. T. B. Seed dispersal and movement patterns in two species of Ceratogymna hornbills in a West African tropical lowland forest. Oecologia 125, 249–257 (2000).
+19) Nathan, R., Horn, H. S., Chave, J. & Levin, S. A. Mechanistic models for tree seed dispersal by wind in dense forests and open landscapes. in Seed dispersal and frugivory: ecology, evolution and conservation (eds. Levey, D. J., Silva, W. R. & Galetti, M.) CABI International, pp. 69–82 (2002).
+20) Thomson, F. J., Moles, A. T., Auld, T. D. & Kingsford, R. T. Seed dispersal distance is more strongly correlated with plant height than with seed mass. J. Ecol. 99, 1299–1307 (2011).
+21) Clark et al. Seed dispersal near and Far: patterns across temperate and tropical forests. Ecology 80, 1475–1494 (1999).
+22) Clark, C. J., Poulsen, J. R., Bolker, B. M., Connor, E. F. & Parker, V. T. Comparative seed shadows of bird-, monkey-, and wind-dispersed trees. Ecology 86, 2684–2694 (2005).
+
+- Optamos investigar a extensão espacial da paisagem ao redor adequada para nosso estudo utilizando os modelos espacialmente explícitos. Uma expectativa é que quanto maior o número de indivíduos na parcela e maior a capacidade de dispersão dos indivíduos, maior deve ser a paisagem local necessária para construir a árvore genealógica da comunidade.
+- A ideia é investigar como a estimativa da taxa U varia com a extensão espacial entre os cenários de limitação de dispersão. A taxa U 
+
+Nossa proposta se baseia na taxa U, colonização de novas espécies na paisagem por evento de nascimento, estimada por MNEE para obter a riqueza observada na parcela dado um cenário de limitação à dispersão e mapa de cobertura vegetal. Em paisagens infinitas e sem perda de habitat, espera-se que a taxa U necessária para manter uma determinada riqueza na parcela apresente padrão não linear (May et al. 2011). Em cenários de limitação à dispersão severa a  taxa U estimada deve ser pequena, pois a perda de espécies deve ser pequena, uma vez que a maior parte das substituições ocorre entre indivíduos de uma mesma espécie devido à elevada agregação de coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies deve aumentar ao passo que a substituição de coespecíficos diminui, aumentando a perda de espécies por deriva ecológica. O aumento da erosão de espécies com o aumento da capacidade de dispersão não se mantem sempre, ao passo que outras subpopulações mais distantes da parcela podem repor espécies perdidas localmente, fazendo com que a perda de espécies local seja parcialmente compensada pela dispersão de propágulos da paisagem ao redor em cenários de limitação de dispersão brandos. Para determinar a extensão espacial adequada da paisagem vamos buscar aquela extensão espacial que não limite a redução da taxa U em cenários de limitação à dispersão brandos. Então vamos pressupor que não há perda de cobertura vegetal na paisagem, desse modo a possível estabilização de U não pode ser resultado do isolamento do habitat da parcela na paisagem.
+
 
 - RELAÇÃO ENTRE CAPACIDADE DE DISPERSÃO E EXTENSÃO ESPACIAL DA PAISAGEM
 
