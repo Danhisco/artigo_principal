@@ -31,8 +31,11 @@ library(dplyr)
 source("source/dinamica_coalescente.R")
 source("source/SoE_MNEE.R")
 source("source/f_z.R")
+# df dados da proporção de cobertura vegetal
+df_p <- read_csv("dados/df_p.csv")
 # df dados para simulação
-df_sim <- read_csv("dados/df_simulacao.csv")
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  inner_join(x=df_p,by="SiteCode")
 # df_sorteio_sitios
 df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv") |> 
   select(-d) |> 
@@ -44,8 +47,7 @@ df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv") |>
 #           to=paste0("dados/paisagens_SoE_MNEE/",v_sim_sites))
 # file.remove("dados/simulacao/")
 ## df_Unull
-df_Unull.rep <- list.files(path = "dados/csv/U_nullLand_16km/",pattern = ".csv",full.names = T) |> 
-  map_df(~read_csv(.)) 
+df_Unull.rep <- read_csv("dados/csv/df_Unull16km_rep.csv")
 df_Unull <- df_Unull.rep |> 
   pivot_longer(cols=`1`:`4`, names_to = "n", values_to = "U") |> 
   group_by(SiteCode, k) |> 
@@ -104,7 +106,7 @@ l_p[[1]] <- df_plot |>
   scale_color_manual(values=c("black","red"),name="SoE: 36 sites") +
   labs(x="density (individuals / ha)", 
        y="spp richness",
-       title="a) 106 sítios selecionados") +
+       title="a) 108 sítios selecionados") +
   theme(legend.position = "bottom")
 l_p[[2]] <- df_sim |> 
   ggplot(aes(x=k,y=d,group=k)) +
@@ -121,15 +123,15 @@ grid.arrange(grobs=l_p,ncol=2)
 ```{r figura 2 U para todo k em paisagens nulas na maior escala investigada,fig.width=12,fig.height=7}
 df_plot <- df_Unull |> 
   arrange(S_obs) |> 
-  mutate(label = paste(SiteCode,S_obs,Ntotal,round(DA,0),sep = ", "))
+  mutate(label = paste(SiteCode,S_obs,Ntotal,effort_ha,sep = ", "))
 df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
 df_plot |> 
   ggplot(aes(x=k,y=Umed)) +
   geom_line() +
   geom_point() +
   labs(title = "U estimado por cenário de dispersão em paisagens nulas de lado 16 km",
-       subtitle = "label = SiteCode, S, N, DA; free y axis; reverse x axis") +
-  geom_vline(xintercept = c(0.25, 0.1,0.05),color="red",alpha=0.4) +
+       subtitle = "label = SiteCode, S, N, plot area(ha); free y axis; reverse x axis") +
+  # geom_vline(xintercept = c(0.25, 0.1,0.05),color="red",alpha=0.4) +
   scale_x_reverse() +
   facet_wrap(~label, ncol=6,scales="free_y")
 ```
@@ -245,18 +247,12 @@ grid.arrange(grobs=l_p,ncol=2)
 <p> __Figura SI1__ Amplitude da taxa U estimada em função da densidade de indivíduos (DA) e da riqueza de espécies (S_obs). </p>
 
 
-### Mapas de Cobertura Vegetal usados (4x4km2)
-
-```{r}
-
-```
-
-
 <!-- ## Códigos para estimar U nas diferentes extensões espaciais -->
 
 <!-- <p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p> -->
 
 ```{r codigos para estimar U para uma mesma extensao espacial e diferentes k,eval=FALSE}
+# usado para estimar o U para uma determinada
 setwd("dados/simulacao")
 f_siteU <- function(df,replicas=4,csv.repo="../csv/U_nullLand_16km/"){
   l_dfU <- list()
@@ -275,7 +271,7 @@ d_ply(df_sorteio_sitios,"SiteCode",f_siteU,.parallel = TRUE)
 ```{r codigos para estimar U SoE, eval=FALSE}
 setwd("dados/simulacao")
 df_sorteio_sitios$txt.file <- gsub(".txt","_null.txt",df_sorteio_sitios$txt.file)
-df_se <- df_sorteio_sitios |> filter(k %in% unique(df_sim$k)[c(16,19)])
+df_se <- df_sorteio_sitios # |> filter(k %in% unique(df_sim$k)[c(16,19)]) # para seleção de alguns cenários
 registerDoMC(2)
 a_ply(df_se,1,f_SoE_MNEE_null,.parallel = TRUE)
 ```
