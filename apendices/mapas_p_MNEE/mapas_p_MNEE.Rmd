@@ -39,14 +39,14 @@ df_dados <- read_csv("dados/df_dados_disponiveis.csv") |>
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   filter(k==0.99) |> select(-(k:d)) |> distinct()
 # df_se_completo
-# df_se_completo <- read_csv("dados/csv/df_p_extensoes.csv")
+df_se_completo <- read_csv("dados/csv/df_p_extensoes.csv")
 # df_selecao_sitios
-# df_sitios_se <- df_se_completo |> 
-#   # como alguns raster tem 743 linhas e outros 744
-#   filter(lado_km>=15.99 & lado_km<=16.02 & SiteCode !="MGlavr4") |>  
-#   arrange(p) |> 
-#   inner_join(select(df_dados,-Ntotal,-S_obs),by="SiteCode") |> 
-#   mutate(DA = Ntotal/effort_ha)
+df_sitios_se <- df_se_completo |>
+  # como alguns raster tem 743 linhas e outros 744
+  filter(lado_km>=15.99 & lado_km<=16.02 & SiteCode !="MGlavr4") |>
+  arrange(p) |>
+  inner_join(select(df_dados,-Ntotal,-S_obs),by="SiteCode") |>
+  mutate(DA = Ntotal/effort_ha)
 # df_auditoria dos recortes de paisagens padronizados para MNEE
 # setwd("../..")
 df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",
@@ -54,8 +54,10 @@ df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",
                                                  full.names = T)) |>
   mutate(SiteCode = str_extract(txt.path,"(?<=o\\/).*?(?=.txt)")) |>
   inner_join(df_dados,by="SiteCode")
+# df_aud2
+
 # paisagens sorteadas para usar em SoE
-# df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv")
+df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv")
 # funções necessárias:
 source("source/mapa_p_MNEE.R")
 ```
@@ -220,19 +222,66 @@ sudo find / -name "policy.xml"
 - Editar o arquivo yml que configura o ImageMagick:
 sudo gedit /etc/ImageMagick-6/policy.xml
 
+```{r avaliar a proporcao de area da parcela nas paisagens usadas na simulacao das SADs 4x4km2}
+f_audioria_area <- function(df){
+  m_sim <- read.table(df$txt.path) |> as.matrix()
+  plotA_prop = length(m_sim[m_sim==2])/length(m_sim)
+  cbind(plotA_prop=plotA_prop,nrow=nrow(m_sim),ncol=ncol(m_sim),DA=df$Ntotal/df$effort_ha)
+}
+registerDoMC(2)
+df_aud2 <- adply(df_auditoria,1,f_audioria_area,.parallel = T) 
+df_aud2 <- df_aud2 |> 
+  mutate(diff_prop = plotA_prop - 1/1616.04,
+         diff_sig = ifelse(diff_prop>0.01,T,F))
+write_csv(df_aud2,"dados/csv/")
+# (1496 * 1496 - 1400 * 1616.04) / (1400 * 1616.04)
+# df_landNull
+df_landNull <- data.frame(path=list.files("dados/simulacao","_null.txt",full.names = T)) |> 
+  mutate(SiteCode = str_extract(path,"(?<=ao\\/).*?(?=\\_null)")) |> 
+  inner_join(select(df_aud2,SiteCode:S_obs,DA),by="SiteCode") |> 
+  mutate(n_cell16km = round(DA * 16*16*100))
+```
+
+
+
 ## paisagens nulas
 
-```{r}
+```{r paisagens nulas para as SADs}
 setwd("dados/simulacao")
 f_nullLand <- function(path.txt){
   m_tab <- read.table(path.txt) |> as.matrix()
   m_tab[m_tab==0] <- 1
   write.table(m_tab,file = gsub(".txt","_null.txt",path.txt),col.names = FALSE,row.names = FALSE)
 }
-df_sorteio_sitios$txt.file <- gsub("_null.txt",".txt",df_sorteio_sitios$txt.file)
-registerDoMC(2)
-a_ply(unique(df_sorteio_sitios$txt.file),1,f_nullLand,.parallel = TRUE)
+registerDoMC(3)
+a_ply(df_sorteio_sitios$txt.file,1,f_nullLand,.parallel = TRUE)
 ```
+
+```{r paisagens nulas para SoE}
+setwd("dados/simulacao")
+f_nullLamdSoE <- function(df){
+  n_cell <- df$DA*16*16*100
+  m_null <- matrix(1,
+                   nrow = ceiling(sqrt(n_cell)), 
+                   ncol = floor(sqrt(n_cell)))
+  
+  
+}
+df <- df_sorteio_sitios[1,]
+
+```
+
+
+```{r auditoria paisagens nulas}
+f_sizeLand <- function(df){
+  m_null <- read.table(df$path) |> as.matrix()
+  erro_size = (df$n_cell - length(m_null)) /  length(m_null)
+  erro_size
+}
+registerDoMC(2)
+df_landNull <- adply(df_landNull,1,f_sizeLand,.parallel = T)
+```
+
 
 ## recorte das paisagens de 16.02x16.02km2 para 4x4km2
 
