@@ -259,16 +259,25 @@ a_ply(df_sorteio_sitios$txt.file,1,f_nullLand,.parallel = TRUE)
 
 ```{r paisagens nulas para SoE}
 setwd("dados/simulacao")
+# df <- df_sorteio_sitios[1,]
 f_nullLamdSoE <- function(df){
+  # número de células em uma paisagem de 16x16km2
   n_cell <- df$DA*16*16*100
+  # matriz composta apenas por unidades de habitat com número ~= n_cell
   m_null <- matrix(1,
                    nrow = ceiling(sqrt(n_cell)), 
                    ncol = floor(sqrt(n_cell)))
-  
-  
+  # matriz com área amostral
+  mat_tri <- try(f_area.simulada(matriz = m_null, N = df$Ntotal)) 
+  # salvamento no formato .txt
+  if(is.matrix(mat_tri)){ 
+    try(write.table(x = mat_tri, 
+                    file = paste0(df$SiteCode,"_null.txt"),
+                    sep = " ", row.names = FALSE, col.names = FALSE))
+  } else{print("f_area.simulada: not a matrix")}
 }
-df <- df_sorteio_sitios[1,]
-
+registerDoMC(2)
+a_ply(df_sorteio_sitios,1,f_nullLamdSoE,.parallel = T)
 ```
 
 
