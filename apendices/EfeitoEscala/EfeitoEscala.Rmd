@@ -16,6 +16,7 @@ csl: plos.csl
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE)
 # pacotes
+library(lubridate)
 library(doMC)
 library(raster)
 library(bbmle)
@@ -23,7 +24,7 @@ library(gridExtra)
 library(ggplot2)
 library(readr)
 library(purrr)
-library(stringr)
+library(stringr) 
 library(tidyr)
 library(plyr)
 library(dplyr)
@@ -46,6 +47,11 @@ df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv") |>
 # file.copy(from=paste0("dados/simulacao/",v_sim_sites),
 #           to=paste0("dados/paisagens_SoE_MNEE/",v_sim_sites))
 # file.remove("dados/simulacao/")
+# df_SoE
+df_SoE <- list.files("dados/csv/SoE",pattern = ".csv",full.names = T) |> 
+  map_df(~read_csv(.))
+
+
 ## df_Unull
 df_Unull.rep <- read_csv("dados/csv/df_Unull16km_rep.csv")
 df_Unull <- df_Unull.rep |> 
@@ -272,9 +278,31 @@ d_ply(df_sorteio_sitios,"SiteCode",f_siteU,.parallel = TRUE)
 setwd("dados/simulacao")
 df_sorteio_sitios$txt.file <- gsub(".txt","_null.txt",df_sorteio_sitios$txt.file)
 df_se <- df_sorteio_sitios # |> filter(k %in% unique(df_sim$k)[c(16,19)]) # para seleção de alguns cenários
+registerDoMC(3)
+a_ply(df_se[-1,],1,f_SoE_MNEE_null,.parallel = TRUE)
+##
+df_sitios_2lote <- data.frame(path.file = list.files("../csv/SoE",".csv",full.names = T)) |>
+  mutate(ctime = as.Date(file.info(path.file)$ctime),
+         SiteCode = str_extract(path.file,"(?<=E\\/).*?(?=\\_k)"),
+         k = as.numeric(str_extract(path.file,"(?<=\\_k).*?(?=\\.csv)")),
+         label = paste(SiteCode, k/100)) |>
+  filter(ctime>"2023-01-02")
+df_se2 <- df_sorteio_sitios |> 
+  mutate(label = paste(SiteCode, round(k,2))) |>
+  anti_join(select(df_sitios_2lote,SiteCode:label),by="label") |> 
+  select(-label)
 registerDoMC(2)
-a_ply(df_se,1,f_SoE_MNEE_null,.parallel = TRUE)
+a_ply(df_se2,1,f_SoE_MNEE_null,.parallel = TRUE)
+#
+df <- df_se |> filter(SiteCode == "PRrico3",k==unique(df_se$k)[3])
+
 ```
+
+Em alguns sítios não foi possível simular a extensão de 0.5 km para nenhum cenário de dispersão. Nesse extensão espacial, a parcela corresponde à 0.64 da área da parcela, ta certo isso?
+
+o erro informado é:
+A practical cause to "corrupted size vs. prev_size" is quite simple - memory chunk control structure fields in the adjacent following chunk are being overwritten due to out-of-bounds access by the code. if you allocate x bytes for pointer p but wind up writing beyond x in regards to the same pointer, you might get this error, indicating the current memory allocation (chunk) size is not the same as what's found in the next chunk control structure (due to it being overwritten).
+
 
 ```{r arrumando os dados do SoE para k05,eval=FALSE}
 v_csv.path <- list.files(path = "dados/csv/SoE", pattern = "_null.csv",full.names = T)
