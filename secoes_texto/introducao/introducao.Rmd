@@ -11,8 +11,8 @@ library(trackdown)
 # upload_file(file="secoes_texto/introducao/introducao.Rmd",
 #             gpath="mestrado/artigo_principal/secoes_texto/",
 #             hide_code=TRUE)
-update_file(file ="relatorio_final.Rmd",
-            gpath = "mestrado/disciplinas/BIE5716/",
+update_file(file ="secoes_texto/introducao/introducao.Rmd",
+            gpath = "mestrado/artigo_principal/secoes_texto/",
             hide_code = TRUE)
 # overwrite the current Rmd with the current google drive 
 download_file(file ="relatorio_final.Rmd",
