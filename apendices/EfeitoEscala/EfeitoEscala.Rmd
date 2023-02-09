@@ -186,7 +186,7 @@ ggsave("apendices/EfeitoEscala/fig3_Uk_ladoKM.png",
 
 <p> Para comparar os sítios utilizei um protocolo de transformações na taxa U. O valor médio foi obtido das replicas de uma bateria de simulações. Então, por sítio e cenário de limitação de dispersão, a diferença das médias de escalas consecutivas foi dividida pela diferença entre os valores extremos para o conjunto de todas as escalas (Ulag1). Dessa forma, avaliamos a mudança da taxa U com a variação da escala (Figura 4). De maneira geral, U diminui cada vez menos com a escala, então os valores extremos de U tendem a ser os valores extremos de escala; mas em alguns casos, onde houve a estabilização da taxa U em escalas mais baixas, também houve maior variação de modo que o menor valor podem ser escalas intermedárias (e.g. SPpesmD para k=0.25), apesar de serem valores próximos com os da maior escala (Figura 3). Então o acumulo de Ulag1 em escalas consecutivas pode informar quanta variação na taxa U foi acumulada até determinada escala (Figura 4b).</p> 
 
-```{r figura 4 Ulag1 e cumulative Ulag1,fig.height=8,fig.width=8}
+```{r preparacao dados figura 4}
 # dados e função
 f_lag.U <- function(df){
   v_Udiff <- diff(range(df$Umed))
@@ -200,6 +200,23 @@ registerDoMC(3)
 df_U <- ddply(df_Usoe,c("SiteCode","k"),f_lag.U,.parallel = TRUE)
 df_U$lado_factor <- factor(df_U$lado_km,labels=c(paste(16/(2^(5:1)),"->",16/(2^(4:0))),NA))
 df_U$k_factor <- factor(df_U$k,levels = sort(unique(df_U$k),decreasing = T))
+# auditoria
+df_U |> filter(Ulag < 0) |> arrange(Ulag) |> count(k) |> ggplot(aes(x=k,y=n)) +
+  geom_point() +
+  labs(title="Freq. de Ulag<0 por k")
+# df_U |> filter(Ulag < 0) |> arrange(Ulag) |> head()
+# df <- df_U |> filter(SiteCode == "MGvico3" & round(k,2) == 0.65)
+df_U |> 
+  group_by(SiteCode,k) |> 
+  summarise(Ucv = sd(Umed) * 100 / mean(Umed)) |> 
+  mutate(k_factor = factor(round(k,2))) |> 
+  ggplot(aes(x=k_factor,y=Ucv)) +
+  geom_jitter() +
+  geom_boxplot()
+```
+
+
+```{r figura 4 Ulag1 e cumulative Ulag1,fig.height=8,fig.width=8}
 # gráficos
 # plot(density(na.omit(df_U$Ulag)))
 l_p <- list()
