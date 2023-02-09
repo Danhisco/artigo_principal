@@ -45,29 +45,22 @@ df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv") |>
 ## acabei perdendo a mão e deletei as paisagens nulas de ambas situações, mas tudo bem faz mais em mapas_...Rmd
 # v_sim_sites <- list.files(path="dados/simulacao",pattern = "_null.txt")
 # file.copy(from=paste0("dados/simulacao/",v_sim_sites),
-#           to=paste0("dados/paisagens_SoE_MNEE/",v_sim_sites))
-# file.remove("dados/simulacao/")
+#           to=paste0("dados/paisagens/paisagens_SoE_MNEE/",v_sim_sites))
+# file.remove(paste0("dados/simulacao/",v_sim_sites))
 # df_SoE
-df_SoE <- list.files("dados/csv/SoE",pattern = ".csv",full.names = T) |> 
-  map_df(~read_csv(.))
-
-
-## df_Unull
-df_Unull.rep <- read_csv("dados/csv/df_Unull16km_rep.csv")
-df_Unull <- df_Unull.rep |> 
-  pivot_longer(cols=`1`:`4`, names_to = "n", values_to = "U") |> 
-  group_by(SiteCode, k) |> 
-  summarise(Umed = mean(U), Usd = sd(U)) |> 
-  inner_join(x=distinct(select(df_sim,SiteCode,p:S_obs)),by="SiteCode") |> 
-  mutate(DA = Ntotal / effort_ha)
+df_SoE <- read_csv("dados/csv/df_Usoe.csv") |> 
+  pivot_longer(cols=`1`:`10`, names_to = "n", values_to = "U") |> 
+  inner_join(x=distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
+  arrange(S_obs,k)
+# df_Unull
+df_Unull <- df_SoE |> filter(round(lado_km) == 16) 
 # df_Usoe
-df_Usoe_completo <- read_csv("dados/csv/df_Usoe.csv")
-df_Usoe <- df_Usoe_completo
-df_Usoe <- cbind(select(df_Usoe,SiteCode:k),
-                 Umed = apply(select(df_Usoe,-(SiteCode:k)), 1, mean),
-                 Usd = apply(select(df_Usoe,-(SiteCode:k)), 1, mean)) |>
-  inner_join(x=distinct(select(df_sim,SiteCode,Ntotal,S_obs,effort_ha)),by="SiteCode") |> 
-  mutate(DA = Ntotal / effort_ha)
+df_Usoe <- df_SoE |> 
+  arrange(lado_km) |> 
+  group_by(SiteCode,k,lado_km) |> 
+  summarise(Umed = mean(U),
+            Umedian = median(U)) |> 
+  mutate(diffU = Umed - Umedian)
 ```
 
 ```{r trackdown,eval=FALSE}
@@ -132,17 +125,25 @@ df_plot <- df_Unull |>
   mutate(label = paste(SiteCode,S_obs,Ntotal,effort_ha,sep = ", "))
 df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
 df_plot |> 
-  ggplot(aes(x=k,y=Umed)) +
-  geom_line() +
-  geom_point() +
+  ggplot(aes(x=k,y=U)) +
+  # geom_line() +
+  # geom_smooth(method = "loess",se=F) +
+  geom_point(alpha=0.4) +
+  stat_summary(geom = "line",fun.data = mean_se) +
+  stat_summary(geom = "pointrange",fun.data = mean_se, color="red",size=0.1) +
+  stat_summary(geom = "errorbar",fun.data = mean_se, color="red",linewidth=0.5) +
   labs(title = "U estimado por cenário de dispersão em paisagens nulas de lado 16 km",
        subtitle = "label = SiteCode, S, N, plot area(ha); free y axis; reverse x axis") +
   # geom_vline(xintercept = c(0.25, 0.1,0.05),color="red",alpha=0.4) +
   scale_x_reverse() +
-  facet_wrap(~label, ncol=6,scales="free_y")
+  facet_wrap(~label, ncol=6,scales="free_y") +
+  theme_classic()
+ggsave("apendices/EfeitoEscala/fig2_U16_k.png",
+       width = 17.2,
+       height = 6.7)
 ```
 
-<p> __Figura 2__ U estimado (eixo y) por cenário de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km). Os pontos representam a média de 4 réplicas e as linhas ligam pontos de um mesmo sítio de amostragem. Os paineis estão separados por sítios de amostragem, cujo mapa de cobertura vegetal foi modificado para ter apenas unidades de habitat. As linhas em vermelho representam os cenários de limitação de dispersão usados na análise de escala de efeito, k = 0.25, 0.10 e 0.05. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão simulada. S = riqueza da espécie, N = número de indivíduos, DA = densidade de indivíduos.</p>
+<p> __Figura 2__ U estimado (eixo y) por cenário de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km). Os pontos são as estimativas réplicas de U, os pontos vermelhos marcam o valor médio e a linha une os valores médios entre cenários de limitação de dispersão. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão, simulada com um kernel de dispersão com decaimento exponencial da probabilidade de colonização com o aumento da distância. S = riqueza da espécie, N = número de indivíduos.</p>
 
 
 
@@ -150,24 +151,33 @@ df_plot |>
 ### Taxa U e a variação na extensão espacial da paisagem local
 
 ```{r figura 3 Umed por lado da paisagem,fig.width=13,fig.height=8}
-df_plot <- df_Usoe |> 
-  arrange(S_obs) |> 
-  mutate(label = paste(SiteCode,S_obs,Ntotal,round(DA,1),sep = ", ")) 
+df_plot <- df_SoE |> 
+  mutate(DA = Ntotal / effort_ha,
+         label = paste(SiteCode,S_obs,Ntotal,round(DA,1),sep = ", "),
+         k = round(k,2)) 
 df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
-df_plot$k <- factor(round(df_plot$k,2))
 df_plot |>
-  ggplot(aes(x=lado_km,y=Umed,color=k,group=k)) +
-  # geom_smooth(method="loess",formula = "y ~ x",se=F,alpha=0.1,color="red",size=0.8) +
-  geom_point(alpha=0.4,size=1.5) +
-  geom_line() +
+  ggplot(aes(x=lado_km,y=U,color=k,group=factor(k))) +
+  geom_point(alpha=0.4) +
+  stat_summary(geom = "line",fun.data = mean_se) +
+  stat_summary(geom = "pointrange",fun.data = mean_se, color="red",size=0.1) +
   scale_x_continuous(trans='log2',breaks = round(16.02/2^(5:0),0)) +
-  theme_minimal() +
+  scale_color_gradient2(low="red",mid = "green",high = "blue", midpoint = 0.5) +
+  theme_classic() +
   # theme(legend.position = "bottom") +
-  labs(title = "U estimado nos 3 cenários de dispersão em diferentes subescalas da paisagem ao redor",
+  labs(title = "U estimado em diferentes subescalas da paisagem ao redor para os 20 cenários de limitação de dispersão (k)",
        subtitle="facet label = Site code, riqueza, número de indivíduos ,densidade; free y axis",
        x = "lado da paisagem (km)",
        y = "taxa U estimada") +
+  # guides(color = guide_legend(title.position = "right")) + # gostaria de deixar o k para a direita e completar a descição dele, mas não tive tempo para fazer
+  theme(legend.position= c(0.57,1.10),
+        legend.direction = "horizontal",
+        legend.justification='left',
+        legend.background = element_rect(fill=alpha('white', 0.1))) +
   facet_wrap(~label,ncol = 6,scales="free_y")
+ggsave("apendices/EfeitoEscala/fig3_Uk_ladoKM.png",
+       width = 17.2,
+       height = 6.7)
 ```
 
 <p> __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para 3 cenários de limitação de dispersão (cor dos pontos e linhas, k = 0.05, 0.10 e 0.25). Pontos representam a média de 4 réplicas por bateria de simulação. Eixo y varia entre paineis</p>
@@ -178,33 +188,33 @@ df_plot |>
 
 ```{r figura 4 Ulag1 e cumulative Ulag1,fig.height=8,fig.width=8}
 # dados e função
-df_Usoe <- df_Usoe |> arrange(lado_km)
 f_lag.U <- function(df){
   v_Udiff <- diff(range(df$Umed))
-  df$Ulag1 <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
-  df$Ucsum <- cumsum(df$Ulag1)
+  df$Ulag <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
+  df <- df |> mutate(Ulag0 = ifelse(Ulag<0,0,Ulag))
+  df$Ucsum <- cumsum(df$Ulag0)
+  df <- df |> mutate(Ucsum = ifelse(Ucsum>1,1,Ucsum))
   return(df)
 }
 registerDoMC(3)
 df_U <- ddply(df_Usoe,c("SiteCode","k"),f_lag.U,.parallel = TRUE)
+df_U$lado_factor <- factor(df_U$lado_km,labels=c(paste(16/(2^(5:1)),"->",16/(2^(4:0))),NA))
+df_U$k_factor <- factor(df_U$k,levels = sort(unique(df_U$k),decreasing = T))
 # gráficos
 # plot(density(na.omit(df_U$Ulag)))
-df_U$lado_factor <- factor(df_U$lado_km,labels=c(paste(16/(2^(5:1)),"->",16/(2^(4:0))),NA))
-df_U$k_factor <- factor(round(df_U$k,2))
 l_p <- list()
 l_p[[1]] <- df_U |>
   drop_na() |>
-  filter(Ulag1>=0) |> 
-  ggplot(aes(x=lado_factor,y=Ulag1,fill=k_factor)) +
-  geom_point(position=position_jitterdodge(),alpha=0.3) +
+  filter(Ulag>=0) |> 
+  ggplot(aes(x=k_factor,y=Ulag)) +
+  geom_ji() +
   geom_boxplot() +
-  labs(x="mudança de escala",
+  labs(x = "k",
        y="U_i - U_i+1 / diff(range(U))",
-       title="a) Ulag1") +
-  facet_wrap(~k_factor,ncol=3)
+       title="a) Ulag") +
+  facet_wrap(~lado_factor,nrow=1)
 l_p[[2]] <- df_U |>
   drop_na() |>
-  filter(Ulag1>=0) |> 
   ggplot(aes(x=lado_factor, y = Ucsum, fill=k_factor)) +
   geom_point(position=position_jitterdodge(),alpha=0.3) +
   geom_boxplot() +
@@ -324,3 +334,5 @@ df_sorteio_sitios <- df |>
   rbind(filter(df,S_obs %in% range(df$S_obs) | DA %in% range(df$DA))) |>  distinct()
 write_csv(df_sorteio_sitios,file = "dados/csv/df_sorteio_sitios.csv")
 ```
+
+
