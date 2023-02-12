@@ -233,32 +233,38 @@ Valores de Ulag negativos indicam que o aumento da escala aumentam a estimativa 
 df_plot <- df_Usoe |> filter(Ulag==-1) |> select(SiteCode, k) |> 
   inner_join(df_Usoe.rep,by=c("SiteCode","k")) |> 
   mutate(DA = Ntotal / effort_ha,
-         label = paste(SiteCode,S_obs,Ntotal,round(DA,1),sep = ", "),
-         k = round(k,2)) 
+         k = round(k,2),
+         k_factor = factor(k),
+         label = paste0(SiteCode,", S=",S_obs,", k=",k_factor)) 
 df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
 df_plot |>
   ggplot(aes(x=lado_km,y=U,color=k,group=factor(k))) +
-  geom_point(alpha=0.4) +
+  geom_point() +
   stat_summary(geom = "line",fun.data = mean_se) +
-  stat_summary(geom = "pointrange",fun.data = mean_se, color="black",size=0.1) +
+  stat_summary(geom = "pointrange",fun.data = mean_se) +
   scale_x_continuous(trans='log2',breaks = round(16.02/2^(5:0),0)) +
   # scale_color_gradient2(low="red",mid = "green",high = "blue", midpoint = 0.5) +
   scale_color_distiller(palette = "Spectral") +
   theme_gray() +
   # theme(legend.position = "bottom") +
-  labs(title = "U estimado em diferentes subescalas da paisagem ao redor para os 20 cenários de limitação de dispersão (k)",
-       subtitle="facet label = Site code, riqueza, número de indivíduos ,densidade; free y axis",
+  labs(title = "Casos em que Ulag =-1",
+       subtitle="*filtrado da figura 3",
        x = "lado da paisagem (km)",
        y = "taxa U estimada") +
   # guides(color = guide_legend(title.position = "right")) + # gostaria de deixar o k para a direita e completar a descição dele, mas não tive tempo para fazer
-  theme(legend.position= c(0.57,1.10),
+  theme_dark() +
+  theme(legend.position= c(0.57,1.07),
         legend.direction = "horizontal",
         legend.justification='left',
         legend.background = element_rect(fill=alpha('white', 0.1))) +
   facet_wrap(~label,ncol = 6,scales="free_y")
 ```
 
+__Figura 5__ Filtro de paineis da figura 3 onde Ulag=-1, os paineis estão subdividos pelo sítio e grau de limitação de dispersão.
 
+Nos casos em que Ulag = -1 pode existir um padrão não linear de máximo ou apresentar um padrão que sugere estabilização. 
+
+há aumento antes de ocorrer diminuição na estimativa de U que pode encontrar um  
 
 
 
