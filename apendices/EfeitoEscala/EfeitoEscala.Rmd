@@ -71,18 +71,19 @@ f_lag.U <- function(df){
 }
 registerDoMC(3)
 df_Usoe <- ddply(df_Usoe,c("SiteCode","k"),f_lag.U,.parallel = TRUE)
-df_Usoe$lado_factor <- factor(df_Usoe$lado_km,labels=c(paste(0.5,"->",16/(2^(4:0))),NA))
-df_Usoe$k_factor <- factor(df_Usoe$k,levels = sort(unique(df_Usoe$k),decreasing = T))
+df_Usoe$Schange <- factor(df_Usoe$lado_km,labels=c(paste(16/(2^(5:1)),"->",16/(2^(4:0))),NA))
+df_Usoe$Schange_cumulative <- factor(df_Usoe$lado_km,labels=c(paste(0.5,"->",16/(2^(4:0))),NA))
+df_Usoe$k_factor <- factor(round(df_Usoe$k,2),levels = sort(unique(round(df_Usoe$k,2)),decreasing = T))
 # df_resultadoSoE
-f_ddply <- function(df){
-  df |> 
-    filter(Ucsum >= 0.9) |> 
-    head(n=1)
-}
-df_soe90 <- ddply(df_Usoe,c("SiteCode","k"),f_ddply)
-df_aud <- anti_join(df_sorteio_sitios,df_soe90,by=c("SiteCode","k")) |> 
-  inner_join(df_Usoe,by=c("SiteCode","k")) |> 
-  select(-(txt.file:DA))
+# f_ddply <- function(df){
+#   df |> 
+#     filter(Ucsum >= 0.9) |> 
+#     head(n=1)
+# }
+# df_soe90 <- ddply(df_Usoe,c("SiteCode","k"),f_ddply)
+# df_aud <- anti_join(df_sorteio_sitios,df_soe90,by=c("SiteCode","k")) |> 
+#   inner_join(df_Usoe,by=c("SiteCode","k")) |> 
+#   select(-(txt.file:DA))
 ```
 
 ```{r trackdown,eval=FALSE}
@@ -133,7 +134,6 @@ grid.arrange(grobs=l_p,ncol=2)
 ### Taxa U e a variação na extensão espacial da paisagem local
 
 
-
 ```{r figura 2 U para todo k em paisagens nulas na maior escala investigada,fig.width=12,fig.height=7}
 df_plot <- df_Unull |> 
   arrange(S_obs) |> 
@@ -160,8 +160,7 @@ ggsave("apendices/EfeitoEscala/fig2_U16_k.png",
 
 <p> __Figura 2__ U estimado (eixo y) por cenário de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km). Os pontos são as estimativas réplicas de U, os pontos vermelhos marcam o valor médio e a linha une os valores médios entre cenários de limitação de dispersão. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão, simulada com um kernel de dispersão com decaimento exponencial da probabilidade de colonização com o aumento da distância. S = riqueza da espécie, N = número de indivíduos.</p>
 
-A taxa U estimada na extensão de 16x16 km2 apresenta padrão não linear com um máximo em graus pouco severos de limitação de dispersão (Figura 2). Há muita variação entre os sítios, relacionado com a riqueza de espécies (texto principal resultados), por isso na figura 2 o eixo y varia entre paineis. A variação entre réplicas de uma mesma bateria de simulação pode ser elevada em graus de limitação de dispersão pouco severos (Figura 2). Os valores médios sugerem um padrão de patamares, com valores baixos de U quando a limitação de dispersão é severa e em graus pouco severos um aumento brusco que suavemente diminui com o aumento do relaxamento da limitação de dispersão (Figura 2). O padrão não linear com máximo em graus pouco severos de limitação de dispersão foi observado na extensão de 16x16km2 indicando que é possível utiliza-la como referência.
-
+A taxa U estimada na extensão de 16x16 km2 apresenta padrão não linear com um máximo em graus pouco severos de limitação de dispersão (Figura 2). Há muita variação entre os sítios, relacionado com a riqueza de espécies (texto principal resultados), por isso na figura 2 o eixo y varia entre paineis. A variação entre réplicas de uma mesma bateria de simulação pode ser elevada em graus de limitação de dispersão pouco severos (Figura 2). Os valores médios sugerem um padrão de patamares, com valores baixos de U quando a limitação de dispersão é severa e em graus pouco severos um aumento brusco que suavemente diminui com o aumento do relaxamento da limitação de dispersão (Figura 2).
 
 
 ```{r figura 3 Umed por lado da paisagem,fig.width=13,fig.height=8}
@@ -197,20 +196,7 @@ ggsave("apendices/EfeitoEscala/fig3_Uk_ladoKM.png",
 
 <p> __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para os 20 graus de limitação de dispersão (cor dos pontos e linhas). Pontos representam a média de 10 réplicas por bateria de simulação e as linhas ligam os pontos médos. Eixo y varia entre paineis.</p>
 
-
-
-
-O efeito de escala varia de forma não linear com o grau de limitação de dispersão (Figura 4). 
-Em graus brandos de limitação de dispersão o efeito de escala pode ser elevado (Figura 4 e 5), enquanto para graus pouco severos de limitação de dispersão o efeito da escala pode ser muito pequeno (Figura 4 e 5), principalmente em graus de limitação de dispersão pouco severos, onde há o aumento brusco da taxa U estimada (figura 3, 4 e 5). 
-Calculamos a diferença entre a média de U de escalas consecutivas e dividimos pela amplitude de U para todas as escalas. Eperavamos que o aumento da escala iria reduzir a estimativa da taxa U, ou seja, os valores extremos de escala seriam os valores extremos de U e dessa forma é possível quantificar o efeito acumulado até uma determinada escala (Figura 6). Isso foi observado em graus de limitação de dispersão severos e brandos, nos graus pouco severos  onde a estimativa de U é elevada (figura 2) esse padrão pode não ocorrer, e em alguns casos o aumento da escala pode elevar o
-
-Em alguns graus de limitação de dispersão há pouca variação entre escalas (Figura 5). Nos graus de limitação de dispersão mais brandos há a maior variação e depois os cenários de limitação à dispersão mais severos; aqueles graus de limitação de dispersão onde há o aumento brusco da estimativa de U há baixa variação entre escalas (Figura 4 e 5).
-
-
-
-<p> A taxa U estimada apresenta padrão de diminuir com o aumento da extensão espacial da paisagem, apesar de variar entre sítios e cenários de limitação de dispersão (Figura 3). O aumento da limitação à dispersão (de k = 0.05 dos propágulos permanece na vizinhança imediata do progenitor para k = 0.25) reduz a sensibilidade ao aumento da extensão espacial, pois para todos os sítios a taxa U no cenário de limitação mais severo é superior ao segundo mais severo e este ao cenário mais brando de limitação de dispersão (Figura 3). Em alguns casos a taxa U estimada no cenário de limitação mais severo tem um perfil similar aos dois mais brandos, enquanto em outros a taxa estabiliza em escalas menores para cenários de limitação mais brandos (Figura 3). A resposta de U em função da variação da escala parece depender também da riqueza de espécies, número total de indivíduos amostrado e da densidade de indivíduos (Figura SI 1 - INCLUIR A AMPLITUDE DE VARIAÇÃO DE U NOMINALMENTE NA LEGENDA).</p>
-
-<!-- <p> Para comparar os sítios utilizei um protocolo de transformações na taxa U. O valor médio foi obtido das replicas de uma bateria de simulações. Então, por sítio e cenário de limitação de dispersão, a diferença das médias de escalas consecutivas foi dividida pela diferença entre os valores extremos para o conjunto de todas as escalas (Ulag1). Dessa forma, avaliamos a mudança da taxa U com a variação da escala (Figura 4). De maneira geral, U diminui cada vez menos com a escala, então os valores extremos de U tendem a ser os valores extremos de escala; mas em alguns casos, onde houve a estabilização da taxa U em escalas mais baixas, também houve maior variação de modo que o menor valor podem ser escalas intermedárias (e.g. SPpesmD para k=0.25), apesar de serem valores próximos com os da maior escala (Figura 3). Então o acumulo de Ulag1 em escalas consecutivas pode informar quanta variação na taxa U foi acumulada até determinada escala (Figura 4b).</p>  -->
+Principalmente para os graus de limitação de dispersão brandos, observamos o padrão esperado de a taxa U diminuir com o aumento da escala (Figura 3). Em alguns graus de limitação de dispersão há pouca variação entre escalas (Figura 3 e 4), para graus pouco severos de limitação de dispersão o efeito da escala pode ser menor do que para graus severos (Figura 3 e 4). Os graus pouco severos devem operar no máximo global de taxa U necessária para obter a riqueza observada (Figura 2) e por isso devem apresentar baixa variação na estimativa da taxa U. 
 
 ```{r figura 4 Ucv por k}
 df_Usoe |> 
@@ -225,6 +211,60 @@ df_Usoe |>
 ```
 
 __Figura 4__ Coeficiente de variação (sd/mean) de Umed (eixo y) para um mesmo cenário de limitação de dispersão (eixo x) e sítio, considerando todas as escalas. 
+
+Calculamos a diferença entre a média de U de escalas consecutivas e dividimos pela amplitude de U para todas as escalas (Ulag). Eperavamos que o aumento da escala iria reduzir a estimativa da taxa U, ou seja, os valores extremos de escala seriam os valores extremos de U e dessa forma seria possível quantificar o efeito acumulado até uma determinada escala. Isso pode ser observado em nos graus de limitação de dispersão severos e principalmente nos brandos (Figura 5), porém em geral nos graus pouco severos esse padrão pode não ocorrer, e valores negativos de Ulag podem ser observados (Figura 5).
+
+```{r figura 5 Ulag por}
+df_Usoe |>
+  drop_na() |> 
+  ggplot(aes(x=k_factor,y=Ulag)) +
+  geom_jitter() +
+  geom_boxplot() +
+  geom_hline(yintercept = 0,color="red") +
+  labs(x="k",y="Ulag",
+       title = "Ulag = ( U_i - U_i+1 )/ U_breadth; U_breadth = diff(range(Umed)), Umed = mean(U)")
+```
+
+__Figura 5__ Ulag para todas as escalas (eixo y) pela grau de limitação de dispersão (eixo x), linha vermelha marca o valor zero.
+
+Valores de Ulag negativos indicam que o aumento da escala aumentam a estimativa média de U, isso pode ocorrer pois há estabilização na estimativa média de U ou que há aumento consistente. 
+
+```{r}
+df_plot <- df_Usoe |> filter(Ulag==-1) |> select(SiteCode, k) |> 
+  inner_join(df_Usoe.rep,by=c("SiteCode","k")) |> 
+  mutate(DA = Ntotal / effort_ha,
+         label = paste(SiteCode,S_obs,Ntotal,round(DA,1),sep = ", "),
+         k = round(k,2)) 
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
+df_plot |>
+  ggplot(aes(x=lado_km,y=U,color=k,group=factor(k))) +
+  geom_point(alpha=0.4) +
+  stat_summary(geom = "line",fun.data = mean_se) +
+  stat_summary(geom = "pointrange",fun.data = mean_se, color="black",size=0.1) +
+  scale_x_continuous(trans='log2',breaks = round(16.02/2^(5:0),0)) +
+  # scale_color_gradient2(low="red",mid = "green",high = "blue", midpoint = 0.5) +
+  scale_color_distiller(palette = "Spectral") +
+  theme_gray() +
+  # theme(legend.position = "bottom") +
+  labs(title = "U estimado em diferentes subescalas da paisagem ao redor para os 20 cenários de limitação de dispersão (k)",
+       subtitle="facet label = Site code, riqueza, número de indivíduos ,densidade; free y axis",
+       x = "lado da paisagem (km)",
+       y = "taxa U estimada") +
+  # guides(color = guide_legend(title.position = "right")) + # gostaria de deixar o k para a direita e completar a descição dele, mas não tive tempo para fazer
+  theme(legend.position= c(0.57,1.10),
+        legend.direction = "horizontal",
+        legend.justification='left',
+        legend.background = element_rect(fill=alpha('white', 0.1))) +
+  facet_wrap(~label,ncol = 6,scales="free_y")
+```
+
+
+
+
+
+<p> A taxa U estimada apresenta padrão de diminuir com o aumento da extensão espacial da paisagem, apesar de variar entre sítios e cenários de limitação de dispersão (Figura 3). O aumento da limitação à dispersão (de k = 0.05 dos propágulos permanece na vizinhança imediata do progenitor para k = 0.25) reduz a sensibilidade ao aumento da extensão espacial, pois para todos os sítios a taxa U no cenário de limitação mais severo é superior ao segundo mais severo e este ao cenário mais brando de limitação de dispersão (Figura 3). Em alguns casos a taxa U estimada no cenário de limitação mais severo tem um perfil similar aos dois mais brandos, enquanto em outros a taxa estabiliza em escalas menores para cenários de limitação mais brandos (Figura 3). A resposta de U em função da variação da escala parece depender também da riqueza de espécies, número total de indivíduos amostrado e da densidade de indivíduos (Figura SI 1 - INCLUIR A AMPLITUDE DE VARIAÇÃO DE U NOMINALMENTE NA LEGENDA).</p>
+
+<!-- <p> Para comparar os sítios utilizei um protocolo de transformações na taxa U. O valor médio foi obtido das replicas de uma bateria de simulações. Então, por sítio e cenário de limitação de dispersão, a diferença das médias de escalas consecutivas foi dividida pela diferença entre os valores extremos para o conjunto de todas as escalas (Ulag1). Dessa forma, avaliamos a mudança da taxa U com a variação da escala (Figura 4). De maneira geral, U diminui cada vez menos com a escala, então os valores extremos de U tendem a ser os valores extremos de escala; mas em alguns casos, onde houve a estabilização da taxa U em escalas mais baixas, também houve maior variação de modo que o menor valor podem ser escalas intermedárias (e.g. SPpesmD para k=0.25), apesar de serem valores próximos com os da maior escala (Figura 3). Então o acumulo de Ulag1 em escalas consecutivas pode informar quanta variação na taxa U foi acumulada até determinada escala (Figura 4b).</p>  -->
 
 
 
