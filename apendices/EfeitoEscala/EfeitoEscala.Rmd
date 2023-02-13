@@ -75,29 +75,12 @@ df_Usoe <- ddply(df_Usoe,c("SiteCode","k"),f_lag.U,.parallel = TRUE)
 df_Usoe$Schange <- factor(df_Usoe$lado_km,labels=c(paste(16/(2^(5:1)),"->",16/(2^(4:0))),NA))
 df_Usoe$Schange_cumulative <- factor(df_Usoe$lado_km,labels=c(paste(0.5,"->",16/(2^(4:0))),NA))
 df_Usoe$k_factor <- factor(round(df_Usoe$k,2),levels = sort(unique(round(df_Usoe$k,2)),decreasing = T))
-# df_resultadoSoE
-# f_ddply <- function(df){
-#   df |> 
-#     filter(Ucsum >= 0.9) |> 
-#     head(n=1)
-# }
-# df_soe90 <- ddply(df_Usoe,c("SiteCode","k"),f_ddply)
-# df_aud <- anti_join(df_sorteio_sitios,df_soe90,by=c("SiteCode","k")) |> 
-#   inner_join(df_Usoe,by=c("SiteCode","k")) |> 
-#   select(-(txt.file:DA))
-# df_Usoe_Ucv.top90
-df_Usoe_UcvCriteria <- df_Usoe |> 
+df_Usoe <- df_Usoe |> 
   group_by(SiteCode,k) |> 
   summarise(Ucv = sd(Umed)*100/mean(Umed)) |> 
   mutate(Ucv_factor = ifelse(Ucv>10,"top90","low10")) |> 
   select(-Ucv) |> 
   inner_join(x=df_Usoe,by=c("SiteCode","k"))
-df_Usoe.rep_UcvCriteria <- df_Usoe |> 
-  group_by(SiteCode,k) |> 
-  summarise(Ucv = sd(Umed)*100/mean(Umed)) |> 
-  mutate(Ucv_factor = ifelse(Ucv>10,"top90","low10")) |> 
-  select(-Ucv) |> 
-  inner_join(x=df_Usoe.rep,by=c("SiteCode","k"))
 ```
 
 ```{r trackdown,eval=FALSE}
@@ -167,9 +150,9 @@ df_plot |>
   scale_x_reverse() +
   facet_wrap(~label, ncol=6,scales="free_y") +
   theme_classic()
-ggsave("apendices/EfeitoEscala/fig2_U16_k.png",
-       width = 17.2,
-       height = 6.7)
+# ggsave("apendices/EfeitoEscala/fig2_U16_k.png",
+#        width = 17.2,
+#        height = 6.7)
 ```
 
 <p> __Figura 2__ U estimado (eixo y) por cenário de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km). Os pontos são as estimativas réplicas de U, os pontos vermelhos marcam o valor médio e a linha une os valores médios entre cenários de limitação de dispersão. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão, simulada com um kernel de dispersão com decaimento exponencial da probabilidade de colonização com o aumento da distância. S = riqueza da espécie, N = número de indivíduos.</p>
@@ -177,7 +160,7 @@ ggsave("apendices/EfeitoEscala/fig2_U16_k.png",
 A taxa U estimada na extensão de 16x16 km2 apresenta padrão não linear com um máximo em graus pouco severos de limitação de dispersão (Figura 2). Há muita variação entre os sítios, relacionado com a riqueza de espécies (texto principal resultados), por isso na figura 2 o eixo y varia entre paineis. A variação entre réplicas de uma mesma bateria de simulação pode ser elevada em graus de limitação de dispersão pouco severos (Figura 2). Os valores médios sugerem um padrão de patamares, com valores baixos de U quando a limitação de dispersão é severa e em graus pouco severos um aumento brusco que suavemente diminui com o aumento do relaxamento da limitação de dispersão (Figura 2).
 
 
-```{r antiga figura 3 Umed por lado da paisagem,fig.width=13,fig.height=8}
+```{r figura 3 Umed por lado da paisagem,fig.width=13,fig.height=8}
 df_plot <- df_Usoe.rep |> 
   mutate(DA = Ntotal / effort_ha,
          label = paste(SiteCode,S_obs,Ntotal,round(DA,1),sep = ", "),
@@ -208,7 +191,7 @@ ggsave("apendices/EfeitoEscala/fig3_Uk_ladoKM.png",
        height = 6.7)
 ```
 
-<!-- <p> __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para os 20 graus de limitação de dispersão (cor dos pontos e linhas). Pontos representam a média de 10 réplicas por bateria de simulação e as linhas ligam os pontos médos. Eixo y varia entre paineis.</p> -->
+<p> __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para os 20 graus de limitação de dispersão (cor dos pontos e linhas). Pontos representam a média de 10 réplicas por bateria de simulação e as linhas ligam os pontos médos. Eixo y varia entre paineis.</p>
 
 Principalmente para os graus de limitação de dispersão brandos, observamos o padrão esperado de a taxa U diminuir com o aumento da escala (Figura 3). Em alguns graus de limitação de dispersão há pouca variação entre escalas (Figura 3 e 4), para graus pouco severos de limitação de dispersão o efeito da escala pode ser menor do que para graus severos (Figura 3 e 4). Os graus pouco severos devem operar no máximo global de taxa U necessária para obter a riqueza observada (Figura 2) e por isso devem apresentar baixa variação na estimativa da taxa U. 
 
@@ -244,9 +227,9 @@ __Figura 5__ Ulag para todas as escalas (eixo y) pela grau de limitação de dis
 
 Valores de Ulag negativos indicam que o aumento da escala pode aumentar a estimativa média de U. Nos casos em que Ulag = -1 pode existir um padrão não linear de máximo ou apresentar um padrão que sugere estabilização (Figura 6). Também observamos variação das réplicas entorno da média (Figura 6). Esses resultados sugerem que graus de limitação de dispersão pouco severos e pouco brandos podem ter pouca sensibilidade ao aumento da extensão espacial da paisagem ao redor, pois já operam próximo do máximo global
 
-```{r figura 6}
-df_plot <- df_Usoe |> filter(Ulag==-1) |> select(SiteCode, k) |> 
-  inner_join(df_Usoe.rep,by=c("SiteCode","k")) |> 
+```{r figura 6 filtro de figura 3 apenas aqueles com low10}
+df_plot <- df_Usoe |> filter(Ucv_factor=="low10") |> select(SiteCode, k) |> distinct() |> 
+  inner_join(x=df_Usoe.rep,by=c("SiteCode","k")) |> 
   mutate(DA = Ntotal / effort_ha,
          k = round(k,2),
          k_factor = factor(k),
@@ -258,15 +241,11 @@ df_plot |>
   stat_summary(geom = "line",fun.data = mean_se) +
   stat_summary(geom = "pointrange",fun.data = mean_se) +
   scale_x_continuous(trans='log2',breaks = round(16.02/2^(5:0),0)) +
-  # scale_color_gradient2(low="red",mid = "green",high = "blue", midpoint = 0.5) +
   scale_color_distiller(palette = "Spectral") +
-  theme_gray() +
-  # theme(legend.position = "bottom") +
-  labs(title = "Casos em que Ulag =-1",
+  labs(title = "Casos em que Ucv < 10",
        subtitle="*filtrado da figura 3",
        x = "lado da paisagem (km)",
        y = "taxa U estimada") +
-  # guides(color = guide_legend(title.position = "right")) + # gostaria de deixar o k para a direita e completar a descição dele, mas não tive tempo para fazer
   theme_dark() +
   theme(legend.position= c(0.57,1.07),
         legend.direction = "horizontal",
