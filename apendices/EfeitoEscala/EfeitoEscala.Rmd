@@ -65,8 +65,9 @@ f_lag.U <- function(df){
   v_Udiff <- diff(range(df$Umed))
   df$Ulag <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
   df <- df |> mutate(Ulag0 = ifelse(Ulag<0,0,Ulag))
-  df$Ucsum <- cumsum(df$Ulag0)
-  df <- df |> mutate(Ucsum = ifelse(Ucsum>1,1,Ucsum))
+  df$Ucsum <- cumsum(df$Ulag)
+  df$Ucsum0 <- cumsum(df$Ulag0)
+  df <- df |> mutate(Ucsum0 = ifelse(Ucsum0>1,1,Ucsum0))
   return(df)
 }
 registerDoMC(3)
@@ -84,6 +85,19 @@ df_Usoe$k_factor <- factor(round(df_Usoe$k,2),levels = sort(unique(round(df_Usoe
 # df_aud <- anti_join(df_sorteio_sitios,df_soe90,by=c("SiteCode","k")) |> 
 #   inner_join(df_Usoe,by=c("SiteCode","k")) |> 
 #   select(-(txt.file:DA))
+# df_Usoe_Ucv.top90
+df_Usoe_UcvCriteria <- df_Usoe |> 
+  group_by(SiteCode,k) |> 
+  summarise(Ucv = sd(Umed)*100/mean(Umed)) |> 
+  mutate(Ucv_factor = ifelse(Ucv>10,"top90","low10")) |> 
+  select(-Ucv) |> 
+  inner_join(x=df_Usoe,by=c("SiteCode","k"))
+df_Usoe.rep_UcvCriteria <- df_Usoe |> 
+  group_by(SiteCode,k) |> 
+  summarise(Ucv = sd(Umed)*100/mean(Umed)) |> 
+  mutate(Ucv_factor = ifelse(Ucv>10,"top90","low10")) |> 
+  select(-Ucv) |> 
+  inner_join(x=df_Usoe.rep,by=c("SiteCode","k"))
 ```
 
 ```{r trackdown,eval=FALSE}
@@ -163,7 +177,7 @@ ggsave("apendices/EfeitoEscala/fig2_U16_k.png",
 A taxa U estimada na extensão de 16x16 km2 apresenta padrão não linear com um máximo em graus pouco severos de limitação de dispersão (Figura 2). Há muita variação entre os sítios, relacionado com a riqueza de espécies (texto principal resultados), por isso na figura 2 o eixo y varia entre paineis. A variação entre réplicas de uma mesma bateria de simulação pode ser elevada em graus de limitação de dispersão pouco severos (Figura 2). Os valores médios sugerem um padrão de patamares, com valores baixos de U quando a limitação de dispersão é severa e em graus pouco severos um aumento brusco que suavemente diminui com o aumento do relaxamento da limitação de dispersão (Figura 2).
 
 
-```{r figura 3 Umed por lado da paisagem,fig.width=13,fig.height=8}
+```{r antiga figura 3 Umed por lado da paisagem,fig.width=13,fig.height=8}
 df_plot <- df_Usoe.rep |> 
   mutate(DA = Ntotal / effort_ha,
          label = paste(SiteCode,S_obs,Ntotal,round(DA,1),sep = ", "),
@@ -194,7 +208,7 @@ ggsave("apendices/EfeitoEscala/fig3_Uk_ladoKM.png",
        height = 6.7)
 ```
 
-<p> __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para os 20 graus de limitação de dispersão (cor dos pontos e linhas). Pontos representam a média de 10 réplicas por bateria de simulação e as linhas ligam os pontos médos. Eixo y varia entre paineis.</p>
+<!-- <p> __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para os 20 graus de limitação de dispersão (cor dos pontos e linhas). Pontos representam a média de 10 réplicas por bateria de simulação e as linhas ligam os pontos médos. Eixo y varia entre paineis.</p> -->
 
 Principalmente para os graus de limitação de dispersão brandos, observamos o padrão esperado de a taxa U diminuir com o aumento da escala (Figura 3). Em alguns graus de limitação de dispersão há pouca variação entre escalas (Figura 3 e 4), para graus pouco severos de limitação de dispersão o efeito da escala pode ser menor do que para graus severos (Figura 3 e 4). Os graus pouco severos devem operar no máximo global de taxa U necessária para obter a riqueza observada (Figura 2) e por isso devem apresentar baixa variação na estimativa da taxa U. 
 
@@ -205,6 +219,7 @@ df_Usoe |>
   ggplot(aes(x=k,y=Ucv, group=k)) +
   geom_jitter() +
   geom_boxplot() +
+  geom_hline(yintercept = 10,color="red") +
   labs(x="k, prop. de propágulos até a vizinhança imediata",
        y="Coef. Var. de Umed (%)",
        title="Variação da média de U considerando todas as escalas")
@@ -214,7 +229,7 @@ __Figura 4__ Coeficiente de variação (sd/mean) de Umed (eixo y) para um mesmo 
 
 Calculamos a diferença entre a média de U de escalas consecutivas e dividimos pela amplitude de U para todas as escalas (Ulag). Eperavamos que o aumento da escala iria reduzir a estimativa da taxa U, ou seja, os valores extremos de escala seriam os valores extremos de U e dessa forma seria possível quantificar o efeito acumulado até uma determinada escala. Isso pode ser observado em nos graus de limitação de dispersão severos e principalmente nos brandos (Figura 5), porém em geral nos graus pouco severos esse padrão pode não ocorrer, e valores negativos de Ulag podem ser observados (Figura 5).
 
-```{r figura 5 Ulag por}
+```{r figura 5 Ulag por grau de limitação de dispersão}
 df_Usoe |>
   drop_na() |> 
   ggplot(aes(x=k_factor,y=Ulag)) +
@@ -227,9 +242,9 @@ df_Usoe |>
 
 __Figura 5__ Ulag para todas as escalas (eixo y) pela grau de limitação de dispersão (eixo x), linha vermelha marca o valor zero.
 
-Valores de Ulag negativos indicam que o aumento da escala aumentam a estimativa média de U, isso pode ocorrer pois há estabilização na estimativa média de U ou que há aumento consistente. 
+Valores de Ulag negativos indicam que o aumento da escala pode aumentar a estimativa média de U. Nos casos em que Ulag = -1 pode existir um padrão não linear de máximo ou apresentar um padrão que sugere estabilização (Figura 6). Também observamos variação das réplicas entorno da média (Figura 6). Esses resultados sugerem que graus de limitação de dispersão pouco severos e pouco brandos podem ter pouca sensibilidade ao aumento da extensão espacial da paisagem ao redor, pois já operam próximo do máximo global
 
-```{r}
+```{r figura 6}
 df_plot <- df_Usoe |> filter(Ulag==-1) |> select(SiteCode, k) |> 
   inner_join(df_Usoe.rep,by=c("SiteCode","k")) |> 
   mutate(DA = Ntotal / effort_ha,
@@ -260,40 +275,14 @@ df_plot |>
   facet_wrap(~label,ncol = 6,scales="free_y")
 ```
 
-__Figura 5__ Filtro de paineis da figura 3 onde Ulag=-1, os paineis estão subdividos pelo sítio e grau de limitação de dispersão.
-
-Nos casos em que Ulag = -1 pode existir um padrão não linear de máximo ou apresentar um padrão que sugere estabilização. 
-
-há aumento antes de ocorrer diminuição na estimativa de U que pode encontrar um  
+__Figura 6__ Filtro de paineis da figura 3 onde Ulag=-1, os paineis estão subdividos pelo sítio e grau de limitação de dispersão.
 
 
-
-<p> A taxa U estimada apresenta padrão de diminuir com o aumento da extensão espacial da paisagem, apesar de variar entre sítios e cenários de limitação de dispersão (Figura 3). O aumento da limitação à dispersão (de k = 0.05 dos propágulos permanece na vizinhança imediata do progenitor para k = 0.25) reduz a sensibilidade ao aumento da extensão espacial, pois para todos os sítios a taxa U no cenário de limitação mais severo é superior ao segundo mais severo e este ao cenário mais brando de limitação de dispersão (Figura 3). Em alguns casos a taxa U estimada no cenário de limitação mais severo tem um perfil similar aos dois mais brandos, enquanto em outros a taxa estabiliza em escalas menores para cenários de limitação mais brandos (Figura 3). A resposta de U em função da variação da escala parece depender também da riqueza de espécies, número total de indivíduos amostrado e da densidade de indivíduos (Figura SI 1 - INCLUIR A AMPLITUDE DE VARIAÇÃO DE U NOMINALMENTE NA LEGENDA).</p>
-
-<!-- <p> Para comparar os sítios utilizei um protocolo de transformações na taxa U. O valor médio foi obtido das replicas de uma bateria de simulações. Então, por sítio e cenário de limitação de dispersão, a diferença das médias de escalas consecutivas foi dividida pela diferença entre os valores extremos para o conjunto de todas as escalas (Ulag1). Dessa forma, avaliamos a mudança da taxa U com a variação da escala (Figura 4). De maneira geral, U diminui cada vez menos com a escala, então os valores extremos de U tendem a ser os valores extremos de escala; mas em alguns casos, onde houve a estabilização da taxa U em escalas mais baixas, também houve maior variação de modo que o menor valor podem ser escalas intermedárias (e.g. SPpesmD para k=0.25), apesar de serem valores próximos com os da maior escala (Figura 3). Então o acumulo de Ulag1 em escalas consecutivas pode informar quanta variação na taxa U foi acumulada até determinada escala (Figura 4b).</p>  -->
-
-
-
-
-```{r figura 5 Ucumulative,fig.height=8,fig.width=8}
-# gráficos
-# plot(density(na.omit(df_U$Ulag)))
-# l_p <- list()
-# l_p[[1]] <- df_U |>
-#   drop_na() |>
-#   filter(Ulag>=0) |> 
-#   ggplot(aes(x=k_factor,y=Ulag)) +
-#   geom_ji() +
-#   geom_boxplot() +
-#   labs(x = "k",
-#        y="U_i - U_i+1 / diff(range(U))",
-#        title="a) Ulag") +
-#   facet_wrap(~lado_factor,nrow=1)
-# l_p[[2]] <- 
-  df_Usoe |>
+```{r figura 7 Ucumulative,fig.height=8,fig.width=8}
+df_Usoe |> 
   drop_na() |>
-  ggplot(aes(x=lado_factor, y = Ucsum, 
-             group=interaction(k_factor,lado_factor))) +
+  ggplot(aes(x=Schange_cumulative, y = Ucsum0, 
+             group=interaction(k_factor,Schange_cumulative))) +
   geom_jitter() +
   geom_boxplot(aes(color=k)) +
   geom_hline(yintercept = 0.9,color="red",alpha=0.6) +
@@ -313,15 +302,31 @@ há aumento antes de ocorrer diminuição na estimativa de U que pode encontrar 
 # grid.arrange(grobs=l_p,nrow=2)
 ```
 
-<p> __Figura 5__ O efeito de escala acumulado entre escalas consecutivas. 
+<p> __Figura 7__ O efeito de escala acumulado entre escalas consecutivas. 
 <!-- No conjunto de paineis em 'a' os valores calculados para cada mudança de escala, em 'b' o valor acumulado. Os subpainíeis estão dividos pelo cenário de limitação de dispersão.</p> -->
 
-```{r figura 6 1a escala que acumula pelo menos 90% do efeito de escala,eval=FALSE}
-df_soe90 |> 
-  mutate(fst_scale90 = as.numeric(str_extract(lado_factor,"[0-9.]+$"))) |> 
-  ggplot(aes(x=k,y=fst_scale90,group=k)) +
-  geom_point(alpha=0.1,size=2) #+
-  # geom_boxplot()
+
+```{r figura para detalhes de Ulag}
+df_Usoe |>
+  drop_na() |> 
+  pivot_longer(Ulag:Ulag0) |>
+  ggplot(aes(x=Schange,y=value, color=name)) +
+  geom_jitter() +
+  geom_boxplot() +
+  scale_colour_manual(values=c("black","green")) +
+  geom_hline(yintercept = c(0,0.1), color="red") +
+  labs(x="mudança de escala",y="(U_i - U_i+1) / diff(range(U))",color="") +
+  facet_wrap(~k_factor, nrow=4) +
+  theme(legend.position = "top")
+df_Usoe |> 
+  drop_na() |> 
+  pivot_longer(Ucsum:Ucsum0) |>
+  ggplot(aes(x=Schange_cumulative,y=value, color=name)) +
+  geom_jitter() +
+  geom_boxplot() +
+  scale_colour_manual(values=c("black","green")) +
+  geom_hline(yintercept = c(0,0.9), color="red") +
+  facet_wrap(~k_factor, nrow=4)
 ```
 
 <!-- __Figura 6__ Primeira escala que acumula pelo menos 90% do efeito da escala -->
