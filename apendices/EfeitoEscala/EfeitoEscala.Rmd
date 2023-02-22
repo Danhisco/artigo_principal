@@ -77,8 +77,9 @@ df_Usoe$Schange_cumulative <- factor(df_Usoe$lado_km,labels=c(paste(0.5,"->",16/
 df_Usoe$k_factor <- factor(round(df_Usoe$k,2),levels = sort(unique(round(df_Usoe$k,2)),decreasing = T))
 df_Usoe <- df_Usoe |> 
   group_by(SiteCode,k) |> 
-  summarise(Ucv = sd(Umed)*100/mean(Umed)) |> 
-  mutate(Ucv_factor = ifelse(Ucv>10,"top90","low10")) |> 
+  summarise(Ucv = sd(Umed)*100/mean(Umed),
+            Ulag_f = ifelse(any(Ulag < -0.1,na.rm = T),"neg_v","pos_v")) |> 
+  mutate(Ucv_f = ifelse(Ucv>10,"top90","low10")) |> 
   # select(-Ucv) |> 
   inner_join(x=df_Usoe,by=c("SiteCode","k"))
 ```
@@ -99,7 +100,7 @@ download_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
               gpath = "mestrado/DaniloPMori-artigo_mestrado/")
 ```
 
-## Objetivo
+__Objetivo__
  
 <p> Primeiro avaliamos se a maior extensão considerada é suficiente para obter o padrão não linear de U esperado em paisagens infinitas. E depois comparamos a estimativa de U para cada subescala (0.5, 1, 2, 4, 8 e 16 km de lado da paisagem ao redor quadrada). Dos 108 sítios selecionados para a comparação dos modelos neutros, 36 foram sorteados e selecionados para avaliar qual a extensão espacial suficiente para comparar os modelos neutros. Esses 36 sítios incluem os extremos da riqueza de espécies e densidade de indivíduos observada e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (figura 1a). Para cada sítio simulamos 20 graus de limitação de dispersão no modelo espacialmente explícito (Figura 1b e Figura 2). Vamos selecionar os graus de limitação de dispersão no qual a extensão espacial de 4x4 km2 acumula a maior parte do efeito da escala na estimativa de U. </p>
 
@@ -160,6 +161,7 @@ df_plot |>
 
 A taxa U estimada na extensão de 16x16 km2 apresenta padrão não linear com máximo em graus pouco severos de limitação de dispersão (Figura 2). Há muita variação entre os sítios, relacionado com a riqueza de espécies (texto principal resultados), por isso na figura 2 o eixo y varia entre paineis. A variação das réplicas em torno da média pode ser elevada (Figura 2). Os valores médios sugerem um padrão de patamares, com valores baixos de U quando a limitação de dispersão é severa e em graus pouco severos um aumento brusco que suavemente diminui com o relaxamento da limitação de dispersão (Figura 2). Uma vez que observamos um padrão qualitativamente similar ao esperado em paisagens infinitas, iremos considerar a extensão espacial de 16x16 km2 como maior escala de referência para os graus de limitação de dispersão. A seguir o efeito 
 
+### Efeito da escala na estimativa média da taxa U por grau de limitação de dispersão
 
 ```{r figura 3 Umed por lado da paisagem,fig.width=13,fig.height=8}
 df_plot <- df_Usoe.rep |> 
@@ -172,7 +174,7 @@ df_plot |>
   geom_point(alpha=0.4) +
   stat_summary(geom = "line",fun.data = mean_se) +
   stat_summary(geom = "pointrange",fun.data = mean_se, color="black",size=0.1) +
-  scale_x_continuous(trans='log2',breaks = round(16.02/2^(5:0),0)) +
+  scale_x_continuous(trans='log2',breaks = c(0,round(16.02/2^(5:0),1))) +
   # scale_color_gradient2(low="red",mid = "green",high = "blue", midpoint = 0.5) +
   scale_color_distiller(palette = "Spectral") +
   theme_gray() +
@@ -304,17 +306,18 @@ df_Usoe |>
 ```{r atual figura 7}
 df_Usoe |> 
   drop_na() |>
-  filter(Ucv_factor == "top90") |> 
+  # filter(Ulag_f == "pos_v") |>
+  # filter(Ucv_factor == "top90") |> 
   ggplot(aes(x=Schange_cumulative,y=Ucsum)) +
   geom_point(position = position_jitter(w = 0.1, h = 0),alpha=0.5) +
   geom_boxplot(aes(group=Schange_cumulative)) +
-   geom_smooth(aes(group=1),method = "loess",se=F,color="black") +
-  stat_summary(fun.data = mean_se,color="red") +
+  geom_smooth(aes(group=1),method = "loess",se=F,color="black") +
+  stat_summary(fun.data = mean_se,color="red",size=0.2) +
   geom_hline(yintercept = 0.9, color="blue") +
   facet_wrap(~k_factor, nrow=4) +
   labs(x="mudança acumulada de escala (lado da paisagem em km)",
        y="cumsum(Ulag)",
-       title="Os graus de limitação de dispersão apropriados são mais severos ou iguais à k=0.40 na extensão de 4x4 km2 em média") +
+       title="Os graus de limitação de dispersão apropriados na exensão de 4x4km2 são mais severos ou iguais à k=0.40 em média") +
   theme_classic()
 ```
 
