@@ -19,6 +19,8 @@ knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALS
 library(lubridate)
 library(doMC)
 library(raster)
+library(insight)
+library(DHARMa)
 library(bbmle)
 library(lme4)
 library(gridExtra)
@@ -336,7 +338,7 @@ __Objetivo__
 selecionar quais as variáveis de controle que serão fixadas no GAMM: riqueza (S), número de indivíduos (N), densidade (DA) e suas versões em log. O modelo estatístico pressupõem relação linear dessas preditoras com o 
 
 
-```{r GLMM selecao de variaveis para fixar no GAMM}
+```{r GLMM selecao de variaveis para fixar no GAMM,eval=T,cache=T}
 # dados
 f_z <- function(x) (x-mean(x))/sd(x)
 df_Usoe$Umed |> density() |> plot()
@@ -348,13 +350,26 @@ df_md <- df_Usoe |>
   select(SiteCode,Umed,logit_Umed,k_factor,lado_km,log2_lado.km,S_obs,Ntotal,DA) |> 
   mutate(across(S_obs:DA,log,.names="log_{.col}"),
          across(S_obs:log_DA,f_z,.names="{.col}_z"))
-  # pull(logit_Umed) |> 
-  # density() |> 
-  # plot()
 # modelos
 l_md <- list()
-l_md[[1]] <- glmer(logit_Umed ~ log())
+l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z + log_Ntotal_z + (1|SiteCode),data=df_md)
+l_md[[2]] <- update(l_md[[1]], . ~ . - log_Ntotal_z + log_DA_z)
+l_md[[3]] <- update(l_md[[1]], . ~ . - log_Ntotal_z)
+l_md[[4]] <- lmer(logit_Umed ~ S_obs_z + DA_z + (1|SiteCode),data=df_md)
+l_md[[5]] <- update(l_md[[4]], . ~ . - DA_z + Ntotal_z)
+l_md[[6]] <- update(l_md[[4]], . ~ . - DA_z)
+f_nameModel <- function(md){
+  paste(unlist(find_predictors(md)),collapse = " + ")
+}
+names(l_md) <-laply(l_md,f_nameModel)
+df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame() #|> head(n=1) |> row.names()
+df_AICctab
+md_pGAMM <- l_md[[row.names(df_AICctab[1,])]]
+```
 
+```{r avaliação de modelo mais plausível}
+p_plot <- simulateResiduals(md_pGAMM,n=1000)
+plot(p_plot)
 ```
 
 
