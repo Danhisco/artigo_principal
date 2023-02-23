@@ -1,0 +1,14 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+apendices/analise_dados/AnaliseDados_cache/
+apendices/analise_dados/AnaliseDados_files/
+apendices/cenarios_limitacao_dispersao/cenarios_limitacao_dispersao_cache/
+apendices/cenarios_limitacao_dispersao/cenarios_limitacao_dispersao_files/
+apendices/EfeitoEscala/EfeitoEscala_cache/
+apendices/EfeitoEscala/EfeitoEscala_files/
+apendices/EfeitoEscala/figuras/
+apendices/mapas_p_MNEE/figuras/
+dados/
+figuras/
