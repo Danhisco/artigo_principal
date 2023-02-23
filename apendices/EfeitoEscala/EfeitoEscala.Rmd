@@ -20,6 +20,7 @@ library(lubridate)
 library(doMC)
 library(raster)
 library(bbmle)
+library(lme4)
 library(gridExtra)
 library(ggplot2)
 library(readr)
@@ -322,6 +323,46 @@ df_Usoe |>
 ```
 
 __Figura 7__ Efeito acumulado do aumento da escala na estimativa de U. Ulag = ( Umed_i - Umed_i+1 )/ diff(range(Umed)), Umed = mean(U), i c [0.5; 16] km de lado da paisagem. cumsum = soma acumulativa das escalas consecutivas em ordem crescente. Pontos são os valores estimados das bateria de simulação (sítio e grau de limitação de dispersão) no qual a variação na escala marcou pelo menos 10% no coeficiente de variação da média estimada por escala (Figura 5). Os pontos em vermelho representam a média, as linhas vermelhas verticais ao redor das médias marcam o desvio-padrão; a linha liga as médias; o boxplot marca os 3 primeiros quantils. Paineis são separados pelo grau de limitação de dispersão (k = proporção de propágulos que permanecem até a vizinhança imediata da planta progenitora).  
+
+### Proposta 2: sem remover as baterias com Ulag < 0
+__1) descrever o padrão por modelos de regressão GLMM e GAMM__
+__2) aplicar a lógica do Ulag -> Ucsum no padrão predio pelas análises de regressão__
+
+Procuro considerar todos os dados sem aplicar filtros que modificam a variabilidade dos dados, além de poder descrever o efeito de escala por grau de limitação de dispersão  
+
+#### GLMM: seleção de variáveis
+
+__Objetivo__
+selecionar quais as variáveis de controle que serão fixadas no GAMM: riqueza (S), número de indivíduos (N), densidade (DA) e suas versões em log. O modelo estatístico pressupõem relação linear dessas preditoras com o 
+
+
+```{r GLMM selecao de variaveis para fixar no GAMM}
+# dados
+f_z <- function(x) (x-mean(x))/sd(x)
+df_Usoe$Umed |> density() |> plot()
+df_md <- df_Usoe |> 
+  inner_join(distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
+  mutate(logit_Umed = log(Umed/(1-Umed)),
+         DA = Ntotal / effort_ha,
+         log2_lado.km = log2(round(lado_km,1))) |> 
+  select(SiteCode,Umed,logit_Umed,k_factor,lado_km,log2_lado.km,S_obs,Ntotal,DA) |> 
+  mutate(across(S_obs:DA,log,.names="log_{.col}"),
+         across(S_obs:log_DA,f_z,.names="{.col}_z"))
+  # pull(logit_Umed) |> 
+  # density() |> 
+  # plot()
+# modelos
+l_md <- list()
+l_md[[1]] <- glmer(logit_Umed ~ log())
+
+```
+
+
+Fim da proposta 2 ###
+
+
+
+
 
 <!-- __Figura 6__ Primeira escala que acumula pelo menos 90% do efeito da escala -->
 
