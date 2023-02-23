@@ -18,7 +18,7 @@ f_SoE_MNEE <- function(df,n_escalas=6,n_replicas=4){
   for(i in 1:n_escalas){
     index <- (nrow(m_full)-nrow(m_full)/(2^(i-1)) )/2
     m_sim <- m_full[(floor(index)+1):(nrow(m_full)-ceiling(index)),
-                    (floor(index)+1):(nrow(m_full)-ceiling(index))]
+                    (floor(index)+1):(ncol(m_full)-ceiling(index))]
     p <- length(m_sim[m_sim!=0])/length(m_sim)
     v_U <- replicate(n=n_replicas,f_simCoalescente(land_name = m_sim))
     l_df_U[[i]] <- cbind(data.frame(SiteCode = df$SiteCode,

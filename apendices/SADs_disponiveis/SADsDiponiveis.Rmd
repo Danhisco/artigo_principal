@@ -61,14 +61,33 @@ df_filtro <- df_dados.brutos  |> filter(method=="parcelas" &
 df_Sites_e_AnoAmostragem <- df_filtro |> 
   mutate(year_bestProxy = ifelse(is.na(year_data),year,year_data)) |> 
   left_join(y=df_LatLong,by="SiteCode")
+```
+
+
+# abundance.csv para SAD observada para cada sítio amostrado
+
+```{r abundance para SAD por SiteCode}
+df_abundance <- 
+  read.csv("/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/dados_para_iniciar_artigo/abundances.csv",
+           header = TRUE,as.is = TRUE)
+df_SADobs <- df_abundance |> 
+  filter(SiteCode %in% df_Sites_e_AnoAmostragem$SiteCode) |> 
+  select(SiteCode, species.correct, N)
+f_SADobs <- function(df){
+  df_write <- select(df,-SiteCode) |> 
+    filter(N>=1 & species.correct != "Mortas") |> 
+    group_by(species.correct) |> 
+    summarise(N = sum(N)) |> 
+    arrange(desc(N))
+  write_csv(df_write,
+            file = paste0("dados/csv/SADs_observadas/",df$SiteCode[1],".csv"))
+  data.frame(Ntotal = sum(df_write$N), S_obs = nrow(df_write))
+}
+df_SADpar <- ddply(df_SADobs,"SiteCode",f_SADobs)
+# 
+df_dados_disponiveis <- df_Sites_e_AnoAmostragem |> 
+  select(-(Ntotal:S_obs)) |> 
+  inner_join(df_SADpar,by="SiteCode")
 # write df_dados_disponiveis
 write_csv(df_Sites_e_AnoAmostragem,"dados/df_dados_disponiveis.csv")
 ```
-
-
-## Riqueza e Número de indivíduos das SADs observadas
-
-```{r riqueza e número de indivíduos das SADs observadas}
-
-```
-

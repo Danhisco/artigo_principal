@@ -13,11 +13,20 @@ knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALS
 library(doMC)
 library(readr)
 library(ggplot2)
+library(readr)
+library(stringr)
 library(plyr)
 library(dplyr)
 # dados disponíveis
-# df_dados <- read_csv(file = "./dados/df_dados_disponiveis.csv") |>
-#   select(SiteCode,effort_ha,Ntotal)
+df_dados <- read_csv(file = "dados/df_dados_disponiveis.csv") |> 
+  select(SiteCode, effort_ha, Ntotal, S_obs) |> 
+  inner_join(
+    mutate(
+      data.frame(
+        tif.path = list.files(path="dados/paisagens/paisagens_mapbiomas6_padronizadas",
+                              pattern=".tif",full.names=T)),
+      SiteCode = str_extract(tif.path,"(?<=as\\/).*?(?=.tif)")),
+             by="SiteCode")
 # sources
 source("source/qkernel_e_sigkernel.R")
 ```
@@ -66,7 +75,7 @@ f_dfSimulacao <- function(df, k = c(0.99,seq(0.95,0.05,-0.05))){
   df_sd$d <- sapply(k,f_sd.kernel)
   return(df_sd)
 }
-registerDoMC(3)
+registerDoMC(2)
 df_sim <- adply(df_dados,1,f_dfSimulacao,.parallel = TRUE)
 write_csv(df_sim,file = "dados/df_simulacao.csv")
 ```
