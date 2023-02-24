@@ -22,6 +22,7 @@ library(raster)
 library(insight)
 library(DHARMa)
 library(bbmle)
+library(mgcv)
 library(lme4)
 library(gridExtra)
 library(ggplot2)
@@ -332,7 +333,7 @@ __2) aplicar a lógica do Ulag -> Ucsum no padrão predio pelas análises de reg
 
 Procuro considerar todos os dados sem aplicar filtros que modificam a variabilidade dos dados, além de poder descrever o efeito de escala por grau de limitação de dispersão  
 
-#### GLMM: seleção de variáveis
+#### LMM: seleção de variáveis
 
 __Objetivo__
 selecionar quais as variáveis de controle que serão fixadas no GAMM: riqueza (S), número de indivíduos (N), densidade (DA) e suas versões em log. O modelo estatístico pressupõem relação linear dessas preditoras com o 
@@ -341,7 +342,7 @@ selecionar quais as variáveis de controle que serão fixadas no GAMM: riqueza (
 ```{r GLMM selecao de variaveis para fixar no GAMM,eval=T,cache=T}
 # dados
 f_z <- function(x) (x-mean(x))/sd(x)
-df_Usoe$Umed |> density() |> plot()
+# df_Usoe$Umed |> density() |> plot()
 df_md <- df_Usoe |> 
   inner_join(distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
   mutate(logit_Umed = log(Umed/(1-Umed)),
@@ -365,11 +366,50 @@ names(l_md) <-laply(l_md,f_nameModel)
 df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame() #|> head(n=1) |> row.names()
 df_AICctab
 md_pGAMM <- l_md[[row.names(df_AICctab[1,])]]
+v_betas <- fixef(md_pGAMM)[-1] %>% as.numeric() %>% round(.,digits = 3)
 ```
 
-```{r avaliação de modelo mais plausível}
+```{r futura figura 5 - avaliação de modelo mais plausível md_pGAMM DHARMa residuals, eval=F}
 p_plot <- simulateResiduals(md_pGAMM,n=1000)
 plot(p_plot)
+```
+
+__Futura Figura 5__ Resíduos quantilícos do LMM mais plausível: logit(Umed) ~ log(S) + log(N). Umed = média da bateria de simulações (# réplicas = 10), S = riqueza de espécies, N = número de indivíduos.
+
+```{r comparação do modelo mais plausivel desconsiderando logit Umed}
+l_md <- list()
+l_md[[1]] <- lmer(Umed ~ log_S_obs_z + log_Ntotal_z + (1|SiteCode),data=df_md)
+l_md[[2]] <- update(l_md[[1]], . ~ . - log_Ntotal_z + log_DA_z)
+l_md[[3]] <- update(l_md[[1]], . ~ . - log_Ntotal_z)
+l_md[[4]] <- lmer(Umed ~ S_obs_z + DA_z + (1|SiteCode),data=df_md)
+l_md[[5]] <- update(l_md[[4]], . ~ . - DA_z + Ntotal_z)
+l_md[[6]] <- update(l_md[[4]], . ~ . - DA_z)
+f_nameModel <- function(md){
+  paste(unlist(find_predictors(md)),collapse = " + ")
+}
+names(l_md) <-laply(l_md,f_nameModel)
+df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame() #|> head(n=1) |> row.names()
+md_pGAMM_Umed <- l_md[[row.names(df_AICctab[1,])]]
+p_plot <- simulateResiduals(md_pGAMM_Umed,n=1000)
+plot(p_plot)
+```
+
+#### GAMM: efeito de escala
+
+```{r}
+l_md <- list()
+l_md[[1]] <- update(md_pGAMM,. ~ . + log2_lado.km)
+l_md[[2]] <- update(md_pGAMM,. ~ . + poly(log2_lado.km,2,raw = TRUE))
+l_md[[3]] <- update(md_pGAMM,. ~ . + poly(log2_lado.km,3,raw = TRUE))
+names(l_md) <- paste("poly",1:3)
+df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame() #|> head(n=1) |> row.names()
+md_GAMM <- l_md[[row.names(df_AICctab[1,])]]
+p_plot <- simulateResiduals(md_GAMM,n=1000)
+plot(p_plot)
+# para utilizar GAMM talvez seja necessário considerar as réplicas
+md_GAMM <- gam(logit_Umed ~ offset(v_betas[1] * log_S_obs_z) + offset(v_betas[2] * log_Ntotal_z) +
+                 s(log2_lado.km,by=k_factor,k = 2) + s(SiteCode,bs="re"),
+               data=df_md)
 ```
 
 
