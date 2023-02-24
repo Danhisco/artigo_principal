@@ -22,7 +22,7 @@ library(raster)
 library(insight)
 library(DHARMa)
 library(bbmle)
-library(mgcv)
+library(broom.mixed)
 library(lme4)
 library(gridExtra)
 library(ggplot2)
@@ -342,15 +342,18 @@ __Figura 7__ Efeito acumulado do aumento da escala na estimativa de U. Ulag = ( 
 __1) descrever o padrão por modelos de regressão GLMM e GAMM__
 __2) aplicar a lógica do Ulag -> Ucsum no padrão predio pelas análises de regressão__
 
-Procuro considerar todos os dados sem aplicar filtros que modificam a variabilidade dos dados, além de poder descrever o efeito de escala por grau de limitação de dispersão  
+Procuro considerar todos os dados sem aplicar filtros que modificam a variabilidade dos dados, além de poder descrever o efeito de escala por grau de limitação de dispersão. Proposta: i) selecionar as variáveis padronizadoras (riqueza de espécies, S; número de indivíduos, N; densidade de indivíduos)  
 
-#### LMM: seleção de variáveis
+__Introdução__
 
-__Objetivo__
-selecionar quais as variáveis de controle que serão fixadas no GAMM: riqueza (S), número de indivíduos (N), densidade (DA) e suas versões em log. O modelo estatístico pressupõem relação linear dessas preditoras com o 
+A estimativa de U depende da arvóre genalógica da comunidade simulada por MNEE, o número de indivíduos (N ou DA) determina o número inicial de linhagens que serão monitoras e o número de espécies (S) determina o número final de linhagens monitoradas. A árvore genealógica da comunidade também é influenciada pelo grau de limitação de dispersão e da extensão espacial, pois em alguns graus de limitação de dispersão a árvore genealógica pode ser restringida pela extensão da paisagem.   
 
 
-```{r GLMM selecao de variaveis para fixar no GAMM,eval=T,cache=T}
+e portanto a interação entre elas também é plausível a priori. 
+Primeiro irei selecionar 
+
+
+```{r GLMM selecao de variaveis para fixar no GLMM final,eval=T,cache=T}
 # modelos
 l_md <- list()
 l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z + (1|SiteCode),data=df_md)
@@ -366,7 +369,7 @@ names(l_md) <-laply(l_md,f_nameModel)
 df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame() #|> head(n=1) |> row.names()
 df_AICctab
 md_pGAMM <- l_md[[row.names(df_AICctab[1,])]]
-v_betas <- fixef(md_pGAMM)[-1] %>% as.numeric() %>% round(.,digits = 3)
+# v_betas <- fixef(md_pGAMM)[-1] %>% as.numeric() %>% round(.,digits = 3)
 ```
 
 ```{r futura figura 5 - avaliação de modelo mais plausível md_pGAMM DHARMa residuals, eval=F}
@@ -396,18 +399,26 @@ plot(p_plot)
 
 ```{r}
 l_md <- list()
-l_md[[1]] <- update(md_pGAMM,. ~ . + log2_lado.km)
-l_md[[2]] <- update(md_pGAMM,. ~ . + poly(log2_lado.km,2,raw = TRUE))
-l_md[[3]] <- update(md_pGAMM,. ~ . + poly(log2_lado.km,3,raw = TRUE))
-names(l_md) <- paste("poly",1:3)
+l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z +
+                    k_factor * poly(log2_lado.km,4,raw = TRUE) + (k_factor|SiteCode),
+                  data=df_md)
+l_md[[2]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z +
+                    k_factor * poly(log2_lado.km,4,raw = TRUE) + (1|SiteCode),
+                  data=df_md)
+names(l_md) <- c("k|Site","1|Site")
 df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame() #|> head(n=1) |> row.names()
-md_GAMM <- l_md[[row.names(df_AICctab[1,])]]
+df_AICctab
+md_SoE <- l_md[[row.names(df_AICctab[1,])]]
 p_plot <- simulateResiduals(md_GAMM,n=1000)
 plot(p_plot)
 # para utilizar GAMM talvez seja necessário considerar as réplicas
-md_GAMM <- gam(logit_Umed ~ offset(v_betas[1] * log_S_obs_z) + offset(v_betas[2] * log_Ntotal_z) +
-                 s(log2_lado.km,by=k_factor,k = 2) + s(SiteCode,bs="re"),
-               data=df_md)
+# md_GAMM <- gam(logit_Umed ~ offset(v_betas[1] * log_S_obs_z) + offset(v_betas[2] * log_Ntotal_z) +
+#                  s(log2_lado.km,by=k_factor,k = 2) + s(SiteCode,bs="re"),
+               # data=df_md)
+```
+
+```{r}
+
 ```
 
 
