@@ -397,28 +397,30 @@ plot(p_plot)
 
 #### efeito de escala: interação entre extensão espacial e grau de limitação de dispersão
 
-```{r}
+```{r GLMM para avaliação de efeito de escala,echo=T}
 l_md <- list()
-l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z +
-                    k_factor * poly(log2_lado.km,4,raw = TRUE) + (k_factor|SiteCode),
+l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
                   data=df_md)
-l_md[[2]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z +
-                    k_factor * poly(log2_lado.km,4,raw = TRUE) + (1|SiteCode),
+l_md[[2]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * poly(log2_lado.km,4,raw = TRUE) + (1|SiteCode),
                   data=df_md)
-names(l_md) <- c("k|Site","1|Site")
-df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame() #|> head(n=1) |> row.names()
-df_AICctab
+names(l_md) <- c("k * lado factor + 1|Site",
+                 "k * lado poly4 + 1|Site")
+AICctab(l_md,weights=T)
+```
+
+```{r diagnostico modelo mais plausivel GLMM efeito de escala}
+df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame()
 md_SoE <- l_md[[row.names(df_AICctab[1,])]]
-p_plot <- simulateResiduals(md_GAMM,n=1000)
+p_plot <- simulateResiduals(md_SoE,n=1000)
 plot(p_plot)
+```
+
+
+```{r alternaivamenet poderíamos considerar as réplicas para uilizar GAMM?,eval=F,include=F}
 # para utilizar GAMM talvez seja necessário considerar as réplicas
 # md_GAMM <- gam(logit_Umed ~ offset(v_betas[1] * log_S_obs_z) + offset(v_betas[2] * log_Ntotal_z) +
 #                  s(log2_lado.km,by=k_factor,k = 2) + s(SiteCode,bs="re"),
                # data=df_md)
-```
-
-```{r}
-
 ```
 
 
