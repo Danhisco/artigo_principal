@@ -415,6 +415,31 @@ p_plot <- simulateResiduals(md_SoE,n=1000)
 plot(p_plot)
 ```
 
+```{r comparacao possiveis submodelos para descrever o efeito de escala, echo=TRUE}
+l_md <- list()
+l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[2]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z + k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[3]] <- lmer(logit_Umed ~ log_S_obs_z + log_Ntotal_z + k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[4]] <- lmer(logit_Umed ~ log_S_obs_z + k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[5]] <- lmer(logit_Umed ~ k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+names(l_md) <- c("* *", "* +", "+ +", "S +","0 +")
+AICctab(l_md,weights=T)
+```
+
+__Tabela 1__ Coeficientes de determinal (R2) marginal(m, desconsiderando o efeito aleatório) e condicional(c, considerando o efeito aleatório):
+
+```{r R2 marginal e condicional do modelo mais plausível para descrever SoE}
+# print("R2 marginal e condicional, respectivamente:")
+AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |> 
+  (\(.) MuMIn::r.squaredGLMM(l_md[[.]]))()
+```
+
+
 
 ```{r alternaivamenet poderíamos considerar as réplicas para uilizar GAMM?,eval=F,include=F}
 # para utilizar GAMM talvez seja necessário considerar as réplicas
