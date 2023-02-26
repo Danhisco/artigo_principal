@@ -427,7 +427,18 @@ l_md[[4]] <- lmer(logit_Umed ~ log_S_obs_z + k_factor * lado_factor + (1|SiteCod
                   data=df_md)
 l_md[[5]] <- lmer(logit_Umed ~ k_factor * lado_factor + (1|SiteCode),
                   data=df_md)
-names(l_md) <- c("* *", "* +", "+ +", "S +","0 +")
+l_md[[6]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor + lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[7]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z + k_factor + lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[8]] <- lmer(logit_Umed ~ log_S_obs_z + log_Ntotal_z + k_factor + lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[9]] <- lmer(logit_Umed ~ log_S_obs_z + k_factor + lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[10]] <- lmer(logit_Umed ~ k_factor + lado_factor + (1|SiteCode),
+                  data=df_md)
+names(l_md) <- c("* * *", "* + *", "+ + *", "S + *","0 + *",
+                 "* * +", "* + +", "+ + +", "S + +","0 + +")
 AICctab(l_md,weights=T)
 ```
 
@@ -438,6 +449,45 @@ __Tabela 1__ Coeficientes de determinal (R2) marginal(m, desconsiderando o efeit
 AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |> 
   (\(.) MuMIn::r.squaredGLMM(l_md[[.]]))()
 ```
+
+```{r}
+# modelo mais plausível
+md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |> 
+  (\(.) l_md[[.]])()
+# dados completos para serem preditos
+df_newdata <- df_sim |> 
+  inner_join(y=distinct(select(df_Usoe, k,k_factor,lado_km)),"k") |> 
+  select(k_factor, lado_km, Ntotal, S_obs) |>
+  mutate(across(Ntotal:S_obs,log,.names="log_{.col}"),
+         across(Ntotal:log_S_obs,f_z,.names="{.col}_z"),
+         lado_factor = factor(round(lado_km,1)),
+         SiteCode = df_md$SiteCode[1]) #|> 
+  # select(SiteCode,k_factor,lado_factor,log_Ntotal_z:log_S_obs_z)
+df_newdata$Umed_predict <- predict(md_SoE,df_newdata)
+df_newdata <- df_newdata |> 
+  mutate(Umed = exp(Umed_predict) / exp(1-Umed_predict))
+# gráficos
+df_newdata |> 
+  filter(S_obs < 250, Ntotal < 5000) |>
+  mutate(k = as.numeric(as.character(k_factor))) |> 
+  ggplot(aes(x=lado_factor,y=Umed)) + #,group=k_factor,color=k
+  stat_summary(fun.data = mean_se) +
+  stat_summary(fun.data = mean_se,geom = "line",aes(group=k_factor)) +
+  facet_wrap(~k_factor,ncol=5)
+df_newdata |>
+  ggplot(aes(x=S_obs,y=Umed, color=k)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~k_factor,ncol=5,scales="free")
+df_newdata |> 
+  ggplot(aes(x=k_factor,y=Umed)) +
+  geom_jitter() +
+  geom_boxplot()
+df_sim |> 
+  ggplot(aes(x=S_obs,y=Ntotal)) +
+  geom_point()
+```
+
 
 
 
