@@ -92,11 +92,12 @@ df_md <- df_Usoe |>
   inner_join(distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
   mutate(logit_Umed = log(Umed/(1-Umed)),
          DA = Ntotal / effort_ha,
+         S.DA = S_obs / Ntotal,
          log2_lado.km = log2(round(lado_km,1)),
          lado_factor = factor(round(lado_km,1)) ) |> 
-  select(SiteCode,Umed,logit_Umed,k_factor,lado_factor,lado_km,log2_lado.km,S_obs,Ntotal,DA) |> 
-  mutate(across(S_obs:DA,log,.names="log_{.col}"),
-         across(S_obs:log_DA,f_z,.names="{.col}_z"))
+  select(SiteCode,Umed,logit_Umed,k_factor,lado_factor,lado_km,log2_lado.km,S_obs,Ntotal,DA,S.DA) |> 
+  mutate(across(S_obs:S.DA,log,.names="log_{.col}"),
+         across(S_obs:log_S.DA,f_z,.names="{.col}_z"))
 ```
 
 ```{r trackdown,eval=FALSE}
@@ -362,9 +363,9 @@ l_md[[3]] <- update(l_md[[1]], . ~ . - log_S_obs_z * log_Ntotal_z + log_S_obs_z)
 l_md[[4]] <- lmer(logit_Umed ~ S_obs_z * DA_z + (1|SiteCode),data=df_md)
 l_md[[5]] <- update(l_md[[4]], . ~ . - S_obs_z * DA_z + S_obs_z * Ntotal_z)
 l_md[[6]] <- update(l_md[[4]], . ~ . - S_obs_z * DA_z + S_obs_z)
-f_nameModel <- function(md){
-  paste(unlist(find_predictors(md)),collapse = " * ")
-}
+l_md[[7]] <- lmer(logit_Umed ~ poly(log_S.DA_z,2,raw = TRUE) + (1|SiteCode),data=df_md)
+l_md[[8]] <- lmer(logit_Umed ~ poly(S.DA_z,2,raw = TRUE) + (1|SiteCode),data=df_md)
+l_md[[9]] <- lmer(logit_Umed ~ 1 + (1|SiteCode),data=df_md)
 names(l_md) <-laply(l_md,f_nameModel)
 df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame() #|> head(n=1) |> row.names()
 df_AICctab
@@ -403,8 +404,12 @@ l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_fact
                   data=df_md)
 l_md[[2]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * poly(log2_lado.km,4,raw = TRUE) + (1|SiteCode),
                   data=df_md)
-names(l_md) <- c("k * lado factor + 1|Site",
-                 "k * lado poly4 + 1|Site")
+l_md[[3]] <- lmer(logit_Umed ~ poly(log_S.DA_z,3,raw = TRUE) * k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[4]] <- lmer(logit_Umed ~ poly(log_S.DA_z,3,raw = TRUE) *  k_factor * poly(log2_lado.km,4,raw = TRUE) + (1|SiteCode),
+                  data=df_md)
+names(l_md) <- c("S * N * k * lado factor + 1|Site","S * N * k * lado poly4 + 1|Site",
+                 "S.DA * lado factor + 1|Site","S.DA * k * lado poly4 + 1|Site")
 AICctab(l_md,weights=T)
 ```
 
@@ -442,18 +447,67 @@ names(l_md) <- c("* * *", "* + *", "+ + *", "S + *","0 + *",
 AICctab(l_md,weights=T)
 ```
 
-__Tabela 1__ Coeficientes de determinal (R2) marginal(m, desconsiderando o efeito aleatório) e condicional(c, considerando o efeito aleatório):
+__Tabela 1__ Coeficientes de determinal (R2) do modelo mais plausível: marginal(m, desconsiderando o efeito aleatório) e condicional(c, considerando o efeito aleatório):
 
 ```{r R2 marginal e condicional do modelo mais plausível para descrever SoE}
 # print("R2 marginal e condicional, respectivamente:")
-AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |> 
-  (\(.) MuMIn::r.squaredGLMM(l_md[[.]]))()
+md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |> 
+  (\(.) l_md[[.]])()
+md_SoE |> (\(.) MuMIn::r.squaredGLMM(.))()
+```
+
+
+```{r coef sítios}
+df_ranef <- ranef(md_SoE)$SiteCode 
+df_ranef$SiteCode <- row.names(df_ranef)
+row.names(df_ranef) <- NULL
+df_ranef <- df_ranef %>% 
+  gather(key = parameter_class,value = parameter_value, -SiteCode) %>% 
+  inner_join(y=distinct(select(df_sim,SiteCode, Ntotal, S_obs)),"SiteCode") 
+df_ranef |>
+  pivot_longer(Ntotal:S_obs) |> head()
+  ggplot(aes(sample=parameter_value)) + 
+  stat_qq(alpha=0.3,aes(color=log(S_obs))) + stat_qq_line(alpha=0.3,col="red") + theme_classic() +
+  facet_wrap(~parameter_class,scales="free",ncol=3)
+df_ranef |> 
+  ggplot(aes(x=log(S_obs),y=parameter_value)) +
+  geom_point() +
+  geom_smooth()
 ```
 
 ```{r}
+df_plot <- df_md |> 
+  select(SiteCode, logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
+df_plot$deviance <- residuals(md_SoE,scale=T)
+df_plot$predict <- predict(md_SoE)
+df_plot <- df_plot |> 
+  mutate(Umed = exp(logit_Umed) / exp(1-logit_Umed),
+         Pre_Umed = exp(predict) / exp(1-predict))
+df_plot |> 
+  pivot_longer(log_S_obs_z:log_Ntotal_z) |> 
+  ggplot(aes(x=value,y=deviance)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~name,ncol=2)
+df_plot |> 
+  ggplot(aes(x=logit_Umed,y=predict)) +
+  geom_point() +
+  geom_smooth(aes(group=SiteCode),se = F,method = "lm") +
+  geom_abline(slope = 1,intercept = 0,color="red")
+summary(lm(predict~logit_Umed,df_plot))
+plot(md_SoE)
+df_plot |> 
+  ggplot(aes(x=Ntotal,y=Umed,group=k_factor)) +
+  geom_point() 
+# +
+  # geom_smooth()
+```
+
+
+
+```{r}
 # modelo mais plausível
-md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |> 
-  (\(.) l_md[[.]])()
+
 # dados completos para serem preditos
 df_newdata <- df_sim |> 
   inner_join(y=distinct(select(df_Usoe, k,k_factor,lado_km)),"k") |> 
@@ -463,17 +517,52 @@ df_newdata <- df_sim |>
          lado_factor = factor(round(lado_km,1)),
          SiteCode = df_md$SiteCode[1]) #|> 
   # select(SiteCode,k_factor,lado_factor,log_Ntotal_z:log_S_obs_z)
-df_newdata$Umed_predict <- predict(md_SoE,df_newdata)
-df_newdata <- df_newdata |> 
-  mutate(Umed = exp(Umed_predict) / exp(1-Umed_predict))
+df_newdata$Umed <- exp(predict(md_SoE,df_newdata)) / exp(1-predict(md_SoE,df_newdata))
 # gráficos
-df_newdata |> 
+l_p <- list()
+l_p[[1]] <- df_newdata |>
+  # filter(S_obs < 250, Ntotal < 5000) |>
+  mutate(k = as.numeric(as.character(k_factor))) |> 
+  ggplot(aes(x=lado_factor,y=Umed)) + #,group=k_factor,color=k
+  stat_summary(fun.data = mean_se) +
+  stat_summary(fun.data = mean_se,geom = "line",aes(group=k_factor)) +
+  facet_wrap(~k_factor,ncol=5) +
+  labs(title="sem filtro")
+l_p[[2]] <- df_newdata |>
   filter(S_obs < 250, Ntotal < 5000) |>
   mutate(k = as.numeric(as.character(k_factor))) |> 
   ggplot(aes(x=lado_factor,y=Umed)) + #,group=k_factor,color=k
   stat_summary(fun.data = mean_se) +
   stat_summary(fun.data = mean_se,geom = "line",aes(group=k_factor)) +
+  labs(title="S < 250 | N < 5000") +
   facet_wrap(~k_factor,ncol=5)
+grid.arrange(grobs=l_p,ncol=2)
+df_newdata |> 
+  mutate(filtro = ifelse(S_obs>250 | Ntotal>5000,NA,1),
+         Umed_cFiltro = Umed * filtro,
+         label=paste0(S_obs,", ",Ntotal)) |> 
+  # filter(is.na(filtro)) |> pull(label) |> unique() |> length() # apenas 6 combinações de S e Ntotal
+  pivot_longer(cols=c(Umed,Umed_cFiltro)) |> 
+  ggplot(aes(x=lado_factor,y=value,color=name,group=name)) + #,group=k_factor,color=k
+  stat_summary(fun.data = mean_se) +
+  stat_summary(fun.data = mean_se,geom = "line",aes(group=name)) +
+  # labs(title="S < 250 | N < 5000") +
+  facet_wrap(~k_factor,ncol=5)
+df_newdata |> 
+  mutate(filtro = ifelse(S_obs>250 | Ntotal>5000,NA,1),
+         Umed_cFiltro = Umed * filtro,
+         label=paste0(S_obs,", ",Ntotal)) |> 
+  # filter(is.na(filtro)) |> pull(label) |> unique() |> length() # apenas 6 combinações de S e Ntotal
+  pivot_longer(cols=c(Umed,Umed_cFiltro)) |> 
+  ggplot(aes(x=lado_factor,y=value,color=name,group=name)) + #,group=k_factor,color=k
+  # stat_summary(fun.data = median,geom = "line",aes(y=value,group=name)) +
+  stat_summary(aes(x=lado_factor,y=value,color=name,group=name),
+               fun.min = \(.) quantile(.,0.25),
+               fun.max = \(.) quantile(.,0.75),
+               fun = median) +
+  # labs(title="S < 250 | N < 5000") +
+  facet_wrap(~k_factor,ncol=5)
+
 df_newdata |>
   ggplot(aes(x=S_obs,y=Umed, color=k)) +
   geom_point() +
@@ -486,6 +575,37 @@ df_newdata |>
 df_sim |> 
   ggplot(aes(x=S_obs,y=Ntotal)) +
   geom_point()
+df_newdata |>
+  filter(S_obs >= 250 | Ntotal >= 5000) |> 
+  group_by(S_obs,Ntotal) |>
+  mutate(label=factor(paste0(S_obs,", ",Ntotal))) |> 
+  ggplot(aes(x=lado_factor,y=Umed,group=label, color=label)) +
+  geom_point(aes(group=label)) +
+  geom_line(aes(group=label)) +
+  labs(color="S, N") +
+  facet_wrap(~k_factor)
+df_newdata |> 
+  group_by(S_obs,Ntotal) |>
+  mutate(label=factor(paste0(S_obs,", ",Ntotal)),
+         S.DA = S_obs / Ntotal) |> 
+  ungroup() |> 
+  # filter(S.DA <= quantile(S.DA,probs=0.90)) |> 
+  ggplot(aes(x=lado_factor,y=Umed,group=label, color=S.DA)) +
+  geom_point(aes(group=label)) +
+  geom_line(aes(group=label)) +
+  scale_color_distiller(palette="Spectral") +
+  labs(color="S / N",
+       title="Umed > 0.9 quantile") +
+  facet_wrap(~k_factor)
+df_newdata |> 
+  group_by(S_obs,Ntotal) |>
+  mutate(label=factor(paste0(S_obs,", ",Ntotal)),
+         S.DA = S_obs / Ntotal) |> 
+  ungroup() |> 
+  ggplot(aes(x=S.DA,y=Umed,color=lado_km)) +
+  geom_point() +
+  geom_smooth(se=F) +
+  facet_wrap(~k_factor)
 ```
 
 
