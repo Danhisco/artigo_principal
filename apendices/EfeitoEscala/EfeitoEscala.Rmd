@@ -98,6 +98,17 @@ df_md <- df_Usoe |>
   select(SiteCode,Umed,logit_Umed,k_factor,lado_factor,lado_km,log2_lado.km,S_obs,Ntotal,DA,S.DA) |> 
   mutate(across(S_obs:S.DA,log,.names="log_{.col}"),
          across(S_obs:log_S.DA,f_z,.names="{.col}_z"))
+# dados completos para serem preditos
+df_newdata <- df_sim |> 
+  inner_join(x=distinct(select(df_Usoe, k,k_factor,lado_km)),"k") |> 
+  select(k,k_factor, lado_km, Ntotal, S_obs) |>
+  mutate(across(Ntotal:S_obs,log,.names="log_{.col}"),
+         across(Ntotal:log_S_obs,f_z,.names="{.col}_z"),
+         lado_factor = factor(round(lado_km,1)),
+         SiteCode = df_md$SiteCode[1])
+md_SoE <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+df_newdata$Umed <- exp(predict(md_SoE,df_newdata)) / exp(1-predict(md_SoE,df_newdata))
 ```
 
 ```{r trackdown,eval=FALSE}
@@ -475,7 +486,7 @@ df_ranef |>
   geom_smooth()
 ```
 
-```{r}
+```{r diagnosticos 1 dados originais 36 sitios}
 df_plot <- df_md |> 
   select(SiteCode, logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
 df_plot$deviance <- residuals(md_SoE,scale=T)
@@ -505,19 +516,8 @@ df_plot |>
 
 
 
-```{r}
+```{r diagnosticos 2 conjunto de dados totais }
 # modelo mais plausível
-
-# dados completos para serem preditos
-df_newdata <- df_sim |> 
-  inner_join(y=distinct(select(df_Usoe, k,k_factor,lado_km)),"k") |> 
-  select(k_factor, lado_km, Ntotal, S_obs) |>
-  mutate(across(Ntotal:S_obs,log,.names="log_{.col}"),
-         across(Ntotal:log_S_obs,f_z,.names="{.col}_z"),
-         lado_factor = factor(round(lado_km,1)),
-         SiteCode = df_md$SiteCode[1]) #|> 
-  # select(SiteCode,k_factor,lado_factor,log_Ntotal_z:log_S_obs_z)
-df_newdata$Umed <- exp(predict(md_SoE,df_newdata)) / exp(1-predict(md_SoE,df_newdata))
 # gráficos
 l_p <- list()
 l_p[[1]] <- df_newdata |>
@@ -548,21 +548,6 @@ df_newdata |>
   stat_summary(fun.data = mean_se,geom = "line",aes(group=name)) +
   # labs(title="S < 250 | N < 5000") +
   facet_wrap(~k_factor,ncol=5)
-df_newdata |> 
-  mutate(filtro = ifelse(S_obs>250 | Ntotal>5000,NA,1),
-         Umed_cFiltro = Umed * filtro,
-         label=paste0(S_obs,", ",Ntotal)) |> 
-  # filter(is.na(filtro)) |> pull(label) |> unique() |> length() # apenas 6 combinações de S e Ntotal
-  pivot_longer(cols=c(Umed,Umed_cFiltro)) |> 
-  ggplot(aes(x=lado_factor,y=value,color=name,group=name)) + #,group=k_factor,color=k
-  # stat_summary(fun.data = median,geom = "line",aes(y=value,group=name)) +
-  stat_summary(aes(x=lado_factor,y=value,color=name,group=name),
-               fun.min = \(.) quantile(.,0.25),
-               fun.max = \(.) quantile(.,0.75),
-               fun = median) +
-  # labs(title="S < 250 | N < 5000") +
-  facet_wrap(~k_factor,ncol=5)
-
 df_newdata |>
   ggplot(aes(x=S_obs,y=Umed, color=k)) +
   geom_point() +
@@ -608,6 +593,29 @@ df_newdata |>
   facet_wrap(~k_factor)
 ```
 
+```{r figura para resultados do efeito de escala}
+df_newdata |> 
+  mutate(filtro = ifelse(S_obs>250 | Ntotal>5000,NA,1),
+         Umed_cFiltro = Umed * filtro,
+         label=paste0(S_obs,", ",Ntotal)) |> 
+  # filter(is.na(filtro)) |> pull(label) |> unique() |> length() # apenas 6 combinações de S e Ntotal
+  # pivot_longer(cols=c(Umed,Umed_cFiltro)) |> 
+  ggplot(aes(x=lado_factor,y=Umed)) + #,group=k_factor,color=k
+  stat_summary(fun.data = mean_se,color="red") +
+  stat_summary(fun.data = mean_se,geom = "line",color="red",aes(group=k_factor)) +
+  stat_summary(aes(x=lado_factor,y=Umed), #,color=name,group=name
+               fun.min = \(.) quantile(.,0.25),
+               fun.max = \(.) quantile(.,0.75),
+               fun = median,color="blue") +
+  stat_summary(aes(x=lado_factor,y=Umed,group=k_factor),
+               fun = median,
+               geom = "line",color="blue") +
+  # labs(title="S < 250 | N < 5000") +
+  facet_wrap(~k_factor,ncol=5,scales = "free")
+```
+
+
+
 ```{r}
 df_Ulag <- df_newdata |> 
   group_by(k_factor,lado_factor) |> 
@@ -617,6 +625,11 @@ df_Ulag <- df_newdata |>
   ungroup() |> 
   pivot_longer(Umed_median:Umed_3q,values_to = "Umed") 
 df_plot <- ddply(df_Ulag,c("k_factor","name"),f_lag.U)
+df_plot |> 
+  drop_na() |> 
+  filter(name=="Umed_median",Ucsum>=0.95) |>
+  ddply(.variables = "k_factor",.fun = \(x) head(x,n=1))
+  
 ```
 
 
