@@ -608,6 +608,16 @@ df_newdata |>
   facet_wrap(~k_factor)
 ```
 
+```{r}
+df_Ulag <- df_newdata |> 
+  group_by(k_factor,lado_factor) |> 
+  summarise(Umed_median = median(Umed),
+            Umed_1q = quantile(Umed,0.25),
+            Umed_3q = quantile(Umed,0.75)) |> 
+  ungroup() |> 
+  pivot_longer(Umed_median:Umed_3q,values_to = "Umed") 
+df_plot <- ddply(df_Ulag,c("k_factor","name"),f_lag.U)
+```
 
 
 
