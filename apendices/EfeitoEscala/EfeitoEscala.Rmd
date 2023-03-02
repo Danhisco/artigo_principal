@@ -381,39 +381,36 @@ Procuro considerar todos os dados sem aplicar filtros que modificam a variabilid
 
 __Motivação de cada variável__
 
-A estimativa de U depende da arvóre genalógica da comunidade simulada por MNEE. O número de indivíduos (N ou DA) determina o número inicial de linhagens que são monitoras e o número de espécies (S) determina o número final de linhagens monitoradas. A árvore genealógica da comunidade também é influenciada pelo grau de limitação de dispersão (k) e da extensão espacial (scale), pois em alguns graus de limitação de dispersão a árvore genealógica pode ser restringida pela extensão da paisagem e não pela limitação de dispersão. 
+A estimativa de U depende da arvóre genalógica da comunidade simulada por MNEE. O número de indivíduos (N) determina o número inicial de linhagens que são monitoras e o número de espécies (S) determina o número final de linhagens monitoradas. A árvore genealógica da comunidade também é influenciada pelo grau de limitação de dispersão (k) e da extensão espacial (scale), pois em alguns graus de limitação de dispersão a árvore genealógica pode ser restringida pela extensão da paisagem e não pela limitação de dispersão. 
 
 __Modelos Estatísticos__
 
-Para descrever a média da estimativa da taxa U optamos por transformar a variável usando a função logito e usar um modelo gaussiano misto (LMM). Primeiro selecionaremos variáveis de controle (tabela 1). Então selecionaremos a maneira mais plausível de descrever a relação entre escala e grau de limitação de dispersão (k e scale, respectivamente, como fatores).
+Para descrever a média da estimativa da taxa U optamos por transformar a variável usando a função logito e usar um modelo gaussiano misto (LMM). O número de indivíduos e riqueza foram modelados na escala log e z (transformação z). As variáveis graus de limitação de dispersão (k) e extensão espacial da paisagem ao redor (scale) foram interpretados como fatores, então cada combinação de k e scale possui um intercepto. Os dados foram agrupados por sítio, então cada sítio possui um intercepto comum. Não inclui estruturas mais complexas como a de ter um intercepto por grau de limitação de dispersão e sítio, pois isso implicaria em estimar um parâmetro a cada 6 valores e portanto muito tempo para a estimativa completa. Na tabela 1 há comparação de 4 modelos que consideram a interação das 4 variáveis. 
 
-__tabela 1__ Seleção das variáveis de controle. S_obs = riqueza observada, N = número de indivíduos, DA = densidade de indivíduos; algumas variáveis estão na escala log e todas as variáveis estão z transformadas. Funções lmer do pacote lme4 (REF), AICctab do pacote bblme (REF). 
+__tabela 1__ Seleção das variáveis de controle. S_obs = riqueza observada, N = número de indivíduos, DA = densidade de indivíduos;  Funções lmer do pacote lme4 (REF), AICctab do pacote bblme (REF). 
 
-```{r GLMM selecao de variaveis para fixar no GLMM final,eval=T,cache=T}
-# modelos
+```{r GLMM selecao de variaveis para fixar no GLMM final,eval=T,cache=T,echo=TRUE}
 l_md <- list()
 l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
-l_md[[2]] <- lmer(logit_Umed ~ log_S_obs_z * log_DA_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
-l_md[[3]] <- lmer(logit_Umed ~ log_S_obs_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
-l_md[[4]] <- lmer(logit_Umed ~ S_obs_z * Ntotal_z * k_factor * lado_factor  + (1|SiteCode),data=df_md)
-l_md[[5]] <- lmer(logit_Umed ~ S_obs_z * DA_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
-l_md[[6]] <- lmer(logit_Umed ~ S_obs_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
+l_md[[2]] <- lmer(logit_Umed ~ log_S_obs_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
+l_md[[3]] <- lmer(logit_Umed ~ S_obs_z * Ntotal_z * k_factor * lado_factor  + (1|SiteCode),data=df_md)
+l_md[[4]] <- lmer(logit_Umed ~ S_obs_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
 names(l_md) <-laply(l_md,f_nameModel)
 AICctab(l_md,weights=T)
 ```
 
-O modelo mais plausível considera a interação dos logs da riqueza observada e número de indivíduos na parcela (tabela 1).
+O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1).
 
+__Tabela 3__ Coeficientes de determinal (R2) do modelo mais plausível: marginal(m, desconsiderando o efeito aleatório) e condicional(c, considerando o efeito aleatório):
 
-```{r GLMM para avaliação de efeito de escala,echo=T}
-l_md <- list()
-l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
-                  data=df_md)
-l_md[[2]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * poly(log2_lado.km_z,4,raw = TRUE) + (1|SiteCode),
-                  data=df_md)
-names(l_md) <- c("k * lado factor + 1|Site","k * lado poly4 + 1|Site")
-AICctab(l_md,weights=T)
+```{r R2 marginal e condicional do modelo mais plausível para descrever SoE}
+# print("R2 marginal e condicional, respectivamente:")
+# md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |> 
+#   (\(.) l_md[[.]])()
+md_SoE |> (\(.) MuMIn::r.squaredGLMM(.))()
 ```
+
+Os coeficientes de determinação marginal e condional do modelo são aproximadamente iguais à 0.96.  
 
 ```{r diagnostico modelo mais plausivel GLMM efeito de escala}
 df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame()
@@ -421,18 +418,6 @@ md_SoE <- l_md[[row.names(df_AICctab[1,])]]
 p_plot <- simulateResiduals(md_SoE,n=1000)
 plot(p_plot)
 ```
-
-__Figura 5__ Resíduos quantilícos do LMM mais plausível: logit(Umed) ~ log(S) + log(N). Umed = média da bateria de simulações (# réplicas = 10), S = riqueza de espécies, N = número de indivíduos.
-
-__Tabela 3__ Coeficientes de determinal (R2) do modelo mais plausível: marginal(m, desconsiderando o efeito aleatório) e condicional(c, considerando o efeito aleatório):
-
-```{r R2 marginal e condicional do modelo mais plausível para descrever SoE}
-# print("R2 marginal e condicional, respectivamente:")
-md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |> 
-  (\(.) l_md[[.]])()
-md_SoE |> (\(.) MuMIn::r.squaredGLMM(.))()
-```
-
 
 ```{r coef sítios}
 df_ranef <- ranef(md_SoE)$SiteCode 
@@ -470,6 +455,7 @@ df_plot |>
   # geom_smooth()
 ```
 
+__Figura 5__ Resíduos quantilícos do LMM mais plausível: logit(Umed) ~ log(S) + log(N). Umed = média da bateria de simulações (# réplicas = 10), S = riqueza de espécies, N = número de indivíduos.
 
 
 ```{r diagnosticos 2 conjunto de dados totais }
