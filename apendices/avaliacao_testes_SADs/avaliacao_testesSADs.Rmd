@@ -42,7 +42,7 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
   select(-(tif.path:d)) |> distinct()
 # df_SADrep
 df_SADrep <- mutate(data.frame(
-  SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE",
+  SADrep.                                                                                                                                        path = list.files(path = "dados/csv/SADs_neutras/MNEE",
                            pattern = ".csv",full.names = T)),
   SiteCode = str_extract(SADrep.path,"(?<=EE\\/).*?(?=.csv)")) |> 
   inner_join(df_sim,by="SiteCode") |> 
