@@ -98,18 +98,9 @@ df_md <- df_Usoe |>
   select(SiteCode,Umed,logit_Umed,k,k_factor,lado_factor,lado_km,log2_lado.km,S_obs,Ntotal,DA,S.DA) |> 
   mutate(across(S_obs:S.DA,log,.names="log_{.col}"),
          across(c(k,log2_lado.km,S_obs:log_S.DA),f_z,.names="{.col}_z"))
-# dados completos para serem preditos - não usado pois há mais valores com S/DA elevado do que na base simulada
 md_SoE <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
                   data=df_md)
-df_newdata <- df_sim |> 
-  inner_join(x=distinct(select(df_Usoe, k,k_factor,lado_km)),"k") |> 
-  select(k,k_factor, lado_km, Ntotal, S_obs) |>
-  mutate(across(Ntotal:S_obs,log,.names="log_{.col}"),
-         across(Ntotal:log_S_obs,f_z,.names="{.col}_z"),
-         lado_factor = factor(round(lado_km,1)),
-         SiteCode = df_md$SiteCode[1])
-df_newdata$Umed <- exp(predict(md_SoE,df_newdata)) / exp(1-predict(md_SoE,df_newdata))
-# dados de dados usados na simulação com os valores preditos e os residuos z transformados
+# dados usados na simulação com os valores preditos e os residuos z transformados
 df_plot <- df_md |> 
   select(SiteCode, logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
 df_plot$deviance <- residuals(md_SoE,scale=T)
@@ -455,93 +446,12 @@ df_plot |>
   # geom_smooth()
 ```
 
-__Figura 5__ Resíduos quantilícos do LMM mais plausível: logit(Umed) ~ log(S) + log(N). Umed = média da bateria de simulações (# réplicas = 10), S = riqueza de espécies, N = número de indivíduos.
+__Figura 5__ Gráficos diagnósticos
 
+Resíduos quantilícos do LMM mais plausível: logit(Umed) ~ log(S) + log(N). Umed = média da bateria de simulações (# réplicas = 10), S = riqueza de espécies, N = número de indivíduos.
 
-```{r diagnosticos 2 conjunto de dados totais }
-# modelo mais plausível
-# gráficos
-l_p <- list()
-l_p[[1]] <- df_newdata |>
-  # filter(S_obs < 250, Ntotal < 5000) |>
-  mutate(k = as.numeric(as.character(k_factor))) |> 
-  ggplot(aes(x=lado_factor,y=Umed)) + #,group=k_factor,color=k
-  stat_summary(fun.data = mean_se) +
-  stat_summary(fun.data = mean_se,geom = "line",aes(group=k_factor)) +
-  facet_wrap(~k_factor,ncol=5) +
-  labs(title="sem filtro")
-l_p[[2]] <- df_newdata |>
-  filter(S_obs < 250, Ntotal < 5000) |>
-  mutate(k = as.numeric(as.character(k_factor))) |> 
-  ggplot(aes(x=lado_factor,y=Umed)) + #,group=k_factor,color=k
-  stat_summary(fun.data = mean_se) +
-  stat_summary(fun.data = mean_se,geom = "line",aes(group=k_factor)) +
-  labs(title="S < 250 | N < 5000") +
-  facet_wrap(~k_factor,ncol=5)
-grid.arrange(grobs=l_p,ncol=2)
-df_newdata |> 
-  mutate(filtro = ifelse(S_obs>250 | Ntotal>5000,NA,1),
-         Umed_cFiltro = Umed * filtro,
-         label=paste0(S_obs,", ",Ntotal)) |> 
-  # filter(is.na(filtro)) |> pull(label) |> unique() |> length() # apenas 6 combinações de S e Ntotal
-  pivot_longer(cols=c(Umed,Umed_cFiltro)) |> 
-  ggplot(aes(x=lado_factor,y=value,color=name,group=name)) + #,group=k_factor,color=k
-  stat_summary(fun.data = mean_se) +
-  stat_summary(fun.data = mean_se,geom = "line",aes(group=name)) +
-  # labs(title="S < 250 | N < 5000") +
-  facet_wrap(~k_factor,ncol=5)
-df_newdata |>
-  ggplot(aes(x=S_obs,y=Umed, color=k)) +
-  geom_point() +
-  geom_smooth() +
-  facet_wrap(~k_factor,ncol=5,scales="free")
-df_newdata |> 
-  ggplot(aes(x=k_factor,y=Umed)) +
-  geom_jitter() +
-  geom_boxplot()
-df_sim |> 
-  ggplot(aes(x=S_obs,y=Ntotal)) +
-  geom_point()
-df_newdata |>
-  filter(S_obs >= 250 | Ntotal >= 5000) |> 
-  group_by(S_obs,Ntotal) |>
-  mutate(label=factor(paste0(S_obs,", ",Ntotal))) |> 
-  ggplot(aes(x=lado_factor,y=Umed,group=label, color=label)) +
-  geom_point(aes(group=label)) +
-  geom_line(aes(group=label)) +
-  labs(color="S, N") +
-  facet_wrap(~k_factor)
-df_newdata |> 
-  group_by(S_obs,Ntotal) |>
-  mutate(label=factor(paste0(S_obs,", ",Ntotal)),
-         S.DA = S_obs / Ntotal) |> 
-  ungroup() |> 
-  # filter(S.DA <= quantile(S.DA,probs=0.90)) |> 
-  ggplot(aes(x=lado_factor,y=Umed,group=label, color=S.DA)) +
-  geom_point(aes(group=label)) +
-  geom_line(aes(group=label)) +
-  scale_color_distiller(palette="Spectral") +
-  labs(color="S / N",
-       title="Umed > 0.9 quantile") +
-  facet_wrap(~k_factor)
-df_newdata |> 
-  group_by(S_obs,Ntotal) |>
-  mutate(label=factor(paste0(S_obs,", ",Ntotal)),
-         S.DA = S_obs / Ntotal) |> 
-  ungroup() |> 
-  ggplot(aes(x=S.DA,y=Umed,color=lado_km)) +
-  geom_point() +
-  geom_smooth(se=F) +
-  facet_wrap(~k_factor)
-```
 
 ```{r figura para resultados do efeito de escala}
-# df_newdata |>
-  # mutate(filtro = ifelse(S_obs>250 | Ntotal>5000,NA,1),
-         # Umed_cFiltro = Umed * filtro,
-         # label=paste0(S_obs,", ",Ntotal)) |> 
-  # filter(is.na(filtro)) |> pull(label) |> unique() |> length() # apenas 6 combinações de S e Ntotal
-  # pivot_longer(cols=c(Umed,Umed_cFiltro)) |> 
 cols <- c("avg+-sd"="#f04546","3 quant"="#3591d1")
 a <- 0.5
 df_plot |> 
@@ -574,35 +484,6 @@ df_k.SoE <- df_plot |>
   filter(!(k_factor %in% df_k.SoE$k_factor)) |> count(k_factor)
   select(k_factor,lado_factor) |> distinct() |> 
   rbind(df_k.SoE)
-  
-  
-```
-
-
-
-```{r}
-df_Ulag <- df_newdata |> 
-  group_by(k_factor,lado_factor) |> 
-  summarise(Umed_median = median(Umed),
-            Umed_1q = quantile(Umed,0.25),
-            Umed_3q = quantile(Umed,0.75)) |> 
-  ungroup() |> 
-  pivot_longer(Umed_median:Umed_3q,values_to = "Umed") 
-df_plot <- ddply(df_Ulag,c("k_factor","name"),f_lag.U)
-df_plot |> 
-  drop_na() |> 
-  filter(name=="Umed_median",Ucsum>=0.95) |>
-  ddply(.variables = "k_factor",.fun = \(x) head(x,n=1))
-  
-```
-
-
-
-```{r alternaivamenet poderíamos considerar as réplicas para uilizar GAMM?,eval=F,include=F}
-# para utilizar GAMM talvez seja necessário considerar as réplicas
-# md_GAMM <- gam(logit_Umed ~ offset(v_betas[1] * log_S_obs_z) + offset(v_betas[2] * log_Ntotal_z) +
-#                  s(log2_lado.km,by=k_factor,k = 2) + s(SiteCode,bs="re"),
-               # data=df_md)
 ```
 
 
