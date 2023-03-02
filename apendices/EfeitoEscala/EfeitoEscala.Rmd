@@ -24,6 +24,7 @@ library(DHARMa)
 library(bbmle)
 library(broom.mixed)
 library(lme4)
+library(scales)
 library(gridExtra)
 library(ggplot2)
 library(readr)
@@ -385,7 +386,79 @@ __Tabela 3__ Coeficientes de determinal (R2) do modelo mais plausível: marginal
 md_SoE |> (\(.) MuMIn::r.squaredGLMM(.))()
 ```
 
-Os coeficientes de determinação marginal e condional do modelo são aproximadamente iguais à 0.96.  
+Os coeficientes de determinação marginal e condional do modelo são aproximadamente iguais à 0.96. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos apresentarem algum desvio (Figura X), o modelo faz uma boa predição do observado (Figura X). Na figura 5 há a média  
+
+
+
+```{r figura para resultados do efeito de escala}
+cols <- c("avg+-sd"="blue","SoE >= 0.99" = "red") # "#f04546","3 quant"=
+a <- 0.5
+df_plot |> 
+  ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
+  geom_point(alpha=0.15) +
+  geom_line(aes(group=SiteCode),alpha=0.15) +
+  # stat_summary(aes(x=lado_numeric,y=Pre_Umed,color="3 quant"), #,color=name,group=name
+  #              fun.min = \(.) quantile(.,0.25),
+  #              fun.max = \(.) quantile(.,0.75),
+  #              fun = median,
+  #              size=a) +
+  # stat_summary(aes(x=lado_numeric,y=Pre_Umed,group=k_factor,color="3 quant"),
+  #              fun = median,
+  #              geom = "line",
+  #              size=a) +
+  stat_summary(fun.data = mean_se,geom ="line",aes(group=k_factor,color="avg+-sd"),alpha=0.6,size=a) +
+  stat_summary(fun = mean,
+               fun.min = function(x) mean(x) - sd(x), 
+               fun.max = function(x) mean(x) + sd(x), 
+               geom = "pointrange",
+               aes(x=lado_numeric,y=Pre_Umed,color="avg+-sd"),alpha=0.6,size=a) +
+  geom_vline(aes(xintercept=SoE.99,color="SoE >= 0.99"),alpha=0.5) +
+  scale_color_manual(name="",values=cols) +
+  scale_x_continuous(trans = log2_trans(),
+                     breaks = trans_breaks("log2", function(x) 2^x)) +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  facet_wrap(~k_factor,ncol=5) +
+  theme_classic() +
+  labs(title = "Estatistica de resumo da taxa U predito pelo LMM:",
+       subtitle="logit(Umed) ~ log(S) * log(N) * k * scale + (1|Site)",
+       x="scale (landscape side, km)",
+       y="Umed") +
+  theme(legend.position = "top")
+```
+
+__Figura 5__ Média das estimativas médias da taxa U (eixo x) em fução do lado da paisagem ao redor (scale, eixo x). Em azul a média e o desvio padrão para cada combinação de grau de limitação de dispersão (título dos paineis, k = proporção de propágulos que permanece até a vizinhança imediata) e scale. As linhas verticais em vermelho marcam a escala que acumula pelo menos 0.99 de toda a variação da média com o aumento da escala.
+
+__Escala que acumula a maior parte do efeito da escala__
+
+
+
+
+Fim da proposta 2 ###
+
+
+
+
+
+<!-- __Figura 6__ Primeira escala que acumula pelo menos 90% do efeito da escala -->
+
+<!-- <p> Quanto maior a dupla de escalas consecutivas menor o valor de Ulag1, apesar de existir variação entre cenários de limitação de dispersão (figura 4). A amplitude de valores de Ulag1 aumenta com a limitação de dispersão (figura 4a), por exemplo, nas simulações em que k=0.25 a primeira mudança de escala (de 0.5 km para 1 km) pode variar entre 80% e 30% de toda a variação da taxa U com o aumento da escala; enquanto para k=0.10 e 0.05 essa mudança de escala representa em geral até 40% de variação na taxa U (Figura 4a). O Ulag1 acumulado dos cenários mais brandos de limitação (k=0.10 e 0.05) chega aos 90% quando passamos para a escala de 8 km (Figura 4b); enquanto no cenário de limitação mais brando esse valor pode ser observado quando passamos para a escala de 4 km, com mais da metade dos sítios, ou de 2 km, com menos de um quarto dos sítios (Figura 4b).</p> -->
+
+<!-- ## Discussão -->
+<!-- IDEIAS: -->
+<!-- - Na maior extensão espacial considerada da paisagem local (16x16km2) observamos um padrão que é qualitativamente similar ao esperado em paisagens infinitas (May et al. 2011), assim pressupomos que a maior extensão espacial é a referência de menor valor da taxa U para uma determinada bateria de simulações (cenário de limitação de dispersão, riqueza de espécies, número de indivíduos na parcela e densidade de indivíduos na paisagem). -->
+<!-- - Dado a natureza não truncada da função de dispersão, a extensão espacial da paisagem que estabiliza a taxa U estimada em cenários de limitação de dispersão muito brandos (e.g. k=0.05) pode ser superior à maior extensão simulada (16x16km2) - aqui não fizemos essa avaliação, porém em todos os sítios a taxa de U no cenário mais brando está na mesma ordem de magnitude do primeiro cenário, possibilitando o padrão não linear.   -->
+<!-- - A riqueza de espécies, número de indivíduos na parcela e densidade de indivíduos na paisagem influencia na magnitude da estimativa de U e da variação de U em função da limitação de dispersão e da extensão espacial da paisagem (Figuras 2, 3 e 4). -->
+<!-- - Nosso método para avaliar a extensão espacial que acumula a maior variação da taxa U, padroniza a amplitude de valores de um sítio como diferença total para aquela sítio, possibilitando a comparação de sítios com diferentes amplitudes de valores.  -->
+
+
+
+<!-- - Outros trabalhos na Floresta Atlântica utilizam a extensão espacial de cerca de 4x4 km2. Nessa escala observamos que a taxa U pode ser superestimada em até 20% (quando comparado com paisagens de 16x16 km2) no cenário de maior capacidade de dispersão (k=0.05), por conta da restrição espacial da paisagem ao redor. Esse efeito deve ser observado em paisagens com pouca perda de habitat e bem funcionalmente conectados. A superestimava da taxa U na escala de 4x4 km2 compensa a redução da contribuição de propágulos para a reposição de espécies perdidas localmente que estariam presentes em paisagens de 16x16 km2 -->
+
+
+
+### Support Information
+
+#### Gráficos Diagnóstico do LMM 
 
 ```{r diagnostico modelo mais plausivel GLMM efeito de escala}
 df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame()
@@ -435,88 +508,13 @@ __Figura 5__ Gráficos diagnósticos
 Resíduos quantilícos do LMM mais plausível: logit(Umed) ~ log(S) + log(N). Umed = média da bateria de simulações (# réplicas = 10), S = riqueza de espécies, N = número de indivíduos.
 
 
-```{r figura para resultados do efeito de escala}
-cols <- c("avg+-sd"="#f04546","3 quant"="#3591d1")
-a <- 0.5
-df_plot |> 
-  ggplot(aes(x=lado_factor,y=Pre_Umed)) + #,group=k_factor,color=k
-  stat_summary(aes(x=lado_factor,y=Pre_Umed,color="3 quant"), #,color=name,group=name
-               fun.min = \(.) quantile(.,0.25),
-               fun.max = \(.) quantile(.,0.75),
-               fun = median,
-               size=a) +
-  stat_summary(aes(x=lado_factor,y=Pre_Umed,group=k_factor,color="3 quant"),
-               fun = median,
-               geom = "line",
-               size=a) +
-  stat_summary(fun.data = mean_se,geom ="line",aes(group=k_factor,color="avg+-sd"),alpha=0.6,size=a) +
-  stat_summary(fun.data = mean_se,aes(color="avg+-sd"),alpha=0.6,size=a) +
-  scale_color_manual(name="statistic:",values=cols) +
-  facet_wrap(~k_factor,ncol=5) +
-  theme_classic() +
-  labs(title = "Estatistica de resumo da taxa U predito pelo LMM:",
-       subtitle="logit(Umed) ~ log(S) * log(N) * k * scale + (1|Site)",
-       x="scale (landscape side, km)",
-       y="Umed") +
-  theme(legend.position = "top")
-# determinação da escala que acumula a maior parte do efeito da escala
-# v_k <- 
-df_k.SoE |> 
-  ggplot(aes(x=k_factor,y=SoE.99)) +
-  geom_point()
-df_k.SoE <- df_plot |> 
-  filter(!(k_factor %in% df_k.SoE$k_factor)) |> count(k_factor)
-  select(k_factor,lado_factor) |> distinct() |> 
-  rbind(df_k.SoE)
-```
-
-
-Fim da proposta 2 ###
-
-
-
-
-
-<!-- __Figura 6__ Primeira escala que acumula pelo menos 90% do efeito da escala -->
-
-<!-- <p> Quanto maior a dupla de escalas consecutivas menor o valor de Ulag1, apesar de existir variação entre cenários de limitação de dispersão (figura 4). A amplitude de valores de Ulag1 aumenta com a limitação de dispersão (figura 4a), por exemplo, nas simulações em que k=0.25 a primeira mudança de escala (de 0.5 km para 1 km) pode variar entre 80% e 30% de toda a variação da taxa U com o aumento da escala; enquanto para k=0.10 e 0.05 essa mudança de escala representa em geral até 40% de variação na taxa U (Figura 4a). O Ulag1 acumulado dos cenários mais brandos de limitação (k=0.10 e 0.05) chega aos 90% quando passamos para a escala de 8 km (Figura 4b); enquanto no cenário de limitação mais brando esse valor pode ser observado quando passamos para a escala de 4 km, com mais da metade dos sítios, ou de 2 km, com menos de um quarto dos sítios (Figura 4b).</p> -->
-
-<!-- ## Discussão -->
-<!-- IDEIAS: -->
-<!-- - Na maior extensão espacial considerada da paisagem local (16x16km2) observamos um padrão que é qualitativamente similar ao esperado em paisagens infinitas (May et al. 2011), assim pressupomos que a maior extensão espacial é a referência de menor valor da taxa U para uma determinada bateria de simulações (cenário de limitação de dispersão, riqueza de espécies, número de indivíduos na parcela e densidade de indivíduos na paisagem). -->
-<!-- - Dado a natureza não truncada da função de dispersão, a extensão espacial da paisagem que estabiliza a taxa U estimada em cenários de limitação de dispersão muito brandos (e.g. k=0.05) pode ser superior à maior extensão simulada (16x16km2) - aqui não fizemos essa avaliação, porém em todos os sítios a taxa de U no cenário mais brando está na mesma ordem de magnitude do primeiro cenário, possibilitando o padrão não linear.   -->
-<!-- - A riqueza de espécies, número de indivíduos na parcela e densidade de indivíduos na paisagem influencia na magnitude da estimativa de U e da variação de U em função da limitação de dispersão e da extensão espacial da paisagem (Figuras 2, 3 e 4). -->
-<!-- - Nosso método para avaliar a extensão espacial que acumula a maior variação da taxa U, padroniza a amplitude de valores de um sítio como diferença total para aquela sítio, possibilitando a comparação de sítios com diferentes amplitudes de valores.  -->
-
-
-
-<!-- - Outros trabalhos na Floresta Atlântica utilizam a extensão espacial de cerca de 4x4 km2. Nessa escala observamos que a taxa U pode ser superestimada em até 20% (quando comparado com paisagens de 16x16 km2) no cenário de maior capacidade de dispersão (k=0.05), por conta da restrição espacial da paisagem ao redor. Esse efeito deve ser observado em paisagens com pouca perda de habitat e bem funcionalmente conectados. A superestimava da taxa U na escala de 4x4 km2 compensa a redução da contribuição de propágulos para a reposição de espécies perdidas localmente que estariam presentes em paisagens de 16x16 km2 -->
-
-
-
-### Support Information
-
-```{r figura SI 1 amplitude de U em funcao das variaveis de controle Sobs e DA,fig.height=3,fig.width=8,eval=F,include=F}
-df_Usoe$k_factor <- factor(round(df_Usoe$k,2))
-l_p <- list()
-l_p[[1]] <- df_Usoe |> 
-  ggplot(aes(x=S_obs,y=Umed,color=DA)) +
-  geom_smooth(method="lm",se=F) +
-  geom_line(aes(group=SiteCode),alpha=0.4) +
-  geom_point(size=2,aes(shape=k_factor))
-l_p[[2]] <- df_Usoe |> 
-  ggplot(aes(x=DA,y=Umed,color=S_obs)) +
-  geom_smooth(method="lm",se=F) +
-  geom_line(aes(group=SiteCode),alpha=0.4) +
-  geom_point(size=2,aes(shape=k_factor))
-grid.arrange(grobs=l_p,ncol=2)
-```
-
-<!-- <p> __Figura SI1__ Amplitude da taxa U estimada em função da densidade de indivíduos (DA) e da riqueza de espécies (S_obs). </p> -->
 
 <!-- ## Códigos para estimar U nas diferentes extensões espaciais -->
 
-<!-- <p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p> -->
+
+##### Códigos para rodar as simulações
+
+<p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p>
 
 ```{r codigos para estimar U para uma mesma extensao espacial e diferentes k,eval=FALSE}
 # usado para estimar o U para uma determinada
@@ -556,7 +554,6 @@ registerDoMC(2)
 a_ply(df_se2,1,f_SoE_MNEE_null,.parallel = TRUE)
 #
 df <- df_se |> filter(SiteCode == "PRrico3",k==unique(df_se$k)[3])
-
 ```
 
 Em alguns sítios não foi possível simular a extensão de 0.5 km para nenhum cenário de dispersão. Nesse extensão espacial, a parcela corresponde à 0.64 da área da parcela, ta certo isso?
