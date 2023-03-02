@@ -52,3 +52,24 @@ f_SoE_MNEE_null <- function(df,n_escalas=6,n_replicas=10){
   df_write <- rbind.fill(l_df_U)
   write_csv(df_write,file = paste0("../csv/SoE/",df$SiteCode,"_k",round(df$k*100,0),".csv"))
 }
+#
+#
+#
+# funções para criar as variáveis de interesse
+f_lag.U <- function(df){
+  v_Udiff <- diff(range(df$Umed))
+  df$Ulag <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
+  df <- df |> mutate(Ulag0 = ifelse(Ulag<0,0,Ulag))
+  df$Ucsum <- cumsum(df$Ulag)
+  df$Ucsum0 <- cumsum(df$Ulag0)
+  df <- df |> mutate(Ucsum0 = ifelse(Ucsum0>1,1,Ucsum0))
+  return(df)
+}
+f_k.SoE <- \(df,limiar=0.99){
+  if(max(df$Ucsum,na.rm = T)<limiar){
+    df |> head(n=1) |> mutate(SoE.99=NA)
+  }else{
+    df |> filter(Ucsum>=limiar) |> head(n=1) |> mutate(SoE.99=as.numeric(as.character(lado_factor)))
+  }
+}
+#
