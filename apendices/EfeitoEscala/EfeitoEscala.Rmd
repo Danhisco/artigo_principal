@@ -66,16 +66,7 @@ df_Usoe <- df_Usoe.rep |>
   summarise(Umed = mean(U),
             Umedian = median(U)) |> 
   mutate(diffU = Umed - Umedian)
-f_lag.U <- function(df){
-  v_Udiff <- diff(range(df$Umed))
-  df$Ulag <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
-  df <- df |> mutate(Ulag0 = ifelse(Ulag<0,0,Ulag))
-  df$Ucsum <- cumsum(df$Ulag)
-  df$Ucsum0 <- cumsum(df$Ulag0)
-  df <- df |> mutate(Ucsum0 = ifelse(Ucsum0>1,1,Ucsum0))
-  return(df)
-}
-registerDoMC(3)
+# registerDoMC(3)
 df_Usoe <- ddply(df_Usoe,c("SiteCode","k"),f_lag.U,.parallel = TRUE)
 df_Usoe$Schange <- factor(df_Usoe$lado_km,labels=c(paste(16/(2^(5:1)),"->",16/(2^(4:0))),NA))
 df_Usoe$Schange_cumulative <- factor(df_Usoe$lado_km,labels=c(paste(0.5,"->",16/(2^(4:0))),NA))
@@ -109,13 +100,6 @@ df_plot <- df_plot |>
   mutate(Umed = exp(logit_Umed) / exp(1-logit_Umed),
          Pre_Umed = exp(predict) / exp(1-predict),
          lado_numeric=as.numeric(as.character(lado_factor)))
-f_k.SoE <- \(df,limiar=0.99){
-  if(max(df$Ucsum,na.rm = T)<limiar){
-    df |> head(n=1) |> mutate(SoE.99=NA)
-  }else{
-    df |> filter(Ucsum>=limiar) |> head(n=1) |> mutate(SoE.99=as.numeric(as.character(lado_factor)))
-  }
-}
 df_plot <- df_plot |>
   group_by(k_factor,lado_factor) |> 
   summarise(Umed = mean(Pre_Umed)) |> 
