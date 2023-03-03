@@ -344,9 +344,6 @@ df_plot |>
 
 __Figura 6__ Lado da paisagem que acumula a maior parte do efeito da escala no grau de limitação de dispersão. Em cinza a área com grande incerteza na estimativa da escala adequada: o lado da paisagem 1 e 2 km podem ser adequados.
 
-Fim da proposta 2 ###
-
-
 
 ### Support Information
 
