@@ -102,7 +102,7 @@ df_plot <- df_plot |>
   mutate(Umed = exp(logit_Umed) / exp(1-logit_Umed),
          Pre_Umed = exp(predict) / exp(1-predict),
          lado_numeric = as.numeric(as.character(lado_factor)),
-         mutate(S.N = S_obs / Ntotal))
+         S.N = S_obs / Ntotal)
 df_plot <- df_plot |>
   group_by(k_factor,lado_factor) |> 
   summarise(Umed = mean(Pre_Umed)) |> 
@@ -159,7 +159,6 @@ grid.arrange(grobs=l_p,ncol=2)
 <p> __Figura 1__ a) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). b) Cenários de limitação de dispersão simulados. k = proporção de propágulos que permanece até a vizinhança imediata (distância média entre indivíduos); d = desvio padrão da função de dispersão com distribuição de Laplace. Para detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal.</p>
 
 ### Taxa U na maior extensão espacial da paisagem (16x16km2)
-
 
 ```{r figura 2 U para todo k em paisagens nulas na maior escala investigada,fig.width=12,fig.height=7}
 df_plot <- df_Unull |> 
@@ -237,10 +236,114 @@ df_Usoe |>
   geom_hline(yintercept = 10,color="red") +
   labs(x="k, prop. de propágulos até a vizinhança imediata",
        y="Coef. Var. de Umed (%)",
-       title="Variação da média de U considerando todas as escalas")
+       title="Variação da média de U por grau de limitação de dispersão")
 ```
 
 __Figura 4__ Coeficiente de variação (sd/mean) de Umed (eixo y) para um mesmo cenário de limitação de dispersão (eixo x) e sítio, considerando todas as escalas. 
+
+### Efeito da Escala: Grau de limitação de dispersão e extensão espacial da paisagem ao redor
+
+__1) descrever o padrão por modelos de regressão LMM__
+__2) aplicar a lógica do Ulag -> Ucsum no padrão predito pelas análises de regressão__
+
+Procuro considerar todos os dados sem aplicar filtros que modificam a variabilidade dos dados, mas que ainda permitem descrever a tendência geral dos dados. 
+
+__Motivação de cada variável__
+
+A estimativa de U depende da arvóre genalógica da comunidade simulada por MNEE. O número de indivíduos (N) determina o número inicial de linhagens que são monitoras e o número de espécies (S) determina o número final de linhagens monitoradas. A árvore genealógica da comunidade também é influenciada pelo grau de limitação de dispersão (k) e da extensão espacial (scale), pois em alguns graus de limitação de dispersão a árvore genealógica pode ser restringida pela extensão da paisagem e não pela limitação de dispersão. 
+
+__Modelos Estatísticos__
+
+Para descrever a média da estimativa da taxa U optamos por transformar a variável usando a função logito e usar um modelo gaussiano misto (LMM). O número de indivíduos e riqueza foram modelados na escala log e z (transformação z). As variáveis graus de limitação de dispersão (k) e extensão espacial da paisagem ao redor (scale) foram interpretados como fatores, então cada combinação de k e scale possui um intercepto. Os dados foram agrupados por sítio, então cada sítio possui um intercepto comum. Não inclui estruturas mais complexas como a de ter um intercepto por grau de limitação de dispersão e sítio, pois isso implicaria em estimar um parâmetro a cada 6 valores e portanto muito tempo para a estimativa completa. Na tabela 1 há comparação de 4 modelos que consideram a interação das 4 variáveis. 
+
+__tabela 1__ Seleção das variáveis de controle. S_obs = riqueza observada, N = número de indivíduos, DA = densidade de indivíduos;  Funções lmer do pacote lme4 (REF), AICctab do pacote bblme (REF). 
+
+```{r GLMM selecao de variaveis para fixar no GLMM final,eval=T,cache=T,echo=TRUE}
+l_md <- list()
+l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
+l_md[[2]] <- lmer(logit_Umed ~ log_S_obs_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
+l_md[[3]] <- lmer(logit_Umed ~ S_obs_z * Ntotal_z * k_factor * lado_factor  + (1|SiteCode),data=df_md)
+l_md[[4]] <- lmer(logit_Umed ~ S_obs_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
+names(l_md) <-laply(l_md,f_nameModel)
+AICctab(l_md,weights=T)
+```
+
+
+__Tabela 2__ Coeficientes de determinal (R2) do modelo mais plausível: marginal(m, desconsiderando o efeito aleatório) e condicional(c, considerando o efeito aleatório):
+
+```{r R2 marginal e condicional do modelo mais plausível para descrever SoE}
+# print("R2 marginal e condicional, respectivamente:")
+# md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |> 
+#   (\(.) l_md[[.]])()
+md_SoE |> (\(.) MuMIn::r.squaredGLMM(.))()
+```
+
+O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1). Os coeficientes de determinação marginal e condional do modelo são aproximadamente iguais à 0.96. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos apresentarem algum desvio (Figura X), o modelo faz uma boa predição do observado (Figura X). Na figura 5 há a média da predição do modelo mais plausível, que descreve o logito da estimativa média da taxa U em função da interação entre log da riqueza e número total de indivíduos, e grau de limitação de dispersão e lado da paisagem como fatores. Os pontos estão coloridos pela razão entre número de espécies e número de indivíduos (S/N).
+
+
+```{r figura para resultados do efeito de escala}
+cols <- c("avg+-sd"="blue","SoE >= 0.99" = "red") # "#f04546","3 quant"=
+a <- 0.5
+df_plot |> 
+  ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
+  geom_point(alpha=0.40,aes(color=S.N)) +
+  geom_line(aes(group=SiteCode,color=S.N),alpha=0.25) +
+  scale_color_distiller(palette = "Spectral",name="S / N") +
+  new_scale_color() +
+  # stat_summary(aes(x=lado_numeric,y=Pre_Umed,color="3 quant"), #,color=name,group=name
+  #              fun.min = \(.) quantile(.,0.25),
+  #              fun.max = \(.) quantile(.,0.75),
+  #              fun = median,
+  #              size=a) +
+  # stat_summary(aes(x=lado_numeric,y=Pre_Umed,group=k_factor,color="3 quant"),
+  #              fun = median,
+  #              geom = "line",
+  #              size=a) +
+  stat_summary(fun.data = mean_se,geom ="line",aes(group=k_factor,color="avg+-sd"),alpha=0.6,size=a) +
+  stat_summary(fun = mean,
+               fun.min = function(x) mean(x) - sd(x), 
+               fun.max = function(x) mean(x) + sd(x), 
+               geom = "pointrange",
+               aes(x=lado_numeric,y=Pre_Umed,color="avg+-sd"),alpha=0.6,size=a) +
+  geom_vline(aes(xintercept=SoE.99,color="SoE >= 0.99"),alpha=0.5) +
+  scale_color_manual(name="",values=cols) +
+  scale_x_continuous(trans = log2_trans(),
+                     breaks = trans_breaks("log2", function(x) 2^x)) +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  facet_wrap(~k_factor,ncol=5) +
+  theme_classic() +
+  labs(title = "Média da estimativa média da taxa U predito pelo LMM:",
+       subtitle="logit(Umed) ~ log(S) * log(N) * k * scale + (1|Site)",
+       x="scale (landscape side, km)",
+       y="avg U rate (Umed)",
+       color="") +
+  theme(legend.position = "top")
+```
+
+__Figura 5__ Média das estimativas médias da taxa U (eixo x) em fução do lado da paisagem ao redor (scale, eixo x). Em azul a média e o desvio padrão para cada combinação de grau de limitação de dispersão (título dos paineis, k = proporção de propágulos que permanece até a vizinhança imediata) e scale. S = número de espécies, N = número de indivíduos. As linhas verticais em vermelho marcam a escala que acumula pelo menos 0.99 de toda a variação da média com o aumento da escala (Ver seção "Escala que acumula a maior parte do efeito da escala").
+
+__Escala que acumula a maior parte do efeito da escala__
+
+Para determinar quais os graus de limitação de dispersão são apropriados para simular nas paisagens de lado 4 km avaliamos qual a escala que acumula pelo menos 99% de toda a variação observada para a média geral com o aumento da escala até paisagens de lado 16 km. Para isso, calculei por grau de limitação de dispersão: a diferença entre a média da estimativa entre 2 escalas consecutivas e dividi o valor pela amplitude para todas as escalas; então os valores de escalas consecutivas são somados em ordem crescente. A escala que acumula pelo menos 0.99 é considerada como a extensão espacial mínima suficiente para simular aquele grau de limitação de dispersão (linhas verticais figura 5). 
+
+Com a redução da limitação de dispersão há aumento na escala adequada (Figura 5, linhas verticais vermelhas): quando k é até 0.90 o lado de 1 km é suficiente; k entre 0.50 e 0.40 sugere incerteza entre o lado de 1 e 2 km; e a partir de k igual 0.20 o lado suficiente é maior do que 4 km. Nos graus de limitação de dispersão pouco severos e pouco brandos (k c [0.85;0.55]), onde ocorre valores máximos da média da estimativa da taxa U (Figura 2), não foi possível obsservar tendência de mudança na média geral (Figura 5). Nesses graus de limitação de dispersão há a menor variação entre escalas para um mesmo sítio e maior variação entre sítios, considerando todo o conjunto de dados (Figura 5). O aumento da variação do padrão geral da média parece estar associado ao aumento do número de espécies per capita (Figura 5). Em média, a extensão espacial adequada para simular os graus onde não foi possível estimar a escala adequada deve variar entre 1 e 2 km. Assim, as paisagens mínimas suficientes para simular os graus de limitação de dispersão são: 1 km de lado, para k entre 0.99 e 0.90; 1 e 2 km de lado, para k entre 0.85 e 0.35; 2 km de lado, para k igual 0.30; e 4 km de lado, para k igual 0.25 (Figura 6).  
+
+```{r figura 6 scale e k adequados}
+df_plot |> 
+  ggplot(aes(x=k_factor,y=SoE.99)) +
+  geom_point() +
+  geom_rect(aes(xmin=4, xmax=13.5, ymin=0.99, ymax=2.1),alpha=0.01) +
+  scale_y_continuous(trans = log2_trans(),
+                     breaks = c(0.5,1,2,4,8)) +
+  labs(x="k = proporção de propágulos que permanece na vizinhança imediaa",
+       y="lado da paisagem (km)",
+       title="lado da paisagem que acumula 99% de toda variação observada") +
+  theme_classic()
+```
+
+__Figura 6__ Lado da paisagem que acumula a maior parte do efeito da escala no grau de limitação de dispersão. Em cinza a área com grande incerteza na estimativa da escala adequada: o lado da paisagem 1 e 2 km podem ser adequados.
+
+Fim da proposta 2 ###
 
 ### Proposta de quantificação do efeito de escala acumulado até uma determinada subescala
 
@@ -350,113 +453,6 @@ df_Usoe |>
 ```
 
 __Figura 7__ Efeito acumulado do aumento da escala na estimativa de U. Ulag = ( Umed_i - Umed_i+1 )/ diff(range(Umed)), Umed = mean(U), i c [0.5; 16] km de lado da paisagem. cumsum = soma acumulativa das escalas consecutivas em ordem crescente. Pontos são os valores estimados das bateria de simulação (sítio e grau de limitação de dispersão) no qual a variação na escala marcou pelo menos 10% no coeficiente de variação da média estimada por escala (Figura 5). Os pontos em vermelho representam a média, as linhas vermelhas verticais ao redor das médias marcam o desvio-padrão; a linha liga as médias; o boxplot marca os 3 primeiros quantils. Paineis são separados pelo grau de limitação de dispersão (k = proporção de propágulos que permanecem até a vizinhança imediata da planta progenitora).  
-
-### Proposta 2: sem remover as baterias com Ulag < 0
-__1) descrever o padrão por modelos de regressão LMM__
-__2) aplicar a lógica do Ulag -> Ucsum no padrão predio pelas análises de regressão__
-
-Procuro considerar todos os dados sem aplicar filtros que modificam a variabilidade dos dados, mas que ainda permitem descrever a tendência geral dos dados. 
-
-__Motivação de cada variável__
-
-A estimativa de U depende da arvóre genalógica da comunidade simulada por MNEE. O número de indivíduos (N) determina o número inicial de linhagens que são monitoras e o número de espécies (S) determina o número final de linhagens monitoradas. A árvore genealógica da comunidade também é influenciada pelo grau de limitação de dispersão (k) e da extensão espacial (scale), pois em alguns graus de limitação de dispersão a árvore genealógica pode ser restringida pela extensão da paisagem e não pela limitação de dispersão. 
-
-__Modelos Estatísticos__
-
-Para descrever a média da estimativa da taxa U optamos por transformar a variável usando a função logito e usar um modelo gaussiano misto (LMM). O número de indivíduos e riqueza foram modelados na escala log e z (transformação z). As variáveis graus de limitação de dispersão (k) e extensão espacial da paisagem ao redor (scale) foram interpretados como fatores, então cada combinação de k e scale possui um intercepto. Os dados foram agrupados por sítio, então cada sítio possui um intercepto comum. Não inclui estruturas mais complexas como a de ter um intercepto por grau de limitação de dispersão e sítio, pois isso implicaria em estimar um parâmetro a cada 6 valores e portanto muito tempo para a estimativa completa. Na tabela 1 há comparação de 4 modelos que consideram a interação das 4 variáveis. 
-
-__tabela 1__ Seleção das variáveis de controle. S_obs = riqueza observada, N = número de indivíduos, DA = densidade de indivíduos;  Funções lmer do pacote lme4 (REF), AICctab do pacote bblme (REF). 
-
-```{r GLMM selecao de variaveis para fixar no GLMM final,eval=T,cache=T,echo=TRUE}
-l_md <- list()
-l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
-l_md[[2]] <- lmer(logit_Umed ~ log_S_obs_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
-l_md[[3]] <- lmer(logit_Umed ~ S_obs_z * Ntotal_z * k_factor * lado_factor  + (1|SiteCode),data=df_md)
-l_md[[4]] <- lmer(logit_Umed ~ S_obs_z * k_factor * lado_factor + (1|SiteCode),data=df_md)
-names(l_md) <-laply(l_md,f_nameModel)
-AICctab(l_md,weights=T)
-```
-
-
-__Tabela 2__ Coeficientes de determinal (R2) do modelo mais plausível: marginal(m, desconsiderando o efeito aleatório) e condicional(c, considerando o efeito aleatório):
-
-```{r R2 marginal e condicional do modelo mais plausível para descrever SoE}
-# print("R2 marginal e condicional, respectivamente:")
-# md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |> 
-#   (\(.) l_md[[.]])()
-md_SoE |> (\(.) MuMIn::r.squaredGLMM(.))()
-```
-
-O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1). Os coeficientes de determinação marginal e condional do modelo são aproximadamente iguais à 0.96. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos apresentarem algum desvio (Figura X), o modelo faz uma boa predição do observado (Figura X). Na figura 5 há a média da predição do modelo mais plausível, que descreve o logito da estimativa média da taxa U em função da interação entre log da riqueza e número total de indivíduos, e grau de limitação de dispersão e lado da paisagem como fatores. Os pontos estão coloridos pela razão entre número de espécies e número de indivíduos (S/N).
-
-
-
-
-```{r figura para resultados do efeito de escala}
-cols <- c("avg+-sd"="blue","SoE >= 0.99" = "red") # "#f04546","3 quant"=
-a <- 0.5
-df_plot |> 
-  ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
-  geom_point(alpha=0.40,aes(color=S.N)) +
-  geom_line(aes(group=SiteCode,color=S.N),alpha=0.25) +
-  scale_color_distiller(palette = "Spectral",name="S / N") +
-  new_scale_color() +
-  # stat_summary(aes(x=lado_numeric,y=Pre_Umed,color="3 quant"), #,color=name,group=name
-  #              fun.min = \(.) quantile(.,0.25),
-  #              fun.max = \(.) quantile(.,0.75),
-  #              fun = median,
-  #              size=a) +
-  # stat_summary(aes(x=lado_numeric,y=Pre_Umed,group=k_factor,color="3 quant"),
-  #              fun = median,
-  #              geom = "line",
-  #              size=a) +
-  stat_summary(fun.data = mean_se,geom ="line",aes(group=k_factor,color="avg+-sd"),alpha=0.6,size=a) +
-  stat_summary(fun = mean,
-               fun.min = function(x) mean(x) - sd(x), 
-               fun.max = function(x) mean(x) + sd(x), 
-               geom = "pointrange",
-               aes(x=lado_numeric,y=Pre_Umed,color="avg+-sd"),alpha=0.6,size=a) +
-  geom_vline(aes(xintercept=SoE.99,color="SoE >= 0.99"),alpha=0.5) +
-  scale_color_manual(name="",values=cols) +
-  scale_x_continuous(trans = log2_trans(),
-                     breaks = trans_breaks("log2", function(x) 2^x)) +
-  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-  facet_wrap(~k_factor,ncol=5) +
-  theme_classic() +
-  labs(title = "Média da estimativa média da taxa U predito pelo LMM:",
-       subtitle="logit(Umed) ~ log(S) * log(N) * k * scale + (1|Site)",
-       x="scale (landscape side, km)",
-       y="avg U rate (Umed)",
-       color="") +
-  theme(legend.position = "top")
-```
-
-__Figura 5__ Média das estimativas médias da taxa U (eixo x) em fução do lado da paisagem ao redor (scale, eixo x). Em azul a média e o desvio padrão para cada combinação de grau de limitação de dispersão (título dos paineis, k = proporção de propágulos que permanece até a vizinhança imediata) e scale. S = número de espécies, N = número de indivíduos. As linhas verticais em vermelho marcam a escala que acumula pelo menos 0.99 de toda a variação da média com o aumento da escala (Ver seção "Escala que acumula a maior parte do efeito da escala").
-
-__Escala que acumula a maior parte do efeito da escala__
-
-Para determinar quais os graus de limitação de dispersão são apropriados para simular nas paisagens de lado 4 km avaliamos qual a escala que acumula pelo menos 99% de toda a variação observada para a média geral com o aumento da escala até paisagens de lado 16 km. Para isso, calculei por grau de limitação de dispersão: a diferença entre a média da estimativa entre 2 escalas consecutivas e dividi o valor pela amplitude para todas as escalas; então os valores de escalas consecutivas são somados em ordem crescente. A escala que acumula pelo menos 0.99 é considerada como a extensão espacial mínima suficiente para simular aquele grau de limitação de dispersão (linhas verticais figura 5). 
-
-Com a redução da limitação de dispersão há aumento na escala adequada (Figura 5, linhas verticais vermelhas): quando k é até 0.90 o lado de 1 km é suficiente; k entre 0.50 e 0.40 sugere incerteza entre o lado de 1 e 2 km; e a partir de k igual 0.20 o lado suficiente é maior do que 4 km. Nos graus de limitação de dispersão pouco severos e pouco brandos (k c [0.85;0.55]), onde ocorre valores máximos da média da estimativa da taxa U (Figura 2), não foi possível obsservar tendência de mudança na média geral (Figura 5). Nesses graus de limitação de dispersão há a menor variação entre escalas para um mesmo sítio e maior variação entre sítios, considerando todo o conjunto de dados (Figura 5). O aumento da variação do padrão geral da média parece estar associado ao aumento do número de espécies per capita (Figura 5). Em média, a extensão espacial adequada para simular os graus onde não foi possível estimar a escala adequada deve variar entre 1 e 2 km. Assim, as paisagens mínimas suficientes para simular os graus de limitação de dispersão são: 1 km de lado, para k entre 0.99 e 0.90; 1 e 2 km de lado, para k entre 0.85 e 0.35; 2 km de lado, para k igual 0.30; e 4 km de lado, para k igual 0.25 (Figura 6).  
-
-```{r figura 6 scale e k adequados}
-df_plot |> 
-  ggplot(aes(x=k_factor,y=SoE.99)) +
-  geom_point() +
-  geom_rect(aes(xmin=4, xmax=13.5, ymin=0.99, ymax=2.1),alpha=0.01) +
-  scale_y_continuous(trans = log2_trans(),
-                     breaks = c(0.5,1,2,4,8)) +
-  labs(x="k = proporção de propágulos que permanece na vizinhança imediaa",
-       y="lado da paisagem (km)",
-       title="lado da paisagem que acumula 99% de toda variação observada") +
-  theme_classic()
-```
-
-__Figura 6__ Lado da paisagem que acumula a maior parte do efeito da escala no grau de limitação de dispersão. Em cinza a área com grande incerteza na estimativa da escala adequada: o lado da paisagem 1 e 2 km podem ser adequados.
-
-Fim da proposta 2 ###
-
-
 
 
 
