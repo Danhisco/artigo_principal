@@ -9,7 +9,7 @@ output:
     extra_dependencies: ["tabu"]
   html_document: default
 editor_options:
-  chunk_output_type: inline
+  chunk_output_type: console
 # bibliography: citations.bib
 csl: plos.csl
 ---
