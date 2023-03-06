@@ -21,7 +21,6 @@ library(dplyr)
 # dados disponíveis
 df_dados <- read_csv(file = "dados/df_dados_disponiveis.csv")
 df_sim <- read_csv("dados/df_simulacao.csv")
-df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
 ```
 
 ```{r trackdown rotine, include=FALSE,eval=FALSE}
@@ -109,53 +108,6 @@ O observado na maior extensão (lado 16 km) é similar ao observado em paisagens
 
 # resultados de SoE
 A extensão espacial mínima adequada aumenta com a redução da limitação de à dispersão e graus de limitação de dispersão com proporção de propágulos que permanece até a vizinhança imediata (k) inferiores à 0.20 não são adequados para simular em paisagens de 4x4 km 2 (Apêndice Efeito de Escala, figura 5). Em k entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km lado. Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U; a variação entre escalas para um mesmo sítio em geral é baixa (Apêndice efeito de Escala, figura 4) e a variação entre sítios é grande. Nesses k, o aumento do número de espécies per capita pode levar a divergência da média geral de estabilidade e apresentar padrões não lineares. Em k entre 0.50 e 0.40 há incerteza entre o lado 1 e 2 km. Em k 0.35 e 0.30 o lado adequado é 2 km e k igual 0.25 é 4 km. Os k entre 0.20 e 0.05 são adequados em paisagens de lado 8 km. Os graus de limitação de dispersão com k entre 0.80 e 0.40, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U (Apêndice Efeito de Escala, Figura 2). 
-
-FIM: remover o resto da parte de efeito de escala! \o/
-
-REMOVER figura 2 p pelas extensões espaciais PARA SI. MOTIVO: de
-
-```{r figura 2 p pelas extensões espaciais}
-df_p_extensoes |> 
-  ggplot(aes(x=lado_km,y=p)) + 
-  geom_point(alpha=0.2,size=0.2) +
-  geom_line(aes(group=SiteCode),linewidth=0.2,alpha=0.2) +
-  labs(x="lado da paisagem quadrada (km)",y="proporção de cobertura vegetal",
-       subtitle="Mudança na extensão espacial da paisagem e a proporção de cobertura vegetal") +
-  scale_y_continuous(breaks = seq(0,1,by=0.1)) +
-  coord_cartesian(expand = F) +
-  theme_light()
-```
-
-__Figura 2__ Mudança na extensão espacial da paisagem a proporção de cobertura vegetal. Cada ponto representa a proporção de cobertura vegetal (eixo y) para aquela determinada extensão espacial da paisagem ao redor (eixo x), as linhas ligam pontos de um sítio de amostragem. Detalhes do procedimento em SI.
-
-#### Proposta para determinar a relação entre dispersão e extensão espacial da paisagem
-
-
-
-REMOVER A FIGURA A SEGUIR E DEIXAR NO APENDICE APENAS
-
-```{r figura 3 U para todo k em paisagens nulas na maior escala investigada,fig.width=12,fig.height=7,eval=FALSE,include=FALSE}
-df_plot <- df_Unull |> 
-  arrange(S_obs) |> 
-  mutate(label = paste(SiteCode,S_obs,Ntotal,effort_ha,sep = ", "))
-df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
-df_plot |> 
-  ggplot(aes(x=k,y=Umed)) +
-  geom_line() +
-  geom_point() +
-  labs(title = "U estimado por grau de dispersão em paisagens nulas de lado 16 km",
-       subtitle = "label = SiteCode, S, N, plot area(ha); free y axis; reverse x axis") +
-  # geom_vline(xintercept = c(0.25, 0.1,0.05),color="red",alpha=0.4) +
-  scale_x_reverse() +
-  facet_wrap(~label, ncol=6,scales="free_y")
-```
-
-<!-- <p> __Figura 3__ U estimado (eixo y) por grau de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km). Os pontos representam a média de 4 réplicas e as linhas ligam pontos de um mesmo sítio de amostragem. Os paineis estão separados por sítios de amostragem, cujo mapa de cobertura vegetal foi modificado para ter apenas unidades de habitat. As linhas em vermelho representam os graus de limitação de dispersão usados na análise de escala de efeito, k = 0.25, 0.10 e 0.05. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão simulada. S = riqueza da espécie, N = número de indivíduos, DA = densidade de indivíduos.</p> -->
-
-<!-- # versão pré projeto -->
-<!-- Um padrão não linear da taxa U em função da capacidade de dispersão pode ser observado nas simulações feitas nas paisagens de 16x16 km2 (Figura 3 U ~ k, 16x16km2). Estimamos a taxa U nos 20 graus de limitação de dispersão nas outras 5 subescalas exploradas (Figura 4). Então comparamos os valores de U estimados em escalas consecutivas, dividindo a diferença do valor de U entre escalas consecutivas pela diferença na amplitude das estimativas para aquele sítio e grau de limitação de dispersão (Figura 5). Em geral as escalas com valores extremos são as escalas extremas (0.5km e 16km de lado), mas em alguns casos em que há estabilização a variação de uma mesma bateria pode fazer com que a média flutue em torno de um patamar, e dessa forma a maior escala (de 16km de lado) não apresenta o valor mínimo em todos os casos (Figura 4).   -->
-
-
 
 
 ### SADs réplicas: 
