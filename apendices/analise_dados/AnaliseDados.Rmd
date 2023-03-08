@@ -43,61 +43,48 @@ df_sim <- read_csv("dados/df_simulacao.csv")
 f_z <- function(x) (x-mean(x))/sd(x)
 df_ad <- inner_join(x=select(df_resultMNEE,-(Ssd:Smax)),
                     y=select(df_sim,-tif.path),
-                    by=c("SiteCode","k")) |>
-  mutate(d.Lplot = d / sqrt(10000*effort_ha),
-         k_cont = k,
-         k = factor(round(k,2),levels=round(k,2)[20:1]),
-         across(Ntotal:d.Lplot,log,.names="log_{.col}"),
-         across(c(p,k_cont,Ntotal:log_d.Lplot),f_z,.names = "{.col}_z")) |> 
-  select(-(d.Lplot:log_d.Lplot))
+                    by=c("SiteCode","k")) |> 
+  # escolhi remover depois do ajuste, para obter um melhor ajuste e depois excluir os valores
+  # filter(k > 0.20) |> # figuras 5 e 6 apêndice Efeito de Escala
+  mutate(k_cont = round(k,2),
+         k = factor(round(k,2),levels=round(k,2)[16:1]), 
+         across(Ntotal:S_obs,log,.names="log_{.col}"),
+         across(c(p,k_cont,log_Ntotal:log_S_obs),f_z,.names = "{.col}_z")) |> 
+  select(-c(nCongDTS,effort_ha, Ntotal:d))
 ```
 
 # MNEE com mapas contemporaneos
 
 ### Seleção da estrutura aleatória e variável de dispersão
 
-```{r selecao estrutura aleatoria}
-df_md <- df_ad |> select(SiteCode,k,nCongKS,p_z:log_d.Lplot_z)
-f_randomEffects <- function(disp_var,df=df_md,poly=polyK){
-  if(disp_var == "k"){
-    l_md <- list()
-    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,polyK,raw=T) * k + (1|SiteCode),
-          data=df, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,polyK,raw=T) * poly(k_cont_z,polyK,raw=T) + (1|SiteCode),
-          data=df, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[3]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                         poly(p_z,polyK,raw=T) * poly(k_cont_z,polyK,raw=T) + (poly(k_cont_z,polyK,raw=T)|SiteCode),
-          data=df, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    names(l_md) <- c("k + 1|Site","k_cont^2 + 1|Site","k_cont^2 + k_cont^2|Site")
-  } else if(disp_var == "log(d)"){
-    l_md <- list()
-    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(log_d_z,2,raw=T) + (1|SiteCode),
-          data=df, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                         poly(p_z,2,raw=T) * poly(log_d_z,2,raw=T) + (poly(log_d_z,2,raw=T)|SiteCode),
-          data=df, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    names(l_md) <- c("log(d)^2 + 1|Site", "log(d)^2 + log(d)^2|Site")
-  }
-  return(l_md)
-}
-########
-save(m_MNEE,file="dados/Rdata/md_MNEE.Rdata")
+```{r selecao modelo cheio,echo=T,cache=TRUE}
+polyK=3
+l_md <- list()
+l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                   log_Ntotal_z * log_S_obs_z *
+                   poly(p_z,polyK,raw=T) * poly(k_cont_z,polyK,raw=T) + 
+                   (poly(k_cont_z,polyK,raw=T)|SiteCode),
+          data=df_ad, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
+l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                   log_Ntotal_z * log_S_obs_z *
+                   poly(p_z,polyK,raw=T) * poly(k_cont_z,polyK,raw=T) + 
+                   (1|SiteCode),
+          data=df_ad, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
+l_md[[3]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                   log_Ntotal_z * log_S_obs_z *
+                   poly(p_z,polyK,raw=T) * k + 
+                   (1|SiteCode),
+          data=df_ad, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
+names(l_md) <- c("poly3(k) | Site", "poly3(k) + 1| Site", "k_fac + 1| Site")
+AICctab(l_md,weights=T)
+# 
+# 
+# v_star <- getME(l_md[[5]],c("theta","fixef"))
+# l_md[[5]] <- update(l_md[[5]],start=v_star)
 
-########
-registerDoMC(3)
-l_md <- alply(c("k","d","d.Lplot","log(d)","log(d.Lplot)"),1,f_randomEffects,.parallel = T,.expand = F)
-# l_md <- f_randomEffects(disp_var = "k")
-# l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2) * k + (1|SiteCode),
-#           data=df_md, family = "binomial",
-#           control=glmerControl(optimizer="Nelder_Mead",optCtrl=list(maxfun=2e9)))
-l_md_RE_MNEE <- unlist(unname(l_md),recursive = F)
-# l_md_RE_MNEE <- unlist(l_md,recursive = F)
-save(l_md_RE_MNEE,file = "dados/Rdata/l_md_RE_MNEE.Rdata")
 ```
 
 ```{r auditoria dos modelos ajustados l_md_RE_MNEE}
