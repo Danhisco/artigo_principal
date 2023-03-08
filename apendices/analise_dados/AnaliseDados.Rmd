@@ -58,41 +58,20 @@ df_ad <- inner_join(x=select(df_resultMNEE,-(Ssd:Smax)),
 
 ```{r selecao estrutura aleatoria}
 df_md <- df_ad |> select(SiteCode,k,nCongKS,p_z:log_d.Lplot_z)
-f_randomEffects <- function(disp_var,df=df_md){
+f_randomEffects <- function(disp_var,df=df_md,poly=polyK){
   if(disp_var == "k"){
     l_md <- list()
-    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * k + (1|SiteCode),
+    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,polyK,raw=T) * k + (1|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(k_cont_z,2,raw=T) + (1|SiteCode),
+    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,polyK,raw=T) * poly(k_cont_z,polyK,raw=T) + (1|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
     l_md[[3]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                         poly(p_z,2,raw=T) * poly(k_cont_z,2,raw=T) + (poly(k_cont_z,2,raw=T)|SiteCode),
+                         poly(p_z,polyK,raw=T) * poly(k_cont_z,polyK,raw=T) + (poly(k_cont_z,polyK,raw=T)|SiteCode),
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
     names(l_md) <- c("k + 1|Site","k_cont^2 + 1|Site","k_cont^2 + k_cont^2|Site")
-  } else if(disp_var == "d"){
-    l_md <- list()
-    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(d_z,2,raw=T) + (1|SiteCode),
-          data=df, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                         poly(p_z,2,raw=T) * poly(d_z,2,raw=T) + (poly(d_z,2,raw=T)|SiteCode),
-          data=df, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    names(l_md) <- c("d^2 + 1|Site", "d^2 + d^2|Site")
-  } else if(disp_var == "d.Lplot"){
-    l_md <- list()
-    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                         poly(p_z,2,raw=T) * poly(d.Lplot_z,2,raw=T) + (1|SiteCode),
-          data=df, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                         poly(p_z,2,raw=T) * poly(d.Lplot_z,2,raw=T) + (poly(d.Lplot_z,2,raw=T)|SiteCode),
-          data=df, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    names(l_md) <- c("d.Lplot^2 + 1|Site", "d.Lplot^2 + d.Lplot^2|Site")
   } else if(disp_var == "log(d)"){
     l_md <- list()
     l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(log_d_z,2,raw=T) + (1|SiteCode),
@@ -103,19 +82,13 @@ f_randomEffects <- function(disp_var,df=df_md){
           data=df, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
     names(l_md) <- c("log(d)^2 + 1|Site", "log(d)^2 + log(d)^2|Site")
-  } else if(disp_var == "log(d.Lplot)"){
-    l_md <- list()
-    l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(log_d.Lplot_z,2,raw=T) + (1|SiteCode),
-          data=df, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                         poly(p_z,2,raw=T) * poly(log_d.Lplot_z,2,raw=T) + (poly(log_d.Lplot_z,2,raw=T)|SiteCode),
-          data=df, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)))
-    names(l_md) <- c("log(d.Lplot)^2 + 1|Site", "log(d.Lplot)^2 + log(d.Lplot)^2|Site")
   }
   return(l_md)
 }
+########
+save(m_MNEE,file="dados/Rdata/md_MNEE.Rdata")
+
+########
 registerDoMC(3)
 l_md <- alply(c("k","d","d.Lplot","log(d)","log(d.Lplot)"),1,f_randomEffects,.parallel = T,.expand = F)
 # l_md <- f_randomEffects(disp_var = "k")
@@ -128,10 +101,19 @@ save(l_md_RE_MNEE,file = "dados/Rdata/l_md_RE_MNEE.Rdata")
 ```
 
 ```{r auditoria dos modelos ajustados l_md_RE_MNEE}
+l_md <- l_md_RE_MNEE
+# seleciona 
 v_reFit <- lapply(l_md[sapply(l_md, is, "merMod")],
                   function(x) !is.null(x@optinfo$conv$lme4$messages)) |> 
   unlist()
+v_reFit2 <- lapply(l_md_allFit[sapply(l_md_allFit, is, "merMod")],
+                  function(x) !is.null(x@optinfo$conv$lme4$messages)) |> 
+  unlist()
 # registerDoMC(3)
+l_md_d <- lme4::allFit(l_md[v_reFit][[1]],maxfun = 1e5)
+llply(.data = l_md_d, .fun = \(x) x@optinfo$conv$lme4$messages)
+
+####
 l_md_allFit <- llply(l_md[v_reFit],allFit,.parallel = F)
 l <- unlist(l_md_allFit,recursive = F)
 f_aud_l_md <- function(l){
@@ -146,19 +128,21 @@ __Tabela 1__ Peso de evidência dos modelos cheios
 
 ```{r AICctab md_MNEE_RE, eval=TRUE}
 load("dados/Rdata/l_md_RE_MNEE.Rdata")
-AICctab(l_md_RE_MNEE,weights=T)
+df_aictab <- AICctab(l_md_RE_MNEE,weights=T) |> as.data.frame()
+df_aictab
+m_MNEE <- l_md_RE_MNEE[[row.names(df_aictab)[1]]]
 ```
 
 
 ```{r dHARMa residuos md_MNEE_RE,eval=TRUE,cache=TRUE}
-p_plot <- DHARMa::simulateResiduals(l_md_RE_MNEE[[5]],n=1000)
+p_plot <- DHARMa::simulateResiduals(m_MNEE,n=1000)
 plot(p_plot)
 ```
 
 __Figura 4__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
 
 ```{r Quantile-quantile plot random effects,eval=TRUE}
-df_ranef <- ranef(l_md_RE_MNEE[[5]])$SiteCode 
+df_ranef <- ranef(l_md[[3]])$SiteCode 
 df_ranef$SiteCode <- row.names(df_ranef)
 row.names(df_ranef) <- NULL
 df_ranef |> 
@@ -173,9 +157,9 @@ __Figura 5__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
 
 ```{r figura 6 observado e predito pelo modelo médio de nCongKS MNEE, eval=T,fig.height=4}
 # dados
-df_md <- l_md_RE_MNEE[[5]]@frame
+df_md <- m_MNEE@frame
 df_md$nCong_observado <- df_md$`cbind(nCongKS, 100 - nCongKS)`[,1]
-df_md$nCong_predito <- predict(l_md_RE_MNEE[[5]],type="response") * 100
+df_md$nCong_predito <- predict(m_MNEE,type="response") * 100
 # graficos
 ggplot(df_md,aes(x=nCong_observado,y=nCong_predito)) +
   geom_smooth(method = "lm",aes(group=SiteCode),se=FALSE,alpha=0.3) +
@@ -185,6 +169,7 @@ ggplot(df_md,aes(x=nCong_observado,y=nCong_predito)) +
        y="sum(p-value>0.05) predito",
        subtitle="Modelo Cheio") +
   coord_cartesian(expand = F)
+# summary(lm(nCong_observado ~ nCong_predito,df_md))
 ```
 
 __Figura 6__ Observado e predito pelo modelo cheio selecionado 
@@ -192,10 +177,13 @@ __Figura 6__ Observado e predito pelo modelo cheio selecionado
 __Tabela 1__ Coeficiente de determinação marginal e condicional do modelo cheio selecionado para nCongKS de MNEE
 
 ```{r R2m e R2c md_MNEE_RE,cache=TRUE,eval=TRUE}
-md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ poly(p_z,2,raw=T) * poly(d_z,2,raw=T) + (poly(d_z,2,raw=T)|SiteCode),
+md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                   log_Ntotal_z * log_S_obs_z *
+                   poly(p_z,polyK,raw=T) * poly(k_cont_z,polyK,raw=T) + 
+                   (poly(k_cont_z,polyK,raw=T)|SiteCode),
           data=df_ad, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-df_R2_RE_MNEE <- MuMIn::r.squaredGLMM(md_MNEE)
+(df_R2_RE_MNEE <- MuMIn::r.squaredGLMM(md_MNEE))
 kableExtra::kable(df_R2_RE_MNEE)
 ```
 
