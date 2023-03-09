@@ -39,9 +39,9 @@ load("dados/Rdata/md_MNEE.Rdata")
 polyK=3
 # dados
 # df_newdata
-# df_newdat <- expand.grid(SiteCode=df_ad$SiteCode[1], 
-#                          p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
-#                          k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150))
+# df_newdat <- expand.grid(SiteCode=df_ad$SiteCode[1],
+                         # p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
+                         # k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150))
 # df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,log_S_obs_z,log_Ntotal_z))))
 df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
 # df_resultMNEE
@@ -136,12 +136,24 @@ kableExtra::kable(df_R2_RE_MNEE)
 ```{r predito newdata MNEE}
 #new data
 df_newdat$predito <- predict(md_MNEE,newdata=df_newdat,type="response")
+plot(density(df_newdat$predito))
 df_plot <- df_newdat |> 
   group_by(p_z,k_cont_z) |> 
   summarise(Prob_Cong_avg = mean(predito),
             Prob_Cong_median = median(predito),
-            Prob_Cong_q5 = quantile(predito,probs = 0.05),
-            Prob_Cong_q95 = quantile(predito,probs = 0.95))
+            Prob_Cong_q05 = quantile(predito,probs = 0.05),
+            Prob_Cong_q95 = quantile(predito,probs = 0.95)) |> 
+  mutate(p = p_z * sd(df_ad$p) + mean(df_ad$p),
+         k = k_cont_z * sd(df_ad$p) + mean(df_ad$p)) |> 
+  filter(k > 0.20 & k <=0.99)
+## gráficos
+df_plot |>
+  pivot_longer(cols = Prob_Cong_avg:Prob_Cong_q75) |> pull(value) |> (\(.)plot(density(.)))()
+  ggplot(aes(x=p,y=k,fill=value)) +
+  geom_tile() +
+  scale_fill_distiller(palette = "Spectral") +
+  facet_wrap(~name,ncol=2,scales="free") +
+  theme_classic()
 ```
 
 
