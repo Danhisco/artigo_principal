@@ -38,6 +38,12 @@ library(dplyr)
 load("dados/Rdata/md_MNEE.Rdata")
 polyK=3
 # dados
+# df_newdata
+# df_newdat <- expand.grid(SiteCode=df_ad$SiteCode[1], 
+#                          p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
+#                          k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150))
+# df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,log_S_obs_z,log_Ntotal_z))))
+df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
 # df_resultMNEE
 df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 # df_sim
@@ -125,42 +131,19 @@ __Tabela 1__ Coeficiente de determinação marginal e condicional do modelo chei
 kableExtra::kable(df_R2_RE_MNEE)
 ```
 
+### Predição para novo conjunto de dados
 
-
-### Predição por bootstrap
-
-```{r predito boostrap MNEE }
+```{r predito newdata MNEE}
 #new data
-df_newdat <- expand.grid(SiteCode=df_ad$SiteCode[1], 
-                         p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
-                         k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150),
-                         log_S_obs_z = seq(min(df_ad$log_S_obs_z),max(df_ad$log_S_obs_z), length=30),
-                         log_Ntotal_z = seq(min(df_ad$log_Ntotal_z),max(df_ad$log_Ntotal_z), length=30))
-## Passo 2: crie as função que devem ser calculadas dos modelos a cada simulação
-## Previstos por efeitos fixos e aleatórios
-f1 <- function(.) predict(., newdata=df_newdat)
-## Previstos por efeitos fixos (argumento re.form=~0)
-f2 <- function(.) predict(., newdata=df_newdat, re.form=~0)
-## Os dois bootstraps. Ajuste o argumento ncpus para o numero de cores de seu computador
-b3 <- bootMer(md_MNEE, FUN = f1, nsim=1000)
-b3 <- bootMer(md_MNEE, FUN = f1, nsim=1000, parallel="multicore", ncpus=2)
-b4 <- bootMer(md_MNEE, FUN = f2, nsim=1000, parallel="multicore", ncpus=2)
-## calcula as médias e intervalos de confiança quantílicos para cada combinação de preditoras
-## no novo conjunto de dados
-df_newdat$mean <- apply(b3$t,2,mean)
-df_newdat$IC.low <- apply(b3$t,2,quantile, 0.025)
-df_newdat$IC.upp <- apply(b3$t,2,quantile, 0.975)
-df_newdat$mean.fixed <- apply(b4$t,2,mean)
-df_newdat$IC.low.fixed <- apply(b4$t,2,quantile, 0.025)
-df_newdat$IC.upp.fixed <- apply(b4$t,2,quantile, 0.975)
-df_newdat %<>% mutate(std_mean = 10^(mean),
-                      std_IC.low = 10^(IC.low),
-                      std_IC.upp = 10^(IC.upp),
-                      std_mean.fixed = 10^(mean.fixed),
-                      std_IC.low.fixed = 10^(IC.low),
-                      std_IC.upp.fixed = 10^(IC.upp.fixed))
-
+df_newdat$predito <- predict(md_MNEE,newdata=df_newdat,type="response")
+df_plot <- df_newdat |> 
+  group_by(p_z,k_cont_z) |> 
+  summarise(Prob_Cong_avg = mean(predito),
+            Prob_Cong_median = median(predito),
+            Prob_Cong_q5 = quantile(predito,probs = 0.05),
+            Prob_Cong_q95 = quantile(predito,probs = 0.95))
 ```
+
 
 
 
