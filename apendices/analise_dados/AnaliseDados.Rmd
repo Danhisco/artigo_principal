@@ -34,6 +34,9 @@ library(DHARMa)
 library(lme4)
 library(plyr)
 library(dplyr)
+# objetos
+load("dados/Rdata/md_MNEE.Rdata")
+polyK=3
 # dados
 # df_resultMNEE
 df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
@@ -65,12 +68,10 @@ md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~
                    (poly(k_cont_z,polyK,raw=T)|SiteCode),
           data=df_ad, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-save(md_MNEE,file="dados/Rdata/md_MNEE.Rdata")
 ```
 
 
 ```{r dHARMa residuos md_MNEE_RE,eval=TRUE,cache=TRUE}
-load("dados/Rdata/md_MNEE.Rdata")
 p_plot <- DHARMa::simulateResiduals(md_MNEE,n=1000)
 plot(p_plot)
 ```
@@ -93,16 +94,16 @@ __Figura 5__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
 
 ```{r figura 6 observado e predito pelo modelo médio de nCongKS MNEE, eval=T,fig.height=4}
 # dados
-df_md <- m_MNEE@frame
+df_md <- md_MNEE@frame
 df_md$nCong_observado <- df_md$`cbind(nCongKS, 100 - nCongKS)`[,1]
-df_md$nCong_predito <- predict(m_MNEE,type="response") * 100
+df_md$nCong_predito <- predict(md_MNEE,type="response") * 100
 # graficos
 ggplot(df_md,aes(x=nCong_observado,y=nCong_predito)) +
   geom_smooth(method = "lm",aes(group=SiteCode),se=FALSE,alpha=0.3) +
   geom_abline(slope = 1,intercept = 0,col="red",alpha=0.8,size=2) +
   geom_point(alpha=0.3) +
-  labs(x="sum(p-value>0.05) observado",
-       y="sum(p-value>0.05) predito",
+  labs(x="nSADcong observado",
+       y="nSADcong predito",
        subtitle="Modelo Cheio") +
   coord_cartesian(expand = F)
 summary(lm(nCong_observado ~ nCong_predito,df_md))
@@ -121,6 +122,11 @@ __Tabela 1__ Coeficiente de determinação marginal e condicional do modelo chei
 #           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
 (df_R2_RE_MNEE <- MuMIn::r.squaredGLMM(md_MNEE))
 kableExtra::kable(df_R2_RE_MNEE)
+```
+
+
+```{r}
+f1 <- detections ~ agr_cover + bldngs_cover + grass_cover + water_cover + wood_cover + (1|date)
 ```
 
 
