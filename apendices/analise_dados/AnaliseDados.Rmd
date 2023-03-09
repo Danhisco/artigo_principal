@@ -111,6 +111,7 @@ summary(lm(nCong_observado ~ nCong_predito,df_md))
 
 __Figura 6__ Observado e predito pelo modelo cheio selecionado 
 
+
 __Tabela 1__ Coeficiente de determinação marginal e condicional do modelo cheio selecionado para nCongKS de MNEE
 
 ```{r R2m e R2c md_MNEE_RE,cache=TRUE}
@@ -125,60 +126,93 @@ kableExtra::kable(df_R2_RE_MNEE)
 ```
 
 
-```{r}
-f1 <- detections ~ agr_cover + bldngs_cover + grass_cover + water_cover + wood_cover + (1|date)
+
+### Predição por bootstrap
+
+```{r predito boostrap MNEE }
+#new data
+df_newdat <- expand.grid(SiteCode=df_ad$SiteCode[1], 
+                         p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
+                         k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150),
+                         log_S_obs_z = seq(min(df_ad$log_S_obs_z),max(df_ad$log_S_obs_z), length=30),
+                         log_Ntotal_z = seq(min(df_ad$log_Ntotal_z),max(df_ad$log_Ntotal_z), length=30))
+## Passo 2: crie as função que devem ser calculadas dos modelos a cada simulação
+## Previstos por efeitos fixos e aleatórios
+f1 <- function(.) predict(., newdata=df_newdat)
+## Previstos por efeitos fixos (argumento re.form=~0)
+f2 <- function(.) predict(., newdata=df_newdat, re.form=~0)
+## Os dois bootstraps. Ajuste o argumento ncpus para o numero de cores de seu computador
+b3 <- bootMer(md_MNEE, FUN = f1, nsim=1000)
+b3 <- bootMer(md_MNEE, FUN = f1, nsim=1000, parallel="multicore", ncpus=2)
+b4 <- bootMer(md_MNEE, FUN = f2, nsim=1000, parallel="multicore", ncpus=2)
+## calcula as médias e intervalos de confiança quantílicos para cada combinação de preditoras
+## no novo conjunto de dados
+df_newdat$mean <- apply(b3$t,2,mean)
+df_newdat$IC.low <- apply(b3$t,2,quantile, 0.025)
+df_newdat$IC.upp <- apply(b3$t,2,quantile, 0.975)
+df_newdat$mean.fixed <- apply(b4$t,2,mean)
+df_newdat$IC.low.fixed <- apply(b4$t,2,quantile, 0.025)
+df_newdat$IC.upp.fixed <- apply(b4$t,2,quantile, 0.975)
+df_newdat %<>% mutate(std_mean = 10^(mean),
+                      std_IC.low = 10^(IC.low),
+                      std_IC.upp = 10^(IC.upp),
+                      std_mean.fixed = 10^(mean.fixed),
+                      std_IC.low.fixed = 10^(IC.low),
+                      std_IC.upp.fixed = 10^(IC.upp.fixed))
+
 ```
 
 
-### Predição Modelo Médio MNEE RE nCongKS
 
-```{r modelo médio MNEE RE nCongKS}
-# todas as combinações de modelo do modelo cheio
-registerDoMC(3)
-l_md.dredge_nCongKS_MNEE <- llply(dredge(md_MNEE,trace = FALSE,evaluate=FALSE), eval,.parallel = TRUE)
-save(l_md.dredge_nCongKS_MNEE,file = "dados/Rdata/l_md_dredge_nCongKS_MNEE.Rdata")
-```
+<!-- ### Predição Modelo Médio MNEE RE nCongKS -->
 
-__tabela 2__ Sub modelos derivados do modelo cheio com maior peso de evidência 
+<!-- ```{r modelo médio MNEE RE nCongKS} -->
+<!-- # todas as combinações de modelo do modelo cheio -->
+<!-- registerDoMC(3) -->
+<!-- l_md.dredge_nCongKS_MNEE <- llply(dredge(md_MNEE,trace = FALSE,evaluate=FALSE), eval,.parallel = TRUE) -->
+<!-- save(l_md.dredge_nCongKS_MNEE,file = "dados/Rdata/l_md_dredge_nCongKS_MNEE.Rdata") -->
+<!-- ``` -->
 
-```{r tabela 2 peso de evidência dos modelos em ordem decrescente,results='hide' }
-load("dados/Rdata/l_md_dredge_nCongKS_MNEE.Rdata")
-# AICctab
-df_tableGLMM <- print(AICctab(l_md.dredge_nCongKS_MNEE,weights=TRUE)) %>% 
-  as.data.frame()
-df_tableGLMM$model_code <- row.names(df_tableGLMM)
-df_tableGLMM$weight <- as.character(df_tableGLMM$weight)
-df_tableGLMM$dAICc <- as.numeric(as.character(df_tableGLMM$dAICc))
-rownames(df_tableGLMM) <- NULL
-df_tableGLMM <- df_tableGLMM[,c(4,1:3)]
-```
+<!-- __tabela 2__ Sub modelos derivados do modelo cheio com maior peso de evidência  -->
+
+<!-- ```{r tabela 2 peso de evidência dos modelos em ordem decrescente,results='hide' } -->
+<!-- load("dados/Rdata/l_md_dredge_nCongKS_MNEE.Rdata") -->
+<!-- # AICctab -->
+<!-- df_tableGLMM <- print(AICctab(l_md.dredge_nCongKS_MNEE,weights=TRUE)) %>%  -->
+<!--   as.data.frame() -->
+<!-- df_tableGLMM$model_code <- row.names(df_tableGLMM) -->
+<!-- df_tableGLMM$weight <- as.character(df_tableGLMM$weight) -->
+<!-- df_tableGLMM$dAICc <- as.numeric(as.character(df_tableGLMM$dAICc)) -->
+<!-- rownames(df_tableGLMM) <- NULL -->
+<!-- df_tableGLMM <- df_tableGLMM[,c(4,1:3)] -->
+<!-- ``` -->
 
 
-```{r model averaging MNEE  MuMIn e AICcmodavg}
-# Model Averaging for SiteCode predictions
-mdAvg_nCongMNEE_MuMIn <- model.avg(l_md.dredge_nCongKS_MNEE)
-save(mdAvg_nCongMNEE_MuMIn,file="dados/Rdata/mdAvg_nCongMNEE_MuMIn.Rdata")
-# Model Averaging for new data predictions
-df_pred <- expand.grid(SiteCode=unique(df_ad$SiteCode)[1],
-                       d_z=seq(min(df_ad$d_z),max(df_ad$d_z),length=40),
-                       p_z=seq(min(df_ad$p_z),max(df_ad$p_z),length=200))
-mdAvg_nCongMNEE_AICcmodavg <- modavgPred(l_md.dredge_nCongKS_MNEE,newdata = df_pred,type="link") %>%
-  cbind(df_pred)
-save(mdAvg_nCongMNEE_AICcmodavg,file="dados/Rdata/mdAvg_nCongMNEE_AICcmodavg.Rdata")
-```
+<!-- ```{r model averaging MNEE  MuMIn e AICcmodavg} -->
+<!-- # Model Averaging for SiteCode predictions -->
+<!-- mdAvg_nCongMNEE_MuMIn <- model.avg(l_md.dredge_nCongKS_MNEE) -->
+<!-- save(mdAvg_nCongMNEE_MuMIn,file="dados/Rdata/mdAvg_nCongMNEE_MuMIn.Rdata") -->
+<!-- # Model Averaging for new data predictions -->
+<!-- df_pred <- expand.grid(SiteCode=unique(df_ad$SiteCode)[1], -->
+<!--                        d_z=seq(min(df_ad$d_z),max(df_ad$d_z),length=40), -->
+<!--                        p_z=seq(min(df_ad$p_z),max(df_ad$p_z),length=200)) -->
+<!-- mdAvg_nCongMNEE_AICcmodavg <- modavgPred(l_md.dredge_nCongKS_MNEE,newdata = df_pred,type="link") %>% -->
+<!--   cbind(df_pred) -->
+<!-- save(mdAvg_nCongMNEE_AICcmodavg,file="dados/Rdata/mdAvg_nCongMNEE_AICcmodavg.Rdata") -->
+<!-- ``` -->
 
-```{r dados para novo conjunto de dados que interpola e extrapola os valores observados}
-load("dados/Rdata/mdAvg_nCongMNEE_AICcmodavg.Rdata")
-df_plot <- mdAvg_nCongMNEE_AICcmodavg |> 
-  select(mod.avg.pred,lower.CL:upper.CL,d_z:p_z) |> 
-  mutate(across(mod.avg.pred:upper.CL,\(x) exp(x)/(1+exp(x))),
-         p = p_z*sd(df_ad$p) + mean(df_ad$p),
-         d = d_z*sd(df_ad$d) + mean(df_ad$d))
-df_plot |> 
-  ggplot(aes(x=p,y=d,fill=mod.avg.pred)) +
-  coord_cartesian(expand = FALSE) + 
-  geom_tile() +
-  scale_fill_distiller(palette = "Spectral")
-```
+<!-- ```{r dados para novo conjunto de dados que interpola e extrapola os valores observados} -->
+<!-- load("dados/Rdata/mdAvg_nCongMNEE_AICcmodavg.Rdata") -->
+<!-- df_plot <- mdAvg_nCongMNEE_AICcmodavg |>  -->
+<!--   select(mod.avg.pred,lower.CL:upper.CL,d_z:p_z) |>  -->
+<!--   mutate(across(mod.avg.pred:upper.CL,\(x) exp(x)/(1+exp(x))), -->
+<!--          p = p_z*sd(df_ad$p) + mean(df_ad$p), -->
+<!--          d = d_z*sd(df_ad$d) + mean(df_ad$d)) -->
+<!-- df_plot |>  -->
+<!--   ggplot(aes(x=p,y=d,fill=mod.avg.pred)) + -->
+<!--   coord_cartesian(expand = FALSE) +  -->
+<!--   geom_tile() + -->
+<!--   scale_fill_distiller(palette = "Spectral") -->
+<!-- ``` -->
 
 
