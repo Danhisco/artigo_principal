@@ -38,12 +38,6 @@ library(dplyr)
 load("dados/Rdata/md_MNEE.Rdata")
 polyK=3
 # dados
-# df_newdata
-# df_newdat <- expand.grid(SiteCode=df_ad$SiteCode[1],
-                         # p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
-                         # k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150))
-# df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,log_S_obs_z,log_Ntotal_z))))
-df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
 # df_resultMNEE
 df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 # df_sim
@@ -60,6 +54,12 @@ df_ad <- inner_join(x=select(df_resultMNEE,-(Ssd:Smax)),
          across(Ntotal:S_obs,log,.names="log_{.col}"),
          across(c(p,k_cont,log_Ntotal:log_S_obs),f_z,.names = "{.col}_z")) |> 
   select(-c(nCongDTS,effort_ha, Ntotal:d))
+# df_newdata
+df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
+# df_newdat <- expand.grid(p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
+#                          k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150))
+# df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,SiteCode,log_S_obs_z,log_Ntotal_z))))
+# write_csv(df_newdat,"dados/csv/df_newdataSADs.csv")
 ```
 
 # MNEE com mapas contemporaneos
@@ -135,25 +135,38 @@ kableExtra::kable(df_R2_RE_MNEE)
 
 ```{r predito newdata MNEE}
 #new data
-df_newdat$predito <- predict(md_MNEE,newdata=df_newdat,type="response")
-plot(density(df_newdat$predito))
+df_newdat$PREDc <- predict(md_MNEE,newdata=df_newdat,type="response")
+df_newdat$PREDm <- predict(md_MNEE,newdata=df_newdat,type="response",re.form=~0)
+#### em consrução
+# f_summarise_qtl <- function(x, q = c(0.05, 0.25,  0.75, 0.95)) {
+#   tibble("{{ x }}" := quantile(x, q), "{{ x }}_q" := q) |> 
+#     pivot_wider(values_from = 1, names_from = 2, )
+# }
+##
 df_plot <- df_newdat |> 
   group_by(p_z,k_cont_z) |> 
-  summarise(Prob_Cong_avg = mean(predito),
-            Prob_Cong_median = median(predito),
-            Prob_Cong_q05 = quantile(predito,probs = 0.05),
-            Prob_Cong_q95 = quantile(predito,probs = 0.95)) |> 
+  summarise(Prob_Cong_avg = mean(PREDc),
+            Prob_Cong_median = median(PREDc),
+            Prob_Cong_q05 = quantile(PREDc,probs = 0.05),
+            Prob_Cong_q95 = quantile(PREDc,probs = 0.95)) |> 
+  # summarise(across(PREDc:PREDm,list(avg = mean, mdn = median, 
+  #                                   qtl05 = quantile(probs=0.05), qtl25 = quantile(probs=0.25),
+  #                                   qtl05 = quantile(probs=0.75), qtl25 = quantile(probs=0.95)))) |> 
   mutate(p = p_z * sd(df_ad$p) + mean(df_ad$p),
          k = k_cont_z * sd(df_ad$p) + mean(df_ad$p)) |> 
   filter(k > 0.20 & k <=0.99)
 ## gráficos
 df_plot |>
-  pivot_longer(cols = Prob_Cong_avg:Prob_Cong_q75) |> pull(value) |> (\(.)plot(density(.)))()
+  pivot_longer(cols = Prob_Cong_avg:Prob_Cong_q95) |> #pull(value) |> (\(.)plot(density(.)))()
   ggplot(aes(x=p,y=k,fill=value)) +
   geom_tile() +
   scale_fill_distiller(palette = "Spectral") +
   facet_wrap(~name,ncol=2,scales="free") +
+  labs(title="predito condicional") +
   theme_classic()
+ggsave("apendices/analise_dados/figuras/predito_marginalMNEE.png",
+       width = 8.5,
+       height = 6.7)
 ```
 
 
