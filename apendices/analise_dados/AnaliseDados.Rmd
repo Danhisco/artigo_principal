@@ -66,12 +66,47 @@ df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
 
 ## Gráficos Exploratórios
 
-```{r GE nCong ~ p (~k)}
-df_ad |> 
+```{r GE congruencia MNEE por p e k}
+l_p <- list()
+l_p[[1]] <- df_ad |> 
   ggplot(aes(x=p,y=nCongKS)) +
   geom_point() +
-  geom_smooth(method = "loess") +
+  geom_smooth(method = "loess",se=F) +
+  labs(title="a) p, proporção de cobertura vegetal (~k)",
+       y="número de SADs réplicas congruentes") +
+  theme_bw() +
   facet_wrap(~k,ncol=5)
+l_p[[2]] <- df_ad |> 
+  mutate(p_cut = cut(p,20)) |> 
+  ggplot(aes(x=k_cont,y=nCongKS)) +
+  geom_point() +
+  geom_smooth(method = "loess",se=F) +
+  labs(title="b) k, prop. propágulos até a vizinhança (~cut(p, 20))",
+       y="número de SADs réplicas congruentes",
+       x="k") +
+  theme_bw() +
+  facet_wrap(~p_cut,ncol=5)
+grid.arrange(grobs=l_p,ncol=1,top="Congruência de MNEE")
+```
+  
+    
+__Figura 1__ Congruência de SADs MNEE por: a) proporção de cobertura vegetal; e b) k, grau de limitação de dispersão.
+  
+    
+```{r congruencia de MNEE por k_cont e sitio de amostragem}
+df_plot <- df_ad |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2))) |>
+  arrange(p)
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k_cont,y=nCongKS)) +
+  geom_smooth(method = "loess",se=F) +
+  geom_point() +
+  # labs(title="b) k, prop. propágulos até a vizinhança (~cut(p, 20))",
+  #      y="número de SADs réplicas congruentes",
+  #      x="k") +
+  theme_bw() +
+  facet_wrap(~label,ncol=8)
 ```
 
 
@@ -83,7 +118,6 @@ df_ad |>
 ```{r selecao modelo cheio,echo=T,eval=F}
 polyK=3
 md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                   log_Ntotal_z * log_S_obs_z *
                    poly(p_z,polyK,raw=T) * poly(k_cont_z,polyK,raw=T) + 
                    (poly(k_cont_z,polyK,raw=T)|SiteCode),
           data=df_ad, family = "binomial",
@@ -142,7 +176,7 @@ __Tabela 1__ Coeficiente de determinação marginal e condicional do modelo chei
 #           data=df_ad, family = "binomial",
 #           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
 (df_R2_RE_MNEE <- MuMIn::r.squaredGLMM(md_MNEE))
-kableExtra::kable(df_R2_RE_MNEE)
+# kableExtra::kable(df_R2_RE_MNEE)
 ```
 
 ### Predição para novo conjunto de dados
