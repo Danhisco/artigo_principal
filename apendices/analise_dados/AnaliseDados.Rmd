@@ -46,14 +46,14 @@ df_sim <- read_csv("dados/df_simulacao.csv")
 f_z <- function(x) (x-mean(x))/sd(x)
 df_ad <- inner_join(x=select(df_resultMNEE,-(Ssd:Smax)),
                     y=select(df_sim,-tif.path),
-                    by=c("SiteCode","k")) |> 
+                    by=c("SiteCode")) |>
   # escolhi remover depois do ajuste, para obter um melhor ajuste e depois excluir os valores
   # filter(k > 0.20) |> # figuras 5 e 6 apêndice Efeito de Escala
   mutate(k_cont = round(k,2),
-         k = factor(round(k,2),levels=round(k,2)[16:1]), 
+         k = factor(round(k,2),levels=round(k,2)[20:1]), 
          across(Ntotal:S_obs,log,.names="log_{.col}"),
-         across(c(p,k_cont,log_Ntotal:log_S_obs),f_z,.names = "{.col}_z")) |> 
-  select(-c(nCongDTS,effort_ha, Ntotal:d))
+         across(c(p,k_cont,log_Ntotal:log_S_obs),f_z,.names = "{.col}_z")) |>
+  select(-c(nCongDTS,effort_ha, Ntotal:S_obs))
 # df_newdata
 df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
 # df_newdat <- expand.grid(p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
@@ -63,6 +63,20 @@ df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
 ```
 
 # MNEE com mapas contemporaneos
+
+## Gráficos Exploratórios
+
+```{r GE nCong ~ p (~k)}
+df_ad |> 
+  ggplot(aes(x=p,y=nCongKS)) +
+  geom_point() +
+  geom_smooth(method = "loess") +
+  facet_wrap(~k,ncol=5)
+```
+
+
+
+## Análise Estatística
 
 ### Modelo Cheio
 
