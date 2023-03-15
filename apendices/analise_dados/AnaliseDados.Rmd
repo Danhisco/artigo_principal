@@ -68,7 +68,8 @@ df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
 
 ```{r GE congruencia MNEE por p e k}
 l_p <- list()
-l_p[[1]] <- df_ad |> 
+df_plot <- df_ad |> filter(k_cont>0.20)
+l_p[[1]] <- df_plot |> 
   ggplot(aes(x=p,y=nCongKS)) +
   geom_point() +
   geom_smooth(method = "loess",se=F) +
@@ -76,17 +77,23 @@ l_p[[1]] <- df_ad |>
        y="número de SADs réplicas congruentes") +
   theme_bw() +
   facet_wrap(~k,ncol=5)
-l_p[[2]] <- df_ad |> 
+l_p[[2]] <- df_plot |> 
   mutate(p_cut = cut(p,20)) |> 
   ggplot(aes(x=k_cont,y=nCongKS)) +
-  geom_point() +
+  geom_point(alpha=0.4) +
+  geom_line(alpha=0.4,aes(group=SiteCode)) +
   geom_smooth(method = "loess",se=F) +
   labs(title="b) k, prop. propágulos até a vizinhança (~cut(p, 20))",
        y="número de SADs réplicas congruentes",
        x="k") +
   theme_bw() +
+  scale_x_reverse() +
   facet_wrap(~p_cut,ncol=5)
-grid.arrange(grobs=l_p,ncol=1,top="Congruência de MNEE")
+p <- grid.arrange(grobs=l_p,ncol=1,top="Congruência de MNEE")
+ggsave("apendices/analise_dados/figuras/fig1_cong_p_k.png",
+       width = 10.2,
+       height = 10.7,
+       plot = p)
 ```
   
     
@@ -96,7 +103,7 @@ __Figura 1__ Congruência de SADs MNEE por: a) proporção de cobertura vegetal;
 ```{r congruencia de MNEE por k_cont e sitio de amostragem}
 df_plot <- df_ad |> 
   mutate(label = paste0(SiteCode,", p=",round(p,2))) |>
-  arrange(p)
+  arrange(p)  |> filter(k_cont>0.20)
 df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
 df_plot |> 
   ggplot(aes(x=k_cont,y=nCongKS)) +
@@ -106,7 +113,33 @@ df_plot |>
   #      y="número de SADs réplicas congruentes",
   #      x="k") +
   theme_bw() +
-  facet_wrap(~label,ncol=8)
+  scale_x_reverse() +
+  facet_wrap(~label,ncol=6)
+ggsave("apendices/analise_dados/figuras/fig2_cong_k_SiteCode.png",
+       width = 10,
+       height = 17.7)
+```
+
+```{r}
+df_plot <- df_ad |> 
+  mutate(log_S.N = log_S_obs - log_Ntotal) 
+df_plot |> 
+  filter(log_S.N >= -3.75) |>
+  ggplot(aes(x=p,y=exp(log_S.N))) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  labs(y="S / N")
+df_plot |> 
+  filter(log_S.N >= -3.75) |> 
+  ggplot(aes(x=log_S.N,y=nCongKS)) +
+  geom_point(aes(color=p)) +
+  geom_smooth(se=F,method="lm") +
+  facet_wrap(~k,ncol = 5)
+df_plot |> 
+  ggplot(aes(x=p,y=exp(log_Ntotal))) +
+  geom_point() +
+  geom_smooth()
+summary(lm(exp(log_S.N) ~ poly(p,1,raw = T), filter(df_plot,log_S.N >= -3.75)))
 ```
 
 
