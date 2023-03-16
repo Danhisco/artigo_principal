@@ -313,7 +313,11 @@ md_SoE |> (\(.) MuMIn::r.squaredGLMM(.))()
 O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1). Os coeficientes de determinação marginal e condional do modelo são aproximadamente iguais à 0.96. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos apresentarem algum desvio (Figura SI 1), o modelo faz uma boa predição do observado (Figura SI 1). Na figura 5 há a média da predição do modelo mais plausível, que descreve o logito da estimativa média da taxa U em função da interação entre log da riqueza e número total de indivíduos, e grau de limitação de dispersão e lado da paisagem como fatores. Os pontos estão coloridos pela razão entre número de espécies e número de indivíduos (S/N).
 
 ```{r figura 5 para resultados do efeito de escala,fig.width=8,fig.height=8.5}
-cols <- c("avg+-sd"="blue","SoE >= 0.95" = "red") # "#f04546","3 quant"=
+v_threshold <- paste0("SoE >= ",
+                      str_extract(paste(names(df_plot),collapse = " "),
+                                  "(?<=SoE\\_)[0-9]{1}[.][0-9]{1,2}")) 
+cols <- c("blue","red") # "#f04546","3 quant"=
+names(cols) <- c("avg+-sd",v_threshold )
 a <- 0.5
 df_plot |> 
   ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
@@ -327,7 +331,7 @@ df_plot |>
                fun.max = function(x) mean(x) + sd(x), 
                geom = "pointrange",
                aes(x=lado_numeric,y=Pre_Umed,color="avg+-sd"),alpha=0.6,size=a) +
-  geom_vline(aes(xintercept=SoE_0.95,color="SoE >= 0.95"),alpha=0.5) +
+  geom_vline(aes(xintercept=SoE_0.95,color=names(cols)[2]),alpha=0.5) +
   scale_color_manual(name="",values=cols) +
   scale_x_continuous(trans = log2_trans(),
                      breaks = trans_breaks("log2", function(x) 2^x)) +
