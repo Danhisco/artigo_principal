@@ -37,6 +37,7 @@ library(dplyr)
 # objetos
 load("dados/Rdata/md_MNEE.Rdata")
 polyK=3
+source("source/nameModel.R")
 # dados
 # df_resultMNEE
 df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
@@ -44,16 +45,19 @@ df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 df_sim <- read_csv("dados/df_simulacao.csv")
 # df_ad
 f_z <- function(x) (x-mean(x))/sd(x)
-df_ad <- inner_join(x=select(df_resultMNEE,-(Ssd:Smax)),
-                    y=select(df_sim,-tif.path),
-                    by=c("SiteCode")) |>
+df_ad <- inner_join(x=distinct(select(df_resultMNEE,-(Ssd:Smax))),
+                    y=distinct(select(df_sim,-tif.path)),
+                    by=c("SiteCode","k"),multiple="all") |>
   # escolhi remover depois do ajuste, para obter um melhor ajuste e depois excluir os valores
   # filter(k > 0.20) |> # figuras 5 e 6 apêndice Efeito de Escala
-  mutate(k_cont = round(k,2),
+  mutate(logit_cong = 
+    k_cont = round(k,2),
          k = factor(round(k,2),levels=round(k,2)[20:1]), 
          across(Ntotal:S_obs,log,.names="log_{.col}"),
-         across(c(p,k_cont,log_Ntotal:log_S_obs),f_z,.names = "{.col}_z")) |>
+         log_S.N = log_S_obs - log_Ntotal,
+         across(c(p,k_cont,log_Ntotal:log_S.N),f_z,.names = "{.col}_z")) |>
   select(-c(nCongDTS,effort_ha, Ntotal:S_obs))
+
 # df_newdata
 df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
 # df_newdat <- expand.grid(p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
@@ -68,7 +72,8 @@ df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
 
 ```{r GE congruencia MNEE por p e k}
 l_p <- list()
-df_plot <- df_ad |> filter(k_cont>0.20)
+df_plot <- df_ad 
+# |> filter(k_cont>0.20)
 l_p[[1]] <- df_plot |> 
   ggplot(aes(x=p,y=nCongKS)) +
   geom_point() +
@@ -103,7 +108,8 @@ __Figura 1__ Congruência de SADs MNEE por: a) proporção de cobertura vegetal;
 ```{r congruencia de MNEE por k_cont e sitio de amostragem}
 df_plot <- df_ad |> 
   mutate(label = paste0(SiteCode,", p=",round(p,2))) |>
-  arrange(p)  |> filter(k_cont>0.20)
+  arrange(p)  
+# |> filter(k_cont>0.20)
 df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
 df_plot |> 
   ggplot(aes(x=k_cont,y=nCongKS)) +
@@ -150,11 +156,25 @@ summary(lm(exp(log_S.N) ~ poly(p,1,raw = T), filter(df_plot,log_S.N >= -3.75)))
 
 ```{r selecao modelo cheio,echo=T,eval=F}
 polyK=3
-md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                   poly(p_z,polyK,raw=T) * poly(k_cont_z,polyK,raw=T) + 
-                   (poly(k_cont_z,polyK,raw=T)|SiteCode),
+l_md <- list()
+l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                   poly(p_z,polyK,raw=TRUE) * poly(k_cont_z,polyK,raw=TRUE) + 
+                   (poly(k_cont_z,polyK,raw=TRUE)|SiteCode),
           data=df_ad, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
+l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                   poly(p_z,polyK,raw=TRUE) * poly(k_cont_z,polyK,raw=TRUE) * log_S.N_z + 
+                   (poly(k_cont_z,polyK,raw=TRUE)|SiteCode),
+          data=df_ad, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
+#   
+# md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+#                    poly(p_z,polyK,raw=T) * poly(k_cont_z,polyK,raw=T) + 
+#                    (poly(k_cont_z,polyK,raw=T)|SiteCode),
+#           data=df_ad, family = "binomial",
+#           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
+names(l_md) <- lapply(l_md, f_nameModel)
+AICctab(l_md,weights=T)
 ```
 
 
