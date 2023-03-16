@@ -65,11 +65,12 @@ f_lag.U <- function(df){
   df <- df |> mutate(Ucsum0 = ifelse(Ucsum0>1,1,Ucsum0))
   return(df)
 }
-f_k.SoE <- \(df,limiar=0.99){
+f_k.SoE <- \(df,limiar=0.95){
   if(max(df$Ucsum,na.rm = T)<limiar){
-    df |> head(n=1) |> mutate(SoE.99=NA)
+    df |> head(n=1) |> mutate("SoE_{limiar}":=NA)
   }else{
-    df |> filter(Ucsum>=limiar) |> head(n=1) |> mutate(SoE.99=as.numeric(as.character(lado_factor)))
+    df |> filter(Ucsum>=limiar) |> head(n=1) |> 
+      mutate("SoE_{limiar}":=as.numeric(as.character(lado_factor)))
   }
 }
 #
