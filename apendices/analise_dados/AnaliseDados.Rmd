@@ -50,14 +50,12 @@ df_ad <- inner_join(x=distinct(select(df_resultMNEE,-(Ssd:Smax))),
                     by=c("SiteCode","k"),multiple="all") |>
   # escolhi remover depois do ajuste, para obter um melhor ajuste e depois excluir os valores
   # filter(k > 0.20) |> # figuras 5 e 6 apêndice Efeito de Escala
-  mutate(logit_cong = 
-    k_cont = round(k,2),
+  mutate(k_cont = round(k,2),
          k = factor(round(k,2),levels=round(k,2)[20:1]), 
          across(Ntotal:S_obs,log,.names="log_{.col}"),
          log_S.N = log_S_obs - log_Ntotal,
          across(c(p,k_cont,log_Ntotal:log_S.N),f_z,.names = "{.col}_z")) |>
   select(-c(nCongDTS,effort_ha, Ntotal:S_obs))
-
 # df_newdata
 df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
 # df_newdat <- expand.grid(p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
@@ -164,7 +162,7 @@ l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
 l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
                    poly(p_z,polyK,raw=TRUE) * poly(k_cont_z,polyK,raw=TRUE) * log_S.N_z + 
-                   (poly(k_cont_z,polyK,raw=TRUE)|SiteCode),
+                   (1|SiteCode),
           data=df_ad, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
 #   
@@ -173,12 +171,13 @@ l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~
 #                    (poly(k_cont_z,polyK,raw=T)|SiteCode),
 #           data=df_ad, family = "binomial",
 #           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-names(l_md) <- lapply(l_md, f_nameModel)
+names(l_md) <- c("poly3 k|Site","1|Site")
 AICctab(l_md,weights=T)
 ```
 
 
 ```{r dHARMa residuos md_MNEE_RE,eval=TRUE,cache=TRUE}
+md_MNEE <- l_md[["poly3 k|Site"]]
 p_plot <- DHARMa::simulateResiduals(md_MNEE,n=1000)
 plot(p_plot)
 ```
@@ -231,6 +230,9 @@ __Tabela 1__ Coeficiente de determinação marginal e condicional do modelo chei
 (df_R2_RE_MNEE <- MuMIn::r.squaredGLMM(md_MNEE))
 # kableExtra::kable(df_R2_RE_MNEE)
 ```
+
+Uma vez que observa-se viés na predição de alguns sítios, vamos utilizar o modelo médio para reduzir esse viés na predição de novo conjunto de dados que interpola os valores observados.
+
 
 ### Predição para novo conjunto de dados
 
