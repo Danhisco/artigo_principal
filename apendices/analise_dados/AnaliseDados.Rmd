@@ -188,11 +188,20 @@ __Figura 4__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
 df_ranef <- ranef(md_MNEE)$SiteCode 
 df_ranef$SiteCode <- row.names(df_ranef)
 row.names(df_ranef) <- NULL
-df_ranef |> 
-  pivot_longer(-SiteCode) |>
+df_p <- df_ranef |> 
+  pivot_longer(-SiteCode) |> 
+  inner_join(df_ad |> select(SiteCode,p) |> distinct(),by="SiteCode")
+df_p |> 
   ggplot(aes(sample=value)) + 
   stat_qq(alpha=0.3) + stat_qq_line(alpha=0.3,col="red") +
   facet_wrap(~name,scales="free",ncol=3)
+# df_p |> 
+#   ggplot(aes(x=p,y=value)) +
+#   geom_hline(yintercept = 0,color="red") +
+#   geom_point() +
+#   geom_smooth() +
+#   facet_wrap(~name,ncol=2) +
+#   theme_bw()
 ```
 
 __Figura 5__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
@@ -231,99 +240,49 @@ __Tabela 1__ Coeficiente de determinação marginal e condicional do modelo chei
 # kableExtra::kable(df_R2_RE_MNEE)
 ```
 
-Uma vez que observa-se viés na predição de alguns sítios, vamos utilizar o modelo médio para reduzir esse viés na predição de novo conjunto de dados que interpola os valores observados.
 
+### Modelo Médio
 
-### Predição para novo conjunto de dados
-
-```{r predito newdata MNEE}
-#new data
-df_newdat$PREDc <- predict(md_MNEE,newdata=df_newdat,type="response")
-df_newdat$PREDm <- predict(md_MNEE,newdata=df_newdat,type="response",re.form=~0)
-#### em consrução
-# f_summarise_qtl <- function(x, q = c(0.05, 0.25,  0.75, 0.95)) {
-#   tibble("{{ x }}" := quantile(x, q), "{{ x }}_q" := q) |> 
-#     pivot_wider(values_from = 1, names_from = 2, )
-# }
-##
-df_plot <- df_newdat |> 
-  group_by(p_z,k_cont_z) |> 
-  summarise(Prob_Cong_avg = mean(PREDc),
-            Prob_Cong_median = median(PREDc),
-            Prob_Cong_q05 = quantile(PREDc,probs = 0.05),
-            Prob_Cong_q95 = quantile(PREDc,probs = 0.95)) |> 
-  # summarise(across(PREDc:PREDm,list(avg = mean, mdn = median, 
-  #                                   qtl05 = quantile(probs=0.05), qtl25 = quantile(probs=0.25),
-  #                                   qtl05 = quantile(probs=0.75), qtl25 = quantile(probs=0.95)))) |> 
-  mutate(p = p_z * sd(df_ad$p) + mean(df_ad$p),
-         k = k_cont_z * sd(df_ad$p) + mean(df_ad$p)) |> 
-  filter(k > 0.20 & k <=0.99)
-## gráficos
-df_plot |>
-  pivot_longer(cols = Prob_Cong_avg:Prob_Cong_q95) |> #pull(value) |> (\(.)plot(density(.)))()
-  ggplot(aes(x=p,y=k,fill=value)) +
-  geom_tile() +
-  scale_fill_distiller(palette = "Spectral") +
-  facet_wrap(~name,ncol=2,scales="free") +
-  labs(title="predito condicional") +
-  theme_classic()
-ggsave("apendices/analise_dados/figuras/predito_marginalMNEE.png",
-       width = 8.5,
-       height = 6.7)
+```{r}
+# todas as combinações de modelo do modelo cheio
+registerDoMC(3)
+l_md.dredge_MNEE <- llply(dredge(md_MNEE,trace = FALSE,evaluate=FALSE), eval,.parallel = TRUE)
+save(l_md.dredge_MNEE,file="dados/Rdata/l_md.dredge_MNEE.Rdata")
 ```
 
 
 
-
-<!-- ### Predição Modelo Médio MNEE RE nCongKS -->
-
-<!-- ```{r modelo médio MNEE RE nCongKS} -->
-<!-- # todas as combinações de modelo do modelo cheio -->
-<!-- registerDoMC(3) -->
-<!-- l_md.dredge_nCongKS_MNEE <- llply(dredge(md_MNEE,trace = FALSE,evaluate=FALSE), eval,.parallel = TRUE) -->
-<!-- save(l_md.dredge_nCongKS_MNEE,file = "dados/Rdata/l_md_dredge_nCongKS_MNEE.Rdata") -->
-<!-- ``` -->
-
-<!-- __tabela 2__ Sub modelos derivados do modelo cheio com maior peso de evidência  -->
-
-<!-- ```{r tabela 2 peso de evidência dos modelos em ordem decrescente,results='hide' } -->
-<!-- load("dados/Rdata/l_md_dredge_nCongKS_MNEE.Rdata") -->
-<!-- # AICctab -->
-<!-- df_tableGLMM <- print(AICctab(l_md.dredge_nCongKS_MNEE,weights=TRUE)) %>%  -->
-<!--   as.data.frame() -->
-<!-- df_tableGLMM$model_code <- row.names(df_tableGLMM) -->
-<!-- df_tableGLMM$weight <- as.character(df_tableGLMM$weight) -->
-<!-- df_tableGLMM$dAICc <- as.numeric(as.character(df_tableGLMM$dAICc)) -->
-<!-- rownames(df_tableGLMM) <- NULL -->
-<!-- df_tableGLMM <- df_tableGLMM[,c(4,1:3)] -->
-<!-- ``` -->
+```{r}
+# Model Averaging for SiteCode predictions
+mdAvg_MNEE__MuMIn <- model.avg(l_md.dredge_MNEE)
+save(mdAvg_MNEE__MuMIn,file="dados/Rdata/mdAvg_MNEE__MuMIn.Rdata")
+# Model Averaging for new data predictions
+df_pred <- expand.grid(SiteCode=unique(df_ad$SiteCode)[1],
+                       k_cont_z=seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z),length=40),
+                       p_z=seq(min(df_ad$p_z),max(df_ad$p_z),length=200))
+mdAvg_MNEE__AICcmodavg <- modavgPred(l_md.dredge_MNEE,newdata = df_pred,type="link") %>%
+  cbind(df_pred)
+save(mdAvg_MNEE__AICcmodavg,
+     file="dados/Rdata/mdAvg_MNEE__AICcmodavg.Rdata")
+```
 
 
-<!-- ```{r model averaging MNEE  MuMIn e AICcmodavg} -->
-<!-- # Model Averaging for SiteCode predictions -->
-<!-- mdAvg_nCongMNEE_MuMIn <- model.avg(l_md.dredge_nCongKS_MNEE) -->
-<!-- save(mdAvg_nCongMNEE_MuMIn,file="dados/Rdata/mdAvg_nCongMNEE_MuMIn.Rdata") -->
-<!-- # Model Averaging for new data predictions -->
-<!-- df_pred <- expand.grid(SiteCode=unique(df_ad$SiteCode)[1], -->
-<!--                        d_z=seq(min(df_ad$d_z),max(df_ad$d_z),length=40), -->
-<!--                        p_z=seq(min(df_ad$p_z),max(df_ad$p_z),length=200)) -->
-<!-- mdAvg_nCongMNEE_AICcmodavg <- modavgPred(l_md.dredge_nCongKS_MNEE,newdata = df_pred,type="link") %>% -->
-<!--   cbind(df_pred) -->
-<!-- save(mdAvg_nCongMNEE_AICcmodavg,file="dados/Rdata/mdAvg_nCongMNEE_AICcmodavg.Rdata") -->
-<!-- ``` -->
+```{r  observado e predito modelo medio, comment=FALSE, message=FALSE,warning=FALSE,results="hide",fig.width=8, fig.height=30}
+# Modelo Global
+load(file="/home/danilo/Documentos/artigo_mestrado/1A.P_MOVER/piloto_MNEE_4x4km/resultados/mdAvg_nRefEE__MuMIn.Rdata")
+# Predição
+df_md <- df_resultados %>% filter(MN=="EE")
+df_md$Pr_nRef <- predict(mdAvg_nRefEE__MuMIn,type="response")*100
+# Gráfico
+df_md %<>% mutate(title = paste0(SiteCode," p=",round(p,3))) %>% arrange(p)
+df_md$title <- factor(df_md$title,levels = unique(df_md$title))
+ggplot(df_md,aes(x=d,y=n_nRef)) +
+  geom_point() + geom_line(aes(y=Pr_nRef),color="red") +
+  labs(x="Dispersão Média",
+       y="Número de SADs não Refutadas",
+       title="Prob. SAD predita ser congruente, MNEE") +
+  facet_wrap(~title,ncol=5)
+```
 
-<!-- ```{r dados para novo conjunto de dados que interpola e extrapola os valores observados} -->
-<!-- load("dados/Rdata/mdAvg_nCongMNEE_AICcmodavg.Rdata") -->
-<!-- df_plot <- mdAvg_nCongMNEE_AICcmodavg |>  -->
-<!--   select(mod.avg.pred,lower.CL:upper.CL,d_z:p_z) |>  -->
-<!--   mutate(across(mod.avg.pred:upper.CL,\(x) exp(x)/(1+exp(x))), -->
-<!--          p = p_z*sd(df_ad$p) + mean(df_ad$p), -->
-<!--          d = d_z*sd(df_ad$d) + mean(df_ad$d)) -->
-<!-- df_plot |>  -->
-<!--   ggplot(aes(x=p,y=d,fill=mod.avg.pred)) + -->
-<!--   coord_cartesian(expand = FALSE) +  -->
-<!--   geom_tile() + -->
-<!--   scale_fill_distiller(palette = "Spectral") -->
-<!-- ``` -->
 
 
