@@ -323,18 +323,12 @@ b3 <- bootMer(md_MNEE, FUN = f1, nsim=1000, parallel="multicore", ncpus=2)
 b4 <- bootMer(md_MNEE, FUN = f2, nsim=1000, parallel="multicore", ncpus=2)
 ## calcula as médias e intervalos de confiança quantílicos para cada combinação de preditoras
 ## no novo conjunto de dados
-df_newdat$mean <- apply(b3$t,2,mean)
-df_newdat$IC.low <- apply(b3$t,2,quantile, 0.025)
-df_newdat$IC.upp <- apply(b3$t,2,quantile, 0.975)
-df_newdat$mean.fixed <- apply(b4$t,2,mean)
-df_newdat$IC.low.fixed <- apply(b4$t,2,quantile, 0.025)
-df_newdat$IC.upp.fixed <- apply(b4$t,2,quantile, 0.975)
-df_newdat %<>% mutate(std_mean = 10^(mean),
-                      std_IC.low = 10^(IC.low),
-                      std_IC.upp = 10^(IC.upp),
-                      std_mean.fixed = 10^(mean.fixed),
-                      std_IC.low.fixed = 10^(IC.low),
-                      std_IC.upp.fixed = 10^(IC.upp.fixed))
-
+df_newdat2$mean <- apply(b3$t,2,mean)
+df_newdat2$IC.low <- apply(b3$t,2,quantile, 0.025)
+df_newdat2$IC.upp <- apply(b3$t,2,quantile, 0.975)
+df_newdat2$mean.fixed <- apply(b4$t,2,mean)
+df_newdat2$IC.low.fixed <- apply(b4$t,2,quantile, 0.025)
+df_newdat2$IC.upp.fixed <- apply(b4$t,2,quantile, 0.975)
+write_csv(x=df_newdat2,file = "dados/csv/resultados_MN/MNEE/df_newdata.csv")
 ```
 
