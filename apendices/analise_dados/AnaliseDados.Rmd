@@ -64,9 +64,11 @@ df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
 # write_csv(df_newdat,"dados/csv/df_newdataSADs.csv")
 ```
 
-# MNEE com mapas contemporaneos
+# MNEE 
 
-## Gráficos Exploratórios
+## mapas contemporaneos
+
+### Gráficos Exploratórios
 
 ```{r GE congruencia MNEE por p e k}
 l_p <- list()
@@ -145,10 +147,6 @@ df_plot |>
   geom_smooth()
 summary(lm(exp(log_S.N) ~ poly(p,1,raw = T), filter(df_plot,log_S.N >= -3.75)))
 ```
-
-
-
-## Análise Estatística
 
 ### Modelo Cheio
 
@@ -247,10 +245,35 @@ __Tabela 1__ Coeficiente de determinação marginal e condicional do modelo chei
 # kableExtra::kable(df_R2_RE_MNEE)
 ```
 
+### Bootstrap do modelo cheio
+
+```{r bootstrap do modelo cheio,echo=T}
+#new data
+df_newdat2 <- df_newdat |> filter(SiteCode == "BAlenc4") |> select(p_z:SiteCode)
+## Passo 2: crie as função que devem ser calculadas dos modelos a cada simulação
+## Previstos por efeitos fixos e aleatórios
+f1 <- function(.) predict(., newdata=df_newdat2)
+## Previstos por efeitos fixos (argumento re.form=~0)
+f2 <- function(.) predict(., newdata=df_newdat2, re.form=~0)
+## Os dois bootstraps. Ajuste o argumento ncpus para o numero de cores de seu computador
+b3 <- bootMer(md_MNEE, FUN = f1, nsim=1000, parallel="multicore", ncpus=2)
+b4 <- bootMer(md_MNEE, FUN = f2, nsim=1000, parallel="multicore", ncpus=2)
+## calcula as médias e intervalos de confiança quantílicos para cada combinação de preditoras
+## no novo conjunto de dados
+df_newdat2$mean <- apply(b3$t,2,mean)
+df_newdat2$IC.low <- apply(b3$t,2,quantile, 0.025)
+df_newdat2$IC.upp <- apply(b3$t,2,quantile, 0.975)
+df_newdat2$mean.fixed <- apply(b4$t,2,mean)
+df_newdat2$IC.low.fixed <- apply(b4$t,2,quantile, 0.025)
+df_newdat2$IC.upp.fixed <- apply(b4$t,2,quantile, 0.975)
+write_csv(x=df_newdat2,file = "dados/csv/resultados_MN/MNEE/df_newdata.csv")
+```
+
+
 
 ### Modelo Médio
 
-```{r códigos para rodar o modelo médio}
+```{r códigos para rodar o modelo médio,echo=T}
 # todas as combinações de modelo do modelo cheio
 registerDoMC(2)
 l_md.dredge_MNEE <- llply(dredge(md_MNEE,trace = FALSE,evaluate=FALSE), eval,.parallel = TRUE)
@@ -295,40 +318,9 @@ v_cols <- c("md médio" = "red", "md cheio" = "blue")
 ggsave("apendices/analise_dados/figuras/fig6b_PredObs_k_Site.png",p,
        width = 10,
        height = 17.7)
-# 
-# # Gráfico
-# df_md %<>% mutate(title = paste0(SiteCode," p=",round(p,3))) %>% arrange(p)
-# df_md$title <- factor(df_md$title,levels = unique(df_md$title))
-# ggplot(df_md,aes(x=d,y=n_nRef)) +
-#   geom_point() + geom_line(aes(y=Pr_nRef),color="red") +
-#   labs(x="Dispersão Média",
-#        y="Número de SADs não Refutadas",
-#        title="Prob. SAD predita ser congruente, MNEE") +
-#   facet_wrap(~title,ncol=5)
+
 ```
 
 
-### Bootstrap do modelo cheio
 
-```{r bootstrap do modelo cheio}
-#new data
-df_newdat2 <- df_newdat |> filter(SiteCode == "BAlenc4") |> select(p_z:SiteCode)
-## Passo 2: crie as função que devem ser calculadas dos modelos a cada simulação
-## Previstos por efeitos fixos e aleatórios
-f1 <- function(.) predict(., newdata=df_newdat2)
-## Previstos por efeitos fixos (argumento re.form=~0)
-f2 <- function(.) predict(., newdata=df_newdat2, re.form=~0)
-## Os dois bootstraps. Ajuste o argumento ncpus para o numero de cores de seu computador
-b3 <- bootMer(md_MNEE, FUN = f1, nsim=1000, parallel="multicore", ncpus=2)
-b4 <- bootMer(md_MNEE, FUN = f2, nsim=1000, parallel="multicore", ncpus=2)
-## calcula as médias e intervalos de confiança quantílicos para cada combinação de preditoras
-## no novo conjunto de dados
-df_newdat2$mean <- apply(b3$t,2,mean)
-df_newdat2$IC.low <- apply(b3$t,2,quantile, 0.025)
-df_newdat2$IC.upp <- apply(b3$t,2,quantile, 0.975)
-df_newdat2$mean.fixed <- apply(b4$t,2,mean)
-df_newdat2$IC.low.fixed <- apply(b4$t,2,quantile, 0.025)
-df_newdat2$IC.upp.fixed <- apply(b4$t,2,quantile, 0.975)
-write_csv(x=df_newdat2,file = "dados/csv/resultados_MN/MNEE/df_newdata.csv")
-```
 
