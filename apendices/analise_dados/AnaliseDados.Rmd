@@ -151,16 +151,20 @@ summary(lm(exp(log_S.N) ~ poly(p,1,raw = T), filter(df_plot,log_S.N >= -3.75)))
 ### Modelo Cheio
 
 ```{r selecao modelo cheio,echo=T,eval=T,cache=TRUE}
-polyK=3
 l_md <- list()
 l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                   poly(p_z,polyK,raw=TRUE) * poly(k_cont_z,polyK,raw=TRUE) + 
-                   (poly(k_cont_z,polyK,raw=TRUE)|SiteCode),
+                   poly(p_z,3,raw=TRUE) * poly(k_cont_z,3,raw=TRUE) + 
+                   (poly(k_cont_z,3,raw=TRUE)|SiteCode),
           data=df_ad, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
 l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                   poly(p_z,polyK,raw=TRUE) * poly(k_cont_z,polyK,raw=TRUE) * log_S.N_z + 
-                   (1|SiteCode),
+                   poly(p_z,2,raw=TRUE) * poly(k_cont_z,2,raw=TRUE) + 
+                   (poly(k_cont_z,2,raw=TRUE)|SiteCode),
+          data=df_ad, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
+l_md[[3]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                   p_z * k_cont_z + 
+                   (k_cont_z|SiteCode),
           data=df_ad, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
 #   
@@ -169,22 +173,13 @@ l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~
 #                    (poly(k_cont_z,polyK,raw=T)|SiteCode),
 #           data=df_ad, family = "binomial",
 #           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-names(l_md) <- c("poly3 k|Site","1|Site")
+names(l_md) <- c("poly 3","poly 2", "poly 1")
 AICctab(l_md,weights=T)
 ```
 
 
-```{r dHARMa residuos md_MNEE_RE,echo=TRUE,cache=TRUE}
-md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                   poly(p_z,polyK,raw=TRUE) * poly(k_cont_z,polyK,raw=TRUE) + 
-                   (poly(k_cont_z,polyK,raw=TRUE)|SiteCode),
-          data=df_ad, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-p_plot <- DHARMa::simulateResiduals(md_MNEE,n=1000)
-plot(p_plot)
-```
 
-__Figura 4__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
+<!-- __Figura 4__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS -->
 
 ```{r Quantile-quantile plot random effects,eval=TRUE}
 df_ranef <- ranef(md_MNEE)$SiteCode 
@@ -270,13 +265,48 @@ write_csv(x=df_newdat2,file = "dados/csv/resultados_MN/MNEE/df_newdata.csv")
 ```
 
 
-
 ### Modelo Médio
 
+
+```{r modelos cheios,echo=TRUE,cache=TRUE}
+l_md <- list()
+l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                   (p_z + I(p_z^2) + I(p_z^3)) *
+                  (k_cont_z + I(k_cont_z^2) + I(k_cont_z^3)) + 
+                   (k_cont_z + I(k_cont_z^2) + I(k_cont_z^3)|SiteCode),
+          data=df_ad, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
+l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                   (p_z + I(p_z^2)) *
+                  (k_cont_z + I(k_cont_z^2)) + 
+                   (k_cont_z + I(k_cont_z^2)|SiteCode),
+          data=df_ad, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
+l_md[[3]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                   p_z * k_cont_z + 
+                   (k_cont_z|SiteCode),
+          data=df_ad, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
+names(l_md) <- c("poly 3|SiteCode", "poly 2|SiteCode", "poly 1|SiteCode")
+#
+# aictab(l_md)
+#
+```
+
+
+
 ```{r códigos para rodar o modelo médio,echo=T}
+# modelo mais pluasível
+md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                   (p_z + I(p_z^2) + I(p_z^3)) *
+                  (k_cont_z + I(k_cont_z^2) + I(k_cont_z^3)) + 
+                   (k_cont_z + I(k_cont_z^2) + I(k_cont_z^3)|SiteCode),
+          data=df_ad, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
 # todas as combinações de modelo do modelo cheio
-registerDoMC(2)
+registerDoMC(3)
 l_md.dredge_MNEE <- llply(dredge(md_MNEE,trace = FALSE,evaluate=FALSE), eval,.parallel = TRUE)
+  # llply(dredge(md_MNEE,trace = FALSE,evaluate=FALSE), eval,.parallel = TRUE)
 # Model Averaging for SiteCode predictions
 mdAvg_MNEE__MuMIn <- model.avg(l_md.dredge_MNEE)
 # Model Averaging for new data predictions
@@ -290,6 +320,14 @@ save(l_md.dredge_MNEE,file="dados/Rdata/l_md.dredge_MNEE.Rdata") # lista c todas
 save(mdAvg_MNEE__MuMIn,file="dados/Rdata/mdAvg_MNEE__MuMIn.Rdata") # predição do modelo médio para os dados observados
 save(mdAvg_MNEE__AICcmodavg,file="dados/Rdata/mdAvg_MNEE__AICcmodavg.Rdata") # predição do modelo médio para novo conjunto de dados 
 ```
+
+#### comparação submodelos
+
+```{r head tabela dos submodelos do modelo cheio}
+load("dados/Rdata/l_md.dredge_MNEE.Rdata")
+df_AICctabMNEE <- model.sel(l_md.dredge_MNEE)
+```
+
 
 
 
@@ -320,6 +358,8 @@ ggsave("apendices/analise_dados/figuras/fig6b_PredObs_k_Site.png",p,
        height = 17.7)
 
 ```
+
+
 
 
 

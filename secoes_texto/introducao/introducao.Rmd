@@ -19,6 +19,29 @@ download_file(file ="relatorio_final.Rmd",
               gpath = "mestrado/disciplinas/BIE5716/")
 ```
 
+# Opening versão 2:
+
+Um debate entre os dois principais programas de pesquisa em ecologia de paisagens questiona a relevância do espaço para compreender os efeitos da perda de habitat na manutenção da diversidade local (REF). Conclusões sobre a relevância do espaço pode influenciar no design ou priorização de paisagens para a conservação e restauração dos ecossistemas naturais (REFs dos dois programas de pesquisa).
+O programa que pressupõe independência dos efeitos da perda de habitat e da configuração espacial, controlada pela quantidade de habitat - chamado de fragmentação per se, conclui que os efeitos da fragmentação per se são pequenos e idiossincráticos, sendo apenas a quantidade de habitat suficiente para compreender os efeitos majoritários da perda de habitat (REF).
+O programa que pressupõe interdependência entre a perda de habitat e as concomitantes mudanças na configuração espacial não reconhece as conclusões que pressupõe independência a priori entre quantidade de habitat e a chamada fragmentação per se (REF).
+Um desafio de investigar os efeitos da perda de habitat e da fragmentação per se é a associação entre as métricas dessas variáveis nos sistemas naturais (REF).
+Alternativamente à decomposição ortogonal da configuração espacial do habitat remanescente em quantidade de habitat e fragmentação per se, é possível avaliar a necessidade  de considerar a configuração espacial do habitat em comparação ao considerar apenas a quantidade de habitat remanescente na paisagem (REF). 
+Essa abordagem sugere a comparação de modelos ecológicos que consideram explicitamente a configuração espacial do habitat e a quantidade de habitat na dinâmica ecológica que resulta no padrão de diversidade local observado.
+
+Para modelar a biodiversidade local é necessário pressupor a dispersão de indivíduos da paisagem ao redor (@Hubbell_2011, @Chase_2020, @Aavik_2017). Os modelos que pressupõe apenas a quantidade de habitat não incluem a influência do espaço na movimentação de indivíduos no habitat remanescente - chamado de conectividade. Os modelos que consideram a configuração espacial podem simular a interação entre a limitação de dispersão dos indivíduos e a particular configuração espacial da paisagem na conectividade. 
+A influência da configuração espacial na conectividade deve depender dos requerimentos de habitat e capacidade de dispersão da espécie, e da proporção de cobertura vegetal na paisagem ao redor (@Villard2014). Quando multiplas espécies são modeladas espera-se que existam espécies que requerem a configuração espacial do habitat para descrever a diversidade local ao longo de todo gradiente de cobertura vegetal (@Pardinir2010, @Villard2014). A configuração espacial do habitat deve apresentar maior variabilidade em proporções intermediárias de habitat, onde áreas de habitat como corredores ecológicos ,
+6,aq
+ 5
+
+Assim, uma expectativa é que a necessidade de pressupor configuração espacial do habitat pode mudar ao longo do gradiente de cobertura vegetal. Porém, essa expectativa se baseia em modelos teóricos que investigam a resposta ecológica em situação de equilíbrio na heterogeneidade da paisagem (REF). Tradicionalmente a ecologia de paisagens se baseia em investigar a relação entre resposta ecológica observada e heterogeneidade contemporânea da paisagem (FRAZIER ET AL 2017), mas há reconhecimento de que não considerar a conectividade espaço-temporal pode negligenciar boa parte da conectividade de um local (@Martensen2017). Infelizmente não é possível avaliar a conectividade espaço-temporal de taxóns que podem apresentar grande atraso na resposta ecológica, uma vevz que a trajetória detalhada da heterogeneidade da paisagem é recente (e.g. o MapBiomas inicia em 1986). Nesse contexto, alguns autores sugerem que um 
+
+
+Ao passo que se perde cobertura vegetal e a paisagem passa o limiar de percolação, há aumento na variabilidade da configuração espacial do habitat em proporções intermediárias, 
+
+os fragmentos remanescentes podem se tornar menores e mais isolados;
+
+
+ao passo que se perde cobertura vegetal e a paisagem passa o limiar de percolação, os fragmentos remanescentes podem se tornar menores e mais isolados, populações perdidas localmente podem não ser repostas enquanto outras podem aumentar em abundância relativa; com a redução do habitat para proporções abaixo de níveis intermediários há também a redução do número de fragmentos possíveis, levando à perda de espécies que estavam restritas aos fragmentos perdidos (@Pardini2010, @Villard2014).
 
 
 # Introdução
