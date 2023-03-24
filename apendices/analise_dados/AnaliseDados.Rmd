@@ -153,28 +153,36 @@ summary(lm(exp(log_S.N) ~ poly(p,1,raw = T), filter(df_plot,log_S.N >= -3.75)))
 ```{r selecao modelo cheio,echo=T,eval=T,cache=TRUE}
 l_md <- list()
 l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                   poly(p_z,3,raw=TRUE) * poly(k_cont_z,3,raw=TRUE) + 
-                   (poly(k_cont_z,3,raw=TRUE)|SiteCode),
+                     log_Ntotal_z * log_S_obs_z * poly(k_cont_z,3,raw=TRUE) * poly(p_z,3,raw=TRUE) + 
+                     (poly(k_cont_z,3,raw=TRUE)|SiteCode),
           data=df_ad, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
 l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                   poly(p_z,2,raw=TRUE) * poly(k_cont_z,2,raw=TRUE) + 
-                   (poly(k_cont_z,2,raw=TRUE)|SiteCode),
+                     log_Ntotal_z * log_S_obs_z * poly(k_cont_z,3,raw=TRUE) +
+                     poly(p_z,3,raw=TRUE) * poly(k_cont_z,3,raw=TRUE) + 
+                     (poly(k_cont_z,3,raw=TRUE)|SiteCode),
           data=df_ad, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
 l_md[[3]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                   p_z * k_cont_z + 
-                   (k_cont_z|SiteCode),
+                     log_Ntotal_z * log_S_obs_z +
+                     poly(p_z,3,raw=TRUE) * poly(k_cont_z,3,raw=TRUE) + 
+                     (poly(k_cont_z,3,raw=TRUE)|SiteCode),
           data=df_ad, family = "binomial",
           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-#   
-# md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-#                    poly(p_z,polyK,raw=T) * poly(k_cont_z,polyK,raw=T) + 
-#                    (poly(k_cont_z,polyK,raw=T)|SiteCode),
-#           data=df_ad, family = "binomial",
-#           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-names(l_md) <- c("poly 3","poly 2", "poly 1")
-AICctab(l_md,weights=T)
+l_md[[4]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                     log_Ntotal_z + log_S_obs_z +
+                     poly(p_z,3,raw=TRUE) * poly(k_cont_z,3,raw=TRUE) + 
+                     (poly(k_cont_z,3,raw=TRUE)|SiteCode),
+          data=df_ad, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
+l_md[[5]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                     poly(p_z,3,raw=TRUE) * poly(k_cont_z,3,raw=TRUE) + 
+                     (poly(k_cont_z,3,raw=TRUE)|SiteCode),
+          data=df_ad, family = "binomial",
+          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
+names(l_md) <- c("N * S * k * p","N * S * k","N * S", "N + S","1")
+(df_aictab <- AICctab(l_md,weights=T) |> as.data.frame())
+md_MNEE <- l_md[[row.names(df_aictab)[1]]]
 ```
 
 
@@ -208,11 +216,11 @@ __Figura 5__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
 
 ```{r figura 6 observado e predito pelo modelo médio de nCongKS MNEE, eval=T,fig.height=4}
 # dados
-# df_md <- md_MNEE@frame
-# df_md$nCong_observado <- df_md$`cbind(nCongKS, 100 - nCongKS)`[,1]
-# df_md$nCong_predito <- predict(md_MNEE,type="response") * 100
+df_md <- md_MNEE@frame
+df_md$nCong_observado <- df_md$`cbind(nCongKS, 100 - nCongKS)`[,1]
+df_md$nCong_predito <- predict(md_MNEE,type="response") * 100
 # graficos
-ggplot(df_md,aes(x=nCongKS,y=nCong_predito)) +
+ggplot(df_md,aes(x=nCong_observado,y=nCong_predito)) +
   geom_smooth(method = "lm",aes(group=SiteCode),se=FALSE,alpha=0.3) +
   geom_abline(slope = 1,intercept = 0,col="red",alpha=0.8,size=2) +
   geom_point(alpha=0.3) +
@@ -221,7 +229,7 @@ ggplot(df_md,aes(x=nCongKS,y=nCong_predito)) +
        title="Modelo Cheio",
        subtitle="predito ~ observado") +
   coord_cartesian(expand = F)
-summary(lm(nCongKS ~ nCong_predito,df_md))
+summary(lm(nCong_observado ~ nCong_predito,df_md))
 ```
 
 __Figura 6__ Observado e predito pelo modelo cheio selecionado 
@@ -264,6 +272,41 @@ df_newdat2$IC.upp.fixed <- apply(b4$t,2,quantile, 0.975)
 write_csv(x=df_newdat2,file = "dados/csv/resultados_MN/MNEE/df_newdata.csv")
 ```
 
+```{r predito pelo modelo cheio}
+# função para summarizar 
+f_summarise <- function(x,probs = c(0.05,0.25, 0.5, 0.75,0.95)){
+  tibble(pred = unname(quantile(x,probs)),prob = probs)
+}
+#
+df_newdat$pred <- predict(md_MNEE,newdata=df_newdat,type="response")
+df_plot <- df_newdat |> 
+  reframe(across(pred,f_summarise,.unpack=TRUE),.by=c(p_z,k_cont_z)) |> 
+  rename_with(~str_remove(.,"pred_")) |> 
+  mutate(label = paste0("Quant = ",prob),
+         p = p_z*sd(df_ad$p) + mean(df_ad$p),
+         k = k_cont_z*sd(df_ad$k_cont) + mean(df_ad$k_cont))
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
+# gráficos
+f_ggplot2 <- function(df,facets=2){
+  ggplot(df,aes(x=p,y=k,fill=pred)) +
+    geom_tile() +
+    scale_fill_distiller(palette = "Spectral",limits=c(0,1)) +
+    scale_y_reverse() +
+    theme_classic() +
+    coord_cartesian(expand = FALSE) +
+    labs(fill="Pr(Cong)") +
+    facet_wrap(~label,ncol = facets)
+}
+l_p <- list()
+l_p[[1]] <- df_plot |> 
+  filter(prob == 0.5) |> 
+  f_ggplot2() + labs(x="")
+l_p[[2]] <- df_plot |> 
+  filter(prob != 0.5) |>
+  f_ggplot2()
+ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+```
+
 
 ### Modelo Médio
 
@@ -298,6 +341,7 @@ names(l_md) <- c("poly 3|SiteCode", "poly 2|SiteCode", "poly 1|SiteCode")
 ```{r códigos para rodar o modelo médio,echo=T}
 # modelo mais pluasível
 md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+                   log_Ntotal_z + log_S_obs_z +
                    (p_z + I(p_z^2) + I(p_z^3)) *
                   (k_cont_z + I(k_cont_z^2) + I(k_cont_z^3)) + 
                    (k_cont_z + I(k_cont_z^2) + I(k_cont_z^3)|SiteCode),
@@ -346,7 +390,7 @@ v_cols <- c("md médio" = "red", "md cheio" = "blue")
 (p <- df_md |> 
   # pivot_longer(pred_modCheio:pred_modMedio) |>
   ggplot(aes(x=k_cont,y=nCongKS)) +
-  geom_line(aes(y=pred_modCheio),color="blue") +
+  # geom_line(aes(y=pred_modCheio),color="blue") +
   geom_line(aes(y=pred_modMedio),color="red",alpha=0.4) +
   geom_point() +
   theme_bw() +
@@ -361,6 +405,20 @@ ggsave("apendices/analise_dados/figuras/fig6b_PredObs_k_Site.png",p,
 
 
 
+```{r}
+df_newdat2$pred_mdMedio <- predict(mdAvg_MNEE__MuMIn,type="response",newdata=df_newdat2)*100
+df_newdat2$pred_mdCheio <- predict(md_MNEE,type="response",newdata=df_newdat2)*100
+df_newdat2 |>
+  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
+         k = k_cont_z*sd(df_ad$k_cont) + mean(df_ad$k_cont)) |> 
+  pivot_longer(starts_with("pred_")) |> 
+  ggplot(aes(x=p,y=k,fill=value)) +
+  geom_tile() +
+  scale_fill_distiller(palette = "Spectral") +
+  scale_y_reverse() +
+  theme_classic() +
+  facet_wrap(~name,ncol=2)
+```
 
 
 
