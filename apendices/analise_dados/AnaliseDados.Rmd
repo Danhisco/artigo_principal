@@ -70,7 +70,7 @@ df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
 
 ### Gráficos Exploratórios
 
-```{r GE congruencia MNEE por p e k}
+```{r fig 1 - GE congruencia MNEE por p e k}
 l_p <- list()
 df_plot <- df_ad 
 # |> filter(k_cont>0.20)
@@ -105,7 +105,7 @@ ggsave("apendices/analise_dados/figuras/fig1_cong_p_k.png",
 __Figura 1__ Congruência de SADs MNEE por: a) proporção de cobertura vegetal; e b) k, grau de limitação de dispersão.
   
     
-```{r congruencia de MNEE por k_cont e sitio de amostragem}
+```{r fig 2 - congruencia de MNEE por k_cont e sitio de amostragem}
 df_plot <- df_ad |> 
   mutate(label = paste0(SiteCode,", p=",round(p,2))) |>
   arrange(p)  
@@ -126,26 +126,28 @@ ggsave("apendices/analise_dados/figuras/fig2_cong_k_SiteCode.png",
        height = 17.7)
 ```
 
-```{r}
+__Figura 2__ Congruência de SADs MNEE grau de limitação de dispersão e sítio de amostragem.
+
+```{r fig 3 - congruência por logs de N e S}
 df_plot <- df_ad |> 
   mutate(log_S.N = log_S_obs - log_Ntotal) 
-df_plot |> 
-  filter(log_S.N >= -3.75) |>
-  ggplot(aes(x=p,y=log_S.N)) +
-  geom_point() +
-  geom_smooth() +
-  labs(y="S / N")
-df_plot |> 
-  filter(log_S.N >= -3.75) |> 
-  ggplot(aes(x=log_S.N,y=nCongKS)) +
-  geom_point(aes(color=p)) +
-  geom_smooth(se=F) +
-  facet_wrap(~k,ncol = 5)
-df_plot |> 
-  ggplot(aes(x=p,y=log_Ntotal)) +
-  geom_point() +
-  geom_smooth()
-summary(lm(log_S.N ~ poly(p,1,raw = T), filter(df_plot,log_S.N >= -3.75)))
+# df_plot |> 
+#   filter(log_S.N >= -3.75) |>
+#   ggplot(aes(x=p,y=log_S.N)) +
+#   geom_point() +
+#   geom_smooth() +
+#   labs(y="S / N")
+# df_plot |> 
+#   filter(log_S.N >= -3.75) |> 
+#   ggplot(aes(x=log_S.N,y=nCongKS)) +
+#   geom_point(aes(color=p)) +
+#   geom_smooth(se=F) +
+#   facet_wrap(~k,ncol = 5)
+# df_plot |> 
+#   ggplot(aes(x=p,y=log_Ntotal)) +
+#   geom_point() +
+#   geom_smooth()
+# summary(lm(log_S.N ~ poly(p,1,raw = T), filter(df_plot,log_S.N >= -3.75)))
 #
 f_ggplot <- function(df){
   ggplot(df,aes(x=value,y=nCongKS)) +
@@ -157,6 +159,19 @@ f_ggplot <- function(df){
 l_p <- dlply(pivot_longer(df_plot,log_Ntotal:log_S_obs),"name",f_ggplot)
 grid.arrange(grobs=l_p,ncol=2,top="# SAD congruentes em função dos log de N e S")  
 ```
+
+__Figura 3__ Congruência de SADs MNEE por: log do número de indivíduos (esquerda); e log do número de espécies por
+
+```{r}
+df_ad |> 
+  ggplot(aes(x=p,y=log_S.N)) +
+  geom_point() +
+  geom_hline(yintercept = mean(df_ad$log_S.N),color="red") +
+  geom_smooth(method = "lm")
+```
+
+
+
 
 ### Modelo Cheio
 
