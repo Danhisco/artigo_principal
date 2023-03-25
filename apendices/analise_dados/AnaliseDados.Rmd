@@ -131,21 +131,31 @@ df_plot <- df_ad |>
   mutate(log_S.N = log_S_obs - log_Ntotal) 
 df_plot |> 
   filter(log_S.N >= -3.75) |>
-  ggplot(aes(x=p,y=exp(log_S.N))) +
+  ggplot(aes(x=p,y=log_S.N)) +
   geom_point() +
-  geom_smooth(method="lm") +
+  geom_smooth() +
   labs(y="S / N")
 df_plot |> 
   filter(log_S.N >= -3.75) |> 
   ggplot(aes(x=log_S.N,y=nCongKS)) +
   geom_point(aes(color=p)) +
-  geom_smooth(se=F,method="lm") +
+  geom_smooth(se=F) +
   facet_wrap(~k,ncol = 5)
 df_plot |> 
-  ggplot(aes(x=p,y=exp(log_Ntotal))) +
+  ggplot(aes(x=p,y=log_Ntotal)) +
   geom_point() +
   geom_smooth()
-summary(lm(exp(log_S.N) ~ poly(p,1,raw = T), filter(df_plot,log_S.N >= -3.75)))
+summary(lm(log_S.N ~ poly(p,1,raw = T), filter(df_plot,log_S.N >= -3.75)))
+#
+f_ggplot <- function(df){
+  ggplot(df,aes(x=value,y=nCongKS)) +
+  geom_point() +
+  geom_smooth(se=F,method = "lm") +
+  labs(x=unique(df$name),y="") +
+  facet_wrap(~k_cont,ncol=5)
+}
+l_p <- dlply(pivot_longer(df_plot,log_Ntotal:log_S_obs),"name",f_ggplot)
+grid.arrange(grobs=l_p,ncol=2,top="# SAD congruentes em função dos log de N e S")  
 ```
 
 ### Modelo Cheio
@@ -185,6 +195,10 @@ names(l_md) <- c("N * S * k * p","N * S * k","N * S", "N + S","1")
 md_MNEE <- l_md[[row.names(df_aictab)[1]]]
 ```
 
+```{r resíduos quantilicos de md_MNEE}
+p_plot <- DHARMa::simulateResiduals(md_MNEE,n=1000)
+plot(p_plot)
+```
 
 
 <!-- __Figura 4__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS -->
