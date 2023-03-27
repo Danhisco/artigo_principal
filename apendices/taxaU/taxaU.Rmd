@@ -24,6 +24,10 @@ library(DHARMa)
 library(lme4)
 library(plyr)
 library(dplyr)
+# funções
+source("source/dinamica_coalescente.R")
+# df_resultsMNEE
+df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   select(-tif.path) |> 
@@ -45,56 +49,10 @@ df_U <- df_Urep |>
             Usd = sd(U),
             Umin = min(U),
             Umax = max(U)) |> 
-  inner_join(x=df_sim,by=c("SiteCode","k"))
-# funções
-source("source/dinamica_coalescente.R")
-```
+  inner_join(x=select(df_sim,-tif.path),by=c("SiteCode","k")) |> 
+  inner_join(x=select(df_resultMNEE,-nCongDTS),by=c("SiteCode","k"))
+# df_ad
 
-### Estimativa da taxa U
-
-```{r estimativa de taxa U, echo=TRUE}
-setwd("dados/simulacao")
-f_taxaU <- function(df,n_replicas=10, Umin = 1.25e-06){
-  f_simCoalescente <- function(X){
-    v <- dinamica_coalescente(U = Umin, S=X$S_obs, disp_range = X$d, N_simul=1,landscape = X$txt.path)
-    v$U_est
-  }
-  l_dfU <- list()
-  for(i in 1:nrow(df)){
-    v_U <- replicate(n=n_replicas,f_simCoalescente(X = df[i,]))
-    l_dfU[[i]] <- cbind(select(df[i,],SiteCode,k,d),
-                        matrix(v_U,nrow=1))
-  }
-  df_write <- rbind.fill(l_dfU)
-  write_csv(df_write,file = paste0("../csv/taxaU/",df$SiteCode[1],".csv"))
-}
-registerDoMC(3)
-d_ply(df_sim,"SiteCode",f_taxaU,.parallel = TRUE)
-```
-
-```{r taxa U para SCarar - sitio com NAs quando Umin igual a 1.25e-06}
-setwd("dados/simulacao")
-df <- filter(df_sim,SiteCode == "SCarar")
-X_i <- df[1,]
-f_taxaU2 <- function(df, n_replicas=10, Umin=1.25e-08, diminuir=5, parallel=TRUE, n_cores=3){
-  f_simCoalescente <- function(X){
-    v <- dinamica_coalescente(U = Umin, S=X$S_obs, disp_range = X$d, N_simul=1,landscape = X$txt.path, decay = diminuir)
-    if(any(is.na(v))){
-      return(NA)
-    } else{
-      return(v$U_est)
-      }
-  }
-  f_write <- function(X_i){
-    v_U <- replicate(n=n_replicas,f_simCoalescente(X = X_i))
-    df_write <- cbind(select(X_i,SiteCode,k,d),
-                        matrix(v_U,nrow=1))
-    write_csv(df_write,file = paste0("../csv/taxaU/",X_i$SiteCode,"_k",round(X_i$k,2),".csv"))
-  }
-  registerDoMC(n_cores)
-  a_ply(df,1,f_write,.parallel = TRUE)
-}
-f_taxaU2(filter(df_sim,SiteCode == "SCarar"))
 ```
 
 
@@ -201,4 +159,53 @@ df_U |>
   ggplot(aes(x=Umed,y=Ucv)) +
   geom_point()
 ```
+
+
+### Cóigos para estimativa da taxa U
+
+```{r estimativa de taxa U, echo=TRUE}
+setwd("dados/simulacao")
+f_taxaU <- function(df,n_replicas=10, Umin = 1.25e-06){
+  f_simCoalescente <- function(X){
+    v <- dinamica_coalescente(U = Umin, S=X$S_obs, disp_range = X$d, N_simul=1,landscape = X$txt.path)
+    v$U_est
+  }
+  l_dfU <- list()
+  for(i in 1:nrow(df)){
+    v_U <- replicate(n=n_replicas,f_simCoalescente(X = df[i,]))
+    l_dfU[[i]] <- cbind(select(df[i,],SiteCode,k,d),
+                        matrix(v_U,nrow=1))
+  }
+  df_write <- rbind.fill(l_dfU)
+  write_csv(df_write,file = paste0("../csv/taxaU/",df$SiteCode[1],".csv"))
+}
+registerDoMC(3)
+d_ply(df_sim,"SiteCode",f_taxaU,.parallel = TRUE)
+```
+
+```{r taxa U para SCarar - sitio com NAs quando Umin igual a 1.25e-06}
+setwd("dados/simulacao")
+df <- filter(df_sim,SiteCode == "SCarar")
+X_i <- df[1,]
+f_taxaU2 <- function(df, n_replicas=10, Umin=1.25e-08, diminuir=5, parallel=TRUE, n_cores=3){
+  f_simCoalescente <- function(X){
+    v <- dinamica_coalescente(U = Umin, S=X$S_obs, disp_range = X$d, N_simul=1,landscape = X$txt.path, decay = diminuir)
+    if(any(is.na(v))){
+      return(NA)
+    } else{
+      return(v$U_est)
+      }
+  }
+  f_write <- function(X_i){
+    v_U <- replicate(n=n_replicas,f_simCoalescente(X = X_i))
+    df_write <- cbind(select(X_i,SiteCode,k,d),
+                        matrix(v_U,nrow=1))
+    write_csv(df_write,file = paste0("../csv/taxaU/",X_i$SiteCode,"_k",round(X_i$k,2),".csv"))
+  }
+  registerDoMC(n_cores)
+  a_ply(df,1,f_write,.parallel = TRUE)
+}
+f_taxaU2(filter(df_sim,SiteCode == "SCarar"))
+```
+
 
