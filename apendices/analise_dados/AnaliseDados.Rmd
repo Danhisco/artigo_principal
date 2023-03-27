@@ -31,6 +31,7 @@ library(AICcmodavg)
 library(insight)
 library(bbmle)
 library(DHARMa)
+library(mgcv)
 library(lme4)
 library(plyr)
 library(dplyr)
@@ -416,5 +417,34 @@ Objetivo:
 Melhorar a regressão das estatísticas resumo em função de p e k.
 
 
+Parametrização adequada segundo Gavin Simpson em vídeo do Ecological Forecasting:
 
+A lógica de parametrização é:
+i) deixar k grande suficiente
+ii) pois a penalização do overfitting 
+
+```{r GAMM binomial MNEE contemporaneo}
+df_md <- df_ad |> 
+  mutate(SiteCode = factor(SiteCode))
+l_md <- list()
+l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                 te(log_Ntotal_z,log_S_obs_z) + s(k_cont_z) + s(p_z) +
+                 s(k_cont_z, SiteCode, bs="fs", k=10, m=2),
+                data = df_md, family="binomial", method = "REML")
+l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
+                   ti(log_Ntotal_z,log_S_obs_z) + ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[3]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
+                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
+                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[4]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
+                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2),
+                 data = df_md, family="binomial", method = "REML")
+```
 
