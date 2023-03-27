@@ -446,5 +446,15 @@ l_md[[4]] <- gam(cbind(nCongKS,100-nCongKS)  ~
                    ti(log_Ntotal_z,log_S_obs_z,k_cont_z,p_z) +
                    s(k_cont_z, SiteCode, bs="fs", k=10, m=2),
                  data = df_md, family="binomial", method = "REML")
+l_md[[5]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
+                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z) + ti(log_Ntotal_z,log_S_obs_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2),
+                 data = df_md, family="binomial", method = "REML")
+names(l_md) <- c("te(N,S) + s(k) + s(p)",
+                 "s + ti(N,S) + ti(k,p)",
+                 "s + ti(N,S,k)",
+                 "s + ti(N,S,k,p)",
+                 "s + ti(N,S,k) + ti(N,S,p)")
 ```
 
