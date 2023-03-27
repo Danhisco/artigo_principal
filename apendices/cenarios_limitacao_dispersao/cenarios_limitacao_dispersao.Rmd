@@ -18,7 +18,8 @@ library(stringr)
 library(plyr)
 library(dplyr)
 # dados disponíveis
-df_dados <- read_csv(file = "dados/df_dados_disponiveis.csv") |> 
+df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
+df_dados <- df_dados_disponiveis |> 
   select(SiteCode, effort_ha, Ntotal, S_obs) |> 
   inner_join(
     mutate(
@@ -92,5 +93,13 @@ df_sim |>
        y = "SD da dist. de Laplace usada na função de dispersão",
        x = "proporção de propágulos até a vizinhança imediata do progenitor") +
   theme_light() 
+```
+
+
+########## REMOVER:: quais as características dos sítios??
+
+```{r}
+df_dados_disponiveis |> 
+  count(Unidade_de_conservacao,forest_succession)
 ```
 
