@@ -413,6 +413,44 @@ df_newdat2 |>
 
 ### GAMM
 
+```{r}
+f_ggplot <- function(){
+  list(
+    geom_point(),
+    geom_smooth(se=F,method = "lm"),
+    geom_smooth(se=F,method = "loess"),
+    geom_smooth(se=F),
+    theme_bw()
+  )
+}
+l_p <- list()
+l_p[[1]] <- df_ad |> 
+  ggplot(aes(p,log_S.N)) +
+  f_ggplot() +
+  labs(title="log(S/N) ~ p",y="log(S/N)")
+l_p[[2]] <- df_ad |> 
+  ggplot(aes(log_Ntotal,log_S_obs)) +
+  f_ggplot() +
+  labs(title="log(S) ~ log(N)",
+       x="log(N)",y="log(S)")
+v_labels <- c(log_Ntotal="log(N)",log_S_obs="log(S)")
+l_p[[3]] <- df_ad |> 
+  pivot_longer(log_Ntotal:log_S_obs) |> 
+  ggplot(aes(p,value)) +
+  f_ggplot() +
+  labs(title="log(S) e log(N) ~ p") +
+  facet_wrap(~name,ncol=2,scales="free",strip.position = "left",labeller = labeller(name=v_labels)) +
+  theme(strip.background = element_blank(),
+        strip.placement = "outside",
+        strip.text.y.left = element_text(size=11),
+        axis.title.y = element_blank(),
+        plot.title = element_text(hjust = 0.5))
+grid.arrange(grobs=l_p,layout_matrix = rbind(c(1,2),c(3,3)))
+# plot(lm(log_S.N ~ p,df_ad))
+```
+
+
+
 Objetivo:
 Melhorar a regressão das estatísticas resumo em função de p e k.
 
