@@ -423,6 +423,13 @@ f_ggplot <- function(){
     theme_bw()
   )
 }
+# outros exemplos:
+# f_mapping <- function(df=df_ad,mapping){
+#   ggplot(df,mapping) +
+#     f_ggplot()
+# }
+# p <- f_mapping(aes(p,log_S.N))
+
 l_p <- list()
 l_p[[1]] <- df_ad |> 
   ggplot(aes(p,log_S.N)) +
@@ -449,6 +456,10 @@ grid.arrange(grobs=l_p,layout_matrix = rbind(c(1,2),c(3,3)))
 # plot(lm(log_S.N ~ p,df_ad))
 ```
 
+```{r}
+l_md <- list()
+l_md[[1]] <- gam()
+```
 
 
 Objetivo:
@@ -477,24 +488,41 @@ l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~
 l_md[[3]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
                    ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
-                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2),
+                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
+                   s(SiteCode,bs="re"),
                  data = df_md, family="binomial", method = "REML")
 # não roda:::
 # l_md[[4]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
 #                    s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
 #                    ti(log_Ntotal_z,log_S_obs_z,k_cont_z,p_z) +
-#                    s(k_cont_z, SiteCode, bs="fs", k=10, m=2),
+#                    s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
+                   # s(SiteCode,bs="re"),
 #                  data = df_md, family="binomial", method = "REML")
 l_md[[4]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
                    ti(log_Ntotal_z,log_S_obs_z,k_cont_z) + ti(log_Ntotal_z,log_S_obs_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2),
+                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[5]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(k_cont_z) + s(p_z) +
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[6]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_S.N_z) + s(k_cont_z) + s(p_z) +
+                   ti(log_S.N_z,k_cont_z) + ti(log_S.N_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
+                   s(SiteCode,bs="re"),
                  data = df_md, family="binomial", method = "REML")
 names(l_md) <- c("te(N,S) + s(k) + s(p)",
                  "s + ti(N,S) + ti(k,p)",
                  "s + ti(N,S,k)",
                  #"s + ti(N,S,k,p)",
-                 "s + ti(N,S,k) + ti(N,S,p)")
+                 "s + ti(N,S,k) + ti(N,S,p)",
+                 "s(k,p) + ti(k,p)",
+                 "s(k,p,log(S/N) + ti(log(S/N),k)")
 l_md_GAMM <- l_md
 save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
 ```
@@ -505,5 +533,6 @@ gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[1]]]
 gratia::appraise(gamm_MNEE)
 summary(gamm_MNEE)
 gratia::draw(gamm_MNEE)
+concurvity(gamm_MNEE,full=FALSE) # full = FALSE: comparação em pares; TRUE: comparação de cada termo com o resto do
 ```
 
