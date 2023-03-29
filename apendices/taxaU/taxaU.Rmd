@@ -49,7 +49,7 @@ df_U <- df_Urep |>
             Usd = sd(U),
             Umin = min(U),
             Umax = max(U)) |> 
-  inner_join(x=select(df_sim,-tif.path),by=c("SiteCode","k")) |> 
+  inner_join(x=select(df_sim,-txt.path),by=c("SiteCode","k")) |> 
   inner_join(x=select(df_resultMNEE,-nCongDTS),by=c("SiteCode","k"))
 # df_ad
 
@@ -59,21 +59,37 @@ df_U <- df_Urep |>
 ```{r fig 1 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=18,fig.width=15}
 df_plot <- df_U |> 
   arrange(p) |> 
-  inner_join(mutate(data.frame(png.path = list.files(path = "dados/paisagens/png_land_sim",
-                                              pattern=".png",full.names=T)),
-                    SiteCode = str_extract(png.path,"(?<=im\\/).*?(?=\\.png)")),
-             by = "SiteCode")
-  # mutate(label = paste0(SiteCode,", p=",round(p,2), " ,S=",S_obs))
+  # inner_join(mutate(data.frame(png.path = list.files(path = "dados/paisagens/png_land_sim",
+  #                                             pattern=".png",full.names=T)),
+  #                   SiteCode = str_extract(png.path,"(?<=im\\/).*?(?=\\.png)")),
+  #            by = "SiteCode")
+  mutate(label = paste0(SiteCode,", p=",round(p,2))) #, " ,S=",S_obs
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 # df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
-f_plot <- function(df){
-  img <- png::readPNG(df$png.path[1],native = T)
-  ggplot(df,aes(x=d,y=Umed)) +
-    inset_element(p=img) +
-    geom_point() +
-    geom_errorbar(aes(ymin=Umin,ymax=Umax)) +
-    geom_line() 
-}
-l_p <- dlply(df_plot,"SiteCode",f_plot)
+### essa função busca inserir o mapa de cobertura vegetal no gráfico de taxa U
+# f_plot <- function(df){
+#   img <- png::readPNG(df$png.path[1],native = T)
+#   ggplot(df,aes(x=d,y=Umed)) +
+#     inset_element(p=img) +
+#     geom_point() +
+#     geom_errorbar(aes(ymin=Umin,ymax=Umax)) +
+#     geom_line() 
+# }
+# l_p <- dlply(df_plot,"SiteCode",f_plot)
+# gráficos
+df_plot |> 
+  ggplot(aes(x=k,y=Umed)) +
+  geom_smooth(method = "loess",se=F) +
+  geom_point() +
+  # labs(title="b) k, prop. propágulos até a vizinhança (~cut(p, 20))",
+  #      y="número de SADs réplicas congruentes",
+  #      x="k") +
+  theme_bw() +
+  scale_x_reverse() +
+  facet_wrap(~label,ncol=4,scales="free")
+ggsave("apendices/taxaU/figuras/Umed_kSite_loess.png",
+       width = 7,
+       height = 27.7)
 ```
 
 __Figura 1__ Média da taxa U estimada pelo desvio padrão da função de dispersão, média de 10 réplicas. p = proporção de cobertura vegetal, S = riqueza de espécies.
@@ -161,7 +177,7 @@ df_U |>
 ```
 
 
-### Cóigos para estimativa da taxa U
+### Códigos para estimativa da taxa U
 
 ```{r estimativa de taxa U, echo=TRUE}
 setwd("dados/simulacao")

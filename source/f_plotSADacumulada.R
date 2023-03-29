@@ -14,6 +14,7 @@
 #
 # OUTPUT: .png com as SADs acumuladas
 #
+library(ggpmisc)
 f_plot.SADacumulada <- function(df,parallel=TRUE,repo="figuras/SADs_acumuladas/"){
   # dados
   m_SADrep <- read_csv(df$SADrep.path[1])

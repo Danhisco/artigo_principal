@@ -413,94 +413,41 @@ df_newdat2 |>
 
 ### GAMM
 
-```{r}
-f_ggplot <- function(){
-  list(
-    geom_point(),
-    geom_smooth(se=F,method = "lm"),
-    geom_smooth(se=F,method = "loess"),
-    geom_smooth(se=F),
-    theme_bw()
-  )
-}
-# outros exemplos:
-# f_mapping <- function(df=df_ad,mapping){
-#   ggplot(df,mapping) +
-#     f_ggplot()
-# }
-# p <- f_mapping(aes(p,log_S.N))
-
-l_p <- list()
-l_p[[1]] <- df_ad |> 
-  ggplot(aes(p,log_S.N)) +
-  f_ggplot() +
-  labs(title="log(S/N) ~ p",y="log(S/N)")
-l_p[[2]] <- df_ad |> 
-  ggplot(aes(log_Ntotal,log_S_obs)) +
-  f_ggplot() +
-  labs(title="log(S) ~ log(N)",
-       x="log(N)",y="log(S)")
-v_labels <- c(log_Ntotal="log(N)",log_S_obs="log(S)")
-l_p[[3]] <- df_ad |> 
-  pivot_longer(log_Ntotal:log_S_obs) |> 
-  ggplot(aes(p,value)) +
-  f_ggplot() +
-  labs(title="log(S) e log(N) ~ p") +
-  facet_wrap(~name,ncol=2,scales="free",strip.position = "left",labeller = labeller(name=v_labels)) +
-  theme(strip.background = element_blank(),
-        strip.placement = "outside",
-        strip.text.y.left = element_text(size=11),
-        axis.title.y = element_blank(),
-        plot.title = element_text(hjust = 0.5))
-grid.arrange(grobs=l_p,layout_matrix = rbind(c(1,2),c(3,3)))
-# plot(lm(log_S.N ~ p,df_ad))
-```
-
-```{r}
-l_md <- list()
-l_md[[1]] <- gam()
-```
-
-
 Objetivo:
-Melhorar a regressão das estatísticas resumo em função de p e k.
-
+Melhorar as estatísticas resumo em função de p e k.
 
 Parametrização adequada segundo Gavin Simpson em vídeo do Ecological Forecasting:
 
 A lógica de parametrização é:
 i) deixar k grande suficiente
-ii) pois a penalização do overfitting 
+ii) pois a penalização do overfitting é ajustada. 
+
+Melhor mesmo é usar REML que já considera isso. Mas sempre fazer o k.check
+
+Ideia geral dos GAMMs:
+
+a) existem duas variáveis que sempre estão relacionadas com a exposição da árvore genealógica da comunidade local ao pool de indivíduos da paisagem ao redor: número de indivíduos (N) e número de espécies (S), pois eles determinam o número de linhagens inicial e final nas simulações coalescentes.
+b) Nas simulações com grau de limitação de dispersão (MNEE e MNEI) outra variável relacionada com a exposição é k.
+c) Uma expectativa é que quanto maior o grau de exposição da árvore genealógica, maior deve ser ser a possível influência da configuração espacial no chuva de propágulos do pool de indivíduos remanescente na paisagem. A restrição da chuva de propágulos pela perda de habitat aumenta com a redução da proporção de cobertura vegetal. Então p está modelando a chuva de propágulos. Olhando os resultados da estimativa da taxa U a dinâmica de substituições muda com o grau de limitação de dispersão, indo 
+
+NOTA: a quantidade de indivíduos 
+
+
 
 ```{r GAMM binomial MNEE contemporaneo}
 df_md <- df_ad |> 
   mutate(SiteCode = factor(SiteCode))
 l_md <- list()
 l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                 te(log_Ntotal_z,log_S_obs_z) + s(k_cont_z) + s(p_z) +
-                 s(k_cont_z, SiteCode, bs="fs", k=10, m=2),
-                data = df_md, family="binomial", method = "REML")
-l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
                    ti(log_Ntotal_z,log_S_obs_z) + ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[3]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
                    ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
                    s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
                    s(SiteCode,bs="re"),
                  data = df_md, family="binomial", method = "REML")
-# não roda:::
-# l_md[[4]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-#                    s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
-#                    ti(log_Ntotal_z,log_S_obs_z,k_cont_z,p_z) +
-#                    s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
-                   # s(SiteCode,bs="re"),
-#                  data = df_md, family="binomial", method = "REML")
-l_md[[4]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
-                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z) + ti(log_Ntotal_z,log_S_obs_z,p_z) +
+                   ti(log_Ntotal_z,log_S_obs_z) + ti(k_cont_z,p_z) +
                    s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
                    s(SiteCode,bs="re"),
                  data = df_md, family="binomial", method = "REML")
@@ -516,13 +463,21 @@ l_md[[6]] <- gam(cbind(nCongKS,100-nCongKS)  ~
                    s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
                    s(SiteCode,bs="re"),
                  data = df_md, family="binomial", method = "REML")
+l_md[[7]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
+                   ti(log_Ntotal_z,log_S_obs_z) + ti(k_cont_z,p_z) +
+                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
+                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
 names(l_md) <- c("te(N,S) + s(k) + s(p)",
                  "s + ti(N,S) + ti(k,p)",
                  "s + ti(N,S,k)",
                  #"s + ti(N,S,k,p)",
                  "s + ti(N,S,k) + ti(N,S,p)",
                  "s(k,p) + ti(k,p)",
-                 "s(k,p,log(S/N) + ti(log(S/N),k)")
+                 "s(k,p,log(S/N) + ti(log(S/N),k)",
+                 "s + ti(N,S) + ti(k,p) + ti(N,S,k) + s(SiteCode)")
 l_md_GAMM <- l_md
 save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
 ```
@@ -532,7 +487,19 @@ load("dados/Rdata/l_md_GAMM.Rdata")
 gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[1]]]
 gratia::appraise(gamm_MNEE)
 summary(gamm_MNEE)
+ggsave()
 gratia::draw(gamm_MNEE)
 concurvity(gamm_MNEE,full=FALSE) # full = FALSE: comparação em pares; TRUE: comparação de cada termo com o resto do
 ```
 
+
+Concurvidade ocorre quando uma variável preditora pode ser bem descrita por um smooth de uma outra variável preditora (Wood 2016? Checking and Selecting GAMs). Nessa sequência de slide ele exemplifica:
+- consider a model containing smooths f1 and f2.
+- we can decompose f2 = f12 + f22; f12: the árt of f2 representable in the space of f1, while f22 is the remaining component, which lies exlusively in the space of f2.
+- a measure of concurvity is \alpha = (||f12||^2 )/(||f2||^2 ), leading to 3 estimates:
+
+1) alpha
+2) the maximum value that alpha could take for any estimates, using the given bases for f1 and f2.
+3) the ratio of the size of the basis for f12 relative to the basis for f2, using some matrix norm.
+
+1,2,3 respectivamente, observed, worst, estimated 
