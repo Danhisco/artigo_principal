@@ -475,8 +475,7 @@ load("dados/Rdata/l_md_GAMM.Rdata")
 (df_aicctab <- AICctab(l_md_GAMM,weights=TRUE) |> as.data.frame())
 gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[1]]]
 gratia::appraise(gamm_MNEE)
-summary(gamm_MNEE)
-ggsave()
+# summary(gamm_MNEE)
 gratia::draw(gamm_MNEE)
 # concurvity(gamm_MNEE,full=FALSE) # full = FALSE: comparação em pares; TRUE: comparação de cada termo com o resto do
 ```
@@ -495,3 +494,41 @@ Concurvidade ocorre quando uma variável preditora pode ser bem descrita por um 
 
 
 O gráfico de efeitos parciais indica que o modelo não conseguiu distinguir os smoother para log(N) e log(S), indicando a existência de concurvidade entre essas duas variáveis: essas preditoras podem ser bem descrita por um smooth uma da outra. A concurvidade pode ser compreendidada como uma extensão da colinearidade em modelos lineares. Na prática o modelo não consegue distinguir os efeitos de log(N) e log(S) um do outro e um novo conjunto de dados que considera a variação ortogonal de log(N) e log(S) deve apresentar predições ruins. Assim, o novo conjunto de dados irá conservar a covariação de log(N) e log(S) ao pressupor que todos os sítios observados (ao longo do gradiente de p) irão se repetir para cada combinação de p e k. 
+
+
+```{r predição para novo conjunto de dados md_GAMM}
+# função para summarizar 
+f_summarise <- function(x,probs = c(0.05,0.25, 0.5, 0.75,0.95)){
+  tibble(pred = unname(quantile(x,probs)),prob = probs)
+}
+#
+df_plotGAMM <- df_newdat
+df_plotGAMM$pred <- predict.gam(gamm_MNEE,newdata = df_newdat,type="response")
+df_plotGAMM <- df_plotGAMM |> 
+  reframe(across(pred,f_summarise,.unpack=TRUE),.by=c(p_z,k_cont_z)) |> 
+  rename_with(~str_remove(.,"pred_")) |> 
+  mutate(label = paste0("Quant = ",prob),
+         p = p_z*sd(df_ad$p) + mean(df_ad$p),
+         k = k_cont_z*sd(df_ad$k_cont) + mean(df_ad$k_cont))
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
+# gráficos
+f_ggplot2 <- function(df,facets=2){
+  ggplot(df,aes(x=p,y=k,fill=pred)) +
+    geom_tile() +
+    scale_fill_distiller(palette = "Spectral",limits=c(0,1)) +
+    scale_y_reverse() +
+    theme_classic() +
+    coord_cartesian(expand = FALSE) +
+    labs(fill="Pr(Cong)") +
+    facet_wrap(~label,ncol = facets)
+}
+l_p <- list()
+l_p[[1]] <- df_plot |> 
+  filter(prob == 0.5) |> 
+  f_ggplot2() + labs(x="")
+l_p[[2]] <- df_plot |> 
+  filter(prob != 0.5) |>
+  f_ggplot2()
+ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+```
+
