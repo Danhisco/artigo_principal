@@ -33,6 +33,7 @@ library(bbmle)
 library(DHARMa)
 library(mgcv)
 library(lme4)
+library(gamm4)
 library(plyr)
 library(dplyr)
 # objetos
@@ -430,6 +431,46 @@ a) existem duas variáveis que sempre estão relacionadas com a exposição da �
 b) Nas simulações com grau de limitação de dispersão (MNEE e MNEI) outra variável relacionada com a exposição é k.
 c) Uma expectativa é que quanto maior o grau de exposição da árvore genealógica, maior deve ser ser a possível influência da configuração espacial no chuva de propágulos do pool de indivíduos remanescente na paisagem. A restrição da chuva de propágulos pela perda de habitat aumenta com a redução da proporção de cobertura vegetal. Então p está modelando a chuva de propágulos máxima possível. 
 
+Sobre t2():
+If full = TRUE then there is a separate penalty for each combination of null space column and range space. This gives strict invariance. If FALSE each combination of null space and range space generates one penalty, but the coulmns of each null space basis are treated as one group. The latter is more parsimonious, but does mean that invariance is only achieved by an arbitrary rescaling of null space basis vectors.
+
+```{r}
+df_md <- df_ad |> 
+  mutate(SiteCode = factor(SiteCode))
+l_md <- list()
+l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(log_Ntotal_z,log_S_obs_z) + ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(log_Ntotal_z,log_S_obs_z) + 
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[3]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[4]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+names(l_md) <- c("s(N,S,k,p) + ti(N,S) + ti(N,S,k) + ti(p,k)",
+                 "s(N,S,k,p) + ti(N,S) + ti(p,k)",
+                 "s(N,S,k,p) + ti(p,k)",
+                 "p,k")
+l_md_GAMM <- l_md
+save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
+```
 
 
 
@@ -437,48 +478,84 @@ c) Uma expectativa é que quanto maior o grau de exposição da árvore genealó
 df_md <- df_ad |> 
   mutate(SiteCode = factor(SiteCode))
 l_md <- list()
-l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+l_md[[1]] <- bam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
                    ti(log_Ntotal_z,log_S_obs_z) + ti(k_cont_z,p_z) +
                    ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
-                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
+                   s(k_cont_z, by=SiteCode) +
                    s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                 data = df_md, family="binomial", method = "fREML")
+l_md[[2]] <- bam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
                    ti(log_Ntotal_z,log_S_obs_z) + ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
+                   s(k_cont_z, by=SiteCode) +
                    s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[3]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                 data = df_md, family="binomial", method = "fREML")
+l_md[[3]] <- bam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
                    ti(k_cont_z,p_z) +
                    ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
-                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
+                   s(k_cont_z, by=SiteCode) +
                    s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[4]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                 data = df_md, family="binomial", method = "fREML")
+l_md[[4]] <- bam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(k_cont_z) + s(p_z) +
                    ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs", k=10, m=2) +
+                   s(k_cont_z, by=SiteCode) +
                    s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
+                 data = df_md, family="binomial", method = "fREML")
+l_md[[5]] <- bam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_S.N_z) + s(k_cont_z) + s(p_z) +
+                   ti(k_cont_z,p_z) + ti(log_S.N_z,k_cont_z) +
+                   s(k_cont_z, by=SiteCode) +
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "fREML")
+l_md[[6]] <- bam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_S.N_z) + s(k_cont_z) + s(p_z) +
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, by=SiteCode) +
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "fREML")
 names(l_md) <- c("s + ti(N,S) + ti(k,p) + ti(N,S,k)",
                  "s + ti(N,S) + ti(k,p)",
                  "s + ti(k,p) +ti(N,S,k)",
-                 "s(k,p) + ti(k,p)")
+                 "s(k,p) + ti(k,p)",
+                 "s + ti(S/N,k) + ti(k,p)",
+                 "s...log(S/N) + ti(k,p)")
 l_md_GAMM <- l_md
-save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
+# save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
 ```
 ```{r}
 load("dados/Rdata/l_md_GAMM.Rdata")
 (df_aicctab <- AICctab(l_md_GAMM,weights=TRUE) |> as.data.frame())
-gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[1]]]
+gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[4]]]
 gratia::appraise(gamm_MNEE)
 # summary(gamm_MNEE)
 gratia::draw(gamm_MNEE)
-# concurvity(gamm_MNEE,full=FALSE) # full = FALSE: comparação em pares; TRUE: comparação de cada termo com o resto do
+concurvity(gamm_MNEE,full=FALSE) # full = FALSE: comparação em pares; TRUE: comparação de cada termo com o resto do
+gam.check(gamm_MNEE)
 ```
+
+```{r tp ou cr}
+l_md <- list()
+l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
+                   ti(log_Ntotal_z,log_S_obs_z) + ti(k_cont_z,p_z) +
+                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
+                   s(k_cont_z, SiteCode, bs="fs", k=10) +
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+
+l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+        s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
+        ti(log_Ntotal_z,log_S_obs_z) + ti(k_cont_z,p_z) +
+                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
+                   s(k_cont_z, SiteCode, bs="fs", k=10, ,xt = list(bs="cr"),m=2) +
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+names(l_md) <- c("tp","cr")
+```
+
 
 
 Concurvidade ocorre quando uma variável preditora pode ser bem descrita por um smooth de uma outra variável preditora (Wood 2016? Checking and Selecting GAMs). Nessa sequência de slide ele exemplifica:
@@ -502,15 +579,18 @@ f_summarise <- function(x,probs = c(0.05,0.25, 0.5, 0.75,0.95)){
   tibble(pred = unname(quantile(x,probs)),prob = probs)
 }
 #
-df_plotGAMM <- df_newdat
-df_plotGAMM$pred <- predict.gam(gamm_MNEE,newdata = df_newdat,type="response")
+df_newdat2 <- df_newdat |> filter(SiteCode == "BAlenc4") |> select(p_z:SiteCode)
+df_plotGAMM <- df_newdat2
+df_plotGAMM$pred <- predict.gam(gamm_MNEE,newdata = df_plotGAMM,type="response")
 df_plotGAMM <- df_plotGAMM |> 
-  reframe(across(pred,f_summarise,.unpack=TRUE),.by=c(p_z,k_cont_z)) |> 
-  rename_with(~str_remove(.,"pred_")) |> 
-  mutate(label = paste0("Quant = ",prob),
+  # reframe(across(pred,f_summarise,.unpack=TRUE),.by=c(p_z,k_cont_z)) |> 
+  # rename_with(~str_remove(.,"pred_")) |> 
+  mutate(
+# label = paste0("Quant = ",prob),
          p = p_z*sd(df_ad$p) + mean(df_ad$p),
          k = k_cont_z*sd(df_ad$k_cont) + mean(df_ad$k_cont))
-df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
+# df_plotGAMM$label <- factor(df_plotGAMM$label,levels = unique(df_plotGAMM$label)[c(3,2,4,1,5)])
+df_plotGAMM$label <- "predito novo conjunto de dados"
 # gráficos
 f_ggplot2 <- function(df,facets=2){
   ggplot(df,aes(x=p,y=k,fill=pred)) +
@@ -523,12 +603,34 @@ f_ggplot2 <- function(df,facets=2){
     facet_wrap(~label,ncol = facets)
 }
 l_p <- list()
-l_p[[1]] <- df_plot |> 
-  filter(prob == 0.5) |> 
+l_p[[1]] <- df_plotGAMM |> 
+  # filter(prob == 0.5) |> 
   f_ggplot2() + labs(x="")
-l_p[[2]] <- df_plot |> 
+l_p[[2]] <- df_plotGAMM |> 
   filter(prob != 0.5) |>
   f_ggplot2()
 ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+```
+
+```{r}
+df_md$pred <- predict(gamm_MNEE,type="response") * 100
+df_md <- df_md |> 
+  mutate(label=paste0(SiteCode,", p=",round(p,3))) |> 
+  arrange(p)
+df_md$label <- factor(df_md$label,levels = unique(df_md$label))
+(p <- df_md |> 
+  # pivot_longer(pred_modCheio:pred_modMedio) |>
+  ggplot(aes(x=k_cont,y=nCongKS)) +
+  # geom_line(aes(y=pred_modCheio),color="blue") +
+  geom_line(aes(y=pred),color="red",alpha=0.4) +
+  geom_point() +
+  theme_bw() +
+  scale_x_reverse() +
+  labs(x="k",y="# SADs congruentes",title="Predito pelo modelo médio (azul) e cheio (vermelho) são iguais") +
+  facet_wrap(~label,ncol=6))
+ggsave("apendices/analise_dados/figuras/gammMNEE_PredObs_k_Site.png",p,
+       width = 10,
+       height = 17.7)
+
 ```
 
