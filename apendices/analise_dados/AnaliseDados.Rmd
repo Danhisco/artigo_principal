@@ -474,57 +474,6 @@ save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
 
 
 
-```{r GAMM binomial MNEE contemporaneo}
-df_md <- df_ad |> 
-  mutate(SiteCode = factor(SiteCode))
-l_md <- list()
-l_md[[1]] <- bam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
-                   ti(log_Ntotal_z,log_S_obs_z) + ti(k_cont_z,p_z) +
-                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
-                   s(k_cont_z, by=SiteCode) +
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "fREML")
-l_md[[2]] <- bam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
-                   ti(log_Ntotal_z,log_S_obs_z) + ti(k_cont_z,p_z) +
-                   s(k_cont_z, by=SiteCode) +
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "fREML")
-l_md[[3]] <- bam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
-                   ti(k_cont_z,p_z) +
-                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
-                   s(k_cont_z, by=SiteCode) +
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "fREML")
-l_md[[4]] <- bam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(k_cont_z) + s(p_z) +
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, by=SiteCode) +
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "fREML")
-l_md[[5]] <- bam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_S.N_z) + s(k_cont_z) + s(p_z) +
-                   ti(k_cont_z,p_z) + ti(log_S.N_z,k_cont_z) +
-                   s(k_cont_z, by=SiteCode) +
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "fREML")
-l_md[[6]] <- bam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_S.N_z) + s(k_cont_z) + s(p_z) +
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, by=SiteCode) +
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "fREML")
-names(l_md) <- c("s + ti(N,S) + ti(k,p) + ti(N,S,k)",
-                 "s + ti(N,S) + ti(k,p)",
-                 "s + ti(k,p) +ti(N,S,k)",
-                 "s(k,p) + ti(k,p)",
-                 "s + ti(S/N,k) + ti(k,p)",
-                 "s...log(S/N) + ti(k,p)")
-l_md_GAMM <- l_md
-# save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
-```
 ```{r}
 load("dados/Rdata/l_md_GAMM.Rdata")
 (df_aicctab <- AICctab(l_md_GAMM,weights=TRUE) |> as.data.frame())
@@ -535,28 +484,6 @@ gratia::draw(gamm_MNEE)
 concurvity(gamm_MNEE,full=FALSE) # full = FALSE: comparação em pares; TRUE: comparação de cada termo com o resto do
 gam.check(gamm_MNEE)
 ```
-
-```{r tp ou cr}
-l_md <- list()
-l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z) + s(log_S_obs_z) + s(k_cont_z) + s(p_z) +
-                   ti(log_Ntotal_z,log_S_obs_z) + ti(k_cont_z,p_z) +
-                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
-                   s(k_cont_z, SiteCode, bs="fs", k=10) +
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-
-l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-        s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-        ti(log_Ntotal_z,log_S_obs_z) + ti(k_cont_z,p_z) +
-                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
-                   s(k_cont_z, SiteCode, bs="fs", k=10, ,xt = list(bs="cr"),m=2) +
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-names(l_md) <- c("tp","cr")
-```
-
-
 
 Concurvidade ocorre quando uma variável preditora pode ser bem descrita por um smooth de uma outra variável preditora (Wood 2016? Checking and Selecting GAMs). Nessa sequência de slide ele exemplifica:
 - consider a model containing smooths f1 and f2.
