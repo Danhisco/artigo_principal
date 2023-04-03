@@ -434,7 +434,7 @@ c) Uma expectativa é que quanto maior o grau de exposição da árvore genealó
 Sobre t2():
 If full = TRUE then there is a separate penalty for each combination of null space column and range space. This gives strict invariance. If FALSE each combination of null space and range space generates one penalty, but the coulmns of each null space basis are treated as one group. The latter is more parsimonious, but does mean that invariance is only achieved by an arbitrary rescaling of null space basis vectors.
 
-```{r}
+```{r gamm MNEE contemporaneo}
 df_md <- df_ad |> 
   mutate(SiteCode = factor(SiteCode))
 l_md <- list()
@@ -464,20 +464,33 @@ l_md[[4]] <- gam(cbind(nCongKS,100-nCongKS)  ~
                    s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
                    s(SiteCode,bs="re"),
                  data = df_md, family="binomial", method = "REML")
+l_md[[5]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(log_Ntotal_z,k_cont_z) +
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[6]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(log_S_obs_z,k_cont_z) +
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
 names(l_md) <- c("s(N,S,k,p) + ti(N,S) + ti(N,S,k) + ti(p,k)",
                  "s(N,S,k,p) + ti(N,S) + ti(p,k)",
                  "s(N,S,k,p) + ti(p,k)",
-                 "p,k")
+                 "p,k",
+                 "s(N,k,p) + ti(N,k) + ti(p,k)",
+                 "s(S,k,p) + ti(S,k) + ti(p,k)")
 l_md_GAMM <- l_md
 save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
 ```
-
-
-
 ```{r}
 load("dados/Rdata/l_md_GAMM.Rdata")
 (df_aicctab <- AICctab(l_md_GAMM,weights=TRUE) |> as.data.frame())
-gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[4]]]
+gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[3]]]
 gratia::appraise(gamm_MNEE)
 # summary(gamm_MNEE)
 gratia::draw(gamm_MNEE)
@@ -501,12 +514,16 @@ O gráfico de efeitos parciais indica que o modelo não conseguiu distinguir os 
 
 
 ```{r predição para novo conjunto de dados md_GAMM}
-# função para summarizar 
-f_summarise <- function(x,probs = c(0.05,0.25, 0.5, 0.75,0.95)){
-  tibble(pred = unname(quantile(x,probs)),prob = probs)
-}
-#
-df_newdat2 <- df_newdat |> filter(SiteCode == "BAlenc4") |> select(p_z:SiteCode)
+l_md <- list()
+l_md[[1]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr"),data = df_md)
+l_md[[2]] <- gam(log_S_obs_z ~ s(p_z,bs="cr"),data = df_md)
+l_md[[3]] <- gam(log_Ntotal_z ~ s(log_S_obs_z,bs="cr"),data = df_md)
+l_md[[4]] <- gam(log_S_obs_z ~ s(log_Ntotal_z,bs="cr"),data = df_md)
+
+lapply(l_md,summary)
+
+df_newdat2 <- df_newdat |> filter(SiteCode == "BAlenc4") |> select(p_z:SiteCode) |> 
+  mutate()
 df_plotGAMM <- df_newdat2
 df_plotGAMM$pred <- predict.gam(gamm_MNEE,newdata = df_plotGAMM,type="response")
 df_plotGAMM <- df_plotGAMM |> 
