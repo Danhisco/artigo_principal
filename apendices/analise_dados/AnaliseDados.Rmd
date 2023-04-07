@@ -437,7 +437,7 @@ If full = TRUE then there is a separate penalty for each combination of null spa
 ```{r gamm MNEE contemporaneo}
 df_md <- df_ad |> 
   mutate(SiteCode = factor(SiteCode))
-l_md <- list()
+l_md <- list() 
 l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
                    ti(log_Ntotal_z,log_S_obs_z) + ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
@@ -490,9 +490,9 @@ save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
 ```{r}
 load("dados/Rdata/l_md_GAMM.Rdata")
 (df_aicctab <- AICctab(l_md_GAMM,weights=TRUE) |> as.data.frame())
-gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[3]]]
+gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[2]]]
 gratia::appraise(gamm_MNEE)
-# summary(gamm_MNEE)
+summary(gamm_MNEE)
 gratia::draw(gamm_MNEE)
 concurvity(gamm_MNEE,full=FALSE) # full = FALSE: comparação em pares; TRUE: comparação de cada termo com o resto do
 gam.check(gamm_MNEE)
@@ -514,13 +514,13 @@ O gráfico de efeitos parciais indica que o modelo não conseguiu distinguir os 
 
 
 ```{r predição para novo conjunto de dados md_GAMM}
-l_md <- list()
-l_md[[1]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr"),data = df_md)
-l_md[[2]] <- gam(log_S_obs_z ~ s(p_z,bs="cr"),data = df_md)
-l_md[[3]] <- gam(log_Ntotal_z ~ s(log_S_obs_z,bs="cr"),data = df_md)
-l_md[[4]] <- gam(log_S_obs_z ~ s(log_Ntotal_z,bs="cr"),data = df_md)
-
-lapply(l_md,summary)
+# l_md <- list()
+# l_md[[1]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr"),data = df_md)
+# l_md[[2]] <- gam(log_S_obs_z ~ s(p_z,bs="cr"),data = df_md)
+# l_md[[3]] <- gam(log_Ntotal_z ~ s(log_S_obs_z,bs="cr"),data = df_md)
+# l_md[[4]] <- gam(log_S_obs_z ~ s(log_Ntotal_z,bs="cr"),data = df_md)
+# 
+# lapply(l_md,summary)
 
 df_newdat2 <- df_newdat |> filter(SiteCode == "BAlenc4") |> select(p_z:SiteCode) |> 
   mutate()
