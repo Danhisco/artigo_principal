@@ -490,17 +490,14 @@ save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
 ```{r}
 load("dados/Rdata/l_md_GAMM.Rdata")
 (df_aicctab <- AICctab(l_md_GAMM,weights=TRUE) |> as.data.frame())
-gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[2]]]
-gratia::appraise(gamm_MNEE)
-summary(gamm_MNEE)
-gratia::draw(gamm_MNEE)
-concurvity(gamm_MNEE,full=FALSE) # full = FALSE: comparação em pares; TRUE: comparação de cada termo com o resto do
-gam.check(gamm_MNEE)
 ```
+
+
+#### avaliação concurvidade
 
 Concurvidade ocorre quando uma variável preditora pode ser bem descrita por um smooth de uma outra variável preditora (Wood 2016? Checking and Selecting GAMs). Nessa sequência de slide ele exemplifica:
 - consider a model containing smooths f1 and f2.
-- we can decompose f2 = f12 + f22; f12: the árt of f2 representable in the space of f1, while f22 is the remaining component, which lies exlusively in the space of f2.
+- we can decompose f2 = f12 + f22; f12: the part of f2 representable in the space of f1, while f22 is the remaining component, which lies exlusively in the space of f2.
 - a measure of concurvity is \alpha = (||f12||^2 )/(||f2||^2 ), leading to 3 estimates:
 
 1) alpha
@@ -509,9 +506,80 @@ Concurvidade ocorre quando uma variável preditora pode ser bem descrita por um 
 
 1,2,3 respectivamente, observed, worst, estimated 
 
+para a função concurvidade:
+full = FALSE: comparação em pares; TRUE: comparação de cada termo com o resto do
+
+Avaliação de concurvidade para o modelo cheio:
 
 O gráfico de efeitos parciais indica que o modelo não conseguiu distinguir os smoother para log(N) e log(S), indicando a existência de concurvidade entre essas duas variáveis: essas preditoras podem ser bem descrita por um smooth uma da outra. A concurvidade pode ser compreendidada como uma extensão da colinearidade em modelos lineares. Na prática o modelo não consegue distinguir os efeitos de log(N) e log(S) um do outro e um novo conjunto de dados que considera a variação ortogonal de log(N) e log(S) deve apresentar predições ruins. Assim, o novo conjunto de dados irá conservar a covariação de log(N) e log(S) ao pressupor que todos os sítios observados (ao longo do gradiente de p) irão se repetir para cada combinação de p e k. 
 
+
+__modelo mais plausível__ Pr(Cong) ~ f(S,p,k,SiteCode)
+
+```{r}
+gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[1]]]
+k.check(gamm_MNEE)
+gratia::appraise(gamm_MNEE)
+# summary(gamm_MNEE)
+gratia::draw(gamm_MNEE)
+(df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
+```
+
+O alpha do smoother de log(S) em relação ao smoother p é de ~0.36; e a relação inversa é de ~0.23. Os outros alphas são pequenos (NOTA: olhar o motivo dos smoothers da estrutura aleatória ficarem igual a 1 para todos os outros smoother da estrutura fixa, penso que isso pode estar relacionado com a forma que é feito a regressão dos smoothers aleatórios para os fixos e vice-versa). 
+
+A avaliação de concurvidade e os efeitos parciais são coerentes: o modelo distingue mais o efeito de log(S) em relação ao efeito de p; porém ambos apresentam influência da concurvidade na estimativa dos smoothers. 
+
+Entendo que apesar desse modelo ser o mais plausível ele pode não ser muito útil, pois interpolar os valores de p é essencial para compreender as expectativas teóricas.
+
+__2o modelo mais plausível__ Pr(Cong) ~ f(p,k,SiteCode)
+
+```{r}
+gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[2]]]
+k.check(gamm_MNEE)
+gratia::appraise(gamm_MNEE)
+# summary(gamm_MNEE)
+gratia::draw(gamm_MNEE)
+(df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
+```
+
+O segundo modelos mais plausível parece não conseguir estimar um smoother adequado para p, pois o smoother conta com cerca de 1 grau de liberdade, indicando que o smoother tende a uma reta, apesar de ter iniciado com 9 funções base.
+Os efeitos parciais de p apresentam elevado erro padrão ao redor da estimativa de efeito parcial que tende a uma reta, indicando que há muita mais informação associada com Pr(Cong) e p do que o smoother consegue estimar. Apesar desse modelo ser útil por considerar apenas as variáveis preditoras relacionadas com a expectativa teórica da ecologia da paisagem, ele faz uma estimativa ruim do smoother de p.
+
+__3o modelo mais plausível__ ~ s(M,S,k,p) + ti(p,k)
+
+```{r}
+(gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[3]]])
+k.check(gamm_MNEE)
+gratia::appraise(gamm_MNEE)
+# summary(gamm_MNEE)
+gratia::draw(gamm_MNEE)
+(df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
+```
+
+Esse modelo apresenta problemas de concurvidade. As preditoras N, p e S não tem smoother estimados de forma adequadas, pois os efeitos parciais dos smoothers individuais apresentam graus de liberdade próximo de 1, tendendo a uma reta, com erro-padrão elevado e que varia ao longo do gradiente da preditora. Esse modelo possui pouco peso de evidência e não deve ser útil para avaliar as expectativas teóricas.
+
+__4o modelo mais plausível__ modelo cheio
+
+```{r}
+(gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[4]]])
+k.check(gamm_MNEE)
+gratia::appraise(gamm_MNEE)
+# summary(gamm_MNEE)
+gratia::draw(gamm_MNEE)
+df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as_tibble() |> as.data.frame()
+rownames(df_conc) <- names(df_conc)
+select(df_conc[2:8,],-c(para,`s(k_cont_z,SiteCode)`,`s(SiteCode)`))
+```
+
+No quarto modelo mais plausível, o modelo cheio, que soma cerca de 4% do peso de evidência, há problemas de concurvidade principalmente associado às variáveis log(S) e log(N). Os graus de liberdade do smoother individual de p é o dobro do observado nos GAMMs mais plausíveis e a incerteza varia menos ao longo do gradiente da preditora. Jà os smoothers dos log de N e S apresentam graus de liberdade próximos de 1, principalmente do log(N), e apresentam incerteza elevada e que varia ao longo do gradiente das variáveis. 
+
+Os alphas do teste concurvidade apresentam indicação de concurvidade nos smoothers indivíduos de p, N e S. 
+O smoother de log(N) tem alpha de 22.92% para o smoother de log(S), 11.34% para o de p e 71.24% para o tensor entre log(S) e log(N). 
+O smoother de log(S) tem alpha de 12.10% para o smoother de log(N), 4% para o smoother de p e 95% com o tensor de log(N) e log(S)
+O smoother de p tem alpha de 10% para o smoother de log(N), de 16.9% para o smoother de log(S) e de 21% para o tensor de log(N) e log(S).
+O tensor de log(N) e log(S) possui alpha de 18% com o smoothe de log(N), 68% com o smoother de log(S) e 9% com o smoother de p
+
+#### predição
 
 ```{r predição para novo conjunto de dados md_GAMM}
 # l_md <- list()
