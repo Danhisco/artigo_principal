@@ -486,13 +486,22 @@ l_md[[7]] <- gam(cbind(nCongKS,100-nCongKS)  ~
                    s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
                    s(SiteCode,bs="re"),
                  data = df_md, family="binomial", method = "REML")
+l_md[[8]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(log_Ntotal_z,log_S_obs_z) + ti(log_Ntotal_z,k_cont_z) + ti(log_S_obs_z,k_cont_z) +  
+                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
 names(l_md) <- c("s(N,S,k,p) + ti(N,S) + ti(N,S,k) + ti(p,k)",
                  "s(N,S,k,p) + ti(N,S) + ti(p,k)",
                  "s(N,S,k,p) + ti(p,k)",
                  "p,k",
                  "s(N,k,p) + ti(N,k) + ti(p,k)",
                  "s(S,k,p) + ti(S,k) + ti(p,k)",
-                 "s(N,S,k,p) + ti(N,k) + ti(S,k) + ti(p,k)")
+                 "s(N,S,k,p) + ti(N,k) + ti(S,k) + ti(p,k)",
+                 "s(N,S,k,p) + ti(N,S) + ti(N,k) + ti(S,k) + ti(N,S,k) + ti(p,k)")
 l_md_GAMM <- l_md
 save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
 ```
@@ -607,7 +616,7 @@ O modelo tem dificuldade de distinguir os efeitos parciais de p, log(S) e log(N)
 PEcabo2 (log_Ntotal_z ~ 0)
 SPpesmF (log_S_obs_z ~ 0)
 
-
+#### Avaliação sensibilidade 
 
 
 #### predição
