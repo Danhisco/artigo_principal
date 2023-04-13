@@ -19,5 +19,10 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
-# Introdução
+# Perguntas Motivadoras
 
+P1) É necessário considerar a configuração espacial do habitat na paisagem ou é suficiente pressupor a relação entre a quantidade de habitat na parcela e na parcela ao redor? Essa regra varia com o grau de limitação de dispersão e proporção de cobertura vegetal?
+<!-- P1 está relacionado com a seção da discussão e da introdução sobre como modelar a diversidade local de árvores a partir de mapas de cobertura vegetal e graus de limitação de dispersão -->
+ <!-- P1 Também é um indicativo de que hipóteses de equilíbrio na paisagem contemporânea tem suporte -->
+ 
+ P2) Quanto maior a perda de habitat maior a diferença em pressupor a paisagem contemporânea e a idealizada sem perda de habitat para modelar a diversidade local de árvores na Floresta Atlântica? Essa diferença muda com a extensão espacial da paisagem observada?
