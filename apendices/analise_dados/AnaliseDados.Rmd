@@ -428,15 +428,41 @@ Melhorar as estatísticas resumo em função de p e k.
 
 #### DAG:
 
-```{r}
-dag_PrCong <- dagify(PrCong ~ p + k + S + N,
-                     p ~ S,
-                     N ~ p + S,
+```{r DAG MNEE contemp - PrCong N S k p prox Sesp Desp}
+l_coord <- list(
+  x = c(PrCong = 0, Sobs = 0, N = 2, p = 3, k = 4, Sesp = 0, effort = 2, PERTesp = 3.5, Prox = 2),
+  y = c(PrCong = 0, Sobs = 2, N = 2, p = 1.5, k=0.5, Sesp = 6, effort = 4, PERTesp = 6, Prox = 7)
+)
+dag_PrCong <- dagify(PrCong ~ p + k + Sobs + N,
+                     Sesp ~ Prox + PERTesp,
+                     PERTesp ~ Prox,
+                     effort ~ Prox + Sesp + PERTesp,
+                     Sobs ~ Sesp + effort + N,
+                     N ~ effort,
+                     p ~ PERTesp,
+                     labels = c(
+                       "PrCong" = "Pr(Cong)",
+                       "p" = "p",
+                       "k" = "k",
+                       "N" = "N",
+                       "Sobs" = "S obs",
+                       "Sesp" = "S esp",
+                       "PERTesp" = "Pert. esp",
+                       "Prox" = "Prox. centros",
+                       "effort" = "effort"
+                     ),
                      outcome = "PrCong",
-                     exposure = "p")
-ggdag(dag_PrCong)
-ggdag_paths(dag_PrCong,shadow = TRUE)
-ggdag_adjustment_set(dag_PrCong,shadow = TRUE)  
+                     latent = c("Sesp","PERTesp","Prox"),
+                     exposure = c("p","k"),
+                     coords = l_coord) 
+l_p <- list()
+l_p[[1]] <- ggdag(dag_PrCong,text = FALSE, use_labels = "label") +
+  theme_void()# 
+ggdag_paths(dag_PrCong)
+ggdag_adjustment_set(dag_PrCong,shadow = TRUE,text = FALSE, use_labels = "label") +
+  theme_dag_gray() +
+  scale_color_manual(values=c("red4","green4"))
+  # ggpmisc::geom_table_npc(data=df_text.table,aes(npcx = x, npcy = y, label = data)) +
 ```
 
 
@@ -562,7 +588,8 @@ save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
 ```
 ```{r}
 load("dados/Rdata/l_md_GAMM.Rdata")
-(df_aicctab <- AICctab(l_md_GAMM,weights=TRUE) |> as.data.frame())
+l_md <- l_md_GAMM[c(1:3,7:10)]
+(df_aicctab <- AICctab(l_md,weights=TRUE) |> as.data.frame())
 ```
 
 
@@ -590,7 +617,7 @@ O gráfico de efeitos parciais indica que o modelo não conseguiu distinguir os 
 __modelo mais plausível__ Pr(Cong) ~ f(S,p,k,SiteCode)
 
 ```{r}
-gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[1]]]
+gamm_MNEE <- l_md[[row.names(df_aicctab)[1]]]
 k.check(gamm_MNEE)
 gratia::appraise(gamm_MNEE)
 summary(gamm_MNEE)
@@ -607,7 +634,7 @@ Entendo que apesar desse modelo ser o mais plausível ele pode não ser muito ú
 __2o modelo mais plausível__ Pr(Cong) ~ f(p,k,SiteCode)
 
 ```{r}
-gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[2]]]
+gamm_MNEE <- l_md[[row.names(df_aicctab)[2]]]
 k.check(gamm_MNEE)
 gratia::appraise(gamm_MNEE)
 # summary(gamm_MNEE)
@@ -621,7 +648,7 @@ Os efeitos parciais de p apresentam elevado erro padrão ao redor da estimativa 
 __3o modelo mais plausível__ ~ s(M,S,k,p) + ti(p,k)
 
 ```{r}
-(gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[3]]])
+(gamm_MNEE <- l_md[[row.names(df_aicctab)[3]]])
 k.check(gamm_MNEE)
 gratia::appraise(gamm_MNEE)
 # summary(gamm_MNEE)
@@ -634,7 +661,7 @@ Esse modelo apresenta problemas de concurvidade. As preditoras N, p e S não tem
 __4o modelo mais plausível__ modelo cheio
 
 ```{r}
-(gamm_MNEE <- l_md_GAMM[[row.names(df_aicctab)[4]]])
+(gamm_MNEE <- l_md[[row.names(df_aicctab)[4]]])
 k.check(gamm_MNEE)
 gratia::appraise(gamm_MNEE)
 # summary(gamm_MNEE)
