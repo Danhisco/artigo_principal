@@ -166,7 +166,8 @@ grid.arrange(grobs=l_p,ncol=2,top="# SAD congruentes em função dos log de N e 
 ```
 
 __Figura 3__ Congruência de SADs MNEE por: log do número de indivíduos (esquerda); e log do número de espécies por
-
+  
+  
 
 ### GLMM Binomial
 
