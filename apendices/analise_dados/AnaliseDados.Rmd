@@ -157,7 +157,7 @@ df_plot <- df_ad |>
 f_ggplot <- function(df){
   ggplot(df,aes(x=value,y=nCongKS)) +
   geom_point() +
-  geom_smooth(se=F,method = "lm") +
+  geom_smooth(se=F,method = "gam") +
   labs(x=unique(df$name),y="") +
   facet_wrap(~k_cont,ncol=5)
 }
@@ -166,15 +166,6 @@ grid.arrange(grobs=l_p,ncol=2,top="# SAD congruentes em função dos log de N e 
 ```
 
 __Figura 3__ Congruência de SADs MNEE por: log do número de indivíduos (esquerda); e log do número de espécies por
-
-```{r investigacao de log S N, eval=F}
-df_ad |> 
-  ggplot(aes(x=p,y=log_S.N)) +
-  geom_point() +
-  geom_hline(yintercept = mean(df_ad$log_S.N),color="red") +
-  geom_smooth(method = "lm")
-df_
-```
 
 
 ### GLMM Binomial
@@ -593,6 +584,32 @@ l_md <- l_md_GAMM[c(1:3,7:10)]
 ```
 
 
+__Qual a melhor forma de descrever as preditoras em função de si mesmas?__
+
+```{r melhor forma de descrever as preditoras}
+df_md0 <- df_md |> filter(k=="0.99") # remove valores repetidos pelos graus de limitação de dispersão simulados
+l_md <- list()
+l_md[[1]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr"),data = df_md0)
+l_md[[2]] <- gam(log_S_obs_z ~ s(p_z,bs="cr"),data = df_md0)
+l_md[[3]] <- gam(log_Ntotal_z ~ s(log_S_obs_z,bs="cr"),data = df_md0)
+l_md[[4]] <- gam(log_S_obs_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0)
+l_md[[5]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0)
+l_md[[6]] <- gam(log_S_obs_z ~ s(p_z,bs="cr") + s(log_Ntotal_z,bs="cr"),data = df_md0)
+l_md[[7]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0)
+l_md[[8]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0)
+l_md[[9]] <- gam(p_z ~ s(log_S_obs_z,bs="cr"),data = df_md0)
+names(l_md) <- c("N ~ p", "S ~ p", "N ~ S", "S ~ N","N ~ p,S", "S ~ p,N",
+                 "p ~ N", "p ~ S + N", "p ~ S")
+l <- l_md[c(1,3,5)]
+AICctab(l,weights=T)
+l <- l_md[c(2,4,6)]
+AICctab(l,weights=T)
+l <- l_md[c(7:9)]
+AICctab(l,weights=T)
+```
+
+
+
 #### avaliação concurvidade
 
 Concurvidade ocorre quando uma variável preditora pode ser bem descrita por um smooth de uma outra variável preditora (Wood 2016? Checking and Selecting GAMs). Nessa sequência de slide ele exemplifica:
@@ -698,8 +715,6 @@ O modelo tem dificuldade de distinguir os efeitos parciais de p, log(S) e log(N)
 PEcabo2 (log_Ntotal_z ~ 0)
 SPpesmF (log_S_obs_z ~ 0)
 
-#### Avaliação sensibilidade 
-
 
 #### predição
 
@@ -713,29 +728,6 @@ Contrafactual gráfico: Como seria Pr(Cong) caso log(N) e log(S) permanecem em s
 
 __Como construir o novo conjunto de dados?__
 
-Resumo da seleção de modelos
-
-__Qual a melhor forma de descrever as preditoras em função de si mesmas?__
-
-```{r melhor forma de descrever as preditoras}
-df_md0 <- df_md |> filter(k=="0.99")
-l_md <- list()
-l_md[[1]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr"),data = df_md0)
-l_md[[2]] <- gam(log_S_obs_z ~ s(p_z,bs="cr"),data = df_md0)
-l_md[[3]] <- gam(log_Ntotal_z ~ s(log_S_obs_z,bs="cr"),data = df_md0)
-l_md[[4]] <- gam(log_S_obs_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0)
-l_md[[5]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0)
-l_md[[6]] <- gam(log_S_obs_z ~ s(p_z,bs="cr") + s(log_Ntotal_z,bs="cr"),data = df_md0)
-names(l_md) <- c("N ~ p", "S ~ p", "N ~ S", "S ~ N","N ~ p,S", "S ~ p,N")
-l <- l_md[c(1,3,5)]
-AICctab(l,weights=T)
-l <- l_md[c(2,4,6)]
-AICctab(l,weights=T)
-```
-
-A seleção de modelos indica que a melhor forma de reconstruir os dados é:
-i) predizer novo conjunto de dados de S a partir de p; e depois
-ii) predizer novo conjunto de dados de N a partir de S.
 
 
 
