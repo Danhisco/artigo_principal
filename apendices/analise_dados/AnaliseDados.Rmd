@@ -177,17 +177,17 @@ Descrever a probabilidade da SAD predita por MNEE em paisagens contemporâneas a
 ```{r MNEE GAMM 1, echo=TRUE}
 l_md <- list()
 l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(p_z,bs = "cr") + s(k_cont_z,bs = "cr")
+                   s(k_cont_z,bs = "cr") + s(p_z,bs = "cr")
                    ti(p_z,k_cont_z) +
                    s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
                    s(SiteCode,bs="re"),
                  data = df_md, family="binomial", method = "REML")
 l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(p_z,bs = "cr") + s(k_cont_z,bs = "cr")
+                   s(k_cont_z,bs = "cr") + s(p_z,bs = "cr")
                    s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
                    s(SiteCode,bs="re"),
                  data = df_md, family="binomial", method = "REML")
-names(l_md) <- c("s(p,k) + ti(p,k)","s(p,k)")
+names(l_md) <- c("s(k,p) + ti(k,p)","s(k,p)")
 ```
 ```{r descrição apenas em função de modelos que consideram p e k}
 load("dados/Rdata/l_md_GAMM.Rdata")
@@ -195,7 +195,7 @@ l_md <- l_md_GAMM[c(4,11)]
 (df_aicctab <- AICctab(l_md,weights=TRUE) |> as.data.frame())
 ```
 
-O modelo mais palusível, com 84% do peso de evidência, possui um spline para cada variável. 
+O modelo mais palusível, com 84% do peso de evidência, possui um spline para cada variável sem o tensor com as duas variáveis. 
 
 __modelo mais plausível__
 
@@ -215,33 +215,31 @@ Para auxiliar no denselvimento de GAMM adequados vamos construir um modelo conce
 
 ### Processo Gerador Pr(Cong)
 
-- intro geral: diff razoável SAD obs e SAD predita
+A probabilidade de uma SAD neutra apresentar boa congruência depende se a maior distância entre as curvas acumuladas é razoavelmente pequena. Para a forma da SAD observada há diversas hipóteses e pouco consenso (McGill et al. 2007). Para a forma da SAD predita há um conjunto conhecido de variáveis que deve influenciar. Cada modelo neutro implementa uma hipótese sobre a dispersão dos indivíduos no habitat da parcela amostrada e no habitat da paisagem ao redor [1]. A relação de N e S pode informar sobre a exposição da árvore genealógica da comunidade na parcela ao pool de indivíduos da paisagem [2]. Por exemplo, quanto maior N e menor S maior é o potencial de espalhamento das linhagens locais pelos indivíduos remanescentes na paisagem ao redor, pois há mais indivíduos para coalescerem para poucas espécies. A variável k possui dois efeitos: i) regular a exposição da árvore genealógica da comunidade ao pool de indivíduos da paisagem ao redor, ou seja, o espalhamento das linhagens locais; e ii) determinar a demanda por propágulos da paisagem ao redor para manter a riqueza local, e portanto determina a potencial taxa U necessária para manter a riqueza local. 
+A relação de k, p na taxa U está descrita no apêndice "Taxa U estimada nas paisagens contemporâneas" [3]. A variável p descreve o maior potencial de chuva de propágulos na paisagem. Além disso, ao longo do gradiente de p, p está relacionado com a configuração espacial da paisagem (Villard & Metzger 2014). A interação de p com outras variáveis permite explorar condicionamentos relacionados com a configuração espacial.       
 
-#### A forma da SAD predita 
+Devido aos viéses de pesquisa relacionada com o esforço amostral, podemos esperar que N, S e p possam covariar. Algumas variáveis latentes que podem conter informação sobre esforço amostral são: proximidade com centros de pesquisa ou urbanos (Prox), diversidade local esperada (e.g. em termos de riqueza esperada - Sesp), e grau de perturbação esperado (PERTesp). Todas essas são variáveis latentes que podem ser explicadas por outras variáveis latentes geográficas (e.g. qualidade do solo e perfil geográfico). As variáveis latentes devem conter informação sobre p, N e S via esforço amostral ou diretamente. O esforço amostral deve conter informação sobre N e S, e N sobre S. Sesp deve conter informação sobre S. PERTesp pode conter informação sobre p e Sesp. Pressupus que não há influência de Sesp em PERTesp (mas esse pressuposto pode ser relaxado sem mudanças nas conclusões do DAG).
 
-DAG inner cicle: Pr(Cong) ~ N, S, p, k
+[1] Todos os modelos neutros utilizam simulações coalescentes, que retrocedem no tempo para obter uma amostra da SAD, pressuposto equilíbrio dinâmico, onde as espécies perdidas na paisagem por deriva são compensadas pela colonização de novas espécies descrito pela taxa U. A simulação termina quando a espécie de todos os indivíduos (linhagens) que iniciaram na parcela é determinada.   
 
-a) existem duas variáveis que sempre estão relacionadas com a exposição da árvore genealógica da comunidade local ao pool de indivíduos da paisagem ao redor: número de indivíduos (N) e número de espécies (S), pois eles determinam o número de linhagens inicial e final nas simulações coalescentes.
-b) Nas simulações com grau de limitação de dispersão (MNEE e MNEI) outra variável relacionada com a exposição é k.
-c) Uma expectativa é que quanto maior o grau de exposição da árvore genealógica, maior deve ser ser a possível influência da configuração espacial no chuva de propágulos do pool de indivíduos remanescente na paisagem. A restrição da chuva de propágulos pela perda de habitat aumenta com a redução da proporção de cobertura vegetal. Então p está modelando a chuva de propágulos máxima possível. 
+[2] exposição ao pool de indivíduos da paisagem ao redor é o conceito comum aos 3 modelos neutros. Para MNEE em específico seria exposição à configuração espacial dos indivíduos remanescenes na paisagem ao redor.
+
+[3] quando o grau de limitação é severo, há grande probabilidade de substituição de coespecífico e portanto baixa erosão de espécies por deriva ecológica; com um pouco de relaxamento da limitação de dispersão, há redução da substituição de coespécificos e baixa probabilidade de reposição de espécies por dispersão de longa distância de dentro da paisagem; nos graus mais brandos de limitação de dispersão, a baixa probabilidade de substituição de coespécies, que leva ao aumento da erosão de espécies, pode ser compensada pela alta probabilidade de reposição de espécies por dispersão de longa distância de dentro da paisagem.
+
+Na figura 4 há o grafo acíclico dirigigo (DAG, _directed acyclic graph_) do modelo conceitual proposto. Podemos avaliar o DAG proposto, avaliando se é plausível descrever S, N e p em função de uma combinação de si mesmas (SI no final). Outra forma é 
 
 
-#### Processo gerador de inventários florestais
-
-Devido aos viéses de pesquisa relacionada com o esforço amostral, podemos esperar que N, Sobs e p possam covariar. As variáveis que podem conter informação sobre esforço amostral podem ser: proximidade com centros de pesquisa ou urbanos (Prox), diversidade local esperada (e.g. em termos de riqueza esperada - Sesp), e grau de perturbação esperado (PERTesp). Todas essas são variáveis latentes no momento que podem ser explicadas por outras variáveis geográficas latentes (e.g. qualidade do solo e perfil geográfico). As variáveis latentes devem conter informação sobre p, N e Sobs via esforço amostral ou diretamente. O esforço amostral deve conter informação sobre N e Sobs, e N sobre Sobs. Sesp deve conter informação sobre Sobs. PERTesp pode conter informação sobre p e Sesp. Pressupus que não há influência de Sesp em PERTesp (mas esse pressuposto pode ser relaxado sem mudanças nas conclusões do DAG).
-
-DAG outter cirvle: S ~, N ~, p ~ latent variables
 
 ```{r DAG MNEE contemp - PrCong N S k p prox Sesp Desp}
 l_coord <- list(
-  x = c(PrCong = 0, Sobs = 0, N = 2, p = 3, k = 4, Sesp = 0, effort = 2, PERTesp = 3.5, Prox = 2),
-  y = c(PrCong = 0, Sobs = 2, N = 2, p = 1.5, k=0.5, Sesp = 6, effort = 4, PERTesp = 6, Prox = 7)
+  x = c(PrCong = 0, S = 0, N = 2, p = 3, k = 4, Sesp = 0, effort = 2, PERTesp = 3.5, Prox = 2),
+  y = c(PrCong = 0, S = 2, N = 2, p = 1.5, k=0.5, Sesp = 6, effort = 4, PERTesp = 6, Prox = 7)
 )
-dag_PrCong <- dagify(PrCong ~ p + k + Sobs + N,
+dag_PrCong <- dagify(PrCong ~ p + k + S + N,
                      Sesp ~ Prox + PERTesp,
                      PERTesp ~ Prox,
                      effort ~ Prox + Sesp + PERTesp,
-                     Sobs ~ Sesp + effort + N,
+                     S ~ Sesp + effort + N,
                      N ~ effort,
                      p ~ PERTesp,
                      labels = c(
@@ -249,7 +247,7 @@ dag_PrCong <- dagify(PrCong ~ p + k + Sobs + N,
                        "p" = "p",
                        "k" = "k",
                        "N" = "N",
-                       "Sobs" = "S obs",
+                       "S" = "S",
                        "Sesp" = "S esp",
                        "PERTesp" = "Pert. esp",
                        "Prox" = "Prox. centros",
@@ -269,33 +267,15 @@ ggdag_adjustment_set(dag_PrCong,shadow = TRUE,text = FALSE, use_labels = "label"
 ```
 
 
-__Qual a melhor forma de descrever as preditoras em função de si mesmas?__
+### GAMM 2: Pr(Cong) ~ f(p,k,N,S)
 
-```{r melhor forma de descrever as preditoras}
-df_md0 <- df_md |> filter(k=="0.99") # remove valores repetidos pelos graus de limitação de dispersão simulados
-l_md <- list()
-l_md[[1]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[2]] <- gam(log_S_obs_z ~ s(p_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[3]] <- gam(log_Ntotal_z ~ s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[4]] <- gam(log_S_obs_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[5]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[6]] <- gam(log_S_obs_z ~ s(p_z,bs="cr") + s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[7]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[8]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[9]] <- gam(p_z ~ s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[10]] <- gam(p_z ~ 1,data = df_md0,method = "REML")
-names(l_md) <- c("N ~ p", "S ~ p", "N ~ S", "S ~ N","N ~ p,S", "S ~ p,N",
-                 "p ~ N", "p ~ S + N", "p ~ S")
-l <- l_md[c(1,3,5)]
-AICctab(l,weights=T)
-l <- l_md[c(2,4,6)]
-AICctab(l,weights=T)
-l <- l_md[c(7:9)]
-AICctab(l,weights=T)
-```
+Vamos considerar interações entre as variáveis relacionadas com a exposição (N,S, e k) e as relacionadas com o pool de propágulos da paisagem ao redor (p e k). 
 
 
 
+Minha proposta de GAMM cheio é de 1 smoother para cada variável (N,S,k,p), 1 interação (tensor) entre N e S, 1 interação entre N, S e k, e 1 interação entre k e p. Na estrutura aleatória há 1 smoother por sítio de amostragem, com todos os sítios compartilhando o mesmo grau de penalização (ou seja, de flexibilidade) e 1 intercepto por sítio.
+
+Em todo tipo de smoother (simples ou interação) utilizei como funções base a função cúbica. A função gratia::draw cria gráficos dos efeitos parciais dos smoother (simples e interação). Na figura 1 há os gráficos dos efeitos parciais dos smoothers do modelo cheio. Os gráficos dos smoothers simples das variáveis N e S indicam que existe concurvidade entre elas.
 
 
 ```{r gamm MNEE contemporaneo}
@@ -592,3 +572,38 @@ ggsave("apendices/analise_dados/figuras/gammMNEE_PredObs_k_Site.png",p,
 
 ```
 
+
+
+# Support Information
+
+## Associação estatística entre variáveis de exposição e p
+
+__Qual a melhor forma de descrever as preditoras em função de si mesmas?__
+
+```{r melhor forma de descrever as preditoras}
+df_md0 <- df_md |> filter(k=="0.99") # remove valores repetidos pelos graus de limitação de dispersão simulados
+f_gamm <- function(formulaGAMM){
+  gam(formula = formulaGAMM,data = df_md0,method = "REML")
+}
+l_f <- list()
+l_f[[1]] <- log_Ntotal_z ~ s(p_z,bs="cr")
+l_md <- list()
+l_md[[1]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[2]] <- gam(log_S_obs_z ~ s(p_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[3]] <- gam(log_Ntotal_z ~ s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[4]] <- gam(log_S_obs_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[5]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[6]] <- gam(log_S_obs_z ~ s(p_z,bs="cr") + s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[7]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[8]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[9]] <- gam(p_z ~ s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[10]] <- gam(p_z ~ 1,data = df_md0,method = "REML")
+names(l_md) <- c("N ~ p", "S ~ p", "N ~ S", "S ~ N","N ~ p,S", "S ~ p,N",
+                 "p ~ N", "p ~ S + N", "p ~ S")
+l <- l_md[c(1,3,5)]
+AICctab(l,weights=T)
+l <- l_md[c(2,4,6)]
+AICctab(l,weights=T)
+l <- l_md[c(7:9)]
+AICctab(l,weights=T)
+```
