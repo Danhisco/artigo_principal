@@ -168,256 +168,69 @@ grid.arrange(grobs=l_p,ncol=2,top="# SAD congruentes em função dos log de N e 
 __Figura 3__ Congruência de SADs MNEE por: log do número de indivíduos (esquerda); e log do número de espécies por
   
 
- GLMM Binomial
-
-#### Modelo Cheio
-
-```{r selecao modelo cheio N S p k, echo=T,eval=T,cache=TRUE}
-l_md <- list()
-l_md[[1]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                     log_Ntotal_z * log_S_obs_z * poly(k_cont_z,3,raw=TRUE) * poly(p_z,3,raw=TRUE) + 
-                     (poly(k_cont_z,3,raw=TRUE)|SiteCode),
-          data=df_ad, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-l_md[[2]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                     log_Ntotal_z * log_S_obs_z * poly(k_cont_z,3,raw=TRUE) +
-                     poly(p_z,3,raw=TRUE) * poly(k_cont_z,3,raw=TRUE) + 
-                     (poly(k_cont_z,3,raw=TRUE)|SiteCode),
-          data=df_ad, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-l_md[[3]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                     log_Ntotal_z * log_S_obs_z +
-                     poly(p_z,3,raw=TRUE) * poly(k_cont_z,3,raw=TRUE) + 
-                     (poly(k_cont_z,3,raw=TRUE)|SiteCode),
-          data=df_ad, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-l_md[[4]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                     log_Ntotal_z + log_S_obs_z +
-                     poly(p_z,3,raw=TRUE) * poly(k_cont_z,3,raw=TRUE) + 
-                     (poly(k_cont_z,3,raw=TRUE)|SiteCode),
-          data=df_ad, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-l_md[[5]] <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-                     poly(p_z,3,raw=TRUE) * poly(k_cont_z,3,raw=TRUE) + 
-                     (poly(k_cont_z,3,raw=TRUE)|SiteCode),
-          data=df_ad, family = "binomial",
-          control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-names(l_md) <- c("N * S * k * p","N * S * k","N * S", "N + S","1")
-(df_aictab <- AICctab(l_md,weights=T) |> as.data.frame())
-md_MNEE <- l_md[[row.names(df_aictab)[1]]]
-```
-
-```{r resíduos quantilicos do modelo cheio mais plausivel}
-p_plot <- DHARMa::simulateResiduals(md_MNEE,n=1000)
-plot(p_plot)
-```
-
-
-__Figura 4__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
-
-```{r opcoes de graf exprotarios dos coef da estr aleat, eval=TRUE}
-df_ranef <- ranef(md_MNEE)$SiteCode 
-df_ranef$SiteCode <- row.names(df_ranef)
-row.names(df_ranef) <- NULL
-df_p <- df_ranef |> 
-  pivot_longer(-SiteCode) |> 
-  inner_join(df_ad |> select(SiteCode,p) |> distinct(),by="SiteCode")
-df_p |> 
-  ggplot(aes(sample=value)) + 
-  stat_qq(alpha=0.3) + stat_qq_line(alpha=0.3,col="red") +
-  labs(title="qqnorm dos coef. por SiteCode") +
-  facet_wrap(~name,scales="free",ncol=3)
-df_p |>
-  ggplot(aes(x=p,y=value)) +
-  geom_hline(yintercept = 0,color="red") +
-  geom_point() +
-  geom_smooth() +
-  facet_wrap(~name,ncol=2) +
-  labs(title="Coef. por SiteCode ~ p") +
-  theme_bw()
-```
-
-__Figura 5__ Resíduos Quantílicos modelo cheio selecionado MNEE nCongKS
-
-
-```{r figura 6 observado e predito pelo modelo cheio de nCongKS MNEE, eval=T,fig.height=4}
-# dados
-df_md <- md_MNEE@frame
-df_md$nCong_observado <- df_md$`cbind(nCongKS, 100 - nCongKS)`[,1]
-df_md$nCong_predito <- predict(md_MNEE,type="response") * 100
-# graficos
-ggplot(df_md,aes(x=nCong_observado,y=nCong_predito)) +
-  geom_smooth(method = "lm",aes(group=SiteCode),se=FALSE,alpha=0.3) +
-  geom_abline(slope = 1,intercept = 0,col="red",alpha=0.8,size=2) +
-  geom_point(alpha=0.3) +
-  labs(x="nSADcong observado",
-       y="nSADcong predito",
-       title="Modelo Cheio",
-       subtitle="predito ~ observado") +
-  coord_cartesian(expand = F)
-summary(lm(nCong_observado ~ nCong_predito,df_md))
-```
-
-__Figura 6__ Observado e predito pelo modelo cheio selecionado 
-
-
-__Tabela 1__ Coeficiente de determinação marginal e condicional do modelo cheio selecionado para nCongKS de MNEE
-
-```{r R2m e R2c do modelo cheio mais plausivel,cache=TRUE}
-# md_MNEE <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-#                    log_Ntotal_z * log_S_obs_z *
-#                    poly(p_z,polyK,raw=T) * poly(k_cont_z,polyK,raw=T) + 
-#                    (poly(k_cont_z,polyK,raw=T)|SiteCode),
-#           data=df_ad, family = "binomial",
-#           control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e9)),na.action = "na.fail")
-(df_R2_RE_MNEE <- MuMIn::r.squaredGLMM(md_MNEE))
-# kableExtra::kable(df_R2_RE_MNEE)
-```
-
-##### Predito pelo modelo cheio para novo conjunto de dados
-
-NOTA:
-df_newdat é um data frame com a interpolação de p e k, e para cada par único de p e k há todos os sítios.
-
-```{r bootstrap do modelo cheio mais plausível MNEE - df_newdat2,echo=T}
-#new data
-df_newdat2 <- df_newdat |> filter(SiteCode == "BAlenc4") |> select(p_z:SiteCode)
-## Passo 2: crie as função que devem ser calculadas dos modelos a cada simulação
-## Previstos por efeitos fixos e aleatórios
-f1 <- function(.) predict(., newdata=df_newdat2)
-## Previstos por efeitos fixos (argumento re.form=~0)
-f2 <- function(.) predict(., newdata=df_newdat2, re.form=~0)
-## Os dois bootstraps. Ajuste o argumento ncpus para o numero de cores de seu computador
-b3 <- bootMer(md_MNEE, FUN = f1, nsim=1000, parallel="multicore", ncpus=2)
-b4 <- bootMer(md_MNEE, FUN = f2, nsim=1000, parallel="multicore", ncpus=2)
-## calcula as médias e intervalos de confiança quantílicos para cada combinação de preditoras
-## no novo conjunto de dados
-df_newdat2$mean <- apply(b3$t,2,mean)
-df_newdat2$IC.low <- apply(b3$t,2,quantile, 0.025)
-df_newdat2$IC.upp <- apply(b3$t,2,quantile, 0.975)
-df_newdat2$mean.fixed <- apply(b4$t,2,mean)
-df_newdat2$IC.low.fixed <- apply(b4$t,2,quantile, 0.025)
-df_newdat2$IC.upp.fixed <- apply(b4$t,2,quantile, 0.975)
-write_csv(x=df_newdat2,file = "dados/csv/resultados_MN/MNEE/df_newdata.csv")
-```
-
-```{r predito pelo modelo cheio para novo conjunto de dados - df_newdat,eval=T}
-# função para summarizar 
-f_summarise <- function(x,probs = c(0.05,0.25, 0.5, 0.75,0.95)){
-  tibble(pred = unname(quantile(x,probs)),prob = probs)
-}
-#
-df_newdat$pred <- predict(md_MNEE,newdata=df_newdat,type="response")
-df_plot <- df_newdat |> 
-  reframe(across(pred,f_summarise,.unpack=TRUE),.by=c(p_z,k_cont_z)) |> 
-  rename_with(~str_remove(.,"pred_")) |> 
-  mutate(label = paste0("Quant = ",prob),
-         p = p_z*sd(df_ad$p) + mean(df_ad$p),
-         k = k_cont_z*sd(df_ad$k_cont) + mean(df_ad$k_cont))
-df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
-# gráficos
-f_ggplot2 <- function(df,facets=2){
-  ggplot(df,aes(x=p,y=k,fill=pred)) +
-    geom_tile() +
-    scale_fill_distiller(palette = "Spectral",limits=c(0,1)) +
-    scale_y_reverse() +
-    theme_classic() +
-    coord_cartesian(expand = FALSE) +
-    labs(fill="Pr(Cong)") +
-    facet_wrap(~label,ncol = facets)
-}
-l_p <- list()
-l_p[[1]] <- df_plot |> 
-  filter(prob == 0.5) |> 
-  f_ggplot2() + labs(x="")
-l_p[[2]] <- df_plot |> 
-  filter(prob != 0.5) |>
-  f_ggplot2()
-ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
-```
-
-
-#### Modelo Médio
-
-
-```{r códigos para rodar o modelo médio,echo=T}
-# todas as combinações de modelo do modelo cheio
-registerDoMC(3)
-l_md.dredge_MNEE <- llply(dredge(md_MNEE,trace = FALSE,evaluate=FALSE), eval,.parallel = TRUE)
-# Model Averaging for SiteCode predictions
-mdAvg_MNEE__MuMIn <- model.avg(l_md.dredge_MNEE)
-# Model Averaging for new data predictions
-mdAvg_MNEE__AICcmodavg <- modavgPred(l_md.dredge_MNEE,newdata = df_newdat,type="link") %>%
-  cbind(df_pred)
-# saves
-save(l_md.dredge_MNEE,file="dados/Rdata/l_md.dredge_MNEE.Rdata") # lista c todas as combinações de modelo
-save(mdAvg_MNEE__MuMIn,file="dados/Rdata/mdAvg_MNEE__MuMIn.Rdata") # predição do modelo médio para os dados observados
-save(mdAvg_MNEE__AICcmodavg,file="dados/Rdata/mdAvg_MNEE__AICcmodavg.Rdata") # predição do modelo médio para novo conjunto de dados 
-```
-
-__tabela X__ Tabela de Seleção com os submodelos mais plausíveis. 
-
-```{r head tabela dos submodelos do modelo cheio}
-load("dados/Rdata/l_md.dredge_MNEE.Rdata")
-df_AICctabMNEE <- model.sel(l_md.dredge_MNEE)
-```
-
-
-```{r  observado e predito modelo medio, comment=FALSE, message=FALSE,warning=FALSE,results="hide",fig.width=8, fig.height=30}
-# Modelo Global
-load(file="dados/Rdata/mdAvg_MNEE__MuMIn.Rdata")
-# Predição
-df_md <- df_ad |> 
-  mutate(label=paste0(SiteCode,", p=",round(p,3)),
-         pred_modCheio = predict(md_MNEE,type="response") * 100,
-         pred_modMedio = predict(mdAvg_MNEE__MuMIn,type="response")*100) |> 
-  arrange(p)
-df_md$label <- factor(df_md$label,levels = unique(df_md$label))
-v_cols <- c("md médio" = "red", "md cheio" = "blue")
-
-(p <- df_md |> 
-  # pivot_longer(pred_modCheio:pred_modMedio) |>
-  ggplot(aes(x=k_cont,y=nCongKS)) +
-  # geom_line(aes(y=pred_modCheio),color="blue") +
-  geom_line(aes(y=pred_modMedio),color="red",alpha=0.4) +
-  geom_point() +
-  theme_bw() +
-  scale_x_reverse() +
-  labs(x="k",y="# SADs congruentes",title="Predito pelo modelo médio (azul) e cheio (vermelho) são iguais") +
-  facet_wrap(~label,ncol=6))
-ggsave("apendices/analise_dados/figuras/fig6b_PredObs_k_Site.png",p,
-       width = 10,
-       height = 17.7)
-
-```
-
-
-```{r comparacao modelo medio e modelo cheio para novo conjunto de dados - df_newdat2}
-df_newdat2$pred_mdMedio <- predict(mdAvg_MNEE__MuMIn,type="response",newdata=df_newdat2)*100
-df_newdat2$pred_mdCheio <- predict(md_MNEE,type="response",newdata=df_newdat2)*100
-df_newdat2 |>
-  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
-         k = k_cont_z*sd(df_ad$k_cont) + mean(df_ad$k_cont)) |> 
-  pivot_longer(starts_with("pred_")) |> 
-  ggplot(aes(x=p,y=k,fill=value)) +
-  geom_tile() +
-  scale_fill_distiller(palette = "Spectral") +
-  scale_y_reverse() +
-  theme_classic() +
-  facet_wrap(~name,ncol=2)
-```
-
-### GAMM
+### GAMM 1: Pr(Cong) ~ f(p,k)
 
 Objetivo:
-Melhorar as estatísticas resumo em função de p e k.
+Descrever a probabilidade da SAD predita por MNEE em paisagens contemporâneas apresentar boa congruência (Pr(Cong)) em função da proporção de cobertura vegetal (p) e grau de limitação de dispersão (k). Iremos iniciar com GAMM com splines e tensores para as variáveis p e k.
 
+
+```{r MNEE GAMM 1, echo=TRUE}
+l_md <- list()
+l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(p_z,bs = "cr") + s(k_cont_z,bs = "cr")
+                   ti(p_z,k_cont_z) +
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(p_z,bs = "cr") + s(k_cont_z,bs = "cr")
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+names(l_md) <- c("s(p,k) + ti(p,k)","s(p,k)")
+```
 ```{r descrição apenas em função de modelos que consideram p e k}
-
+load("dados/Rdata/l_md_GAMM.Rdata")
+l_md <- l_md_GAMM[c(4,11)]
+(df_aicctab <- AICctab(l_md,weights=TRUE) |> as.data.frame())
 ```
 
+O modelo mais palusível, com 84% do peso de evidência, possui um spline para cada variável. 
 
-#### DAG:
+__modelo mais plausível__
+
+```{r qualidade ajuste MNEE GAMM 1 mais plaus,echo=F,cache=TRUE}
+(gamm_MNEE <- l_md[[row.names(df_aicctab)[1]]])
+print("k.check:")
+k.check(gamm_MNEE)
+print("summaryy:")
+summary(gamm_MNEE)
+gratia::appraise(gamm_MNEE)
+gratia::draw(gamm_MNEE)
+```
+
+O modelo mais plausível não estima de forma adequada o spline de p: o efeito parcial estimado tende à uma reta, e o intervalo de confiança dessa estimativa é elevada e varia ao longo do gradiente da preditora. O spline de p parece estar sofrende de concurvidade com uma outra variável relevante para descrever Pr(Cong) que não está incluída no GAMM. Concurvidade ocorre quando uma preditora pode ser bem descrita por um spline de outra preditora.  
+
+Para auxiliar no denselvimento de GAMM adequados vamos construir um modelo conceitual do processo gerador dos dados.
+
+### Processo Gerador Pr(Cong)
+
+- intro geral: diff razoável SAD obs e SAD predita
+
+#### A forma da SAD predita 
+
+DAG inner cicle: Pr(Cong) ~ N, S, p, k
+
+a) existem duas variáveis que sempre estão relacionadas com a exposição da árvore genealógica da comunidade local ao pool de indivíduos da paisagem ao redor: número de indivíduos (N) e número de espécies (S), pois eles determinam o número de linhagens inicial e final nas simulações coalescentes.
+b) Nas simulações com grau de limitação de dispersão (MNEE e MNEI) outra variável relacionada com a exposição é k.
+c) Uma expectativa é que quanto maior o grau de exposição da árvore genealógica, maior deve ser ser a possível influência da configuração espacial no chuva de propágulos do pool de indivíduos remanescente na paisagem. A restrição da chuva de propágulos pela perda de habitat aumenta com a redução da proporção de cobertura vegetal. Então p está modelando a chuva de propágulos máxima possível. 
+
+
+#### Processo gerador de inventários florestais
+
+Devido aos viéses de pesquisa relacionada com o esforço amostral, podemos esperar que N, Sobs e p possam covariar. As variáveis que podem conter informação sobre esforço amostral podem ser: proximidade com centros de pesquisa ou urbanos (Prox), diversidade local esperada (e.g. em termos de riqueza esperada - Sesp), e grau de perturbação esperado (PERTesp). Todas essas são variáveis latentes no momento que podem ser explicadas por outras variáveis geográficas latentes (e.g. qualidade do solo e perfil geográfico). As variáveis latentes devem conter informação sobre p, N e Sobs via esforço amostral ou diretamente. O esforço amostral deve conter informação sobre N e Sobs, e N sobre Sobs. Sesp deve conter informação sobre Sobs. PERTesp pode conter informação sobre p e Sesp. Pressupus que não há influência de Sesp em PERTesp (mas esse pressuposto pode ser relaxado sem mudanças nas conclusões do DAG).
+
+DAG outter cirvle: S ~, N ~, p ~ latent variables
 
 ```{r DAG MNEE contemp - PrCong N S k p prox Sesp Desp}
 l_coord <- list(
@@ -446,10 +259,9 @@ dag_PrCong <- dagify(PrCong ~ p + k + Sobs + N,
                      latent = c("Sesp","PERTesp","Prox"),
                      exposure = c("p","k"),
                      coords = l_coord) 
-l_p <- list()
-l_p[[1]] <- ggdag(dag_PrCong,text = FALSE, use_labels = "label") +
-  theme_void()# 
-ggdag_paths(dag_PrCong)
+# l_p <- list()
+# l_p[[1]] <- ggdag(dag_PrCong,text = FALSE, use_labels = "label") +
+#   theme_void()
 ggdag_adjustment_set(dag_PrCong,shadow = TRUE,text = FALSE, use_labels = "label") +
   theme_dag_gray() +
   scale_color_manual(values=c("red4","green4"))
@@ -457,23 +269,34 @@ ggdag_adjustment_set(dag_PrCong,shadow = TRUE,text = FALSE, use_labels = "label"
 ```
 
 
+__Qual a melhor forma de descrever as preditoras em função de si mesmas?__
 
-Parametrização adequada segundo Gavin Simpson em vídeo do Ecological Forecasting:
+```{r melhor forma de descrever as preditoras}
+df_md0 <- df_md |> filter(k=="0.99") # remove valores repetidos pelos graus de limitação de dispersão simulados
+l_md <- list()
+l_md[[1]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[2]] <- gam(log_S_obs_z ~ s(p_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[3]] <- gam(log_Ntotal_z ~ s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[4]] <- gam(log_S_obs_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[5]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[6]] <- gam(log_S_obs_z ~ s(p_z,bs="cr") + s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[7]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[8]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[9]] <- gam(p_z ~ s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md[[10]] <- gam(p_z ~ 1,data = df_md0,method = "REML")
+names(l_md) <- c("N ~ p", "S ~ p", "N ~ S", "S ~ N","N ~ p,S", "S ~ p,N",
+                 "p ~ N", "p ~ S + N", "p ~ S")
+l <- l_md[c(1,3,5)]
+AICctab(l,weights=T)
+l <- l_md[c(2,4,6)]
+AICctab(l,weights=T)
+l <- l_md[c(7:9)]
+AICctab(l,weights=T)
+```
 
-A lógica de parametrização é:
-i) deixar k grande suficiente
-ii) pois a penalização do overfitting é ajustada. 
 
-Melhor mesmo é usar REML que já considera isso. Mas sempre fazer o k.check
 
-Ideia geral dos GAMMs:
 
-a) existem duas variáveis que sempre estão relacionadas com a exposição da árvore genealógica da comunidade local ao pool de indivíduos da paisagem ao redor: número de indivíduos (N) e número de espécies (S), pois eles determinam o número de linhagens inicial e final nas simulações coalescentes.
-b) Nas simulações com grau de limitação de dispersão (MNEE e MNEI) outra variável relacionada com a exposição é k.
-c) Uma expectativa é que quanto maior o grau de exposição da árvore genealógica, maior deve ser ser a possível influência da configuração espacial no chuva de propágulos do pool de indivíduos remanescente na paisagem. A restrição da chuva de propágulos pela perda de habitat aumenta com a redução da proporção de cobertura vegetal. Então p está modelando a chuva de propágulos máxima possível. 
-
-Sobre t2():
-If full = TRUE then there is a separate penalty for each combination of null space column and range space. This gives strict invariance. If FALSE each combination of null space and range space generates one penalty, but the coulmns of each null space basis are treated as one group. The latter is more parsimonious, but does mean that invariance is only achieved by an arbitrary rescaling of null space basis vectors.
 
 ```{r gamm MNEE contemporaneo}
 df_md <- df_ad |> 
@@ -584,29 +407,6 @@ l_md <- l_md_GAMM[c(1:3,7:10)]
 ```
 
 
-__Qual a melhor forma de descrever as preditoras em função de si mesmas?__
-
-```{r melhor forma de descrever as preditoras}
-df_md0 <- df_md |> filter(k=="0.99") # remove valores repetidos pelos graus de limitação de dispersão simulados
-l_md <- list()
-l_md[[1]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr"),data = df_md0)
-l_md[[2]] <- gam(log_S_obs_z ~ s(p_z,bs="cr"),data = df_md0)
-l_md[[3]] <- gam(log_Ntotal_z ~ s(log_S_obs_z,bs="cr"),data = df_md0)
-l_md[[4]] <- gam(log_S_obs_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0)
-l_md[[5]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0)
-l_md[[6]] <- gam(log_S_obs_z ~ s(p_z,bs="cr") + s(log_Ntotal_z,bs="cr"),data = df_md0)
-l_md[[7]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0)
-l_md[[8]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0)
-l_md[[9]] <- gam(p_z ~ s(log_S_obs_z,bs="cr"),data = df_md0)
-names(l_md) <- c("N ~ p", "S ~ p", "N ~ S", "S ~ N","N ~ p,S", "S ~ p,N",
-                 "p ~ N", "p ~ S + N", "p ~ S")
-l <- l_md[c(1,3,5)]
-AICctab(l,weights=T)
-l <- l_md[c(2,4,6)]
-AICctab(l,weights=T)
-l <- l_md[c(7:9)]
-AICctab(l,weights=T)
-```
 
 
 
