@@ -41,7 +41,7 @@ library(plyr)
 library(dplyr)
 source("source/nameModel.R")
 # objetos
-load("dados/Rdata/md_MNEE.Rdata")
+# load("dados/Rdata/md_MNEE.Rdata")
 load("dados/Rdata/l_md_GAMM.Rdata")
 # dados
 # df_resultMNEE
@@ -62,7 +62,7 @@ df_ad <- inner_join(x=distinct(select(df_resultMNEE,-(Ssd:Smax))),
          across(c(p,k_cont,log_Ntotal:log_S.N),f_z,.names = "{.col}_z")) |>
   select(-c(nCongDTS,effort_ha, Ntotal:S_obs))
 # df_newdata
-df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
+df_newpred <- read_csv(file="dados/csv/df_newpred.csv")
 # df_md
 df_md <- df_ad |> 
   mutate(SiteCode = factor(SiteCode))
@@ -399,7 +399,32 @@ Ele será usado para predizer o intervalo de predição a posteriori do modelo. 
 
 ESTRATÉGIA:
 
-Contrafactual gráfico: Como seria Pr(Cong) caso log(N) e log(S) permanecem em seus valores médios e a variação entre sítios fossem desconsiderada? Ou seja, quais os efeitos de p e k em isolamento?
+Contrafactual gráfico: Como seria Pr(Cong) caso log(N) e log(S) permanecem em seus valores médios e a variação entre sítios fossem desconsiderada? Ou seja, quais os efeitos de p e k apenas?
+
+```{r função para predicao posteriori GAMM MNEE}
+f_PredInt.GAMM <- \(data, gamm, 
+                    quantiles = c(0.05,0.25,0.5,0.75,0.95),nsim=10000){
+  data$predito <- predict(gamm, type = "response",
+                          exclude = c("s(k_cont_z,SiteCode)","s(SiteCode)"),
+                          newdata=data,newdata.guaranteed=TRUE)
+  beta <- coef(gamm)
+  V <- vcov.gam(gamm)
+  num_beta_vecs <- nsim
+  Cv <- chol(V)
+  set.seed(1)
+  nus <- rnorm(num_beta_vecs * length(beta))
+  beta_sims <- beta + t(Cv) %*% matrix(nus, nrow = length(beta), ncol = num_beta_vecs)
+  matrix_lprediction <- predict(gamm,type="lpmatrix",
+                                exclude = c("s(k_cont_z,SiteCode)","s(SiteCode)"),
+                                newdata=data,newdata.guaranteed=TRUE) 
+  predict_link <- matrix_lprediction %*% beta_sims
+  df_pred <- t(apply(predict_link,1,\(X) quantile(X,probs = quantiles))) %>% 
+    as.data.frame()
+  names(df_pred) <- paste0("Q_",quantiles)
+  cbind(data,df_pred)
+}
+df_pred <- f_PredInt.GAMM(data = df_newpred,gamm=gamm_MNEE)
+```
 
 
 
