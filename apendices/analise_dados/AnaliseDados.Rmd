@@ -63,6 +63,9 @@ df_ad <- inner_join(x=distinct(select(df_resultMNEE,-(Ssd:Smax))),
   select(-c(nCongDTS,effort_ha, Ntotal:S_obs))
 # df_newdata
 df_newdat <- read_csv("dados/csv/df_newdataSADs.csv")
+# df_md
+df_md <- df_ad |> 
+  mutate(SiteCode = factor(SiteCode))
 # df_newdat <- expand.grid(p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
 #                          k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150))
 # df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,SiteCode,log_S_obs_z,log_Ntotal_z))))
@@ -269,67 +272,12 @@ ggdag_adjustment_set(dag_PrCong,shadow = TRUE,text = FALSE, use_labels = "label"
 
 ### GAMM 2: Pr(Cong) ~ f(p,k,N,S)
 
-Vamos considerar interações entre as variáveis relacionadas com a exposição (N,S, e k) e as relacionadas com o pool de propágulos da paisagem ao redor (p e k). 
-
-
-
-Minha proposta de GAMM cheio é de 1 smoother para cada variável (N,S,k,p), 1 interação (tensor) entre N e S, 1 interação entre N, S e k, e 1 interação entre k e p. Na estrutura aleatória há 1 smoother por sítio de amostragem, com todos os sítios compartilhando o mesmo grau de penalização (ou seja, de flexibilidade) e 1 intercepto por sítio.
-
-Em todo tipo de smoother (simples ou interação) utilizei como funções base a função cúbica. A função gratia::draw cria gráficos dos efeitos parciais dos smoother (simples e interação). Na figura 1 há os gráficos dos efeitos parciais dos smoothers do modelo cheio. Os gráficos dos smoothers simples das variáveis N e S indicam que existe concurvidade entre elas.
+Vamos considerar interações entre as variáveis relacionadas com a exposição (N,S, e k) e as relacionadas com o pool de propágulos da paisagem ao redor (p e k). O GAMM cheio possui todas as possíveis interações de duas variáveis e 3 variáveis utilizando splines individuais (mgcv::s()) e tensores (mgcv::ti()). Em todos os submodelos há a mesma estrutura aleatória: um intercepto por sítio de amostragem e um spline por k por sítio com uma mesma penalização para todos os sítios (Pedersen et al. 2019). 
 
 
 ```{r gamm MNEE contemporaneo}
-df_md <- df_ad |> 
-  mutate(SiteCode = factor(SiteCode))
 l_md <- list() 
 l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(log_Ntotal_z,log_S_obs_z) + ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(log_Ntotal_z,log_S_obs_z) + 
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[3]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[4]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[5]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(log_Ntotal_z,k_cont_z) +
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[6]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(log_S_obs_z,k_cont_z) +
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[7]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(log_Ntotal_z,k_cont_z) + ti(log_S_obs_z,k_cont_z) +
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[8]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
                    ti(log_Ntotal_z,log_S_obs_z) + ti(log_Ntotal_z,k_cont_z) + ti(log_S_obs_z,k_cont_z) +  
                    ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
@@ -337,62 +285,79 @@ l_md[[8]] <- gam(cbind(nCongKS,100-nCongKS)  ~
                    s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
                    s(SiteCode,bs="re"),
                  data = df_md, family="binomial", method = "REML")
-l_md[[9]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
                    ti(log_Ntotal_z,log_S_obs_z) + ti(log_Ntotal_z,k_cont_z) + ti(log_S_obs_z,k_cont_z) +  
                    ti(k_cont_z,p_z) +
                    s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
                    s(SiteCode,bs="re"),
                  data = df_md, family="binomial", method = "REML")
-l_md[[10]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+l_md[[3]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(log_Ntotal_z,log_S_obs_z) + ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[4]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(log_Ntotal_z,k_cont_z) + ti(log_S_obs_z,k_cont_z) +
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[5]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(log_Ntotal_z,log_S_obs_z) + 
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[6]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
+                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(k_cont_z,p_z) +
+                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data = df_md, family="binomial", method = "REML")
+l_md[[7]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
                    s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
                    s(SiteCode,bs="re"),
                  data = df_md, family="binomial", method = "REML")
-l_md[[11]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[12]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[13]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(k_cont_z,bs = "cr") +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-names(l_md) <- c("s(N,S,k,p) + ti(N,S) + ti(N,S,k) + ti(p,k)",
+names(l_md) <- c("s(N,S,k,p) + ti(N,S) + ti(N,k) + ti(S,k) + ti(N,S,k) + ti(p,k)",
+                 "s(N,S,k,p) + ti(N,S) + ti(N,k) + ti(S,k) + ti(p,k)",
+                 "s(N,S,k,p) + ti(N,S) + ti(N,S,k) + ti(p,k)",
+                 "s(N,S,k,p) + ti(N,k) + ti(S,k) + ti(p,k)",
                  "s(N,S,k,p) + ti(N,S) + ti(p,k)",
                  "s(N,S,k,p) + ti(p,k)",
-                 "s(k,p) + ti(p,k)",
-                 "s(N,k,p) + ti(N,k) + ti(p,k)",
-                 "s(S,k,p) + ti(S,k) + ti(p,k)",
-                 "s(N,S,k,p) + ti(N,k) + ti(S,k) + ti(p,k)",
-                 "s(N,S,k,p) + ti(N,S) + ti(N,k) + ti(S,k) + ti(N,S,k) + ti(p,k)",
-                 "s(N,S,k,p) + ti(N,S) + ti(N,k) + ti(S,k) + ti(p,k)",
-                 "s(N,S,k,p)",
-                 "s(k,p)",
-                 "s(S,k)",
-                 "s(N,k)")
-l_md_GAMM <- l_md
-save(l_md_GAMM,file="dados/Rdata/l_md_GAMM.Rdata")
+                 "s(N,S,k,p)")
 ```
 ```{r}
-load("dados/Rdata/l_md_GAMM.Rdata")
-l_md <- l_md_GAMM[c(1:3,7:10)]
+l_md <- l_md_GAMM[c(8,9,1,7,2,3,10)]
 (df_aicctab <- AICctab(l_md,weights=TRUE) |> as.data.frame())
 ```
 
+Dois modelos acumulam a maior parte do peso de evidência de forma quase equivalente. O mais plausível possui tensor entre p e k, o segundo apenas os splines individuais.
 
+__modelo mais plausível__
 
+```{r}
+gamm_MNEE <- l_md[[row.names(df_aicctab)[1]]]
+gratia::appraise(gamm_MNEE)
+gratia::draw(gamm_MNEE)
+k.check(gamm_MNEE)
+summary(gamm_MNEE)
+print("Avaliação de Concurvidade (alpha)")
+(df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
+```
 
+Os resíduos do modelo parecem ser adequados, mas os efeitos parciais sugerem problemas de concurvidade entre as 3 variáveis. Como esperado pelo modelo conceitual.  
 
-#### avaliação concurvidade
+Os testes do pacote mgcv (k.check() e summary()) indicam que o spline de p tende a uma reta que poderia ser bem representada por uma reta horizontal em relação à p. A métrica de concurvidade do pacote mgcv(alpha) indica a proporção de informação contido em smoother em relação ao outro [4]. O spline de N apresenta alpha de 22% com o spline de S e 11% com o spline de p. O spline de S apresenta concurvidade maior com o spline de p (~23%) sendo similar ao grau de concurvidade com N. O spline de p apresenta concurvidade maior com o spline de S (~36%) e 16% com o de N. 
 
-Concurvidade ocorre quando uma variável preditora pode ser bem descrita por um smooth de uma outra variável preditora (Wood 2016? Checking and Selecting GAMs). Nessa sequência de slide ele exemplifica:
+Esse modelo não é útil para descrevermos Pr(Cong) em função de p e k, pois os efeitos parciais de p não são bem estimados.
+
+[4] Exemplo em slide de Simon Wood 2016:
 - consider a model containing smooths f1 and f2.
 - we can decompose f2 = f12 + f22; f12: the part of f2 representable in the space of f1, while f22 is the remaining component, which lies exlusively in the space of f2.
 - a measure of concurvity is \alpha = (||f12||^2 )/(||f2||^2 ), leading to 3 estimates:
@@ -403,41 +368,44 @@ Concurvidade ocorre quando uma variável preditora pode ser bem descrita por um 
 
 1,2,3 respectivamente, observed, worst, estimated 
 
-para a função concurvidade:
-full = FALSE: comparação em pares; TRUE: comparação de cada termo com o resto do
-
-Avaliação de concurvidade para o modelo cheio:
-
-O gráfico de efeitos parciais indica que o modelo não conseguiu distinguir os smoother para log(N) e log(S), indicando a existência de concurvidade entre essas duas variáveis: essas preditoras podem ser bem descrita por um smooth uma da outra. A concurvidade pode ser compreendidada como uma extensão da colinearidade em modelos lineares. Na prática o modelo não consegue distinguir os efeitos de log(N) e log(S) um do outro e um novo conjunto de dados que considera a variação ortogonal de log(N) e log(S) deve apresentar predições ruins. Assim, o novo conjunto de dados irá conservar a covariação de log(N) e log(S) ao pressupor que todos os sítios observados (ao longo do gradiente de p) irão se repetir para cada combinação de p e k. 
-
-
-__modelo mais plausível__ Pr(Cong) ~ f(S,p,k,SiteCode)
+__segundo modelo mais plausível__ 
 
 ```{r}
-gamm_MNEE <- l_md[[row.names(df_aicctab)[1]]]
-k.check(gamm_MNEE)
-gratia::appraise(gamm_MNEE)
-summary(gamm_MNEE)
+(gamm_MNEE <- l_md[[row.names(df_aicctab)[2]]])
+# gratia::appraise(gamm_MNEE)
 gratia::draw(gamm_MNEE)
-(df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
-```
-
-O alpha do smoother de log(S) em relação ao smoother p é de ~0.36; e a relação inversa é de ~0.23. Os outros alphas são pequenos (NOTA: olhar o motivo dos smoothers da estrutura aleatória ficarem igual a 1 para todos os outros smoother da estrutura fixa, penso que isso pode estar relacionado com a forma que é feito a regressão dos smoothers aleatórios para os fixos e vice-versa). 
-
-A avaliação de concurvidade e os efeitos parciais são coerentes: o modelo distingue mais o efeito de log(S) em relação ao efeito de p; porém ambos apresentam influência da concurvidade na estimativa dos smoothers. 
-
-Entendo que apesar desse modelo ser o mais plausível ele pode não ser muito útil, pois interpolar os valores de p é essencial para compreender as expectativas teóricas.
-
-__2o modelo mais plausível__ Pr(Cong) ~ f(p,k,SiteCode)
-
-```{r}
-gamm_MNEE <- l_md[[row.names(df_aicctab)[2]]]
-k.check(gamm_MNEE)
-gratia::appraise(gamm_MNEE)
+# k.check(gamm_MNEE)
 # summary(gamm_MNEE)
-gratia::draw(gamm_MNEE)
-(df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
+# (df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
 ```
+
+O segundo modelo mais plausível também apresenta o mesmo tipo de problema segundo o gráfico de efeitos parciais: há concurvidade entre os splines de N, S e p.
+
+
+__terceiro modelo mais plausível__ Pr(Cong) ~ f(p,k,SiteCode)
+
+```{r}
+(gamm_MNEE <- l_md[[row.names(df_aicctab)[3]]])
+gratia::draw(gamm_MNEE)
+gratia::appraise(gamm_MNEE)
+k.check(gamm_MNEE)
+summary(gamm_MNEE)
+(df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
+f_lapply <- function(x){
+  
+}
+df_conc[] <- lapply(df_conc, function(x) ifelse(x>=0.01),x,NA)
+```
+
+No terceiro modelo mais plausível o spline para p parece não sofrer de concurvidade, enquanto o spline de N e S sofrem de concurvidade. Os resíduos do modelo e o número de funções base parecem estar adequados. Se os plines que contem p não apresentarem muita influência da concurvidade então esse modelo pode ser um bom candidato para a descrição dos dados em função de p e k. O spline de N apresenta alpha de 23% com o spline de S, de 11% com o de p, e 71% com o tensor entre N e S. O spline de S apresenta alpha de 12% com o spline de N, e de 95% com o tensor entre N e S. O spline de p apresenta alpha de 10% com o spline de N, de 16% com o de S, e de 21% com o tensor entre N e S. O tensor de N e S apresenta alpha de 17% com o spline de N e de 68% com o spline de S. O tensor de N, S e k não apresenta alphas relevantes. O tensor entre k e p apresentam alpha de 12% com o tensor entre N, S e k. O alpha do smoother de k por sítio apresentou alpha de 37% com a estimatia de interceptos por sítio.
+
+O spline de p e o tensor de p e k apresentam baixos valores de alpha (>25%) com os splines e tensores de N e S. Esse modelo é dos mais plausíveis o que faz melhor estimativa dos efeitos parciais em função de p e k, apesar do modelo acumular menor de 1% do peso de evidência.  
+
+
+
+
+
+
 
 O segundo modelos mais plausível parece não conseguir estimar um smoother adequado para p, pois o smoother conta com cerca de 1 grau de liberdade, indicando que o smoother tende a uma reta, apesar de ter iniciado com 9 funções base.
 Os efeitos parciais de p apresentam elevado erro padrão ao redor da estimativa de efeito parcial que tende a uma reta, indicando que há muita mais informação associada com Pr(Cong) e p do que o smoother consegue estimar. Apesar desse modelo ser útil por considerar apenas as variáveis preditoras relacionadas com a expectativa teórica da ecologia da paisagem, ele faz uma estimativa ruim do smoother de p.
