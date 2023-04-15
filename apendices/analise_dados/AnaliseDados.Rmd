@@ -401,13 +401,15 @@ write_csv(df_pred,file="dados/csv/resultados_MN/MNEE/df_pred.csv")
 
 
 ```{r predição para novo conjunto de dados md_GAMM}
-df_pred <- df_pred |> 
-  select(-contains("log")) |> 
+f_invlogit <- function(x) exp(x)/(1+exp(x))
+df_plot <- df_pred |> 
   mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
-         k = k_cont_z*sd(df_ad$k_cont) + mean(df_ad$k_cont))
-df_plotGAMM$label <- factor(df_plotGAMM$label,levels = unique(df_plotGAMM$label)[c(3,2,4,1,5)])
-df_plotGAMM$label <- "predito novo conjunto de dados"
-gráficos
+         k = k_cont_z*sd(df_ad$k_cont) + mean(df_ad$k_cont),
+         across(predito:Q_0.95,f_invlogit)) |> 
+  select(-contains("log"),-contains("_z"),-predito) |> 
+  pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
+# gráficos
 f_ggplot2 <- function(df,facets=2){
   ggplot(df,aes(x=p,y=k,fill=pred)) +
     geom_tile() +
@@ -419,15 +421,16 @@ f_ggplot2 <- function(df,facets=2){
     facet_wrap(~label,ncol = facets)
 }
 l_p <- list()
-l_p[[1]] <- df_plotGAMM |> 
-  # filter(prob == 0.5) |> 
+l_p[[1]] <- df_plot |> 
+  filter(label == "Q_0.5") |>
   f_ggplot2() + labs(x="")
-l_p[[2]] <- df_plotGAMM |> 
-  filter(prob != 0.5) |>
+l_p[[2]] <- df_plot |> 
+  filter(label != "Q_0.5") |>
   f_ggplot2()
 ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
 ```
 
+__Figura 5__ Probabilidade de boa congruência da SAD predita neutra em função da proporção de cobertura vegetal remanescente e grau de limitação de dispersão, com o log do número de espécies e número de indivíduos são mantidos nos valores médios e não há variação entre sítios.
 
 ```{r}
 df_md$pred <- predict(gamm_MNEE,type="response") * 100
@@ -451,7 +454,13 @@ ggsave("apendices/analise_dados/figuras/gammMNEE_PredObs_k_Site.png",p,
 
 ```
 
+__Figura 6__ Predito e observado para o conjunto de dados observado
 
+
+### Análise de Sensibilidade: valores extremos N e S
+
+Objetivo: 
+fazer um subset dos dados em que log(S).z e log(N).z c [-2,2]. 
 
 # Support Information
 
