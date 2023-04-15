@@ -220,16 +220,16 @@ Para auxiliar no denselvimento de GAMM adequados vamos construir um modelo conce
 
 ### Processo Gerador Pr(Cong)
 
-A probabilidade de uma SAD neutra apresentar boa congruência depende da maior distância entre as curvas acumuladas. Sobre a forma da SAD observada há diversas hipóteses e pouco consenso (McGill et al. 2007). Para a forma da SAD predita há um conjunto conhecido de variáveis que influenciam. Cada modelo neutro implementa uma hipótese sobre a dispersão dos indivíduos no habitat da parcela amostrada e no habitat da paisagem ao redor [1]. A relação de N e S pode informar sobre a exposição da árvore genealógica da comunidade na parcela ao pool de indivíduos da paisagem [2]. Por exemplo, quanto maior N e menor S, maior é o potencial de espalhamento das linhagens locais pelos indivíduos remanescentes na paisagem ao redor, pois há muitos indivíduos para coalescerem em poucas espécies. A variável k possui dois efeitos: i) regular a exposição da árvore genealógica da comunidade ao pool de indivíduos da paisagem ao redor, ou seja, o espalhamento das linhagens locais; e ii) determinar a demanda por propágulos da paisagem ao redor para manter a riqueza local, e portanto determina a potencial taxa U necessária para manter a riqueza local. 
-A relação de k, p na taxa U está descrita no apêndice "Taxa U estimada nas paisagens contemporâneas" [3]. A variável p descreve o maior potencial de chuva de propágulos na paisagem. Além disso, ao longo do gradiente de p, p está relacionado com a configuração espacial da paisagem (Villard & Metzger 2014). A interação de p com outras variáveis permite explorar indiretamente condicionalmente à configuração espacial.       
+A probabilidade de uma SAD predita neutra apresentar boa congruência com a SAD observada depende da maior distância entre as curvas acumuladas. As SAD preditas apresentam o mesmo número de indivíduos da SAD observada (N) e aproximam o número de espécies observada (S, Apêndice Riqueza Estimada). Para uma mesma combinação de N e S existem diversas SAD que poderiam ser reconstruídas (REF), assim a comparação ocorre na forma com que a abundância se distribui nas espécies observadas. Nâo há consenso sobre um modelo ou hipótese geral para a forma da SAD observada (McGill et al. 2007). A forma da SAD predita depende de um conjunto conhecido de variáveis. Cada modelo neutro implementa uma hipótese sobre a dispersão dos indivíduos no habitat da parcela amostrada e no habitat da paisagem ao redor [1]. A relação de N e S pode informar sobre a exposição da árvore genealógica da comunidade na parcela ao pool de indivíduos da paisagem [2]. Por exemplo, quanto maior N e menor S, maior é o potencial de espalhamento das linhagens locais pelos indivíduos remanescentes na paisagem ao redor, pois há muitos indivíduos para coalescerem em poucas espécies. A variável k possui dois efeitos: i) regular a exposição da árvore genealógica da comunidade ao pool de indivíduos da paisagem ao redor, ou seja, o espalhamento das linhagens locais; e ii) determinar a demanda por propágulos da paisagem ao redor para manter a riqueza local, e portanto determina a potencial taxa U necessária para manter a riqueza local. 
+A relação de k, p e a taxa U está descrita no apêndice "Taxa U estimada nas paisagens contemporâneas" [3]. A variável p descreve o maior potencial de chuva de propágulos na paisagem. Além disso, ao longo do gradiente de p, p está relacionado com a configuração espacial da paisagem (Villard & Metzger 2014), assim a interação de p com outras variáveis permite explorar indiretamente condicionamento à configuração espacial.       
 
 Devido aos viéses de pesquisa relacionada com o esforço amostral, podemos esperar que N, S e p possam covariar. Algumas variáveis latentes que podem conter informação sobre esforço amostral são: proximidade com centros de pesquisa ou urbanos (Prox), diversidade local esperada (e.g. em termos de riqueza esperada - Sesp), e grau de perturbação esperado (PERTesp) (REFs). Todas essas são variáveis latentes que podem ser explicadas por outras variáveis latentes geográficas (e.g. qualidade do solo e perfil geográfico). As variáveis latentes devem conter informação sobre p, N e S via esforço amostral ou diretamente. O esforço amostral deve conter informação sobre N e S, e N sobre S. Sesp deve conter informação sobre S. PERTesp pode conter informação sobre p e Sesp. Pressupus que não há influência de Sesp em PERTesp (mas esse pressuposto pode ser relaxado sem mudanças nas conclusões do DAG).
 
-Na figura 4 há o grafo acíclico dirigigo (DAG, _directed acyclic graph_) do modelo conceitual proposto. Avaliamos que é plausível descrever S, N e p em função de uma combinação de si mesmas (SI no final), o quê está alinhado com o DAG proposto. Outra implicação do modelo conceitual é a concurvidade entre as variáveis N, S e p. 
+Na figura 4 há o grafo acíclico dirigigo (DAG, _directed acyclic graph_) do modelo conceitual proposto. Uma implicação do DAG é a associação entre S, N e p. No Support Information deste apêndice há evidências da associação entre essas 3 variáveis. Outra implicação do modelo conceitual é a concurvidade entre as variáveis N, S e p. 
 
-```{r dag estudo de melhor caracterizacao de PrCong em funcao de SADobs e SADneutra,echo=F,include=F}
+```{r dag estudo de melhor caracterizacao de PrCong em funcao de SADobs e SADneutra,include=F}
 dag_estudo <- dagify(PrCong ~ SADobs + SADneutra,
-                     SADobs ~ succession,
+                     SADobs ~ unknown,
                      SADneutra ~ p + k + S + N,
                      Sesp ~ Prox + PERTesp,
                      PERTesp ~ Prox,
@@ -293,7 +293,7 @@ __Figura 4__ DAG do modelo conceitual do processo gerador da variável de intere
 
 ### GAMM 2: Pr(Cong) ~ f(p,k,N,S)
 
-Vamos considerar interações entre as variáveis relacionadas com a exposição (N,S, e k) e as relacionadas com o pool de propágulos da paisagem ao redor (p e k). O GAMM cheio possui todas as possíveis interações de duas variáveis e 3 variáveis utilizando splines individuais (mgcv::s()) e tensores (mgcv::ti()). Em todos os submodelos há a mesma estrutura aleatória: um intercepto por sítio de amostragem e um spline por k por sítio com uma mesma penalização para todos os sítios (Pedersen et al. 2019). 
+Vamos considerar interações entre as variáveis relacionadas com a exposição (N,S, e k) e as relacionadas com o pool de propágulos da paisagem ao redor (p e k). O GAMM cheio possui todas as possíveis interações de duas variáveis e 3 variáveis utilizando splines individuais (mgcv::s()) e tensores (mgcv::ti()). Em todos os submodelos há a mesma estrutura aleatória: um intercepto por sítio de amostragem e um spline por k por sítio com uma mesma penalização para todos os sítios (Pedersen et al. 2019). Modelos com penalização por sítio não levaram muito tempo para rodar e não foram explorados. 
 
 
 ```{r gamm 2 MNEE contemporaneo,echo=T,eval=F}
@@ -358,21 +358,9 @@ l_md <- l_md_GAMM[c(8,9,1,7,2,3,10)]
 (df_aicctab <- AICctab(l_md,weights=TRUE) |> as.data.frame())
 ```
 
-Dois modelos acumulam a maior parte do peso de evidência de forma quase equivalente. O mais plausível possui tensor entre p e k, o segundo apenas os splines individuais.
+Dois modelos acumulam a maior parte do peso de evidência de forma quase equivalente. O mais plausível possui apenas os splines individuais, e o segundo inclui tensor entre p e k. No Support Information deste apêndice há os gráficos e tabelas diagnóstico dos 3 modelos mais plausíveis. Os resíduos do modelo mais plausíveis parecem adequados, mas os efeitos parciais sugerem problemas de concurvidade entre as 3 variáveis. Como esperado pelo modelo conceitual. Os testes do pacote mgcv (k.check() e summary()) indicam que o spline de p tende a uma reta que poderia ser bem representada por uma reta horizontal em relação à p. A métrica de concurvidade do pacote mgcv(alpha) indica a proporção de informação contido em smoother em relação ao outro [4]. O spline de N apresenta alpha de 22% com o spline de S e 11% com o spline de p. O spline de S apresenta concurvidade maior com o spline de p (~23%) sendo similar ao grau de concurvidade com N. O spline de p apresenta concurvidade maior com o spline de S (~36%) e 16% com o de N. Esse modelo não é útil para descrevermos Pr(Cong) em função de p e k, pois os efeitos parciais de p não são bem estimados. O segundo modelo mais plausível também apresenta o mesmo tipo de problema segundo o gráfico de efeitos parciais: há concurvidade entre os splines de N, S e p.
 
-Os resíduos do modelo parecem ser adequados, mas os efeitos parciais sugerem problemas de concurvidade entre as 3 variáveis. Como esperado pelo modelo conceitual.  
-
-Os testes do pacote mgcv (k.check() e summary()) indicam que o spline de p tende a uma reta que poderia ser bem representada por uma reta horizontal em relação à p. A métrica de concurvidade do pacote mgcv(alpha) indica a proporção de informação contido em smoother em relação ao outro [4]. O spline de N apresenta alpha de 22% com o spline de S e 11% com o spline de p. O spline de S apresenta concurvidade maior com o spline de p (~23%) sendo similar ao grau de concurvidade com N. O spline de p apresenta concurvidade maior com o spline de S (~36%) e 16% com o de N. 
-
-Esse modelo não é útil para descrevermos Pr(Cong) em função de p e k, pois os efeitos parciais de p não são bem estimados.
-
-O segundo modelo mais plausível também apresenta o mesmo tipo de problema segundo o gráfico de efeitos parciais: há concurvidade entre os splines de N, S e p.
-
-No terceiro modelo mais plausível o spline para p parece não sofrer de concurvidade, enquanto o spline de N e S sofrem de concurvidade. Os resíduos do modelo e o número de funções base parecem estar adequados. Se os plines que contem p não apresentarem muita influência da concurvidade então esse modelo pode ser um bom candidato para a descrição dos dados em função de p e k. O spline de N apresenta alpha de 23% com o spline de S, de 11% com o de p, e 71% com o tensor entre N e S. O spline de S apresenta alpha de 12% com o spline de N, e de 95% com o tensor entre N e S. O spline de p apresenta alpha de 10% com o spline de N, de 16% com o de S, e de 21% com o tensor entre N e S. O tensor de N e S apresenta alpha de 17% com o spline de N e de 68% com o spline de S. O tensor de N, S e k não apresenta alphas relevantes. O tensor entre k e p apresentam alpha de 12% com o tensor entre N, S e k. O alpha do smoother de k por sítio apresentou alpha de 37% com a estimatia de interceptos por sítio.
-
-O spline de p e o tensor de p e k apresentam baixos valores de alpha (>25%) com os splines e tensores de N e S. Esse modelo é dos mais plausíveis o que faz melhor estimativa dos efeitos parciais em função de p e k, apesar do modelo acumular menos de 1% do peso de evidência.
-
-Ele será usado para predizer o intervalo de predição a posteriori do modelo. O novo conjunto de dados interpola os valores de p e k e pressupõe que N e S se mantém em seus valores médios ao longo de p. Além disso, vamos excluir os efeitos relacionados com sítio de amostragem (predição sem efeito aleatório).
+No terceiro modelo mais plausível o spline para p parece sofrer menos de concurvidade, enquanto o spline de N e S sofrem de concurvidade. Os resíduos do modelo e o número de funções base parecem estar adequados. Se os plines que contem p não apresentarem muita influência da concurvidade então esse modelo pode ser um bom candidato para a descrição dos dados em função de p e k. Os splines individuais e os tensores de N e S sofrem de concurvidade entre si com alpha variando de 22% até 95%. O spline de p apresenta alpha de 10% com o spline de N, de 16% com o de S, e de 21% com o tensor entre N e S. O tenso de p e k apresentam alpha de 12.6% com otensor de N, S e k. O spline de p e o tensor de p e k apresentam baixos valores de alpha (>30%) com os splines e tensores de N e S. Esse modelo faz a melhor estimativa dos efeitos parciais em função de p e k entre os mais plausíveis, apesar do modelo acumular menos de 1% do peso de evidência. Ele será usado para predizer o intervalo de predição a posteriori do GAMM (REF). O novo conjunto de dados interpola os valores de p e k e pressupõe que N e S se mantém em seus valores médios ao longo de p. Além disso, vamos excluir os efeitos relacionados com sítio de amostragem (predição sem efeito aleatório).
 
 [4] Exemplo em slide de Simon Wood 2016:
 - consider a model containing smooths f1 and f2.
@@ -381,7 +369,7 @@ Ele será usado para predizer o intervalo de predição a posteriori do modelo. 
 
 #### predição
 
-Como seria Pr(Cong) caso log(N) e log(S) permanecem em seus valores médios e a variação entre sítios fossem desconsiderada? Ou seja, quais os efeitos de p e k apenas?
+Como seria Pr(Cong) caso log(N) e log(S) permanecem em seus valores médios e não houvesse variação entre sítios? Ou seja, quais os efeitos de p e k apenas?
 
 __Janelas de código 1__ Função da Estimativa do Intervalo de Predição a Posteriori
 
@@ -476,26 +464,24 @@ df_md0 <- df_md |> filter(k=="0.99") # remove valores repetidos pelos graus de l
 f_gamm <- function(formulaGAMM){
   gam(formula = formulaGAMM,data = df_md0,method = "REML")
 }
-l_f <- list()
-l_f[[1]] <- log_Ntotal_z ~ s(p_z,bs="cr")
-l_md <- list()
-l_md[[1]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[2]] <- gam(log_S_obs_z ~ s(p_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[3]] <- gam(log_Ntotal_z ~ s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[4]] <- gam(log_S_obs_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[5]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[6]] <- gam(log_S_obs_z ~ s(p_z,bs="cr") + s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[7]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[8]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[9]] <- gam(p_z ~ s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
-l_md[[10]] <- gam(p_z ~ 1,data = df_md0,method = "REML")
-names(l_md) <- c("N ~ p", "S ~ p", "N ~ S", "S ~ N","N ~ p,S", "S ~ p,N",
+l_md1 <- list()
+l_md1[[1]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[2]] <- gam(log_S_obs_z ~ s(p_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[3]] <- gam(log_Ntotal_z ~ s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[4]] <- gam(log_S_obs_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[5]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[6]] <- gam(log_S_obs_z ~ s(p_z,bs="cr") + s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[7]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[8]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[9]] <- gam(p_z ~ s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[10]] <- gam(p_z ~ 1,data = df_md0,method = "REML")
+names(l_md1) <- c("N ~ p", "S ~ p", "N ~ S", "S ~ N","N ~ p,S", "S ~ p,N",
                  "p ~ N", "p ~ S + N", "p ~ S")
-l <- l_md[c(1,3,5)]
+l <- l_md1[c(1,3,5)]
 AICctab(l,weights=T)
-l <- l_md[c(2,4,6)]
+l <- l_md1[c(2,4,6)]
 AICctab(l,weights=T)
-l <- l_md[c(7:9)]
+l <- l_md1[c(7:9)]
 AICctab(l,weights=T)
 ```
 
