@@ -397,16 +397,14 @@ Ele será usado para predizer o intervalo de predição a posteriori do modelo. 
 
 #### predição
 
-ESTRATÉGIA:
-
 Contrafactual gráfico: Como seria Pr(Cong) caso log(N) e log(S) permanecem em seus valores médios e a variação entre sítios fossem desconsiderada? Ou seja, quais os efeitos de p e k apenas?
 
 ```{r função para predicao posteriori GAMM MNEE}
 f_PredInt.GAMM <- \(data, gamm, 
                     quantiles = c(0.05,0.25,0.5,0.75,0.95),nsim=10000){
-  data$predito <- predict(gamm, type = "response",
+  data$predito <- predict(gamm, type = "link",
                           exclude = c("s(k_cont_z,SiteCode)","s(SiteCode)"),
-                          newdata=data,newdata.guaranteed=TRUE)
+                          newdata=data,newdata.guaranteed=TRUE) |> as.vector()
   beta <- coef(gamm)
   V <- vcov.gam(gamm)
   num_beta_vecs <- nsim
@@ -424,6 +422,7 @@ f_PredInt.GAMM <- \(data, gamm,
   cbind(data,df_pred)
 }
 df_pred <- f_PredInt.GAMM(data = df_newpred,gamm=gamm_MNEE)
+write_csv(df_pred,file="dados/csv/resultados_MN/MNEE/df_pred.csv")
 ```
 
 
