@@ -16,7 +16,7 @@ text-align: justify}
 </style>
 
 ```{r setup,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE)
 # pacotes
 library(dagitty)
 library(ggdag)
@@ -40,6 +40,7 @@ library(gamm4)
 library(plyr)
 library(dplyr)
 source("source/nameModel.R")
+source("source/f_PredIntGAMM.R")
 # objetos
 # load("dados/Rdata/md_MNEE.Rdata")
 load("dados/Rdata/l_md_GAMM.Rdata")
@@ -61,11 +62,13 @@ df_ad <- inner_join(x=distinct(select(df_resultMNEE,-(Ssd:Smax))),
          log_S.N = log_S_obs - log_Ntotal,
          across(c(p,k_cont,log_Ntotal:log_S.N),f_z,.names = "{.col}_z")) |>
   select(-c(nCongDTS,effort_ha, Ntotal:S_obs))
-# df_newdata
-df_newpred <- read_csv(file="dados/csv/df_newpred.csv")
 # df_md
 df_md <- df_ad |> 
   mutate(SiteCode = factor(SiteCode))
+# df_newdata
+df_newpred <- read_csv(file="dados/csv/df_newpred.csv")
+# df_pred
+df_pred <- read_csv("dados/csv/resultados_MN/MNEE/df_pred.csv")
 # df_newdat <- expand.grid(p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
 #                          k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150))
 # df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,SiteCode,log_S_obs_z,log_Ntotal_z))))
@@ -205,7 +208,7 @@ __modelo mais plausível__
 (gamm_MNEE <- l_md[[row.names(df_aicctab)[1]]])
 print("k.check:")
 k.check(gamm_MNEE)
-print("summaryy:")
+print("summary:")
 summary(gamm_MNEE)
 gratia::appraise(gamm_MNEE)
 gratia::draw(gamm_MNEE)
@@ -222,13 +225,26 @@ A relação de k, p na taxa U está descrita no apêndice "Taxa U estimada nas p
 
 Devido aos viéses de pesquisa relacionada com o esforço amostral, podemos esperar que N, S e p possam covariar. Algumas variáveis latentes que podem conter informação sobre esforço amostral são: proximidade com centros de pesquisa ou urbanos (Prox), diversidade local esperada (e.g. em termos de riqueza esperada - Sesp), e grau de perturbação esperado (PERTesp) (REFs). Todas essas são variáveis latentes que podem ser explicadas por outras variáveis latentes geográficas (e.g. qualidade do solo e perfil geográfico). As variáveis latentes devem conter informação sobre p, N e S via esforço amostral ou diretamente. O esforço amostral deve conter informação sobre N e S, e N sobre S. Sesp deve conter informação sobre S. PERTesp pode conter informação sobre p e Sesp. Pressupus que não há influência de Sesp em PERTesp (mas esse pressuposto pode ser relaxado sem mudanças nas conclusões do DAG).
 
-[1] Todos os modelos neutros utilizam simulações coalescentes, que retrocedem no tempo para obter uma amostra da SAD, pressuposto equilíbrio dinâmico, onde as espécies perdidas na paisagem por deriva são compensadas pela colonização de novas espécies descrito pela taxa U. A simulação termina quando a espécie de todos os indivíduos (linhagens) que iniciaram na parcela é determinada.   
-
-[2] exposição ao pool de indivíduos da paisagem ao redor é o conceito comum aos 3 modelos neutros. Para MNEE em específico seria exposição à configuração espacial dos indivíduos remanescenes na paisagem ao redor.
-
-[3] quando o grau de limitação é severo, há grande probabilidade de substituição de coespecífico e portanto baixa erosão de espécies por deriva ecológica resultando em baixa taxa U. Com um pouco de relaxamento da limitação de dispersão, há redução da substituição de coespécificos e baixa probabilidade de reposição de espécies por dispersão de longa distância de dentro da paisagem, aumento a taxa U. Nos graus mais brandos de limitação de dispersão, a baixa probabilidade de substituição de coespécies, que leva ao aumento da erosão de espécies, pode ser compensada pela alta probabilidade de reposição de espécies por dispersão de longa distância de dentro da paisagem, caso a proporção de habitat remanescente seja suficiente.
-
 Na figura 4 há o grafo acíclico dirigigo (DAG, _directed acyclic graph_) do modelo conceitual proposto. Avaliamos que é plausível descrever S, N e p em função de uma combinação de si mesmas (SI no final), o quê está alinhado com o DAG proposto. Outra implicação do modelo conceitual é a concurvidade entre as variáveis N, S e p. 
+
+```{r dag estudo de melhor caracterizacao de PrCong em funcao de SADobs e SADneutra,echo=F,include=F}
+dag_estudo <- dagify(PrCong ~ SADobs + SADneutra,
+                     SADobs ~ succession,
+                     SADneutra ~ p + k + S + N,
+                     Sesp ~ Prox + PERTesp,
+                     PERTesp ~ Prox,
+                     effort ~ Prox + Sesp + PERTesp,
+                     S ~ Sesp + effort + N,
+                     N ~ effort,
+                     p ~ PERTesp,
+                     sucession ~ PERTesp,
+                     outcome = "PrCong",
+                     latent = c("Sesp","PERTesp","Prox"),
+                     exposure = c("p","k")
+                     )
+ggdag(dag_estudo)
+ggdag_adjustment_set(dag_estudo,shadow = TRUE)
+```
 
 
 ```{r DAG MNEE contemp - PrCong N S k p prox Sesp Desp}
@@ -267,13 +283,20 @@ ggdag_adjustment_set(dag_PrCong,shadow = TRUE,text = FALSE, use_labels = "label"
   # ggpmisc::geom_table_npc(data=df_text.table,aes(npcx = x, npcy = y, label = data)) +
 ```
 
+__Figura 4__ DAG do modelo conceitual do processo gerador da variável de interesse probabilidade de uma SAD neutra apresentar boa congruência com a SAD observada.
+
+[1] Todos os modelos neutros utilizam simulações coalescentes, que retrocedem no tempo para obter uma amostra da SAD, pressuposto equilíbrio dinâmico, onde as espécies perdidas na paisagem por deriva são compensadas pela colonização de novas espécies descrito pela taxa U. A simulação termina quando a espécie de todos os indivíduos (linhagens) que iniciaram na parcela é determinada.   
+
+[2] exposição ao pool de indivíduos da paisagem ao redor é o conceito comum aos 3 modelos neutros. Para MNEE em específico seria exposição à configuração espacial dos indivíduos remanescenes na paisagem ao redor.
+
+[3] quando o grau de limitação é severo, há grande probabilidade de substituição de coespecífico e portanto baixa erosão de espécies por deriva ecológica resultando em baixa taxa U. Com um pouco de relaxamento da limitação de dispersão, há redução da substituição de coespécificos e baixa probabilidade de reposição de espécies por dispersão de longa distância de dentro da paisagem, aumento a taxa U. Nos graus mais brandos de limitação de dispersão, a baixa probabilidade de substituição de coespécies, que leva ao aumento da erosão de espécies, pode ser compensada pela alta probabilidade de reposição de espécies por dispersão de longa distância de dentro da paisagem, caso a proporção de habitat remanescente seja suficiente.
 
 ### GAMM 2: Pr(Cong) ~ f(p,k,N,S)
 
 Vamos considerar interações entre as variáveis relacionadas com a exposição (N,S, e k) e as relacionadas com o pool de propágulos da paisagem ao redor (p e k). O GAMM cheio possui todas as possíveis interações de duas variáveis e 3 variáveis utilizando splines individuais (mgcv::s()) e tensores (mgcv::ti()). Em todos os submodelos há a mesma estrutura aleatória: um intercepto por sítio de amostragem e um spline por k por sítio com uma mesma penalização para todos os sítios (Pedersen et al. 2019). 
 
 
-```{r gamm 2 MNEE contemporaneo}
+```{r gamm 2 MNEE contemporaneo,echo=T,eval=F}
 l_md <- list() 
 l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
                    s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
@@ -337,69 +360,32 @@ l_md <- l_md_GAMM[c(8,9,1,7,2,3,10)]
 
 Dois modelos acumulam a maior parte do peso de evidência de forma quase equivalente. O mais plausível possui tensor entre p e k, o segundo apenas os splines individuais.
 
-__modelo mais plausível__
-
-```{r diag modelo mais plausivel MNEE GAMM 2}
-(gamm_MNEE <- l_md[[row.names(df_aicctab)[1]]])
-gratia::appraise(gamm_MNEE)
-gratia::draw(gamm_MNEE)
-k.check(gamm_MNEE)
-summary(gamm_MNEE)
-print("Avaliação de Concurvidade (alpha)")
-(df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
-```
-
 Os resíduos do modelo parecem ser adequados, mas os efeitos parciais sugerem problemas de concurvidade entre as 3 variáveis. Como esperado pelo modelo conceitual.  
 
 Os testes do pacote mgcv (k.check() e summary()) indicam que o spline de p tende a uma reta que poderia ser bem representada por uma reta horizontal em relação à p. A métrica de concurvidade do pacote mgcv(alpha) indica a proporção de informação contido em smoother em relação ao outro [4]. O spline de N apresenta alpha de 22% com o spline de S e 11% com o spline de p. O spline de S apresenta concurvidade maior com o spline de p (~23%) sendo similar ao grau de concurvidade com N. O spline de p apresenta concurvidade maior com o spline de S (~36%) e 16% com o de N. 
 
 Esse modelo não é útil para descrevermos Pr(Cong) em função de p e k, pois os efeitos parciais de p não são bem estimados.
 
+O segundo modelo mais plausível também apresenta o mesmo tipo de problema segundo o gráfico de efeitos parciais: há concurvidade entre os splines de N, S e p.
+
+No terceiro modelo mais plausível o spline para p parece não sofrer de concurvidade, enquanto o spline de N e S sofrem de concurvidade. Os resíduos do modelo e o número de funções base parecem estar adequados. Se os plines que contem p não apresentarem muita influência da concurvidade então esse modelo pode ser um bom candidato para a descrição dos dados em função de p e k. O spline de N apresenta alpha de 23% com o spline de S, de 11% com o de p, e 71% com o tensor entre N e S. O spline de S apresenta alpha de 12% com o spline de N, e de 95% com o tensor entre N e S. O spline de p apresenta alpha de 10% com o spline de N, de 16% com o de S, e de 21% com o tensor entre N e S. O tensor de N e S apresenta alpha de 17% com o spline de N e de 68% com o spline de S. O tensor de N, S e k não apresenta alphas relevantes. O tensor entre k e p apresentam alpha de 12% com o tensor entre N, S e k. O alpha do smoother de k por sítio apresentou alpha de 37% com a estimatia de interceptos por sítio.
+
+O spline de p e o tensor de p e k apresentam baixos valores de alpha (>25%) com os splines e tensores de N e S. Esse modelo é dos mais plausíveis o que faz melhor estimativa dos efeitos parciais em função de p e k, apesar do modelo acumular menos de 1% do peso de evidência.
+
+Ele será usado para predizer o intervalo de predição a posteriori do modelo. O novo conjunto de dados interpola os valores de p e k e pressupõe que N e S se mantém em seus valores médios ao longo de p. Além disso, vamos excluir os efeitos relacionados com sítio de amostragem (predição sem efeito aleatório).
+
 [4] Exemplo em slide de Simon Wood 2016:
 - consider a model containing smooths f1 and f2.
 - we can decompose f2 = f12 + f22; f12: the part of f2 representable in the space of f1, while f22 is the remaining component, which lies exlusively in the space of f2.
 - a measure of concurvity is \alpha = (||f12||^2 )/(||f2||^2 ).
 
-__segundo modelo mais plausível__ 
-
-```{r}
-(gamm_MNEE <- l_md[[row.names(df_aicctab)[2]]])
-# gratia::appraise(gamm_MNEE)
-gratia::draw(gamm_MNEE)
-# k.check(gamm_MNEE)
-# summary(gamm_MNEE)
-# (df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
-```
-
-O segundo modelo mais plausível também apresenta o mesmo tipo de problema segundo o gráfico de efeitos parciais: há concurvidade entre os splines de N, S e p.
-
-
-__terceiro modelo mais plausível__ Pr(Cong) ~ f(p,k,SiteCode)
-
-```{r}
-(gamm_MNEE <- l_md[[row.names(df_aicctab)[3]]])
-gratia::draw(gamm_MNEE)
-gratia::appraise(gamm_MNEE)
-k.check(gamm_MNEE)
-summary(gamm_MNEE)
-print("Avaliação de Concurvidade (alpha >= 1%)")
-df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame()
-df_conc <- lapply(df_conc, \(x) ifelse(x>=0.01,round(x*100,1),NA))
-df_conc
-```
-
-No terceiro modelo mais plausível o spline para p parece não sofrer de concurvidade, enquanto o spline de N e S sofrem de concurvidade. Os resíduos do modelo e o número de funções base parecem estar adequados. Se os plines que contem p não apresentarem muita influência da concurvidade então esse modelo pode ser um bom candidato para a descrição dos dados em função de p e k. O spline de N apresenta alpha de 23% com o spline de S, de 11% com o de p, e 71% com o tensor entre N e S. O spline de S apresenta alpha de 12% com o spline de N, e de 95% com o tensor entre N e S. O spline de p apresenta alpha de 10% com o spline de N, de 16% com o de S, e de 21% com o tensor entre N e S. O tensor de N e S apresenta alpha de 17% com o spline de N e de 68% com o spline de S. O tensor de N, S e k não apresenta alphas relevantes. O tensor entre k e p apresentam alpha de 12% com o tensor entre N, S e k. O alpha do smoother de k por sítio apresentou alpha de 37% com a estimatia de interceptos por sítio.
-
-O spline de p e o tensor de p e k apresentam baixos valores de alpha (>25%) com os splines e tensores de N e S. Esse modelo é dos mais plausíveis o que faz melhor estimativa dos efeitos parciais em função de p e k, apesar do modelo acumular menor de 1% do peso de evidência.
-
-Ele será usado para predizer o intervalo de predição a posteriori do modelo. O novo conjunto de dados interpola os valores de p e k e pressupõe que N e S se mantém em seus valores médios ao longo de p. Além disso, vamos excluir os efeitos relacionados com sítio de amostragem (predição sem efeito aleatório).
-
-
 #### predição
 
-Contrafactual gráfico: Como seria Pr(Cong) caso log(N) e log(S) permanecem em seus valores médios e a variação entre sítios fossem desconsiderada? Ou seja, quais os efeitos de p e k apenas?
+Como seria Pr(Cong) caso log(N) e log(S) permanecem em seus valores médios e a variação entre sítios fossem desconsiderada? Ou seja, quais os efeitos de p e k apenas?
 
-```{r função para predicao posteriori GAMM MNEE}
+__Janelas de código 1__ Função da Estimativa do Intervalo de Predição a Posteriori
+
+```{r função para predicao posteriori GAMM MNEE,eval=FALSE, echo=TRUE}
 f_PredInt.GAMM <- \(data, gamm, 
                     quantiles = c(0.05,0.25,0.5,0.75,0.95),nsim=10000){
   data$predito <- predict(gamm, type = "link",
@@ -426,33 +412,14 @@ write_csv(df_pred,file="dados/csv/resultados_MN/MNEE/df_pred.csv")
 ```
 
 
-
-
-
-__Como construir o novo conjunto de dados?__
-
-
-
-
 ```{r predição para novo conjunto de dados md_GAMM}
-
-# 
-# lapply(l_md,summary)
-
-df_newdat2 <- df_newdat |> filter(SiteCode == "BAlenc4") |> select(p_z:SiteCode) |> 
-  mutate()
-df_plotGAMM <- df_newdat2
-df_plotGAMM$pred <- predict.gam(gamm_MNEE,newdata = df_plotGAMM,type="response")
-df_plotGAMM <- df_plotGAMM |> 
-  # reframe(across(pred,f_summarise,.unpack=TRUE),.by=c(p_z,k_cont_z)) |> 
-  # rename_with(~str_remove(.,"pred_")) |> 
-  mutate(
-# label = paste0("Quant = ",prob),
-         p = p_z*sd(df_ad$p) + mean(df_ad$p),
+df_pred <- df_pred |> 
+  select(-contains("log")) |> 
+  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
          k = k_cont_z*sd(df_ad$k_cont) + mean(df_ad$k_cont))
-# df_plotGAMM$label <- factor(df_plotGAMM$label,levels = unique(df_plotGAMM$label)[c(3,2,4,1,5)])
+df_plotGAMM$label <- factor(df_plotGAMM$label,levels = unique(df_plotGAMM$label)[c(3,2,4,1,5)])
 df_plotGAMM$label <- "predito novo conjunto de dados"
-# gráficos
+gráficos
 f_ggplot2 <- function(df,facets=2){
   ggplot(df,aes(x=p,y=k,fill=pred)) +
     geom_tile() +
@@ -472,6 +439,7 @@ l_p[[2]] <- df_plotGAMM |>
   f_ggplot2()
 ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
 ```
+
 
 ```{r}
 df_md$pred <- predict(gamm_MNEE,type="response") * 100
@@ -499,7 +467,7 @@ ggsave("apendices/analise_dados/figuras/gammMNEE_PredObs_k_Site.png",p,
 
 # Support Information
 
-## Associação estatística entre variáveis de exposição e p
+## Associação estatística entre variáveis de exposição (N e S) e p
 
 __Qual a melhor forma de descrever as preditoras em função de si mesmas?__
 
@@ -530,3 +498,52 @@ AICctab(l,weights=T)
 l <- l_md[c(7:9)]
 AICctab(l,weights=T)
 ```
+
+## gráficos diagnósticos dos GAMM mais plausíveis ~ p,k,N,S
+
+__modelo mais plausível__
+
+```{r diag modelo mais plausivel MNEE GAMM 2}
+(gamm_MNEE <- l_md[[row.names(df_aicctab)[1]]])
+gratia::appraise(gamm_MNEE)
+gratia::draw(gamm_MNEE)
+print("mgcv::k.check:")
+k.check(gamm_MNEE)
+print("sumamry:")
+summary(gamm_MNEE)
+print("Avaliação de Concurvidade (alpha)")
+(df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
+```
+
+__Figuras e Tabelas SI 1__ Gráficos e tabelas diagnóstico do modelo mais plausível
+
+__segundo modelo mais plausível__ 
+
+```{r}
+(gamm_MNEE <- l_md[[row.names(df_aicctab)[2]]])
+# gratia::appraise(gamm_MNEE)
+gratia::draw(gamm_MNEE)
+# k.check(gamm_MNEE)
+# summary(gamm_MNEE)
+# (df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
+```
+
+__Figuras e Tabelas SI 2__ Gráficos diagnóstico do segundo modelo mais plausível
+
+__terceiro modelo mais plausível__ Pr(Cong) ~ f(p,k,SiteCode)
+
+```{r}
+(gamm_MNEE <- l_md[[row.names(df_aicctab)[3]]])
+gratia::draw(gamm_MNEE)
+gratia::appraise(gamm_MNEE)
+print("mgcv::k.check:")
+k.check(gamm_MNEE)
+print("summary:")
+summary(gamm_MNEE)
+print("Avaliação de Concurvidade (alpha >= 1%)")
+df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame()
+df_conc[] <- lapply(df_conc, \(x) ifelse(x>=0.01,round(x*100,1),NA))
+df_conc
+```
+
+__Figuras e Tabela SI 3__ Gráficos e tabelas diagnóstico do terceiro modelo mais plausível
