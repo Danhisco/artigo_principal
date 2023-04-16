@@ -35,7 +35,8 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
     mutate(
       data.frame(txt.path = list.files(path="dados/simulacao",pattern=".txt")),
       SiteCode = str_extract(txt.path,".*?(?=.txt)")),
-    by = "SiteCode")
+    by = "SiteCode") |>  
+  left_join(y=distinct(select(df_resultMNEE,p,SiteCode)),by="SiteCode")
 # df_Urep
 # df_Urep <- list.files(path="dados/csv/taxaU",pattern=".csv",full.names = T) |> 
 #   map_df(~read_csv(.))
@@ -49,10 +50,9 @@ df_U <- df_Urep |>
             Usd = sd(U),
             Umin = min(U),
             Umax = max(U)) |> 
-  inner_join(x=select(df_sim,-txt.path),by=c("SiteCode","k")) |> 
-  inner_join(x=select(df_resultMNEE,-nCongDTS),by=c("SiteCode","k"))
+  inner_join(x=select(df_sim,-txt.path,-d),by=c("SiteCode","k")) |> 
+  inner_join(x=select(df_resultMNEE,p,SiteCode,k),by=c("SiteCode","k"))
 # df_ad
-
 ```
 
 

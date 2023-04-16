@@ -448,7 +448,7 @@ df_md$label <- factor(df_md$label,levels = unique(df_md$label))
   scale_x_reverse() +
   labs(x="k",y="# SADs congruentes",title="Predito pelo modelo médio (azul) e cheio (vermelho) são iguais") +
   facet_wrap(~label,ncol=6))
-ggsave("apendices/analise_dados/figuras/gammMNEE_PredObs_k_Site.png",p,
+ggsave("apendices/analise_dados/figuras/fig6_gammMNEE_PredObs_k_Site.png",p,
        width = 10,
        height = 17.7)
 
