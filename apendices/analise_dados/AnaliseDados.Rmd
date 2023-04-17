@@ -427,7 +427,10 @@ l_p[[1]] <- df_plot |>
 l_p[[2]] <- df_plot |> 
   filter(label != "Q_0.5") |>
   f_ggplot2()
-ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+p <- ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+ggsave("apendices/analise_dados/figuras/fig5_predNewData_gammMNEEcont.png",p,
+       width = 6,
+       height = 10)
 ```
 
 __Figura 5__ Probabilidade de boa congruência da SAD predita neutra em função da proporção de cobertura vegetal remanescente e grau de limitação de dispersão, com o log do número de espécies e número de indivíduos são mantidos nos valores médios e não há variação entre sítios.
@@ -457,10 +460,13 @@ ggsave("apendices/analise_dados/figuras/fig6_gammMNEE_PredObs_k_Site.png",p,
 __Figura 6__ Predito e observado para o conjunto de dados observado
 
 
-### Análise de Sensibilidade: valores extremos N e S
+### CASO o comitê peça :: Análise de Sensibilidade: valores extremos N e S
 
 Objetivo: 
-fazer um subset dos dados em que log(S).z e log(N).z c [-2,2]. 
+fazer um subset dos dados em que log(S).z e log(N).z c [-2,2] para avaliar se há melhora dos ajustes. 
+
+
+
 
 # Support Information
 

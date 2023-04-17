@@ -1,0 +1,122 @@
+---
+title: "SADs neutras"
+author: "Mori, Danilo"
+date: "19/11/2022"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+editor_options: 
+  chunk_output_type: console
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
+# pacotes
+library(twosamples)
+library(sads)
+library(doMC)
+library(ggpmisc)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(insight)
+library(bbmle)
+library(DHARMa)
+library(lme4)
+library(plyr)
+library(dplyr)
+# funções
+source("source/dinamica_coalescente.R")
+source("source/mapa_p_MNEE.R")
+## dados comuns
+# df_p
+df_p <- read_csv("dados/df_p.csv")
+#df_sítios simuláveis em MNEE contemporâneo
+v_site <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv") |> 
+  pull(SiteCode) |> unique()
+# df_sim
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  select(-tif.path) |> 
+  inner_join(y=mutate(
+    data.frame(txt.path = list.files(path="dados/simulacao",pattern=".txt")),
+    SiteCode = str_extract(txt.path,".*?(?=.txt)")),
+    by="SiteCode") |> 
+  filter(SiteCode %in% v_site) |>
+  left_join(df_p,by="SiteCode")
+df_sim <- cbind(df_sim,land_type = rep(x=c("ideal","non_frag"),each=nrow(df_sim)))
+```
+
+
+
+
+
+```{r função para simular as SADs para MNEE em diferentes tipos de paisagens}
+f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06){
+  # tipo da paisagem
+  m_land <- read.table(df$txt.path[1]) |> as.matrix()
+  if(unique(df$land_type) == "ideal"){
+    m_land[m_land==0] <- 1
+  }else if(unique(df$land_type) == "non_frag"){
+    m_land <- f_nonFragLand(m_land)
+  }
+  # taxa U
+  # SAD
+}
+
+
+
+
+f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06){
+  f_simCoalescente <- function(land_name){
+    v <- dinamica_coalescente(U = 1.25e-06, S=df$S_obs, disp_range = df$d, N_simul = 1,
+                              landscape = land_name)
+    v$U_est
+  }
+  m_full <- read.table(df$txt.file) |> as.matrix()
+  l_df_U <- list()
+  for(i in 1:n_escalas){
+    index <- ( nrow(m_full)-(nrow(m_full)/ (2^(i-1))) ) /2
+    m_sim <- m_full[(floor(index)+1):(nrow(m_full)-ceiling(index)),
+                    (floor(index)+1):(ncol(m_full)-ceiling(index))]
+    v_U <- replicate(n=n_replicas,f_simCoalescente(land_name = m_sim))
+    l_df_U[[i]] <- cbind(data.frame(SiteCode = df$SiteCode,
+                                    lado_km=16.02/(2^(i-1)),
+                                    k=df$k),
+                         matrix(v_U,nrow=1))
+  }
+  df_write <- rbind.fill(l_df_U)
+  write_csv(df_write,file = paste0("../csv/SoE/",df$SiteCode,"_k",round(df$k*100,0),".csv"))
+}
+##########
+setwd("dados/simulacao")
+f_taxaU <- function(df,n_replicas=10, Umin = 1.25e-06){
+  f_simCoalescente <- function(X){
+    v <- dinamica_coalescente(U = Umin, S=X$S_obs, disp_range = X$d, N_simul=1,landscape = X$txt.path)
+    v$U_est
+  }
+  l_dfU <- list()
+  for(i in 1:nrow(df)){
+    v_U <- replicate(n=n_replicas,f_simCoalescente(X = df[i,]))
+    l_dfU[[i]] <- cbind(select(df[i,],SiteCode,k,d),
+                        matrix(v_U,nrow=1))
+  }
+  df_write <- rbind.fill(l_dfU)
+  write_csv(df_write,file = paste0("../csv/taxaU/",df$SiteCode[1],".csv"))
+}
+registerDoMC(3)
+d_ply(df_sim,"SiteCode",f_taxaU,.parallel = TRUE)
+```
+
+
+```
+
+

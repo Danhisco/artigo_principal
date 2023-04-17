@@ -34,16 +34,37 @@ library(DHARMa)
 library(lme4)
 library(plyr)
 library(dplyr)
-# dados
+# funções
+source("source/dinamica_coalescente.R")
+source("source/2samples_testes.R")
+source("source/f_plotSADacumulada.R")
+source("source/chi2_2samples_bootstrap.R")
+f_dfSADcsv <- function(l_files.path.full, site_pattern = "(?<=EE\\/).*?(?=.csv)"){
+  mutate(data.frame(
+    SAD.path = l_files.path.full),
+    SiteCode = str_extract(SAD.path,site_pattern)
+  )
+}
+## dados comuns
 # df_p
 df_p <- read_csv("dados/df_p.csv")
+#df_sítios simuláveis em MNEE contemporâneo
+v_site <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv") |> 
+  pull(SiteCode) |> unique()
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   select(-tif.path) |> 
   inner_join(y=mutate(
     data.frame(txt.path = list.files(path="dados/simulacao",pattern=".txt")),
     SiteCode = str_extract(txt.path,".*?(?=.txt)")),
-    by="SiteCode")
+    by="SiteCode") |> 
+  filter(SiteCode %in% v_site)
+```
+
+
+# MNEE Contemporâneo
+
+```{r dados MNEE contemporaneo}
 # df_Urep
 df_Urep <- read_csv("dados/csv/df_Urep.csv")
 df_U <- df_Urep |> 
@@ -62,16 +83,9 @@ df_SADrep <- mutate(data.frame(
 df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
 # df_resultMNEE
 df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
-# funções
-source("source/dinamica_coalescente.R")
-source("source/2samples_testes.R")
-source("source/f_plotSADacumulada.R")
-source("source/chi2_2samples_bootstrap.R")
+
 ```
 
-
-
-# MNEE
 
 ## Simulação das SADs por sítio de amostragem
 
@@ -161,4 +175,14 @@ Comentários:
 não é simples fazer essa classificação, em alguns casos (SiteCode) ambos parecem ser ruins, pois acertam em alguns k e erram em outros. E ser melhor não implica em ser bom em si.  
 
 
+# MNEE idealizado
+
+```{r dados MNEE idealizado SAD}
+df_SADcsv <- list.files(path="dados/csv/SADs_neutras/MNEE_idealizado",
+                        pattern = ".csv", full.names = TRUE) |> 
+  f_dfSADcsv(site_pattern = "(?<=ado\\/).*?(?=\\_k)") |> 
+  ddply(.variables="SiteCode",.fun = \(df) df$SAD.path |> map_df(~read_csv(.)))
+df_teste <- df$SAD.path |> map_df(~read_csv(.))
+df_teste |> summary()
+```
 
