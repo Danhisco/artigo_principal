@@ -154,6 +154,9 @@ f_quad <- function(a, b, c){
 f_nonFragLand <- function(mat){
   v_0 <- mat[mat==0] |> length()
   mat[mat==0] <- 1
+  if(v_0>=0.01){
+    return(mat)
+  }
   index <- f_2aEqSol(a=-4,b=2*sum(dim(mat)),c = -v_0)[1]
   i_row <- ceiling(index)
   i_col <- floor(index)
