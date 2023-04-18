@@ -141,9 +141,8 @@ f_nova_parcela <- function(df){
   return(paisagem)
 }
 
-# função que cria paisagens sem fragmentação per se 'non_frag'
-# source::https://stackoverflow.com/questions/64749481/how-to-solve-a-quadratic-equation-in-r
 f_2aEqSol <- function(a, b, c){
+# source::https://stackoverflow.com/questions/64749481/how-to-solve-a-quadratic-equation-in-r
   a <- as.complex(a)
   answer <- c((-b + sqrt(b^2 - 4 * a * c)) / (2 * a),
               (-b - sqrt(b^2 - 4 * a * c)) / (2 * a))
@@ -151,6 +150,7 @@ f_2aEqSol <- function(a, b, c){
   if(answer[1] == answer[2]) return(answer[1])
   answer
 }
+# função que cria paisagens sem fragmentação per se 'non_frag'
 f_nonFragLand <- function(mat){
   v_0 <- mat[mat==0] |> length()
   mat[mat==0] <- 1
@@ -160,7 +160,6 @@ f_nonFragLand <- function(mat){
   index <- f_2aEqSol(a=-4,b=2*sum(dim(mat)),c = -v_0)[1]
   i_row <- ceiling(index)
   i_col <- floor(index)
-  # m_teste <- m_land
   mat[,c(1:i_col,(ncol(mat)-i_col):ncol(mat))] <- 0
   mat[c(1:i_row,(nrow(mat)-i_row):nrow(mat)),] <- 0
   return(mat)

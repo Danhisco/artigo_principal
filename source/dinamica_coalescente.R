@@ -105,7 +105,7 @@ f_simU <- function(df_1row,land_mat=FALSE){
 }
 
 f_writeUcsv <- function(df_bySite, land_matrix = FALSE,
-                        n_replicas=10, Umin = 1.25e-06, path_csv = "../csv/taxaU/"){
+                        n_replicas=10, Umin = 1.25e-06, path_csv){
   l_dfU <- list()
   for(i in 1:nrow(df_bySite)){
     v_U <- replicate(n=n_replicas,f_simU(df_1row = df_bySite[i,],
@@ -115,4 +115,54 @@ f_writeUcsv <- function(df_bySite, land_matrix = FALSE,
   }
   df_write <- rbind.fill(l_dfU)
   write_csv(df_write,file = paste0(path_csv,df_bySite$SiteCode[1],".csv"))
+}
+
+f_simSAD <- function(df_1row,n=100,land_mat=FALSE){
+    # receives a data frame with 
+    ## S_obs = 0
+    ## d (sd laplace dispersal kernel), 
+    ## txt.file (path to the habitat spatial configuration matrix)
+    ## land_mat=FALSE: o txt da simulação
+    # returns a estimated U rate
+    if(is.matrix(land_mat)){
+      with(df_1row,dinamica_coalescente(U = Umed, 
+                                        S=0, 
+                                        disp_range = d, 
+                                        N_simul=n,
+                                        landscape = land_mat))  
+    }else{
+      with(df_1row,dinamica_coalescente(U = Umed, 
+                                        S=0, 
+                                        disp_range = d, 
+                                        N_simul=n,
+                                        landscape = txt.path))  
+    }
+}
+f_writeSADcsv <- function(df_bySite, land_matrix = FALSE,
+                          n_replicas=100, path_csv){
+  f_adply <- \(X) f_simSAD(df_1row = X, land_mat = land_matrix,n = n_replicas)
+  m_SADreplicas <- adply(df_bySite,1,f_adply)
+  write_csv(select(m_SADreplicas,-c(effort_ha:S_obs,d:p,Umed:Usd)),
+            file = paste0(path_csv,df_bySite$SiteCode[1],".csv"))
+}
+
+f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06){
+  # tipo da paisagem
+  m_land <- read.table(df$txt.path[1]) |> as.matrix()
+  if(df$land_type[1] == "ideal"){
+    m_land[m_land==0] <- 1
+  }else if(df$land_type[1] == "non_frag"){
+    m_land <- f_nonFragLand(m_land)
+  }
+  # taxa U
+  folder_path <- paste0("../csv/taxaU/MNEE/",df$land_type[1],"/")
+  f_writeUcsv(df_bySite = df,land_matrix = m_land,path_csv = folder_path,n_replicas = U_rep)
+  # síntese taxa U
+  df_simSAD <- read_csv(paste0(folder_path,df$SiteCode[1],".csv")) |> 
+    pivot_longer(-c(SiteCode:d)) |> 
+    summarise(Umed = mean(value),.by = "k") |> 
+    inner_join(x=df,by="k")
+  # SAD
+  folder_path <- paste0("../csv/SADs_neutras/MNEE/",df$land_type[1],"/")
+  f_writeSADcsv(df_bySite = df_simSAD,land_matrix = m_land, path_csv = folder_path,n_replicas = SAD_rep)
 }

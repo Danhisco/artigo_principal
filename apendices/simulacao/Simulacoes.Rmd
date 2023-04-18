@@ -55,58 +55,9 @@ setwd("dados/simulacao")
 
 
 ```{r função para simular as SADs para MNEE em diferentes tipos de paisagens}
-df <- df_sim |> filter(SiteCode == "SPigua1" & land_type == "non_frag")
-
-f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06){
-  # tipo da paisagem
-  m_land <- read.table(df$txt.path[1]) |> as.matrix()
-  if(unique(df$land_type) == "ideal"){
-    m_land[m_land==0] <- 1
-  }else if(unique(df$land_type) == "non_frag"){
-    m_land <- f_nonFragLand(m_land)
-  }
-  # taxa U
-  
-  
-  # SAD
-}
+# df <- df_sim |> filter(SiteCode == "SPigua1" & land_type == "non_frag")
 
 
-
-
-f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06){
-  f_simCoalescente <- function(land_name){
-    v <- dinamica_coalescente(U = 1.25e-06, S=df$S_obs, disp_range = df$d, N_simul = 1,
-                              landscape = land_name)
-    v$U_est
-  }
-  m_full <- read.table(df$txt.file) |> as.matrix()
-  l_df_U <- list()
-  for(i in 1:n_escalas){
-    index <- ( nrow(m_full)-(nrow(m_full)/ (2^(i-1))) ) /2
-    m_sim <- m_full[(floor(index)+1):(nrow(m_full)-ceiling(index)),
-                    (floor(index)+1):(ncol(m_full)-ceiling(index))]
-    v_U <- replicate(n=n_replicas,f_simCoalescente(land_name = m_sim))
-    l_df_U[[i]] <- cbind(data.frame(SiteCode = df$SiteCode,
-                                    lado_km=16.02/(2^(i-1)),
-                                    k=df$k),
-                         matrix(v_U,nrow=1))
-  }
-  df_write <- rbind.fill(l_df_U)
-  write_csv(df_write,file = paste0("../csv/SoE/",df$SiteCode,"_k",round(df$k*100,0),".csv"))
-}
-##########
-f_writeUcsv <- function(df,n_replicas=10, Umin = 1.25e-06, path_csv = "../csv/taxaU/"){
-  l_dfU <- list()
-  for(i in 1:nrow(df)){
-    v_U <- replicate(n=n_replicas,f_simU(df = df[i,]))
-    l_dfU[[i]] <- cbind(select(df[i,],SiteCode,k,d),
-                        matrix(v_U,nrow=1))
-  }
-  df_write <- rbind.fill(l_dfU)
-  write_csv(df_write,file = paste0(path_csv,df$SiteCode[1],".csv"))
-}
-registerDoMC(3)
 d_ply(df_sim,"SiteCode",f_taxaU,.parallel = TRUE)
 ```
 
