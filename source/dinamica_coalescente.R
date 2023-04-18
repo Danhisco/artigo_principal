@@ -78,11 +78,41 @@ rec_distribuicao_espacial <- function(r, landscape){
     l[l==2] <- r
     return(l)
 }
-f_simU <- function(df){
-  v <- dinamica_coalescente(U = 1.25e-06, 
-                            S=df$S_obs, 
-                            disp_range = df$d, 
-                            N_simul=1,
-                            landscape = df$txt.file)
+
+f_simU <- function(df_1row,land_mat=FALSE){
+  # receives a data frame with 
+  ## S_obs (observed species richness), 
+  ## d (sd laplace dispersal kernel), 
+  ## txt.file (path to the habitat spatial configuration matrix)
+  ## land_mat=FALSE: o txt da simulação
+  # returns a estimated U rate
+  if(is.matrix(land_mat)){
+    v <- with(df_1row,
+              dinamica_coalescente(U = 1.25e-06, 
+                                   S=S_obs, 
+                                   disp_range = d, 
+                                   N_simul=1,
+                                   landscape = land_mat))  
+  }else{
+    v <- with(df_1row,
+              dinamica_coalescente(U = 1.25e-06, 
+                                   S=S_obs, 
+                                   disp_range = d, 
+                                   N_simul=1,
+                                   landscape = txt.path))  
+  }
   v$U_est
+}
+
+f_writeUcsv <- function(df_bySite, land_matrix = FALSE,
+                        n_replicas=10, Umin = 1.25e-06, path_csv = "../csv/taxaU/"){
+  l_dfU <- list()
+  for(i in 1:nrow(df_bySite)){
+    v_U <- replicate(n=n_replicas,f_simU(df_1row = df_bySite[i,],
+                                         land_mat = land_matrix))
+    l_dfU[[i]] <- cbind(select(df_bySite[i,],SiteCode,land_type,k,d),
+                        matrix(v_U,nrow=1))
+  }
+  df_write <- rbind.fill(l_dfU)
+  write_csv(df_write,file = paste0(path_csv,df_bySite$SiteCode[1],".csv"))
 }

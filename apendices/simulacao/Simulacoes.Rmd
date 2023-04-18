@@ -47,6 +47,7 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
   left_join(df_p,by="SiteCode")
 df_sim <- cbind(df_sim,land_type = rep(x=c("ideal","non_frag"),each=nrow(df_sim)))
 setwd("dados/simulacao")
+# setwd("../..")
 ```
 
 
@@ -65,6 +66,8 @@ f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06){
     m_land <- f_nonFragLand(m_land)
   }
   # taxa U
+  
+  
   # SAD
 }
 
@@ -93,20 +96,15 @@ f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06){
   write_csv(df_write,file = paste0("../csv/SoE/",df$SiteCode,"_k",round(df$k*100,0),".csv"))
 }
 ##########
-setwd("dados/simulacao")
-f_taxaU <- function(df,n_replicas=10, Umin = 1.25e-06){
-  f_simCoalescente <- function(X){
-    v <- dinamica_coalescente(U = Umin, S=X$S_obs, disp_range = X$d, N_simul=1,landscape = X$txt.path)
-    v$U_est
-  }
+f_writeUcsv <- function(df,n_replicas=10, Umin = 1.25e-06, path_csv = "../csv/taxaU/"){
   l_dfU <- list()
   for(i in 1:nrow(df)){
-    v_U <- replicate(n=n_replicas,f_simCoalescente(X = df[i,]))
+    v_U <- replicate(n=n_replicas,f_simU(df = df[i,]))
     l_dfU[[i]] <- cbind(select(df[i,],SiteCode,k,d),
                         matrix(v_U,nrow=1))
   }
   df_write <- rbind.fill(l_dfU)
-  write_csv(df_write,file = paste0("../csv/taxaU/",df$SiteCode[1],".csv"))
+  write_csv(df_write,file = paste0(path_csv,df$SiteCode[1],".csv"))
 }
 registerDoMC(3)
 d_ply(df_sim,"SiteCode",f_taxaU,.parallel = TRUE)
