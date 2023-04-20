@@ -146,7 +146,11 @@ f_writeSADcsv <- function(df_bySite, land_matrix = FALSE,
             file = paste0(path_csv,df_bySite$SiteCode[1],".csv"))
 }
 
-f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06){
+f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06,general_path){
+  SAD_path <- paste0(general_path,"/csv/SADs_neutras/MNEE/",df$land_type[1],"/",df$SiteCode[1],".csv")
+  if(file.exists(SAD_path)){
+    return(NA)
+  }
   # tipo da paisagem
   m_land <- read.table(df$txt.path[1]) |> as.matrix()
   if(df$land_type[1] == "ideal"){
@@ -154,16 +158,18 @@ f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06){
   }else if(df$land_type[1] == "non_frag"){
     m_land <- f_nonFragLand(m_land)
   }
-  # taxa U
-  folder_path <- paste0("../csv/taxaU/MNEE/",df$land_type[1],"/")
-  f_writeUcsv(df_bySite = df,land_matrix = m_land,path_csv = folder_path,n_replicas = U_rep)
+  folder_path <- paste0(general_path,"/csv/taxaU/MNEE/",df$land_type[1],"/")
+  path_df_simSAD <- paste0(folder_path,df$SiteCode[1],".csv")
+  if(!file.exists(path_df_simSAD)){
+    # taxa U
+    f_writeUcsv(df_bySite = df,land_matrix = m_land,path_csv = folder_path,n_replicas = U_rep)
+  }
   # síntese taxa U
-  df_simSAD <- read_csv(paste0(folder_path,df$SiteCode[1],".csv")) |> 
+  df_simSAD <- read_csv(path_df_simSAD) |> 
     pivot_longer(-c(SiteCode:d)) |> 
     summarise(Umed = mean(value),.by = "k") |> 
     inner_join(x=df,by="k")
   # SAD
-  folder_path <- paste0("../csv/SADs_neutras/MNEE/",df$land_type[1],"/")
+  folder_path <- paste0(general_path,"/csv/SADs_neutras/MNEE/",df$land_type[1],"/")
   f_writeSADcsv(df_bySite = df_simSAD,land_matrix = m_land, path_csv = folder_path,n_replicas = SAD_rep)
 }
-f_simMNEE(df = df1)

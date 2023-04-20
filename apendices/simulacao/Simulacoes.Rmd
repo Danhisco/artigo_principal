@@ -34,7 +34,7 @@ library(dplyr)
 # df_p
 df_p <- read_csv("dados/df_p.csv")
 #df_sítios simuláveis em MNEE contemporâneo
-v_site <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv") |> 
+v_site <- read_csv("dados/csv/resultados_MN/MNEE/cont/df_resultados.csv") |> 
   pull(SiteCode) |> unique()
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
@@ -57,7 +57,9 @@ setwd("dados/simulacao")
 ```{r função para simular as SADs para MNEE em diferentes tipos de paisagens}
 # df <- df_sim |> filter(SiteCode == "SPigua1" & land_type == "non_frag")
 registerDoMC(3)
-d_ply(df_sim,c("SiteCode","land_type"),f_simMNEE,.parallel = TRUE)
+v_gpath <- "/media/danilo/HD_externo/Documentos/mestrado_Ecologia/artigo_principal/dados"
+f_d_ply <- function(dataframe) f_simMNEE(df = dataframe,general_path = v_gpath)
+d_ply(df_sim,c("SiteCode","land_type"),f_d_ply,.parallel = TRUE)
 ```
 
 
