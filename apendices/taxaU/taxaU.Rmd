@@ -24,10 +24,9 @@ library(DHARMa)
 library(lme4)
 library(plyr)
 library(dplyr)
-# funções
-source("source/dinamica_coalescente.R")
+# objetos
 # df_resultsMNEE
-df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
+df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/cont/df_resultados.csv")
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   select(-tif.path) |> 
@@ -55,6 +54,9 @@ df_U <- df_Urep |>
 # df_ad
 ```
 
+
+## Gráficos Exploratórios da taxa U
+__Umed ~ f(MN, p, k, Site)__
 
 ```{r fig 1 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=18,fig.width=15}
 df_plot <- df_U |> 
@@ -108,98 +110,69 @@ par(mar=c(0.2,0.2,2.2,0.2),mfrow=c(3,5))
 a_ply(df_plot,1,f_landscape)
 ```
 
+## Contrastes entre o estimado nos diferentes tipos de paisagem
 
-### Análise Estatística de U
-
-<p>Proposta:</p>
-<p>i) transformar U para escala logito</p>
-<p>ii) fazer seleção de modelos usando LMER para avaliar quais os possíveis offsets: S_obs, razão A_J / A_M, A_J, DA</p>
-<p>iii) avaliar a melhor estrutura do GAMM </p>
-
-```{r Umed selecao de offset,echo=T}
+```{r}
+# preparação dos dados: incluir uma coluna de land type nos arquivos de 
+# f_list.files <- \(path_file){
+#   df <- read_csv(path_file) 
+#   df_write <- inner_join(x=data.frame(SiteCode = df$SiteCode[1],land_type="contemp"),y=df,by="SiteCode")
+#   write_csv(df_write,file = path_file)
+# }
+# a_ply(list.files(path="dados/csv/taxaU/MNEE/cont",pattern = ".csv",full.names = T),
+#       1,
+#       .fun = f_list.files)
 # dados
-f_z <- function(x){
-  m <- base::mean(x,na.rm=FALSE)
-  sd <- sd(x,na.rm=FALSE)
-  (x-m)/sd
-}
-df_Ulogit <- df_U |> 
-  drop_na() |> 
-  mutate(Areas_ratio = effort_ha / 1600,
-         DA = Ntotal / effort_ha,
-         Ulogit = log(Umed/(1-Umed)),
-         logS.z = f_z(log(S_obs)),
-         S.z = f_z(S_obs),
-         logDA.z = f_z(log(DA)),
-         DA.z = f_z(DA),
-         logAreas.z = f_z(log(Areas_ratio)),
-         effort.z = f_z(effort_ha),
-         log_effort.z = f_z(log(effort_ha)),
-         Areas.z = f_z(Areas_ratio))
-# gráficos
-df_Ulogit |> 
-  select(Ulogit:Areas.z,effort.z) |> 
-  pivot_longer(-Ulogit,names_to = "preditoras",values_to = "values") |> 
-  ggplot(aes(x=values,y=Ulogit)) +
-  geom_point() +
-  geom_smooth(se=F,method = "loess",formula = "y~x") +
-  facet_wrap(~preditoras,ncol=2,scales="free_x")
-# próximo: fazer gráficos exploratórios 
-```
+df_Urep <- list.files(path = "dados/csv/taxaU/", pattern = ".csv",recursive = T,full.names = T) |> 
+  map_df(~read_csv(.)) |> na.omit() #na.omit para remover o Sítio em que não foi possível rodar pela relação N / p
+# sumarização
+df_U <- df_Urep |> select(SiteCode:k)
+df_U$Umed <- apply(select(df_Urep,-c(SiteCode:d)),1,mean)
+df_U$Usd <- apply(select(df_Urep,-c(SiteCode:d)),1,sd)
+df_contrastes <- df_U |>  
+  pivot_wider(names_from = land_type, values_from = c(Umed,Usd)) 
 
 
-```{r modelos para offsets,eval=TRUE,echo=TRUE}
-# modelos
-l_md <- list()
-l_md[[1]] <- lmer(Ulogit ~ S.z + DA.z + (1|SiteCode), data=df_Ulogit)
-l_md[[2]] <- update(l_md[[1]], . ~ . -DA.z)
-l_md[[3]] <- lmer(Ulogit ~ logS.z + logDA.z + (1|SiteCode), data=df_Ulogit)
-l_md[[4]] <- update(l_md[[3]], . ~ . -logDA.z)
-f_nameModel <- function(md){
-  paste(unlist(find_predictors(md)),collapse = " + ")
-}
-names(l_md) <-laply(l_md,f_nameModel)
-AICctab(l_md,weights=T)
-```
-
-
-```{r DHARMa residuals, eval=TRUE}
-p_plot <- simulateResiduals(l_md[["logS.z + logDA.z"]],n=1000)
-plot(p_plot)
-plot(density(df_Ulogit$Umed))
 ```
 
 ```{r}
-df_U |> 
-  mutate(Ucv = Usd * 100 / Umed) |> 
-  ggplot(aes(x=Umed,y=Ucv)) +
-  geom_point()
+df_plot <- df_Urep |> select(-d) |> 
+  pivot_longer(-c(SiteCode:k),names_to = "rep",values_to = "U") |>
+  inner_join(x=unique(select(df_sim,SiteCode,p)),by="SiteCode") |> 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+# df_plot <- df_U |>
+#   inner_join(x=unique(select(df_sim,SiteCode,p)),by="SiteCode") |> 
+#   arrange(p) |> 
+#   mutate(label = paste0(SiteCode,", p=",round(p,2))) #, " ,S=",S_obs
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k,y=U,color=land_type)) +
+  geom_point(alpha=0.1) +
+  # geom_line() +
+  stat_summary(geom = "line",fun.data = mean_se,alpha=0.5) +
+  scale_x_reverse() +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  theme_bw() +
+  labs(color="landscape type") +
+  theme(legend.position = "top",
+        axis.text=element_text(size=4.5),
+        strip.text = element_text(size = 4.5, margin = margin())) +
+  scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                     labels=c("contemporâneo","idealizado","sem fragmentação")) +
+  facet_wrap(~label,ncol=4,scales="free")
+ggsave("apendices/taxaU/figuras/Umed_Usd_landType_Site.png",
+       width = 7,
+       height = 30)
 ```
 
 
-### Códigos para estimativa da taxa U
 
-```{r estimativa de taxa U, echo=TRUE}
-setwd("dados/simulacao")
-f_taxaU <- function(df,n_replicas=10, Umin = 1.25e-06){
-  f_simCoalescente <- function(X){
-    v <- dinamica_coalescente(U = Umin, S=X$S_obs, disp_range = X$d, N_simul=1,landscape = X$txt.path)
-    v$U_est
-  }
-  l_dfU <- list()
-  for(i in 1:nrow(df)){
-    v_U <- replicate(n=n_replicas,f_simCoalescente(X = df[i,]))
-    l_dfU[[i]] <- cbind(select(df[i,],SiteCode,k,d),
-                        matrix(v_U,nrow=1))
-  }
-  df_write <- rbind.fill(l_dfU)
-  write_csv(df_write,file = paste0("../csv/taxaU/",df$SiteCode[1],".csv"))
-}
-registerDoMC(3)
-d_ply(df_sim,"SiteCode",f_taxaU,.parallel = TRUE)
-```
 
-```{r taxa U para SCarar - sitio com NAs quando Umin igual a 1.25e-06}
+
+### Códigos para estimativa da taxa U ainda em desenvolvimento - avaliar necessidade
+
+```{r taxa U para SCarar - sitio com NAs quando Umin igual a 1.25e-06,include=F,eval=F}
 setwd("dados/simulacao")
 df <- filter(df_sim,SiteCode == "SCarar")
 X_i <- df[1,]

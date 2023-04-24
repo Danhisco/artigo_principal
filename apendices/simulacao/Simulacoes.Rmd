@@ -51,9 +51,6 @@ setwd("dados/simulacao")
 ```
 
 
-
-
-
 ```{r função para simular as SADs para MNEE em diferentes tipos de paisagens}
 # df <- df_sim |> filter(SiteCode == "SPigua1" & land_type == "non_frag")
 registerDoMC(3)
@@ -63,6 +60,5 @@ d_ply(df_sim,c("SiteCode","land_type"),f_d_ply,.parallel = TRUE)
 ```
 
 
-```
 
 
