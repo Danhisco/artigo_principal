@@ -26,7 +26,7 @@ library(plyr)
 library(dplyr)
 # objetos
 # df_resultsMNEE
-df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/cont/df_resultados.csv")
+df_resultados <- read_csv("dados/csv/resultados_MN/MNEE/cont/df_resultados.csv")
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   select(-tif.path) |> 
@@ -40,77 +40,60 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
 # df_Urep <- list.files(path="dados/csv/taxaU",pattern=".csv",full.names = T) |> 
 #   map_df(~read_csv(.))
 # write_csv(df_Urep,"dados/csv/df_Urep.csv")
-df_Urep <- read_csv("dados/csv/df_Urep.csv")
-df_U <- df_Urep |> 
-  drop_na() |> 
-  pivot_longer(cols = `1`:`10`,names_to = "n",values_to = "U") |> 
-  group_by(SiteCode,k) |> 
-  summarise(Umed = mean(U),
-            Usd = sd(U),
-            Umin = min(U),
-            Umax = max(U)) |> 
-  inner_join(x=select(df_sim,-txt.path,-d),by=c("SiteCode","k")) |> 
-  inner_join(x=select(df_resultMNEE,p,SiteCode,k),by=c("SiteCode","k"))
+# df_Urep <- read_csv("dados/csv/df_Urep.csv")
+# df_U <- df_Urep |>
+#   drop_na() |>
+#   pivot_longer(cols = `1`:`10`,names_to = "n",values_to = "U") |>
+#   group_by(SiteCode,k) |>
+#   summarise(Umed = mean(U),
+#             Usd = sd(U),
+#             Umin = min(U),
+#             Umax = max(U)) |>
+#   inner_join(x=select(df_sim,-txt.path,-d),by=c("SiteCode","k")) |>
+#   inner_join(x=select(df_resultMNEE,p,SiteCode,k),by=c("SiteCode","k"))
+# dados
+df_Urep <- list.files(path = "dados/csv/taxaU", pattern = ".csv",recursive = T,full.names = T) |> as.list() |>
+  map_df(~read_csv(.)) |> na.omit() #na.omit para remover o Sítio em que não foi possível rodar pela relação N / p
+# sumarização
+df_U <- df_Urep |> select(SiteCode:k)
+df_U$Umed <- apply(select(df_Urep,-c(SiteCode:d)),1,mean)
+df_U$Usd <- apply(select(df_Urep,-c(SiteCode:d)),1,sd)
+v_min <- apply(as.data.frame(select(df_contrastes,efeito_area:efeito_conf)),2,\(v) min(v[v>=0])) |> min()
+df_contrastes <- df_U |>  
+  pivot_wider(names_from = land_type, values_from = c(Umed,Usd)) |> 
+  mutate(efeito_area = (Umed_non_frag - Umed_ideal) / Umed_ideal,
+         efeito_frag = (Umed_contemp - Umed_non_frag) / Umed_ideal,
+         efeito_conf = (Umed_contemp - Umed_ideal) / Umed_ideal,
+         across(contains("efeito"), ~ log(ifelse(.x<=0,v_min,.x)),.names = "log_{.col}")) |>
+  select(SiteCode:k,efeito_area:log_efeito_conf) |> 
+  inner_join(x=distinct(select(df_sim,SiteCode:S_obs,txt.path:p)),by="SiteCode")
+write_csv(df_contrastes,file="dados/csv/taxaU/MNEE/df_taxaU.csv")
 # df_ad
 ```
 
+```{r}
+f_aply <- \(v) min(v[v>=0]) 
+df_contrastes |> select(efeito_area:efeito_conf) |> as.data.frame
+
+```
 
 ## Gráficos Exploratórios da taxa U
+
+__Coeficiente de Variação da estimativa da taxa U__
+
+```{r}
+df_U |> 
+  ggplot(aes(x=Umed,y=Usd)) + 
+  geom_point(alpha=0.1) + 
+  geom_abline(slope = 1,intercept = 0) + 
+  geom_abline(slope=0.1,intercept = 0,color="darkgreen") +
+  geom_abline(slope=0.01,intercept = 0,color="darkred")
+```
+
+__Figura 1__ Coeficiente de variação da taxa U estimada por MNEE. Cada ponto representa uma bateria de simulação com 10 réplicas cada; no eixo x há a média da taxa U e no eixo y o correspondente desvio padrão. Todas as retas passam pela origem, em preto a reta com inclinação de 1, em verde a com inclinação de 0.1, e em vermelho com inclinaçãao de 0.01. A maior parte dos pontos tem coeficiente de inclinação entre 10% e 1%
+
 __Umed ~ f(MN, p, k, Site)__
 
-```{r fig 1 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=18,fig.width=15}
-df_plot <- df_U |> 
-  arrange(p) |> 
-  # inner_join(mutate(data.frame(png.path = list.files(path = "dados/paisagens/png_land_sim",
-  #                                             pattern=".png",full.names=T)),
-  #                   SiteCode = str_extract(png.path,"(?<=im\\/).*?(?=\\.png)")),
-  #            by = "SiteCode")
-  mutate(label = paste0(SiteCode,", p=",round(p,2))) #, " ,S=",S_obs
-df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
-# df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
-### essa função busca inserir o mapa de cobertura vegetal no gráfico de taxa U
-# f_plot <- function(df){
-#   img <- png::readPNG(df$png.path[1],native = T)
-#   ggplot(df,aes(x=d,y=Umed)) +
-#     inset_element(p=img) +
-#     geom_point() +
-#     geom_errorbar(aes(ymin=Umin,ymax=Umax)) +
-#     geom_line() 
-# }
-# l_p <- dlply(df_plot,"SiteCode",f_plot)
-# gráficos
-df_plot |> 
-  ggplot(aes(x=k,y=Umed)) +
-  geom_smooth(method = "loess",se=F) +
-  geom_point() +
-  # labs(title="b) k, prop. propágulos até a vizinhança (~cut(p, 20))",
-  #      y="número de SADs réplicas congruentes",
-  #      x="k") +
-  theme_bw() +
-  scale_x_reverse() +
-  facet_wrap(~label,ncol=4,scales="free")
-ggsave("apendices/taxaU/figuras/Umed_kSite_loess.png",
-       width = 7,
-       height = 27.7)
-```
-
-__Figura 1__ Média da taxa U estimada pelo desvio padrão da função de dispersão, média de 10 réplicas. p = proporção de cobertura vegetal, S = riqueza de espécies.
-
-Sítios para olhar:
-
-```{r auditoria dos sítios que apresentam padrão adiverso}
-v_sitios <- c("RScach4","PEalia","MGubera","MSdour","SPitir1","RSgaur","PRsapo","PRdiam3","RSfaxi","RSvsol","SPcara3","PRanto11","PRanto8","SPeec1","SPpecb1")
-# v_missingSite <- v_sitios[!(v_sitios %in% df_plot$SiteCode)]
-df_plot <- df_sim |> filter(SiteCode %in% v_sitios & k == 0.99)
-f_landscape <- function(df){
-  m <- as.matrix(read.table(paste0("dados/simulacao/",df$txt.path)))
-  image(m,axes=F,main=paste0(df$SiteCode,", S=",df$S_obs,", p=",round(df$p,3)),zlim=c(0,2))
-}
-par(mar=c(0.2,0.2,2.2,0.2),mfrow=c(3,5))
-a_ply(df_plot,1,f_landscape)
-```
-
-## Contrastes entre o estimado nos diferentes tipos de paisagem
 
 ```{r}
 # preparação dos dados: incluir uma coluna de land type nos arquivos de 
@@ -122,20 +105,9 @@ a_ply(df_plot,1,f_landscape)
 # a_ply(list.files(path="dados/csv/taxaU/MNEE/cont",pattern = ".csv",full.names = T),
 #       1,
 #       .fun = f_list.files)
-# dados
-df_Urep <- list.files(path = "dados/csv/taxaU/", pattern = ".csv",recursive = T,full.names = T) |> 
-  map_df(~read_csv(.)) |> na.omit() #na.omit para remover o Sítio em que não foi possível rodar pela relação N / p
-# sumarização
-df_U <- df_Urep |> select(SiteCode:k)
-df_U$Umed <- apply(select(df_Urep,-c(SiteCode:d)),1,mean)
-df_U$Usd <- apply(select(df_Urep,-c(SiteCode:d)),1,sd)
-df_contrastes <- df_U |>  
-  pivot_wider(names_from = land_type, values_from = c(Umed,Usd)) 
-
-
 ```
 
-```{r}
+```{r fig 1 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=18,fig.width=15}
 df_plot <- df_Urep |> select(-d) |> 
   pivot_longer(-c(SiteCode:k),names_to = "rep",values_to = "U") |>
   inner_join(x=unique(select(df_sim,SiteCode,p)),by="SiteCode") |> 
@@ -167,6 +139,84 @@ ggsave("apendices/taxaU/figuras/Umed_Usd_landType_Site.png",
 ```
 
 
+__Figura 2__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados. Os sítios estão organizados pela pela proporção de cobertura vegetal 
+
+
+Média da taxa U estimada pelo desvio padrão da função de dispersão, média de 10 réplicas. p = proporção de cobertura vegetal, S = riqueza de espécies.
+
+Sítios para olhar:
+
+```{r auditoria dos sítios que apresentam padrão adiverso}
+v_sitios <- c("MGuberl6","MGuberl5","RScach4","")
+v_sítios <- df_contrastes |> 
+  filter(efeito_frag < min(efeito_area)) |> pull(SiteCode) |> unique()
+
+# v_missingSite <- v_sitios[!(v_sitios %in% df_plot$SiteCode)]
+df_plot <- df_sim |> filter(SiteCode %in% v_sitios & k == 0.99)
+f_landscape <- function(df){
+  m <- as.matrix(read.table(paste0("dados/simulacao/",df$txt.path)))
+  image(m,axes=F,main=paste0(df$SiteCode,", S=",df$S_obs,", p=",round(df$p,3)),zlim=c(0,2))
+}
+par(mar=c(0.2,0.2,2.2,0.2),mfrow=c(3,5))
+a_ply(df_plot,1,f_landscape)
+```
+
+```{r}
+df_contrastes |> 
+  # ggplot(aes(x=efeito_area,y=efeito_frag)) +
+  ggplot(aes(x=log_efeito_area,y=log_efeito_frag)) +
+  geom_abline(intercept = 0,slope = 1) +
+  geom_point()
+df_contrastes |> 
+  # pivot_longer(efeito_area:efeito_frag) |> 
+  pivot_longer(log_efeito_area:log_efeito_frag) |> 
+  ggplot(aes(y=value,x=name)) +
+  geom_jitter() +
+  geom_boxplot() 
+  # geom_density() +
+  # geom_histogram(aes(y = after_stat(density)),
+  #                colour = 1, fill = "white") +
+  # facet_wrap(~name,ncol=2)
+df_contrastes |> 
+  # pivot_longer(efeito_area:efeito_frag) |> 
+  pivot_longer(log_efeito_area:log_efeito_frag) |> 
+  ggplot(aes(x=p,y=value,color=k)) +
+  geom_line(aes(group=k)) +
+  geom_point() +
+  facet_wrap(~name,ncol=2)
+df_contrastes |> 
+  # pivot_longer(efeito_area:efeito_frag) |> 
+  pivot_longer(log_efeito_area:log_efeito_frag) |> 
+  ggplot(aes(x=k,y=value,color=p)) +
+  geom_line(aes(group=p)) +
+  geom_point() +
+  facet_wrap(~name,ncol=2)
+#
+df_contrastes |> 
+  pivot_longer(efeito_area:efeito_frag) |> 
+  ggplot(aes(x=p,y=k,fill=value)) +
+  geom_tile() +
+  geom_point() +
+  scale_fill_distiller(palette = "Spectral") +
+  coord_cartesian(expand = FALSE) +
+  facet_wrap(~name,ncol=2)
+#
+# df_resultados <- df_resultados |> 
+#   mutate(Prob_invasion = c_invasion/100,
+#          propM0 = M0/50,
+#          t_sd=sqrt(t_var))
+# df_resultados |> 
+#   ggplot(aes(x=propM0,y=C_nm,fill=Prob_invasion)) +
+#   geom_tile() +
+#   scale_fill_distiller(palette = "Spectral") +
+#   labs(fill="",x="M0, initial pop. size of invader (%K)",y="(Cn - Cm) 2 / gamma") +
+#   coord_cartesian(expand = FALSE) +
+#   geom_text(aes(label=Prob_invasion)) +
+#   ggtitle("Proporção de eventos de substituição da residente em 100 réplicas") +
+#   theme_classic()
+df_contrastes |> 
+  ggplot(aes(x=k,y=log_efeito_area))
+```
 
 
 
