@@ -106,29 +106,6 @@ d_ply(df_U,"SiteCode",f_sadMNEE,.parallel = TRUE)
 
 ## Comparação com a SAD observada
 
-### teste chi quadrado bootstrap para 2 amostras
-
-```{r chi2 bootstrap 2 amostras}
-# df <- df_SADrep[1,]
-f_chi2Boot <- function(df){
-  df_SADobs <- read_csv(df$SADobs.path) |> as.data.frame() |> arrange(N)
-  m_SADrep <- read_csv(df$SADrep.path) |> as.data.frame()
-  f_apply.chi2 <- function(m_df){
-    df_SADi <- table(as.matrix(m_df[,-(1:2)])) |> as.data.frame()
-    names(df_SADi) <- names(df_SADobs)
-    df_SADi$species.correct <- as.character(df_SADi$species.correct)
-    p.value <- f_chi2Boot0(df_sample1 = df_SADobs, df_sample2 = df_SADi,n_sim = 1e3)
-    cbind(m_df[,1:2],p.value)
-  }
-  registerDoMC(3)
-  df_p.value <- adply(m_SADrep,1,f_apply.chi2,.expand = F,.parallel = T) |> rename(n=1)
-  write_csv(df_p.value,paste0("dados/csv/resultados_MN/MNEE/chi2_2samples/",df$SiteCode,".csv"))
-}
-a_ply(df_SADrep,1,f_chi2Boot)
-```
-
-
-
 
 ### testes KS, DTS e a contagem de espécies
 

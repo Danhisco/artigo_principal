@@ -23,64 +23,10 @@ f_resultsMN <- function(df){
     v_rep <- sort(table(X))
     f_KS(SADrep = v_rep)
   }
-  f_DTS <- function(SADrep, v_obs = SADobs, boots=1000){
-    testeDTS <- dts_test(a=v_obs,b=SADrep,nboots=boots,keep.boots=FALSE)
-    testeDTS[2]
-  }
-  f_repDTS <- function(X){
-    v_rep <- sort(table(X))
-    f_DTS(SADrep = v_rep)
-  }
   f_S <- function(X) length(table(X))
   # rotinas
   df_return$p.KS <- apply(as.matrix(m_SADrep[,-(1:2)]),1,f_repKS)
-  df_return$p.DTS <- apply(as.matrix(m_SADrep[,-(1:2)]),1,f_repDTS)
   df_return$S <- apply(as.matrix(m_SADrep[,-(1:2)]),1,f_S)
   # return
-  return(df_return)
-}
-# 
-f_KSrep <- function(df){
-  # dados
-  SADobs <- read_csv(df$SADobs.path) |> arrange(N) |> pull(N)
-  m_SADrep <- read.csv(df$SADrep.path)
-  df_return <- m_SADrep[,1:2] 
-  # subfunções
-  f_KS <- function(SADrep, v_obs = SADobs, boots=1000){
-    testeKS <- ks_test(a=v_obs,b=SADrep,nboots = boots)
-    testeKS[2]
-  }
-  f_rep <- function(X){
-    v_rep <- sort(table(X))
-    f_KS(SADrep = v_rep)
-  }
-  # rotinas
-  df_return$p.value <- apply(as.matrix(m_SADrep[,-(1:2)]),1,f_rep)
-  return(df_return)
-}
-f_DTSrep <- function(df){
-  # dados
-  SADobs <- read_csv(df$SADobs.path) |> arrange(N) |> pull(N)
-  m_SADrep <- read.csv(df$SADrep.path)
-  df_return <- m_SADrep[,1:2] 
-  # subfunções
-  f_DTS <- function(SADrep, v_obs = SADobs, boots=1000){
-    testeDTS <- dts_test(a=v_obs,b=SADrep,nboots=boots,keep.boots=FALSE)
-    testeDTS[2]
-  }
-  f_rep <- function(X){
-    v_rep <- sort(table(X))
-    f_DTS(SADrep = v_rep)
-  }
-  # rotina
-  df_return$p.value <- apply(as.matrix(m_SADrep[,-(1:2)]),1,f_rep)
-  return(df_return)
-}
-#
-f_Srep <- function(df){
-  m_SADrep <- read_csv(df$SADrep.path)
-  df_return <- m_SADrep[,1:2]
-  f_S <- function(X) length(table(X))
-  df_return$S <- apply(as.matrix(m_SADrep[,-(1:2)]),1,f_S)
   return(df_return)
 }
