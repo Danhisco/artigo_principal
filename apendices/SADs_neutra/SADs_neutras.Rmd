@@ -49,7 +49,7 @@ f_dfSADcsv <- function(l_files.path.full, site_pattern = "(?<=EE\\/).*?(?=.csv)"
 # df_p
 df_p <- read_csv("dados/df_p.csv")
 #df_sítios simuláveis em MNEE contemporâneo
-v_site <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv") |> 
+v_site <- read_csv("dados/csv/resultados_MN/MNEE/cont/df_resultados.csv") |> 
   pull(SiteCode) |> unique()
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
@@ -59,55 +59,25 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
     SiteCode = str_extract(txt.path,".*?(?=.txt)")),
     by="SiteCode") |> 
   filter(SiteCode %in% v_site)
-```
-
-
-# MNEE Contemporâneo
-
-```{r dados MNEE contemporaneo}
-# df_Urep
-df_Urep <- read_csv("dados/csv/df_Urep.csv")
-df_U <- df_Urep |> 
-  drop_na() |> 
-  pivot_longer(cols = `1`:`10`,names_to = "n",values_to = "U") |> 
-  group_by(SiteCode,k) |> 
-  summarise(Umed = mean(U)) |> 
-  inner_join(x=select(df_sim,SiteCode, k, d,txt.path),by=c("SiteCode","k"))
+# df_taxaU
+df_taxaU <- read_csv("dados/csv/df_taxaU.csv")
 # df_SADrep
 df_SADrep <- mutate(data.frame(
   SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE",
-                           pattern = ".csv",full.names = T)),
-  SADobs.path = gsub("neutras/MNEE","observadas",SADrep.path),
-  SiteCode = str_extract(SADrep.path,"(?<=EE\\/).*?(?=.csv)"))
-# df_repMNEE
-df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
-# df_resultMNEE
-df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
-
+                           pattern = ".csv",full.names = T,recursive = T)),
+  SiteCode = str_extract(SADrep.path,"(?<=[cont|frag|ideal]\\/).*?(?=.csv)"),
+  SADobs.path = paste0("dados/csv/",SiteCode,".csv"))
+# # df_repMNEE
+# df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
+# # df_resultMNEE
+# df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 ```
 
-
-## Simulação das SADs por sítio de amostragem
-
-```{r MNEE simulação das SADs por sítio de amostragem e k}
-setwd("dados/simulacao/")
-f_sadMNEE <- function(df, n_replicas=100){
-  land_path <- df$txt.path[1]
-  f_simCoalescente <- function(X){
-    dinamica_coalescente(U = X$Umed, S=0, disp_range = X$d, N_simul=n_replicas,landscape = land_path)
-  }
-  m_SADreplicas <- adply(df,1,f_simCoalescente)
-  write_csv(select(m_SADreplicas,-(txt.path:Umed)),
-            file = paste0("../csv/SADs_neutras/MNEE/",df$SiteCode[1],".csv"))
-}
-registerDoMC(3)
-d_ply(df_U,"SiteCode",f_sadMNEE,.parallel = TRUE)
-```
 
 ## Comparação com a SAD observada
 
 
-### testes KS, DTS e a contagem de espécies
+### testes KS e a contagem de espécies
 
 ```{r testes KS DTS e S}
 registerDoMC(3)
