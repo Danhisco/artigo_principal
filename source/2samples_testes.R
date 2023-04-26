@@ -13,7 +13,7 @@ f_resultsMN <- function(df){
   # dados
   SADobs <- read_csv(df$SADobs.path) |> arrange(N) |> pull(N)
   m_SADrep <- read.csv(df$SADrep.path)
-  df_return <- m_SADrep[,1:2]
+  df_return <- with(df,cbind(m_SADrep[,1:2],land_type))
   # subfunções
   f_KS <- function(SADrep, v_obs = SADobs, boots=1000){
     testeKS <- ks_test(a=v_obs,b=SADrep,nboots = boots)

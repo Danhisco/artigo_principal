@@ -66,16 +66,15 @@ df_SADrep <- mutate(data.frame(
   SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE",
                            pattern = ".csv",full.names = T,recursive = T)),
   SiteCode = str_extract(SADrep.path,"(?<=[cont|frag|ideal]\\/).*?(?=.csv)"),
-  SADobs.path = paste0("dados/csv/",SiteCode,".csv"))
+  land_type = str_extract(SADrep.path,"(?<=MNEE\\/).*?(?=\\/)"),
+  SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv"))
 # # df_repMNEE
 # df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
 # # df_resultMNEE
 # df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 ```
 
-
 ## Comparação com a SAD observada
-
 
 ### testes KS e a contagem de espécies
 
