@@ -35,7 +35,7 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
       data.frame(txt.path = list.files(path="dados/simulacao",pattern=".txt")),
       SiteCode = str_extract(txt.path,".*?(?=.txt)")),
     by = "SiteCode") |>  
-  left_join(y=distinct(select(df_resultMNEE,p,SiteCode)),by="SiteCode")
+  left_join(y=distinct(select(df_resultados,p,SiteCode)),by="SiteCode")
 # df_Urep
 # df_Urep <- list.files(path="dados/csv/taxaU",pattern=".csv",full.names = T) |> 
 #   map_df(~read_csv(.))
@@ -52,7 +52,7 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
 #   inner_join(x=select(df_sim,-txt.path,-d),by=c("SiteCode","k")) |>
 #   inner_join(x=select(df_resultMNEE,p,SiteCode,k),by=c("SiteCode","k"))
 # dados
-df_Urep <- list.files(path = "dados/csv/taxaU", pattern = ".csv",recursive = T,full.names = T) |> as.list() |>
+df_Urep <- list.files(path = "dados/csv/taxaU", pattern = ".csv",recursive = T,full.names = T) |> 
   map_df(~read_csv(.)) |> na.omit() #na.omit para remover o Sítio em que não foi possível rodar pela relação N / p
 # sumarização
 df_U <- df_Urep |> select(SiteCode:k)
