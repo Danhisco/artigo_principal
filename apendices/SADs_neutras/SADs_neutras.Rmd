@@ -46,8 +46,6 @@ f_dfSADcsv <- function(l_files.path.full, site_pattern = "(?<=EE\\/).*?(?=.csv)"
   )
 }
 ## dados comuns
-# df_p
-df_p <- read_csv("dados/df_p.csv")
 #df_sítios simuláveis em MNEE contemporâneo
 v_site <- read_csv("dados/csv/resultados_MN/MNEE/cont/df_resultados.csv") |> 
   pull(SiteCode) |> unique()
@@ -70,6 +68,14 @@ df_SADrep <- mutate(data.frame(
 df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
 # # df_resultMNEE
 df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
+# df_contrastes
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_taxaU.csv")
+# df_ad
+df_logOR <- df_resultados |> 
+  # filter(logOR_pair == "cont.non_frag") |> 
+  select(SiteCode:k,logOR_pair:logOR_value) |>
+  pivot_wider(names_from = logOR_pair, values_from = logOR_value) |> 
+  inner_join(y=select(df_contrastes,SiteCode,k,log_efeito_area:log_efeito_conf),by=c("SiteCode","k"))
 ```
 
 ## Comparação com a SAD observada
@@ -121,7 +127,7 @@ df_plot <- df_resultados |>
 df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 df_plot |> 
   ggplot(aes(x=k,y=nCongKS,color=land_type)) +
-  geom_smooth(method = "loess") +
+  geom_smooth(method = "loess",se=F) +
   geom_point() +
   scale_x_reverse() +
   theme_bw() +
@@ -131,11 +137,10 @@ df_plot |>
         strip.text = element_text(size = 4.5, margin = margin())) +
   scale_color_manual(values=c("darkred","darkblue","darkgreen"),
                      labels=c("contemporâneo","idealizado","sem fragmentação")) +
-  facet_wrap(~label,ncol=4,scales="free")
+  facet_wrap(~label,ncol=4)
 ggsave("apendices/SADs_neutras/figuras/nCongKS_k_landType_Site.png",
        width = 7,
        height = 30)
-
 ```
 
 

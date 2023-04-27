@@ -25,8 +25,6 @@ library(lme4)
 library(plyr)
 library(dplyr)
 # objetos
-# df_resultsMNEE
-df_resultados <- read_csv("dados/csv/resultados_MN/MNEE/cont/df_resultados.csv")
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   select(-tif.path) |> 
@@ -158,9 +156,10 @@ a_ply(df_plot,1,f_landscape)
 
 ```{r}
 df_contrastes |> 
-  # ggplot(aes(x=efeito_area,y=efeito_frag)) +
-  ggplot(aes(x=log_efeito_area,y=log_efeito_frag)) +
+  ggplot(aes(x=efeito_area,y=efeito_frag)) +
+  # ggplot(aes(x=log_efeito_area,y=log_efeito_frag)) +
   geom_abline(intercept = 0,slope = 1) +
+  geom_line(aes(group=SiteCode),alpha=0.2) +
   geom_point()
 df_contrastes |> 
   # pivot_longer(efeito_area:efeito_frag) |> 
@@ -172,20 +171,38 @@ df_contrastes |>
   # geom_histogram(aes(y = after_stat(density)),
   #                colour = 1, fill = "white") +
   # facet_wrap(~name,ncol=2)
-df_contrastes |> 
-  # pivot_longer(efeito_area:efeito_frag) |> 
-  pivot_longer(log_efeito_area:log_efeito_frag) |> 
+l_p <- list()
+l_p[[1]] <- df_contrastes |> 
+  pivot_longer(efeito_area:efeito_frag) |>
+  # pivot_longer(log_efeito_area:log_efeito_frag) |> 
   ggplot(aes(x=p,y=value,color=k)) +
   geom_line(aes(group=k)) +
   geom_point() +
   facet_wrap(~name,ncol=2)
-df_contrastes |> 
-  # pivot_longer(efeito_area:efeito_frag) |> 
-  pivot_longer(log_efeito_area:log_efeito_frag) |> 
+l_p[[2]] <- df_contrastes |> 
+  # pivot_longer(efeito_area:efeito_frag) |>
+  pivot_longer(log_efeito_area:log_efeito_frag) |>
+  ggplot(aes(x=p,y=value,color=k)) +
+  geom_line(aes(group=k)) +
+  geom_point() +
+  facet_wrap(~name,ncol=2)
+grid.arrange(grobs=l_p,ncol=1)
+l_p <- list()
+l_p[[1]] <- df_contrastes |> 
+  pivot_longer(efeito_area:efeito_frag) |>
+  # pivot_longer(log_efeito_area:log_efeito_frag) |> 
   ggplot(aes(x=k,y=value,color=p)) +
   geom_line(aes(group=p)) +
   geom_point() +
   facet_wrap(~name,ncol=2)
+l_p[[2]] <- df_contrastes |> 
+  # pivot_longer(efeito_area:efeito_frag) |>
+  pivot_longer(log_efeito_area:log_efeito_frag) |>
+  ggplot(aes(x=k,y=value,color=p)) +
+  geom_line(aes(group=p)) +
+  geom_point() +
+  facet_wrap(~name,ncol=2)
+grid.arrange(grobs=l_p,ncol=1)
 #
 df_contrastes |> 
   pivot_longer(efeito_area:efeito_frag) |> 
@@ -213,6 +230,9 @@ df_contrastes |>
   ggplot(aes(x=k,y=log_efeito_area))
 ```
 
+Oq os contrastes informam?
+Os contrastes particionam (condicionado ao modelo neutro, configuração espacial da paisagem ao redor contemporânea à amostragem da SAD, e a escala espacial da dinâmica de dispersão de propágulos entre a parcela e paisagem - que é determinada pelo grau de limitação de dispersão) a magnitude da redução da taxa de colonização de propágulos vindos da paisagem ao redor devido: i) à redução do número de progenitores, efeito da perda de habitat per se, sem considerar o isolamento estrutural; e ii) ao isolamento estrutural dos progenitores remanescentes.
+Pressuposto que a riqueza observada está em equilíbrio com a heterogeneidade contemporânea, observamos con
 
 
 ### Códigos para estimativa da taxa U ainda em desenvolvimento - avaliar necessidade
