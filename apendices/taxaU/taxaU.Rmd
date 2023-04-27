@@ -52,7 +52,7 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
 #   inner_join(x=select(df_sim,-txt.path,-d),by=c("SiteCode","k")) |>
 #   inner_join(x=select(df_resultMNEE,p,SiteCode,k),by=c("SiteCode","k"))
 # dados
-df_Urep <- list.files(path = "dados/csv/taxaU", pattern = ".csv",recursive = T,full.names = T) |> 
+df_Urep <- list.files(path = "dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) |> 
   map_df(~read_csv(.)) |> na.omit() #na.omit para remover o Sítio em que não foi possível rodar pela relação N / p
 # sumarização
 df_U <- df_Urep |> select(SiteCode:k)
@@ -70,12 +70,6 @@ df_contrastes <- df_contrastes |>
   inner_join(x=distinct(select(df_sim,SiteCode:S_obs,txt.path:p)),by="SiteCode")
 write_csv(df_contrastes,file="dados/csv/taxaU/df_taxaU.csv")
 # df_ad
-```
-
-```{r}
-f_aply <- \(v) min(v[v>=0]) 
-df_contrastes |> select(efeito_area:efeito_conf) |> as.data.frame
-
 ```
 
 ## Gráficos Exploratórios da taxa U
@@ -134,7 +128,7 @@ df_plot |>
   scale_color_manual(values=c("darkred","darkblue","darkgreen"),
                      labels=c("contemporâneo","idealizado","sem fragmentação")) +
   facet_wrap(~label,ncol=4,scales="free")
-ggsave("apendices/taxaU/figuras/Umed_Usd_landType_Site.png",
+ggsave("apendices/taxaU/figuras/Umed_k_landType_Site.png",
        width = 7,
        height = 30)
 ```

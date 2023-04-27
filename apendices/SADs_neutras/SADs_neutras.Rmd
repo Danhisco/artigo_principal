@@ -59,9 +59,6 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
     SiteCode = str_extract(txt.path,".*?(?=.txt)")),
     by="SiteCode") |> 
   filter(SiteCode %in% v_site)
-# df_taxaU
-df_contrastes <- read_csv("dados/csv/taxaU/df_taxaU.csv") |> 
-  select(-c(effort_ha:txt.path))
 # df_SADrep
 df_SADrep <- mutate(data.frame(
   SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE",
@@ -72,14 +69,14 @@ df_SADrep <- mutate(data.frame(
 # # df_repMNEE
 df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
 # # df_resultMNEE
-df_resultados <- read_csv("dados/csv/resultados_MN/df_resultMNEE.csv")
+df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
 ```
 
 ## Comparação com a SAD observada
 
 ### testes KS e a contagem de espécies
 
-```{r testes KS DTS e S}
+```{r testes KS e S}
 registerDoMC(3)
 df_repMNEE <- adply(df_SADrep,1,f_resultsMN,.parallel = TRUE)
 write_csv(select(df_repMNEE,SiteCode:S), file = "dados/csv/resultados_MN/MNEE/df_repMNEE")
@@ -116,6 +113,30 @@ write_csv(df_resultados,file = "dados/csv/resultados_MN/df_resultados.csv")
 ```
 
 ### Gráficos Exploratórios
+
+```{r GE }
+df_plot <- df_resultados |> 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k,y=nCongKS,color=land_type)) +
+  geom_smooth(method = "loess") +
+  geom_point() +
+  scale_x_reverse() +
+  theme_bw() +
+  labs(color="landscape type") +
+  theme(legend.position = "top",
+        axis.text=element_text(size=4.5),
+        strip.text = element_text(size = 4.5, margin = margin())) +
+  scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                     labels=c("contemporâneo","idealizado","sem fragmentação")) +
+  facet_wrap(~label,ncol=4,scales="free")
+ggsave("apendices/SADs_neutras/figuras/nCongKS_k_landType_Site.png",
+       width = 7,
+       height = 30)
+
+```
 
 
 

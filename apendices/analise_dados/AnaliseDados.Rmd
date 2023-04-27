@@ -43,7 +43,7 @@ source("source/nameModel.R")
 source("source/f_PredIntGAMM.R")
 # objetos
 # load("dados/Rdata/md_MNEE.Rdata")
-load("dados/Rdata/l_md_GAMM.Rdata")
+# load("dados/Rdata/l_md_GAMM.Rdata")
 # dados
 # df_resultMNEE
 df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
