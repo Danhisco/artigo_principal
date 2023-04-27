@@ -69,7 +69,7 @@ df_SADrep <- mutate(data.frame(
   land_type = str_extract(SADrep.path,"(?<=MNEE\\/).*?(?=\\/)"),
   SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv"))
 # # df_repMNEE
-# df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
+df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
 # # df_resultMNEE
 # df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 ```
@@ -85,16 +85,22 @@ write_csv(select(df_repMNEE,SiteCode:S), file = "dados/csv/resultados_MN/MNEE/df
 ```
 
 ```{r summarise resultados de MNEE para df_resultMNEE}
+# resultados base
 df_resultMNEE <- df_repMNEE |> 
-  group_by(SiteCode,k) |> 
+  group_by(SiteCode,k,land_type) |> 
   summarise(nCongKS = sum(p.KS>0.05),
-            nCongDTS = sum(p.DTS>0.05),
             Smed = mean(S),
             Ssd = sd(S),
             Smin = min(S),
-            Smax = max(S))
+            Smax = max(S),
+            .groups = "drop") |> 
+  mutate(propCong = case_when(nCongKS == 100 ~ 0.99/100,
+                              nCongKS == 0 ~ 0.01/100,
+                              TRUE ~ nCongKS / 100))
 df_resultMNEE <- df_resultMNEE |> 
   inner_join(x=df_p,by="SiteCode")
+# 
+
 write_csv(df_resultMNEE,file = "dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
 ```
 
