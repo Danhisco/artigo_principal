@@ -58,16 +58,17 @@ df_Urep <- list.files(path = "dados/csv/taxaU", pattern = ".csv",recursive = T,f
 df_U <- df_Urep |> select(SiteCode:k)
 df_U$Umed <- apply(select(df_Urep,-c(SiteCode:d)),1,mean)
 df_U$Usd <- apply(select(df_Urep,-c(SiteCode:d)),1,sd)
-v_min <- apply(as.data.frame(select(df_contrastes,efeito_area:efeito_conf)),2,\(v) min(v[v>=0])) |> min()
 df_contrastes <- df_U |>  
   pivot_wider(names_from = land_type, values_from = c(Umed,Usd)) |> 
   mutate(efeito_area = (Umed_non_frag - Umed_ideal) / Umed_ideal,
          efeito_frag = (Umed_contemp - Umed_non_frag) / Umed_ideal,
-         efeito_conf = (Umed_contemp - Umed_ideal) / Umed_ideal,
-         across(contains("efeito"), ~ log(ifelse(.x<=0,v_min,.x)),.names = "log_{.col}")) |>
+         efeito_conf = (Umed_contemp - Umed_ideal) / Umed_ideal)
+v_min <- apply(as.data.frame(select(df_contrastes,efeito_area:efeito_conf)),2,\(v) min(v[v>=0])) |> min()
+df_contrastes <- df_contrastes |> 
+  mutate(across(contains("efeito"), ~ log(ifelse(.x<=0,v_min,.x)),.names = "log_{.col}")) |>
   select(SiteCode:k,efeito_area:log_efeito_conf) |> 
   inner_join(x=distinct(select(df_sim,SiteCode:S_obs,txt.path:p)),by="SiteCode")
-write_csv(df_contrastes,file="dados/csv/taxaU/MNEE/df_taxaU.csv")
+write_csv(df_contrastes,file="dados/csv/taxaU/df_taxaU.csv")
 # df_ad
 ```
 

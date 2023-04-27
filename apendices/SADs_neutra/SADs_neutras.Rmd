@@ -60,7 +60,8 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
     by="SiteCode") |> 
   filter(SiteCode %in% v_site)
 # df_taxaU
-df_taxaU <- read_csv("dados/csv/df_taxaU.csv")
+df_contrastes <- read_csv("dados/csv/taxaU/df_taxaU.csv") |> 
+  select(-c(effort_ha:txt.path))
 # df_SADrep
 df_SADrep <- mutate(data.frame(
   SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE",
@@ -71,7 +72,7 @@ df_SADrep <- mutate(data.frame(
 # # df_repMNEE
 df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
 # # df_resultMNEE
-# df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
+df_resultados <- read_csv("dados/csv/resultados_MN/df_resultMNEE.csv")
 ```
 
 ## Comparação com a SAD observada
@@ -84,9 +85,9 @@ df_repMNEE <- adply(df_SADrep,1,f_resultsMN,.parallel = TRUE)
 write_csv(select(df_repMNEE,SiteCode:S), file = "dados/csv/resultados_MN/MNEE/df_repMNEE")
 ```
 
-```{r summarise resultados de MNEE para df_resultMNEE}
+```{r summarise resultados de MNEE}
 # resultados base
-df_resultMNEE <- df_repMNEE |> 
+df_resultados <- df_repMNEE |> 
   group_by(SiteCode,k,land_type) |> 
   summarise(nCongKS = sum(p.KS>0.05),
             Smed = mean(S),
@@ -96,13 +97,28 @@ df_resultMNEE <- df_repMNEE |>
             .groups = "drop") |> 
   mutate(propCong = case_when(nCongKS == 100 ~ 0.99/100,
                               nCongKS == 0 ~ 0.01/100,
-                              TRUE ~ nCongKS / 100))
-df_resultMNEE <- df_resultMNEE |> 
+                              TRUE ~ nCongKS / 100)) |> 
   inner_join(x=df_p,by="SiteCode")
-# 
-
-write_csv(df_resultMNEE,file = "dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
+#
+f_ddply <- \(df,
+             pairs = list(c("cont","non_frag"),c("cont","ideal"),c("non_frag","ideal"))){
+  f <- \(v_string){
+    p1 <- df |> filter(land_type == v_string[1]) |> pull(propCong)
+    p2 <- df |> filter(land_type == v_string[2]) |> pull(propCong)
+    data.frame(logOR_pair = paste(v_string,collapse = "."),
+               logOR_value = log( (p1/(1-p1)) / (p2/(1-p2)) ) )
+  }
+  cbind(df,ldply(pairs,f))
+}
+df_resultados <- ddply(df_resultados,c("SiteCode","k"),f_ddply)
+#
+write_csv(df_resultados,file = "dados/csv/resultados_MN/df_resultados.csv")
 ```
+
+### Gráficos Exploratórios
+
+
+
 
 ## Comparação gráfica SAD acumulada e predita
 
@@ -125,16 +141,3 @@ os dois são semelhantes: BAjuss, BAuruc, ESsoor, MGipia1, MGvico1, MSjatei, PEa
 
 Comentários:
 não é simples fazer essa classificação, em alguns casos (SiteCode) ambos parecem ser ruins, pois acertam em alguns k e erram em outros. E ser melhor não implica em ser bom em si.  
-
-
-# MNEE idealizado
-
-```{r dados MNEE idealizado SAD}
-df_SADcsv <- list.files(path="dados/csv/SADs_neutras/MNEE_idealizado",
-                        pattern = ".csv", full.names = TRUE) |> 
-  f_dfSADcsv(site_pattern = "(?<=ado\\/).*?(?=\\_k)") |> 
-  ddply(.variables="SiteCode",.fun = \(df) df$SAD.path |> map_df(~read_csv(.)))
-df_teste <- df$SAD.path |> map_df(~read_csv(.))
-df_teste |> summary()
-```
-
