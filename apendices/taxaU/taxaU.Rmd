@@ -156,6 +156,9 @@ a_ply(df_plot,1,f_landscape)
 
 ```{r}
 df_contrastes |> 
+  summarise(across(efeito_area:efeito_conf,~sum(.x<0)))
+
+df_contrastes |> 
   ggplot(aes(x=efeito_area,y=efeito_frag)) +
   # ggplot(aes(x=log_efeito_area,y=log_efeito_frag)) +
   geom_abline(intercept = 0,slope = 1) +

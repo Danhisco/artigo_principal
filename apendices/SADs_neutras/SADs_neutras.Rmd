@@ -46,6 +46,8 @@ f_dfSADcsv <- function(l_files.path.full, site_pattern = "(?<=EE\\/).*?(?=.csv)"
   )
 }
 ## dados comuns
+# df_p
+df_p <- read_csv("dados/df_p.csv")
 #df_sítios simuláveis em MNEE contemporâneo
 v_site <- read_csv("dados/csv/resultados_MN/MNEE/cont/df_resultados.csv") |> 
   pull(SiteCode) |> unique()
@@ -98,8 +100,8 @@ df_resultados <- df_repMNEE |>
             Smin = min(S),
             Smax = max(S),
             .groups = "drop") |> 
-  mutate(propCong = case_when(nCongKS == 100 ~ 0.99/100,
-                              nCongKS == 0 ~ 0.01/100,
+  mutate(propCong = case_when(nCongKS == 100 ~ 99.9/100,
+                              nCongKS == 0 ~ 0.1/100,
                               TRUE ~ nCongKS / 100)) |> 
   inner_join(x=df_p,by="SiteCode")
 #
@@ -107,9 +109,11 @@ f_ddply <- \(df,
              pairs = list(c("cont","non_frag"),c("cont","ideal"),c("non_frag","ideal"))){
   f <- \(v_string){
     p1 <- df |> filter(land_type == v_string[1]) |> pull(propCong)
+    p1 <- p1 / (1-p1)
     p2 <- df |> filter(land_type == v_string[2]) |> pull(propCong)
+    p2 <- p2 / (1-p2)
     data.frame(logOR_pair = paste(v_string,collapse = "."),
-               logOR_value = log( (p1/(1-p1)) / (p2/(1-p2)) ) )
+               logOR_value = log( p1 / p2 ) )
   }
   cbind(df,ldply(pairs,f))
 }
@@ -120,15 +124,15 @@ write_csv(df_resultados,file = "dados/csv/resultados_MN/df_resultados.csv")
 
 ### Gráficos Exploratórios
 
-```{r GE }
+```{r GE1 nCongKS ~ k by land type ~ |SiteCode ~ p AJUSTAR DIMENSÕES}
 df_plot <- df_resultados |> 
   arrange(p) |> 
   mutate(label = paste0(SiteCode,", p=",round(p,2)))
 df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 df_plot |> 
   ggplot(aes(x=k,y=nCongKS,color=land_type)) +
-  geom_smooth(method = "loess",se=F) +
-  geom_point() +
+  geom_smooth(method = "loess",se=F,alpha=0.4) +
+  geom_point(alpha=0.4) +
   scale_x_reverse() +
   theme_bw() +
   labs(color="landscape type") +
@@ -143,7 +147,42 @@ ggsave("apendices/SADs_neutras/figuras/nCongKS_k_landType_Site.png",
        height = 30)
 ```
 
+```{r GE2 logOR cont.non_frag ~ contrastes by k ~ |SiteCode ~ p EM ESTUDO}
+df_plot <- df_logOR |> 
+  select(-c(cont.ideal:non_frag.ideal)) |>
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k,y=cont.non_frag)) +
+  geom_hline(yintercept = 0,color="darkred") +
+  geom_smooth(method = "loess",se=F) +
+  geom_point() +
+  scale_x_reverse() +
+  theme_bw() +
+  labs(color="landscape type") +
+  theme(legend.position = "top",
+        axis.text=element_text(size=4.5),
+        strip.text = element_text(size = 4.5, margin = margin())) +
+  # scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+  #                    labels=c("contemporâneo","idealizado","sem fragmentação")) +
+  facet_wrap(~label,ncol=4)
+ggsave("apendices/SADs_neutras/figuras/logOR_cont.non_frag_k_Site_p.png",
+       width = 7,
+       height = 30)
+```
 
+
+```{r GE3 nCongKS ~ contrastes EF}
+df_plot <- df_logOR |> 
+  select(-c(cont.ideal:non_frag.ideal)) |>
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k,y=cont.non_frag)) +
+  geom_point()
+```
 
 
 ## Comparação gráfica SAD acumulada e predita
