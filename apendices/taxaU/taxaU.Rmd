@@ -25,6 +25,8 @@ library(lme4)
 library(plyr)
 library(dplyr)
 # objetos
+# df_p
+df_p <- read_csv("dados/df_p.csv")
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   select(-tif.path) |> 
@@ -32,8 +34,8 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
     mutate(
       data.frame(txt.path = list.files(path="dados/simulacao",pattern=".txt")),
       SiteCode = str_extract(txt.path,".*?(?=.txt)")),
-    by = "SiteCode") |>  
-  left_join(y=distinct(select(df_resultados,p,SiteCode)),by="SiteCode")
+    by = "SiteCode") |>
+  left_join(x=df_p,by="SiteCode")
 # df_Urep
 # df_Urep <- list.files(path="dados/csv/taxaU",pattern=".csv",full.names = T) |> 
 #   map_df(~read_csv(.))
@@ -65,7 +67,7 @@ v_min <- apply(as.data.frame(select(df_contrastes,efeito_area:efeito_conf)),2,\(
 df_contrastes <- df_contrastes |> 
   mutate(across(contains("efeito"), ~ log(ifelse(.x<=0,v_min,.x)),.names = "log_{.col}")) |>
   select(SiteCode:k,efeito_area:log_efeito_conf) |> 
-  inner_join(x=distinct(select(df_sim,SiteCode:S_obs,txt.path:p)),by="SiteCode")
+  inner_join(x=distinct(select(df_sim,-c(k:d))),by="SiteCode")
 write_csv(df_contrastes,file="dados/csv/taxaU/df_taxaU.csv")
 # df_ad
 ```
@@ -140,17 +142,18 @@ Média da taxa U estimada pelo desvio padrão da função de dispersão, média 
 Sítios para olhar:
 
 ```{r auditoria dos sítios que apresentam padrão adiverso}
-v_sitios <- c("MGuberl6","MGuberl5","RScach4","")
-v_sítios <- df_contrastes |> 
-  filter(efeito_frag < min(efeito_area)) |> pull(SiteCode) |> unique()
+v_sitios <- c("RSrioz1","PEbrejo","PRanto14","PRanto5","PRanto8","PRanto10","PRanto7","SPcana1")
+v_sitios <- df_contrastes |> filter(p == 1) |> pull(SiteCode) |> unique()
+# v_sítios <- df_contrastes |> 
+#   filter(efeito_frag < min(efeito_area)) |> pull(SiteCode) |> unique()
 
 # v_missingSite <- v_sitios[!(v_sitios %in% df_plot$SiteCode)]
-df_plot <- df_sim |> filter(SiteCode %in% v_sitios & k == 0.99)
+df_plot <- df_contrastes |> filter(SiteCode %in% v_sitios & k == 0.99)
 f_landscape <- function(df){
   m <- as.matrix(read.table(paste0("dados/simulacao/",df$txt.path)))
-  image(m,axes=F,main=paste0(df$SiteCode,", S=",df$S_obs,", p=",round(df$p,3)),zlim=c(0,2))
+  image(m,axes=F,main=paste0(df$SiteCode,", p=",round(df$p,3)),zlim=c(0,2)) #", S=",df$S_obs,
 }
-par(mar=c(0.2,0.2,2.2,0.2),mfrow=c(3,5))
+par(mar=c(0.2,0.2,2,0.2),mfrow=c(4,4))
 a_ply(df_plot,1,f_landscape)
 ```
 
