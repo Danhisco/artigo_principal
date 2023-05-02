@@ -24,7 +24,9 @@ library(DHARMa)
 library(lme4)
 library(plyr)
 library(dplyr)
-# objetos
+# funções
+source("source/f_z.R")
+# dados
 # df_p
 df_p <- read_csv("dados/df_p.csv")
 # df_sim
@@ -62,11 +64,9 @@ df_contrastes <- df_U |>
   pivot_wider(names_from = land_type, values_from = c(Umed,Usd)) |> 
   mutate(efeito_area = (Umed_non_frag - Umed_ideal) / Umed_ideal,
          efeito_frag = (Umed_contemp - Umed_non_frag) / Umed_ideal,
-         efeito_conf = (Umed_contemp - Umed_ideal) / Umed_ideal)
-v_min <- apply(as.data.frame(select(df_contrastes,efeito_area:efeito_conf)),2,\(v) min(v[v>=0])) |> min()
-df_contrastes <- df_contrastes |> 
-  mutate(across(contains("efeito"), ~ log(ifelse(.x<=0,v_min,.x)),.names = "log_{.col}")) |>
-  select(SiteCode:k,efeito_area:log_efeito_conf) |> 
+         efeito_conf = (Umed_contemp - Umed_ideal) / Umed_ideal,
+         across(starts_with("efeito"),~sign(.x) * abs(.x)^(1/5),.names = "cubeR_{.col}")) |> 
+  select(SiteCode:k,efeito_area:cubeR_efeito_conf) |> 
   inner_join(x=distinct(select(df_sim,-c(k:d))),by="SiteCode")
 write_csv(df_contrastes,file="dados/csv/taxaU/df_taxaU.csv")
 # df_ad
@@ -152,7 +152,7 @@ Sítios para olhar:
 v_sitios <- c("RSrioz1","PEbrejo","PRanto14","PRanto5","PRanto8","PRanto10","PRanto7","SPcana1")
 v_sitios_p1 <- df_contrastes |> filter(p == 1) |> pull(SiteCode) |> unique()
 v_sitios_vis.igual <- df_contrastes |> 
-  filter(p >= 0.77 & 
+  filter(p >= 0.77 & p < 1 &  
            !(SiteCode %in% 
                c("SPcana1","PRanto7","PRanto10","PRanto8","SPpeic1","PRanto5","PEbrejo","RSrioz1",""))) |> 
   pull(SiteCode) |> unique()
@@ -170,19 +170,34 @@ f_landscape <- function(df){
 par(mar=c(0.2,0.2,2,0.2),mfrow=c(4,4))
 a_ply(df_plot,1,f_landscape)
 #
-df_auditoria <- df_contrastes |> filter(SiteCode %in% v_sitios_vis.igual)
+df_auditoria <- df_contrastes |> 
+  mutate(referencia_efeito = case_when(SiteCode %in% v_sitios_vis.igual ~ "visualmente igual",
+                                       p ==1 ~ "p=1",
+                                       TRUE ~ "algum grau diferente"))
+
+df_auditoria |> 
+  pivot_longer(efeito_area:efeito_conf) |> 
+  ggplot(aes(x=name,y=value)) +
+    geom_boxplot() +
+    geom_jitter() + 
+  labs(x="",y="contraste entre simulações") +
+    # scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                     # labels=c("contemporâneo","idealizado","sem fragmentação")) +
+  facet_wrap(~referencia_efeito,ncol=2)
 ```
 
 ```{r}
 df_contrastes |> 
   summarise(across(efeito_area:efeito_conf,~sum(.x<0)))
-
-df_contrastes |> 
-  ggplot(aes(x=efeito_area,y=efeito_frag)) +
+df_auditoria |> 
+# df_contrastes |> 
+  # ggplot(aes(x=cubeR_efeito_area,y=cubeR_efeito_frag,color=referencia_efeito)) +
+  ggplot(aes(x=efeito_area,y=efeito_frag,color = p==1)) +
   # ggplot(aes(x=log_efeito_area,y=log_efeito_frag)) +
   geom_abline(intercept = 0,slope = 1) +
-  geom_line(aes(group=SiteCode),alpha=0.2) +
-  geom_point()
+  geom_line(aes(group=SiteCode),alpha=0.3) +
+  geom_point(alpha=0.5) +
+  scale_color_manual(name="p = 1", values = setNames(c('darkgreen','darkgray'),c(T, F)))
 df_contrastes |> 
   # pivot_longer(efeito_area:efeito_frag) |> 
   pivot_longer(log_efeito_area:log_efeito_frag) |> 

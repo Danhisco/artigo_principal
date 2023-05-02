@@ -19,10 +19,12 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
+# Objetivo
+
+Aqui comparamos a congruência do predito para a diversidade local de árvores por um modelo neutro espacialmente explícito (Campos et al. 2012,2013; Thompson et al. 2019) pressuposto a configuração espacial contemporânea do habitat remanescente na paisagem ao redor (Villard & Metzger 2014, Frazier et al. 2017), com a situação de ausência de isolamento estrutural, onde todo o habitat remanescente está aglomerado ao redor da parcela. A situação de ausência de perda de habitat na paisagem ao redor foi simulada como controle nulo (Fahrig et al. 2022). Para cada sítio de amostragem exploramos graus de limitação de dispersão per capita e a ausência de limitação de dispersão entre os indivíduos da paisagem local (Fahrig 2013). Se houver alguma limitação de dispersão, o modelo neutro prevê a possibilidade de que o isolamento estrutural da parcela na paisagem possa reduzir o input de espécies vindos da paisagem ao redor e/ou reduzir a erosão de espécies por deriva ecológica (Campos et al. 2012, 2013; Condit et al. 2012; May et al. 2012; Thompson et al. 2019). A taxa de nascimento de novas espécies na paisagem (U, espacialmente aleatória) foi ajustada para obter a riqueza observada localmente, condicional ao número de indivíduos observado. O contraste na taxa U estimada em cada tipo de paisagem pode informar o efeito da perda de habitat per se (contraste entre controle e sem isolamento estrutural) e do efeito da fragmentação per se (contraste entre sem isolamento estrutural e paisagem contemporânea) na manutenção da diversidade local. Esses efeitos são expressos na dependência de propágulos vindos da paisagem ao redor para repor espécies perdidas localmente. O efeito da área per se é o da redução no número de progenitores. Se o efeito da fragmentação per se for majoritamente de reduzir o input de novas espécies na parcela, então a taxa U estimada nas paisagens contemporâneas deve ser maior; caso o efeito majoritário seja o de reduzir a substituição de coespécies então a taxa estimada deve ser menor. Os contrastes estimados em paisagens com pouca perda de habitat e bem conectados em que não houve diferença aparente entre as estimativas foram usados como referência de ausência de contraste. 
+
+
+O efeito da fragmentação per se pode ser de aumentar ou diminuir a taxa U necessária para manter a riqueza local.  
+
 # Perguntas Motivadoras
 
-P1) É necessário considerar a configuração espacial do habitat na paisagem ou é suficiente pressupor a relação entre a quantidade de habitat na parcela e na parcela ao redor? Essa regra varia com o grau de limitação de dispersão e proporção de cobertura vegetal?
-<!-- P1 está relacionado com a seção da discussão e da introdução sobre como modelar a diversidade local de árvores a partir de mapas de cobertura vegetal e graus de limitação de dispersão -->
- <!-- P1 Também é um indicativo de que hipóteses de equilíbrio na paisagem contemporânea tem suporte -->
- 
- P2) Quanto maior a perda de habitat maior a diferença em pressupor a paisagem contemporânea e a idealizada sem perda de habitat para modelar a diversidade local de árvores na Floresta Atlântica? Essa diferença muda com a extensão espacial da paisagem observada?
