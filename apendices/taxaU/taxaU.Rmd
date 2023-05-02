@@ -139,11 +139,25 @@ __Figura 2__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispe
 
 Média da taxa U estimada pelo desvio padrão da função de dispersão, média de 10 réplicas. p = proporção de cobertura vegetal, S = riqueza de espécies.
 
+
+
+## validação dos contrastes
+
+1o: sítios p==1
+2o: sítios em que avalio que não há mudança no gráfico acima de 
+
 Sítios para olhar:
 
 ```{r auditoria dos sítios que apresentam padrão adiverso}
 v_sitios <- c("RSrioz1","PEbrejo","PRanto14","PRanto5","PRanto8","PRanto10","PRanto7","SPcana1")
-v_sitios <- df_contrastes |> filter(p == 1) |> pull(SiteCode) |> unique()
+v_sitios_p1 <- df_contrastes |> filter(p == 1) |> pull(SiteCode) |> unique()
+v_sitios_vis.igual <- df_contrastes |> 
+  filter(p >= 0.77 & 
+           !(SiteCode %in% 
+               c("SPcana1","PRanto7","PRanto10","PRanto8","SPpeic1","PRanto5","PEbrejo","RSrioz1",""))) |> 
+  pull(SiteCode) |> unique()
+v_sitios_vis.igual <- c(v_sitios_vis.igual,
+                        c("BAuruc","BAlenc4"))
 # v_sítios <- df_contrastes |> 
 #   filter(efeito_frag < min(efeito_area)) |> pull(SiteCode) |> unique()
 
@@ -155,6 +169,8 @@ f_landscape <- function(df){
 }
 par(mar=c(0.2,0.2,2,0.2),mfrow=c(4,4))
 a_ply(df_plot,1,f_landscape)
+#
+df_auditoria <- df_contrastes |> filter(SiteCode %in% v_sitios_vis.igual)
 ```
 
 ```{r}
