@@ -8,9 +8,9 @@ editor_options:
 library(trackdown)
 # both overwrite: 
 # overwrite the current google drive file with the current Rmd:
-upload_file(file="secoes_texto/Resultados/Resultados.Rmd",
-            gpath="mestrado/artigo_principal/secoes_texto/",
-            hide_code=TRUE)
+# upload_file(file="secoes_texto/Resultados/Resultados.Rmd",
+#             gpath="mestrado/artigo_principal/secoes_texto/",
+#             hide_code=TRUE)
 update_file(file ="secoes_texto/Resultados/Resultados.Rmd",
             gpath = "mestrado/artigo_principal/secoes_texto/",
             hide_code = TRUE)
