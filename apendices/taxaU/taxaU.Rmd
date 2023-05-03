@@ -152,12 +152,7 @@ Sítios para olhar:
 v_sitios <- c("RSrioz1","PEbrejo","PRanto14","PRanto5","PRanto8","PRanto10","PRanto7","SPcana1")
 v_sitios_p1 <- df_contrastes |> filter(p == 1) |> pull(SiteCode) |> unique()
 v_sitios_vis.igual <- df_contrastes |> 
-  filter(p >= 0.77 & p < 1 &  
-           !(SiteCode %in% 
-               c("SPcana1","PRanto7","PRanto10","PRanto8","SPpeic1","PRanto5","PEbrejo","RSrioz1",""))) |> 
-  pull(SiteCode) |> unique()
-v_sitios_vis.igual <- c(v_sitios_vis.igual,
-                        c("BAuruc","BAlenc4"))
+  filter(p >= 0.92 & p<1 & !(SiteCode == "RSrioz1")) |> pull(SiteCode) |> unique()
 # v_sítios <- df_contrastes |> 
 #   filter(efeito_frag < min(efeito_area)) |> pull(SiteCode) |> unique()
 
@@ -171,19 +166,29 @@ par(mar=c(0.2,0.2,2,0.2),mfrow=c(4,4))
 a_ply(df_plot,1,f_landscape)
 #
 df_auditoria <- df_contrastes |> 
-  mutate(referencia_efeito = case_when(SiteCode %in% v_sitios_vis.igual ~ "visualmente igual",
+  mutate(referencia_efeito = case_when(SiteCode %in% v_sitios_vis.igual ~ "p >= 0.92 e visualmente igual",
                                        p ==1 ~ "p=1",
                                        TRUE ~ "algum grau diferente"))
-
 df_auditoria |> 
-  pivot_longer(efeito_area:efeito_conf) |> 
+  pivot_longer(efeito_area:efeito_conf) |>
+  mutate(name = factor(name,labels = c("efeito area","efeito contemp","efeito frag"))) |> 
   ggplot(aes(x=name,y=value)) +
-    geom_boxplot() +
-    geom_jitter() + 
-  labs(x="",y="contraste entre simulações") +
+  geom_hline(data = df_auditoria |> 
+               group_by(referencia_efeito) |> 
+               summarise(min = min(across(efeito_area:efeito_conf,min))),
+             aes(yintercept = min,
+                 color=referencia_efeito),alpha=0.5) +
+  scale_x_discrete(limits=c("efeito area","efeito frag","efeito contemp")) +
+  geom_boxplot() +
+  geom_jitter() + 
+  labs(x="",y="contraste na estimativa da taxa U",
+       subtitle = "efeito area = (sem isolamento - idealizado) / idealizado  \nefeito frag = (contemp - sem isolamento) / idealizado  \nefeito contemp = (contemp - idealizado) / idealizado",
+       color="menor valor :") +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        legend.margin=margin(-14, 0, 0, 0))
     # scale_color_manual(values=c("darkred","darkblue","darkgreen"),
                      # labels=c("contemporâneo","idealizado","sem fragmentação")) +
-  facet_wrap(~referencia_efeito,ncol=2)
 ```
 
 ```{r}
