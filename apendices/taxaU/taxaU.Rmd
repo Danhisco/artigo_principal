@@ -61,13 +61,14 @@ df_U <- df_Urep |> select(SiteCode:k)
 df_U$Umed <- apply(select(df_Urep,-c(SiteCode:d)),1,mean)
 df_U$Usd <- apply(select(df_Urep,-c(SiteCode:d)),1,sd)
 df_contrastes <- df_U |>  
+  inner_join(df_p,by="SiteCode") |>
   pivot_wider(names_from = land_type, values_from = c(Umed,Usd)) |> 
   mutate(efeito_area = (Umed_non_frag - Umed_ideal) / Umed_ideal,
          efeito_frag = (Umed_contemp - Umed_non_frag) / Umed_ideal,
-         efeito_conf = (Umed_contemp - Umed_ideal) / Umed_ideal,
-         across(starts_with("efeito"),~sign(.x) * abs(.x)^(1/5),.names = "cubeR_{.col}")) |> 
-  select(SiteCode:k,efeito_area:cubeR_efeito_conf) |> 
-  inner_join(x=distinct(select(df_sim,-c(k:d))),by="SiteCode")
+         efeito_conf = (Umed_contemp - Umed_ideal) / Umed_ideal) |> 
+         #,
+         # across(starts_with("efeito"),~sign(.x) * abs(.x)^(1/5),.names = "cubeR_{.col}")|> 
+  select(-starts_with("U"))
 write_csv(df_contrastes,file="dados/csv/taxaU/df_taxaU.csv")
 # df_ad
 ```
@@ -76,13 +77,71 @@ write_csv(df_contrastes,file="dados/csv/taxaU/df_taxaU.csv")
 
 __Coeficiente de Variação da estimativa da taxa U__
 
-```{r}
-df_U |> 
+```{r gráficos para o artigo Figura SI 1 - Graf Exp dos contrastes}
+l_p <- list()
+l_p[[1]] <- df_U |> 
   ggplot(aes(x=Umed,y=Usd)) + 
   geom_point(alpha=0.1) + 
   geom_abline(slope = 1,intercept = 0) + 
   geom_abline(slope=0.1,intercept = 0,color="darkgreen") +
   geom_abline(slope=0.01,intercept = 0,color="darkred")
+l_p[[2]] <- df_contrastes |> 
+  pivot_longer(efeito_area:efeito_conf) |>
+  mutate(name = factor(name,labels = c("contraste area","contraste contemp","contraste frag"))) |> 
+  ggplot(aes(x=name,y=value)) +
+  geom_hline(data = df_contrastes |> 
+               mutate(referencia_efeito = ifelse(p>=0.93,"p>=0.93","p<0.93")) |> 
+               group_by(referencia_efeito) |> 
+               summarise(min = min(across(efeito_area:efeito_conf,min)),
+                         max = max(across(efeito_area:efeito_conf,max))) |> 
+               pivot_longer(min:max),
+             # |> 
+               # pivot_longer(),
+             aes(yintercept = value,
+                 color=referencia_efeito)) +
+  scale_x_discrete(limits=c("contraste area","contraste frag","contraste contemp")) +
+  # coord_flip() +
+  geom_boxplot() +
+  geom_jitter(alpha=0.4) + 
+  labs(x="",y="contraste na estimativa da taxa U",
+       subtitle = "contraste area = (sem isolamento - idealizado) / idealizado  \ncontraste frag = (contemp - sem isolamento) / idealizado  \ncontraste contemp = (contemp - idealizado) / idealizado",
+       color="valor extremos:",
+       title="Os contrastes da frag per se podem ser significativamente negativos, mas em sua maioria são \nnulos ou positivos") +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        legend.margin=margin(-14, 0, 0, 0))
+l_p[[3]] <- df_contrastes |> 
+  ggplot(aes(x=efeito_area,y=efeito_frag)) + # ,color=p>=0.93
+  geom_abline(slope = 1,intercept = 0,color="darkred") +
+  geom_hline(data = df_contrastes |>
+               filter(p>=0.93) |> 
+               summarise(min = min(efeito_frag),
+                         max = max(efeito_frag)) |> 
+               pivot_longer(min:max),
+             aes(yintercept = value),color="darkgreen") +
+  geom_vline(data = df_contrastes |>
+               filter(p>=0.93) |> 
+               summarise(min = min(efeito_area),
+                         max = max(efeito_area)) |> 
+               pivot_longer(min:max),
+             aes(xintercept = value),color="darkgreen") +
+  geom_point(alpha=0.3) +
+  # geom_density_2d(aes(color=..level..)) +
+  # geom_density_2d_filled(alpha = 0.4) +
+  # geom_density_2d(colour = "black")
+  geom_hex(bins=70,alpha=0.4) +
+  scale_x_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  scale_y_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  labs(x="Área per se",y="Fragmentação per se",level="2D density") +
+  guides(fill = guide_legend(title="contagem")) +
+  scale_fill_continuous(type = "viridis") +
+  # scale_color_manual(name="p >= 0.93", values = setNames(c('darkgreen','black'),c(T, F))) +
+  theme_bw()
+l_p[[4]] <- df_contrastes |> 
+  ggplot(aes(x=p,efeito_conf)) +
+  geom_point(aes(color=k)) +
+  geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
+  labs(x="proporção de cobertura vegetal",y="contraste contemporâneo")
 ```
 
 __Figura 1__ Coeficiente de variação da taxa U estimada por MNEE. Cada ponto representa uma bateria de simulação com 10 réplicas cada; no eixo x há a média da taxa U e no eixo y o correspondente desvio padrão. Todas as retas passam pela origem, em preto a reta com inclinação de 1, em verde a com inclinação de 0.1, e em vermelho com inclinaçãao de 0.01. A maior parte dos pontos tem coeficiente de inclinação entre 10% e 1%
