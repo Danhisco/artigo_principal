@@ -46,7 +46,7 @@ source("source/f_PredIntGAMM.R")
 # load("dados/Rdata/l_md_GAMM.Rdata")
 # dados
 # df_resultMNEE
-df_resultMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_resultMNEE.csv")
+df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv")
 # df_ad
@@ -68,16 +68,68 @@ df_md <- df_ad |>
 # df_newdata
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv")
 # df_pred
-df_pred <- read_csv("dados/csv/resultados_MN/MNEE/df_pred.csv")
+# df_pred <- read_csv("dados/csv/resultados_MN/MNEE/df_pred.csv")
 # df_newdat <- expand.grid(p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
 #                          k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150))
 # df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,SiteCode,log_S_obs_z,log_Ntotal_z))))
 # write_csv(df_newdat,"dados/csv/df_newdataSADs.csv")
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
+  inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
+             by="SiteCode") |> 
+  rename(N=Ntotal,S=S_obs) |> 
+  mutate(across(N:S,log,.names="log.{.col}"),
+         across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
+         SiteCode = factor(SiteCode)) |> 
+  select(-c(N:log.S))
 ```
 
-# MNEE 
+# Contrastes
 
-## mapas contemporaneos
+## Efeito Área
+
+modelo cheio:
+?contraste ~ k * p * S * N?
+
+```{r GE contraste preditoras}
+df_contrastes |> 
+  pivot_longer(cols = c(k:p,log.N_z:log.S_z)) |> 
+  mutate(name = factor(name,levels=c("p","k","log.N_z","log.S_z"))) |> 
+  ggplot(aes(x=value,y=efeito_area)) +
+  geom_point() +
+  geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
+  facet_wrap(~name,ncol=2,scales="free_x")
+```
+
+
+```{r GAMM }
+f_gam <- function(df){
+  gam(value ~
+        s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+            ti(p_z,k_z) +
+            s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+            s(SiteCode,bs="re"),
+            data=df,method = "REML")
+}
+l_md.contrastes <- dlply(df_contrastes |> pivot_longer(starts_with("efeito_")),
+              "name",f_gam)
+save(l_md,file="dados/Rdata/l_md.contrastes.Rdata")
+print("k.check:")
+k.check(md)
+print("summary:")
+summary(md)
+gratia::appraise(md)
+gratia::draw(md)
+# predito para dados originais
+df_plot <- md$model
+df_plot$predito <- predict(md)
+
+# predito para novo conjunto de dados
+
+```
+
+
+
+# Logito
 
 ### Gráficos Exploratórios
 
