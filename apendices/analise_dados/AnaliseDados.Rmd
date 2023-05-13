@@ -45,23 +45,23 @@ source("source/f_PredIntGAMM.R")
 # load("dados/Rdata/md_MNEE.Rdata")
 # load("dados/Rdata/l_md_GAMM.Rdata")
 # dados
+load("dados/Rdata/l_md.contrastes.Rdata")
 # df_resultMNEE
 df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv")
 # df_ad
 f_z <- function(x) (x-mean(x))/sd(x)
-df_ad <- inner_join(x=distinct(select(df_resultMNEE,-(Ssd:Smax))),
+df_ad <- inner_join(x=distinct(select(df_resultados,-(Ssd:Smax))),
                     y=distinct(select(df_sim,-tif.path)),
                     by=c("SiteCode","k"),multiple="all") |>
   # escolhi remover depois do ajuste, para obter um melhor ajuste e depois excluir os valores
   # filter(k > 0.20) |> # figuras 5 e 6 apêndice Efeito de Escala
   mutate(k_cont = round(k,2),
-         k = factor(round(k,2),levels=round(k,2)[20:1]), 
          across(Ntotal:S_obs,log,.names="log_{.col}"),
          log_S.N = log_S_obs - log_Ntotal,
          across(c(p,k_cont,log_Ntotal:log_S.N),f_z,.names = "{.col}_z")) |>
-  select(-c(nCongDTS,effort_ha, Ntotal:S_obs))
+  select(-c(effort_ha, Ntotal:S_obs))
 # df_md
 df_md <- df_ad |> 
   mutate(SiteCode = factor(SiteCode))
@@ -150,9 +150,6 @@ df_plot |>
 ggsave("apendices/analise_dados/figuras/contraste_area_site_kGAMM.png",
        width = 7,
        height = 30)
-
-# predito para novo conjunto de dados
-
 ```
 
 __Figura X+1__ Tabela e Figuras  para avaliação de 
