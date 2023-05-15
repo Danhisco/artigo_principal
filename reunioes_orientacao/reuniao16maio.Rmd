@@ -57,7 +57,8 @@ df_md <- df_ad |>
   mutate(SiteCode = factor(SiteCode))
 # df_newdata
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
-  select(-starts_with("log_"))
+  select(-starts_with("log_")) |> 
+  rename(k_z = k_cont_z)
 # df_pred
 # df_pred <- read_csv("dados/csv/resultados_MN/MNEE/df_pred.csv")
 # df_newdat <- expand.grid(p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
@@ -72,6 +73,8 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |>
          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
          SiteCode = factor(SiteCode)) |> 
   select(-c(N:log.S))
+# df_intPred
+df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
 ```
 
 # Contrastes
@@ -90,6 +93,52 @@ df_contrastes |>
 ```
 
 __figura 1__ Contrastes em função das preditoras
+
+
+```{r}
+df_intPred |> head()
+
+# 
+df_plot <- df_pred |> 
+  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
+         k = k_cont_z*sd(df_ad$k_cont) + mean(df_ad$k_cont),
+         across(predito:Q_0.95,f_invlogit)) |> 
+  select(-contains("log"),-contains("_z"),-predito) |> 
+  pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
+# gráficos
+f_ggplot2 <- function(df,facets=2){
+  ggplot(df,aes(x=p,y=k,fill=pred)) +
+    geom_tile() +
+    scale_fill_distiller(palette = "Spectral",limits=c(0,1)) +
+    scale_y_reverse() +
+    theme_classic() +
+    coord_cartesian(expand = FALSE) +
+    labs(fill="Pr(Cong)") +
+    facet_wrap(~label,ncol = facets)
+}
+l_p <- list()
+l_p[[1]] <- df_plot |> 
+  filter(label == "Q_0.5") |>
+  f_ggplot2() + labs(x="")
+l_p[[2]] <- df_plot |> 
+  filter(label != "Q_0.5") |>
+  f_ggplot2()
+p <- ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+ggsave("apendices/analise_dados/figuras/fig5_predNewData_gammMNEEcont.png",p,
+       width = 6,
+       height = 10)\
+```
+
+
+__figura 2__ Intervalo de predição do GAMM para os contrastes, desconsiderando os efeitos parciais associados com o sítio de amostragem.
+
+
+```{r códigos para rodar o intervalo de predicao a posteriori}
+df_intPred <- ldply(l_md.contrastes,f_PredInt.GAMM)
+```
+
+
 
 ## Área per se
 
@@ -121,7 +170,7 @@ df_plot |>
   geom_point(alpha=0.5) +
   scale_x_reverse() +
   scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-  labs(title="Contraste Área",y="") +
+  labs(title="Contraste Área",y="",subtitle="eixo x reverso") +
   facet_wrap(~label,ncol=4,scales="free") +
   theme(strip.text=element_text(margin=margin()),
         panel.spacing=unit(0, "lines"))
