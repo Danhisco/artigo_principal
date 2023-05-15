@@ -98,7 +98,8 @@ __figura 1__ Contrastes em função das preditoras
 ```{r}
 df_plot <- df_intPred |> 
   mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
-         k = k_z*sd(df_ad$k) + mean(df_ad$k)) |> 
+         k = k_z*sd(df_ad$k) + mean(df_ad$k),
+         name=factor(name,levels=paste0("efeito_",c("area","frag","conf")))) |> 
   select(-contains("_z"),-predito) |> 
   pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
 df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
@@ -106,28 +107,32 @@ df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5
 f_plot <- function(df){
   f_ggplot <- function(df,facets=2){
   ggplot(df,aes(x=p,y=k,fill=pred)) +
-    geom_tile() +
-    scale_fill_distiller(palette = "Spectral",
-                         breaks=round(seq(range(df$pred)[1],range(df$pred)[2],length.out = 5),2),
-                         limits=c(NA,NA),
-                         n.breaks=5) +
-    # scale_fill_viridis_c(option = "D")  +
+    geom_raster() +
+    scale_fill_gradient2(low="green",
+                         mid="red",
+                         high="black",
+                         midpoint = 0.5,
+                         breaks=round(seq(range(df$pred)[1],range(df$pred)[2],length.out = 5)[1:4],2)) +
     scale_y_reverse() +
     theme_classic() +
+    guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
     coord_cartesian(expand = FALSE) +
     labs(fill=df$name[1]) +
     facet_wrap(~label,ncol = facets,scales="free")
   }
   l_p <- list()
-  l_p[[1]] <- df_plot |> 
+  l_p[[1]] <- df |> 
     filter(label == "Q_0.5") |>
     f_ggplot() + labs(x="")
-  l_p[[2]] <- df_plot |> 
+  l_p[[2]] <- df |> 
     filter(label != "Q_0.5") |>
     f_ggplot()
   ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
-
 }
+l_plot <- dlply(df_plot,"name",f_plot)
+grid.arrange(grobs=l_plot,ncol=3)
+
+
 
 l_p <- list()
 l_p[[1]] <- df_plot |> 
