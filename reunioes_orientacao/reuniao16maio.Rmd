@@ -96,27 +96,36 @@ __figura 1__ Contrastes em função das preditoras
 
 
 ```{r}
-df_intPred |> head()
-
-# 
-df_plot <- df_pred |> 
+df_plot <- df_intPred |> 
   mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
-         k = k_cont_z*sd(df_ad$k_cont) + mean(df_ad$k_cont),
-         across(predito:Q_0.95,f_invlogit)) |> 
-  select(-contains("log"),-contains("_z"),-predito) |> 
+         k = k_z*sd(df_ad$k) + mean(df_ad$k)) |> 
+  select(-contains("_z"),-predito) |> 
   pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
 df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
 # gráficos
-f_ggplot2 <- function(df,facets=2){
+f_plot <- function(df){
+  f_ggplot <- function(df,facets=2){
   ggplot(df,aes(x=p,y=k,fill=pred)) +
     geom_tile() +
-    scale_fill_distiller(palette = "Spectral",limits=c(0,1)) +
+    scale_fill_distiller(palette = "Spectral",limits=range(df$pred)) +
+    # scale_fill_viridis_c(option = "D")  +
     scale_y_reverse() +
     theme_classic() +
     coord_cartesian(expand = FALSE) +
-    labs(fill="Pr(Cong)") +
-    facet_wrap(~label,ncol = facets)
+    labs(fill=df$name[1]) +
+    facet_wrap(~label,ncol = facets,scales="free")
+  }
+  l_p <- list()
+  l_p[[1]] <- df_plot |> 
+    filter(label == "Q_0.5") |>
+    f_ggplot() + labs(x="")
+  l_p[[2]] <- df_plot |> 
+    filter(label != "Q_0.5") |>
+    f_ggplot()
+  ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+
 }
+
 l_p <- list()
 l_p[[1]] <- df_plot |> 
   filter(label == "Q_0.5") |>
