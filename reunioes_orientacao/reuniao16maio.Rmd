@@ -107,7 +107,10 @@ f_plot <- function(df){
   f_ggplot <- function(df,facets=2){
   ggplot(df,aes(x=p,y=k,fill=pred)) +
     geom_tile() +
-    scale_fill_distiller(palette = "Spectral",limits=range(df$pred)) +
+    scale_fill_distiller(palette = "Spectral",
+                         breaks=round(seq(range(df$pred)[1],range(df$pred)[2],length.out = 5),2),
+                         limits=c(NA,NA),
+                         n.breaks=5) +
     # scale_fill_viridis_c(option = "D")  +
     scale_y_reverse() +
     theme_classic() +
