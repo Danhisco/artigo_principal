@@ -6,7 +6,7 @@
 #
 # output: retorna um data frame com o intevalo de predição na escala da função de ligação e as preditoras
 f_PredInt.GAMM <- \(gamm,
-                    data = df_newpred, 
+                    data, 
                     v_exclude = c("s(k_cont_z,SiteCode)","s(SiteCode)"),
                     quantiles = c(0.05,0.25,0.5,0.75,0.95),
                     nsim=10000){
@@ -30,3 +30,4 @@ f_PredInt.GAMM <- \(gamm,
   names(df_pred) <- paste0("Q_",quantiles)
   cbind(data,df_pred)
 }
+df_pred <- f_PredInt.GAMM(data = df_newpred,gamm=gamm_MNEE)

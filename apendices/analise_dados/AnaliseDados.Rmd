@@ -46,6 +46,8 @@ source("source/f_PredIntGAMM.R")
 # load("dados/Rdata/l_md_GAMM.Rdata")
 # dados
 load("dados/Rdata/l_md.contrastes.Rdata")
+# df_p
+df_p <- read_csv("dados/df_p.csv")
 # df_resultMNEE
 df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
 # df_sim
@@ -66,7 +68,8 @@ df_ad <- inner_join(x=distinct(select(df_resultados,-(Ssd:Smax))),
 df_md <- df_ad |> 
   mutate(SiteCode = factor(SiteCode))
 # df_newdata
-df_newpred <- read_csv(file="dados/csv/df_newpred.csv")
+df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
+  select(-starts_with("log_"))
 # df_pred
 # df_pred <- read_csv("dados/csv/resultados_MN/MNEE/df_pred.csv")
 # df_newdat <- expand.grid(p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
@@ -176,6 +179,8 @@ df_md |>
   geom_point() +
   geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
   facet_wrap(~name,ncol=2,scales="free")
+
+df_md
 ```
 
 
@@ -507,27 +512,6 @@ Como seria Pr(Cong) caso log(N) e log(S) permanecem em seus valores médios e n�
 __Janelas de código 1__ Função da Estimativa do Intervalo de Predição a Posteriori
 
 ```{r função para predicao posteriori GAMM MNEE,eval=FALSE, echo=TRUE}
-f_PredInt.GAMM <- \(data, gamm, 
-                    quantiles = c(0.05,0.25,0.5,0.75,0.95),nsim=10000){
-  data$predito <- predict(gamm, type = "link",
-                          exclude = c("s(k_cont_z,SiteCode)","s(SiteCode)"),
-                          newdata=data,newdata.guaranteed=TRUE) |> as.vector()
-  beta <- coef(gamm)
-  V <- vcov.gam(gamm)
-  num_beta_vecs <- nsim
-  Cv <- chol(V)
-  set.seed(1)
-  nus <- rnorm(num_beta_vecs * length(beta))
-  beta_sims <- beta + t(Cv) %*% matrix(nus, nrow = length(beta), ncol = num_beta_vecs)
-  matrix_lprediction <- predict(gamm,type="lpmatrix",
-                                exclude = c("s(k_cont_z,SiteCode)","s(SiteCode)"),
-                                newdata=data,newdata.guaranteed=TRUE) 
-  predict_link <- matrix_lprediction %*% beta_sims
-  df_pred <- t(apply(predict_link,1,\(X) quantile(X,probs = quantiles))) %>% 
-    as.data.frame()
-  names(df_pred) <- paste0("Q_",quantiles)
-  cbind(data,df_pred)
-}
 df_pred <- f_PredInt.GAMM(data = df_newpred,gamm=gamm_MNEE)
 write_csv(df_pred,file="dados/csv/resultados_MN/MNEE/df_pred.csv")
 ```
