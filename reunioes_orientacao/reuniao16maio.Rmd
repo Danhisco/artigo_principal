@@ -11,7 +11,10 @@ editor_options:
 
 
 ```{r setup,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE, cache = TRUE)
+# ajuste das figuras
+fig.heigth_Site <- 32
+fig.width_Site <- 9
 # pacotes
 library(gratia)
 library(doMC)
@@ -39,7 +42,7 @@ load("dados/Rdata/l_md.contrastes.Rdata")
 df_p <- read_csv("dados/df_p.csv")
 # df_resultMNEE
 df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
-# df_sim
+# df_sim                            
 df_sim <- read_csv("dados/df_simulacao.csv")
 # df_ad
 f_z <- function(x) (x-mean(x))/sd(x)
@@ -80,8 +83,11 @@ df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
 
 # Contrastes
 
-```{r GE contrastes e possíveis preditoras}
-df_contrastes |> 
+## Gráficos Exploratórios
+
+```{r GE contrastes possíveis preditoras e a relacao entre elas,fig.height=6,fig.width=18}
+l_p <- list()
+l_p[[1]] <- df_contrastes |> 
   pivot_longer(cols = k:p,names_to = "pred_class",values_to = "pred_values") |> 
   mutate(pred_class = factor(pred_class,levels=c("p","k"))) |> 
   pivot_longer(cols = starts_with("efeito_"),names_to = "resp_class",values_to = "resp_values") |> 
@@ -91,12 +97,37 @@ df_contrastes |>
   geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
   labs(title="Contrastes ~ p e k") +
   facet_grid(pred_class~resp_class,scales="free")
+l_p[[2]] <- df_contrastes |> 
+  ggplot(aes(x=efeito_area,y=efeito_frag)) + # ,color=p>=0.93
+  geom_abline(slope = 1,intercept = 0,color="darkred") +
+  geom_hline(data = df_contrastes |>
+               filter(p>=0.93) |> 
+               summarise(min = min(efeito_frag),
+                         max = max(efeito_frag)) |> 
+               pivot_longer(min:max),
+             aes(yintercept = value),color="darkgreen") +
+  geom_vline(data = df_contrastes |>
+               filter(p>=0.93) |> 
+               summarise(min = min(efeito_area),
+                         max = max(efeito_area)) |> 
+               pivot_longer(min:max),
+             aes(xintercept = value),color="darkgreen") +
+  geom_point(alpha=0.3) +
+  geom_hex(bins=70,alpha=0.4) +
+  scale_x_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  scale_y_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  labs(x="Área per se",y="Fragmentação per se",title="Frag. per se ~ Área per se") +
+  guides(fill = guide_legend(title="contagem")) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw()
+grid.arrange(grobs=l_p,ncol=2)
 ```
 
 __figura 1__ Contrastes em função das preditoras
 
+## Gráficos Finais: Intervalo de Predição
 
-```{r intervalo de predição para os contrastes segundo estimado pelo GAMM}
+```{r intervalo de predição para os contrastes segundo estimado pelo GAMM,fig.height=8,fig.width=12}
 df_plot <- df_intPred |> 
   mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
          k = k_z*sd(df_ad$k) + mean(df_ad$k),
@@ -151,15 +182,46 @@ ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
 __figura 2__ Intervalo de predição do GAMM para os contrastes, desconsiderando os efeitos parciais associados com o sítio de amostragem.
 
 
-```{r códigos para rodar o intervalo de predicao a posteriori,eval=F,include=F}
-df_intPred <- ldply(l_md.contrastes,f_PredInt.GAMM)
+__Janela de Código 1__ Código usado para obter o Intervalo de Predição. Adaptado de https://fromthebottomoftheheap.net/2016/12/15/simultaneous-interval-revisited/
+
+
+```{r f_PredInt.GAM, echo=T, eval=FALSE}
+f_PredInt.GAMM <- \(gamm,
+                    data = df_newpred, 
+                    v_exclude = c("s(k_z,SiteCode)","s(SiteCode)"),
+                    quantiles = c(0.05,0.25,0.5,0.75,0.95),
+                    nsim=10000){
+  data$predito <- predict(gamm, type = "link",
+                          exclude = v_exclude,
+                          newdata=data,
+                          newdata.guaranteed=TRUE) |> as.vector()
+  beta <- coef(gamm)
+  V <- vcov.gam(gamm)
+  num_beta_vecs <- nsim
+  Cv <- chol(V)
+  set.seed(1)
+  nus <- rnorm(num_beta_vecs * length(beta))
+  beta_sims <- beta + t(Cv) %*% matrix(nus, nrow = length(beta), ncol = num_beta_vecs)
+  matrix_lprediction <- predict(gamm,type="lpmatrix",
+                                exclude = c("s(k_cont_z,SiteCode)","s(SiteCode)"),
+                                newdata=data,newdata.guaranteed=TRUE) 
+  predict_link <- matrix_lprediction %*% beta_sims
+  df_pred <- t(apply(predict_link,1,\(X) quantile(X,probs = quantiles))) %>% 
+    as.data.frame()
+  names(df_pred) <- paste0("Q_",quantiles)
+  cbind(data,df_pred)
+}
 ```
 
 
 
-## Área per se
+```{r códigos para rodar o intervalo de predicao a posteriori,eval=F,include=F}
+df_intPred <- ldply(l_md.contrastes,f_PredInt.GAMM)
+```
 
-### gam e validação
+## validação dos GAMMs
+
+### Área per se
 
 ```{r efeito area gam e validacao}
 i <- "efeito_area"
@@ -172,7 +234,7 @@ summary(md)
 gratia::appraise(md)
 gratia::draw(md)
 ```
-```{r predito para dados originais,fig.height=18,fig.width=15}
+```{r predito para dados originais,fig.height=fig.heigth_Site,fig.width=fig.width_Site}
 df_plot <- cbind(md$model,
                  predict(md,se.fit=TRUE)) |> 
   inner_join(x=df_p,"SiteCode") |> 
@@ -181,6 +243,7 @@ df_plot <- cbind(md$model,
 df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 df_plot |> 
   ggplot(aes(x=k_z,y=value)) +
+  geom_hline(yintercept = 0) +
   geom_line(aes(y=fit),color="darkred") +
   geom_line(aes(y=fit+se.fit)) +
   geom_line(aes(y=fit-se.fit)) +
@@ -196,7 +259,7 @@ ggsave(paste0("apendices/analise_dados/figuras/",i,"_site_kGAMM.png"),
        height = 30)  
 ```
 
-## Frag per se
+### Frag per se
 
 ```{r efeito frag gam e validacao}
 i <- "efeito_frag"
@@ -209,7 +272,7 @@ summary(md)
 gratia::appraise(md)
 gratia::draw(md)
 ```
-```{r efeito frag predito para dados originais,fig.height=18,fig.width=15}
+```{r efeito frag predito para dados originais,fig.height=fig.heigth_Site,fig.width=fig.width_Site}
 df_plot <- cbind(md$model,
                  predict(md,se.fit=TRUE)) |> 
   inner_join(x=df_p,"SiteCode") |> 
@@ -235,7 +298,7 @@ ggsave(paste0("apendices/analise_dados/figuras/",i,"_site_kGAMM.png"),
 ```
 
 
-## Contemporâneo
+### Contemporâneo
 
 ```{r efeito conf gam e validacao}
 i <- "efeito_conf"
@@ -248,7 +311,7 @@ summary(md)
 gratia::appraise(md)
 gratia::draw(md)
 ```
-```{r efeito conf predito para dados originais,fig.height=18,fig.width=15}
+```{r efeito conf predito para dados originais,fig.height=fig.heigth_Site,fig.width=fig.width_Site}
 df_plot <- cbind(md$model,
                  predict(md,se.fit=TRUE)) |> 
   inner_join(x=df_p,"SiteCode") |> 
