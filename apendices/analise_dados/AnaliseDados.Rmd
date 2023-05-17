@@ -90,10 +90,9 @@ df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |>
 
 # Contrastes
 
-## Efeito Área
-
-```{r GE efeito área e as possíveis 4 preditoras}
-df_contrastes |> 
+```{r GE contrastes possíveis preditoras e a relacao entre elas,fig.height=6,fig.width=18}
+l_p <- list()
+l_p[[1]] <- df_contrastes |> 
   pivot_longer(cols = k:p,names_to = "pred_class",values_to = "pred_values") |> 
   mutate(pred_class = factor(pred_class,levels=c("p","k"))) |> 
   pivot_longer(cols = starts_with("efeito_"),names_to = "resp_class",values_to = "resp_values") |> 
@@ -101,16 +100,41 @@ df_contrastes |>
   ggplot(aes(x=pred_values,y=resp_values)) +
   geom_point(alpha=0.4) +
   geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
-  labs(title="p e k parecem ser suficientes para descrever os contrastes") +
+  labs(title="Contrastes ~ p e k") +
   facet_grid(pred_class~resp_class,scales="free")
+l_p[[2]] <- df_contrastes |> 
+  ggplot(aes(x=efeito_area,y=efeito_frag)) + # ,color=p>=0.93
+  geom_abline(slope = 1,intercept = 0,color="darkred") +
+  geom_hline(data = df_contrastes |>
+               filter(p>=0.93) |> 
+               summarise(min = min(efeito_frag),
+                         max = max(efeito_frag)) |> 
+               pivot_longer(min:max),
+             aes(yintercept = value),color="darkgreen") +
+  geom_vline(data = df_contrastes |>
+               filter(p>=0.93) |> 
+               summarise(min = min(efeito_area),
+                         max = max(efeito_area)) |> 
+               pivot_longer(min:max),
+             aes(xintercept = value),color="darkgreen") +
+  geom_point(alpha=0.3) +
+  geom_hex(bins=70,alpha=0.4) +
+  scale_x_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  scale_y_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  labs(x="Área per se",y="Fragmentação per se",title="Frag. per se ~ Área per se") +
+  guides(fill = guide_legend(title="contagem")) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw()
+grid.arrange(grobs=l_p,ncol=2)
 ```
 
-__Figura X__. Gráficos exploratórios das possíveis preditoras para descrever o contraste de área
+__figura 1__ Contrastes em função das preditoras
 
+### GAMM
 
 __Janela de código X__ GAMM usado para ajustar os contrastes 
 
-```{r GAMM contrastes, echo=T}
+```{r GAMM contrastes, echo=T,eval=F}
 f_gam <- function(df){
   gam(value ~
         s(k_z,bs = "cr") + s(p_z,bs = "cr") +
@@ -120,49 +144,104 @@ f_gam <- function(df){
             data=df,method = "REML")
 }
 l_md.contrastes <- dlply(df_contrastes |> pivot_longer(starts_with("efeito_")),
-              "name",f_gam)
+                         "name",f_gam)
 save(l_md.contrastes,file="dados/Rdata/l_md.contrastes.Rdata")
 ```
 
+### Intervalo de Predição do Efeito Médio de p e k
 
-```{r efeito de área SI avaliacao modelo}
-for(i in length(l_md.contrastes)){
-md <- l_md.contrastes[[i]]
-print("k.check:")
-k.check(md)
-print("summary:")
-summary(md)
-gratia::appraise(md)
-gratia::draw(md)
-# predito para dados originais
-df_plot <- cbind(md$model,
-                 predict(md,se.fit=TRUE)) |> 
-  inner_join(x=df_p,"SiteCode") |> 
-  arrange(p) |> 
-  mutate(label = paste0(SiteCode,", p=",round(p,2)))
-df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
-df_plot |> 
-  ggplot(aes(x=k_z,y=value)) +
-  geom_line(aes(y=fit),color="darkred") +
-  geom_line(aes(y=fit+se.fit)) +
-  geom_line(aes(y=fit-se.fit)) +
-  geom_point(alpha=0.5) +
-  scale_x_reverse() +
-  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-  labs(title="Contraste Área",y="") +
-  facet_wrap(~label,ncol=4,scales="free") +
-  theme(strip.text=element_text(margin=margin()),
-        panel.spacing=unit(0, "lines"))
-ggsave(paste0("apendices/analise_dados/figuras/",names(l_md.contrastes[[i]]),"_site_kGAMM.png"),
-       width = 7,
-       height = 30)  
+```{r intervalo de predição para os contrastes segundo estimado pelo GAMM,fig.height=8,fig.width=12}
+df_plot <- df_intPred |> 
+  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
+         k = k_z*sd(df_ad$k) + mean(df_ad$k),
+         name=factor(name,levels=paste0("efeito_",c("area","frag","conf")))) |> 
+  select(-contains("_z"),-predito) |> 
+  pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
+# gráficos
+v_range <- range(df_plot$pred)
+v_breaks1 <- c(-0.2,0,0.2,0.5,1)
+f_plot <- function(df){
+  f_ggplot <- function(df,facets=2){
+  ggplot(df,aes(x=p,y=k,z=pred,fill=pred)) +
+    geom_raster() +
+    geom_contour(aes(z=pred),
+                 size=0.5,color="darkblue",
+                 breaks=v_breaks1) +
+    geom_text_contour(aes(z=pred),
+                      breaks=v_breaks1,
+                      label.placer = label_placer_flattest()) +
+    scale_fill_gradient2(low="green",
+                         mid="red",
+                         high="black",
+                         midpoint = 0.5,
+                         limits=v_range,
+                         # round(seq(v_range[1],v_range[2],length.out = 5)[1:4],2)
+                         breaks=v_breaks1) +
+    scale_y_reverse() +
+    theme_classic() +
+    guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
+    coord_cartesian(expand = FALSE) +
+    labs(fill=df$name[1]) +
+    facet_wrap(~label,ncol = facets,scales="free")
+  }
+  l_p <- list()
+  l_p[[1]] <- df |> 
+    filter(label == "Q_0.5") |>
+    f_ggplot() + labs(x="")
+  l_p[[2]] <- df |> 
+    filter(label != "Q_0.5") |>
+    f_ggplot()
+  ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+}
+l_plot <- dlply(df_plot,"name",f_plot)
+p <- grid.arrange(grobs=l_plot,ncol=3)
+ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
+       width = 13,
+       height = 9)
+```
+
+
+__figura 2__ Intervalo de predição do GAMM para os contrastes, desconsiderando os efeitos parciais associados com o sítio de amostragem.
+
+
+__Janela de Código 2__ Código usado para obter o Intervalo de Predição. Adaptado de https://fromthebottomoftheheap.net/2016/12/15/simultaneous-interval-revisited/
+
+
+```{r f_PredInt.GAM, echo=T, eval=FALSE}
+f_PredInt.GAMM <- \(gamm,
+                    data = df_newpred, 
+                    v_exclude = c("s(k_z,SiteCode)","s(SiteCode)"),
+                    quantiles = c(0.05,0.25,0.5,0.75,0.95),
+                    nsim=10000){
+  data$predito <- predict(gamm, type = "link",
+                          exclude = v_exclude,
+                          newdata=data,
+                          newdata.guaranteed=TRUE) |> as.vector()
+  beta <- coef(gamm)
+  V <- vcov.gam(gamm)
+  num_beta_vecs <- nsim
+  Cv <- chol(V)
+  set.seed(1)
+  nus <- rnorm(num_beta_vecs * length(beta))
+  beta_sims <- beta + t(Cv) %*% matrix(nus, nrow = length(beta), ncol = num_beta_vecs)
+  matrix_lprediction <- predict(gamm,type="lpmatrix",
+                                exclude = c("s(k_cont_z,SiteCode)","s(SiteCode)"),
+                                newdata=data,newdata.guaranteed=TRUE) 
+  predict_link <- matrix_lprediction %*% beta_sims
+  df_pred <- t(apply(predict_link,1,\(X) quantile(X,probs = quantiles))) %>% 
+    as.data.frame()
+  names(df_pred) <- paste0("Q_",quantiles)
+  cbind(data,df_pred)
 }
 ```
 
-__Figura X+1__ Tabela e Figuras  para avaliação de 
-
 
 # logOR contemporâneo / sem frag
+
+
+
+
 
 ### GE
 
@@ -588,6 +667,65 @@ fazer um subset dos dados em que log(S).z e log(N).z c [-2,2] para avaliar se h�
 
 
 # Support Information
+
+## Diagnóstico Contrastes
+
+```{r efeito de área SI avaliacao modelo}
+for(i in length(l_md.contrastes)){
+names(l_md.contrastes)[i]
+md <- l_md.contrastes[[i]]
+print("k.check:")
+k.check(md)
+print("summary:")
+summary(md)
+gratia::appraise(md)
+gratia::draw(md)
+# predito para dados originais
+df_plot <- cbind(md$model,
+                 predict(md,se.fit=TRUE)) |> 
+  inner_join(x=df_p,"SiteCode") |> 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k_z,y=value)) +
+  geom_line(aes(y=fit),color="darkred") +
+  geom_line(aes(y=fit+se.fit)) +
+  geom_line(aes(y=fit-se.fit)) +
+  geom_point(alpha=0.5) +
+  scale_x_reverse() +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  labs(title="Contraste Área",y="") +
+  facet_wrap(~label,ncol=4,scales="free") +
+  theme(strip.text=element_text(margin=margin()),
+        panel.spacing=unit(0, "lines"))
+ggsave(paste0("apendices/analise_dados/figuras/",names(l_md.contrastes[[i]]),"_site_kGAMM.png"),
+       width = 7,
+       height = 30)  
+}
+```
+
+__Figura X+1__ Tabela e Figuras  para avaliação de 
+
+
+
+
+
+#### Antigo avaliar
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Associação estatística entre variáveis de exposição (N e S) e p
 
