@@ -78,6 +78,7 @@ df_md <- df_ad |>
   select(-land_type,-propCong,-c(p:k),-c(efeito_area:cubeR_efeito_conf)) |> 
   rename(logOR = logOR_value,nSADcong=nCongKS)
   # df_newdata
+write_csv(df_md,"dados/csv/df_md_logOR.csv")
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
   select(-starts_with("log_"))
 # df_pred
@@ -256,12 +257,12 @@ df_md |>
 f_gam_logOR <- function(df){
   l_md <- list()
   l_md[[1]] <- gam(logOR ~ 
-                     te(p_z,k_z) +
-                     t2(p_z,k_z,SiteCode,bs=c("cr","cr","re"),full=TRUE),
+                     te(p_z,k_z,k=15) +
+                     t2(p_z,k_z,SiteCode,k=15,bs=c("cr","cr","re"),full=TRUE),
                    data=df, method="REML")
   l_md[[2]] <- gam(logOR ~ 
-                     te(cubeR_efeito_area_z,cubeR_efeito_frag_z) +
-                     t2(cubeR_efeito_area_z,cubeR_efeito_frag_z,SiteCode,bs=c("cr","cr","re"),full=TRUE),
+                     te(cubeR_efeito_area_z,cubeR_efeito_frag_z,k=15) +
+                     t2(cubeR_efeito_area_z,cubeR_efeito_frag_z,SiteCode,k=15,bs=c("cr","cr","re"),full=TRUE),
                    data=df, method="REML")
   names(l_md) <- c("~ f(p,k)","~ f(efeito area, efeito frag)")
   return(l_md)
