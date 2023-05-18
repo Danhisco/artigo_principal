@@ -56,9 +56,7 @@ df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
 df_sim <- read_csv("dados/df_simulacao.csv")
 # df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
 f_z <- function(x) (x-mean(x))/sd(x)
-df_ad <- inner_join(y=distinct(select(df_resultados,-(Smed:Smax))),
-                    x=distinct(select(df_dados_disponiveis,SiteCode,forest_succession)),
-                    by="SiteCode") |>
+df_ad <- distinct(select(df_resultados,-(Smed:Smax))) |>
   arrange(p) |> 
   mutate(across(p:k,f_z,.names = "{.col}_z"))
 # df_contrastes: contrastes por sítio e grau de limitação de dispersão
@@ -73,10 +71,12 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |>
 # df_md: dados necessários 
 df_md <- df_ad |> 
   inner_join(select(df_contrastes,SiteCode,k,starts_with("efeito_")),by=c("SiteCode","k")) |> 
-  filter(logOR_pair == "cont.non_frag") |> 
+  # filter(logOR_pair == "cont.non_frag") |> 
   mutate(SiteCode = factor(SiteCode),
-         across(starts_with("efeito"),~sign(.x) * abs(.x)^(1/3),.names = "cubeR_{.col}")) |> 
-  select(-land_type,-propCong,-logOR_pair,-p,-k)
+         across(starts_with("efeito"),~sign(.x) * abs(.x)^(1/3),.names = "cubeR_{.col}"),
+         across(contains("efeito"),f_z,.names="{.col}_z")) |>
+  select(-land_type,-propCong,-c(p:k),-c(efeito_area:cubeR_efeito_conf)) |> 
+  rename(logOR = logOR_value,nSADcong=nCongKS)
   # df_newdata
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
   select(-starts_with("log_"))
@@ -237,33 +237,40 @@ f_PredInt.GAMM <- \(gamm,
 ```
 
 
-# logOR contemporâneo / sem frag
-
-
-
-
-
-### GE
+# logOR
 
 ```{r GE logOR contem sem fra}
-df_md <- df_resultados |> filter(logOR_pair == "cont.non_frag") |> 
-  inner_join(x=df_contrastes |> 
-               select(SiteCode:k,efeito_area:efeito_frag),
-             by=c("SiteCode","k")) |> 
-  mutate(SiteCode = factor(SiteCode),
-         across(c(p:k,efeito_area:efeito_frag),f_z,.names = "{.col}_z")) |> 
-  select(SiteCode,contains("_z"),logOR_value) |> 
-  rename(logOR = logOR_value)
 df_md |> 
-  pivot_longer(p_z:k_z) |> 
+  filter(logOR_pair == "cont.non_frag") |> 
+  pivot_longer(c(p_z:efeito_frag_z,cubeR_efeito_area_z:cubeR_efeito_frag_z)) |> 
+  mutate(name = factor(name,levels=names(df_md)[c(5:8,10:11)])) |> 
   ggplot(aes(x=value,y=logOR)) +
-  geom_point() +
-  geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
+  geom_point(alpha=0.4) +
+  geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred",linewidth=1.5) +
   facet_wrap(~name,ncol=2,scales="free")
-
-df_md
 ```
 
+### GAMM
+
+```{r}
+f_gam_logOR <- function(df){
+  l_md <- list()
+  l_md[[1]] <- gam(logOR ~ 
+                     te(p_z,k_z) +
+                     t2(p_z,k_z,SiteCode,bs=c("cr","cr","re"),full=TRUE),
+                   data=df, method="REML")
+  l_md[[2]] <- gam(logOR ~ 
+                     te(cubeR_efeito_area_z,cubeR_efeito_frag_z) +
+                     t2(cubeR_efeito_area_z,cubeR_efeito_frag_z,SiteCode,bs=c("cr","cr","re"),full=TRUE),
+                   data=df, method="REML")
+  names(l_md) <- c("~ f(p,k)","~ f(efeito area, efeito frag)")
+  return(l_md)
+}
+l_md.logOR <- df_md |> 
+  filter(logOR_pair == "cont.non_frag") |> 
+  f_gam_logOR()
+save(l_md.logOR,file="dados/Rdata/l_md.logOR.Rdata")
+```
 
 
 
