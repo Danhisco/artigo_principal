@@ -46,6 +46,7 @@ source("source/f_PredIntGAMM.R")
 # load("dados/Rdata/l_md_GAMM.Rdata")
 # dados
 load("dados/Rdata/l_md.contrastes.Rdata")
+load("dados/Rdata/l_md.logOR.Rdata")
 # df_dados_disponiveis
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
 # df_p
@@ -259,12 +260,12 @@ f_gam_logOR <- function(df){
   l_md <- list()
   l_md[[1]] <- gam(logOR ~ 
                      s(k_z,bs = "cr") + s(p_z,bs = "cr") + ti(p_z,k_z) +
-                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                     s(SiteCode,bs="re"),
+                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")),
                    data=df, method="REML")
   l_md[[2]] <- gam(logOR ~ 
-                     te(cubeR_efeito_area_z,cubeR_efeito_frag_z,k=15) +
-                     t2(cubeR_efeito_area_z,cubeR_efeito_frag_z,SiteCode,k=15,bs=c("cr","cr","re"),full=TRUE),
+                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") + ti(r3_area_z,r3_frag_z) +
+                     s(r3_area_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(r3_frag_z, SiteCode, bs="fs",xt=list(bs="cr")),
                    data=df, method="REML")
   names(l_md) <- c("~ f(p,k)","~ f(efeito area, efeito frag)")
   return(l_md)
