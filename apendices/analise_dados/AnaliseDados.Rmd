@@ -73,12 +73,11 @@ df_md <- df_ad |>
   inner_join(select(df_contrastes,SiteCode,k,starts_with("efeito_")),by=c("SiteCode","k")) |> 
   # filter(logOR_pair == "cont.non_frag") |> 
   mutate(SiteCode = factor(SiteCode),
-         across(starts_with("efeito"),~sign(.x) * abs(.x)^(1/3),.names = "cubeR_{.col}"),
+         across(starts_with("efeito"),~sign(.x) * abs(.x)^(1/3),.names = "r3_{.col}"),
          across(contains("efeito"),f_z,.names="{.col}_z")) |>
-  select(-land_type,-propCong,-c(p:k),-c(efeito_area:cubeR_efeito_conf)) |> 
   rename(logOR = logOR_value,nSADcong=nCongKS) |> 
-  rename_with(.fn = \(x) str_replace(x,pattern = "cubeR_efeito_",replacement = "r3_"),
-              .cols = starts_with("cubeR"))
+  rename_with(.fn = \(x) str_remove(x,pattern = "efeito_")) |> 
+  select(-land_type,-propCong,-c(p:k),-c(area:r3_conf))
   # df_newdata
 write_csv(df_md,"dados/csv/df_md_logOR.csv")
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
