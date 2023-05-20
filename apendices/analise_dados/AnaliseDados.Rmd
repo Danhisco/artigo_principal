@@ -239,13 +239,22 @@ f_PredInt.GAMM <- \(gamm,
 }
 ```
 
+### Fragmentação per se ~ Área per se
+
+```{r frag per se em funcao de area per se}
+md_frag_f.area <- gam(r3_frag_z ~ 
+                        s(r3_area_z,bs="cr") + s(r3_area_z,SiteCode,bs="fs",xt=list(bs="cr")),
+                      data=filter(df_md,logOR_pair == "cont.non_frag"))
+```
+
+
 
 # logOR
 
-```{r GE logOR contem sem fra}
+```{r GE logOR contemp em relacao ao sem frag}
 df_md |> 
   filter(logOR_pair == "cont.non_frag") |> 
-  pivot_longer(c(p_z:efeito_frag_z,cubeR_efeito_area_z:cubeR_efeito_frag_z)) |> 
+  pivot_longer(c(p_z:frag_z,r3_area_z:r3_frag_z)) |> 
   mutate(name = factor(name,levels=names(df_md)[c(5:8,10:11)])) |> 
   ggplot(aes(x=value,y=logOR)) +
   geom_point(alpha=0.4) +
@@ -255,25 +264,106 @@ df_md |>
 
 ### GAMM
 
-```{r}
+```{r logOR GAMM candidatas,echo=T,eval=F}
 f_gam_logOR <- function(df){
   l_md <- list()
   l_md[[1]] <- gam(logOR ~ 
                      s(k_z,bs = "cr") + s(p_z,bs = "cr") + ti(p_z,k_z) +
-                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")),
+                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
                    data=df, method="REML")
   l_md[[2]] <- gam(logOR ~ 
                      s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") + ti(r3_area_z,r3_frag_z) +
-                     s(r3_area_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                     s(r3_frag_z, SiteCode, bs="fs",xt=list(bs="cr")),
+                     s(r3_frag_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
                    data=df, method="REML")
-  names(l_md) <- c("~ f(p,k)","~ f(efeito area, efeito frag)")
-  return(l_md)
+  l_md[[3]] <- gam(logOR ~ 
+                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") + ti(r3_area_z,r3_frag_z) +
+                     s(r3_area_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
+                   data=df, method="REML")
+  l_md[[4]] <- gam(logOR ~ 
+                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") + ti(r3_area_z,r3_frag_z) +
+                     s(SiteCode,bs="re"),
+                   data=df, method="REML")
+  l_md[[5]] <- gam(logOR ~ 
+                     s(r3_frag_z,bs = "cr") +
+                     s(r3_frag_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
+                   data=df, method="REML")
+  l_md[[6]] <- gam(logOR ~ 
+                     s(r3_area_z,bs = "cr") +
+                     s(r3_area_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
+                   data=df, method="REML")
+  l_md[[7]] <- gam(logOR ~ 
+                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") +
+                     s(r3_frag_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
+                   data=df, method="REML")
+  l_md[[8]] <- gam(logOR ~ 
+                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") +
+                     s(r3_area_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
+                   data=df, method="REML")
+  names(l_md) <- c("~ f(p, k, k|Site)",
+                   "~ f(area, frag, frag|Site)","~ f(area, frag, area|Site)","~ f(area, frag, 1|Site)",
+                   "~ f(frag, frag|Site)","~ f(area, area|Site)",
+                   "~ f(area,frag,frag|Site - ti","~ f(area,frag,area|Site - ti")
+  return(l_md) 
 }
 l_md.logOR <- df_md |> 
   filter(logOR_pair == "cont.non_frag") |> 
   f_gam_logOR()
-save(l_md.logOR,file="dados/Rdata/l_md.logOR.Rdata")
+```
+
+__Tabela X__ O peso de evidência (AICc) e a deviance explained dos GAMM usados para descrever o log OR da chance de congruência da SAD predita quando se pressupõe a paisagem contemporânea em relação à paisagem sem isolamento estrutural
+
+```{r tabela de selecao dos GAMM logOR}
+df_aicctab <- AICctab(l_md.logOR,weights=TRUE) |> as.data.frame()
+df_aicctab$modelo <- row.names(df_aicctab)
+row.names(df_aicctab) <- NULL
+df_dev.exp <- ldply(l_md.logOR,.fun = \(x) summary(x)$dev.expl)
+names(df_dev.exp) <- c("modelo","dev.expl")
+df_tabelaSelecao <- df_dev.exp |> 
+  inner_join(y=df_aicctab,"modelo") |> 
+  arrange(dAICc) |> 
+  select(modelo,dAICc:weight,dev.expl)
+df_tabelaSelecao
+```
+
+
+```{r logOR GAMM}
+md_logOR <- l_md.logOR[[df_tabelaSelecao$modelo[1]]] 
+k.check(md_logOR)
+summary_md <- summary(md_logOR)
+gratia::appraise(md_logOR)
+gratia::draw(md_logOR)
+#
+f_predSitio1d <- \(md,
+                   v_path="apendices/analise_dados/figuras/logORcont.non_frag.png"){
+  df_plot <- cbind(md$model,
+                   predict(md,se.fit=TRUE)) |> 
+    inner_join(x=df_p,"SiteCode") |>
+    arrange(p) |> 
+    mutate(label = paste0(SiteCode, ", p =",round(p,2)))
+  df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+  df_plot |> 
+    ggplot(aes(x=r3_frag_z,y=logOR)) +
+    geom_hline(yintercept = 0) +
+    geom_line(aes(y=fit),color="darkred") +
+    geom_line(aes(y=fit+se.fit)) +
+    geom_line(aes(y=fit-se.fit)) +
+    geom_point(alpha=0.5) +
+    scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+    labs(title="logOR(contemporaneo / sem isolamento estrutural)",y="") +
+    facet_wrap(~label,ncol=4,scales="free") +
+    theme(strip.text=element_text(margin=margin()),
+          panel.spacing=unit(0, "lines"))
+  ggsave(v_path,
+         width = 7,
+         height = 30)
+}
 ```
 
 
