@@ -13,42 +13,42 @@ df_md <- read_csv("dados/csv/df_md_logOR.csv") |>
 f_gam_logOR <- function(df){
   l_md <- list()
   l_md[[1]] <- gam(logOR ~ 
-                     s(k_z,bs = "cr") + s(p_z,bs = "cr") + ti(p_z,k_z) +
-                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(k_z,bs = "tp") + s(p_z,bs = "tp") + ti(p_z,k_z) +
+                     s(k_z, SiteCode, bs="fs",xt=list(bs="tp")) +
                      s(SiteCode,bs="re"),
                    data=df, method="REML")
-  l_md[[2]] <- gam(logOR ~ 
-                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") + ti(r3_area_z,r3_frag_z) +
-                     s(r3_frag_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+  md_logOR <- gam(logOR ~ 
+                     s(area_z,bs = "tp") + s(frag_z,bs = "tp") + ti(area_z,frag_z,bs=c("tp","tp")) +
+                     s(frag_z, SiteCode, bs="fs",xt=list(bs="tp")) +
                      s(SiteCode,bs="re"),
                    data=df, method="REML")
   l_md[[3]] <- gam(logOR ~ 
-                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") + ti(r3_area_z,r3_frag_z) +
-                     s(r3_area_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(area_z,bs = "tp") + s(frag_z,bs = "tp") + ti(area_z,frag_z) +
+                     s(area_z, SiteCode, bs="fs",xt=list(bs="tp")) +
                      s(SiteCode,bs="re"),
                    data=df, method="REML")
   l_md[[4]] <- gam(logOR ~ 
-                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") + ti(r3_area_z,r3_frag_z) +
+                     s(area_z,bs = "tp") + s(frag_z,bs = "tp") + ti(area_z,frag_z) +
                      s(SiteCode,bs="re"),
                    data=df, method="REML")
   l_md[[5]] <- gam(logOR ~ 
-                     s(r3_frag_z,bs = "cr") +
-                     s(r3_frag_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(frag_z,bs = "tp") +
+                     s(frag_z, SiteCode, bs="fs",xt=list(bs="tp")) +
                      s(SiteCode,bs="re"),
                    data=df, method="REML")
   l_md[[6]] <- gam(logOR ~ 
-                     s(r3_area_z,bs = "cr") +
-                     s(r3_area_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(area_z,bs = "tp") +
+                     s(area_z, SiteCode, bs="fs",xt=list(bs="tp")) +
                      s(SiteCode,bs="re"),
                    data=df, method="REML")
   l_md[[7]] <- gam(logOR ~ 
-                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") +
-                     s(r3_frag_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(area_z,bs = "tp") + s(frag_z,bs = "tp") +
+                     s(frag_z, SiteCode, bs="fs",xt=list(bs="tp")) +
                      s(SiteCode,bs="re"),
                    data=df, method="REML")
   l_md[[8]] <- gam(logOR ~ 
-                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") +
-                     s(r3_area_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(area_z,bs = "tp") + s(frag_z,bs = "tp") +
+                     s(area_z, SiteCode, bs="fs",xt=list(bs="tp")) +
                      s(SiteCode,bs="re"),
                    data=df, method="REML")
   names(l_md) <- c("~ f(p, k, k|Site)",
@@ -57,7 +57,7 @@ f_gam_logOR <- function(df){
                    "~ f(area,frag,frag|Site - ti","~ f(area,frag,area|Site - ti")
   return(l_md) 
 }
-l_md.logOR <- df_md |> 
+l_md.logOR_r3remov <- df_md |> 
   filter(logOR_pair == "cont.non_frag") |> 
   f_gam_logOR()
-save(l_md.logOR,file="dados/Rdata/l_md.logOR.Rdata")
+save(l_md.logOR_r3remov,file="dados/Rdata/l_md.logOR_r3removido.Rdata")
