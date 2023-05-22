@@ -48,6 +48,7 @@ source("source/f_PredIntGAMM.R")
 load("dados/Rdata/l_md.contrastes.Rdata")
 load("dados/Rdata/l_md.logOR.Rdata")
 load("dados/Rdata/l_md.logOR_tp.Rdata")
+load("dados/Rdata/l_md.logOR_tp_r3removido.Rdata")
 # df_dados_disponiveis
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
 # df_p
@@ -321,41 +322,43 @@ l_md.logOR <- df_md |>
 __Tabela X__ O peso de evidência (AICc) e a deviance explained dos GAMM usados para descrever o log OR da chance de congruência da SAD predita quando se pressupõe a paisagem contemporânea em relação à paisagem sem isolamento estrutural
 
 ```{r tabela de selecao dos GAMM logOR}
-df_aicctab <- AICctab(l_md.logOR,weights=TRUE) |> as.data.frame()
-df_aicctab$modelo <- row.names(df_aicctab)
-row.names(df_aicctab) <- NULL
-df_dev.exp <- ldply(l_md.logOR,.fun = \(x) summary(x)$dev.expl)
-names(df_dev.exp) <- c("modelo","dev.expl")
-df_tabelaSelecao <- df_dev.exp |> 
-  inner_join(y=df_aicctab,"modelo") |> 
-  arrange(dAICc) |> 
-  select(modelo,dAICc:weight,dev.expl)
-df_tabelaSelecao
+f_TabSelGAMM <- function(l_md){
+  df_aicctab <- AICctab(l_md,weights=TRUE) |> as.data.frame()
+  df_aicctab$modelo <- row.names(df_aicctab)
+  row.names(df_aicctab) <- NULL
+  df_dev.exp <- ldply(l_md,.fun = \(x) summary(x)$dev.expl)
+  names(df_dev.exp) <- c("modelo","dev.expl")
+  df_dev.exp |> 
+    inner_join(y=df_aicctab,"modelo") |> 
+    arrange(dAICc) |> 
+    select(modelo,dAICc:weight,dev.expl)
+}
+df_tabelaSelecao <- l_md.logOR |> 
+  f_TabSelGAMM()
 ```
 ```{r}
-df_aicctab_tp <- AICctab(l_md.logOR_tp,weights=TRUE) |> as.data.frame()
-df_aicctab_tp$modelo <- row.names(df_aicctab_tp)
-row.names(df_aicctab_tp) <- NULL
-df_dev.exp_tp <- ldply(l_md.logOR_tp,.fun = \(x) summary(x)$dev.expl)
-names(df_dev.exp_tp) <- c("modelo","dev.expl")
-df_tabelaSelecao_tp <- df_dev.exp_tp |> 
-  inner_join(y=df_aicctab_tp,"modelo") |> 
-  arrange(dAICc) |> 
-  select(modelo,dAICc:weight,dev.expl)
-df_tabelaSelecao_tp
+df_tabelaSelecao_tp <- l_md.logOR_tp |> 
+  f_TabSelGAMM()
 ```
+```{r}
+df_tabelaSelecao_r3remov <- l_md.logOR_tp_r3removido |> 
+  f_TabSelGAMM()
+```
+
+
 
 ```{r}
 l_md <- list()
 l_md[[1]] <- l_md.logOR[[df_tabelaSelecao$modelo[1]]] 
 l_md[[2]] <- l_md.logOR_tp[[df_tabelaSelecao_tp$modelo[1]]] 
-names(l_md) <- c("cr","tp")
+l_md[[3]] <- l_md.logOR_tp_r3removido[[df_tabelaSelecao_r3remov$modelo[1]]]
+names(l_md) <- c("cr","tp","tp r3removido")
 AICctab(l_md,weights=T)
 ```
 
 
 ```{r logOR GAMM}
-md_logOR <- l_md.logOR_tp[[df_tabelaSelecao_tp$modelo[1]]] 
+md_logOR <-l_md.logOR_tp_r3removido[[df_tabelaSelecao_r3remov$modelo[1]]]
 k.check(md_logOR)
 (summary_md <- summary(md_logOR))
 gratia::appraise(md_logOR)
@@ -370,7 +373,7 @@ f_predSitio1d <- \(md,
     mutate(label = paste0(SiteCode, ", p =",round(p,2)))
   df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
   df_plot |> 
-    ggplot(aes(x=r3_frag_z,y=logOR)) +
+    ggplot(aes(x=frag_z,y=logOR)) +
     geom_hline(yintercept = 0) +
     geom_line(aes(y=fit),color="darkred") +
     geom_line(aes(y=fit+se.fit)) +
@@ -385,6 +388,7 @@ f_predSitio1d <- \(md,
          width = 7,
          height = 30)
 }
+md_logOR |> f_predSitio1d()
 ```
 
 
