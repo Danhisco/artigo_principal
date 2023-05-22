@@ -59,9 +59,9 @@ df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
 df_sim <- read_csv("dados/df_simulacao.csv")
 # df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
 f_z <- function(x) (x-mean(x))/sd(x)
-df_ad <- distinct(select(df_resultados,-(Smed:Smax))) |>
+df_ad <- df_resultados |>
   arrange(p) |> 
-  mutate(across(p:k,f_z,.names = "{.col}_z"))
+  inner_join(df_)
 # df_contrastes: contrastes por sítio e grau de limitação de dispersão
 df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
   inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
@@ -92,6 +92,35 @@ df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |>
 # df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,SiteCode,log_S_obs_z,log_Ntotal_z))))
 # write_csv(df_newdat,"dados/csv/df_newdataSADs.csv")
 ```
+
+# GE
+
+```{r}
+df_sim |> 
+  pivot_longer(Ntotal:S_obs) |> 
+  ggplot(aes(x=effort_ha,y=value)) +
+  geom_point() +
+  scale_x_continuous(trans="log10") +
+  scale_y_continuous(trans="log10") +
+  facet_wrap(~name,scales="free",ncol=2)
+```
+
+```{r dag estudo de melhor caracterizacao de logOR,include=F}
+# exp = frag
+dag_exp.frag <- dagify(logOR ~ frag + p + k,
+                     frag ~ area + p + k + GLV,
+                     area ~ p + k,
+                     # S ~ effort + GLV,
+                     # N ~ effort + GLV,
+                     p ~ GLV,
+                     # effort ~ GLV,
+                     outcome = "logOR",
+                     latent = "GLV",
+                     exposure = "frag")
+ggdag(dag_exp.frag)
+ggdag_adjustment_set(dag_exp.frag,shadow = TRUE) + ggtitle(label="exposure = frag")
+```
+
 
 # Contrastes
 
