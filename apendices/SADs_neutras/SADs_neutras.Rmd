@@ -71,13 +71,11 @@ df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
 # # df_resultMNEE
 df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
 # df_contrastes
-df_contrastes <- read_csv(file="dados/csv/taxaU/df_taxaU.csv")
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv")
 # df_ad
 df_logOR <- df_resultados |> 
-  # filter(logOR_pair == "cont.non_frag") |> 
-  select(SiteCode:k,logOR_pair:logOR_value) |>
-  pivot_wider(names_from = logOR_pair, values_from = logOR_value) |> 
-  inner_join(y=select(df_contrastes,SiteCode,k,log_efeito_area:log_efeito_conf),by=c("SiteCode","k"))
+  inner_join(y=select(df_contrastes,-p),by=c("SiteCode","k")) |> 
+  inner_join(y=distinct(select(df_sim,SiteCode,Ntotal,S_obs)),"SiteCode")
 ```
 
 ## Comparação com a SAD observada
@@ -206,3 +204,11 @@ os dois são semelhantes: BAjuss, BAuruc, ESsoor, MGipia1, MGvico1, MSjatei, PEa
 
 Comentários:
 não é simples fazer essa classificação, em alguns casos (SiteCode) ambos parecem ser ruins, pois acertam em alguns k e erram em outros. E ser melhor não implica em ser bom em si.  
+
+
+## Comparação entre os contrastes
+
+```{r}
+
+```
+
