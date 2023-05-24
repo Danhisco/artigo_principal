@@ -209,6 +209,8 @@ não é simples fazer essa classificação, em alguns casos (SiteCode) ambos par
 ## Comparação entre os contrastes
 
 ```{r}
-
+registerDoMC(3)
+df_congContrastes <- ddply(df_SADrep,"SiteCode",f_congContrastes,.parallel = T)
+write_csv(df_congContrastes,file="dados/csv/resultados_MN/df_congContrastesREP.csv")
 ```
 
