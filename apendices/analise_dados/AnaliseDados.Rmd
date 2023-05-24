@@ -46,9 +46,9 @@ source("source/f_PredIntGAMM.R")
 # load("dados/Rdata/l_md_GAMM.Rdata")
 # dados
 load("dados/Rdata/l_md.contrastes.Rdata")
-load("dados/Rdata/l_md.logOR.Rdata")
-load("dados/Rdata/l_md.logOR_tp.Rdata")
-load("dados/Rdata/l_md.logOR_tp_r3removido.Rdata")
+# load("dados/Rdata/l_md.logOR.Rdata")
+# load("dados/Rdata/l_md.logOR_tp.Rdata")
+# load("dados/Rdata/l_md.logOR_tp_r3removido.Rdata")
 # df_dados_disponiveis
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
 # df_p
@@ -295,10 +295,14 @@ f_PredInt.GAMM <- \(gamm,
 ### Fragmentação per se ~ Área per se
 
 ```{r frag per se em funcao de area per se}
-md_frag_f.area <- gam(r3_frag_z ~ 
-                        s(r3_area_z,bs="cr") + s(r3_area_z,SiteCode,bs="fs",xt=list(bs="cr")),
-                      data=filter(df_md,logOR_pair == "cont.non_frag"))
+md_frag_area <- gam(frag_z ~ 
+                        s(area_z,bs="tp") + s(area_z,SiteCode,bs="fs",xt=list(bs="tp")),
+                      data=filter(df_md,logOR_pair == "cont.non_frag"),method = "REML")
+md_frag_area_semSite <- gam(frag_z ~ s(area_z,bs="tp"),
+                      data=filter(df_md,logOR_pair == "cont.non_frag"),method = "REML")
 ```
+
+### Probabilidade de Congruência entre as SADs preditas nos contrastes
 
 
 
