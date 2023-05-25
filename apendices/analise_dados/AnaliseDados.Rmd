@@ -102,8 +102,8 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastesREP.csv"
                select(SiteCode,p,k,logOR_pair,contraste_z),
              by=c("SiteCode","k","pair" = "logOR_pair")) |> 
   arrange(p) |> 
-  relocate(p,.after=k)
-
+  relocate(p,.after=k) |> 
+  mutate(SiteCode = factor(SiteCode))
 ```
 
 # GE
@@ -316,22 +316,43 @@ md_frag_area_semSite <- gam(frag_z ~ s(area_z,bs="tp"),
 
 ### Probabilidade de Congruência entre as SADs preditas nos contrastes
 
-```{r}
-df_congContrastes |> 
-  filter(pair=="cont.ideal") |> 
-  ggplot(aes(x=conf_z,y=nCong)) +
-  geom_point() +
-  geom_smooth(method = "gam")
-df_congContrastes |> 
-  filter(pair=="cont.non_frag") |> 
-  ggplot(aes(x=frag_z,y=nCong)) +
-  geom_point() +
-  geom_smooth(method = "gam")
-df_congContrastes |> 
-  filter(pair=="non_frag.ideal") |> 
-  ggplot(aes(x=area_z,y=nCong)) +
-  geom_point() +
-  geom_smooth(method = "gam")
+```{r GE relacao entre respectiva congruencia e contraste nos pares da comparacao}
+f_ggplot <- \(df){
+  df |> 
+    ggplot(aes(x=contraste_z,y=nCong)) +
+    geom_point() +
+    geom_smooth(method = "gam") +
+    labs(x="") +
+    facet_wrap(~pair,strip.position = "bottom",
+               labeller = as_labeller(c(cont.ideal='diff(cont., ideal.)',
+                                        cont.non_frag='diff(cont., non frag.)',
+                                        non_frag.ideal='diff(non frag., ideal.)'))) +
+    theme(strip.background = element_blank(),
+          strip.placement='outside')
+}
+l_p <- dlply(df_congContrastes,"pair",f_ggplot)
+grid.arrange(grobs=l_p,ncol=3,bottom="eixo x está z transformado")
+```
+
+```{r GAMM para descrever a relacao entre congruencia e contraste de U}
+f_mdGAMM <- \(df){
+  gam(cbind(nCong,100-nCong) ~ 
+        s(contraste_z) + s(contraste_z,SiteCode,bs="fs"),
+      family="binomial",data=df,method="REML")
+}
+l_md <- dlply(df_congContrastes,"pair",f_mdGAMM)
+l_md_congContrastes <- l_md
+save(l_md_congContrastes,file="dados/Rdata/l_md_congContrastes.Rdata")
+# validação
+for(pair in names(l_md)){
+  md <- l_md[[pair]]
+  print(pair)
+  k.check(md)
+  summary(md)
+  gratia::appraise(md)
+  gratia::draw(md)
+  
+}
 ```
 
 
