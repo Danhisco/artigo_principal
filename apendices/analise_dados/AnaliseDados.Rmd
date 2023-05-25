@@ -74,14 +74,15 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |>
   select(-c(N:log.S))
 # df_md: dados necessários 
 df_md <- df_ad |> 
-  inner_join(select(df_contrastes,SiteCode,k,starts_with("efeito_")),by=c("SiteCode","k")) |> 
-  # filter(logOR_pair == "cont.non_frag") |> 
-  mutate(SiteCode = factor(SiteCode),
-         across(starts_with("efeito"),~sign(.x) * abs(.x)^(1/3),.names = "r3_{.col}"),
-         across(contains("efeito"),f_z,.names="{.col}_z")) |>
-  rename(logOR = logOR_value,nSADcong=nCongKS) |> 
-  rename_with(.fn = \(x) str_remove(x,pattern = "efeito_")) |> 
-  select(-land_type,-propCong,-c(p:k),-c(area:r3_conf))
+  inner_join(df_contrastes |> 
+               select(SiteCode:efeito_conf) |> 
+               mutate(across(contains("efeito"),f_z,.names="{.col}_z")) |> 
+               select(-c(p,efeito_area:efeito_conf)) |> 
+               pivot_longer(starts_with("efeito_"),names_to="logOR_pair",values_to="contraste_z") |> 
+               mutate(logOR_pair = case_when(logOR_pair == "efeito_area_z" ~ "non_frag.ideal",
+                                             logOR_pair == "efeito_frag_z" ~ "cont.non_frag",
+                                             TRUE ~ "cont.ideal")),
+             by=c("SiteCode","k","logOR_pair")) 
   # df_newdata
 write_csv(df_md,"dados/csv/df_md_logOR.csv")
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
@@ -92,6 +93,17 @@ df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |>
 #                          k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150))
 # df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,SiteCode,log_S_obs_z,log_Ntotal_z))))
 # write_csv(df_newdat,"dados/csv/df_newdataSADs.csv")
+#
+# df_congContrastetsREP.cvs
+df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastesREP.csv") |> 
+  group_by(SiteCode,k,pair) |> 
+  summarise(nCong = sum(p_value>0.05)) |> 
+  inner_join(df_md |> 
+               select(SiteCode,p,k,logOR_pair,contraste_z),
+             by=c("SiteCode","k","pair" = "logOR_pair")) |> 
+  arrange(p) |> 
+  relocate(p,.after=k)
+
 ```
 
 # GE
@@ -303,6 +315,24 @@ md_frag_area_semSite <- gam(frag_z ~ s(area_z,bs="tp"),
 ```
 
 ### Probabilidade de Congruência entre as SADs preditas nos contrastes
+
+```{r}
+df_congContrastes |> 
+  filter(pair=="cont.ideal") |> 
+  ggplot(aes(x=conf_z,y=nCong)) +
+  geom_point() +
+  geom_smooth(method = "gam")
+df_congContrastes |> 
+  filter(pair=="cont.non_frag") |> 
+  ggplot(aes(x=frag_z,y=nCong)) +
+  geom_point() +
+  geom_smooth(method = "gam")
+df_congContrastes |> 
+  filter(pair=="non_frag.ideal") |> 
+  ggplot(aes(x=area_z,y=nCong)) +
+  geom_point() +
+  geom_smooth(method = "gam")
+```
 
 
 
