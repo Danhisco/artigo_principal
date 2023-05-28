@@ -307,11 +307,17 @@ f_PredInt.GAMM <- \(gamm,
 ### Fragmentação per se ~ Área per se
 
 ```{r frag per se em funcao de area per se}
+df <- df_md |> 
+  filter(logOR_pair == "cont.non_frag") |> 
+  rename(frag_z=contraste_z) |> 
+  mutate(area_z = df_md |> 
+           filter(logOR_pair == "non_frag.ideal") |> 
+           pull(contraste_z),
+         SiteCode = factor(SiteCode))
 md_frag_area <- gam(frag_z ~ 
                         s(area_z,bs="tp") + s(area_z,SiteCode,bs="fs",xt=list(bs="tp")),
-                      data=filter(df_md,logOR_pair == "cont.non_frag"),method = "REML")
-md_frag_area_semSite <- gam(frag_z ~ s(area_z,bs="tp"),
-                      data=filter(df_md,logOR_pair == "cont.non_frag"),method = "REML")
+                      data=df,method = "REML")
+save(md_frag_area,file="dados/Rdata/md_frag_area.Rdata")
 ```
 
 ### Probabilidade de Congruência entre as SADs preditas nos contrastes
