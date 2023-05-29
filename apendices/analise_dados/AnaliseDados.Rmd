@@ -48,7 +48,7 @@ source("source/f_PredIntGAMM.R")
 load("dados/Rdata/l_md.contrastes.Rdata")
 # load("dados/Rdata/l_md.logOR.Rdata")
 # load("dados/Rdata/l_md.logOR_tp.Rdata")
-# load("dados/Rdata/l_md.logOR_tp_r3removido.Rdata")
+load("dados/Rdata/l_md.logOR_tp_r3removido.Rdata")
 # df_dados_disponiveis
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
 # df_p
@@ -434,17 +434,6 @@ l_md.logOR <- df_md |>
 __Tabela X__ O peso de evidência (AICc) e a deviance explained dos GAMM usados para descrever o log OR da chance de congruência da SAD predita quando se pressupõe a paisagem contemporânea em relação à paisagem sem isolamento estrutural
 
 ```{r tabela de selecao dos GAMM logOR}
-f_TabSelGAMM <- function(l_md){
-  df_aicctab <- AICctab(l_md,weights=TRUE) |> as.data.frame()
-  df_aicctab$modelo <- row.names(df_aicctab)
-  row.names(df_aicctab) <- NULL
-  df_dev.exp <- ldply(l_md,.fun = \(x) summary(x)$dev.expl)
-  names(df_dev.exp) <- c("modelo","dev.expl")
-  df_dev.exp |> 
-    inner_join(y=df_aicctab,"modelo") |> 
-    arrange(dAICc) |> 
-    select(modelo,dAICc:weight,dev.expl)
-}
 df_tabelaSelecao <- l_md.logOR |> 
   f_TabSelGAMM()
 ```
