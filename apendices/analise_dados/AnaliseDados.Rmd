@@ -324,6 +324,27 @@ CPF:
 1) protocolo de validação: 5 elementos - k.check, summary, appraise, draw, e png do predito e observado por sítio
 2) gráfico de 1 d sobrepondo novo conjunto de dados e o observado
 
+```{r protocolo de validacao simples GAMM frag ~ area|Site}
+load("dados/Rdata/md_frag_area.Rdata")
+k.check(md_frag_area)
+summary(md_frag_area)
+gratia::appraise(md_frag_area)
+gratia::draw(md_frag_area)
+```
+```{r GAMM frag ~ area|Site intervalo de predicao a posteriori}
+# dados
+df_newpred <- data.frame(area_z = seq(min(df$area_z),max(df$area_z),length.out=200)) |> 
+  mutate(SiteCode = "SPigua1")
+df_pred_newdata <- f_PredInt.GAMM(data=df_newpred,
+                                  gamm=md_frag_area,
+                                  v_exclude="s(area_z,SiteCode)")
+df$predito <- predict(md_frag_area)
+# gráfico
+df_pred_newdata |> 
+  ggplot(aes())
+```
+
+
 
 
 

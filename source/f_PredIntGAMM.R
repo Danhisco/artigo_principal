@@ -6,7 +6,7 @@
 #
 # output: retorna um data frame com o intevalo de predição na escala da função de ligação e as preditoras
 f_PredInt.GAMM <- \(gamm,
-                    data = df_newpred, 
+                    data, 
                     v_exclude = c("s(k_z,SiteCode)","s(SiteCode)"),
                     quantiles = c(0.05,0.25,0.5,0.75,0.95),
                     nsim=10000){
