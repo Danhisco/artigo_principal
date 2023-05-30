@@ -333,6 +333,13 @@ gratia::draw(md_frag_area)
 ```
 ```{r GAMM frag ~ area|Site intervalo de predicao a posteriori}
 # dados
+df <- df_md |> 
+  filter(logOR_pair == "cont.non_frag") |> 
+  rename(frag_z=contraste_z) |> 
+  mutate(area_z = df_md |> 
+           filter(logOR_pair == "non_frag.ideal") |> 
+           pull(contraste_z),
+         SiteCode = factor(SiteCode))
 df_newpred <- data.frame(area_z = seq(min(df$area_z),max(df$area_z),length.out=200)) |> 
   mutate(SiteCode = "SPigua1")
 df_pred_newdata <- f_PredInt.GAMM(data=df_newpred,
@@ -340,8 +347,28 @@ df_pred_newdata <- f_PredInt.GAMM(data=df_newpred,
                                   v_exclude="s(area_z,SiteCode)")
 df$predito <- predict(md_frag_area)
 # gráfico
-df_pred_newdata |> 
-  ggplot(aes())
+v_devexp <- summary(md_frag_area)$dev.exp
+df |> 
+  ggplot(aes(x=area_z,y=frag_z)) +
+  geom_point(alpha=0.2) +
+  geom_line(aes(y=predito,group=SiteCode),alpha=0.2) +
+  geom_line(data=df_pred_newdata,aes(x=area_z,y=predito),color="darkgreen") +
+  geom_line(data=df_pred_newdata,aes(x=area_z,y=Q_0.5),color="darkred") +
+  geom_line(data = df_pred_newdata |> 
+              select(-Q_0.5) |> 
+              pivot_longer(starts_with("Q_0.")),
+            aes(x=area_z,y=value,group=name),color="darkblue") +
+  # scale_y_continuous(limits=range(df$frag_z)) +
+  annotate("rect",xmin = -1,xmax=1,ymin=14,ymax=16) +
+  annotate("text",x = 0,y = 15,
+           label=paste0("dev. exp. = ",round(v_devexp*100,digits = 1),"%*"),color="white") +
+  labs(x="z(contraste área per se)",y="z(contraste frag. per se)",
+       title="observado e predito pelo modelo completo e sem a variação entre sítios",
+       subtitle = "horizontal lines = quantile(x, probs=c(0.95,0.99))",
+       caption = "*full model") +
+  geom_vline(xintercept = quantile(df$area_z,probs = c(0.95,0.99)),linetype="dashed",alpha=0.3) +
+  theme_bw() +
+  theme(plot.caption = element_text(hjust=0))
 ```
 
 
