@@ -315,7 +315,9 @@ df <- df_md |>
            pull(contraste_z),
          SiteCode = factor(SiteCode))
 md_frag_area <- gam(frag_z ~ 
-                        s(area_z,bs="tp") + s(area_z,SiteCode,bs="fs",xt=list(bs="tp")),
+                      s(area_z,bs="tp") + 
+                      s(area_z,SiteCode,bs="fs",xt=list(bs="tp")) + 
+                      s(SiteCode,bs="re"),
                       data=df,method = "REML")
 save(md_frag_area,file="dados/Rdata/md_frag_area.Rdata")
 ```
@@ -344,7 +346,7 @@ df_newpred <- data.frame(area_z = seq(min(df$area_z),max(df$area_z),length.out=2
   mutate(SiteCode = "SPigua1")
 df_pred_newdata <- f_PredInt.GAMM(data=df_newpred,
                                   gamm=md_frag_area,
-                                  v_exclude="s(area_z,SiteCode)")
+                                  v_exclude=c("s(area_z,SiteCode)","s(SiteCode)"))
 df$predito <- predict(md_frag_area)
 # gráfico
 v_devexp <- summary(md_frag_area)$dev.exp
@@ -352,7 +354,7 @@ df |>
   ggplot(aes(x=area_z,y=frag_z)) +
   geom_point(alpha=0.2) +
   geom_line(aes(y=predito,group=SiteCode),alpha=0.2) +
-  geom_line(data=df_pred_newdata,aes(x=area_z,y=predito),color="darkgreen") +
+  # geom_line(data=df_pred_newdata,aes(x=area_z,y=predito),color="darkgreen") +
   geom_line(data=df_pred_newdata,aes(x=area_z,y=Q_0.5),color="darkred") +
   geom_line(data = df_pred_newdata |> 
               select(-Q_0.5) |> 
@@ -370,12 +372,6 @@ df |>
   theme_bw() +
   theme(plot.caption = element_text(hjust=0))
 ```
-
-
-
-
-
-
 
 
 
@@ -404,23 +400,58 @@ grid.arrange(grobs=l_p,ncol=3,bottom="eixo x está z transformado")
 ```{r GAMM para descrever a relacao entre congruencia e contraste de U}
 f_mdGAMM <- \(df){
   gam(cbind(nCong,100-nCong) ~ 
-        s(contraste_z) + s(contraste_z,SiteCode,bs="fs"),
+        s(contraste_z) + 
+        s(contraste_z,SiteCode,bs="fs") + s(SiteCode,bs="re"),
       family="binomial",data=df,method="REML")
 }
-l_md <- dlply(df_congContrastes,"pair",f_mdGAMM)
-l_md_congContrastes <- l_md
+l_md_congContrastes <- dlply(df_congContrastes,"pair",f_mdGAMM)
+# l_md_congContrastes <- l_md
 save(l_md_congContrastes,file="dados/Rdata/l_md_congContrastes.Rdata")
+```
+```{r validacao dos GAMMs Cong contrastes}
+load("dados/Rdata/l_md_congContrastes.Rdata")
 # validação
-for(pair in names(l_md)){
-  md <- l_md[[pair]]
+for(pair in names(l_md_congContrastes)){
+  md <- l_md_congContrastes[[pair]]
   print(pair)
-  k.check(md)
-  summary(md)
-  gratia::appraise(md)
-  gratia::draw(md)
-  
+  print(k.check(md))
+  print(summary(md))
+  p <- gratia::appraise(md)
+  print(p)
+  askYesNo("próximo?")
+  p <- gratia::draw(md)
+  print(p)
+  askYesNo("próximo?")
 }
 ```
+
+Diagnósticos Congruência entre Contrastes
+
+1) Contenporâneo e Idealizado
+
+Os smoothers são significativos segundo o número de funções base adequadas e quanto a comparação com um intercepto. 
+O deviance explainde é de 85.6%. 
+Pode existir erros sistemáticos na deviance (resíduos), apesar do predito quanto observado estarem em congruência no padrão geral.
+Quanto maior o contraste estimado maior a variabilidade estimada do efeito parcial, com o efeito médio tendendo à zero e os extremos variando de 10 até -10. 
+
+2) Contemporaneo e Sem Fragmentação
+
+Os smoothers são significativos segundo as funções do mgcv.
+O dev. exp. é 76.8%
+Os resíduos parecem ter um viés sistmático, mas o predito observado parecem convergir.
+Os efeitos parciais do contraste também apresentam padrão de aumentar em variabilidade com o aumento do contraste, mas eles tendem a reduzir com nos extremos do gradiente da preditora.
+
+3) Sem Fragmentação e Idealizado
+
+Os smoothers são significativos segundo as funções do mgcv.
+O dev. exp. é 54%.
+Os resíduos não estão muito bem distribuídos.
+A variabilidade dos efeitos parciais aumenta com o valor do contraste
+
+```{r figura final GAMM CongContrastes}
+
+```
+
 
 
 
