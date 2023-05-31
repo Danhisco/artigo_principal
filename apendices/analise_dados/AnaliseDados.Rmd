@@ -373,6 +373,76 @@ df |>
   theme(plot.caption = element_text(hjust=0))
 ```
 
+```{r}
+# parameters
+site.posteriori ="SPigua1"
+length.out_x = 200
+n.posteriori_samples = 10000
+# take the GAMM objects:
+f_invlink <- gamm$family$linkinv
+v_devexp <- summary(gamm)$dev.exp
+if(gamm$family$family=="binomial"){
+  df_obs <- gamm$model |> select(-1) |> #@ esse trecho é válido apenas para modelos binomiais
+    mutate(y = gamm$model[,1][,1]) |> relocate(y)
+  names(df_obs)[1] <- colnames(gamm$model[,1])[1]  
+}else{
+  df_obs <- gamm$model
+}
+# create the new data 
+y_var <- names(df_obs)[1]
+x_var <- names(df_obs)[2]
+df_newpred <- data.frame(x = seq(min(df_obs[,x_var]),
+                                 max(df_obs[,x_var]),
+                                 length.out=length_out_x)) |> 
+  mutate(SiteCode = v_site)
+names(df_newpred)[1] <- x_var
+# obtain the predictions
+## new predictions without variability between sites
+df_pred_newdata <- f_PredInt.GAMM(data=df_newpred,
+                                  gamm=gamm,
+                                  v_exclude=c(paste0("s(",x_var,",SiteCode)"),
+                                              "s(SiteCode)"))
+## predictions for the observed data (with variability between sites)
+df_obs$predito <- predict(gamm)
+## apply the inverse link function
+### if the case is a binomial GAMM
+if(gamm$family$family=="binomial"){
+  df_pred_newdata <- df_pred_newdata |> 
+    mutate(across(predito:8,\(x) f_invlink(x) * sum(gamm$model[1,1])))
+  df_obs <- df_obs |> 
+    mutate(predito = f_invlink(predito) * sum(gamm$model[1,1]))  
+}else{
+  df_pred_newdata <- df_pred_newdata |> 
+    mutate(across(predito:8,f_invlink))
+  df_obs <- df_obs |> 
+    mutate(predito = f_invlink(predito))  
+}
+# create the final figure
+df_obs |> 
+  ggplot(aes(x=.data[[x_var]],y=.data[[y_var]])) +
+  geom_point(alpha=0.2) +
+  geom_line(aes(y=predito,group=SiteCode),alpha=0.2) +
+  # geom_line(data=df_pred_newdata,aes(x=area_z,y=predito),color="darkgreen") +
+  geom_line(data=df_pred_newdata,
+            aes(x=.data[[x_var]],y=Q_0.5),color="darkred") +
+  geom_line(data = df_pred_newdata |> 
+              select(-Q_0.5) |> 
+              pivot_longer(starts_with("Q_0.")),
+            aes(x=.data[[x_var]],y=value,group=name),color="darkblue") +
+  # scale_y_continuous(limits=range(df$frag_z)) +
+  annotate("rect",xmin = -1,xmax=1,ymin=14,ymax=16) +
+  annotate("text",x = 0,y = 15,
+           label=paste0("dev. exp. = ",round(v_devexp*100,digits = 1),"%*"),color="white") +
+  labs(x="z(contraste)",y="congruência",
+       title="observado e predito pelo modelo completo e sem a variação entre sítios",
+       subtitle = "horizontal lines = quantile(x, probs=c(0.95,0.99))",
+       caption = "*full model") +
+  geom_vline(xintercept = quantile(df$area_z,probs = c(0.95,0.99)),linetype="dashed",alpha=0.3) +
+  theme_bw() +
+  theme(plot.caption = element_text(hjust=0))
+  
+```
+
 
 
 
