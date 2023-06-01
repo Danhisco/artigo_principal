@@ -40,15 +40,15 @@ library(gamm4)
 library(plyr)
 library(dplyr)
 source("source/nameModel.R")
-source("source/f_PredIntGAMM.R")
+source("source/GAMMtools.R")
 # objetos
 # load("dados/Rdata/md_MNEE.Rdata")
 # load("dados/Rdata/l_md_GAMM.Rdata")
 # dados
-load("dados/Rdata/l_md.contrastes.Rdata")
+# load("dados/Rdata/l_md.contrastes.Rdata")
 # load("dados/Rdata/l_md.logOR.Rdata")
 # load("dados/Rdata/l_md.logOR_tp.Rdata")
-load("dados/Rdata/l_md.logOR_tp_r3removido.Rdata")
+# load("dados/Rdata/l_md.logOR_tp_r3removido.Rdata")
 # df_dados_disponiveis
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
 # df_p
@@ -76,13 +76,15 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |>
 df_md <- df_ad |> 
   inner_join(df_contrastes |> 
                select(SiteCode:efeito_conf) |> 
-               mutate(across(contains("efeito"),f_z,.names="{.col}_z")) |> 
+               mutate(across(.cols=c(p,k,contains("efeito")),f_z,.names="{.col}_z")) |> 
                select(-c(p,efeito_area:efeito_conf)) |> 
                pivot_longer(starts_with("efeito_"),names_to="logOR_pair",values_to="contraste_z") |> 
                mutate(logOR_pair = case_when(logOR_pair == "efeito_area_z" ~ "non_frag.ideal",
                                              logOR_pair == "efeito_frag_z" ~ "cont.non_frag",
                                              TRUE ~ "cont.ideal")),
-             by=c("SiteCode","k","logOR_pair")) 
+             by=c("SiteCode","k","logOR_pair")) |> 
+  mutate(SiteCode = factor(SiteCode),
+         land_hyp = factor(land_type))
   # df_newdata
 write_csv(df_md,"dados/csv/df_md_logOR.csv")
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
@@ -516,38 +518,40 @@ Os resíduos não estão muito bem distribuídos.
 A variabilidade dos efeitos parciais aumenta com o valor do contraste
 
 ```{r figura final GAMM CongContrastes}
-f_l_mdGAMM_FiguraFinal_1dGAMM <- \(l_md){
-  df_labels <- data.frame(pair = names(l_md)) |> 
-    mutate(contraste = case_when(pair == "cont.ideal" ~ "contemporaneidade",
-                                 pair == "cont.non_frag" ~ "fragmentação per se",
-                                 TRUE ~ "área per se"),
-           labels = case_when(pair == "cont.ideal" ~ "contemp. : ideal.",
-                              pair == "cont.non_frag" ~ "contemp. : sem frag.",
-                              TRUE ~ "sem frag. : ideal."))
-  
-  l_p <- llply(l_md,f_PostPredPlotGAMM1d_obsEpred)
-  names(l_p) <- names(l_md)
-  for(plot in names(l_p)){
-    l_p[[plot]] <- l_p[[plot]] +
-      labs(x=df_labels |> 
-             filter(pair == plot) |> 
-             pull(contraste),
-           title=df_labels |> 
-             filter(pair == plot) |> 
-             pull(labels)) +
-      theme(plot.title = element_text(hjust = 0.5,
-                                      size = 12, 
-                                      face = "bold"))
-  }
-  return(l_p)
-}
+l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
+grid.arrange(grobs=l_p,ncol=3)
+```
+
+Figura Final Congruência da SAD entre pares de contrastes em função dos contrastes estimados para a taxa U.
+
+
+# Congruência com o observado
+
+## diffS
+
+```{r diffS GE}
+df_md |> 
+  ggplot(aes(x=p,y=diffS)) +
+  geom_point(alpha=0.3) +
+  geom_smooth(method="gam") + 
+  geom_hline(yintercept = 0,color="darkred") +
+  facet_wrap(~land_type,ncol=3)
+#
+l_md <- list()
+l_md[[1]] <- gam(diffS ~ land_hyp + s(p,by=land_hyp) + s(SiteCode,bs="re"),
+                 data=df_md,method="REML")
+l_md[[2]] <- gam(diffS ~ land_hyp + s(SiteCode,bs="re"),
+                 data=df_md,method="REML")
+l_md[[3]] <- gam(diffS ~ 1 + s(SiteCode,bs="re"),
+                 data=df_md,method="REML")
+names(l_md) <- c("~ f(p,land. hyp)","~ f(land. hyp)","~ 1")
+AICctab(l_md,weights=T)
 
 ```
 
 
+## logOR
 
-
-# logOR
 
 ```{r GE logOR contemp em relacao ao sem frag}
 df_md |> 
