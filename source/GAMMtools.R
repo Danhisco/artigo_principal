@@ -115,6 +115,90 @@ f_PostPredPlotGAMM1d_obsEpred <- \(gamm,
 }
 #
 #
+## função para post PI 1d 1f # pensar em formas 
+f_PostPredPlotGAMM1d1f_obsEpred <- \(gamm,
+                                     site.posteriori ="SPigua1",
+                                     length.out_x = 200,
+                                     n.posteriori_samples = 10000){
+  # take the GAMM objects:
+  f_invlink <- gamm$family$linkinv
+  v_devexp <- summary(gamm)$dev.exp
+  if(gamm$family$family=="binomial"){
+    df_obs <- gamm$model |> select(-1) |> 
+      mutate(y = gamm$model[,1][,1]) |> relocate(y)
+    names(df_obs)[1] <- colnames(gamm$model[,1])[1]  
+  }else{
+    df_obs <- gamm$model
+  }
+  v_other.factor <- df_obs |> 
+    select(-SiteCode) |> select(where(is.factor)) |> names()
+  # create the new data 
+  y_var <- names(df_obs)[1]
+  x_var <- df_obs |> 
+    select(-1) |> select(where(is.numeric)) |> names()
+  if(!is_empty(v_other.factor)){
+    df_newpred <- expand.grid(
+      x = seq(min(df_obs[,x_var]),
+              max(df_obs[,x_var]),
+              length.out=length.out_x),
+      factor = df_obs |> 
+        select(-SiteCode) |> 
+        select(where(is.factor)) |> 
+        pull() |> 
+        unique()
+      ) |> 
+      mutate(SiteCode = factor(site.posteriori))
+    names(df_newpred) <- c(x_var,v_other.factor,"SiteCode")
+    }else{
+    df_newpred <- data.frame(x = seq(min(df_obs[,x_var]),
+                                     max(df_obs[,x_var]),
+                                     length.out=length.out_x)) |> 
+      mutate(SiteCode = site.posteriori)
+    names(df_newpred)[1] <- x_var  
+  }
+  # obtain the predictions
+  ## new predictions without variability between sites
+  df_pred_newdata <- f_PredInt.GAMM(data=df_newpred,
+                                    gamm=gamm,
+                                    nsim=n.posteriori_samples,
+                                    v_exclude=c(paste0("s(",x_var,",SiteCode)"),
+                                                "s(SiteCode)"))
+  ## predictions for the observed data (with variability between sites)
+  df_obs$predito <- predict(gamm)
+  ## apply the inverse link function
+  ### if the case is a binomial GAMM
+  if(gamm$family$family=="binomial"){
+    df_pred_newdata <- df_pred_newdata |> 
+      mutate(across(predito:8,\(x) f_invlink(x) * sum(gamm$model[1,1])))
+    df_obs <- df_obs |> 
+      mutate(predito = f_invlink(predito) * sum(gamm$model[1,1]))  
+  }else{
+    df_pred_newdata <- df_pred_newdata |> 
+      mutate(across(predito:8,f_invlink))
+    df_obs <- df_obs |> 
+      mutate(predito = f_invlink(predito))  
+  }
+  # create the final figure
+  df_obs |> 
+    ggplot(aes(x=.data[[x_var]],y=.data[[y_var]])) +
+    geom_point(alpha=0.2) +
+    geom_line(aes(y=predito,group=SiteCode),alpha=0.2) +
+    geom_line(data=df_pred_newdata,
+              aes(x=.data[[x_var]],y=Q_0.5),color="darkred") +
+    geom_line(data = df_pred_newdata |> 
+                select(-Q_0.5) |> 
+                pivot_longer(starts_with("Q_0.")),
+              aes(x=.data[[x_var]],y=value,group=name),color="darkblue") +
+    geom_hline(yintercept = 0,color="darkred") +
+    labs(y = "diiffS",
+         subtitle = paste0("full model dev. exp. = ",round(v_devexp*100,digits = 1),"%")) +
+    # geom_vline(xintercept = quantile(df_obs[,x_var],probs = c(0.95,0.99)),linetype="dashed",alpha=0.3) +
+    theme_bw() +
+    theme(plot.caption = element_text(hjust=0)) +
+    facet_wrap(~.data[[v_other.factor]],nrow=1)
+}
+#
+#
 ## função para customizar o gráfico produzido por f_PostPredPlotGAMM1d_obsEpred
 # adiciona título e rótulo do eixo x
 f_l_mdGAMM_FiguraFinal_1dGAMM <- \(l_md){
