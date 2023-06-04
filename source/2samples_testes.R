@@ -9,7 +9,6 @@
 # exemplo de uso:
 ## df_KSrep <- adply(df_SADrep,1,f_ksObsRep,.parallel = TRUE)
 #
-  
 f_resultsMN <- function(df){
   # dados
   SADobs <- read_csv(df$SADobs.path) |> arrange(N) |> pull(N)
@@ -101,3 +100,40 @@ f_congContrastes <- \(df_pSite){
   }
   ddply(df_mSAD,"k",f_outputKS)
 }
+##
+#
+# uma possível implementação do teste de permutação baseado na distância multivariada 
+# autoria: chatgpt
+# library(vegan)
+# 
+# # Example data
+# vector1 <- c(10, 15, 5, 20)  # Species abundances in sample 1
+# vector2 <- c(8, 12, 10, 18)  # Species abundances in sample 2
+# 
+# # Calculate the observed test statistic
+# obs_stat <- vegdist(rbind(vector1, vector2), method = "euclidean")  # Bray-Curtis dissimilarity
+# 
+# # Set the number of permutations
+# n_permutations <- 1000
+# 
+# # Create an empty vector to store permuted test statistics
+# perm_stats <- numeric(n_permutations)
+# 
+# # Perform the permutation test
+# for (i in 1:n_permutations) {
+#   # Pool the data and randomly permute the labels
+#   perm_data <- sample(c(vector1, vector2))
+#   
+#   # Calculate the test statistic for the permuted data
+#   perm_stat <- vegdist(matrix(perm_data, ncol = length(vector1)), method = "euclidean")
+#   
+#   # Store the permuted test statistic
+#   perm_stats[i] <- perm_stat
+# }
+# 
+# # Calculate the p-value
+# p_value <- sum(perm_stats >= obs_stat) / n_permutations
+# 
+# # Print the results
+# cat("Observed test statistic:", obs_stat, "\n")
+# cat("p-value:", p_value, "\n")

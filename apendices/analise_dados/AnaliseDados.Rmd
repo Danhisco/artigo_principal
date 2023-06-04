@@ -553,16 +553,27 @@ AICctab(l_md,weights=T)
 
 ## logOR
 
-
 ```{r GE logOR contemp em relacao ao sem frag}
-df_md |> 
-  filter(logOR_pair == "cont.non_frag") |> 
-  pivot_longer(c(p_z:frag_z,r3_area_z:r3_frag_z)) |> 
-  mutate(name = factor(name,levels=names(df_md)[c(5:8,10:11)])) |> 
-  ggplot(aes(x=value,y=logOR)) +
-  geom_point(alpha=0.4) +
-  geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred",linewidth=1.5) +
-  facet_wrap(~name,ncol=2,scales="free")
+geom_final <- \(){
+  list(
+    geom_point(alpha=0.4),
+    geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),
+                  lambda=0.1,color="darkgreen",linewidth=1.5,alpha=0.5),
+    geom_smooth(method="gam"),
+    geom_hline(yintercept = 0,color="darkred")
+  )
+}
+l_p <- list()
+l_p[[1]] <- df_md |> 
+  ggplot(aes(x=contraste_z,y=logOR_value)) +
+  geom_final() +
+  facet_wrap(~logOR_pair,ncol=3)
+l_p[[2]] <- df_md |> 
+  pivot_longer(p:k) |> 
+  ggplot(aes(x=value,y=logOR_value)) +
+  geom_final() +
+  facet_grid(name~logOR_pair)
+grid.arrange(grobs=l_p,ncol=1)
 ```
 
 ### GAMM
