@@ -108,7 +108,7 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastesREP.csv"
   mutate(SiteCode = factor(SiteCode))
 ```
 
-# GE
+# GE Gerais
 
 ```{r}
 df_sim |> 
@@ -546,7 +546,7 @@ l_md[[3]] <- gam(diffS ~ 1 + s(SiteCode,bs="re"),
                  data=df_md,method="REML")
 names(l_md) <- c("~ f(p,land. hyp)","~ f(land. hyp)","~ 1")
 AICctab(l_md,weights=T)
-#
+# olhar GAMMtools.R
 
 ```
 
@@ -579,292 +579,38 @@ grid.arrange(grobs=l_p,ncol=1)
 ### GAMM
 
 ```{r logOR GAMM candidatas,echo=T,eval=F}
-f_gam_logOR <- function(df){
+f_gam_logOR <- function(df,ssbs.type="tp"){
   l_md <- list()
-  l_md[[1]] <- gam(logOR ~ 
-                     s(k_z,bs = "cr") + s(p_z,bs = "cr") + ti(p_z,k_z) +
-                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+  l_md[[1]] <- gam(logOR_value ~ 
+                     s(k_z,bs = ssbs.type) + s(p_z,bs = ssbs.type) + ti(p_z,k_z) +
+                     s(k_z, SiteCode, bs="fs",xt=list(bs=ssbs.type)) +
                      s(SiteCode,bs="re"),
                    data=df, method="REML")
-  l_md[[2]] <- gam(logOR ~ 
-                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") + ti(r3_area_z,r3_frag_z) +
-                     s(r3_frag_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+  l_md[[2]] <- gam(logOR_value ~ 
+                     s(contraste_z,bs = ssbs.type) + 
+                     s(contraste_z, SiteCode, bs="fs",xt=list(bs=ssbs.type)) +
                      s(SiteCode,bs="re"),
                    data=df, method="REML")
-  l_md[[3]] <- gam(logOR ~ 
-                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") + ti(r3_area_z,r3_frag_z) +
-                     s(r3_area_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                     s(SiteCode,bs="re"),
-                   data=df, method="REML")
-  l_md[[4]] <- gam(logOR ~ 
-                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") + ti(r3_area_z,r3_frag_z) +
-                     s(SiteCode,bs="re"),
-                   data=df, method="REML")
-  l_md[[5]] <- gam(logOR ~ 
-                     s(r3_frag_z,bs = "cr") +
-                     s(r3_frag_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                     s(SiteCode,bs="re"),
-                   data=df, method="REML")
-  l_md[[6]] <- gam(logOR ~ 
-                     s(r3_area_z,bs = "cr") +
-                     s(r3_area_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                     s(SiteCode,bs="re"),
-                   data=df, method="REML")
-  l_md[[7]] <- gam(logOR ~ 
-                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") +
-                     s(r3_frag_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                     s(SiteCode,bs="re"),
-                   data=df, method="REML")
-  l_md[[8]] <- gam(logOR ~ 
-                     s(r3_area_z,bs = "cr") + s(r3_frag_z,bs = "cr") +
-                     s(r3_area_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                     s(SiteCode,bs="re"),
-                   data=df, method="REML")
-  names(l_md) <- c("~ f(p, k, k|Site)",
-                   "~ f(area, frag, frag|Site)","~ f(area, frag, area|Site)","~ f(area, frag, 1|Site)",
-                   "~ f(frag, frag|Site)","~ f(area, area|Site)",
-                   "~ f(area,frag,frag|Site - ti","~ f(area,frag,area|Site - ti")
+  names(l_md) <- llply(l_md,f_nameModel)
   return(l_md) 
 }
-l_md.logOR <- df_md |> 
-  filter(logOR_pair == "cont.non_frag") |> 
-  f_gam_logOR()
+l_md.logOR <- dlply(df_md,"logOR_pair",f_gam_logOR)
+save(l_md.logOR,file="dados/Rdata/l_md.logOR.Rdata")
 ```
 
 __Tabela X__ O peso de evidência (AICc) e a deviance explained dos GAMM usados para descrever o log OR da chance de congruência da SAD predita quando se pressupõe a paisagem contemporânea em relação à paisagem sem isolamento estrutural
 
 ```{r tabela de selecao dos GAMM logOR}
-df_tabelaSelecao <- l_md.logOR |> 
-  f_TabSelGAMM()
-```
-```{r}
-df_tabelaSelecao_tp <- l_md.logOR_tp |> 
-  f_TabSelGAMM()
-```
-```{r}
-df_tabelaSelecao_r3remov <- l_md.logOR_tp_r3removido |> 
-  f_TabSelGAMM()
-```
-
-
-
-```{r}
-l_md <- list()
-l_md[[1]] <- l_md.logOR[[df_tabelaSelecao$modelo[1]]] 
-l_md[[2]] <- l_md.logOR_tp[[df_tabelaSelecao_tp$modelo[1]]] 
-l_md[[3]] <- l_md.logOR_tp_r3removido[[df_tabelaSelecao_r3remov$modelo[1]]]
-names(l_md) <- c("cr","tp","tp r3removido")
-AICctab(l_md,weights=T)
-```
-
-
-```{r logOR GAMM}
-md_logOR <-l_md.logOR_tp_r3removido[[df_tabelaSelecao_r3remov$modelo[1]]]
-k.check(md_logOR)
-(summary_md <- summary(md_logOR))
-gratia::appraise(md_logOR)
-gratia::draw(md_logOR)
-#
-f_predSitio1d <- \(md,
-                   v_path="apendices/analise_dados/figuras/logORcont.non_frag.png"){
-  df_plot <- cbind(md$model,
-                   predict(md,se.fit=TRUE)) |> 
-    inner_join(x=df_p,"SiteCode") |>
-    arrange(p) |> 
-    mutate(label = paste0(SiteCode, ", p =",round(p,2)))
-  df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
-  df_plot |> 
-    ggplot(aes(x=frag_z,y=logOR)) +
-    geom_hline(yintercept = 0) +
-    geom_line(aes(y=fit),color="darkred") +
-    geom_line(aes(y=fit+se.fit)) +
-    geom_line(aes(y=fit-se.fit)) +
-    geom_point(alpha=0.5) +
-    scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-    labs(title="logOR(contemporaneo / sem isolamento estrutural)",y="") +
-    facet_wrap(~label,ncol=4,scales="free") +
-    theme(strip.text=element_text(margin=margin()),
-          panel.spacing=unit(0, "lines"))
-  ggsave(v_path,
-         width = 7,
-         height = 30)
+load("dados/Rdata/l_md.logOR.Rdata")
+f_l.tabelaSelecao <- \(l_md){
+  names(l_md) <- str_remove(names(l_md),",ssbs.type") # corrigir na próxima versão de f_nameModel 
+  f_TabSelGAMM(l_md)
 }
-md_logOR |> f_predSitio1d()
+df_tabelaSelecao <- ldply(l_md.logOR,f_l.tabelaSelecao,.id="pair")
+df_tabelaSelecao
 ```
 
-
-
-
-
-
-
-
-### códigos
-
-
-```{r GAMM logito contemp sem isolamento, echo=TRUE,eval=FALSE}
-l_md.logORcont_semfrag <- list()
-l_md.logORcont_semfrag[[1]] <- 
-  gam(logOR ~
-        s(k_z,bs = "cr") + s(p_z,bs = "cr") +
-        ti(p_z,k_z) +
-        s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-        s(SiteCode,bs="re"),
-      data=df_md,method = "REML")
-l_md.logORcont_semfrag[[2]] <- 
-  gam(logOR ~
-        s(k_z,bs = "cr") + s(p_z,bs = "cr") +
-        ti(p_z,k_z) +
-        s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-        s(SiteCode,bs="re"),
-      data=df_md,method = "REML")
-```
-
-
-
-
-# Pr(Cong)
-
-### Gráficos Exploratórios
-
-```{r fig 1 - GE congruencia MNEE por p e k}
-l_p <- list()
-df_plot <- df_ad 
-# |> filter(k_cont>0.20)
-l_p[[1]] <- df_plot |> 
-  ggplot(aes(x=p,y=nCongKS)) +
-  geom_point() +
-  geom_smooth(method = "loess",se=F) +
-  labs(title="a) p, proporção de cobertura vegetal (~k)",
-       y="número de SADs réplicas congruentes") +
-  theme_bw() +
-  facet_wrap(~k,ncol=5)
-l_p[[2]] <- df_plot |> 
-  mutate(p_cut = cut(p,20)) |> 
-  ggplot(aes(x=k_cont,y=nCongKS)) +
-  geom_point(alpha=0.4) +
-  geom_line(alpha=0.4,aes(group=SiteCode)) +
-  geom_smooth(method = "loess",se=F) +
-  labs(title="b) k, prop. propágulos até a vizinhança (~cut(p, 20))",
-       y="número de SADs réplicas congruentes",
-       x="k") +
-  theme_bw() +
-  scale_x_reverse() +
-  facet_wrap(~p_cut,ncol=5)
-p <- grid.arrange(grobs=l_p,ncol=1,top="Congruência de MNEE")
-ggsave("apendices/analise_dados/figuras/fig1_cong_p_k.png",
-       width = 10.2,
-       height = 10.7,
-       plot = p)
-```
-  
-    
-__Figura 1__ Congruência de SADs MNEE por: a) proporção de cobertura vegetal; e b) k, grau de limitação de dispersão.
-  
-    
-```{r fig 2 - congruencia de MNEE por k_cont e sitio de amostragem}
-df_plot <- df_ad |> 
-  mutate(label = paste0(SiteCode,", p=",round(p,2))) |>
-  arrange(p)  
-# |> filter(k_cont>0.20)
-df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label))
-df_plot |> 
-  ggplot(aes(x=k_cont,y=nCongKS)) +
-  geom_smooth(method = "loess",se=F) +
-  geom_point() +
-  # labs(title="b) k, prop. propágulos até a vizinhança (~cut(p, 20))",
-  #      y="número de SADs réplicas congruentes",
-  #      x="k") +
-  theme_bw() +
-  scale_x_reverse() +
-  facet_wrap(~label,ncol=6)
-ggsave("apendices/analise_dados/figuras/fig2_cong_k_SiteCode.png",
-       width = 10,
-       height = 17.7)
-```
-
-__Figura 2__ Congruência de SADs MNEE grau de limitação de dispersão e sítio de amostragem.
-
-```{r fig 3 - congruência por logs de N e S}
-df_plot <- df_ad |> 
-  mutate(log_S.N = log_S_obs - log_Ntotal) 
-# df_plot |> 
-#   filter(log_S.N >= -3.75) |>
-#   ggplot(aes(x=p,y=log_S.N)) +
-#   geom_point() +
-#   geom_smooth() +
-#   labs(y="S / N")
-# df_plot |> 
-#   filter(log_S.N >= -3.75) |> 
-#   ggplot(aes(x=log_S.N,y=nCongKS)) +
-#   geom_point(aes(color=p)) +
-#   geom_smooth(se=F) +
-#   facet_wrap(~k,ncol = 5)
-# df_plot |> 
-#   ggplot(aes(x=p,y=log_Ntotal)) +
-#   geom_point() +
-#   geom_smooth()
-# summary(lm(log_S.N ~ poly(p,1,raw = T), filter(df_plot,log_S.N >= -3.75)))
-#
-f_ggplot <- function(df){
-  ggplot(df,aes(x=value,y=nCongKS)) +
-  geom_point() +
-  geom_smooth(se=F,method = "gam") +
-  labs(x=unique(df$name),y="") +
-  facet_wrap(~k_cont,ncol=5)
-}
-l_p <- dlply(pivot_longer(df_plot,log_Ntotal:log_S_obs),"name",f_ggplot)
-grid.arrange(grobs=l_p,ncol=2,top="# SAD congruentes em função dos log de N e S")  
-```
-
-__Figura 3__ Congruência de SADs MNEE por: log do número de indivíduos (esquerda); e log do número de espécies por
-  
-
-### GAMM 1: Pr(Cong) ~ f(p,k)
-
-Objetivo:
-Descrever a probabilidade da SAD predita por MNEE em paisagens contemporâneas apresentar boa congruência (Pr(Cong)) em função da proporção de cobertura vegetal (p) e grau de limitação de dispersão (k). Iremos iniciar com GAMM com splines e tensores para as variáveis p e k.
-
-
-```{r MNEE GAMM 1, echo=TRUE}
-l_md <- list()
-l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(k_cont_z,bs = "cr") + s(p_z,bs = "cr")
-                   ti(p_z,k_cont_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(k_cont_z,bs = "cr") + s(p_z,bs = "cr")
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-names(l_md) <- c("s(k,p) + ti(k,p)","s(k,p)")
-```
-```{r descrição apenas em função de modelos que consideram p e k}
-l_md <- l_md_GAMM[c(4,11)]
-(df_aicctab <- AICctab(l_md,weights=TRUE) |> as.data.frame())
-```
-
-O modelo mais palusível, com 84% do peso de evidência, possui um spline para cada variável sem o tensor com as duas variáveis. 
-
-__modelo mais plausível__
-
-```{r qualidade ajuste MNEE GAMM 1 mais plaus,echo=F,cache=TRUE}
-(gamm_MNEE <- l_md[[row.names(df_aicctab)[1]]])
-print("k.check:")
-k.check(gamm_MNEE)
-print("summary:")
-summary(gamm_MNEE)
-gratia::appraise(gamm_MNEE)
-gratia::draw(gamm_MNEE)
-```
-
-O modelo mais plausível não estima de forma adequada o spline de p: o efeito parcial estimado tende à uma reta, e o intervalo de confiança dessa estimativa é elevada e varia ao longo do gradiente da preditora. O spline de p parece estar sofrende de concurvidade com uma outra variável relevante para descrever Pr(Cong) que não está incluída no GAMM. Concurvidade ocorre quando uma preditora pode ser bem descrita por um spline de outra preditora.  
-
-Para auxiliar no denselvimento de GAMM adequados vamos construir um modelo conceitual do processo gerador dos dados.
-
-### Processo Gerador Pr(Cong)
+# Processo Gerador dos dados
 
 A probabilidade de uma SAD predita neutra apresentar boa congruência com a SAD observada depende da maior distância entre as curvas acumuladas. As SAD preditas apresentam o mesmo número de indivíduos da SAD observada (N) e aproximam o número de espécies observada (S, Apêndice Riqueza Estimada). Para uma mesma combinação de N e S existem diversas SAD que poderiam ser reconstruídas (REF), assim a comparação ocorre na forma com que a abundância se distribui nas espécies observadas. Nâo há consenso sobre um modelo ou hipótese geral para a forma da SAD observada (McGill et al. 2007). A forma da SAD predita depende de um conjunto conhecido de variáveis. Cada modelo neutro implementa uma hipótese sobre a dispersão dos indivíduos no habitat da parcela amostrada e no habitat da paisagem ao redor [1]. A relação de N e S pode informar sobre a exposição da árvore genealógica da comunidade na parcela ao pool de indivíduos da paisagem [2]. Por exemplo, quanto maior N e menor S, maior é o potencial de espalhamento das linhagens locais pelos indivíduos remanescentes na paisagem ao redor, pois há muitos indivíduos para coalescerem em poucas espécies. A variável k possui dois efeitos: i) regular a exposição da árvore genealógica da comunidade ao pool de indivíduos da paisagem ao redor, ou seja, o espalhamento das linhagens locais; e ii) determinar a demanda por propágulos da paisagem ao redor para manter a riqueza local, e portanto determina a potencial taxa U necessária para manter a riqueza local. 
 A relação de k, p e a taxa U está descrita no apêndice "Taxa U estimada nas paisagens contemporâneas" [3]. A variável p descreve o maior potencial de chuva de propágulos na paisagem. Além disso, ao longo do gradiente de p, p está relacionado com a configuração espacial da paisagem (Villard & Metzger 2014), assim a interação de p com outras variáveis permite explorar indiretamente condicionamento à configuração espacial.       
@@ -937,162 +683,6 @@ __Figura 4__ DAG do modelo conceitual do processo gerador da variável de intere
 
 [3] quando o grau de limitação é severo, há grande probabilidade de substituição de coespecífico e portanto baixa erosão de espécies por deriva ecológica resultando em baixa taxa U. Com um pouco de relaxamento da limitação de dispersão, há redução da substituição de coespécificos e baixa probabilidade de reposição de espécies por dispersão de longa distância de dentro da paisagem, aumento a taxa U. Nos graus mais brandos de limitação de dispersão, a baixa probabilidade de substituição de coespécies, que leva ao aumento da erosão de espécies, pode ser compensada pela alta probabilidade de reposição de espécies por dispersão de longa distância de dentro da paisagem, caso a proporção de habitat remanescente seja suficiente.
 
-### GAMM 2: Pr(Cong) ~ f(p,k,N,S)
-
-Vamos considerar interações entre as variáveis relacionadas com a exposição (N,S, e k) e as relacionadas com o pool de propágulos da paisagem ao redor (p e k). O GAMM cheio possui todas as possíveis interações de duas variáveis e 3 variáveis utilizando splines individuais (mgcv::s()) e tensores (mgcv::ti()). Em todos os submodelos há a mesma estrutura aleatória: um intercepto por sítio de amostragem e um spline por k por sítio com uma mesma penalização para todos os sítios (Pedersen et al. 2019). Modelos com penalização por sítio não levaram muito tempo para rodar e não foram explorados. 
-
-
-```{r gamm 2 MNEE contemporaneo,echo=T,eval=F}
-l_md <- list() 
-l_md[[1]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(log_Ntotal_z,log_S_obs_z) + ti(log_Ntotal_z,k_cont_z) + ti(log_S_obs_z,k_cont_z) +  
-                   ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[2]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(log_Ntotal_z,log_S_obs_z) + ti(log_Ntotal_z,k_cont_z) + ti(log_S_obs_z,k_cont_z) +  
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[3]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(log_Ntotal_z,log_S_obs_z) + ti(log_Ntotal_z,log_S_obs_z,k_cont_z) +
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[4]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(log_Ntotal_z,k_cont_z) + ti(log_S_obs_z,k_cont_z) +
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[5]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(log_Ntotal_z,log_S_obs_z) + 
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[6]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(k_cont_z,p_z) +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-l_md[[7]] <- gam(cbind(nCongKS,100-nCongKS)  ~ 
-                   s(log_Ntotal_z,bs = "cr") + s(log_S_obs_z,bs = "cr") + s(k_cont_z,bs = "cr") + s(p_z,bs = "cr") +
-                   s(k_cont_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data = df_md, family="binomial", method = "REML")
-names(l_md) <- c("s(N,S,k,p) + ti(N,S) + ti(N,k) + ti(S,k) + ti(N,S,k) + ti(p,k)",
-                 "s(N,S,k,p) + ti(N,S) + ti(N,k) + ti(S,k) + ti(p,k)",
-                 "s(N,S,k,p) + ti(N,S) + ti(N,S,k) + ti(p,k)",
-                 "s(N,S,k,p) + ti(N,k) + ti(S,k) + ti(p,k)",
-                 "s(N,S,k,p) + ti(N,S) + ti(p,k)",
-                 "s(N,S,k,p) + ti(p,k)",
-                 "s(N,S,k,p)")
-```
-```{r l_md modelos DAG MNEE GAMM}
-l_md <- l_md_GAMM[c(8,9,1,7,2,3,10)]
-(df_aicctab <- AICctab(l_md,weights=TRUE) |> as.data.frame())
-```
-
-Dois modelos acumulam a maior parte do peso de evidência de forma quase equivalente. O mais plausível possui apenas os splines individuais, e o segundo inclui tensor entre p e k. No Support Information deste apêndice há os gráficos e tabelas diagnóstico dos 3 modelos mais plausíveis. Os resíduos do modelo mais plausíveis parecem adequados, mas os efeitos parciais sugerem problemas de concurvidade entre as 3 variáveis. Como esperado pelo modelo conceitual. Os testes do pacote mgcv (k.check() e summary()) indicam que o spline de p tende a uma reta que poderia ser bem representada por uma reta horizontal em relação à p. A métrica de concurvidade do pacote mgcv(alpha) indica a proporção de informação contido em smoother em relação ao outro [4]. O spline de N apresenta alpha de 22% com o spline de S e 11% com o spline de p. O spline de S apresenta concurvidade maior com o spline de p (~23%) sendo similar ao grau de concurvidade com N. O spline de p apresenta concurvidade maior com o spline de S (~36%) e 16% com o de N. Esse modelo não é útil para descrevermos Pr(Cong) em função de p e k, pois os efeitos parciais de p não são bem estimados. O segundo modelo mais plausível também apresenta o mesmo tipo de problema segundo o gráfico de efeitos parciais: há concurvidade entre os splines de N, S e p.
-
-No terceiro modelo mais plausível o spline para p parece sofrer menos de concurvidade, enquanto o spline de N e S sofrem de concurvidade. Os resíduos do modelo e o número de funções base parecem estar adequados. Se os plines que contem p não apresentarem muita influência da concurvidade então esse modelo pode ser um bom candidato para a descrição dos dados em função de p e k. Os splines individuais e os tensores de N e S sofrem de concurvidade entre si com alpha variando de 22% até 95%. O spline de p apresenta alpha de 10% com o spline de N, de 16% com o de S, e de 21% com o tensor entre N e S. O tenso de p e k apresentam alpha de 12.6% com otensor de N, S e k. O spline de p e o tensor de p e k apresentam baixos valores de alpha (>30%) com os splines e tensores de N e S. Esse modelo faz a melhor estimativa dos efeitos parciais em função de p e k entre os mais plausíveis, apesar do modelo acumular menos de 1% do peso de evidência. Ele será usado para predizer o intervalo de predição a posteriori do GAMM (REF). O novo conjunto de dados interpola os valores de p e k e pressupõe que N e S se mantém em seus valores médios ao longo de p. Além disso, vamos excluir os efeitos relacionados com sítio de amostragem (predição sem efeito aleatório).
-
-[4] Exemplo em slide de Simon Wood 2016:
-- consider a model containing smooths f1 and f2.
-- we can decompose f2 = f12 + f22; f12: the part of f2 representable in the space of f1, while f22 is the remaining component, which lies exlusively in the space of f2.
-- a measure of concurvity is \alpha = (||f12||^2 )/(||f2||^2 ).
-
-#### predição
-
-Como seria Pr(Cong) caso log(N) e log(S) permanecem em seus valores médios e não houvesse variação entre sítios? Ou seja, quais os efeitos de p e k apenas?
-
-__Janelas de código 1__ Função da Estimativa do Intervalo de Predição a Posteriori
-
-```{r função para predicao posteriori GAMM MNEE,eval=FALSE, echo=TRUE}
-df_pred <- f_PredInt.GAMM(data = df_newpred,gamm=gamm_MNEE)
-write_csv(df_pred,file="dados/csv/resultados_MN/MNEE/df_pred.csv")
-```
-
-
-```{r predição para novo conjunto de dados md_GAMM}
-f_invlogit <- function(x) exp(x)/(1+exp(x))
-df_plot <- df_pred |> 
-  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
-         k = k_cont_z*sd(df_ad$k_cont) + mean(df_ad$k_cont),
-         across(predito:Q_0.95,f_invlogit)) |> 
-  select(-contains("log"),-contains("_z"),-predito) |> 
-  pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
-df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
-# gráficos
-f_ggplot2 <- function(df,facets=2){
-  ggplot(df,aes(x=p,y=k,fill=pred)) +
-    geom_tile() +
-    scale_fill_distiller(palette = "Spectral",limits=c(0,1)) +
-    scale_y_reverse() +
-    theme_classic() +
-    coord_cartesian(expand = FALSE) +
-    labs(fill="Pr(Cong)") +
-    facet_wrap(~label,ncol = facets)
-}
-l_p <- list()
-l_p[[1]] <- df_plot |> 
-  filter(label == "Q_0.5") |>
-  f_ggplot2() + labs(x="")
-l_p[[2]] <- df_plot |> 
-  filter(label != "Q_0.5") |>
-  f_ggplot2()
-p <- ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
-ggsave("apendices/analise_dados/figuras/fig5_predNewData_gammMNEEcont.png",p,
-       width = 6,
-       height = 10)
-```
-
-__Figura 5__ Probabilidade de boa congruência da SAD predita neutra em função da proporção de cobertura vegetal remanescente e grau de limitação de dispersão, com o log do número de espécies e número de indivíduos são mantidos nos valores médios e não há variação entre sítios.
-
-```{r}
-df_md$pred <- predict(gamm_MNEE,type="response") * 100
-df_md <- df_md |> 
-  mutate(label=paste0(SiteCode,", p=",round(p,3))) |> 
-  arrange(p)
-df_md$label <- factor(df_md$label,levels = unique(df_md$label))
-(p <- df_md |> 
-  # pivot_longer(pred_modCheio:pred_modMedio) |>
-  ggplot(aes(x=k_cont,y=nCongKS)) +
-  # geom_line(aes(y=pred_modCheio),color="blue") +
-  geom_line(aes(y=pred),color="red",alpha=0.4) +
-  geom_point() +
-  theme_bw() +
-  scale_x_reverse() +
-  labs(x="k",y="# SADs congruentes",title="Predito pelo modelo médio (azul) e cheio (vermelho) são iguais") +
-  facet_wrap(~label,ncol=6))
-ggsave("apendices/analise_dados/figuras/fig6_gammMNEE_PredObs_k_Site.png",p,
-       width = 10,
-       height = 17.7)
-
-```
-
-__Figura 6__ Predito e observado para o conjunto de dados observado
-
-
-### CASO o comitê peça :: Análise de Sensibilidade: valores extremos N e S
-
-Objetivo: 
-fazer um subset dos dados em que log(S).z e log(N).z c [-2,2] para avaliar se há melhora dos ajustes. 
-
-
-
-
 # Support Information
 
 ## Diagnóstico Contrastes
@@ -1135,26 +725,7 @@ ggsave(paste0("apendices/analise_dados/figuras/",names(l_md.contrastes[[i]]),"_s
 __Figura X+1__ Tabela e Figuras  para avaliação de 
 
 
-
-
-
-#### Antigo avaliar
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Associação estatística entre variáveis de exposição (N e S) e p
+### Avaliação DAG: associação estatística entre variáveis de exposição (N e S) e p
 
 __Qual a melhor forma de descrever as preditoras em função de si mesmas?__
 
@@ -1184,51 +755,3 @@ l <- l_md1[c(7:9)]
 AICctab(l,weights=T)
 ```
 
-## gráficos diagnósticos dos GAMM mais plausíveis ~ p,k,N,S
-
-__modelo mais plausível__
-
-```{r diag modelo mais plausivel MNEE GAMM 2}
-(gamm_MNEE <- l_md[[row.names(df_aicctab)[1]]])
-gratia::appraise(gamm_MNEE)
-gratia::draw(gamm_MNEE)
-print("mgcv::k.check:")
-k.check(gamm_MNEE)
-print("sumamry:")
-summary(gamm_MNEE)
-print("Avaliação de Concurvidade (alpha)")
-(df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
-```
-
-__Figuras e Tabelas SI 1__ Gráficos e tabelas diagnóstico do modelo mais plausível
-
-__segundo modelo mais plausível__ 
-
-```{r}
-(gamm_MNEE <- l_md[[row.names(df_aicctab)[2]]])
-# gratia::appraise(gamm_MNEE)
-gratia::draw(gamm_MNEE)
-# k.check(gamm_MNEE)
-# summary(gamm_MNEE)
-# (df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame())
-```
-
-__Figuras e Tabelas SI 2__ Gráficos diagnóstico do segundo modelo mais plausível
-
-__terceiro modelo mais plausível__ Pr(Cong) ~ f(p,k,SiteCode)
-
-```{r}
-(gamm_MNEE <- l_md[[row.names(df_aicctab)[3]]])
-gratia::draw(gamm_MNEE)
-gratia::appraise(gamm_MNEE)
-print("mgcv::k.check:")
-k.check(gamm_MNEE)
-print("summary:")
-summary(gamm_MNEE)
-print("Avaliação de Concurvidade (alpha >= 1%)")
-df_conc <- concurvity(gamm_MNEE,full=FALSE)$observed |> as.data.frame()
-df_conc[] <- lapply(df_conc, \(x) ifelse(x>=0.01,round(x*100,1),NA))
-df_conc
-```
-
-__Figuras e Tabela SI 3__ Gráficos e tabelas diagnóstico do terceiro modelo mais plausível
