@@ -200,7 +200,7 @@ grid.arrange(grobs=l_p,ncol=2)
 
 __figura 1__ Contrastes em função das preditoras
 
-### GAMM
+### Contrastes ~ p e k
 
 __Janela de código X__ GAMM usado para ajustar os contrastes 
 
@@ -218,7 +218,7 @@ l_md.contrastes <- dlply(df_contrastes |> pivot_longer(starts_with("efeito_")),
 save(l_md.contrastes,file="dados/Rdata/l_md.contrastes.Rdata")
 ```
 
-### Intervalo de Predição do Efeito Médio de p e k
+#### Intervalo de Predição do Efeito Médio de p e k
 
 ```{r intervalo de predição para os contrastes segundo estimado pelo GAMM,fig.height=8,fig.width=12}
 df_plot <- df_intPred |> 
@@ -602,13 +602,41 @@ __Tabela X__ O peso de evidência (AICc) e a deviance explained dos GAMM usados 
 
 ```{r tabela de selecao dos GAMM logOR}
 load("dados/Rdata/l_md.logOR.Rdata")
-f_l.tabelaSelecao <- \(l_md){
+f_correcaoNomes <- \(l_md){
   names(l_md) <- str_remove(names(l_md),",ssbs.type") # corrigir na próxima versão de f_nameModel 
-  f_TabSelGAMM(l_md)
+  return(l_md)
 }
-df_tabelaSelecao <- ldply(l_md.logOR,f_l.tabelaSelecao,.id="pair")
+l_md.logOR <- llply(l_md.logOR,f_correcaoNomes)
+df_tabelaSelecao <- ldply(l_md.logOR,f_TabSelGAMM,.id="pair")
 df_tabelaSelecao
+#
+f_SML.gamm <- \(df){md <- l_md.logOR[[df$pair[1]]][[df$modelo[[1]]]]}
+l_p <- dlply(df_tabelaSelecao,"pair",f_SML.gamm) |> 
+  f_l_mdGAMM_FiguraFinal_1dGAMM()
+grid.arrange(grobs=l_p,ncol=3)  
 ```
+
+
+```{r}
+# validação
+for(pair in names(l_md_congContrastes)){
+  md <- l_md_congContrastes[[pair]]
+  print(pair)
+  print(k.check(md))
+  print(summary(md))
+  p <- gratia::appraise(md)
+  print(p)
+  askYesNo("próximo?")
+  p <- gratia::draw(md)
+  print(p)
+  askYesNo("próximo?")
+}
+l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
+grid.arrange(grobs=l_p,ncol=3)
+```
+
+
+
 
 # Processo Gerador dos dados
 
