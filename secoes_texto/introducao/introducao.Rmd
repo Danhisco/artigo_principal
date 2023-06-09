@@ -19,6 +19,82 @@ download_file(file ="relatorio_final.Rmd",
               gpath = "mestrado/disciplinas/BIE5716/")
 ```
 
+# Intodução
+
+## Opening
+
+Não há consenso sobre os princípios da relação entre a perda de habitat na escala da paisagem e a manutenção das populações naturais na escala local (Fletcher Jr et al. 2018; Fahrig et al. 2019; Miller-Rushing et al. 2019). Um programa de pesquisa pressupõe que os efeitos na diversidade biológica da perda de habitat e da mudança na configuração espacial são independentes (fragmentação per se, Fahrig 2003; Fahrig et al. 2019). Revisões de trabalhos empíricos que seguem essa abordagem indicam que o efeito da fragmentação per se não é significativo ou é idiossincrático, podendo inclusive ser positivo (Fahrig 2017, 2020; mas veja Fletcher Jr. et al. 2018a; e Fahrig et al. 2019). Dessa perspectiva, uma hipótese mínima é que a diversidade biológica local aumenta com a quantidade de habitat remanescente na paisagem (hipótese da quantidade de habitat; Fahrig 2013). A hipótese da quantidade de habitat pressupõe que para descrever a diversidade local é suficiente desconsiderar o isolamento estrutural do habitat remanescente, i.e., as distâncias entre fragmentos (Fahrig 2013; Watling et al. 2020). Um programa de pesquisa concorrente desafia esta abordagem ao pressupor que pode existir interdependência entre a perda de habitat e o padrão de fragmentação per se: a perda de habitat é a principal causa das mudanças na configuração espacial do habitat remanescente e portanto não é possível separar ortogonalmente os dois efeitos a priori (Didham, Kapos & Ewers 2012; Fletcher Jr et al. 2018a; Püttker et al. 2020). Além disso, baseado em experimentos na escala do fragmento florestal e em trabalhos teóricos na escala da paisagem, espera-se que a configuração espacial do habitat remanescente na paisagem seja um importante determinante das populações por restringir a movimentação dos indivíduos no habitat remanescente, a conectividade da paisagem com o local (Villard & Metzger 2014; Hanski 2015; Haddad et al. 2015, 2017a). Assim, uma outra hipótese mínima é que a configuração espacial do habitat remanescente, resultado da perda de habitat e do padrão de fragmentação per se, é necessária para descrever a diversidade biológica local observada em paisagens fragmentadas (hipótese da configuração espacial de hábitat; Villard & Metzger 2014, Hanski 2015). 
+
+
+## Funnel
+Um desafio em avaliar as hipóteses mínimas são as métricas de perda de área e de fragmentação per se (REFs). Existe uma diversidade de métricas de fragmentação per se (REF). A proporção de cobertura vegetal e as métricas de fragmentação per se covariam com a escala de observação (REF). Em geral, a escala de observação  determinada pressupondo equilíbrio entre a riqueza local de espécies e a heterogeneidade da paisagem (glossário) contemporânea; e a riqueza de espécies tambem é usada para avaliar os efeitos da perda de habitat e fragmentação per se (REF). 
+
+Ao invés de estimar os efeitos de área e fragmentação per se a partir de métricas dependentes da escala de observação para avaliar as hipóteses mínimas, é possível aproximar as hipóteses mínimas por modelos teóricos baseados em dinâmicas ecológicas para comparar diferentes paisagens hipotéticas (Hanski 2015).
+
+
+
+
+Um possível ponto comum dos programas de pesquisa pode ser obtido se a conectividade que está relacionado com a manutenção da riqueza local for aproximada pela taxa de colonização no local de propágulos vindos da paisagem ao redor. A taxa de colonização de imigrantes observada em uma particular configuração espacial do habitat remanescente pode ser decomposta na taxa de colonização devido apenas ao número remanescente de progenitores (efeito de área) e devido ao particular isolamento estrutural imposto pela configuração espacial (efeito de fragmentação per se).  Esse tipo de abordagem é possível utilizando modelos teóricos que explicitamente consideram a movimentação dos indivíduos na paisagem e variando a paisagem pressuposto segundo a hipótese mínima. 
+
+
+Um possível ponto comum dos programas de pesquisa é a decomposição da taxa de colonização no local de propágulos vindos da paisagem ao redor, uma aproximação da conectividade que está relacionada com a manutenção da riqueza local, nos componentes relacionados com a redução do número de progenitores na paisagem (efeito de área per se) e relacionado ao isolamento estrutural devido a particular forma da configuração espacial do habitat remanescente (efeito da fragmentação per se).
+
+
+decomposição da conectividade que sustenta a riqueza local em 
+Um ponto comum aos dois programas de pesquisa é a relação dos efeitos da perda de habitat e fragmentação per se na conectividade da paisagem com a parcela relacionada com a manutenção do número de espécies local. 
+
+As paisagens hipotéticas podem pressupor a particular configuração espacial do habitat remanescente contemporânea ao evento de amostragem ou desconsiderar o isolamento estrutural. 
+
+
+
+
+
+
+
+Uma possível abordagem para avaliar as hipótese mínimas em um arcabouço comum é 
+
+######## onde estás?
+O programa independentista conclui que os efeitos da fragmentação per se são pequenos em comparação aos efeitos da perda de haitat e idiossincráticos, em sua maioria positivos para a retenção de espécies no habitat remanescente (Fahrig et al.). Assim, 
+O programa interdependetista não reconhece o conceito de fragmentação per se enquanto padrão, apenas fragmentação de habitat enquanto processo de perda de habitat e concomitante mudança na configuração espacial do habitat (REF). 
+########
+
+### Perguntas motivadoras
+É suficiente desconsiderar a fragmentação per se para predizer a diversidade local de árvores? Uma expectativa do programa independente é que para modelar a diversidade local de árvores a partir de mapas de cobertura vegetal e dinâmicas ecológicas idealizadas é suficiente desconsiderar o isolamento estrutural informado pelo mapa de vegetal. Outra expectativa, que concilia a crítica do programa interdependentista, é que sob limitação de dispersão a particular configuração espacial do habitat pode restringir a movimentação dos indivíduos no habitat remanescente (conectitivade, REF). A restrição da conectividade pela configuração espacial pode variar ao longo do gradiente de cobertura vegetal, uma vez que a variabilidade nas possíveis configurações espaciais variam ao longo do gradiente de cobertura vegetal (REF). Os efeitos de área e de fragmentação per se na manutenção do número de espécies local, como idealizados pelo programa independente, podem ser estimados comparando adicionalmente a situação de ausência de perda de habitat. Como os efeito da fragmentação per se variam ao longo do gradiente de cobertura vegetal? Os efeitos de área e fragmentação per se diferem em magnitude? Desconsiderar o isolamento estrutural é suficiente mesmo quando o efeito estimado de fragmentação per se é elevado?
+
+
+A diferença na situação de ausência de isolamento estrutural e ausência de perda de habitat, informa a redução no número de progenitores na paisagem, o efeito de perda de habitat.
+
+
+
+
+
+
+
+
+## Objetivo
+
+Aqui comparamos a congruência do predito para a diversidade local de árvores por um modelo mínimo de dinâmica ecológica no equilíbrio (Campos et al. 2012,2013; Thompson et al. 2019) na configuração espacial contemporânea do habitat remanescente na paisagem ao redor (Villard & Metzger 2014; Frazier et al. 2017), com a situação de ausência de isolamento estrutural (REF), onde todo o habitat remanescente está aglomerado ao redor da parcela. A situação de ausência de perda de habitat na paisagem ao redor foi simulada como controle nulo (Fahrig et al. 2022). Para cada sítio de amostragem exploramos graus de limitação de dispersão per capita (Chisholm & Lichtenstein 2009?; Campos 2012,2013; Villard & Metzger 2014) e situação de ausência de limitação de dispersão entre os indivíduos da paisagem local (HAH Fahrig 2013; Saura e al. 2021). Se houver limitação de dispersão, o modelo prevê a possibilidade de que o isolamento estrutural da parcela na paisagem possa reduzir o input de espécies vindos da paisagem ao redor e/ou reduzir a erosão de espécies por deriva ecológica (glossário; veja Campos et al. 2012, 2013; Condit et al. 2012; May et al. 2012; Thompson et al. 2019). A taxa de colonização de novas espécies na paisagem por evento de nascimento (U, espacialmente aleatória na paisagem) foi ajustada para obter a riqueza observada localmente, dado o número de indivíduos na amostra. O contraste na taxa U estimada em cada tipo de paisagem pode informar o efeito da perda de habitat per se (contraste entre controle e sem isolamento estrutural) e do efeito da fragmentação per se (contraste entre sem isolamento estrutural e paisagem contemporânea) na manutenção da riqueza local. Esses contrastes informam a dependência de propágulos vindos da paisagem ao redor para repor espécies perdidas localmente e são condicionais à escala espacial da dinâmica ecológica simulada (REF). Nos perguntamos se negligenciar o efeito do isolamento estrutural contemporâneo é suficiente para predizer a distribuição de abundância de espécies (SAD) de árvores observadas em parcelas contíguas na Floresta Atlântica e como a chance relativa de congruência varia em função dos efeitos estimados de área e fragmentação per se ao longo do gradiente de cobertura vegetal observado e graus de limitação de dispersão simulados (Fletcher Jr et al. 2018; Fahrig et al. 2019; Editorial 2019; Watling et al. 2020; Pütkker et al. 2020). 
+
+# Resumo do Método
+
+Buscamos na base de dados TreeCo (Lima et al. 2015) inventários florestais que identificaram todos os indivíduos arbóreos com pelos menos 4.8 cm de DBH em parcela contíguas de pelo menos 1 ha na Floresta Atlântica. Selecionamos os inventários florestais com grande confiabilidade taxonômica e da coordenada central da parcela. Os inventários selecionados foram realizados entre 1986 e 2016, obtemos mapas  quadrados de cobertura vegetal do MapBiomas (coleção XX REF XX GREG) contemporâneos aos eventos de amostragem da SAD de 16 x 16 km2, pressupondo a data de publicação ou de coleta, quando disponível. A resolução dos mapas de cobertura vegetal foi ajustada por inventário, de modo que a densidade de pixels do mapa é igual à densidade de indivíduos na parcela. A parcela e a paisagem ao redor foram aproximadas por um quadrado. O modelo de equilíbrio é um modelo neutro espacialmente explícito (REFs) que simula as posições e distâncias de todos os indivíduos na paisagem pressupondo equilíbrio dinâmico na escala da paisagem, situação em que a taxa de perda de espécies devido à deriva ecológica é compensada pelo input de espécies descrito pela taxa U (REFs). Esse modelo neutro utiliza uma abordagem coalescente para reconstruir a árvore genealógica da comunidade amostrada na parcela, pressupondo equivalência funcional entre os indivíduos de diferentes espécies (REFs). Os graus de limitação de dispersão foram simulados com uma distribuição de Laplace controlando pela proporção de propágulos que permanece até o vizinho imediato do progenitor (k) variando de 0.99 até 0.05. Avaliamos o efeito da escala na estimativa U para buscar a extensão espacial da paisagem ao redor que acumulava a maior parte do efeito de aumentar a escala (apêndice Efeito de Escala). A extensão de 4x4 km2 foi suficiente para simular todos os 20 graus de limitação de dispersão e foi a exensão espacial usada para calcular a proporção de cobertura vegetal na paisagem ao redor (p). Simulamos 10 réplicas da taxa U e 100 réplicas da SAD para cada combinação de grau de limitação de dispersão e tipo de paisagem por inventário florestal. Os contrastes foram obtidos pela diferença das médias divido pela média no controle nulo, por grau de limitação de dispersão e inventário florestal. As SADs réplicas foram comparadas com a SAD observada usando a versão bootstrap do teste de Kolmogorov-Smirnov (REF); contabilizamos o número de réplicas com boa congruência (p-valor > 0.05, apêncide análise de dados). 
+
+# Resultados
+
+## Contrastes Estimados
+
+</> Opening and the funnel <\>
+A taxa U estimada para obter a riqueza observada no equilíbrio apresenta uma padrão canônico em paisagens sem perda de habitat (May et al. 2012), com um máximo em graus de limitação de dispersão intermediários (Figuras X). Quando a limitação de dispersão é severa a maior parte das substituições ocorre entre coespécificos, reduzindo a perda de espécies por deriva ecológica; com o relaxamento da limitação de dispersão para graus menos severos, há aumento na probabilidade de substituição de coespécificos; quando a limitação de dispersão é branda, subpopulações distantes na paisagem podem repor espécies perdidas localmente, reduzindo a taxa U necessária para redor as espécies perdidas localmente por deriva ecológica (May et al. 2012). A perda de habitat reduz o número de progenitores na paisagem, potencialmente reduzindo a oferta de propágulos para a parcela; e pode aumentar o isolamento estrutural reduzindo o input de propágulos vindos da paisagem ao redor para a parcela ou aumentando a probabilidade de substituição de coespecíficos. Se o isolamento estrutural majoritariamente reduz o input de propágulos vindos para a parcela, então a taxa U estimada na configuração contemporânea deve ser maior do que aquela estimada na ausência de isolamento estrutural. Se o isolamento estrutural majoritariamente aumenta a probabilidade de substituição de coespécificos, então a taxa U estimada na configuração contemporânea deve ser menor do que aquela estimada na ausência de isolamento estrutural. A forma do padrão canônico também depende do número de indivíduos e de espécies na parcela. Essas variáveis controlam o grau de exposição da árvore genealógica à paisagem ao redor, e.g., se o número de indivíduos é muito elevado em comparação ao número de espécies, há muitas linhagens iniciais para coalescerem em poucas linhagens finais (REFs, apêndice estimativa taxa U). 
+<\> Resultados: Fatos e interpretação imediata (compreensão) <\>
+- relação entre média e desvio padrão da estimativa da taxa U
+- contrastes GE
+- descrição estatística contrastes ~ p e k
+
+## Chance relativa de congruência com a SAD observada
+
+############################################## Anterior
+
+
 # Opening versão 2:
 
 O debate entre os dois principais programas de pesquisa em ecologia de paisagens questiona a relevância do espaço para compreender os efeitos da perda de habitat na manutenção da diversidade local (REF). Conclusões sobre a relevância do espaço podem influenciar o design ou priorização de paisagens para a conservação e restauração dos ecossistemas naturais (REFs dos dois programas de pesquisa). O programa que pressupõe independência dos efeitos da perda de habitat e da configuração espacial, controlado pela quantidade de habitat - chamado de fragmentação per se, conclui que os efeitos da fragmentação per se são pequenos e idiossincráticos, tal que apenas a quantidade de habitat pode ser suficiente para compreender os efeitos majoritários da perda de habitat (REF). O programa que pressupõe interdependência entre a perda de habitat e as concomitantes mudanças na configuração espacial não reconhece essas conclusões que pressupõem independência a priori entre quantidade de habitat e a chamada fragmentação per se (REF). 
