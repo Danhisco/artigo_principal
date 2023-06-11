@@ -43,7 +43,7 @@ download_file(file = "secoes_texto/MeM/MaterialeMetodo.Rmd",
 
 ### Sítios selecionados
 
-  Selecionamos na base de dados TreeCo inventários florestais que amostraram em parcela única pelo menos 1ha de floresta, com alta confiabilidade taxonômica dos indivíduos arbóreos com DBH>=5.0cm e da coordenada central da parcela, totalizando 109 sítios (figura 1). As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (figura 1a). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrado mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação mediano foi 2007 (figura 1b). Os mapas de cobertura vegetal contemporâneos foram recortadas a partir da coleção 6 do mapbiomas (@mapbiomas), usando a coordenada central da parcela e o ano que melhor aproxima a amostragem da SAD (ano da coleta ou da publicação). A resolução dos mapas foi ajustados para que a densidade de pixels seja igual a densidade de indivíduos na parcela. As áreas da parcela e da paisagem foram aproximadas por quadrados. Em uma paisagem não foi possível desenhar uma área quadrado devido à configuração espacial do habitat e foi descartada. 
+Selecionamos na base de dados TreeCo inventários florestais que amostraram em parcela única pelo menos 1ha de floresta, com alta confiabilidade taxonômica dos indivíduos arbóreos com DBH>=5.0cm e da coordenada central da parcela, totalizando 109 sítios (figura 1). As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (figura 1a). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrado mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação mediano foi 2007 (figura 1b). Os mapas de cobertura vegetal contemporâneos foram recortadas a partir da coleção 6 do mapbiomas (@mapbiomas), usando a coordenada central da parcela e o ano que melhor aproxima a amostragem da SAD (ano da coleta ou da publicação). A resolução dos mapas foi ajustados para que a densidade de pixels seja igual a densidade de indivíduos na parcela. As áreas da parcela e da paisagem foram aproximadas por quadrados. Em uma paisagem não foi possível desenhar uma área quadrado devido à configuração espacial do habitat e foi descartada. 
 
 ```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6}
 df_plot <- df_dados |> 
@@ -72,6 +72,24 @@ l_p[[2]] <- df_plot |>
         strip.background = element_blank(),
         strip.placement = "outside") +
   coord_flip()
+l_p[[3]] <- df_plot |> 
+  ggplot(aes(x=forest_succession)) +
+  geom_bar() +
+  geom_text(aes(label = ..count..), stat = "count", vjust = -0.2, colour = "black") +
+  labs(x="classificação de estágio sucessional do TreeCo",
+       y="countagem",subtitle="c)")
+grid.arrange(grobs=l_p,ncol=3)
+```
+
+__Figura 1__ Sítios selecionados. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) DESCRIÇÃO DE C
+
+### Modelos Neutros
+
+O modelo neutro espacialmente explícito utiliza uma simulação coalescentes, onde se retrocede no tempo para reconstruir a trajetória de cada indivíduo na área amostral até o primeiro progenitor que surgiu na paisagem, unindo indivíduos de uma mesma espécie em ramos comuns, criando árvores genealógicas da comunidade (@Azaele2016, @Thompson2020). A abordagem pressupõe que apenas um indivíduo pode colonizar uma unidade de habitat por vez e toda morte é reposta pelo surgimento de um indivíduo adulto (pressuposto de soma zero). Em todo evento de nascimento há a probabilidade U de que o nascimento ocorra de uma nova espécie na paisagem. Nos 1-U casos é sorteado um indivíduo presente na paisagem (parcela ou paisagem ao redor) como progenitor. O progenitor é sorteado centralizando a função de dispersão no habitat vago e sorteando posições até obter uma unidade de habitat. Com essa abordagem é possível predizer SADs pressuposto equilíbrio dinâmico na paisagem local. A situação de equilíbrio dinâmico ocorre quando na escala da paisagem as extinções por deriva são compensadas pela colonização novas espécies por evento de nascimento, descrita pela taxa U. 
+
+### extensão espacial da paisagem ao redor e graus de limitação de dispersão
+
+```{r graus de limitação de dispersão simulados}
 l_p[[3]] <- df_sim |> 
   mutate(DA = Ntotal / effort_ha,
          k_factor = factor(round(k,2))) |> 
@@ -83,16 +101,11 @@ l_p[[3]] <- df_sim |>
        x = "k") +
   theme_light() +
   theme(legend.position = "top")
-grid.arrange(grobs=l_p,ncol=3)
 ```
 
-__Figura 1__ Sítios selecionados e graus de limitação de dispersão simulados. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) graus de limitação de dispersão: desvio-padrão da distribuição de laplace (eixo y), e a proporção de propágulos que permanece até a vizinhança imediata (até o vizinho imediato, eixo x), quanto menor a densidade de indivíduos (DA) maior a distância entre vizinhos e por isso menor o desvio padrão para obter a mesma proporção de propágulos até a vizinhança imediata.
+__Figura 2__ c) graus de limitação de dispersão: desvio-padrão da distribuição de laplace (eixo y), e a proporção de propágulos que permanece até a vizinhança imediata (até o vizinho imediato, eixo x), quanto menor a densidade de indivíduos (DA) maior a distância entre vizinhos e por isso menor o desvio padrão para obter a mesma proporção de propágulos até a vizinhança imediata.
 
-### Modelos Neutros
 
-Os modelos neutros utilizam simulações coalescentes, onde se retrocede no tempo para reconstruir a trajetória de cada indivíduo na área amostral até o primeiro progenitor que surgiu na paisagem, unindo indivíduos de uma mesma espécie em ramos comuns, criando árvores genealógicas da comunidade (@Azaele2016, @Thompson2020). A abordagem pressupõe que apenas um indivíduo pode colonizar uma unidade de habitat por vez e toda morte é reposta pelo surgimento de um indivíduo adulto (pressuposto de soma zero). Em todo evento de nascimento há a probabilidade U de que o nascimento ocorra de uma nova espécie na paisagem. Nos 1-U casos é sorteado um indivíduo presente na paisagem (parcela ou paisagem ao redor) como progenitor. Nos modelos neutros espacialmente explícitos um progenitor é sorteado centralizando a função de dispersão no habitat vago e sorteando posições até obter uma unidade de habitat. Nos modelos espacialmente implícitos, se a posição sorteada está dentro da parcela, então um sorteio é feito entre os indivíduos da parcela para definir o progenitor; caso o sorteio ocorra na paisagem ao redor, então um sorteio é feito entre os indivíduos da paisagem ao redor. Nos modelos sem espaço, sortea-se o progenitor entre os indivíduos remanescentes na paisagem (parcela e paisagem ao redor). Com essa abordagem é possível predizer SADs pressuposto equilíbrio dinâmico na paisagem local. A situação de equilíbrio dinâmico ocorre quando na escala da paisagem as extinções por deriva são compensadas pela colonização novas espécies por evento de nascimento, descrita pela taxa U. 
-
-### extensão espacial da paisagem ao redor e graus de limitação de dispersão
 
 Os graus de limitação de dispersão __per capita__ foram modelados com a distribuição de Laplace (exponencial espelhada; @Bullock2017). Para obter a posição do progenitor por dois sorteios ortogonais independentes (@Rosindell2008, @Campos2012). Os 20 graus de limitação de dispersão foram controlados pela proporção de propágulos que permanece até a vizinhança imediata da planta progenitora, a distância até o vizinho imediato. Quanto menor a densidade de indivíduos, maior a distância entre indivíduos; assim o parâmetro que controla o desvio-padrão da distribuição de Laplace diminui com a densidade (figura 1c).
   
