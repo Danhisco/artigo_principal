@@ -114,7 +114,7 @@ df_plot <- df_plot |>
   ddply("k_factor",f_k.SoE) |> 
   select(k_factor,matches("SoE")) |> 
   inner_join(x=df_plot,by="k_factor")
-write_csv()
+write_csv(df_plot,"dados/csv/df_plotSoE.csv")
 # df_plot <- read_csv("dados/csv/df_plotSoE.csv") |> as.data.frame()
 # df_plot$k_factor <- factor(round(df_plot$k_factor,2),
 #                            levels = unique(round(df_plot$k_factor,2))[20:1])

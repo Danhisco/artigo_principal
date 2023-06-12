@@ -21,6 +21,8 @@ library(dplyr)
 # dados disponíveis
 df_dados <- read_csv(file = "dados/df_dados_disponiveis.csv")
 df_sim <- read_csv("dados/df_simulacao.csv")
+df_plot <- read_csv("dados/csv/df_plotSoE.csv")
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
 ```
 
 ```{r trackdown rotine, include=FALSE,eval=FALSE}
@@ -112,6 +114,20 @@ __Figura 2__ c) graus de limitação de dispersão: desvio-padrão da distribui�
 
 Um desafio para criar os contrastes é definir a extensão espacial da paisagem ao redor (@Jackson2015, @Miguet2017, @Fahrig2021). A extensão espacial da paisagem determina a quantidade máxima de habitat disponível ao redor dos sítios de estudo (figura 2b - x: extensão, y: p). A análise de escala de efeito (@Jackson2015) propõe que a extensão espacial adequada é aquela que maximiza o peso de evidência da associação estatística entre o padrão de biodiversidade local estudado e a variável de interesse, por exemplo, a proporção de cobertura vegetal na paisagem. Essa abordagem tem sido adotada em diversos trabalhos (@Crouzeilles2016, @Stuber2020). Optamos por não utilizar a análise de escala de efeito, pois ela pressupõe que existe equilíbrio da resposta ecológica à heterogeneidade contemporânea da paisagem. Alternativamente, vamos investigar a extensão mínima da paisagem ao redor para que a construção da árvore genealógica da comunidade (@Thompson2020) não seja restringida pela extensão espacial da paisagem, mas sim pela limitação de dispersão. 
 
+```{r}
+df_p_extensoes |> filter(lado_km<=16.02) |> 
+  ggplot(aes(x=lado_km,y=p)) + 
+  geom_point(alpha=0.2,size=0.2) +
+  geom_line(aes(group=SiteCode),linewidth=0.2,alpha=0.2) +
+  labs(x="lado da paisagem quadrada (km)",y="proporção de cobertura vegetal",
+       title="a) %CV ~ scale") +
+  scale_y_continuous(breaks = seq(0,1,by=0.1)) +
+  coord_cartesian(expand = F) +
+  theme_light()
+```
+
+
+
 Uma forma de avaliar se a árvore genealógica da comunidade está sendo restringida pela extensão espacial da paisagem é investigar a taxa U (Apêndice: Efeito de Escala). A taxa U necessária para manter a riqueza local compensa o número de espécies perdidas localmente que não são repostas por subpopulações da paisagem (@May2012). Então quando a paisagem é pequena para um grau de limitação de dispersão, a taxa U deve ser elevada para compensar a ausência da chuva de propágulos esperada para aquele grau de limitação de dispersão. Com o aumento da extensão da paisagem a taxa U pode diminuir. Para um determinado grau de limitação de dispersão deve existir uma extensão espacial que acumula a maior parte do efeito de aumentar a escala na contribuição de propágulos para a parcela. Exploramos 6 extensões espaciais das paisagem ao redor que variaram de lado 0.5 km até 16 km. Investivamos paisagens sem perda de habitat para excluir os casos em que a taxa U se estabiliza por conta do isolamento do habitat da parcela em relação ao habitat remanescente na paisagem (@Thompson2019). Sorteamos 36 sítios dos 108 sítios totais, buscamos explorar a amplitude de valores de riqueza de espécies e número de indivíduos. Cada bateria de simulações teve 10 réplicas, totalizando 43 mil e 200 simulações para os 20 graus de limitação de dispersão e 6 escalas (Apêndice Efeito de Escala, Figura 3). Ajustamos um LMM (@Bolker2007?) que considerou a riqueza de espécies e número de indivíduos na escala log, e o grau de limitação de dispersão e a escala como duas variáveis categoricas. Pressupomos que a taxa U estimada na extensão de lado 16 km é referência e avaliamos o efeito de aumentar a escala na média do predito pelo LMM. 
 
 O observado na maior extensão (lado 16 km) é qualitativamente similar ao observado em paisagens infinitas (Apêndice Efeito de Escala, figura 2). Em paisagens infinitas sem perda de habitat a taxa U necessária para manter uma determinada riqueza na parcela apresenta um máximo global quando o grau de limitação de dispersão é pouco brando (@May2012). Em graus de limitação à dispersão severa a taxa U estimada é baixa, pois a perda de espécies é pequena: a maior parte das substituições ocorre entre coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies aumenta com a redução da substituição de coespecíficos, aumentando a perda de espécies por deriva ecológica. O aumento da erosão de espécies com o aumento da capacidade de dispersão não se mantem sempre, com o aumento da contribuição de supopulações da paisagem mais distante da parcela, reduzindo a estimativa da taxa U.
@@ -152,6 +168,8 @@ df_plot |>
        color="") +
   theme(legend.position = "top")
 ```
+
+### Paisagens Hipotéticas
 
 
 
