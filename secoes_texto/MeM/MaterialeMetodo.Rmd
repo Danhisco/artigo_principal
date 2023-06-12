@@ -18,6 +18,7 @@ library(readr)
 library(stringr)
 library(plyr)
 library(dplyr)
+source("source/mapa_p_MNEE.R")
 # dados disponíveis
 df_dados <- read_csv(file = "dados/df_dados_disponiveis.csv")
 df_sim <- read_csv("dados/df_simulacao.csv")
@@ -47,7 +48,7 @@ Aqui comparamos a congruência do predito para a diversidade local de árvores p
 
 ### Sítios selecionados
 
-Selecionamos na base de dados TreeCo inventários florestais que amostraram em parcela única pelo menos 1ha de floresta, com alta confiabilidade taxonômica dos indivíduos arbóreos com DBH>=5.0cm e da coordenada central da parcela, totalizando 109 sítios (figura 1). As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (figura 1a). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrado mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação mediano foi 2007 (figura 1b). Os mapas de cobertura vegetal contemporâneos foram recortadas a partir da coleção 6 do mapbiomas (@mapbiomas), usando a coordenada central da parcela e o ano que melhor aproxima a amostragem da SAD (ano da coleta ou da publicação). A resolução dos mapas foi ajustados para que a densidade de pixels seja igual a densidade de indivíduos na parcela. As áreas da parcela e da paisagem foram aproximadas por quadrados. Em uma paisagem não foi possível desenhar uma área quadrado devido à configuração espacial do habitat e foi descartada. 
+Selecionamos na base de dados TreeCo inventários florestais que amostraram em parcela única pelo menos 1ha de floresta, com alta confiabilidade taxonômica dos indivíduos arbóreos com DBH>=5.0cm e da coordenada central da parcela, totalizando 109 sítios (figura 1). As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (figura 1a). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrado mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação mediano foi 2007 (figura 1b). A maioria dos trabalhos ocorreu em áreas de florestas classificadas como primárias no TreeCo (Figura 1c). Os mapas de cobertura vegetal contemporâneos foram recortadas a partir da coleção 6 do mapbiomas (@mapbiomas), usando a coordenada central da parcela e o ano que melhor aproxima a amostragem da SAD (ano da coleta ou da publicação). A resolução dos mapas foi ajustados para que a densidade de pixels seja igual a densidade de indivíduos na parcela. As áreas da parcela e da paisagem foram aproximadas por quadrados. Em uma paisagem não foi possível desenhar uma área quadrado devido à configuração espacial do habitat e foi descartada. 
 
 ```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6}
 df_plot <- df_dados |> 
@@ -93,7 +94,7 @@ O modelo neutro espacialmente explícito utiliza uma simulação coalescentes, o
 
 
 ```{r graus de limitação de dispersão simulados}
-l_p[[3]] <- df_sim |> 
+df_sim |> 
   mutate(DA = Ntotal / effort_ha,
          k_factor = factor(round(k,2))) |> 
   ggplot(aes(x=k_factor,y=d)) +
@@ -106,36 +107,34 @@ l_p[[3]] <- df_sim |>
   theme(legend.position = "top")
 ```
 
-__Figura 2__ c) graus de limitação de dispersão: desvio-padrão da distribuição de laplace (eixo y), e a proporção de propágulos que permanece até a vizinhança imediata (até o vizinho imediato, eixo x), quanto menor a densidade de indivíduos (DA) maior a distância entre vizinhos e por isso menor o desvio padrão para obter a mesma proporção de propágulos até a vizinhança imediata.
-
+__Figura 2__ Graus de limitação de dispersão: desvio-padrão da distribuição de laplace (eixo y), e a proporção de propágulos que permanece até a vizinhança imediata (até o vizinho imediato - k, eixo x), quanto menor a densidade de indivíduos (DA) maior a distância entre vizinhos e por isso menor o desvio padrão para obter a mesma proporção de propágulos até a vizinhança imediata.
 
 
 ### Extensão espacial da paisagem
 
-Um desafio para criar os contrastes é definir a extensão espacial da paisagem ao redor (@Jackson2015, @Miguet2017, @Fahrig2021). A extensão espacial da paisagem determina a quantidade máxima de habitat disponível ao redor dos sítios de estudo (figura 2b - x: extensão, y: p). A análise de escala de efeito (@Jackson2015) propõe que a extensão espacial adequada é aquela que maximiza o peso de evidência da associação estatística entre o padrão de biodiversidade local estudado e a variável de interesse, por exemplo, a proporção de cobertura vegetal na paisagem. Essa abordagem tem sido adotada em diversos trabalhos (@Crouzeilles2016, @Stuber2020). Optamos por não utilizar a análise de escala de efeito, pois ela pressupõe que existe equilíbrio da resposta ecológica à heterogeneidade contemporânea da paisagem. Alternativamente, vamos investigar a extensão mínima da paisagem ao redor para que a construção da árvore genealógica da comunidade (@Thompson2020) não seja restringida pela extensão espacial da paisagem, mas sim pela limitação de dispersão. 
+Um desafio para criar os contrastes é definir a extensão espacial da paisagem ao redor (@Jackson2015, @Miguet2017, @Fahrig2021). A extensão espacial da paisagem determina a quantidade máxima de habitat disponível ao redor dos sítios de estudo (figura 3). A análise de escala de efeito (@Jackson2015) propõe que a extensão espacial adequada é aquela que maximiza o peso de evidência da associação estatística entre o padrão de biodiversidade local estudado e a variável de interesse, por exemplo, a proporção de cobertura vegetal na paisagem. Essa abordagem tem sido adotada em diversos trabalhos (@Crouzeilles2016, @Stuber2020). Optamos por não utilizar a análise de escala de efeito, pois ela pressupõe que existe equilíbrio da resposta ecológica à heterogeneidade contemporânea da paisagem. Alternativamente, vamos investigar a extensão mínima da paisagem ao redor para que a construção da árvore genealógica da comunidade não seja restringida pela extensão espacial da paisagem, mas sim pela limitação de dispersão. 
 
-```{r}
+```{r figura 3 p em funcao das extensoes espaciais}
 df_p_extensoes |> filter(lado_km<=16.02) |> 
   ggplot(aes(x=lado_km,y=p)) + 
   geom_point(alpha=0.2,size=0.2) +
   geom_line(aes(group=SiteCode),linewidth=0.2,alpha=0.2) +
-  labs(x="lado da paisagem quadrada (km)",y="proporção de cobertura vegetal",
-       title="a) %CV ~ scale") +
+  labs(x="lado da paisagem quadrada (km)",y="proporção de cobertura vegetal") +
   scale_y_continuous(breaks = seq(0,1,by=0.1)) +
   coord_cartesian(expand = F) +
   theme_light()
 ```
 
+__Figura 3__ Variação da proporção de cobertura vegetal contemporânea ao evento de amostragem do inventário florestal e a extensão espacial da paisagem ao redor. 
 
-
-Uma forma de avaliar se a árvore genealógica da comunidade está sendo restringida pela extensão espacial da paisagem é investigar a taxa U (Apêndice: Efeito de Escala). A taxa U necessária para manter a riqueza local compensa o número de espécies perdidas localmente que não são repostas por subpopulações da paisagem (@May2012). Então quando a paisagem é pequena para um grau de limitação de dispersão, a taxa U deve ser elevada para compensar a ausência da chuva de propágulos esperada para aquele grau de limitação de dispersão. Com o aumento da extensão da paisagem a taxa U pode diminuir. Para um determinado grau de limitação de dispersão deve existir uma extensão espacial que acumula a maior parte do efeito de aumentar a escala na contribuição de propágulos para a parcela. Exploramos 6 extensões espaciais das paisagem ao redor que variaram de lado 0.5 km até 16 km. Investivamos paisagens sem perda de habitat para excluir os casos em que a taxa U se estabiliza por conta do isolamento do habitat da parcela em relação ao habitat remanescente na paisagem (@Thompson2019). Sorteamos 36 sítios dos 108 sítios totais, buscamos explorar a amplitude de valores de riqueza de espécies e número de indivíduos. Cada bateria de simulações teve 10 réplicas, totalizando 43 mil e 200 simulações para os 20 graus de limitação de dispersão e 6 escalas (Apêndice Efeito de Escala, Figura 3). Ajustamos um LMM (@Bolker2007?) que considerou a riqueza de espécies e número de indivíduos na escala log, e o grau de limitação de dispersão e a escala como duas variáveis categoricas. Pressupomos que a taxa U estimada na extensão de lado 16 km é referência e avaliamos o efeito de aumentar a escala na média do predito pelo LMM. 
+Uma forma de avaliar se a árvore genealógica da comunidade está sendo restringida pela extensão espacial da paisagem é investigar a taxa U (Apêndice: Efeito de Escala). A taxa U necessária para manter a riqueza local compensa o número de espécies perdidas localmente que não são repostas por subpopulações da paisagem (@May2012). Então quando a paisagem é pequena para um grau de limitação de dispersão, a taxa U deve ser elevada para compensar a ausência da chuva de propágulos esperada para aquele grau de limitação de dispersão. Com o aumento da extensão da paisagem a taxa U pode diminuir. Para um determinado grau de limitação de dispersão deve existir uma extensão espacial que acumula a maior parte do efeito de aumentar a escala na contribuição de propágulos para a parcela. Exploramos 6 extensões espaciais das paisagem ao redor que variaram de lado 0.5 km até 16 km. Investivamos paisagens sem perda de habitat para excluir os casos em que a taxa U se estabiliza por conta do isolamento do habitat da parcela em relação ao habitat remanescente na paisagem (@Thompson2019). Sorteamos 36 sítios dos 108 sítios totais, buscamos explorar a amplitude de valores de riqueza de espécies e número de indivíduos. Cada bateria de simulações teve 10 réplicas, totalizando 43 mil e 200 simulações para os 20 graus de limitação de dispersão e 6 escalas (Apêndice Efeito de Escala figura 3). Ajustamos um LMM que considerou a riqueza de espécies e número de indivíduos na escala log, e o grau de limitação de dispersão e a escala como duas variáveis categoricas. Pressupomos que a taxa U estimada na extensão de lado 16 km é referência e avaliamos o efeito de aumentar a escala na média do predito pelo LMM. Definimos como escala adequada aquela escala que acumula 0.95% de toda redução esperada da menor escala de 0.5 km até a maior escala simulada de lado 16 km.
 
 O observado na maior extensão (lado 16 km) é qualitativamente similar ao observado em paisagens infinitas (Apêndice Efeito de Escala, figura 2). Em paisagens infinitas sem perda de habitat a taxa U necessária para manter uma determinada riqueza na parcela apresenta um máximo global quando o grau de limitação de dispersão é pouco brando (@May2012). Em graus de limitação à dispersão severa a taxa U estimada é baixa, pois a perda de espécies é pequena: a maior parte das substituições ocorre entre coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies aumenta com a redução da substituição de coespecíficos, aumentando a perda de espécies por deriva ecológica. O aumento da erosão de espécies com o aumento da capacidade de dispersão não se mantem sempre, com o aumento da contribuição de supopulações da paisagem mais distante da parcela, reduzindo a estimativa da taxa U.
 
-A extensão espacial mínima adequada aumenta com a redução da limitação de à dispersão e graus de limitação de dispersão com proporção de propágulos que permanece até a vizinhança imediata (k) inferiores à 0.20 não são adequados para simular em paisagens de 4x4 km 2 (Apêndice Efeito de Escala, figura 5). Em k entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km lado. Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U; a variação entre escalas para um mesmo sítio em geral é baixa (Apêndice efeito de Escala, figura 4) e a variação entre sítios é grande. Nesses k, o aumento do número de espécies per capita pode levar a divergência da média geral de estabilidade e apresentar padrões não lineares. Os graus de limitação de dispersão com k entre 0.80 e 0.40, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U (Apêndice Efeito de Escala, Figura 2). Em k entre 0.50 e 0.40 há incerteza entre o lado 1 e 2 km. Em k 0.35 e 0.30 o lado adequado é 2 km e k igual 0.25 é 4 km. Os k entre 0.20 e 0.05 são adequados em paisagens de lado 8 km.  
+A extensão espacial mínima adequada aumenta com a redução da limitação de à dispersão (figura 4, detalhes em Apêndice Efeito de Escala). Em k entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km lado. Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U; a variação entre escalas para um mesmo sítio em geral é baixa (Apêndice efeito de Escala, figura 4) e a variação entre sítios é grande. Nesses k, o aumento do número de espécies per capita pode levar a divergência da média geral de estabilidade e apresentar padrões não lineares. Os graus de limitação de dispersão com k entre 0.80 e 0.40, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U (Apêndice Efeito de Escala, Figura 2). Em k entre 0.50 e 0.40 há incerteza entre o lado 1 e 2 km. Em k 0.35 e 0.30 o lado adequado é 2 km e k igual 0.25 é 4 km. Os k entre 0.20 e 0.05 são adequados em paisagens de lado 8 km.  
 
 
-```{r análise de escala de efeito figura 3?}
+```{r análise de escala de efeito figura 4}
 v_threshold <- paste0("SoE >= ",
                       str_extract(paste(names(df_plot),collapse = " "),
                                   "(?<=SoE\\_)[0-9]{1}[.][0-9]{1,2}")) 
@@ -169,8 +168,35 @@ df_plot |>
   theme(legend.position = "top")
 ```
 
+__Figura 4__ Média das estimativas médias da taxa U (eixo x) em fução do lado da paisagem ao redor (scale, eixo x). Em azul a média e o desvio padrão para cada combinação de grau de limitação de dispersão (título dos paineis, k = proporção de propágulos que permanece até a vizinhança imediata) e scale. S = número de espécies, N = número de indivíduos. As linhas verticais em vermelho marcam a escala que acumula pelo menos 0.99 de toda a variação da média com o aumento da escala (Ver seção "Escala que acumula a maior parte do efeito da escala").
+
+
 ### Paisagens Hipotéticas
 
+```{r exemplo apresentacao Felipe}
+f_image <- \(mat,title){
+  image(mat,
+        main=title,
+        zlim=c(0,2),
+        axes=FALSE,
+        col=terrain.colors(12,rev = TRUE))
+}
+#
+par(mfrow=c(1,3))
+#
+path_name <- "dados/simulacao/MGipia1.txt"
+m <- read_table(file = path_name) |> as.matrix()
+f_image(mat=m,title="Contemporâneo")
+# sem frag
+m_sem_frag <- f_nonFragLand(m)
+f_image(mat=m_sem_frag,title="Sem Isolamento Estrutural")
+# idealizado
+m_ideal <- m
+m_ideal[m_ideal==0] <- 1
+f_image(mat=m_ideal,title="Idealizado")
+```
+
+__Figura 5__ Paisagens hipotéticas na escala de 4x4km2. Na esquerda a paisagem contemporânea ao evento da amostragem da SAD. No centro, paisagem sem isolamento estrutural, onde aproximadamente todo habitat remanescente está aglomerado ao redor da parcela. Na direita, paisagem idealizada sem perda habitat, situação de satuação de progenitores.
 
 
 ### SADs réplicas: 
