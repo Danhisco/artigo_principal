@@ -44,6 +44,7 @@ source("source/GAMMtools.R")
 f_z <- function(x) (x-mean(x))/sd(x)
 # Rdata e data frames
 load("dados/Rdata/l_md.contrastes.Rdata")
+load("dados/Rdata/l_md_congContrastes.Rdata")
 load("dados/Rdata/l_md.logOR.Rdata")
 ## df_dados_disponiveis
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
@@ -111,22 +112,180 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
-
 # Contrastes entre paisagens hipotéticas
-
-
-
 
 ## taxa U
 
 ### Gráficos exploratórios
 
+```{r figura 1 GE contrastes}
+l_p <- list()
+l_p[[1]] <- df_contrastes |>
+  pivot_longer(starts_with("efeito_")) |> 
+  mutate(name = factor(name,
+                       levels=c("efeito_area","efeito_frag","efeito_conf"))) |> 
+  ggplot(aes(x=value)) +
+  geom_density() +
+  facet_wrap(~name,ncol=3,scales="free",
+             strip.position = "bottom",
+             labeller = as_labeller(c(efeito_area = "área per se",
+                                      efeito_conf = "contemporaneidade",
+                                      efeito_frag = "fragmentação per se"))) +
+  labs(x="",y="",title="a) density plots contrastes") +
+  theme(strip.background = element_blank(),
+        strip.placement='outside',
+        axis.text.x = element_blank(),
+        plot.margin = unit(c(5, 5, 0, 5), "points"))
+l_p[[2]] <- df_contrastes |> 
+  pivot_longer(cols = k:p,names_to = "pred_class",values_to = "pred_values") |> 
+  mutate(pred_class = factor(pred_class,levels=c("p","k"))) |> 
+  pivot_longer(cols = starts_with("efeito_"),names_to = "resp_class",values_to = "resp_values") |> 
+  mutate(resp_class = factor(resp_class,levels=names(df_contrastes)[4:6])) |> 
+  ggplot(aes(x=pred_values,y=resp_values)) +
+  geom_point(alpha=0.4) +
+  geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
+  labs(title="b) Contrastes ~ p e k",x="",y="") +
+  facet_grid(pred_class~resp_class,scales="free",
+             labeller = labeller(pred_class = c(p="p",k="k"),
+                                 resp_class = c(efeito_area = "área per se",
+                                                efeito_conf = "contemporaneidade",
+                                                efeito_frag = "fragmentação per se")))
+# l_p[[3]] <- df_contrastes |> 
+#   ggplot(aes(x=efeito_area,y=efeito_frag)) + # ,color=p>=0.93
+#   geom_abline(slope = 1,intercept = 0,color="darkred") +
+#   geom_hline(data = df_contrastes |>
+#                filter(p>=0.93) |> 
+#                summarise(min = min(efeito_frag),
+#                          max = max(efeito_frag)) |> 
+#                pivot_longer(min:max),
+#              aes(yintercept = value),color="darkgreen") +
+#   geom_vline(data = df_contrastes |>
+#                filter(p>=0.93) |> 
+#                summarise(min = min(efeito_area),
+#                          max = max(efeito_area)) |> 
+#                pivot_longer(min:max),
+#              aes(xintercept = value),color="darkgreen") +
+#   geom_point(alpha=0.3) +
+#   geom_hex(bins=70,alpha=0.4) +
+#   scale_x_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+#   scale_y_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+#   labs(x="Área per se",y="Frag. per se",title="c) Frag. per se ~ Área per se") +
+#   guides(fill = guide_legend(title="contagem")) +
+#   scale_fill_continuous(type = "viridis") +
+#   theme_bw()
+grid.arrange(grobs=l_p,
+             layout_matrix = rbind(c(1,1,1,1),
+                                   c(2,2,2,2),
+                                   c(2,2,2,2))
+             )
+```
+
+__Figura 1__ Gráficos explotários do contraste
+
 ### GAMM: contrastes ~  f(p,k) 
+
+```{r intervalo de predição para os contrastes segundo estimado pelo GAMM,fig.height=8,fig.width=12}
+df_plot <- df_intPred |> 
+  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
+         k = k_z*sd(df_ad$k) + mean(df_ad$k),
+         name=factor(name,levels=paste0("efeito_",c("area","frag","conf")))) |> 
+  select(-contains("_z"),-predito) |> 
+  pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
+# gráficos
+v_range <- range(df_plot$pred)
+v_breaks1 <- c(-0.2,0,0.2,0.5,1)
+f_plot <- function(df){
+  f_ggplot <- function(df,facets=2){
+  ggplot(df,aes(x=p,y=k,z=pred,fill=pred)) +
+    geom_raster() +
+    geom_contour(aes(z=pred),
+                 size=0.5,color="darkblue",
+                 breaks=v_breaks1) +
+    geom_text_contour(aes(z=pred),
+                      breaks=v_breaks1,
+                      label.placer = label_placer_flattest()) +
+    scale_fill_gradient2(low="green",
+                         mid="red",
+                         high="black",
+                         midpoint = 0.5,
+                         limits=v_range,
+                         # round(seq(v_range[1],v_range[2],length.out = 5)[1:4],2)
+                         breaks=v_breaks1) +
+    scale_y_reverse() +
+    theme_classic() +
+    guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
+    coord_cartesian(expand = FALSE) +
+    labs(fill=df$name[1]) +
+    facet_wrap(~label,ncol = facets,scales="free")
+  }
+  l_p <- list()
+  l_p[[1]] <- df |> 
+    filter(label == "Q_0.5") |>
+    f_ggplot() + labs(x="")
+  l_p[[2]] <- df |> 
+    filter(label != "Q_0.5") |>
+    f_ggplot()
+  ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+}
+l_plot <- dlply(df_plot,"name",f_plot)
+p <- grid.arrange(grobs=l_plot,ncol=3)
+ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
+       width = 13,
+       height = 9)
+```
+
+__Figura 2__ Intervalo de Predição estimado pelos GAMM. 
+
+## Frag. per se ~ Área per se
+
+```{r figura 3 gamm para descreve contraste de frag per se em funcao do contraste de area per se}
+load("dados/Rdata/md_frag_area.Rdata")
+# dados
+df <- df_md |> 
+  filter(logOR_pair == "cont.non_frag") |> 
+  rename(frag_z=contraste_z) |> 
+  mutate(area_z = df_md |> 
+           filter(logOR_pair == "non_frag.ideal") |> 
+           pull(contraste_z),
+         SiteCode = factor(SiteCode))
+df_newpred <- data.frame(area_z = seq(min(df$area_z),max(df$area_z),length.out=200)) |> 
+  mutate(SiteCode = "SPigua1")
+df_pred_newdata <- f_PredInt.GAMM(data=df_newpred,
+                                  gamm=md_frag_area,
+                                  v_exclude=c("s(area_z,SiteCode)","s(SiteCode)"))
+df$predito <- predict(md_frag_area)
+# gráfico
+v_devexp <- summary(md_frag_area)$dev.exp
+df |> 
+  ggplot(aes(x=area_z,y=frag_z)) +
+  geom_point(alpha=0.2) +
+  geom_line(aes(y=predito,group=SiteCode),alpha=0.2) +
+  # geom_line(data=df_pred_newdata,aes(x=area_z,y=predito),color="darkgreen") +
+  geom_line(data=df_pred_newdata,aes(x=area_z,y=Q_0.5),color="darkred") +
+  geom_line(data = df_pred_newdata |> 
+              select(-Q_0.5) |> 
+              pivot_longer(starts_with("Q_0.")),
+            aes(x=area_z,y=value,group=name),color="darkblue") +
+  # scale_y_continuous(limits=range(df$frag_z)) +
+  annotate("rect",xmin = -1,xmax=1,ymin=14,ymax=16) +
+  annotate("text",x = 0,y = 15,
+           label=paste0("dev. exp. = ",round(v_devexp*100,digits = 1),"%*"),color="white") +
+  labs(x="z(contraste área per se)",y="z(contraste frag. per se)",
+       title="observado e predito pelo modelo completo e sem a variação entre sítios",
+       subtitle = "horizontal lines = quantile(x, probs=c(0.95,0.99))",
+       caption = "*full model") +
+  geom_vline(xintercept = quantile(df$area_z,probs = c(0.95,0.99)),linetype="dashed",alpha=0.3) +
+  theme_bw() +
+  theme(plot.caption = element_text(hjust=0))
+```
 
 ## congruência da SAD predita 
 
+```{r}
+
+```
+
 # SAD observada e SAD predita entre paisagens hipotéticas
 
-## 
-
-
+##
