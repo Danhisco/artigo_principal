@@ -114,6 +114,9 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 # Contrastes entre paisagens hipotéticas
 
+
+
+
 ## taxa U
 
 ### Gráficos exploratórios
@@ -124,5 +127,6 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 # SAD observada e SAD predita entre paisagens hipotéticas
 
+## 
 
 

@@ -216,7 +216,8 @@ __Figura 5__ Paisagens hipotéticas na escala de 4x4km2. Na esquerda a paisagem 
 
 ### Taxa U e Contrastes
 
-Para cada sítio de observação, paisagem hipotética e grau de limitação de dispersão 
+Para cada sítio de observação, paisagem hipotética e grau de limitação de dispersão 10 réplicas da taxa U foram estimadas. As médias da taxa U foram usadas para parametrizar as simulações que predizem as respectivas SADs. 
+Os contrastes da taxa U são obtidos pela comparação par a par da média de cada paisagem hipotética para um mesmo sítio e grau de limitação de dispersão. Calculamos a diferença entre o par e dividimos o valor pela média estimada na paisagem idealizada. Assim, obtemos 3 contrastes para cada sítio e grau de limitação de dispersão: contraste de área per se, (sem fragmentação - ideal) / ideal; contraste de fragmentação per se, (contemporâneo - sem fragmentação) / ideal; contraste de contemporaneidade (contemporâneo - ideal) / ideal.
 
 ### SADs réplicas: 
 
