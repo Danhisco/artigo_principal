@@ -1,7 +1,8 @@
 ---
+title: "Métodos para o 2o Comitê"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 editor_options:
   chunk_output_type: console
 ---
@@ -9,8 +10,11 @@ editor_options:
 ```{r setup,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE)
 # pacotes adicionais´
+source("source/mapa_p_MNEE.R")
 library(doMC)
 library(readr)
+library(scales)
+library(ggnewscale)
 library(gridExtra)
 library(ggplot2)
 library(tidyr)
@@ -18,11 +22,11 @@ library(readr)
 library(stringr)
 library(plyr)
 library(dplyr)
-source("source/mapa_p_MNEE.R")
 # dados disponíveis
 df_dados <- read_csv(file = "dados/df_dados_disponiveis.csv")
 df_sim <- read_csv("dados/df_simulacao.csv")
-df_plot <- read_csv("dados/csv/df_plotSoE.csv")
+df_plot <- read_csv("dados/csv/df_plotSoE.csv") |> 
+  mutate(k_factor=factor(round(k_factor,2)))
 df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
 ```
 
@@ -42,7 +46,8 @@ download_file(file = "secoes_texto/MeM/MaterialeMetodo.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
-## Métodos para o 2o Comitê
+
+<!-- ## Métodos para o 2o Comitê -->
 
 Aqui comparamos a congruência do predito para a diversidade local de árvores por um modelo mínimo de dinâmica ecológica no equilíbrio (Campos et al. 2012,2013; Thompson et al. 2019) na configuração espacial contemporânea do habitat remanescente na paisagem ao redor (Villard & Metzger 2014; Frazier et al. 2017), com a situação de ausência de isolamento estrutural (Fahrig et al. 2017, 2020; Fletcher Jr et al. 2018; Fahrig et al. 2019; Miller-Rushing et al. 2019), onde todo o habitat remanescente está aglomerado ao redor da parcela. A situação de ausência de perda de habitat na paisagem ao redor foi simulada como referência da ausência de efeito da perda de habitat (Fahrig et al. 2022). Exploramos graus de limitação de dispersão per capita (Chisholm & Lichtenstein 2009?; Campos 2012,2013; Villard & Metzger 2014). O modelo prevê a possibilidade de que o isolamento estrutural da parcela na paisagem possa reduzir o input de espécies vindos da paisagem ao redor e/ou reduzir a erosão de espécies por deriva ecológica (veja Campos et al. 2012, 2013; Condit et al. 2012; May et al. 2012; Thompson et al. 2019). A taxa de colonização de novas espécies na paisagem por evento de nascimento (U, espacialmente aleatória na paisagem) foi ajustada para obter a riqueza observada localmente, dado o número de indivíduos na amostra. O contraste na taxa U estimado entre paisagens hipotéticas pode informar o efeito da perda de habitat per se (contraste entre controle e sem isolamento estrutural) e do efeito da fragmentação per se (contraste entre sem isolamento estrutural e paisagem contemporânea) na manutenção da riqueza local. Esses contrastes informam a dependência de propágulos vindos da paisagem ao redor para repor espécies perdidas localmente. Nos perguntamos se desconsiderar o efeito do isolamento estrutural contemporâneo é suficiente para predizer a distribuição de abundância de espécies (SAD) de árvores observadas em parcelas contíguas na Floresta Atlântica e como a chance relativa de congruência varia em função dos efeitos estimados de área e fragmentação per se ao longo do gradiente de cobertura vegetal observado e graus de limitação de dispersão simulados (Fletcher Jr et al. 2018; Fahrig et al. 2019; Miller-Rushing et al. 2019; Watling et al. 2020; Pütkker et al. 2020). 
 
@@ -134,25 +139,26 @@ O observado na maior extensão (lado 16 km) é qualitativamente similar ao obser
 A extensão espacial mínima adequada aumenta com a redução da limitação de à dispersão (figura 4, detalhes em Apêndice Efeito de Escala). Em k entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km lado. Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U; a variação entre escalas para um mesmo sítio em geral é baixa (Apêndice efeito de Escala, figura 4) e a variação entre sítios é grande. Nesses k, o aumento do número de espécies per capita pode levar a divergência da média geral de estabilidade e apresentar padrões não lineares. Os graus de limitação de dispersão com k entre 0.80 e 0.40, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U (Apêndice Efeito de Escala, Figura 2). Em k entre 0.50 e 0.40 há incerteza entre o lado 1 e 2 km. Em k 0.35 e 0.30 o lado adequado é 2 km e k igual 0.25 é 4 km. Os k entre 0.20 e 0.05 são adequados em paisagens de lado 8 km.  
 
 
-```{r análise de escala de efeito figura 4}
+```{r análise de escala de efeito figura 4,include=F,eval=F}
 v_threshold <- paste0("SoE >= ",
                       str_extract(paste(names(df_plot),collapse = " "),
                                   "(?<=SoE\\_)[0-9]{1}[.][0-9]{1,2}")) 
 cols <- c("blue","red") # "#f04546","3 quant"=
 names(cols) <- c("avg+-sd",v_threshold )
 a <- 0.5
-df_plot |> 
+p <- df_plot |> 
   ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
   geom_point(alpha=0.40,aes(color=S.N)) +
   geom_line(aes(group=SiteCode,color=S.N),alpha=0.25) +
   scale_color_distiller(palette = "Spectral",name="S / N") +
   new_scale_color() +
-  stat_summary(fun.data = mean_se,geom ="line",aes(group=k_factor,color="avg+-sd"),alpha=0.6,size=a) +
+  stat_summary(fun.data = mean_se,geom ="line",
+               aes(group=k_factor,color="avg+-sd"),alpha=0.6,linewidth=a) +
   stat_summary(fun = mean,
                fun.min = function(x) mean(x) - sd(x), 
                fun.max = function(x) mean(x) + sd(x), 
                geom = "pointrange",
-               aes(x=lado_numeric,y=Pre_Umed,color="avg+-sd"),alpha=0.6,size=a) +
+               aes(x=lado_numeric,y=Pre_Umed,color="avg+-sd"),alpha=0.6,linewidth=a) +
   geom_vline(aes(xintercept=SoE_0.95,color=names(cols)[2]),alpha=0.5) +
   scale_color_manual(name="",values=cols) +
   scale_x_continuous(trans = log2_trans(),
@@ -166,6 +172,14 @@ df_plot |>
        y="avg U rate (Umed)",
        color="") +
   theme(legend.position = "top")
+ggsave("apendices/EfeitoEscala/figuras/fig5_SoE.png",p,
+       width = 10.2,
+       height = 6.7)
+```
+
+```{r figura 4 display, fig.width=8,fig.height=8.5}
+knitr::include_graphics("/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/apendices/EfeitoEscala/figuras/fig5_SoE.png", 
+                        rel_path = FALSE)
 ```
 
 __Figura 4__ Média das estimativas médias da taxa U (eixo x) em fução do lado da paisagem ao redor (scale, eixo x). Em azul a média e o desvio padrão para cada combinação de grau de limitação de dispersão (título dos paineis, k = proporção de propágulos que permanece até a vizinhança imediata) e scale. S = número de espécies, N = número de indivíduos. As linhas verticais em vermelho marcam a escala que acumula pelo menos 0.99 de toda a variação da média com o aumento da escala (Ver seção "Escala que acumula a maior parte do efeito da escala").
