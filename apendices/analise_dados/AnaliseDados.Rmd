@@ -23,6 +23,7 @@ library(ggdag)
 library(gratia)
 library(sads)
 library(doMC)
+library(metR)
 library(gridExtra)
 library(ggplot2)
 library(readr)
@@ -96,6 +97,8 @@ df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |>
 # df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,SiteCode,log_S_obs_z,log_Ntotal_z))))
 # write_csv(df_newdat,"dados/csv/df_newdataSADs.csv")
 #
+# df_intePred_contrastes.csv
+df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
 # df_congContrastetsREP.cvs
 df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastesREP.csv") |> 
   group_by(SiteCode,k,pair) |> 

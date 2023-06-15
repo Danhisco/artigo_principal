@@ -23,6 +23,7 @@ library(ggdag)
 library(gratia)
 library(sads)
 library(doMC)
+library(metR)
 library(gridExtra)
 library(ggplot2)
 library(readr)
@@ -68,6 +69,8 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |>
          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
          SiteCode = factor(SiteCode)) |> 
   select(-c(N:log.S))
+# df_intePred_contrastes.csv
+df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
 ## df_md: dados necessários para os modelos
 df_md <- df_ad |> 
   inner_join(df_contrastes |> 
