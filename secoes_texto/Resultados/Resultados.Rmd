@@ -47,6 +47,7 @@ f_z <- function(x) (x-mean(x))/sd(x)
 load("dados/Rdata/l_md.contrastes.Rdata")
 load("dados/Rdata/l_md_congContrastes.Rdata")
 load("dados/Rdata/l_md.logOR.Rdata")
+load("dados/Rdata/md_frag_area.Rdata")
 ## df_dados_disponiveis
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
 ## df_p
@@ -243,7 +244,6 @@ __Figura 2__ Intervalo de Predição estimado pelos GAMM.
 ## Frag. per se ~ Área per se
 
 ```{r figura 3 gamm para descreve contraste de frag per se em funcao do contraste de area per se}
-load("dados/Rdata/md_frag_area.Rdata")
 # dados
 df <- df_md |> 
   filter(logOR_pair == "cont.non_frag") |> 

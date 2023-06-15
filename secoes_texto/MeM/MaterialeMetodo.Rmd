@@ -35,9 +35,9 @@ df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
 library(trackdown)
 # both overwrite: 
 # overwrite the current google drive file with the current Rmd:
-upload_file(file="secoes_texto/MeM/MaterialeMetodo.Rmd",
-            gpath="mestrado/artigo_principal/secoes_texto/",
-            hide_code=TRUE)
+# upload_file(file="secoes_texto/MeM/MaterialeMetodo.Rmd",
+#             gpath="mestrado/artigo_principal/secoes_texto/",
+#             hide_code=TRUE)
 update_file(file ="secoes_texto/MeM/MaterialeMetodo.Rmd",
             gpath = "mestrado/artigo_principal/secoes_texto/",
             hide_code = TRUE)
