@@ -482,7 +482,6 @@ l_md[[3]] <- gam(diffS ~ 1 + s(SiteCode,bs="re"),
 names(l_md) <- c("~ f(p,land. hyp)","~ f(land. hyp)","~ 1")
 AICctab(l_md,weights=T)
 # olhar GAMMtools.R
-
 ```
 
 

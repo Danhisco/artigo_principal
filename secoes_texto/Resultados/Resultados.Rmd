@@ -16,7 +16,7 @@ text-align: justify}
 </style>
 
 ```{r setup,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE)
 # pacotes
 library(dagitty)
 library(ggdag)
@@ -285,10 +285,60 @@ df |>
 
 ## congruência da SAD predita 
 
-```{r}
-
+```{r figura 4 final GAMM CongContrastes}
+l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
+grid.arrange(grobs=l_p,ncol=3)
 ```
+
+__Figura 4__ Congruência da SAD predita entre contrastes: observada e estimada quando se pressupõe ausência de variabilidade entre sítios. 
 
 # SAD observada e SAD predita entre paisagens hipotéticas
 
-##
+## Log Odds Ratio
+
+```{r GE logOR contemp em relacao ao sem frag}
+geom_final <- \(){
+  list(
+    geom_point(alpha=0.4),
+    geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),
+                  lambda=0.1,color="darkgreen",linewidth=1.5,alpha=0.5),
+    geom_smooth(method="gam"),
+    geom_hline(yintercept = 0,color="darkred")
+  )
+}
+l_p <- list()
+l_p[[1]] <- df_md |> 
+  ggplot(aes(x=contraste_z,y=logOR_value)) +
+  geom_final() +
+  facet_wrap(~logOR_pair,ncol=3)
+l_p[[2]] <- df_md |> 
+  pivot_longer(p:k) |> 
+  ggplot(aes(x=value,y=logOR_value)) +
+  geom_final() +
+  facet_grid(name~logOR_pair)
+grid.arrange(grobs=l_p,ncol=1)
+```
+
+__Figura 5__ Gráficos exploratórios do log odds ratio em função das possíveis preditoras.
+  
+    
+__Tabela 1__ Seleção de GAMM 
+
+```{r tabela de selecao dos GAMM }
+f_correcaoNomes <- \(l_md){
+  names(l_md) <- str_remove(names(l_md),",ssbs.type") # corrigir na próxima versão de f_nameModel 
+  return(l_md)
+}
+l_md.logOR <- llply(l_md.logOR,f_correcaoNomes)
+df_tabelaSelecao <- ldply(l_md.logOR,f_TabSelGAMM,.id="pair")
+df_tabelaSelecao
+```
+
+```{r figura 6 log odds ratio contrastes intervalo de predicao e observado}
+f_SML.gamm <- \(df){md <- l_md.logOR[[df$pair[1]]][[df$modelo[[1]]]]}
+l_p <- dlply(df_tabelaSelecao,"pair",f_SML.gamm) |> 
+  f_l_mdGAMM_FiguraFinal_1dGAMM()
+grid.arrange(grobs=l_p,ncol=3)
+```
+
+__Figura 6__ Log Odds Ratio ~ contrastes: intervalo de predição e observado
