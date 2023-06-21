@@ -12,6 +12,9 @@ f_TabSelGAMM <- function(l_md){
     arrange(dAICc) |> 
     select(modelo,dAICc:weight,dev.expl)
 }
+
+
+
 #
 # 
 ## gamm: um mgcv::gam
