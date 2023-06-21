@@ -50,60 +50,6 @@ download_file(file = "secoes_texto/MeM/MaterialeMetodo.Rmd",
 
 Selecionamos na base de dados TreeCo inventários florestais que amostraram indivíduos arbóreos com DBH>=4.8 cm em parcela única de pelo menos 1ha de floresta, com alta confiabilidade taxonômica no nível de espécie e da coordenada central da parcela, totalizando 109 sítios. A base de dados TreeCo compilou todos os trabalhos fitossociológicos feitos na Floresta Atlântica, somando 75 anos de pesquisa. Utilizamos mapas de cobertura vegetal da coleção 6 do mapbiomas com resolução de 30x30 m2, que compilam mapas de 1985 até 2020 (@mapbiomas).  Os mapas de cobertura vegetal distinguem as áreas de cobertura vegetal nativa das áreas de outros tipos de cobertura. Classificamos as áreas de cobertura vegetal como áreas de habitat e as restantes como áreas de não habitat. Os mapas de cobertura vegetal foram recortados em quadrados centrados na coordenada central da parcela. A resolução dos mapas foi ajustada para que a densidade de pixels seja igual a densidade de indivíduos na parcela do respectivo inventário florestal. Aproximamos a área da parcela por um quadrado. Em uma paisagem não foi possível desenhar uma área quadrada devido à configuração espacial do habitat e foi descartada.
 
-<!-> Vai para os resultados
-
-```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6}
-df_plot <- df_dados |> 
-  select(SiteCode, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
-l_p <- list()
-l_p[[1]] <- df_plot |> 
-  ggplot(aes(y=lat,x=long)) +
-  geom_point(alpha=0.5) +
-  theme_light() +
-  labs(subtitle = "a)")
-v_labels <- c("effort_ha" = "plot area (ha)",
-              "Ntotal" = "# ind",
-              "S_obs" = "riqueza",
-              "year_bestProxy" = "approx. data year")
-df_plot[grep("\\_",df_plot$year_bestProxy),"year_bestProxy"] <- "2012.5"
-l_p[[2]] <- df_plot |>
-  mutate(year_bestProxy = as.numeric(year_bestProxy)) |> 
-  pivot_longer(effort_ha:year_bestProxy) |> 
-  ggplot(aes(x=name,y=value)) +
-  geom_jitter(alpha=0.4) +
-  geom_boxplot() +
-  labs(x="",y="",subtitle="b)") +
-  facet_wrap(~name,ncol=1,scales="free", labeller = as_labeller(v_labels), strip.position = "bottom") +
-  theme(axis.ticks.y = element_blank(),
-        axis.text.y = element_blank(),
-        strip.background = element_blank(),
-        strip.placement = "outside") +
-  coord_flip()
-l_p[[3]] <- df_plot |> 
-  ggplot(aes(x=forest_succession)) +
-  geom_bar() +
-  geom_text(aes(label = ..count..), stat = "count", vjust = -0.2, colour = "black") +
-  labs(x="classificação de estágio sucessional do TreeCo",
-       y="countagem",subtitle="c)")
-grid.arrange(grobs=l_p,ncol=3)
-```
-
-```{r graus de limitação de dispersão simulados}
-df_sim |> 
-  mutate(DA = Ntotal / effort_ha,
-         k_factor = factor(round(k,2))) |> 
-  ggplot(aes(x=k_factor,y=d)) +
-  geom_jitter(aes(color=DA)) +
-  geom_boxplot() +
-  labs(subtitle = "c)",
-       y = "disp. kernel sd",
-       x = "k") +
-  theme_light() +
-  theme(legend.position = "top")
-```
-
-<!-> vai para resultados <->
-
 
 
 ### Método
