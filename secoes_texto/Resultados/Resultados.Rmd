@@ -122,7 +122,6 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 As coordenadas dos sítios variaram entre -31° e -7° de latit”ude e entre -55° e -35° de longitude (figura 1a). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2010 (figura 1b). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo (Figura 1c). 
 
-<!-> Vai para os resultados
 
 ```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6}
 df_plot <- df_dados |> 
@@ -176,6 +175,20 @@ df_sim |>
 
 
 __Figura 1__ Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão)).
+
+
+```{r figura 2 p em funcao das extensoes espaciais}
+df_p_extensoes |> filter(lado_km<=16.02) |> 
+  ggplot(aes(x=lado_km,y=p)) + 
+  geom_point(alpha=0.2,size=0.2) +
+  geom_line(aes(group=SiteCode),linewidth=0.2,alpha=0.2) +
+  labs(x="lado da paisagem quadrada (km)",y="proporção de cobertura vegetal") +
+  scale_y_continuous(breaks = seq(0,1,by=0.1)) +
+  coord_cartesian(expand = F) +
+  theme_light()
+```
+
+__Figura 2__ Variação da proporção de cobertura vegetal contemporânea ao evento de amostragem do inventário florestal e a extensão espacial da paisagem ao redor. 
 
 
 
