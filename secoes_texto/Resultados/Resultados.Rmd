@@ -187,6 +187,49 @@ O observado na maior extensão (lado 16 km) é qualitativamente similar ao obser
 A extensão espacial mínima adequada aumenta com a redução da limitação de à dispersão (figura 4, detalhes em Apêndice Efeito de Escala). Em k entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km lado. Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U; a variação entre escalas para um mesmo sítio em geral é baixa (Apêndice efeito de Escala, figura 4) e a variação entre sítios é grande. Nesses k, o aumento do número de espécies per capita pode levar a divergência da média geral de estabilidade e apresentar padrões não lineares. Os graus de limitação de dispersão com k entre 0.80 e 0.40, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U (Apêndice Efeito de Escala, Figura 2). Em k entre 0.50 e 0.40 há incerteza entre o lado 1 e 2 km. Em k 0.35 e 0.30 o lado adequado é 2 km e k igual 0.25 é 4 km. Os k entre 0.20 e 0.05 são adequados em paisagens de lado 8 km.  
 
 
+```{r análise de escala de efeito figura 4,include=F,eval=F}
+v_threshold <- paste0("SoE >= ",
+                      str_extract(paste(names(df_plot),collapse = " "),
+                                  "(?<=SoE\\_)[0-9]{1}[.][0-9]{1,2}")) 
+cols <- c("blue","red") # "#f04546","3 quant"=
+names(cols) <- c("avg+-sd",v_threshold )
+a <- 0.5
+p <- df_plot |> 
+  ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
+  geom_point(alpha=0.40,aes(color=S.N)) +
+  geom_line(aes(group=SiteCode,color=S.N),alpha=0.25) +
+  scale_color_distiller(palette = "Spectral",name="S / N") +
+  new_scale_color() +
+  stat_summary(fun.data = mean_se,geom ="line",
+               aes(group=k_factor,color="avg+-sd"),alpha=0.6,linewidth=a) +
+  stat_summary(fun = mean,
+               fun.min = function(x) mean(x) - sd(x), 
+               fun.max = function(x) mean(x) + sd(x), 
+               geom = "pointrange",
+               aes(x=lado_numeric,y=Pre_Umed,color="avg+-sd"),alpha=0.6,linewidth=a) +
+  geom_vline(aes(xintercept=SoE_0.95,color=names(cols)[2]),alpha=0.5) +
+  scale_color_manual(name="",values=cols) +
+  scale_x_continuous(trans = log2_trans(),
+                     breaks = trans_breaks("log2", function(x) 2^x)) +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  facet_wrap(~k_factor,ncol=5) +
+  theme_classic() +
+  labs(title = "Média da estimativa média da taxa U predito pelo LMM:",
+       subtitle="logit(Umed) ~ log(S) * log(N) * k * scale + (1|Site)",
+       x="scale (landscape side, km)",
+       y="avg U rate (Umed)",
+       color="") +
+  theme(legend.position = "top")
+ggsave("apendices/EfeitoEscala/figuras/fig5_SoE.png",p,
+       width = 10.2,
+       height = 6.7)
+```
+
+```{r figura 4 display, fig.width=8,fig.height=8.5}
+knitr::include_graphics("/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/apendices/EfeitoEscala/figuras/fig5_SoE.png", 
+                        rel_path = FALSE)
+```
+
 
 __Figura 4__ Média das estimativas médias da taxa U (eixo x) em fução do lado da paisagem ao redor (scale, eixo x). Em azul a média e o desvio padrão para cada combinação de grau de limitação de dispersão (título dos paineis, k = proporção de propágulos que permanece até a vizinhança imediata) e scale. S = número de espécies, N = número de indivíduos. As linhas verticais em vermelho marcam a escala que acumula pelo menos 0.99 de toda a variação da média com o aumento da escala (Ver seção "Escala que acumula a maior parte do efeito da escala").
 

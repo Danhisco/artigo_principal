@@ -86,52 +86,6 @@ __Figura 3__ Variação da proporção de cobertura vegetal contemporânea ao ev
 
 
 
-<-> Vai para resultados 
-```{r análise de escala de efeito figura 4,include=F,eval=F}
-v_threshold <- paste0("SoE >= ",
-                      str_extract(paste(names(df_plot),collapse = " "),
-                                  "(?<=SoE\\_)[0-9]{1}[.][0-9]{1,2}")) 
-cols <- c("blue","red") # "#f04546","3 quant"=
-names(cols) <- c("avg+-sd",v_threshold )
-a <- 0.5
-p <- df_plot |> 
-  ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
-  geom_point(alpha=0.40,aes(color=S.N)) +
-  geom_line(aes(group=SiteCode,color=S.N),alpha=0.25) +
-  scale_color_distiller(palette = "Spectral",name="S / N") +
-  new_scale_color() +
-  stat_summary(fun.data = mean_se,geom ="line",
-               aes(group=k_factor,color="avg+-sd"),alpha=0.6,linewidth=a) +
-  stat_summary(fun = mean,
-               fun.min = function(x) mean(x) - sd(x), 
-               fun.max = function(x) mean(x) + sd(x), 
-               geom = "pointrange",
-               aes(x=lado_numeric,y=Pre_Umed,color="avg+-sd"),alpha=0.6,linewidth=a) +
-  geom_vline(aes(xintercept=SoE_0.95,color=names(cols)[2]),alpha=0.5) +
-  scale_color_manual(name="",values=cols) +
-  scale_x_continuous(trans = log2_trans(),
-                     breaks = trans_breaks("log2", function(x) 2^x)) +
-  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-  facet_wrap(~k_factor,ncol=5) +
-  theme_classic() +
-  labs(title = "Média da estimativa média da taxa U predito pelo LMM:",
-       subtitle="logit(Umed) ~ log(S) * log(N) * k * scale + (1|Site)",
-       x="scale (landscape side, km)",
-       y="avg U rate (Umed)",
-       color="") +
-  theme(legend.position = "top")
-ggsave("apendices/EfeitoEscala/figuras/fig5_SoE.png",p,
-       width = 10.2,
-       height = 6.7)
-```
-
-```{r figura 4 display, fig.width=8,fig.height=8.5}
-knitr::include_graphics("/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/apendices/EfeitoEscala/figuras/fig5_SoE.png", 
-                        rel_path = FALSE)
-```
-
-<-> Vai para resultados 
-
 
 
 <-> repensar local
@@ -164,8 +118,4 @@ __Figura 5__ Paisagens hipotéticas na escala de 4x4km2. Na esquerda a paisagem 
 [a]artigo em que ele explica o programa de pesquisa da teoria neutra como aquele que procura explorar até onde é razoável pressupor equivalência funcional. Dentro da proposta original de Lakatos isso seria o mesmo que ser um programa de pesquisa degenerado a priori: explorar ao máximo os pressupostos auxiliares ao pressuposto central com intenção de manter o pressuposto central. Tem dois artigos que abordam bem esse tema em uma revista de filosofia.
 [b]mais novo: https://www.jstor.org/stable/26948089
 [c]Leroi, A.M., Lambert, B., Rosindell, J. et al. Neutral syndrome. Nat Hum Behav 4, 780–790 (2020). https://doi.org/10.1038/s41562-020-0844-7
-[d]artigo em que ele explica o programa de pesquisa da teoria neutra como aquele que procura explorar até onde é razoável pressupor equivalência funcional. Dentro da proposta original de Lakatos isso seria o mesmo que ser um programa de pesquisa degenerado a priori: explorar ao máximo os pressupostos auxiliares ao pressuposto central com intenção de manter o pressuposto central. Tem dois artigos que abordam bem esse tema em uma revista de filosofia.
-[e]mais novo: https://www.jstor.org/stable/26948089
-[f]Leroi, A.M., Lambert, B., Rosindell, J. et al. Neutral syndrome. Nat Hum Behav 4, 780–790 (2020). https://doi.org/10.1038/s41562-020-0844-7
-[g]Munoz, F., & Huneman, P. (2016). From the neutral theory to a comprehensive and multiscale theory of ecological equivalence. The Quarterly Review of Biology, 91(3), 321-342.
-[h]Munoz, F., & Huneman, P. (2016). From the neutral theory to a comprehensive and multiscale theory of ecological equivalence. The Quarterly Review of Biology, 91(3), 321-342.
+[d]Munoz, F., & Huneman, P. (2016). From the neutral theory to a comprehensive and multiscale theory of ecological equivalence. The Quarterly Review of Biology, 91(3), 321-342.
