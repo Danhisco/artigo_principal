@@ -52,11 +52,6 @@ load("dados/Rdata/md_frag_area.Rdata")
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
 ## df_p
 df_p <- read_csv("dados/df_p.csv")
-## df_plotSoE
-df_plotSoE <- read_csv("dados/csv/df_plotSoE.csv") |> 
-  mutate(k_factor=factor(round(k_factor,2)))
-## df_p_extensoes
-df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
 ## df_resultados 
 df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
 ## df_sim
@@ -125,11 +120,12 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 # Inventários Florestais Selecionados
 
-As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (figura 1a). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (figura 1b). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo (Figura 1c). 
+As coordenadas dos sítios variaram entre -31° e -7° de latit”ude e entre -55° e -35° de longitude (figura 1a). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (figura 1b). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo (Figura 1c). Portanto, todos os sítios dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Uma paisagem foi descartada, pois não foi possível delimitar uma área amostral quadrada por conta da particular configuração espacial do habitat remanescente. 
+
 
 
 ```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6}
-df_plot <- df_dados_disponiveis |> 
+df_plot <- df_dados |> 
   select(SiteCode, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
 l_p <- list()
 l_p[[1]] <- df_plot |> 
@@ -178,41 +174,25 @@ df_sim |>
   theme(legend.position = "top")
 ```
 
-
 __Figura 1__ Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão)).
 
 
-```{r figura 2 p em funcao das extensoes espaciais}
-df_p_extensoes |> filter(lado_km<=16.02) |> 
-  ggplot(aes(x=lado_km,y=p)) + 
-  geom_point(alpha=0.2,size=0.2) +
-  geom_line(aes(group=SiteCode),linewidth=0.2,alpha=0.2) +
-  labs(x="lado da paisagem quadrada (km)",y="proporção de cobertura vegetal") +
-  scale_y_continuous(breaks = seq(0,1,by=0.1)) +
-  coord_cartesian(expand = F) +
-  theme_light()
-```
-
-__Figura 2__ Variação da proporção de cobertura vegetal contemporânea ao evento de amostragem do inventário florestal e a extensão espacial da paisagem ao redor. 
 
 
+# Efeito de Escalar[a]
 
+Dentre os 36 sítios usados para avaliar o efeito de escalar, o observado na maior extensão (lado 16 km) é qualitativamente similar ao observado em paisagens infinitas (Apêndice Efeito de Escala, figura 2). Em paisagens infinitas sem perda de habitat a taxa U necessária para manter uma determinada riqueza na parcela apresenta um máximo global quando o grau de limitação de dispersão é pouco brando (@May2012). Em graus de limitação à dispersão severa a taxa U estimada é baixa, pois a perda de espécies é pequena: a maior parte das substituições ocorre entre coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies aumenta com a redução da substituição de coespecíficos, aumentando a perda de espécies por deriva ecológica. O aumento da erosão de espécies com o aumento da capacidade de dispersão não se mantém sempre, com o aumento da contribuição de subpopulações da paisagem mais distante da parcela, reduzindo a estimativa da taxa U.
 
-# Efeito de Escalar
-
-O observado na maior extensão (lado 16 km) é qualitativamente similar ao observado em paisagens infinitas (Apêndice Efeito de Escala, figura 2). Em paisagens infinitas sem perda de habitat a taxa U necessária para manter uma determinada riqueza na parcela apresenta um máximo global quando o grau de limitação de dispersão é pouco brando (@May2012). Em graus de limitação à dispersão severa a taxa U estimada é baixa, pois a perda de espécies é pequena: a maior parte das substituições ocorre entre coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies aumenta com a redução da substituição de coespecíficos, aumentando a perda de espécies por deriva ecológica. O aumento da erosão de espécies com o aumento da capacidade de dispersão não se mantem sempre, com o aumento da contribuição de supopulações da paisagem mais distante da parcela, reduzindo a estimativa da taxa U.
-
-A extensão espacial mínima adequada aumenta com a redução da limitação de à dispersão (figura 4, detalhes em Apêndice Efeito de Escala). Em k entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km lado. Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U; a variação entre escalas para um mesmo sítio em geral é baixa (Apêndice efeito de Escala, figura 4) e a variação entre sítios é grande. Nesses k, o aumento do número de espécies per capita pode levar a divergência da média geral de estabilidade e apresentar padrões não lineares. Os graus de limitação de dispersão com k entre 0.80 e 0.40, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U (Apêndice Efeito de Escala, Figura 2). Em k entre 0.50 e 0.40 há incerteza entre o lado 1 e 2 km. Em k 0.35 e 0.30 o lado adequado é 2 km e k igual 0.25 é 4 km. Os k entre 0.20 e 0.05 são adequados em paisagens de lado 8 km.  
-
+Pressuposto que a extensão espacial mínima adequada é aquela que acumula pelo menos 95% de toda diminuição na taxa U observada ao aumentar a extensão espacial de 0.5 km de lado até 16 km de lado. A extensão espacial mínima adequada tende a aumentar com a redução da limitação de à dispersão (figura 2, detalhes em Apêndice Efeito de Escalar). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km de lado. Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U; a variação entre escalas para um mesmo sítio em geral é baixa (Apêndice efeito de Escala, figura 4) e a variação entre sítios é grande. Nesses graus de limitação de dispersão, o aumento do número de espécies per capita pode aumentar a divergência da média geral de estabilidade e apresentar padrões não lineares (detalhes em Apêndice efeito de escalar). Os graus de limitação de dispersão com k entre 0.80 e 0.55, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U e paisagem sem perda de habitat (Apêndice Efeito de Escala, Figura 2). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura 2). 
 
 ```{r análise de escala de efeito figura 4,include=F,eval=F}
 v_threshold <- paste0("SoE >= ",
-                      str_extract(paste(names(df_plotSoE),collapse = " "),
+                      str_extract(paste(names(df_plot),collapse = " "),
                                   "(?<=SoE\\_)[0-9]{1}[.][0-9]{1,2}")) 
 cols <- c("blue","red") # "#f04546","3 quant"=
 names(cols) <- c("avg+-sd",v_threshold )
 a <- 0.5
-p <- df_plotSoE |> 
+p <- df_plot |> 
   ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
   geom_point(alpha=0.40,aes(color=S.N)) +
   geom_line(aes(group=SiteCode,color=S.N),alpha=0.25) +
@@ -247,7 +227,6 @@ ggsave("apendices/EfeitoEscala/figuras/fig5_SoE.png",p,
 knitr::include_graphics("/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/apendices/EfeitoEscala/figuras/fig5_SoE.png", 
                         rel_path = FALSE)
 ```
-
 
 __Figura 4__ Média das estimativas médias da taxa U (eixo x) em fução do lado da paisagem ao redor (scale, eixo x). Em azul a média e o desvio padrão para cada combinação de grau de limitação de dispersão (título dos paineis, k = proporção de propágulos que permanece até a vizinhança imediata) e scale. S = número de espécies, N = número de indivíduos. As linhas verticais em vermelho marcam a escala que acumula pelo menos 0.99 de toda a variação da média com o aumento da escala (Ver seção "Escala que acumula a maior parte do efeito da escala").
 
@@ -495,3 +474,5 @@ grid.arrange(grobs=l_p,ncol=3)
 ```
 
 __Figura 6__ Log Odds Ratio ~ contrastes: intervalo de predição e observado
+
+[a]como o efeito de escalar foi avaliado apenas com a taxa U acredito que preciso incluir uma descrição da variabilidade entre réplicas (e.g. %coeficiente de variação)
