@@ -52,6 +52,11 @@ load("dados/Rdata/md_frag_area.Rdata")
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
 ## df_p
 df_p <- read_csv("dados/df_p.csv")
+## df_plotSoE
+df_plotSoE <- read_csv("dados/csv/df_plotSoE.csv") |> 
+  mutate(k_factor=factor(round(k_factor,2)))
+## df_p_extensoes
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
 ## df_resultados 
 df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
 ## df_sim
@@ -120,11 +125,11 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 # Inventários Florestais Selecionados
 
-As coordenadas dos sítios variaram entre -31° e -7° de latit”ude e entre -55° e -35° de longitude (figura 1a). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2010 (figura 1b). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo (Figura 1c). 
+As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (figura 1a). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (figura 1b). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo (Figura 1c). 
 
 
 ```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6}
-df_plot <- df_dados |> 
+df_plot <- df_dados_disponiveis |> 
   select(SiteCode, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
 l_p <- list()
 l_p[[1]] <- df_plot |> 
@@ -202,12 +207,12 @@ A extensão espacial mínima adequada aumenta com a redução da limitação de 
 
 ```{r análise de escala de efeito figura 4,include=F,eval=F}
 v_threshold <- paste0("SoE >= ",
-                      str_extract(paste(names(df_plot),collapse = " "),
+                      str_extract(paste(names(df_plotSoE),collapse = " "),
                                   "(?<=SoE\\_)[0-9]{1}[.][0-9]{1,2}")) 
 cols <- c("blue","red") # "#f04546","3 quant"=
 names(cols) <- c("avg+-sd",v_threshold )
 a <- 0.5
-p <- df_plot |> 
+p <- df_plotSoE |> 
   ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
   geom_point(alpha=0.40,aes(color=S.N)) +
   geom_line(aes(group=SiteCode,color=S.N),alpha=0.25) +

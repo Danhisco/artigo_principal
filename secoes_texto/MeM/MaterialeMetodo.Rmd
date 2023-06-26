@@ -59,7 +59,7 @@ Para comparar os dois programas de pesquisa da ecologia de paisagens (Fahrig et 
 
 O modelo neutro espacialmente explícito utiliza uma abordagem coalescente (@Rosindell2008; @Thompson2020). A abordagem pressupõe que apenas um indivíduo pode colonizar uma unidade de habitat por vez e toda morte é reposta pelo nascimento de um indivíduo adulto (pressuposto de soma zero). Na simulação coalescente at each time step, um indivíduo é substituído por um singleton de uma nova espécie na paisagem (probabilidade U) ou pela prole de uma árvore residente na paisagem (1-U). Caso a prole de uma árvore residente colonize o habitat vago, a posição da árvore progenitora é determinada centrando a função de dispersão no habitat vago e sorteando posições até que uma unidade de habitat seja escolhida (Thompson et al. 2020). A função de dispersão, que descreve a probabilidade de colonização de um propágulo em função da distância entre planta progenitora e unidade de habitat vago, permite eventos raros de dispersão de longa distância dentro da paisagem local. Variamos o grau de limitação de dispersão variando a proporção de propágulos que permanecem até a vizinhança imediata da planta progenitora (distância até o vizinho imediato), variando entre inventários florestais em função da densidade de indivíduos. Os indivíduos que compartilham um único ancestral comum constituem a população de uma determinada espécie (detalhes do algoritmo em Rosindell et al. 2008). A simulação termina quando todos os indivíduos da área amostral coalescem para o conjunto dos primeiros indivíduos ancestrais que originaram às populações na  paisagem local (árvore genealógica da comunidade local). A taxa U é estimada usando a abordagem analítica proposta por Rosindell et al. (2008, apêndice A). Para cada bateria de simulação (paisagem hipotética e grau de limitação de dispersão) são estimadas 10 réplicas da taxa U necessária para manter a riqueza observada. A taxa U média é usada para parametrizar as 100 simulações réplicas usadas para predizer a SAD. 
 
-```{r exemplo paisagens hipoteticas}
+```{r exemplo paisagens hipoteticas, fig.height=5,fig.width=15}
 f_image <- \(mat,title){
   image(mat,
         main=title,
@@ -95,7 +95,17 @@ Uma forma de avaliar se a árvore genealógica da comunidade está sendo restrin
 
 Os contrastes na taxa U foram obtidos pela diferença na média da taxa U entre os 3 possíveis contrastes entre paisagens hipotéticas par a par divido pela média da taxa U. O terceiro possível contraste é entre a paisagem contemporânea e a paisagem idealizada. A congruência na forma das SADs foi classificada como congruênte ou não usando um teste de Kolmogorov-Smirnov bootstrap (@2samples), cuja hipotese nula asserta que as duas SADs comparadas são amostras de uma mesma distribuição de abundância de espécies. As SAD foram classificadas como congruentes se o p-valor do teste for maior ou igual a 5%. Contabilizamos o número de SADs congruêntes. Descrevemos as variáveis resposta (contrastes da taxa U e congruência entre SADs) utilizando GAMMs normais e binomiais (@Pedersen2019).
 
+
+__Comentários__ 
+
 [a]artigo em que ele explica o programa de pesquisa da teoria neutra como aquele que procura explorar até onde é razoável pressupor equivalência funcional. Dentro da proposta original de Lakatos isso seria o mesmo que ser um programa de pesquisa degenerado a priori: explorar ao máximo os pressupostos auxiliares ao pressuposto central com intenção de manter o pressuposto central. Tem dois artigos que abordam bem esse tema em uma revista de filosofia.
-[b]mais novo: https://www.jstor.org/stable/26948089
+  
+    
+[b]mais novo: https://www.jstor.org/stable/26948089  
+  
+  
 [c]Leroi, A.M., Lambert, B., Rosindell, J. et al. Neutral syndrome. Nat Hum Behav 4, 780–790 (2020). https://doi.org/10.1038/s41562-020-0844-7
+  
+    
 [d]Munoz, F., & Huneman, P. (2016). From the neutral theory to a comprehensive and multiscale theory of ecological equivalence. The Quarterly Review of Biology, 91(3), 321-342.
+ 
