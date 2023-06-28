@@ -160,20 +160,6 @@ l_p[[3]] <- df_plot |>
 grid.arrange(grobs=l_p,ncol=3)
 ```
 
-```{r graus de limitação de dispersão simulados, eval=F,include=F}
-df_sim |> 
-  mutate(DA = Ntotal / effort_ha,
-         k_factor = factor(round(k,2))) |> 
-  ggplot(aes(x=k_factor,y=d)) +
-  geom_jitter(aes(color=DA)) +
-  geom_boxplot() +
-  labs(subtitle = "c)",
-       y = "disp. kernel sd",
-       x = "k") +
-  theme_light() +
-  theme(legend.position = "top")
-```
-
 __Figura 1__ Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão)).
 
 

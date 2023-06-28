@@ -35,6 +35,26 @@ f_resultsMN <- function(df){
 # exemplo de uso:
 # df_congContrastes <- ddply(df_SADrep,"SiteCode",f_congContrastes,.parallel = TRUE)
 # função para se aplicar por sítio
+f_congContrastes <- \(df_pSite,nboots=1000){
+  # objetos
+  l_mSADrep <- dlply(df_pSite,"land_type",\(x) read_csv(x$SADrep.path))
+  df_return <- df_pSite |> select(SiteCode,land_type) |> 
+    mutate(pair = case_when(land_type == "cont" ~ "cont.non_frag",
+                            land_type == "non_frag" ~ "non_frag.ideal",
+                            TRUE ~ "cont.ideal"))
+  # rotinas
+  f_ks <- \(v1,v2){
+    testeKS <- ks_test(a=v1,b=v2,nboots=nboots)
+    testeKS[2]
+  }
+  f_aply <- \(row){
+    v_names <- unlist(strsplit(row$pair,split="[.]"))
+    v_sample <- sample
+  }
+}
+
+
+
 f_congContrastes <- \(df_pSite){
   df_mSAD <- dlply(df_pSite,"land_type",\(x) f_sampRowsbyk(x$SADrep.path)) |> 
     bind_rows(.id="land_type") |> 
