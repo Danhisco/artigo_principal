@@ -7,7 +7,9 @@
 # o output é um df com as colunas guias (SiteCode e k) e o valor p
 #
 # exemplo de uso:
-## df_KSrep <- adply(df_SADrep,1,f_ksObsRep,.parallel = TRUE)
+## df_KSrep <- ddply(df_SADrep,"SiteCode",f_ksObsRep,.parallel = TRUE)
+#
+# df <- df_SADrep |> filter(SiteCode == "SPigua1")
 #
 f_resultsMN <- function(df){
   # dados
@@ -35,91 +37,107 @@ f_resultsMN <- function(df){
 # exemplo de uso:
 # df_congContrastes <- ddply(df_SADrep,"SiteCode",f_congContrastes,.parallel = TRUE)
 # função para se aplicar por sítio
-f_congContrastes <- \(df_pSite,nboots=1000){
+f_congContrastes <- \(df_pSite,n_ks=1000,n_replicate=1000){
   # objetos
   l_mSADrep <- dlply(df_pSite,"land_type",\(x) read_csv(x$SADrep.path))
   df_return <- df_pSite |> select(SiteCode,land_type) |> 
     mutate(pair = case_when(land_type == "cont" ~ "cont.non_frag",
                             land_type == "non_frag" ~ "non_frag.ideal",
-                            TRUE ~ "cont.ideal"))
+                            TRUE ~ "cont.ideal")) |> 
+    select(-land_type) |> 
+    nest() |> 
+    expand_grid(k = unique(l_mSADrep[[1]]$k)) |> 
+    unnest(cols = c(data))
   # rotinas
   f_ks <- \(v1,v2){
-    testeKS <- ks_test(a=v1,b=v2,nboots=nboots)
+    testeKS <- ks_test(a=v1,b=v2,nboots=n_ks)
     testeKS[2]
   }
   f_aply <- \(row){
     v_names <- unlist(strsplit(row$pair,split="[.]"))
-    v_sample <- sample
+    df_1 <- l_mSADrep[[v_names[1]]] |> filter(k==row$k)
+    df_2 <- l_mSADrep[[v_names[2]]] |> filter(k==row$k)
+    f_replicate <- \(){
+      v_sample <- sample(1:100,2)
+      v1 <- df_1[v_sample[1],] |> select(starts_with("V")) |> t() |> table() |> sort()
+      v2 <- df_2[v_sample[2],] |> select(starts_with("V")) |> t() |> table() |> sort()
+      cbind(row) |> 
+        data.frame(index.1_2 = paste(v_sample,collapse = "_"),
+                   p.valor = as.character(f_ks(v1=v1,v2=v2)),row.names = NULL)
+        
+    }
+    rdply(n_replicate,f_replicate(),.id=NULL)
   }
+  df_teste <- adply(df_return,1,f_aply)
 }
 
-
-
-f_congContrastes <- \(df_pSite){
-  df_mSAD <- dlply(df_pSite,"land_type",\(x) f_sampRowsbyk(x$SADrep.path)) |> 
-    bind_rows(.id="land_type") |> 
-    relocate(land_type)
-  f_outputKS <- \(df,nboots=1000){
-    ## cont e os outros dois tratamentos:
-    # dados
-    df_cont <- df |> filter(land_type == "cont") |> data.frame()  |> select(-c(1:3)) |> as.matrix()
-    df_comp <- df |> filter(land_type != "cont") |> data.frame()  |> select(-c(1:3)) |> as.matrix()
-    # 2o nível: função aplicada em cada linha de df_comp
-    f_KS <- \(v_ref){
-      f_testeKS <- \(row_df){
-        v_row <- sort(table(row_df))
-        testeKS <- ks_test(a=v_ref,b=v_row,nboots=nboots)
-        testeKS[2]
-      }
-      aaply(df_comp,1,f_testeKS)
-    }
-    # 1o nível: função aplicada em cada linha de df_cont
-    f_appKS <- \(X){
-      v_X <- sort(table(X))
-      f_KS(v_ref=v_X)
-    }
-    df_return <- adply(df_cont,1,f_appKS) |> select(-1) |> 
-      mutate(land_type = "cont") |> relocate(land_type)
-    names(df_return)[-1] <- df |> filter(land_type != "cont") |> pull(land_type)
-    df_return1 <- df_return |> 
-      pivot_longer(-land_type,names_to = "pair",values_to = "p_value") |> 
-      mutate(pair=paste0(land_type,".",pair),
-             SiteCode = unique(df$SiteCode),
-             k = unique(df$k)) |> select(-land_type) |> 
-      relocate(p_value,.after = last_col())
-    # 
-    ## non_frag e ideal:
-    # dados
-    df_non_frag <- df |> filter(land_type == "non_frag") |> data.frame()  |> select(-c(1:3)) |> as.matrix()
-    df_comp <- df |> filter(land_type == "ideal") |> data.frame()  |> select(-c(1:3)) |> as.matrix()
-    # 2o nível: função aplicada em cada linha de df_comp
-    f_KS <- \(v_ref){
-      f_testeKS <- \(row_df){
-        v_row <- sort(table(row_df))
-        testeKS <- ks_test(a=v_ref,b=v_row,nboots=nboots)
-        testeKS[2]
-      }
-      aaply(df_comp,1,f_testeKS)
-    }
-    # 1o nível: função aplicada em cada linha de df_cont
-    f_appKS <- \(X){
-      v_X <- sort(table(X))
-      f_KS(v_ref=v_X)
-    }
-    df_return <- adply(df_non_frag,1,f_appKS) |> select(-1) |> 
-      mutate(land_type = "non_frag") |> relocate(land_type)
-    names(df_return)[-1] <- "ideal"
-    df_return2 <- df_return |> 
-      pivot_longer(-land_type,names_to = "pair",values_to = "p_value") |> 
-      mutate(pair=paste0(land_type,".",pair),
-             SiteCode = unique(df$SiteCode),
-             k = unique(df$k)) |> select(-land_type) |> 
-      relocate(p_value,.after = last_col())
-    # return
-    rbind.fill(df_return1,df_return2)
-  }
-  ddply(df_mSAD,"k",f_outputKS)
-}
+# 
+# 
+# f_congContrastes <- \(df_pSite){
+#   df_mSAD <- dlply(df_pSite,"land_type",\(x) f_sampRowsbyk(x$SADrep.path)) |> 
+#     bind_rows(.id="land_type") |> 
+#     relocate(land_type)
+#   f_outputKS <- \(df,nboots=1000){
+#     ## cont e os outros dois tratamentos:
+#     # dados
+#     df_cont <- df |> filter(land_type == "cont") |> data.frame()  |> select(-c(1:3)) |> as.matrix()
+#     df_comp <- df |> filter(land_type != "cont") |> data.frame()  |> select(-c(1:3)) |> as.matrix()
+#     # 2o nível: função aplicada em cada linha de df_comp
+#     f_KS <- \(v_ref){
+#       f_testeKS <- \(row_df){
+#         v_row <- sort(table(row_df))
+#         testeKS <- ks_test(a=v_ref,b=v_row,nboots=nboots)
+#         testeKS[2]
+#       }
+#       aaply(df_comp,1,f_testeKS)
+#     }
+#     # 1o nível: função aplicada em cada linha de df_cont
+#     f_appKS <- \(X){
+#       v_X <- sort(table(X))
+#       f_KS(v_ref=v_X)
+#     }
+#     df_return <- adply(df_cont,1,f_appKS) |> select(-1) |> 
+#       mutate(land_type = "cont") |> relocate(land_type)
+#     names(df_return)[-1] <- df |> filter(land_type != "cont") |> pull(land_type)
+#     df_return1 <- df_return |> 
+#       pivot_longer(-land_type,names_to = "pair",values_to = "p_value") |> 
+#       mutate(pair=paste0(land_type,".",pair),
+#              SiteCode = unique(df$SiteCode),
+#              k = unique(df$k)) |> select(-land_type) |> 
+#       relocate(p_value,.after = last_col())
+#     # 
+#     ## non_frag e ideal:
+#     # dados
+#     df_non_frag <- df |> filter(land_type == "non_frag") |> data.frame()  |> select(-c(1:3)) |> as.matrix()
+#     df_comp <- df |> filter(land_type == "ideal") |> data.frame()  |> select(-c(1:3)) |> as.matrix()
+#     # 2o nível: função aplicada em cada linha de df_comp
+#     f_KS <- \(v_ref){
+#       f_testeKS <- \(row_df){
+#         v_row <- sort(table(row_df))
+#         testeKS <- ks_test(a=v_ref,b=v_row,nboots=nboots)
+#         testeKS[2]
+#       }
+#       aaply(df_comp,1,f_testeKS)
+#     }
+#     # 1o nível: função aplicada em cada linha de df_cont
+#     f_appKS <- \(X){
+#       v_X <- sort(table(X))
+#       f_KS(v_ref=v_X)
+#     }
+#     df_return <- adply(df_non_frag,1,f_appKS) |> select(-1) |> 
+#       mutate(land_type = "non_frag") |> relocate(land_type)
+#     names(df_return)[-1] <- "ideal"
+#     df_return2 <- df_return |> 
+#       pivot_longer(-land_type,names_to = "pair",values_to = "p_value") |> 
+#       mutate(pair=paste0(land_type,".",pair),
+#              SiteCode = unique(df$SiteCode),
+#              k = unique(df$k)) |> select(-land_type) |> 
+#       relocate(p_value,.after = last_col())
+#     # return
+#     rbind.fill(df_return1,df_return2)
+#   }
+#   ddply(df_mSAD,"k",f_outputKS)
+# }
 ##
 #
 # uma possível implementação do teste de permutação baseado na distância multivariada 
