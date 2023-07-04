@@ -37,10 +37,10 @@ f_resultsMN <- function(df){
 # exemplo de uso:
 # df_congContrastes <- ddply(df_SADrep,"SiteCode",f_congContrastes,.parallel = TRUE)
 # função para se aplicar por sítio
-f_congContrastes <- \(df_pSite,n_ks=1000,n_replicate=1000){
+f_congContrastes <- \(df_pSite,n_ks=500,n_replicate=500,repo="dados/csv/congruencia_contrastes/"){
   # objetos
   l_mSADrep <- dlply(df_pSite,"land_type",\(x) read_csv(x$SADrep.path))
-  df_return <- df_pSite |> select(SiteCode,land_type) |> 
+  df_adply <- df_pSite |> select(SiteCode,land_type) |> 
     mutate(pair = case_when(land_type == "cont" ~ "cont.non_frag",
                             land_type == "non_frag" ~ "non_frag.ideal",
                             TRUE ~ "cont.ideal")) |> 
@@ -63,12 +63,12 @@ f_congContrastes <- \(df_pSite,n_ks=1000,n_replicate=1000){
       v2 <- df_2[v_sample[2],] |> select(starts_with("V")) |> t() |> table() |> sort()
       cbind(row) |> 
         data.frame(index.1_2 = paste(v_sample,collapse = "_"),
-                   p.valor = as.character(f_ks(v1=v1,v2=v2)),row.names = NULL)
-        
+                   p.valor = f_ks(v1=v1,v2=v2),row.names = NULL)
     }
     rdply(n_replicate,f_replicate(),.id=NULL)
   }
-  df_teste <- adply(df_return,1,f_aply)
+  df_toWrite <- adply(df_adply,1,f_aply)
+  write_csv(df_toWrite,file = paste0(repo,df_pSite$SiteCode[1],".csv"))
 }
 
 # 
