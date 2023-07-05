@@ -400,13 +400,13 @@ grid.arrange(grobs=l_p,ncol=3,bottom="eixo x está z transformado")
 ```
 
 ```{r GAMM para descrever a relacao entre congruencia e contraste de U}
-f_mdGAMM <- \(df){
-  gam(cbind(nCong,100-nCong) ~ 
+f_mdGAMMcongCont <- \(df){
+  gam(cbind(nCong,500-nCong) ~ 
         s(contraste_z) + 
         s(contraste_z,SiteCode,bs="fs") + s(SiteCode,bs="re"),
       family="binomial",data=df,method="REML")
 }
-l_md_congContrastes <- dlply(df_congContrastes,"pair",f_mdGAMM)
+l_md_congContrastes <- dlply(df_congContrastes,"pair",f_mdGAMMcongCont)
 # l_md_congContrastes <- l_md
 save(l_md_congContrastes,file="dados/Rdata/l_md_congContrastes.Rdata")
 ```
