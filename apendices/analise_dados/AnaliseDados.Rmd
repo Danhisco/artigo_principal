@@ -100,9 +100,7 @@ df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |>
 # df_intePred_contrastes.csv
 df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
 # df_congContrastetsREP.cvs
-df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastesREP.csv") |> 
-  group_by(SiteCode,k,pair) |> 
-  summarise(nCong = sum(p_value>0.05)) |> 
+df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
   inner_join(df_md |> 
                select(SiteCode,p,k,logOR_pair,contraste_z),
              by=c("SiteCode","k","pair" = "logOR_pair")) |> 

@@ -208,10 +208,19 @@ não é simples fazer essa classificação, em alguns casos (SiteCode) ambos par
 
 ## Comparação entre os contrastes
 
-```{r}
+```{r congruencia entre contrastes - obtenção dos dados}
+#  obtenção dos dados
 registerDoMC(3)
 # df_congContrastes <- d_ply(df_SADrep,"SiteCode",f_congContrastes,.parallel = T)
 # write_csv(df_congContrastes,file="dados/csv/resultados_MN/df_congContrastesREP.csv")
 d_ply(df_SADrep,"SiteCode",f_congContrastes,.parallel = T)
+```
+
+```{r congruencia entre contrastes - sintese dos dados}
+df_congContrastes <- list.files("dados/csv/congruencia_contrastes",pattern = ".csv",full.names = T) |> 
+  map_dfr(\(path) read_csv(path) |> 
+            group_by(SiteCode,pair,k) |> 
+            summarise(nCong = sum(p.valor>0.05)))
+write_csv(df_congContrastes,"dados/csv/resultados_MN/df_congContrastes.csv")
 ```
 
