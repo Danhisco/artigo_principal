@@ -85,7 +85,10 @@ df_md <- df_ad |>
                                              TRUE ~ "cont.ideal")),
              by=c("SiteCode","k","logOR_pair")) |> 
   mutate(SiteCode = factor(SiteCode),
-         land_hyp = factor(land_type))
+         land_hyp = factor(land_type),
+         contrasteSAD_z = f(logOR_value)) |> 
+  select(-land_type) |> 
+  rename(nCong=nCongKS)
   # df_newdata
 write_csv(df_md,"dados/csv/df_md_logOR.csv")
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
@@ -567,6 +570,45 @@ l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
 grid.arrange(grobs=l_p,ncol=3)
 ```
 
+## Pr(Cong)_contemporaneo:observado
+
+```{r dados e GE Pr(Cong)_contemporaneo:observado}
+f_wider <- \(df){
+  df_y <- df |> filter(land_hyp == "frag") |> select(SiteCode:p_z)
+  df_x <- df |> select(SiteCode,k_z,land_hyp:last_col()) |> 
+    pivot_wider(names_from=land_hyp,values_from = c(U_z,SAD_z),names_glue = "{land_hyp}.{.value}")
+  inner_join(df_y,df_x)
+}
+df_md1 <- df_md |> 
+  select(SiteCode,nCong,k_z,p_z,land_hyp,contrasteSAD_z,contraste_z) |> 
+  rename(U_z=contraste_z,
+         SAD_z=contrasteSAD_z) |> 
+  mutate(land_hyp = case_when(land_hyp == "cont" ~ "frag",
+                              land_hyp == "ideal" ~ "cont",
+                              land_hyp == "non_frag" ~ "area",
+                              TRUE ~ NA)) |> 
+  f_wider()
+
+```
+
+
+
+```{r GAMM Pr(Cong)_contemp:obs}
+f_formulaGAMM <- \(string){
+  if(string == "f(p,k)"){
+    as.formula(paste("cbind(nCong,100-nCong)",
+                     "~ s(p_z,bs='cr') + s(k_z,bs='cr') + s(k_z,Site,bs = 'fs') + s(Site, bs = 're')"))
+  }else if(string == "f(areaU,fragU)"){
+    as.formula(paste("cbind(nCong,100-nCong)",
+                     "~ s(p_z,bs='cr') + s(k_z,bs='cr') + s(k_z,Site,bs = 'fs') + s(Site, bs = 're')"))
+  }
+}
+l_md <- vector("list",5)
+names(l_md) <- c("f(p,k)", # p: 4x4km dependente , k: variável que controla a maior escala da AGC
+                 "f(areaU,fragU)","f(areaSAD,fragSAD)", # var padronistas
+                 "f(contU)","f(contSAD)") # var não padronistas
+
+```
 
 
 
