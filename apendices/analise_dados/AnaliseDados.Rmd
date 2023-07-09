@@ -573,6 +573,7 @@ grid.arrange(grobs=l_p,ncol=3)
 ## Pr(Cong)_contemporaneo:observado
 
 ```{r dados e GE Pr(Cong)_contemporaneo:observado}
+# dados
 f_wider <- \(df){
   df_y <- df |> filter(land_hyp == "frag") |> select(SiteCode:p_z)
   df_x <- df |> select(SiteCode,k_z,land_hyp:last_col()) |> 
@@ -588,10 +589,17 @@ df_md1 <- df_md |>
                               land_hyp == "non_frag" ~ "area",
                               TRUE ~ NA)) |> 
   f_wider()
-
+# GE
+df_md1 |> 
+  pivot_longer(-(SiteCode:nCong)) |> 
+  ggplot(aes(x=value,y=nCong)) +
+  geom_line(aes(group=SiteCode),alpha=0.4) +
+  geom_point() +
+  geom_smooth(method = "gam",se=F)+
+  facet_wrap(~name,ncol=4,scales="free")
 ```
 
-
+__Figura X__ 
 
 ```{r GAMM Pr(Cong)_contemp:obs}
 f_formulaGAMM <- \(string){
