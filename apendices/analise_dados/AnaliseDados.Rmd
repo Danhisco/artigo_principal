@@ -605,16 +605,19 @@ __Figura X__
 f_formulaGAMM <- \(string){
   if(string == "f(p,k)"){
     as.formula(paste("cbind(nCong,100-nCong)",
-                     "~ s(p_z,bs='cr') + s(k_z,bs='cr') + s(k_z,Site,bs = 'fs') + s(Site, bs = 're')"))
+                     "~ s(p_z,bs='cr') + s(k_z,bs='cr') + ti(p_z,k_z,bs=c('cr','cr')) + s(k_z,Site,bs = 'fs') + s(Site, bs = 're')"))
   }else if(string == "f(areaU,fragU)"){
     as.formula(paste("cbind(nCong,100-nCong)",
-                     "~ s(p_z,bs='cr') + s(k_z,bs='cr') + s(k_z,Site,bs = 'fs') + s(Site, bs = 're')"))
+                     "~ s(area.U_z,bs='cr') + s(frag.U_z,bs='cr') + ti(area.U_z,frag.U_z,bs=c('cr','cr')) + s(k_z,Site,bs = 'fs') + s(Site, bs = 're')"))
   }
 }
-l_md <- vector("list",5)
-names(l_md) <- c("f(p,k)", # p: 4x4km dependente , k: variável que controla a maior escala da AGC
-                 "f(areaU,fragU)","f(areaSAD,fragSAD)", # var padronistas
-                 "f(contU)","f(contSAD)") # var não padronistas
+f_GAMM <- \(string,df=df_md1){
+  f_ <- f_formulaGAMM(string)
+  mgcv::gam(formula = f_,data = df,method = "REML")
+}
+v_md <- c("f(p,k)","f(areaU,fragU)","f(areaSAD,fragSAD)","f(contU)","f(contSAD)")
+l_md <- alply(v_md,1,f_GAMM)
+
 
 ```
 
