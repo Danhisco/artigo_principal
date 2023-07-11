@@ -1,0 +1,329 @@
+---
+title: "Apêndice 2: Figuras e Tabelas"
+author: "Mori, Danilo"
+date: "19/11/2022"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+editor_options: 
+  chunk_output_type: console
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE)
+# pacotes
+library(dagitty)
+library(ggdag)
+library(gratia)
+library(sads)
+library(doMC)
+library(metR)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(MuMIn)
+library(AICcmodavg)
+library(insight)
+library(bbmle)
+library(DHARMa)
+library(mgcv)
+library(lme4)
+library(gamm4)
+library(plyr)
+library(dplyr)
+source("source/nameModel.R")
+source("source/GAMMtools.R")
+# objetos
+# load("dados/Rdata/md_MNEE.Rdata")
+# load("dados/Rdata/l_md_GAMM.Rdata")
+# dados
+# load("dados/Rdata/l_md.contrastes.Rdata")
+# load("dados/Rdata/l_md.logOR.Rdata")
+# load("dados/Rdata/l_md.logOR_tp.Rdata")
+# load("dados/Rdata/l_md.logOR_tp_r3removido.Rdata")
+# df_dados_disponiveis
+df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
+# df_p
+df_p <- read_csv("dados/df_p.csv")
+# df_resultMNEE
+df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
+# df_sim
+df_sim <- read_csv("dados/df_simulacao.csv")
+# df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
+f_z <- function(x) (x-mean(x))/sd(x)
+df_ad <- df_resultados |>
+  arrange(p) |> 
+  inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
+  mutate(diffS = (Smed - S_obs)/S_obs)
+# df_contrastes: contrastes por sítio e grau de limitação de dispersão
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
+  inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
+             by="SiteCode") |> 
+  rename(N=Ntotal,S=S_obs) |> 
+  mutate(across(N:S,log,.names="log.{.col}"),
+         across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
+         SiteCode = factor(SiteCode)) |> 
+  select(-c(N:log.S))
+# df_md: dados necessários 
+df_md <- df_ad |> 
+  inner_join(df_contrastes |> 
+               select(SiteCode:efeito_conf) |> 
+               mutate(across(.cols=c(p,k,contains("efeito")),f_z,.names="{.col}_z")) |> 
+               select(-c(p,efeito_area:efeito_conf)) |> 
+               pivot_longer(starts_with("efeito_"),names_to="logOR_pair",values_to="contraste_z") |> 
+               mutate(logOR_pair = case_when(logOR_pair == "efeito_area_z" ~ "non_frag.ideal",
+                                             logOR_pair == "efeito_frag_z" ~ "cont.non_frag",
+                                             TRUE ~ "cont.ideal")),
+             by=c("SiteCode","k","logOR_pair")) |> 
+  mutate(SiteCode = factor(SiteCode),
+         land_hyp = factor(land_type),
+         contrasteSAD_z = f(logOR_value)) |> 
+  select(-land_type) |> 
+  rename(nCong=nCongKS)
+  # df_newdata
+write_csv(df_md,"dados/csv/df_md_logOR.csv")
+df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
+  select(-starts_with("log_"))
+# df_pred
+# df_pred <- read_csv("dados/csv/resultados_MN/MNEE/df_pred.csv")
+# df_newdat <- expand.grid(p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
+#                          k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150))
+# df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,SiteCode,log_S_obs_z,log_Ntotal_z))))
+# write_csv(df_newdat,"dados/csv/df_newdataSADs.csv")
+#
+# df_intePred_contrastes.csv
+df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
+# df_congContrastetsREP.cvs
+df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
+  inner_join(df_md |> 
+               select(SiteCode,p,k,logOR_pair,contraste_z),
+             by=c("SiteCode","k","pair" = "logOR_pair")) |> 
+  arrange(p) |> 
+  relocate(p,.after=k) |> 
+  mutate(SiteCode = factor(SiteCode))
+```
+
+
+### Figura A2 1
+
+
+```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6}
+df_plot <- df_dados_disponiveis |> 
+  select(SiteCode, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
+l_p <- list()
+l_p[[1]] <- df_plot |> 
+  ggplot(aes(y=lat,x=long)) +
+  geom_point(alpha=0.5) +
+  theme_light() +
+  labs(subtitle = "a)")
+v_labels <- c("effort_ha" = "plot area (ha)",
+              "Ntotal" = "# ind",
+              "S_obs" = "riqueza",
+              "year_bestProxy" = "approx. data year")
+df_plot[grep("\\_",df_plot$year_bestProxy),"year_bestProxy"] <- "2012.5"
+l_p[[2]] <- df_plot |>
+  mutate(year_bestProxy = as.numeric(year_bestProxy)) |> 
+  pivot_longer(effort_ha:year_bestProxy) |> 
+  ggplot(aes(x=name,y=value)) +
+  geom_jitter(alpha=0.4) +
+  geom_boxplot() +
+  labs(x="",y="",subtitle="b)") +
+  facet_wrap(~name,ncol=1,scales="free", labeller = as_labeller(v_labels), strip.position = "bottom") +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        strip.background = element_blank(),
+        strip.placement = "outside") +
+  coord_flip()
+l_p[[3]] <- df_plot |> 
+  ggplot(aes(x=forest_succession)) +
+  geom_bar() +
+  geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
+  labs(x="classificação de estágio sucessional do TreeCo",
+       y="countagem",subtitle="c)")
+grid.arrange(grobs=l_p,ncol=3)
+```
+
+__Figura A2 1__ Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão)).
+
+
+### Figura A2 2
+
+```{r gráficos para o artigo Figura SI 1 - Graf Exp dos contrastes,eval=T}
+l_p <- list()
+l_p[[1]] <- df_U |> 
+  ggplot(aes(x=Umed,y=Usd)) + 
+  geom_point(alpha=0.1) + 
+  geom_abline(slope = 1,intercept = 0) + 
+  geom_abline(slope=0.1,intercept = 0,color="darkgreen") +
+  geom_abline(slope=0.01,intercept = 0,color="darkred")
+l_p[[2]] <- df_contrastes |> 
+  pivot_longer(efeito_area:efeito_conf) |>
+  mutate(name = factor(name,labels = c("contraste area","contraste contemp","contraste frag"))) |> 
+  ggplot(aes(x=name,y=value)) +
+  geom_hline(data = df_contrastes |> 
+               mutate(referencia_efeito = ifelse(p>=0.93,"p>=0.93","p<0.93")) |> 
+               group_by(referencia_efeito) |> 
+               filter(p>=0.93) |> 
+               summarise(min = min(across(efeito_area:efeito_conf,min)),
+                         max = max(across(efeito_area:efeito_conf,max))) |> 
+               pivot_longer(min:max),
+             # |> 
+               # pivot_longer(),
+             aes(yintercept = value,
+                 color=referencia_efeito)) +
+  scale_x_discrete(limits=c("contraste area","contraste frag","contraste contemp")) +
+  # coord_flip() +
+  geom_boxplot() +
+  geom_jitter(alpha=0.4) + 
+  labs(x="",y="contraste na estimativa da taxa U",
+       subtitle = "contraste area = (sem isolamento - idealizado) / idealizado  \ncontraste frag = (contemp - sem isolamento) / idealizado  \ncontraste contemp = (contemp - idealizado) / idealizado",
+       color="valor extremos:",
+       title="Os contrastes da frag per se podem ser significativamente negativos, mas em sua maioria são \nnulos ou positivos") +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        legend.margin=margin(-14, 0, 0, 0))
+l_p[[3]] <- df_contrastes |> 
+  ggplot(aes(x=efeito_area,y=efeito_frag)) + # ,color=p>=0.93
+  geom_abline(slope = 1,intercept = 0,color="darkred") +
+  geom_hline(data = df_contrastes |>
+               filter(p>=0.93) |> 
+               summarise(min = min(efeito_frag),
+                         max = max(efeito_frag)) |> 
+               pivot_longer(min:max),
+             aes(yintercept = value),color="darkgreen") +
+  geom_vline(data = df_contrastes |>
+               filter(p>=0.93) |> 
+               summarise(min = min(efeito_area),
+                         max = max(efeito_area)) |> 
+               pivot_longer(min:max),
+             aes(xintercept = value),color="darkgreen") +
+  geom_point(alpha=0.3) +
+  # geom_density_2d(aes(color=..level..)) +
+  # geom_density_2d_filled(alpha = 0.4) +
+  # geom_density_2d(colour = "black")
+  geom_hex(bins=70,alpha=0.4) +
+  scale_x_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  scale_y_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  labs(x="Área per se",y="Fragmentação per se",level="2D density") +
+  guides(fill = guide_legend(title="contagem")) +
+  scale_fill_continuous(type = "viridis") +
+  # scale_color_manual(name="p >= 0.93", values = setNames(c('darkgreen','black'),c(T, F))) +
+  theme_bw()
+l_p[[4]] <- df_contrastes |> 
+  ggplot(aes(x=p,efeito_conf)) +
+  geom_point(aes(color=k)) +
+  geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
+  labs(x="proporção de cobertura vegetal",y="contraste contemporâneo")
+grid.arrange(grobs=l_p,ncol=2)
+```
+
+__Figura 1__ Coeficiente de variação da taxa U estimada por MNEE. Cada ponto representa uma bateria de simulação com 10 réplicas cada; no eixo x há a média da taxa U e no eixo y o correspondente desvio padrão. Todas as retas passam pela origem, em preto a reta com inclinação de 1, em verde a com inclinação de 0.1, e em vermelho com inclinaçãao de 0.01. A maior parte dos pontos tem coeficiente de inclinação entre 10% e 1%
+
+
+```{r fig 1 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=18,fig.width=15}
+df_plot <- df_Urep |> select(-d) |> 
+  pivot_longer(-c(SiteCode:k),names_to = "rep",values_to = "U") |>
+  inner_join(x=unique(select(df_sim,SiteCode,p)),by="SiteCode") |> 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+# df_plot <- df_U |>
+#   inner_join(x=unique(select(df_sim,SiteCode,p)),by="SiteCode") |> 
+#   arrange(p) |> 
+#   mutate(label = paste0(SiteCode,", p=",round(p,2))) #, " ,S=",S_obs
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k,y=U,color=land_type)) +
+  geom_point(alpha=0.1) +
+  # geom_line() +
+  stat_summary(geom = "line",fun.data = mean_se,alpha=0.5) +
+  scale_x_reverse() +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  theme_bw() +
+  labs(color="landscape type") +
+  theme(legend.position = "top",
+        axis.text=element_text(size=4.5),
+        strip.text = element_text(size = 4.5, margin = margin())) +
+  scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                     labels=c("contemporâneo","idealizado","sem fragmentação")) +
+  facet_wrap(~label,ncol=5,scales="free")
+ggsave("apendices/taxaU/figuras/Umed_k_landType_Site.png",
+       width = 7,
+       height = 30)
+```
+
+
+__Figura 2__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados. Os sítios estão organizados pela pela proporção de cobertura vegetal 
+
+
+```{r figura 3 GE contrastes}
+l_p <- list()
+l_p[[1]] <- df_contrastes |>
+  pivot_longer(starts_with("efeito_")) |> 
+  mutate(name = factor(name,
+                       levels=c("efeito_area","efeito_frag","efeito_conf"),
+                       labels=c("área per se","fragmentação per se","contemporaneidade"))) |> 
+  ggplot(aes(y=value,x=name)) +
+  geom_jitter() +
+  geom_boxplot() +
+  labs(x="",
+       y="",
+       title="a) Contrastes taxa U")
+l_p[[2]] <- df_contrastes |> 
+  pivot_longer(cols = k:p,names_to = "pred_class",values_to = "pred_values") |> 
+  mutate(pred_class = factor(pred_class,levels=c("p","k"))) |> 
+  pivot_longer(cols = starts_with("efeito_"),names_to = "resp_class",values_to = "resp_values") |> 
+  mutate(resp_class = factor(resp_class,levels=names(df_contrastes)[4:6])) |> 
+  ggplot(aes(x=pred_values,y=resp_values)) +
+  geom_point(alpha=0.4) +
+  geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
+  labs(title="b) Contrastes ~ p e k",x="",y="") +
+  facet_grid(pred_class~resp_class,scales="free",
+             labeller = labeller(pred_class = c(p="p",k="k"),
+                                 resp_class = c(efeito_area = "área per se",
+                                                efeito_conf = "contemporaneidade",
+                                                efeito_frag = "fragmentação per se")))
+grid.arrange(grobs=l_p,
+             layout_matrix = rbind(c(1,1,1,1),
+                                   c(2,2,2,2),
+                                   c(2,2,2,2))
+             )
+```
+
+__Figura 3__ Gráficos explotários do contraste
+
+```{r figura contrastes por sítio e k}
+df_plot <- df_contrastes |> select(-starts_with("cubeR"),-efeito_conf) |>
+  pivot_longer(starts_with("efeito")) |> 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k,y=value,color=name)) +
+  geom_hline(yintercept = 0) +
+  geom_point(alpha=0.1) +
+  geom_line() +
+  scale_x_reverse() +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  theme_bw() +
+  labs(color="contraste") +
+  theme(legend.position = "top",
+        axis.text=element_text(size=4.5),
+        strip.text = element_text(size = 4.5, margin = margin())) +
+  # scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+  #                    labels=c("contemporâneo","idealizado","sem fragmentação")) +
+  facet_wrap(~label,ncol=4,scales="free")
+ggsave("apendices/taxaU/figuras/contraste_k_landType_Site.png",
+       width = 7,
+       height = 30)
+```
+
+_figura 4__ contrastes de área e frag per se por sítio de amostragem (contraste de U ~ k ~ site)

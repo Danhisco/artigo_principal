@@ -115,52 +115,9 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 ```
 
 
-
 # Inventários Florestais Selecionados
 
 As coordenadas dos sítios variaram entre -31° e -7° de latit”ude e entre -55° e -35° de longitude (figura 1a). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (figura 1b). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo (Figura 1c). Portanto, todos os sítios dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Uma paisagem foi descartada, pois não foi possível delimitar uma área amostral quadrada por conta da particular configuração espacial do habitat remanescente. 
-
-
-
-```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6}
-df_plot <- df_dados_disponiveis |> 
-  select(SiteCode, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
-l_p <- list()
-l_p[[1]] <- df_plot |> 
-  ggplot(aes(y=lat,x=long)) +
-  geom_point(alpha=0.5) +
-  theme_light() +
-  labs(subtitle = "a)")
-v_labels <- c("effort_ha" = "plot area (ha)",
-              "Ntotal" = "# ind",
-              "S_obs" = "riqueza",
-              "year_bestProxy" = "approx. data year")
-df_plot[grep("\\_",df_plot$year_bestProxy),"year_bestProxy"] <- "2012.5"
-l_p[[2]] <- df_plot |>
-  mutate(year_bestProxy = as.numeric(year_bestProxy)) |> 
-  pivot_longer(effort_ha:year_bestProxy) |> 
-  ggplot(aes(x=name,y=value)) +
-  geom_jitter(alpha=0.4) +
-  geom_boxplot() +
-  labs(x="",y="",subtitle="b)") +
-  facet_wrap(~name,ncol=1,scales="free", labeller = as_labeller(v_labels), strip.position = "bottom") +
-  theme(axis.ticks.y = element_blank(),
-        axis.text.y = element_blank(),
-        strip.background = element_blank(),
-        strip.placement = "outside") +
-  coord_flip()
-l_p[[3]] <- df_plot |> 
-  ggplot(aes(x=forest_succession)) +
-  geom_bar() +
-  geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
-  labs(x="classificação de estágio sucessional do TreeCo",
-       y="countagem",subtitle="c)")
-grid.arrange(grobs=l_p,ncol=3)
-```
-
-__Figura 1__ Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão)).
-
-
 
 
 # Efeito de Escalar[a]
@@ -169,128 +126,12 @@ Dentre os 36 sítios usados para avaliar o efeito de escalar, o observado na mai
 
 Pressuposto que a extensão espacial mínima adequada é aquela que acumula pelo menos 95% de toda diminuição na taxa U observada ao aumentar a extensão espacial de 0.5 km de lado até 16 km de lado. A extensão espacial mínima adequada tende a aumentar com a redução da limitação de à dispersão (figura 2, detalhes em Apêndice Efeito de Escalar). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km de lado. Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U; a variação entre escalas para um mesmo sítio em geral é baixa (Apêndice efeito de Escala, figura 4) e a variação entre sítios é grande. Nesses graus de limitação de dispersão, o aumento do número de espécies per capita pode aumentar a divergência da média geral de estabilidade e apresentar padrões não lineares (detalhes em Apêndice efeito de escalar). Os graus de limitação de dispersão com k entre 0.80 e 0.55, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U e paisagem sem perda de habitat (Apêndice Efeito de Escala, Figura 2). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura 2). 
 
-```{r análise de escala de efeito figura 4,include=F,eval=F}
-v_threshold <- paste0("SoE >= ",
-                      str_extract(paste(names(df_plot),collapse = " "),
-                                  "(?<=SoE\\_)[0-9]{1}[.][0-9]{1,2}")) 
-cols <- c("blue","red") # "#f04546","3 quant"=
-names(cols) <- c("avg+-sd",v_threshold )
-a <- 0.5
-p <- df_plot |> 
-  ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
-  geom_point(alpha=0.40,aes(color=S.N)) +
-  geom_line(aes(group=SiteCode,color=S.N),alpha=0.25) +
-  scale_color_distiller(palette = "Spectral",name="S / N") +
-  new_scale_color() +
-  stat_summary(fun.data = mean_se,geom ="line",
-               aes(group=k_factor,color="avg+-sd"),alpha=0.6,linewidth=a) +
-  stat_summary(fun = mean,
-               fun.min = function(x) mean(x) - sd(x), 
-               fun.max = function(x) mean(x) + sd(x), 
-               geom = "pointrange",
-               aes(x=lado_numeric,y=Pre_Umed,color="avg+-sd"),alpha=0.6,linewidth=a) +
-  geom_vline(aes(xintercept=SoE_0.95,color=names(cols)[2]),alpha=0.5) +
-  scale_color_manual(name="",values=cols) +
-  scale_x_continuous(trans = log2_trans(),
-                     breaks = trans_breaks("log2", function(x) 2^x)) +
-  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-  facet_wrap(~k_factor,ncol=5) +
-  theme_classic() +
-  labs(title = "Média da estimativa média da taxa U predito pelo LMM:",
-       subtitle="logit(Umed) ~ log(S) * log(N) * k * scale + (1|Site)",
-       x="scale (landscape side, km)",
-       y="avg U rate (Umed)",
-       color="") +
-  theme(legend.position = "top")
-ggsave("apendices/EfeitoEscala/figuras/fig5_SoE.png",p,
-       width = 10.2,
-       height = 6.7)
-```
-
-```{r figura 4 display, fig.width=8,fig.height=8.5}
-knitr::include_graphics("/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/apendices/EfeitoEscala/figuras/fig5_SoE.png", 
-                        rel_path = FALSE)
-```
-
-__Figura 2__ Média das estimativas médias da taxa U (eixo x) em fução do lado da paisagem ao redor (scale, eixo x). Em azul a média e o desvio padrão para cada combinação de grau de limitação de dispersão (título dos paineis, k = proporção de propágulos que permanece até a vizinhança imediata) e scale. S = número de espécies, N = número de indivíduos. As linhas verticais em vermelho marcam a escala que acumula pelo menos 0.99 de toda a variação da média com o aumento da escala (Ver seção "Escala que acumula a maior parte do efeito da escala").
-
-
-
 # Contrastes entre paisagens hipotéticas
 
 ## taxa U
 
 ### Gráficos exploratórios
 
-```{r figura 3 GE contrastes}
-l_p <- list()
-l_p[[1]] <- df_contrastes |>
-  pivot_longer(starts_with("efeito_")) |> 
-  mutate(name = factor(name,
-                       levels=c("efeito_area","efeito_frag","efeito_conf"),
-                       labels=c("área per se","fragmentação per se","contemporaneidade"))) |> 
-  ggplot(aes(y=value,x=name)) +
-  # geom_density() +
-  geom_jitter() +
-  geom_boxplot() +
-  # facet_wrap(~name,ncol=3,
-  #            strip.position = "bottom",
-  #            labeller = as_labeller(c(efeito_area = "área per se",
-  #                                     efeito_conf = "contemporaneidade",
-  #                                     efeito_frag = "fragmentação per se"))) +
-  labs(x="",
-       y="",
-       title="a) Contrastes taxa U")
-  # coord_flip() +
-  # theme(strip.background = element_blank(),
-  #       strip.placement='outside',
-  #       # axis.text.x = element_blank(),
-  #       plot.margin = unit(c(5, 5, 0, 5), "points"))
-l_p[[2]] <- df_contrastes |> 
-  pivot_longer(cols = k:p,names_to = "pred_class",values_to = "pred_values") |> 
-  mutate(pred_class = factor(pred_class,levels=c("p","k"))) |> 
-  pivot_longer(cols = starts_with("efeito_"),names_to = "resp_class",values_to = "resp_values") |> 
-  mutate(resp_class = factor(resp_class,levels=names(df_contrastes)[4:6])) |> 
-  ggplot(aes(x=pred_values,y=resp_values)) +
-  geom_point(alpha=0.4) +
-  geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
-  labs(title="b) Contrastes ~ p e k",x="",y="") +
-  facet_grid(pred_class~resp_class,scales="free",
-             labeller = labeller(pred_class = c(p="p",k="k"),
-                                 resp_class = c(efeito_area = "área per se",
-                                                efeito_conf = "contemporaneidade",
-                                                efeito_frag = "fragmentação per se")))
-# l_p[[3]] <- df_contrastes |> 
-#   ggplot(aes(x=efeito_area,y=efeito_frag)) + # ,color=p>=0.93
-#   geom_abline(slope = 1,intercept = 0,color="darkred") +
-#   geom_hline(data = df_contrastes |>
-#                filter(p>=0.93) |> 
-#                summarise(min = min(efeito_frag),
-#                          max = max(efeito_frag)) |> 
-#                pivot_longer(min:max),
-#              aes(yintercept = value),color="darkgreen") +
-#   geom_vline(data = df_contrastes |>
-#                filter(p>=0.93) |> 
-#                summarise(min = min(efeito_area),
-#                          max = max(efeito_area)) |> 
-#                pivot_longer(min:max),
-#              aes(xintercept = value),color="darkgreen") +
-#   geom_point(alpha=0.3) +
-#   geom_hex(bins=70,alpha=0.4) +
-#   scale_x_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
-#   scale_y_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
-#   labs(x="Área per se",y="Frag. per se",title="c) Frag. per se ~ Área per se") +
-#   guides(fill = guide_legend(title="contagem")) +
-#   scale_fill_continuous(type = "viridis") +
-#   theme_bw()
-grid.arrange(grobs=l_p,
-             layout_matrix = rbind(c(1,1,1,1),
-                                   c(2,2,2,2),
-                                   c(2,2,2,2))
-             )
-```
-
-__Figura 3__ Gráficos explotários do contraste
 
 ### GAMM: contrastes ~  f(p,k) 
 

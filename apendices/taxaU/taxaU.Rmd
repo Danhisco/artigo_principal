@@ -218,7 +218,7 @@ v_sitios_vis.igual <- df_contrastes |>
 #   filter(efeito_frag < min(efeito_area)) |> pull(SiteCode) |> unique()
 
 # v_missingSite <- v_sitios[!(v_sitios %in% df_plot$SiteCode)]
-df_plot <- df_contrastes |> filter(SiteCode %in% v_sitios & k == 0.99)
+df_plot <- df_sim |> filter(SiteCode %in% v_sitios & k == 0.99)
 f_landscape <- function(df){
   m <- as.matrix(read.table(paste0("dados/simulacao/",df$txt.path)))
   image(m,axes=F,main=paste0(df$SiteCode,", p=",round(df$p,3)),zlim=c(0,2)) #", S=",df$S_obs,
@@ -226,46 +226,6 @@ f_landscape <- function(df){
 par(mar=c(0.2,0.2,2,0.2),mfrow=c(4,4))
 a_ply(df_plot,1,f_landscape)
 #
-df_auditoria <- df_contrastes |> 
-  # mutate(referencia_efeito = case_when(SiteCode %in% v_sitios_vis.igual ~ "p >= 0.93",
-  #                                      p ==1 ~ "p = 1",
-  #                                      TRUE ~ "p < 0.91"))
-  mutate(referencia_efeito = ifelse(p>=0.93,"p >= 0.93","p < 0.93"))
-# em trabalho
-min_max <- list(
-  min = ~min(.x, na.rm = TRUE), 
-  max = ~max(.x, na.rm = TRUE)
-)
-f_summarise <- \(df) adply(df,1,data.frame())
-
-
-df_auditoria |> 
-  pivot_longer(efeito_area:efeito_conf) |>
-  mutate(name = factor(name,labels = c("contraste area","contraste contemp","contraste frag"))) |> 
-  ggplot(aes(x=name,y=value)) +
-  geom_hline(data = df_auditoria |> 
-               group_by(referencia_efeito) |>
-               filter(p >= 0.93) |> 
-               summarise(min = min(across(efeito_area:efeito_conf,min)),
-                         max = max(across(efeito_area:efeito_conf,max))) |> 
-               pivot_longer(min:max),
-             # |> 
-               # pivot_longer(),
-             aes(yintercept = value,
-                 color=referencia_efeito)) +
-  scale_x_discrete(limits=c("contraste area","contraste frag","contraste contemp")) +
-  # coord_flip() +
-  geom_boxplot() +
-  geom_jitter(alpha=0.4) + 
-  labs(x="",y="contraste na estimativa da taxa U",
-       subtitle = "contraste area = (sem isolamento - idealizado) / idealizado  \ncontraste frag = (contemp - sem isolamento) / idealizado  \ncontraste contemp = (contemp - idealizado) / idealizado",
-       color="valor extremos:",
-       title="Os contrastes da frag per se podem ser significativamente negativos, mas em sua maioria são \nnulos ou positivos") +
-  theme_bw() +
-  theme(legend.position = "bottom",
-        legend.margin=margin(-14, 0, 0, 0))
-    # scale_color_manual(values=c("darkred","darkblue","darkgreen"),
-                     # labels=c("contemporâneo","idealizado","sem fragmentação")) +
 ```
 
 
@@ -273,7 +233,7 @@ df_auditoria |>
 df_plot <- df_contrastes |> select(-starts_with("cubeR"),-efeito_conf) |>
   pivot_longer(starts_with("efeito")) |> 
   arrange(p) |> 
-  mutate(label = paste0(SiteCode,", p=",round(p,2),"S=",S_obs,"N=",Ntotal))
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
 df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 df_plot |> 
   ggplot(aes(x=k,y=value,color=name)) +
@@ -295,88 +255,6 @@ ggsave("apendices/taxaU/figuras/contraste_k_landType_Site.png",
        height = 30)
 ```
 
-
-
-
-```{r}
-
-df_auditoria |> 
-# df_contrastes |> 
-  # ggplot(aes(x=cubeR_efeito_area,y=cubeR_efeito_frag,color=referencia_efeito)) +
-  ggplot(aes(x=efeito_area,y=efeito_frag,color = p>=0.93)) +
-  # ggplot(aes(x=log_efeito_area,y=log_efeito_frag)) +
-  geom_abline(intercept = 0,slope = 1) +
-  geom_line(aes(group=SiteCode),alpha=0.3) +
-  geom_point(alpha=0.5) +
-  scale_color_manual(name="p >= 0.93", values = setNames(c('darkgreen','black'),c(T, F)))
-df_contrastes |> 
-  # pivot_longer(efeito_area:efeito_frag) |> 
-  pivot_longer(log_efeito_area:log_efeito_frag) |> 
-  ggplot(aes(y=value,x=name)) +
-  geom_jitter() +
-  geom_boxplot() 
-  # geom_density() +
-  # geom_histogram(aes(y = after_stat(density)),
-  #                colour = 1, fill = "white") +
-  # facet_wrap(~name,ncol=2)
-l_p <- list()
-l_p[[1]] <- df_contrastes |> 
-  pivot_longer(efeito_area:efeito_frag) |>
-  # pivot_longer(log_efeito_area:log_efeito_frag) |> 
-  ggplot(aes(x=p,y=value,color=k)) +
-  geom_line(aes(group=k)) +
-  geom_point() +
-  facet_wrap(~name,ncol=2)
-l_p[[2]] <- df_contrastes |> 
-  # pivot_longer(efeito_area:efeito_frag) |>
-  pivot_longer(log_efeito_area:log_efeito_frag) |>
-  ggplot(aes(x=p,y=value,color=k)) +
-  geom_line(aes(group=k)) +
-  geom_point() +
-  facet_wrap(~name,ncol=2)
-grid.arrange(grobs=l_p,ncol=1)
-l_p <- list()
-l_p[[1]] <- df_contrastes |> 
-  pivot_longer(efeito_area:efeito_frag) |>
-  # pivot_longer(log_efeito_area:log_efeito_frag) |> 
-  ggplot(aes(x=k,y=value,color=p)) +
-  geom_line(aes(group=p)) +
-  geom_point() +
-  facet_wrap(~name,ncol=2)
-l_p[[2]] <- df_contrastes |> 
-  # pivot_longer(efeito_area:efeito_frag) |>
-  pivot_longer(log_efeito_area:log_efeito_frag) |>
-  ggplot(aes(x=k,y=value,color=p)) +
-  geom_line(aes(group=p)) +
-  geom_point() +
-  facet_wrap(~name,ncol=2)
-grid.arrange(grobs=l_p,ncol=1)
-#
-df_contrastes |> 
-  pivot_longer(efeito_area:efeito_frag) |> 
-  ggplot(aes(x=p,y=k,fill=value)) +
-  geom_tile() +
-  geom_point() +
-  scale_fill_distiller(palette = "Spectral") +
-  coord_cartesian(expand = FALSE) +
-  facet_wrap(~name,ncol=2)
-#
-# df_resultados <- df_resultados |> 
-#   mutate(Prob_invasion = c_invasion/100,
-#          propM0 = M0/50,
-#          t_sd=sqrt(t_var))
-# df_resultados |> 
-#   ggplot(aes(x=propM0,y=C_nm,fill=Prob_invasion)) +
-#   geom_tile() +
-#   scale_fill_distiller(palette = "Spectral") +
-#   labs(fill="",x="M0, initial pop. size of invader (%K)",y="(Cn - Cm) 2 / gamma") +
-#   coord_cartesian(expand = FALSE) +
-#   geom_text(aes(label=Prob_invasion)) +
-#   ggtitle("Proporção de eventos de substituição da residente em 100 réplicas") +
-#   theme_classic()
-df_contrastes |> 
-  ggplot(aes(x=k,y=log_efeito_area))
-```
 
 Oq os contrastes informam?
 Os contrastes particionam (condicionado ao modelo neutro, configuração espacial da paisagem ao redor contemporânea à amostragem da SAD, e a escala espacial da dinâmica de dispersão de propágulos entre a parcela e paisagem - que é determinada pelo grau de limitação de dispersão) a magnitude da redução da taxa de colonização de propágulos vindos da paisagem ao redor devido: i) à redução do número de progenitores, efeito da perda de habitat per se, sem considerar o isolamento estrutural; e ii) ao isolamento estrutural dos progenitores remanescentes.
