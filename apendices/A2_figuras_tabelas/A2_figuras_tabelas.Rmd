@@ -16,7 +16,7 @@ text-align: justify}
 </style>
 
 ```{r setup,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=T)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE)
 # pacotes
 library(dagitty)
 library(ggdag)
@@ -117,6 +117,10 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |
   arrange(p) |> 
   relocate(p,.after=k) |> 
   mutate(SiteCode = factor(SiteCode))
+# loads
+load("dados/Rdata/md_frag_area.Rdata")
+load("dados/Rdata/l_md_congContrastes.Rdata")
+load("dados/Rdata/l_md.logOR.Rdata")
 ```
 
 
