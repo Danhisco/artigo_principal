@@ -328,10 +328,6 @@ md_frag_area <- gam(frag_z ~
 save(md_frag_area,file="dados/Rdata/md_frag_area.Rdata")
 ```
 
-CPF:
-1) protocolo de validação: 4 elementos - k.check, summary, appraise, draw
-2) gráfico de 1 d sobrepondo novo conjunto de dados e o observado
-
 ```{r protocolo de validacao simples GAMM frag ~ area|Site}
 load("dados/Rdata/md_frag_area.Rdata")
 k.check(md_frag_area)

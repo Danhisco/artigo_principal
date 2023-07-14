@@ -1,3 +1,4 @@
+# f_TabSelGAMM
 # tabela de seleção com deviance explained
 # input: uma lista com os modelos candidatos nomeados
 # output um data frame com o output de bbmle::AICctab + mgcv::summary$dev.exp
@@ -12,11 +13,19 @@ f_TabSelGAMM <- function(l_md){
     arrange(dAICc) |> 
     select(modelo,dAICc:weight,dev.expl)
 }
-
-
-
 #
-# 
+# f_validaGAMM
+# input: um gam (md)
+# uso: en um chunk indivíduo rode 'md |> f_validaGAMM()'
+# outpu: dois outputs de console (k.check e summary) e dois conjuntos de gráficos diag do pacote gratia
+f_validaGAMM <- \(md){
+  k.check(md)
+  summary(md)
+  gratia::appraise(md)
+  gratia::draw(md)
+}
+#
+# f_PredInt.GAMM
 ## gamm: um mgcv::gam
 ## data: df com colunas com as preditoras do gamm
 ## v_exclude: quais os splines devem ser desconsiderados?
@@ -24,6 +33,7 @@ f_TabSelGAMM <- function(l_md){
 ## nsim: número de amostras da distribuição normal multivariada dos coef estimados pelo gamm
 #
 # output: retorna um data frame com o intevalo de predição na escala da função de ligação e as preditoras
+# adaptado de https://fromthebottomoftheheap.net/2016/12/15/simultaneous-interval-revisited/
 f_PredInt.GAMM <- \(gamm,
                     data, 
                     v_exclude = c("s(k_z,SiteCode)","s(SiteCode)"),
@@ -50,7 +60,7 @@ f_PredInt.GAMM <- \(gamm,
   cbind(data,df_pred)
 }
 #
-#
+# f_PostPredPlotGAMM1d_obsEpred
 ## posterior prediction interval from a GAMM
 # input: GAMM
 # output: a ggplot2 scatter plot with the observed values and predictions;
@@ -117,7 +127,7 @@ f_PostPredPlotGAMM1d_obsEpred <- \(gamm,
     theme(plot.caption = element_text(hjust=0))
 }
 #
-#
+# f_PostPredPlotGAMM1d1f_obsEpred
 ## função para post PI 1d 1f # pensar em formas 
 f_PostPredPlotGAMM1d1f_obsEpred <- \(gamm,
                                      site.posteriori ="SPigua1",
@@ -201,7 +211,7 @@ f_PostPredPlotGAMM1d1f_obsEpred <- \(gamm,
     facet_wrap(~.data[[v_other.factor]],nrow=1)
 }
 #
-#
+# f_l_mdGAMM_FiguraFinal_1dGAMM
 ## função para customizar o gráfico produzido por f_PostPredPlotGAMM1d_obsEpred
 # adiciona título e rótulo do eixo x
 f_l_mdGAMM_FiguraFinal_1dGAMM <- \(l_md){
@@ -229,4 +239,3 @@ f_l_mdGAMM_FiguraFinal_1dGAMM <- \(l_md){
   }
   return(l_p)
 }
-

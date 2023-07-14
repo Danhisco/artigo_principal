@@ -170,7 +170,7 @@ __Figura A2 1__ Sítios selecionados na base de dados TreeCo. a) latitude e long
 
 ### Figura A2 2
 
-```{r Fig A2 2 - Graf Exp dos contrastes}
+```{r Fig A2 2 - Graf Exp dos contrastes,fig.width=10,fig.height=4}
 l_p <- list()
 l_p[[1]] <- df_U |> 
   ggplot(aes(x=Umed,y=Usd)) + 
@@ -201,7 +201,7 @@ __Figura A2 2__ Gráficos exploratórios da taxa U estimada e dos contrastes cal
 
 ### Figura A2 3
 
-```{r fig A2 3 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=18,fig.width=15}
+```{r fig A2 3 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=30,fig.width=15}
 df_plot <- df_Urep |> select(-d) |> 
   pivot_longer(-c(SiteCode:k),names_to = "rep",values_to = "U") |>
   inner_join(df_p) |> 
@@ -310,117 +310,18 @@ grid.arrange(grobs=l_p,
 
 __Figura A2 4__ Gráficos explotários dos contraste
 
-### Figura A2 5
+### Avaliação GAMM 1
 
-### Figura A2 6
+Avaliação GAMMs contrastes - taxa U ~ f(p,k)
 
-```{r figura A2 6 intervalo de predição para os contrastes segundo estimado pelo GAMM,fig.height=8,fig.width=12}
-df_plot <- df_intPred |> 
-  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
-         k = k_z*sd(df_ad$k) + mean(df_ad$k),
-         name=factor(name,levels=paste0("efeito_",c("area","frag","conf")))) |> 
-  select(-contains("_z"),-predito) |> 
-  pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
-df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
-# gráficos
-v_range <- range(df_plot$pred)
-v_breaks1 <- c(-0.2,0,0.2,0.5,1)
-f_plot <- function(df){
-  f_ggplot <- function(df,facets=2){
-  ggplot(df,aes(x=p,y=k,z=pred,fill=pred)) +
-    geom_raster() +
-    geom_contour(aes(z=pred),
-                 size=0.5,color="darkblue",
-                 breaks=v_breaks1) +
-    geom_text_contour(aes(z=pred),
-                      breaks=v_breaks1,
-                      label.placer = label_placer_flattest()) +
-    scale_fill_gradient2(low="green",
-                         mid="red",
-                         high="black",
-                         midpoint = 0.5,
-                         limits=v_range,
-                         # round(seq(v_range[1],v_range[2],length.out = 5)[1:4],2)
-                         breaks=v_breaks1) +
-    scale_y_reverse() +
-    theme_classic() +
-    guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
-    coord_cartesian(expand = FALSE) +
-    labs(fill=df$name[1]) +
-    facet_wrap(~label,ncol = facets,scales="free")
-  }
-  l_p <- list()
-  l_p[[1]] <- df |> 
-    filter(label == "Q_0.5") |>
-    f_ggplot() + labs(x="")
-  l_p[[2]] <- df |> 
-    filter(label != "Q_0.5") |>
-    f_ggplot()
-  ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
-}
-l_plot <- dlply(df_plot,"name",f_plot)
-p <- grid.arrange(grobs=l_plot,ncol=3)
-ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
-       width = 13,
-       height = 9)
-```
+### Avaliação GAMM 2
 
-__Figura 4__ Intervalo de Predição estimado pelos GAMM. 
-
-### Figura A2 7
-
-```{r figura 5 gamm para descreve contraste de frag per se em funcao do contraste de area per se}
-# dados
-df <- df_md |> 
-  filter(logOR_pair == "cont.non_frag") |> 
-  rename(frag_z=contraste_z) |> 
-  mutate(area_z = df_md |> 
-           filter(logOR_pair == "non_frag.ideal") |> 
-           pull(contraste_z),
-         SiteCode = factor(SiteCode))
-df_newpred <- data.frame(area_z = seq(min(df$area_z),max(df$area_z),length.out=200)) |> 
-  mutate(SiteCode = "SPigua1")
-df_pred_newdata <- f_PredInt.GAMM(data=df_newpred,
-                                  gamm=md_frag_area,
-                                  v_exclude=c("s(area_z,SiteCode)","s(SiteCode)"))
-df$predito <- predict(md_frag_area)
-# gráfico
-v_devexp <- summary(md_frag_area)$dev.exp
-df |> 
-  ggplot(aes(x=area_z,y=frag_z)) +
-  geom_point(alpha=0.2) +
-  geom_line(aes(y=predito,group=SiteCode),alpha=0.2) +
-  # geom_line(data=df_pred_newdata,aes(x=area_z,y=predito),color="darkgreen") +
-  geom_line(data=df_pred_newdata,aes(x=area_z,y=Q_0.5),color="darkred") +
-  geom_line(data = df_pred_newdata |> 
-              select(-Q_0.5) |> 
-              pivot_longer(starts_with("Q_0.")),
-            aes(x=area_z,y=value,group=name),color="darkblue") +
-  # scale_y_continuous(limits=range(df$frag_z)) +
-  annotate("rect",xmin = -1,xmax=1,ymin=14,ymax=16) +
-  annotate("text",x = 0,y = 15,
-           label=paste0("dev. exp. = ",round(v_devexp*100,digits = 1),"%*"),color="white") +
-  labs(x="z(contraste área per se)",y="z(contraste frag. per se)",
-       title="observado e predito pelo modelo completo e sem a variação entre sítios",
-       subtitle = "horizontal lines = quantile(x, probs=c(0.95,0.99))",
-       caption = "*full model") +
-  geom_vline(xintercept = quantile(df$area_z,probs = c(0.95,0.99)),linetype="dashed",alpha=0.3) +
-  theme_bw() +
-  theme(plot.caption = element_text(hjust=0))
-```
-
-__Figura 5__ Intervalo de Predição estimado pelos GAMM. 
-
+Avaliação GAMMs contraste - taxa U: frag. per se ~ f(área per se)
 
 ## Contrastes - Congruência SADs preditas
 
+
+
+
 ## Congruência com a SAD observada
-
-```{r figura 6 final GAMM CongContrastes}
-l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
-grid.arrange(grobs=l_p,ncol=3)
-```
-
-__Figura 6__ Congruência da SAD predita entre contrastes: observada e estimada quando se pressupõe ausência de variabilidade entre sítios. 
-
 

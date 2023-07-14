@@ -296,7 +296,6 @@ Utilizamos um GAMM gaussiano com o grau de limitação de dispersão (k) e a pro
 - AVALIAÇÃO e INTERPRETAÇÃO do GAMM do contraste de frag per se em função do contraste de efeito de área.[b] (A2 vai a parte das tabelas de validação e ai pode ir no formato padrão)
 
 
-
 ### GAMM: contrastes ~  f(p,k) 
 
 ```{r figura 4 intervalo de predição para os contrastes segundo estimado pelo GAMM,fig.height=8,fig.width=12}
