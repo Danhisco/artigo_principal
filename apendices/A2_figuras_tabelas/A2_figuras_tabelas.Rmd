@@ -16,7 +16,7 @@ text-align: justify}
 </style>
 
 ```{r setup,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE)
 # pacotes
 library(dagitty)
 library(ggdag)
@@ -123,7 +123,7 @@ load("dados/Rdata/l_md_congContrastes.Rdata")
 load("dados/Rdata/l_md.logOR.Rdata")
 ```
 
-
+## Sítios Selecionados 
 ### Figura A2 1
 
 
@@ -166,9 +166,11 @@ grid.arrange(grobs=l_p,ncol=3)
 __Figura A2 1__ Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão)).
 
 
+## Contrastes - Taxa U
+
 ### Figura A2 2
 
-```{r Fig A2 2 - Graf Exp dos contrastes,eval=T}
+```{r Fig A2 2 - Graf Exp dos contrastes}
 l_p <- list()
 l_p[[1]] <- df_U |> 
   ggplot(aes(x=Umed,y=Usd)) + 
@@ -186,69 +188,13 @@ l_p[[2]] <- df_U |>
   scale_color_manual(values=c("darkred","darkblue","darkgreen"),
                      labels=c("contemporâneo","idealizado","sem fragmentação")) +
   labs(color="",y="média taxa U",x="") +
-  theme(legend.position = "bottom") +
-  facet_wrap(~name,ncol=2,scales="free")
-
-
-# l_p[[2]] <- df_contrastes |> 
-#   pivot_longer(efeito_area:efeito_conf) |>
-#   mutate(name = factor(name,labels = c("contraste area","contraste contemp","contraste frag"))) |> 
-#   ggplot(aes(x=name,y=value)) +
-#   geom_hline(data = df_contrastes |> 
-#                mutate(referencia_efeito = ifelse(p>=0.93,"p>=0.93","p<0.93")) |> 
-#                group_by(referencia_efeito) |> 
-#                filter(p>=0.93) |> 
-#                summarise(min = min(across(efeito_area:efeito_conf,min)),
-#                          max = max(across(efeito_area:efeito_conf,max))) |> 
-#                pivot_longer(min:max),
-#              # |> 
-#                # pivot_longer(),
-#              aes(yintercept = value,
-#                  color=referencia_efeito)) +
-#   scale_x_discrete(limits=c("contraste area","contraste frag","contraste contemp")) +
-#   # coord_flip() +
-#   geom_boxplot() +
-#   geom_jitter(alpha=0.4) + 
-#   labs(x="",y="contraste na estimativa da taxa U",
-#        subtitle = "contraste area = (sem isolamento - idealizado) / idealizado  \ncontraste frag = (contemp - sem isolamento) / idealizado  \ncontraste contemp = (contemp - idealizado) / idealizado",
-#        color="valor extremos:",
-#        title="Os contrastes da frag per se podem ser significativamente negativos, mas em sua maioria são \nnulos ou positivos") +
-#   theme_bw() +
-#   theme(legend.position = "bottom",
-#         legend.margin=margin(-14, 0, 0, 0))
-# l_p[[3]] <- df_contrastes |> 
-#   ggplot(aes(x=efeito_area,y=efeito_frag)) + # ,color=p>=0.93
-#   geom_abline(slope = 1,intercept = 0,color="darkred") +
-#   geom_hline(data = df_contrastes |>
-#                filter(p>=0.93) |> 
-#                summarise(min = min(efeito_frag),
-#                          max = max(efeito_frag)) |> 
-#                pivot_longer(min:max),
-#              aes(yintercept = value),color="darkgreen") +
-#   geom_vline(data = df_contrastes |>
-#                filter(p>=0.93) |> 
-#                summarise(min = min(efeito_area),
-#                          max = max(efeito_area)) |> 
-#                pivot_longer(min:max),
-#              aes(xintercept = value),color="darkgreen") +
-#   geom_point(alpha=0.3) +
-#   # geom_density_2d(aes(color=..level..)) +
-#   # geom_density_2d_filled(alpha = 0.4) +
-#   # geom_density_2d(colour = "black")
-#   geom_hex(bins=70,alpha=0.4) +
-#   scale_x_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
-#   scale_y_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
-#   labs(x="Área per se",y="Fragmentação per se",level="2D density") +
-#   guides(fill = guide_legend(title="contagem")) +
-#   scale_fill_continuous(type = "viridis") +
-#   # scale_color_manual(name="p >= 0.93", values = setNames(c('darkgreen','black'),c(T, F))) +
-#   theme_bw()
-# l_p[[4]] <- df_contrastes |> 
-#   ggplot(aes(x=p,efeito_conf)) +
-#   geom_point(aes(color=k)) +
-#   geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
-#   labs(x="proporção de cobertura vegetal",y="contraste contemporâneo")
-# grid.arrange(grobs=l_p,ncol=2)
+  facet_wrap(~name,ncol=2,scales="free",strip.position = "bottom") +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        legend.margin=margin(-26, 0, 0, 0),
+        strip.background = element_blank(),
+        strip.placement = "outside")
+grid.arrange(grobs=l_p,layout_matrix = rbind(c(1,2,2)))
 ```
 
 __Figura A2 2__ Gráficos exploratórios da taxa U estimada e dos contrastes calculados. No painel da esquerda superior, coeficiente de variação da taxa U estimada por MNEE. Cada ponto representa uma bateria de simulação com 10 réplicas cada; no eixo x há a média da taxa U e no eixo y o correspondente desvio padrão. Todas as retas passam pela origem, em preto a reta com inclinação de 1, em verde a com inclinação de 0.1, e em vermelho com inclinaçãao de 0.01. A maior parte dos pontos tem coeficiente de inclinação entre 10% e 1%. Nos paineis da direita superior e da linha de baixo há os gráficos exploratórios dos contrastes, respectivamente: boxplots dos contrastes calculados, gráfico de dispersão dos contrastes de fragmentação per se e área per se, e o contraste contemporâneo em função de p e colorido por k. 
@@ -288,74 +234,87 @@ ggsave("apendices/taxaU/figuras/Umed_k_landType_Site.png",
 
 __Figura A2 3__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados. Os sítios estão organizados pela pela proporção de cobertura vegetal 
 
+### Figura A2 4
 
-```{r figura 3 GE contrastes}
+```{r Figura A2 4 GE contrastes}
 l_p <- list()
 l_p[[1]] <- df_contrastes |>
-  pivot_longer(starts_with("efeito_")) |> 
-  mutate(name = factor(name,
-                       levels=c("efeito_area","efeito_frag","efeito_conf"),
-                       labels=c("área per se","fragmentação per se","contemporaneidade"))) |> 
-  ggplot(aes(y=value,x=name)) +
-  geom_jitter() +
+  pivot_longer(efeito_area:efeito_conf) |>
+  mutate(name = factor(name,labels = c("contraste area","contraste contemp","contraste frag"))) |>
+  ggplot(aes(x=name,y=value)) +
+  geom_hline(data = df_contrastes |>
+               mutate(referencia_efeito = ifelse(p>=0.93,"p>=0.93","p<0.93")) |>
+               group_by(referencia_efeito) |>
+               filter(p>=0.93) |>
+               summarise(min = min(across(efeito_area:efeito_conf,min)),
+                         max = max(across(efeito_area:efeito_conf,max))) |>
+               pivot_longer(min:max),
+             # |>
+               # pivot_longer(),
+             aes(yintercept = value,
+                 color=referencia_efeito)) +
+  scale_x_discrete(limits=c("contraste area","contraste frag","contraste contemp")) +
+  # coord_flip() +
   geom_boxplot() +
-  labs(x="",
-       y="",
-       title="a) Contrastes taxa U")
-l_p[[2]] <- df_contrastes |> 
-  pivot_longer(cols = k:p,names_to = "pred_class",values_to = "pred_values") |> 
-  mutate(pred_class = factor(pred_class,levels=c("p","k"))) |> 
-  pivot_longer(cols = starts_with("efeito_"),names_to = "resp_class",values_to = "resp_values") |> 
-  mutate(resp_class = factor(resp_class,levels=names(df_contrastes)[4:6])) |> 
+  geom_jitter(alpha=0.4) +
+  labs(x="",y="contraste na estimativa da taxa U",
+       # subtitle = "contraste area = (sem isolamento - idealizado) / idealizado  \ncontraste frag = (contemp - sem isolamento) / idealizado  \ncontraste contemp = (contemp - idealizado) / idealizado",
+       color="valor extremos:",
+       title="a)") +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        legend.margin=margin(-14, 0, 0, 0))
+l_p[[2]] <- df_contrastes |>
+  ggplot(aes(x=efeito_area,y=efeito_frag)) + # ,color=p>=0.93
+  geom_abline(slope = 1,intercept = 0,color="darkred") +
+  geom_hline(data = df_contrastes |>
+               filter(p>=0.93) |>
+               summarise(min = min(efeito_frag),
+                         max = max(efeito_frag)) |>
+               pivot_longer(min:max),
+             aes(yintercept = value),color="darkgreen") +
+  geom_vline(data = df_contrastes |>
+               filter(p>=0.93) |>
+               summarise(min = min(efeito_area),
+                         max = max(efeito_area)) |>
+               pivot_longer(min:max),
+             aes(xintercept = value),color="darkgreen") +
+  geom_point(alpha=0.3) +
+  geom_hex(bins=70,alpha=0.4) +
+  scale_x_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  scale_y_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  labs(x="Área per se",y="Fragmentação per se",level="2D density",title="b)") +
+  guides(fill = guide_legend(title="contagem")) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw()
+l_p[[3]] <- df_contrastes |>
+  pivot_longer(cols = k:p,names_to = "pred_class",values_to = "pred_values") |>
+  mutate(pred_class = factor(pred_class,levels=c("p","k"))) |>
+  pivot_longer(cols = starts_with("efeito_"),names_to = "resp_class",values_to = "resp_values") |>
+  mutate(resp_class = factor(resp_class,levels=names(df_contrastes)[4:6])) |>
   ggplot(aes(x=pred_values,y=resp_values)) +
   geom_point(alpha=0.4) +
   geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
-  labs(title="b) Contrastes ~ p e k",x="",y="") +
+  labs(title="c)",x="",y="") +
   facet_grid(pred_class~resp_class,scales="free",
              labeller = labeller(pred_class = c(p="p",k="k"),
                                  resp_class = c(efeito_area = "área per se",
                                                 efeito_conf = "contemporaneidade",
                                                 efeito_frag = "fragmentação per se")))
 grid.arrange(grobs=l_p,
-             layout_matrix = rbind(c(1,1,1,1),
-                                   c(2,2,2,2),
-                                   c(2,2,2,2))
+             layout_matrix = rbind(c(1,1,2,2),
+                                   c(3,3,3,3),
+                                   c(3,3,3,3))
              )
 ```
 
-__Figura 3__ Gráficos explotários do contraste
+__Figura A2 4__ Gráficos explotários dos contraste
 
-```{r figura contrastes por sítio e k}
-df_plot <- df_contrastes |> select(-starts_with("cubeR"),-efeito_conf) |>
-  pivot_longer(starts_with("efeito")) |> 
-  arrange(p) |> 
-  mutate(label = paste0(SiteCode,", p=",round(p,2)))
-df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
-df_plot |> 
-  ggplot(aes(x=k,y=value,color=name)) +
-  geom_hline(yintercept = 0) +
-  geom_point(alpha=0.1) +
-  geom_line() +
-  scale_x_reverse() +
-  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-  theme_bw() +
-  labs(color="contraste") +
-  theme(legend.position = "top",
-        axis.text=element_text(size=4.5),
-        strip.text = element_text(size = 4.5, margin = margin())) +
-  # scale_color_manual(values=c("darkred","darkblue","darkgreen"),
-  #                    labels=c("contemporâneo","idealizado","sem fragmentação")) +
-  facet_wrap(~label,ncol=4,scales="free")
-ggsave("apendices/taxaU/figuras/contraste_k_landType_Site.png",
-       width = 7,
-       height = 30)
-```
+### Figura A2 5
 
-_figura 4__ contrastes de área e frag per se por sítio de amostragem (contraste de U ~ k ~ site)
+### Figura A2 6
 
-######## novo:
-
-```{r figura 4 intervalo de predição para os contrastes segundo estimado pelo GAMM,fig.height=8,fig.width=12}
+```{r figura A2 6 intervalo de predição para os contrastes segundo estimado pelo GAMM,fig.height=8,fig.width=12}
 df_plot <- df_intPred |> 
   mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
          k = k_z*sd(df_ad$k) + mean(df_ad$k),
@@ -408,7 +367,7 @@ ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
 
 __Figura 4__ Intervalo de Predição estimado pelos GAMM. 
 
-## Frag. per se ~ Área per se
+### Figura A2 7
 
 ```{r figura 5 gamm para descreve contraste de frag per se em funcao do contraste de area per se}
 # dados
@@ -452,7 +411,10 @@ df |>
 
 __Figura 5__ Intervalo de Predição estimado pelos GAMM. 
 
-## congruência da SAD predita 
+
+## Contrastes - Congruência SADs preditas
+
+## Congruência com a SAD observada
 
 ```{r figura 6 final GAMM CongContrastes}
 l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
