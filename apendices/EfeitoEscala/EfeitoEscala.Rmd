@@ -4,10 +4,10 @@ author:
   - Danilo Pereira Mori, Laboratório de Ecologia Teórica (IBUSP)
 date: ""
 output:
+  html_document: default
   pdf_document:
     latex_engine: xelatex
     extra_dependencies: ["tabu"]
-  html_document: default
 editor_options:
   chunk_output_type: console
 # bibliography: citations.bib
@@ -178,10 +178,9 @@ l_p[[3]] <- df_sim |>
 grid.arrange(grobs=l_p,nrow=1)
 ```
 
-\begingroup
-\fontfamily{ppl}\fontsize{6}{7.5}\selectfont
+<font size="1"> 
 __Figura 1__ a) Mudança na extensão espacial da paisagem a proporção de cobertura vegetal. Cada ponto representa a proporção de cobertura vegetal (eixo y) para aquela determinada extensão espacial da paisagem ao redor (eixo x), as linhas ligam pontos de um sítio de amostragem. b) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). c) Cenários de limitação de dispersão simulados. k = proporção de propágulos que permanece até a vizinhança imediata (distância média entre indivíduos); d = desvio padrão da função de dispersão com distribuição de Laplace. Para detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal. 
-\endgroup
+</font> 
 
 
 ## Taxa U estimada na maior extensão espacial da paisagem (16x16km2)
@@ -209,10 +208,10 @@ df_p |>
 #        width = 17.2,
 #        height = 6.7)
 ```
-\begingroup
-\fontfamily{ppl}\fontsize{6}{7.5}\selectfont
+
+<font size="1"> 
 __Figura 2__ U estimado (eixo y) por cenário de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km). Os pontos são as estimativas réplicas de U, os pontos vermelhos marcam o valor médio e a linha une os valores médios entre cenários de limitação de dispersão. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão, simulada com um kernel de dispersão com decaimento exponencial da probabilidade de colonização com o aumento da distância. S = riqueza da espécie, N = número de indivíduos.
-\endgroup
+</font> 
 
 A taxa U estimada na extensão de 16x16 km2 apresenta padrão não linear com máximo em graus pouco severos de limitação de dispersão (Figura 2), qualitativamente é semelhante ao esperado em paisagens infinitas (texto principal). Há muita variação entre os sítios, por isso na figura 2 o eixo y varia entre paineis. A variação das réplicas em torno da média também pode ser elevada (Figura 2). Os valores médios sugerem um padrão de patamares, com valores baixos de U quando a limitação de dispersão é severa e em graus pouco severos um aumento brusco que suavemente diminui com o relaxamento da limitação de dispersão (Figura 2). Uma vez que observamos um padrão qualitativamente similar ao esperado em paisagens infinitas, iremos considerar a extensão espacial de 16x16 km2 como maior escala de referência para os graus de limitação de dispersão. 
 
@@ -248,10 +247,10 @@ df_p |>
 #        width = 17.2,
 #        height = 6.7)
 ```
-\begingroup
-\fontfamily{ppl}\fontsize{6}{7.5}\selectfont
+
+<font size="1"> 
 __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para os 20 graus de limitação de dispersão (cor dos pontos e linhas). Pontos representam a média de 10 réplicas por bateria de simulação e as linhas ligam os pontos médos. Eixo y varia entre paineis.
-\endgroup
+</font> 
 
 Observamos o padrão esperado de a taxa U diminuir com o aumento da escala, principalmente para os graus de limitação de dispersão brandos (Figura 3). Em graus pouco severos de limitação de dispersão pode existir pouca variação na estimativa média entre escalas (Figura 3 e 4); nesses graus, a estimativa média da taxa U pode operar no máximo global (Figura 2) e por isso devem apresentar baixa variação com a mudança na escala.
 
@@ -267,13 +266,10 @@ df_Usoe |>
        y="Coef. Var. de Umed (%)",
        title="Variação da média de U")
 ```
-  
-  
 
-\begingroup
-\fontfamily{ppl}\fontsize{6}{7.5}\selectfont
+<font size="1"> 
 __Figura 4__ Coeficiente de variação (sd/mean) de Umed (eixo y) para um mesmo grau de limitação de dispersão (eixo x) e sítio, considerando todas as escalas. 
-\endgroup
+</font> 
 
 ## Grau de limitação de dispersão e extensão espacial da paisagem adequada
 
@@ -349,10 +345,10 @@ ggsave("apendices/EfeitoEscala/figuras/fig5_SoE.png",
        width = 10.2,
        height = 6.7)
 ```
-\begingroup
-\fontfamily{ppl}\fontsize{6}{7.5}\selectfont
+
+<font size="1"> 
 __Figura 5__ Média das estimativas médias da taxa U (eixo x) em fução do lado da paisagem ao redor (scale, eixo x). Em azul a média e o desvio padrão para cada combinação de grau de limitação de dispersão (título dos paineis, k = proporção de propágulos que permanece até a vizinhança imediata) e scale. S = número de espécies, N = número de indivíduos. As linhas verticais em vermelho marcam a escala que acumula pelo menos 0.99 de toda a variação da média com o aumento da escala (Ver seção "Escala que acumula a maior parte do efeito da escala").
-\endgroup
+</font> 
 
 __Escala que acumula a maior parte do efeito da escala__
 
@@ -396,16 +392,11 @@ ggsave("apendices/EfeitoEscala/figuras/fig6_SoE_resumo.png",
        height = 6.7)
 ```
   
-    
-\begingroup
-\fontfamily{ppl}\fontsize{6}{7.5}\selectfont
+<font size="1"> 
 __Figura 6__ Lado da paisagem que acumula a maior parte do efeito da escala no grau de limitação de dispersão. Em cinza a área com incerteza: os lados de 1 e 2 km podem ser adequados.
-\endgroup
+</font> 
 
 ### Support Information
-
-<!-- #### Gráficos Diagnóstico do LMM  -->
-  
     
 
 ```{r diagnostico modelo mais plausivel GLMM efeito de escala}
@@ -448,8 +439,10 @@ ggsave("apendices/EfeitoEscala/figuras/figSI_diagnostico_md_SoE.png",grob,
        height = 6.7)
 ```
 
+<font size="1"> 
 __Figura SI 1__ 
 Resíduos quantilícos do LMM mais plausível: logit(Umed) ~ log(S) + log(N). Umed = média da bateria de simulações (# réplicas = 10), S = riqueza de espécies, N = número de indivíduos.
+<fon> 
 
 <!-- ##### Códigos para rodar as simulações -->
 
