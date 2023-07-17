@@ -267,7 +267,7 @@ __Figura 3__ U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e 
 Na maioria dos graus de limitação de dispersão observamos o padrão esperado de a taxa U diminuir com o aumento da escala, principalmente para os graus de limitação de dispersão brandos e muito severos (Figura 3). Em graus pouco severos de limitação de dispersão pode existir pouca variação na estimativa média entre escalas (Figura 3 e 4); nesses graus, a estimativa média da taxa U ocorre no patamar superior de valores médios da taxa U(Figura 2b). No patamar superior da taxa U há a menor variação na média entre escalas e maior variabilidade entre réplicas de uma mesma bateria de simulação (figura 4). 
 
 
-```{r figura 4 Ucv por k,fig.width=3.5,fig.height=3.75}
+```{r figura 4 Ucv por k,fig.width=8,fig.height=4}
 l_p <- list()
 l_p[[1]] <- df_Usoe |>
   group_by(SiteCode,k) |>
