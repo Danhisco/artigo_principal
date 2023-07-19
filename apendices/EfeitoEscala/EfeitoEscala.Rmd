@@ -327,7 +327,7 @@ md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names()
 md_SoE |> (\(.) MuMIn::r.squaredGLMM(.))()
 ```
 
-O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1). Os coeficientes de determinação marginal e condional do modelo são aproximadamente iguais à 0.96. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos apresentarem algum desvio (Figura SI 1), o modelo faz uma boa predição do observado (Figura SI 1). Na figura 5 há a média da predição do modelo mais plausível, que descreve o logito da estimativa média da taxa U em função da interação entre log da riqueza e número total de indivíduos, e grau de limitação de dispersão e lado da paisagem como fatores. Os pontos estão coloridos pela razão entre número de espécies e número de indivíduos (S/N).
+O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1). Os coeficientes de determinação marginal e condional do modelo são aproximadamente iguais à 0.96. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos apresentarem algum desvio (Figura SI 1), o modelo faz uma boa predição do observado (Figura SI 1). Na figura 5 há o predito para os dados observados na escala padrão da variável resposta, taxa U. Para cada escala e grau de limitação de dispersão foi calculado a média entre sítios (pontos em azul). Os pontos estão coloridos pela razão entre número de espécies e número de indivíduos (S/N).
 
 ```{r figura 5 para resultados do efeito de escala,fig.width=8,fig.height=8.5}
 v_threshold <- paste0("SoE >= ",
@@ -372,7 +372,7 @@ __Figura 5__ Média das estimativas médias da taxa U (eixo x) em fução do lad
 
 __Escala que acumula a maior parte do efeito da escala__
 
-Para determinar quais os graus de limitação de dispersão são apropriados para simular nas paisagens de lado 4 km avaliamos qual a escala que acumula pelo menos 95% de toda a variação observada para a média geral com o aumento da escala até paisagens de lado 16 km. Para isso, calculei por grau de limitação de dispersão: a diferença entre a média da estimativa entre 2 escalas consecutivas e dividi o valor pela amplitude para todas as escalas; então os valores de escalas consecutivas são somados em ordem crescente. A escala que acumula pelo menos 95% é considerada como a extensão espacial mínima suficiente para simular aquele grau de limitação de dispersão (linhas verticais figura 5). 
+Para determinar quais os graus de limitação de dispersão são adequados avaliamos qual a escala que acumula pelo menos 95% de toda a variação observada para a média geral com o aumento da escala até paisagens de lado 16 km. Para isso, calculei por grau de limitação de dispersão: a diferença entre a média da estimativa entre 2 escalas consecutivas e dividi o valor pela amplitude para todas as escalas; então os valores de escalas consecutivas são somados em ordem crescente. A escala que acumula pelo menos 95% é considerada como a extensão espacial mínima suficiente para simular aquele grau de limitação de dispersão (linhas vermelhas na figura 5). 
 
 
   
@@ -392,7 +392,10 @@ f_lag.U <- function(df){
 ```
 
 
-Com a redução da limitação de dispersão há aumento na escala adequada (Figura 5, linhas verticais vermelhas): quando k é até 0.90 o lado de 1 km é suficiente; k entre 0.50 e 0.40 sugere incerteza entre o lado de 1 e 2 km; e a partir de k igual 0.20 o lado suficiente é maior do que 4 km. Nos graus de limitação de dispersão pouco severos e pouco brandos (k c [0.85;0.55]), onde ocorre valores máximos da média da estimativa da taxa U (Figura 2), não foi possível obsservar tendência de mudança na média geral (Figura 5). Nesses graus de limitação de dispersão há a menor variação entre escalas para um mesmo sítio e maior variação entre sítios (Figura 5). O aumento da variação do padrão geral da média parece estar associado ao aumento do número de espécies per capita (Figura 5). Em média, a extensão espacial adequada para simular os graus onde não foi possível estimar a escala adequada deve variar entre 1 e 2 km. Assim, as paisagens mínimas suficientes para simular os graus de limitação de dispersão são: 1 km de lado, para k entre 0.99 e 0.90; 1 e 2 km de lado, para k entre 0.85 e 0.35; 2 km de lado, para k igual 0.30; e 4 km de lado, para k igual 0.25 (Figura 6).  
+Com a redução da limitação de dispersão há aumento na escala adequada (Figura 5, linhas verticais vermelhas; Figura 6). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km de lado. Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U; a variação entre escalas para um mesmo sítio é baixa (Apêndice efeito de Escala, figura 4). Nesses graus de limitação de dispersão, o aumento do número de espécies per capita pode aumentar a divergência da média geral de estabilidade e apresentar padrões não lineares (detalhes em Apêndice efeito de escalar). Os graus de limitação de dispersão com k entre 0.80 e 0.55, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U (Apêndice Efeito de Escala, Figura 2). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura 2).
+
+
+
 
 ```{r figura 6 scale e k adequados, fig.height=5,fig.width=6}
 df_plot |> 
