@@ -227,6 +227,20 @@ __Figura 2b__ U estimado (eixo y) por cenário de limitação de dispersão (eix
 
 A taxa U estimada na extensão de 16x16 km2 apresenta padrão não linear com máximo em graus pouco severos de limitação de dispersão (Figura 2a,b), qualitativamente é semelhante ao esperado em paisagens infinitas (texto principal CONFIRMAR). Há muita variação entre os sítios, por isso na figura 2b o eixo y varia entre paineis. A variação das réplicas em torno da média também pode ser elevada (Figura 2b). Os valores médios sugerem um padrão de patamares, com valores baixos de U quando a limitação de dispersão é severa e em graus pouco severos um aumento brusco que suavemente diminui com o relaxamento da limitação de dispersão (Figura 2b). Uma vez que observamos um padrão qualitativamente similar ao esperado em paisagens infinitas, iremos considerar a extensão espacial de 16x16 km2 como maior escala de referência para os graus de limitação de dispersão. 
 
+
+```{r figura 2+1 relacoes nao triviais da riqueza e do numero de individuos}
+df_Unull |> 
+  group_by(SiteCode,Ntotal,S_obs,k,lado_km) |> 
+  summarise(Umed = mean(U)) |> 
+  # pivot_longer(Ntotal:S_obs) |> 
+  # filter(name=="S_obs") |> 
+  ggplot(aes(x=S_obs,y=Umed)) +
+  geom_point(aes(color=Ntotal)) +
+  geom_smooth(method="gam",se=F,alpha=0.6) +
+  facet_wrap(~k)
+```
+
+
 # Efeito da escala na estimativa média da taxa U por grau de limitação de dispersão
 
 ```{r figura 3 Umed por lado da paisagem,fig.width=14,fig.height=8.5}
