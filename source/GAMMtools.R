@@ -18,13 +18,19 @@ f_TabSelGAMM <- function(l_md){
 # input: um gam (md)
 # uso: en um chunk indivíduo rode 'md |> f_validaGAMM()'
 # outpu: dois outputs de console (k.check e summary) e dois conjuntos de gráficos diag do pacote gratia
-f_validaGAMM <- \(md){
-  k.check(md)
-  summary(md)
-  gratia::appraise(md)
-  gratia::draw(md)
+f_validaGAMM <- \(md_name,l_md){
+  print(paste0("Var. resposta: ",sub("efeito_","contraste ",md_name)))
+  md <- l_md[[md_name]]
+  print("k.check:")
+  print(k.check(md))
+  print("summary:")
+  print(summary(md))
+  print("gratia::appraise:")
+  print(gratia::appraise(md))
+  print("gratia::draw:")
+  print(gratia::draw(md))
 }
-#
+ #
 # f_PredInt.GAMM
 ## gamm: um mgcv::gam
 ## data: df com colunas com as preditoras do gamm

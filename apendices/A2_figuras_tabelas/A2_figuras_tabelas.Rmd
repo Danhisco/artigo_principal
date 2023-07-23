@@ -42,11 +42,8 @@ library(plyr)
 library(dplyr)
 source("source/nameModel.R")
 source("source/GAMMtools.R")
-# objetos
-# load("dados/Rdata/md_MNEE.Rdata")
-# load("dados/Rdata/l_md_GAMM.Rdata")
 # dados
-# load("dados/Rdata/l_md.contrastes.Rdata")
+load("dados/Rdata/l_md.contrastes.Rdata")
 # load("dados/Rdata/l_md.logOR.Rdata")
 # load("dados/Rdata/l_md.logOR_tp.Rdata")
 # load("dados/Rdata/l_md.logOR_tp_r3removido.Rdata")
@@ -173,12 +170,22 @@ __Figura A2 1__ Sítios selecionados na base de dados TreeCo. a) latitude e long
 ```{r Fig A2 2 - Graf Exp dos contrastes,fig.width=10,fig.height=4}
 l_p <- list()
 l_p[[1]] <- df_U |> 
-  ggplot(aes(x=Umed,y=Usd)) + 
-  geom_point(alpha=0.1) + 
-  geom_abline(slope = 1,intercept = 0) + 
-  geom_abline(slope=0.1,intercept = 0,color="darkgreen") +
-  geom_abline(slope=0.01,intercept = 0,color="darkred") +
-  labs(x="média taxa U",y="desvio padrão taxa U")
+  mutate(Ucv = Usd / Umed,
+         k_factor = factor(round(k,2))) |> 
+  inner_join(df_p) |> 
+  # ggplot(aes(y=Ucv,x=k_factor)) + 
+  # geom_jitter() +
+  # geom_boxplot()
+  ggplot(aes(x=Umed,y=Usd,color=land_type)) +
+  geom_point(alpha=0.2) +
+  geom_abline(slope = 1,intercept = 0) +
+  geom_abline(slope=0.1,intercept = 0) +
+  geom_abline(slope=0.01,intercept = 0) +
+  scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                     labels=c("contemporâneo","idealizado","sem fragmentação")) +
+  labs(x="média taxa U",y="desvio padrão taxa U") +
+  theme(legend.position = "none") +
+  facet_wrap(~k_factor,ncol=4)
 l_p[[2]] <- df_U |>
   inner_join(df_p) |>
   pivot_longer(c(p,k)) |> 
@@ -312,7 +319,29 @@ __Figura A2 4__ Gráficos explotários dos contraste
 
 ### Avaliação GAMM 1
 
-Avaliação GAMMs contrastes - taxa U ~ f(p,k)
+Os GAMM utilizaram a cubic regression spline como função base nos splines simples e nos tensores entre as variáveis preditoras (Janela de código 1). A estrutura aleatória do GAMM foi específica de modo que há um intercepto e spline de k por inventário florestal (Janela de código 1), com os splines de k por inventário florestal compartilhando um mesmo parâmetro de penalização (veja @Pedersen2019).
+
+__Janela de código 1__ GAMM usado para ajustar os contrastes 
+
+```{r GAMM contrastes, echo=T,eval=F}
+f_gam <- function(df){
+  gam(value ~
+        s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+            ti(p_z,k_z) +
+            s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) + 
+            s(SiteCode,bs="re"),
+            data=df,method = "REML")
+}
+```
+
+__Janela de output R console 1__ Validação dos GAMMs usados para descrever os contrastes da taxa U 
+
+```{r avaliação contrastes}
+l_ply(names(l_md.contrastes),\(string) f_validaGAMM(md_name = string,l_md=l_md.contrastes))
+```
+
+
+
 
 ### Avaliação GAMM 2
 
