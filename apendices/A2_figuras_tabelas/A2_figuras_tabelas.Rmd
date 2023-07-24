@@ -43,11 +43,6 @@ library(dplyr)
 source("source/nameModel.R")
 source("source/GAMMtools.R")
 # dados
-load("dados/Rdata/l_md.contrastes.Rdata")
-load("dados/Rdata/md_frag_area.Rdata")
-# load("dados/Rdata/l_md.logOR.Rdata")
-# load("dados/Rdata/l_md.logOR_tp.Rdata")
-# load("dados/Rdata/l_md.logOR_tp_r3removido.Rdata")
 # df_dados_disponiveis
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
 # df_p
@@ -116,6 +111,7 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |
   relocate(p,.after=k) |> 
   mutate(SiteCode = factor(SiteCode))
 # loads
+load("dados/Rdata/l_md.contrastes.Rdata")
 load("dados/Rdata/md_frag_area.Rdata")
 load("dados/Rdata/l_md_congContrastes.Rdata")
 load("dados/Rdata/l_md.logOR.Rdata")
@@ -185,6 +181,7 @@ l_p[[1]] <- df_U |>
   scale_color_manual(values=c("darkred","darkblue","darkgreen"),
                      labels=c("contemporâneo","idealizado","sem fragmentação")) +
   labs(x="média taxa U",y="desvio padrão taxa U") +
+  scale_y_continuous(labels = scales::label_scientific(digits = 1)) +
   theme(legend.position = "none") +
   facet_wrap(~k_factor,ncol=4)
 l_p[[2]] <- df_U |>
