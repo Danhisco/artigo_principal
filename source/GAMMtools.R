@@ -18,9 +18,14 @@ f_TabSelGAMM <- function(l_md){
 # input: um gam (md)
 # uso: en um chunk indivíduo rode 'md |> f_validaGAMM()'
 # outpu: dois outputs de console (k.check e summary) e dois conjuntos de gráficos diag do pacote gratia
-f_validaGAMM <- \(md_name,l_md){
-  print(paste0("Var. resposta: ",sub("efeito_","contraste ",md_name)))
-  md <- l_md[[md_name]]
+f_validaGAMM <- \(md_name,l_md,size=NA){
+  if(size == 1){
+    md <- l_md
+    print(md_name)
+  }else{
+    print(paste0("Var. resposta: ",sub("efeito_","contraste ",md_name)))
+    md <- l_md[[md_name]]
+  }
   print("k.check:")
   print(k.check(md))
   print("summary:")

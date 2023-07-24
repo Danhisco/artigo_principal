@@ -44,6 +44,7 @@ source("source/nameModel.R")
 source("source/GAMMtools.R")
 # dados
 load("dados/Rdata/l_md.contrastes.Rdata")
+load("dados/Rdata/md_frag_area.Rdata")
 # load("dados/Rdata/l_md.logOR.Rdata")
 # load("dados/Rdata/l_md.logOR_tp.Rdata")
 # load("dados/Rdata/l_md.logOR_tp_r3removido.Rdata")
@@ -323,7 +324,7 @@ Os GAMM utilizaram a cubic regression spline como função base nos splines simp
 
 __Janela de código 1__ GAMM usado para ajustar os contrastes 
 
-```{r GAMM contrastes, echo=T,eval=F}
+```{r janela 1 GAMM contrastes taxa U, echo=T,eval=F}
 f_gam <- function(df){
   gam(value ~
         s(k_z,bs = "cr") + s(p_z,bs = "cr") +
@@ -340,12 +341,32 @@ __Janela de output R console 1__ Validação dos GAMMs usados para descrever os 
 l_ply(names(l_md.contrastes),\(string) f_validaGAMM(md_name = string,l_md=l_md.contrastes))
 ```
 
-
+  
+O GAMM do contraste de área apresenta o melhor ajuste entre os GAMMs para os 3 contrastes. O spline indivídual para a variável p apresenta a melhor estimativa do efeito parcial médio, com o desvio padrão sendo mais uniforme ao longo da estimativa do efeito parcial médio (gráfico 's(p_z)' no output da função 'gratia::draw'; e outputs das funções 'mgcv::k.check' e 'mgcv::summary'). Os splines indivíduos para a variável p nos GAMMs dos outros dois contrastes (contemporâneo e fragmentação per se) apresentam estimativa do efeito médio que tendem à uma reta ; o ajuste do GAMM para o contraste de contemporaneidade parece ser mais adequado do que o fragmentação per se, pois o desvio padrão ao redor da estimativa de efeito médio é mais uniforme ao longo do gradiente da preditora (gráfico 's(p_z)' do output da função 'gratia::draw'). Os 3 GAMMs não fazem um bom ajuste de valores extremos dos contrastes (output da função 'gratia:appraise - QQplot of residuals'), o quê explica a melhor qualidade do GAMM para o contraste de área per se. O deviance explained  dos GAMMs foram 96.2%, 98.1% e 98.1% para os contrastes de área, contemporaneidade e fragmentação per se, respectivamente. As estimativas de efeitos médios dos splines da variável k de cada inventário florestal podem apresentar variação qualitativa do padrão dos efeitos médios do spline geral para a variável k ou do tensor entre a variável k e a variável p (output da função 'gratia::draw').
 
 
 ### Avaliação GAMM 2
 
 Avaliação GAMMs contraste - taxa U: frag. per se ~ f(área per se)
+
+
+__Janela de código 2__ GAMM usado para ajustar os contrastes 
+
+```{r janela 2 GAMM frag per se ~ area Taxa U,echo=T,eval=F}
+md_frag_area <- gam(frag_z ~ 
+                      s(area_z,bs="tp") + 
+                      s(area_z,SiteCode,bs="fs",xt=list(bs="tp")) + 
+                      s(SiteCode,bs="re"),
+                      data=df,method = "REML")
+```
+
+
+__Janela de output R console 2__ Validação dos GAMMs usados para descrever os contrastes da taxa U 
+
+```{r janela de output 2 GAMM frag ~ area taxa U}
+f_validaGAMM(md_name = "Frag. per se ~ Area",l_md = md_frag_area,size = 1)
+```
+
 
 ## Contrastes - Congruência SADs preditas
 
