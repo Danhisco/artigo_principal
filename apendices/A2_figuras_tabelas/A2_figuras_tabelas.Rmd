@@ -162,6 +162,9 @@ __Figura A2 1__ Sítios selecionados na base de dados TreeCo. a) latitude e long
 
 ## Contrastes - Taxa U
 
+Nas paisagens com pouco habitat o padrão médio é similar ao esperado em paisagens infinitas sem perda de habitat (Apêndice 1): um patamar baixo de valores médios em graus de limitação de dispersão severos; aumento brusco para um novo patamar em graus de limitação de dispersão menos severos; seguido por redução da taxa U com o aumento da capacidade de dispersão para graus brandos de limitação de dispersão (Figura A2 2 e 3). A variabilidade entre réplicas pode aumentar nos graus de limitação de dispersão pouco severos (Figura A2 2), onde há o patamar superior de valores da taxa U nas paisagens sem perda de habitat (Figura A2 2 e 3). 
+
+
 ### Figura A2 2
 
 ```{r Fig A2 2 - Graf Exp dos contrastes,fig.width=10,fig.height=4}
