@@ -151,6 +151,15 @@ Utilizamos um GAMM gaussiano com o grau de limitação de dispersão (k) e a pro
 
 ### GAMM: contrastes ~  f(p,k) 
 
+```{r}
+# df_plot |> 
+#   filter(pred <0) |> 
+#   ggplot(aes(x=pred)) +
+#   geom_histogram() +
+#   facet_wrap(~name,ncol=3)
+```
+
+
 ```{r figura 4 intervalo de predição para os contrastes segundo estimado pelo GAMM,fig.height=8,fig.width=12}
 df_plot <- df_intPred |> 
   mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
