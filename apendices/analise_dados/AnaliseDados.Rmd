@@ -105,7 +105,7 @@ df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
 # df_congContrastetsREP.cvs
 df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
   inner_join(df_md |> 
-               select(SiteCode,p,k,logOR_pair,contraste_z),
+               select(SiteCode,p,k,logOR_pair,contraste_z,k_z,p_z),
              by=c("SiteCode","k","pair" = "logOR_pair")) |> 
   arrange(p) |> 
   relocate(p,.after=k) |> 
@@ -399,31 +399,30 @@ grid.arrange(grobs=l_p,ncol=3,bottom="eixo x está z transformado")
 ```
 
 ```{r GAMM para descrever a relacao entre congruencia e contraste de U}
-f_mdGAMMcongCont <- \(df){
-  gam(cbind(nCong,500-nCong) ~ 
-        s(contraste_z) + 
-        s(contraste_z,SiteCode,bs="fs") + s(SiteCode,bs="re"),
-      family="binomial",data=df,method="REML")
+f_GAMMcongCont <- function(df){
+  l_md <- list()
+  l_md[[1]] <- gam(cbind(nCong,500-nCong) ~ 
+                     s(k_z,bs = "cr") + s(p_z,bs = "cr") + ti(p_z,k_z) +
+                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
+                   data=df, method="REML",family="binomial")
+  l_md[[2]] <- gam(cbind(nCong,500-nCong) ~ 
+                     s(contraste_z,bs = "cr") + 
+                     s(contraste_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
+                   data=df, method="REML",family="binomial")
+  names(l_md) <- llply(l_md,f_nameModel)
+  return(l_md) 
 }
-l_md_congContrastes <- dlply(df_congContrastes,"pair",f_mdGAMMcongCont)
+l_md_congContrastes <- dlply(df_congContrastes,"pair",f_GAMMcongCont)
 # l_md_congContrastes <- l_md
 save(l_md_congContrastes,file="dados/Rdata/l_md_congContrastes.Rdata")
 ```
 ```{r validacao dos GAMMs Cong contrastes}
 load("dados/Rdata/l_md_congContrastes.Rdata")
 # validação
-for(pair in names(l_md_congContrastes)){
-  md <- l_md_congContrastes[[pair]]
-  print(pair)
-  print(k.check(md))
-  print(summary(md))
-  p <- gratia::appraise(md)
-  print(p)
-  askYesNo("próximo?")
-  p <- gratia::draw(md)
-  print(p)
-  askYesNo("próximo?")
-}
+l_ply(names(l_md_congContrastes),\(string) f_validaGAMM(md_name = string,l_md=l_md_congContrastes))
+ldply(l_md_congContrastes,f_TabSelGAMM)
 ```
 
 Diagnósticos Congruência entre Contrastes
@@ -510,16 +509,16 @@ grid.arrange(grobs=l_p,ncol=1)
 ### GAMM
 
 ```{r logOR GAMM candidatas,echo=T,eval=F}
-f_gam_logOR <- function(df,ssbs.type="tp"){
+f_gam_logOR <- function(df){
   l_md <- list()
   l_md[[1]] <- gam(logOR_value ~ 
-                     s(k_z,bs = ssbs.type) + s(p_z,bs = ssbs.type) + ti(p_z,k_z) +
-                     s(k_z, SiteCode, bs="fs",xt=list(bs=ssbs.type)) +
+                     s(k_z,bs = "cr") + s(p_z,bs = "cr") + ti(p_z,k_z) +
+                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
                      s(SiteCode,bs="re"),
                    data=df, method="REML")
   l_md[[2]] <- gam(logOR_value ~ 
-                     s(contraste_z,bs = ssbs.type) + 
-                     s(contraste_z, SiteCode, bs="fs",xt=list(bs=ssbs.type)) +
+                     s(contraste_z,bs = "cr") + 
+                     s(contraste_z, SiteCode, bs="fs",xt=list(bs="cr")) +
                      s(SiteCode,bs="re"),
                    data=df, method="REML")
   names(l_md) <- llply(l_md,f_nameModel)

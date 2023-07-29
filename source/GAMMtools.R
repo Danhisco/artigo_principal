@@ -3,7 +3,8 @@
 # input: uma lista com os modelos candidatos nomeados
 # output um data frame com o output de bbmle::AICctab + mgcv::summary$dev.exp
 f_TabSelGAMM <- function(l_md){
-  df_aicctab <- AICctab(l_md,weights=TRUE) |> as.data.frame()
+  l_names <- names(l_md)
+  df_aicctab <- AICctab(l_md,weights=TRUE,mnames = l_names) |> as.data.frame()
   df_aicctab$modelo <- row.names(df_aicctab)
   row.names(df_aicctab) <- NULL
   df_dev.exp <- ldply(l_md,.fun = \(x) summary(x)$dev.expl)
@@ -18,7 +19,7 @@ f_TabSelGAMM <- function(l_md){
 # input: um gam (md)
 # uso: en um chunk indivíduo rode 'md |> f_validaGAMM()'
 # outpu: dois outputs de console (k.check e summary) e dois conjuntos de gráficos diag do pacote gratia
-f_validaGAMM <- \(md_name,l_md,size=NA){
+f_validaGAMM <- \(md_name,l_md,size=0){
   if(size == 1){
     md <- l_md
     print(md_name)
