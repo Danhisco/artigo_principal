@@ -370,6 +370,17 @@ f_validaGAMM(md_name = "Frag. per se ~ Area",l_md = md_frag_area,size = 1)
 
 ## Contrastes - Congruência SADs preditas
 
+__Janela de output R console 3__ Validação dos GAMMs mais plausíveis
+
+```{r Janela de output R console 3}
+df_tab <- ldply(l_md_congContrastes,f_TabSelGAMM)
+df_mnames <- df_tab |> group_by(pair) |> slice_head() |> select(pair,modelo)
+f_a_ply <- \(df){
+  print(paste0("Contraste: ",df$pair))
+  f_validaGAMM(md_name = df$modelo,l_md = l_md_congContrastes[[df$pair]],size=0)
+}
+a_ply(df_mnames,1,f_a_ply)
+```
 
 
 
