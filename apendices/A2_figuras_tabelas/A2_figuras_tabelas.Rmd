@@ -117,6 +117,19 @@ load("dados/Rdata/l_md_congContrastes.Rdata")
 load("dados/Rdata/l_md.logOR.Rdata")
 ```
 
+```{r}
+df <- data.frame(x=1:10,y=rnorm(10))
+f_teste <- \(){
+  lm(y ~ x)
+}
+md <- with(df,f_teste())
+f <- formula(md)
+f[[3]] <- quote(x^2)
+update(f,~x^2)
+lm(formula = f)
+```
+
+
 ## Sítios Selecionados 
 ### Figura A2 1
 

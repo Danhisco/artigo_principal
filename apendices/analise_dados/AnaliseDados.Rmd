@@ -449,8 +449,19 @@ Os resíduos não estão muito bem distribuídos.
 A variabilidade dos efeitos parciais aumenta com o valor do contraste
 
 ```{r figura final GAMM CongContrastes}
-l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
-grid.arrange(grobs=l_p,ncol=3)
+# l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
+# grid.arrange(grobs=l_p,ncol=3)
+df_tab <- ldply(l_md_congContrastes,f_TabSelGAMM)
+# df_tab
+df_mdlik <- df_tab |> filter(dAICc == 0) |> select(pair,modelo)
+l_md_plot <- alply(df_mdlik,1,\(df) l_md_congContrastes[[df$pair]][[df$modelo]])
+names(l_md_plot) <- df_mdlik$pair
+f_calcPIandSAVE <- \(mnames,path="dados/csv/df_PIcongCont",l_md=l_md_plot){
+  file_path <- paste0(path,mnames,".csv")
+  df_write <- f_calcPI(gamm=l_md[[mnames]])
+  write_csv(df_write,file = file_path)
+}
+a_ply(names(l_md_plot),1,f_calcPIandSAVE)
 ```
 
 Figura Final Congruência da SAD entre pares de contrastes em função dos contrastes estimados para a taxa U.

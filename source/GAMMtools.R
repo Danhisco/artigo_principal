@@ -51,10 +51,10 @@ f_PredInt.GAMM <- \(gamm,
                     v_exclude = c("s(k_z,SiteCode)","s(SiteCode)"),
                     quantiles = c(0.05,0.25,0.5,0.75,0.95),
                     nsim=10000){
-  data$predito <- predict(gamm, type = "link",
-                          exclude = v_exclude,
-                          newdata=data,
-                          newdata.guaranteed=TRUE) |> as.vector()
+  # data$predito <- predict(gamm, type = "link",
+  #                         exclude = v_exclude,
+  #                         newdata=data,
+  #                         newdata.guaranteed=TRUE) |> as.vector()
   beta <- coef(gamm)
   V <- vcov.gam(gamm)
   num_beta_vecs <- nsim
@@ -63,7 +63,7 @@ f_PredInt.GAMM <- \(gamm,
   nus <- rnorm(num_beta_vecs * length(beta))
   beta_sims <- beta + t(Cv) %*% matrix(nus, nrow = length(beta), ncol = num_beta_vecs)
   matrix_lprediction <- predict(gamm,type="lpmatrix",
-                                exclude = c("s(k_cont_z,SiteCode)","s(SiteCode)"),
+                                exclude = v_exclude,
                                 newdata=data,newdata.guaranteed=TRUE) 
   predict_link <- matrix_lprediction %*% beta_sims
   df_pred <- t(apply(predict_link,1,\(X) quantile(X,probs = quantiles))) %>% 
@@ -71,6 +71,64 @@ f_PredInt.GAMM <- \(gamm,
   names(df_pred) <- paste0("Q_",quantiles)
   cbind(data,df_pred)
 }
+#
+# f_calcPI
+f_calcPI <- \(gamm,
+              site.posteriori ="SPigua1",
+              length_pred = 150,
+              n.posteriori_samples = 10000){
+    # take the GAMM objects:
+    f_invlink <- gamm$family$linkinv
+    if(gamm$family$family=="binomial"){
+      df_obs <- gamm$model |> select(-1) |> 
+        mutate(y = gamm$model[,1][,1]) |> relocate(y)
+      names(df_obs)[1] <- colnames(gamm$model[,1])[1]  
+    }else{
+      df_obs <- gamm$model
+    }
+    # create the new data 
+    if(any(names(df_obs) |> str_detect("contraste_z"))){
+      y_var <- names(df_obs)[1]
+      x_var <- names(df_obs)[2]
+      df_newpred <- data.frame(x = seq(min(df_obs[,x_var]),
+                                       max(df_obs[,x_var]),
+                                       length.out=length_pred)) |> 
+        mutate(SiteCode = site.posteriori)
+      names(df_newpred)[1] <- x_var  
+    }else{
+      y_var <- names(df_obs)[1]
+      x1_var <- names(df_obs)[2]
+      x2_var <- names(df_obs)[3]
+      df_newpred <- expand.grid(x1 = seq(min(df_obs[,x1_var]),
+                                         max(df_obs[,x1_var]),
+                                         length.out=length_pred),
+                                x2 = seq(min(df_obs[,x2_var]),
+                                         max(df_obs[,x2_var]),
+                                         length.out=length_pred)) |> 
+        mutate(SiteCode = site.posteriori)
+      names(df_newpred)[1:2] <- c(x1_var,x2_var)
+      x_var <- "k_z"
+    }
+    # obtain the predictions
+    ## new predictions without variability between sites
+    df_newpred <- f_PredInt.GAMM(data=df_newpred,
+                                      gamm=gamm,
+                                      nsim=n.posteriori_samples,
+                                      v_exclude=c(paste0("s(",x_var,",SiteCode)"),
+                                                  "s(SiteCode)"))
+    ## predictions for the observed data (with variability between sites)
+    ## apply the inverse link function
+    ### if the case is a binomial GAMM
+    if(gamm$family$family=="binomial"){
+      df_newpred <- df_newpred |> 
+        mutate(across(starts_with("Q_"),\(x) f_invlink(x) * sum(gamm$model[1,1])))
+    }else{
+      df_newpred <- df_newpred |> 
+        mutate(across(starts_with("Q_"),f_invlink))
+    }
+    return(df_newpred)
+}
+
 #
 # f_PostPredPlotGAMM1d_obsEpred
 ## posterior prediction interval from a GAMM

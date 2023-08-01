@@ -239,11 +239,17 @@ __Figura 2__ Intervalo de Predição estimado pelos GAMM.
 
 ```{r tabela 1 selecao dos GAMM mais plausiveis para descrever,cache=TRUE}
 df_tab <- ldply(l_md_congContrastes,f_TabSelGAMM)
+df_tab
+# |> to the final table style
 ```
 
 
 
 ```{r figura 3 final GAMM CongContrastes}
+
+
+
+
 l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
 grid.arrange(grobs=l_p,ncol=3)
 ```
