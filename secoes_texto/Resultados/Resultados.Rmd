@@ -148,41 +148,7 @@ df_plot <- df_intPred |>
 df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
 # gráficos
 v_range <- range(df_plot$pred)
-v_breaks1 <- c(-0.2,0,0.2,0.5,1)
-f_plot <- function(df){
-  f_ggplot <- function(df,facets=2){
-  ggplot(df,aes(x=p,y=k,z=pred,fill=pred)) +
-    geom_raster() +
-    geom_contour(aes(z=pred),
-                 size=0.5,color="darkblue",
-                 breaks=v_breaks1) +
-    geom_text_contour(aes(z=pred),
-                      breaks=v_breaks1,
-                      label.placer = label_placer_flattest()) +
-    scale_fill_gradient2(low="green",
-                         mid="red",
-                         high="black",
-                         midpoint = 0.5,
-                         limits=v_range,
-                         # round(seq(v_range[1],v_range[2],length.out = 5)[1:4],2)
-                         breaks=v_breaks1) +
-    scale_y_reverse() +
-    theme_classic() +
-    guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
-    coord_cartesian(expand = FALSE) +
-    labs(fill=df$name[1]) +
-    facet_wrap(~label,ncol = facets,scales="free")
-  }
-  l_p <- list()
-  l_p[[1]] <- df |> 
-    filter(label == "Q_0.5") |>
-    f_ggplot() + labs(x="")
-  l_p[[2]] <- df |> 
-    filter(label != "Q_0.5") |>
-    f_ggplot()
-  ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
-}
-l_plot <- dlply(df_plot,"name",f_plot)
+l_plot <- dlply(df_plot,"name",f_ggplot_PI2d)
 p <- grid.arrange(grobs=l_plot,ncol=3)
 ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
        width = 13,
@@ -246,12 +212,12 @@ df_tab
 
 
 ```{r figura 3 final GAMM CongContrastes}
+l_df <- list.files(path = "./dados/csv",pattern = "df_PIcongCont",full.names = T) |> 
+  lmap(~read_csv(.))
+names(l_df) <- list.files(path = "./dados/csv",pattern = "df_PIcongCont",full.names = F) |> 
+  str_extract("(?<=Cont).+?(?=\\.csv)")
 
 
-
-
-l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
-grid.arrange(grobs=l_p,ncol=3)
 ```
 
 __Figura 3__ Congruência da SAD predita entre contrastes: observada e estimada quando se pressupõe ausência de variabilidade entre sítios. 
