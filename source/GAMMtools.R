@@ -309,3 +309,68 @@ f_l_mdGAMM_FiguraFinal_1dGAMM <- \(l_md){
   }
   return(l_p)
 }
+
+# ggplo2 para plootar intervalo de predição 1d com os valores observados
+f_ggplot_PI1d <- \(df_pred,df_obs,x_var,y_var){
+  df_obs |> 
+    ggplot(aes(x=.data[[x_var]],y=.data[[y_var]])) +
+    geom_point(alpha=0.2) +
+    geom_line(aes(y=predito,group=SiteCode),alpha=0.2) +
+    geom_line(data=df_pred,
+              aes(x=.data[[x_var]],y=Q_0.5),color="darkred") +
+    geom_line(data = df_pred |> 
+                select(-Q_0.5) |> 
+                pivot_longer(starts_with("Q_0.")),
+              aes(x=.data[[x_var]],y=value,group=name),color="darkblue") +
+    labs(y = "congruência",
+         subtitle = paste0("full model dev. exp. = ",round(v_devexp*100,digits = 1),"%")) +
+    geom_vline(xintercept = quantile(df_obs[,x_var],probs = c(0.95,0.99)),linetype="dashed",alpha=0.3) +
+    theme_bw() +
+    theme(plot.caption = element_text(hjust=0))
+}
+# ggplot2 para plotar intervalo de predição 2D
+f_ggplot_PI2d <- \(df,v_range,v_breaks1=c(-0.2,0,0.2,0.5,1)){
+  f_ggplot <- \(df,facets=2){
+    ggplot(df,aes(x=p,y=k,z=pred,fill=pred)) +
+      geom_raster() +
+      geom_contour(aes(z=pred),
+                   size=0.5,color="darkblue",
+                   breaks=v_breaks1) +
+      geom_text_contour(aes(z=pred),
+                        breaks=v_breaks1,
+                        label.placer = label_placer_flattest()) +
+      scale_fill_gradient2(low="green",
+                           mid="red",
+                           high="black",
+                           midpoint = 0.5,
+                           limits=v_range,
+                           breaks=v_breaks1) +
+      scale_y_reverse() +
+      theme_classic() +
+      guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
+      coord_cartesian(expand = FALSE) +
+      labs(fill=df$name[1]) +
+      facet_wrap(~label,ncol = facets,scales="free")
+  }
+  l_p <- list()
+  l_p[[1]] <- df |> 
+    filter(label == "Q_0.5") |>
+    f_ggplot() + labs(x="")
+  l_p[[2]] <- df |> 
+    filter(label != "Q_0.5") |>
+    f_ggplot()
+  ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+}
+#
+#
+f_plotCongCont <- \(df){
+  df_pred <- read_csv(paste0("./dados/csv/df_PIcongCont",df$pair[1],".csv"))
+  if(any(names(df_pred)=="contraste_z")){
+    df$predito <- predict.gam(object = l_md_congContrastes[[df$pair[1]]][["f(contraste_z)"]],
+                              type = "response")
+      
+  }else{
+    
+  }
+}
+

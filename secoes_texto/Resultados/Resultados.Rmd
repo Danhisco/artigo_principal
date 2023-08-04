@@ -91,7 +91,7 @@ df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |>
 ## df_congContrastetsREP.cvs
 df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
   inner_join(df_md |> 
-               select(SiteCode,p,k,logOR_pair,contraste_z),
+               select(SiteCode,p,k,logOR_pair,contraste_z,k_z,p_z),
              by=c("SiteCode","k","pair" = "logOR_pair")) |> 
   arrange(p) |> 
   relocate(p,.after=k) |> 
@@ -216,6 +216,7 @@ l_df <- list.files(path = "./dados/csv",pattern = "df_PIcongCont",full.names = T
   lmap(~read_csv(.))
 names(l_df) <- list.files(path = "./dados/csv",pattern = "df_PIcongCont",full.names = F) |> 
   str_extract("(?<=Cont).+?(?=\\.csv)")
+# df_congContrastes será usado dentro da função
 
 
 ```
