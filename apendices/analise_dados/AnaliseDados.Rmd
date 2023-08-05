@@ -425,30 +425,8 @@ l_ply(names(l_md_congContrastes),\(string) f_validaGAMM(md_name = string,l_md=l_
 ldply(l_md_congContrastes,f_TabSelGAMM)
 ```
 
-Diagnósticos Congruência entre Contrastes
 
-1) Contenporâneo e Idealizado
-
-Os smoothers são significativos segundo o número de funções base adequadas e quanto a comparação com um intercepto. 
-O deviance explainde é de 85.6%. 
-Pode existir erros sistemáticos na deviance (resíduos), apesar do predito quanto observado estarem em congruência no padrão geral.
-Quanto maior o contraste estimado maior a variabilidade estimada do efeito parcial, com o efeito médio tendendo à zero e os extremos variando de 10 até -10. 
-
-2) Contemporaneo e Sem Fragmentação
-
-Os smoothers são significativos segundo as funções do mgcv.
-O dev. exp. é 76.8%
-Os resíduos parecem ter um viés sistmático, mas o predito observado parecem convergir.
-Os efeitos parciais do contraste também apresentam padrão de aumentar em variabilidade com o aumento do contraste, mas eles tendem a reduzir com nos extremos do gradiente da preditora.
-
-3) Sem Fragmentação e Idealizado
-
-Os smoothers são significativos segundo as funções do mgcv.
-O dev. exp. é 54%.
-Os resíduos não estão muito bem distribuídos.
-A variabilidade dos efeitos parciais aumenta com o valor do contraste
-
-```{r figura final GAMM CongContrastes}
+```{r modelos mais plausíveis GAMM CongContrastes}
 # l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
 # grid.arrange(grobs=l_p,ncol=3)
 df_tab <- ldply(l_md_congContrastes,f_TabSelGAMM)
