@@ -211,7 +211,46 @@ f_plotCongCont <- \(df){
     f_ggplot_PI2d(df=df_pred,title_contraste = title_contraste)
   }
 }
-
+#
+#
+f_diffSBtsIntPred <- \(lme){
+  df_obs <- lme@frame
+  #new data
+  df_newdat <- expand.grid(SiteCode="SPigua1", 
+                           p = seq(min(df_obs$p),max(df_obs$p), length=150),
+                           land_hyp = unique(df_obs$land_hyp))
+  ## Passo 2: crie as função que devem ser calculadas dos modelos a cada simulação
+  ## Previstos por efeitos fixos e aleatórios
+  f1 <- function(.) predict(., newdata=df_newdat)
+  ## Previstos por efeitos fixos (argumento re.form=~0)
+  f2 <- function(.) predict(., newdata=df_newdat, re.form=~0)
+  ## Os dois bootstraps. Ajuste o argumento ncpus para o numero de cores de seu computador
+  b3 <- bootMer(lme, FUN = f1, nsim=1000, parallel="multicore", ncpus=2)
+  b4 <- bootMer(lme, FUN = f2, nsim=1000, parallel="multicore", ncpus=2)
+  ## calcula as médias e intervalos de confiança quantílicos para cada combinação de preditoras
+  ## no novo conjunto de dados
+  df_newdat$mean <- apply(b3$t,2,mean)
+  df_newdat$IC.low <- apply(b3$t,2,quantile, 0.025)
+  df_newdat$IC.upp <- apply(b3$t,2,quantile, 0.975)
+  df_newdat$mean.fixed <- apply(b4$t,2,mean)
+  df_newdat$IC.low.fixed <- apply(b4$t,2,quantile, 0.025)
+  df_newdat$IC.upp.fixed <- apply(b4$t,2,quantile, 0.975)
+  return(df_newdat)
+}
+f_diffSplotPI <- \(lme,df_newpred){
+  df_obs <- lme@frame
+  #
+  df_obs %>% 
+    ggplot(aes(x=p,y=diffS)) + 
+    geom_point(alpha=0.3) + 
+    geom_ribbon(aes(y = mean, ymin=IC.low, ymax=IC.upp), data=df_newdat, fill="grey15", alpha=0.5) +
+    geom_ribbon(aes(y=mean, ymin=IC.low.fixed, ymax=IC.upp.fixed), data=df_newdat, fill="white", alpha=0.5) +
+    geom_line(aes(x=p, y=mean.fixed), data=df_newdat,color="red") +
+    labs(x="p",y="erro na estimativa da riqueza") +
+    facet_wrap(~land_hyp,ncol=3,labeller = c(cont = "Cont.",
+                                             ideal = "Ideal.",
+                                             non_frag = "Sem Frag."))
+}
 #
 # deprecated funcions:
 d_f_PostPredPlotGAMM1d_obsEpred <- \(gamm,

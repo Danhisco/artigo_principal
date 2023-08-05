@@ -377,7 +377,6 @@ df |>
 
 
 
-
 ### Probabilidade de Congruência entre as SADs preditas nos contrastes
 
 ```{r GE relacao entre respectiva congruencia e contraste nos pares da comparacao}
@@ -450,23 +449,15 @@ Figura Final Congruência da SAD entre pares de contrastes em função dos contr
 ## diffS
 
 ```{r diffS GE}
-df_md |> 
-  ggplot(aes(x=p,y=diffS)) +
-  geom_point(alpha=0.3) +
-  geom_smooth(method="gam") + 
-  geom_hline(yintercept = 0,color="darkred") +
-  facet_wrap(~land_type,ncol=3)
 #
-l_md <- list()
-l_md[[1]] <- gam(diffS ~ land_hyp + s(p,by=land_hyp) + s(SiteCode,bs="re"),
-                 data=df_md,method="REML")
-l_md[[2]] <- gam(diffS ~ land_hyp + s(SiteCode,bs="re"),
-                 data=df_md,method="REML")
-l_md[[3]] <- gam(diffS ~ 1 + s(SiteCode,bs="re"),
-                 data=df_md,method="REML")
-names(l_md) <- c("~ f(p,land. hyp)","~ f(land. hyp)","~ 1")
+l_f <- list()
+l_f[[1]] <- diffS ~ land_hyp * k * p + (1|SiteCode)
+l_f[[2]] <- diffS ~ k * p + (1|SiteCode)
+l_f[[3]] <- diffS ~ p + (1|SiteCode)
+l_f[[4]] <- diffS ~ 1 + (1|SiteCode)
+l_md <- llply(l_f,\(f) lmer(f,data=df_md))
+names(l_md) <- llply(l_md,f_nameModel)
 AICctab(l_md,weights=T)
-# olhar GAMMtools.R
 ```
 
 
