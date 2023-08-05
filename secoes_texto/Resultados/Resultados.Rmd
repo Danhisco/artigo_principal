@@ -304,8 +304,9 @@ df_seldiffs |>
 
 O modelo mais plausível é aquele que descreve o erro na estimativa da riqueza por uma interação entre o tipo da paisagem hipotética e a proporção de cobertura vegetal na paisagem.
 
-```{r}
-
+```{r diffS md + lik}
+df_newpred <- f_diffSBtsIntPred(md_diffs)
+f_diffSplotPI(md_diffs,df_newpred) + theme_bw()
 ```
 
 

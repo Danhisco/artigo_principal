@@ -239,17 +239,23 @@ f_diffSBtsIntPred <- \(lme){
 }
 f_diffSplotPI <- \(lme,df_newpred){
   df_obs <- lme@frame
+  levels(df_obs$land_hyp) <- levels(df_obs$land_hyp)[c(1,3,2)] 
   #
   df_obs %>% 
     ggplot(aes(x=p,y=diffS)) + 
-    geom_point(alpha=0.3) + 
-    geom_ribbon(aes(y = mean, ymin=IC.low, ymax=IC.upp), data=df_newdat, fill="grey15", alpha=0.5) +
-    geom_ribbon(aes(y=mean, ymin=IC.low.fixed, ymax=IC.upp.fixed), data=df_newdat, fill="white", alpha=0.5) +
-    geom_line(aes(x=p, y=mean.fixed), data=df_newdat,color="red") +
+    geom_point(alpha=0.1) + 
+    geom_hline(yintercept = 0,color="red",alpha=0.8) +
+    geom_ribbon(aes(y = mean, ymin=IC.low, ymax=IC.upp), 
+                data=df_newpred, fill="grey15", alpha=0.5) +
+    geom_ribbon(aes(y=mean, ymin=IC.low.fixed, ymax=IC.upp.fixed), 
+                data=df_newpred, fill="white", alpha=0.5) +
+    geom_line(aes(x=p, y=mean.fixed), 
+              data=df_newpred,color="lightgreen") +
     labs(x="p",y="erro na estimativa da riqueza") +
-    facet_wrap(~land_hyp,ncol=3,labeller = c(cont = "Cont.",
-                                             ideal = "Ideal.",
-                                             non_frag = "Sem Frag."))
+    facet_wrap(~land_hyp,ncol=3,
+               labeller = as_labeller(c("cont" = "Cont.",
+                                        "ideal" = "Ideal.",
+                                        "non_frag" = "Sem Frag.")))
 }
 #
 # deprecated funcions:

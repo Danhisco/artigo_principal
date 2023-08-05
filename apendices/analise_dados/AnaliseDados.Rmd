@@ -449,15 +449,23 @@ Figura Final Congruência da SAD entre pares de contrastes em função dos contr
 ## diffS
 
 ```{r diffS GE}
-#
 l_f <- list()
 l_f[[1]] <- diffS ~ land_hyp * k * p + (1|SiteCode)
-l_f[[2]] <- diffS ~ k * p + (1|SiteCode)
-l_f[[3]] <- diffS ~ p + (1|SiteCode)
-l_f[[4]] <- diffS ~ 1 + (1|SiteCode)
+l_f[[2]] <- diffS ~ land_hyp * p + (1|SiteCode)
+l_f[[3]] <- diffS ~ land_hyp * k + (1|SiteCode)
+l_f[[4]] <- diffS ~ k * p + (1|SiteCode)
+l_f[[5]] <- diffS ~ land_hyp + (1|SiteCode)
+l_f[[6]] <- diffS ~ k + (1|SiteCode)
+l_f[[7]] <- diffS ~ p + (1|SiteCode)
+l_f[[8]] <- diffS ~ 1 + (1|SiteCode)
 l_md <- llply(l_f,\(f) lmer(f,data=df_md))
 names(l_md) <- llply(l_md,f_nameModel)
-AICctab(l_md,weights=T)
+df_seldiffs<- AICctab(l_md,weights=T) |> as.data.frame()
+df_seldiffs$modelo <- row.names(df_seldiffs)
+md_diffs <- l_md[[df_seldiffs$modelo[1]]]
+#
+df_newpred <- f_diffSBtsIntPred(md_diffs)
+
 ```
 
 
