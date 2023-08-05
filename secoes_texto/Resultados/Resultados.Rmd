@@ -18,6 +18,8 @@ text-align: justify}
 ```{r setup,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE)
 # pacotes
+library(ggpubr)
+library(gt)
 library(dagitty)
 library(ggdag)
 library(gratia)
@@ -239,8 +241,29 @@ __Figura 2__ Intervalo de Predição estimado pelos GAMM.
 
 ```{r tabela 1 selecao dos GAMM mais plausiveis para descrever,cache=TRUE}
 df_tab <- ldply(l_md_congContrastes,f_TabSelGAMM)
-df_tab
-# |> to the final table style
+df_tab |> 
+  gt(groupname_col = "pair",
+     # rowname_col = "modelo",
+     rownames_to_stub = F) |> 
+  # tab_header(title = "GAMM usados para descrever a congruência na SAD entre contrastes") |> 
+  fmt_number(columns = dAICc:dev.expl,decimals = 2, suffixing = TRUE) |> 
+  cols_label(dev.expl = "dev. expl.") |> 
+  tab_row_group(label = md("<center><b>Sem Fragmentação <i>per se</i> : Idealizado<b/></center>"),
+                rows = 5:6) |> 
+  tab_row_group(label = md("<center><b>Contemporâneo : Sem Fragmentação <i>per se</i><b/></center>"),
+                rows = 3:4) |>
+  tab_row_group(label = md("<center><b>Contemporâneo : Idealizado</center></b>"),
+                rows = 1:2) |>
+  tab_style(style = cell_fill(color = "gray75"),
+            locations = cells_row_groups(groups = 1:3)) |> 
+  cols_align(align = "right") |> 
+  tab_style(style = cell_text(align = "left",
+                              weight = "bold"),
+            locations = cells_column_labels(columns = modelo:dev.expl)) |> 
+  text_case_when(x == "f(contraste_z)" ~ "~ f(contraste U)",
+                 x == "f(k_z,p_z)" ~ "~ f(k, p)",
+                 .default = "",.locations = cells_body(columns = "modelo")) |> 
+  cols_width(modelo ~ px(130),where(is.numeric) ~ px(100))
 ```
 
 
