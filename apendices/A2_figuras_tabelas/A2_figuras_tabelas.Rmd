@@ -383,8 +383,32 @@ l_ply(names(l_md_plot),\(string) f_validaGAMM(md_name = string,l_md=l_md_plot))
 ```
 
 
-
 ## Congruência com a SAD observada
 
 ### Diferença na Riqueza Estimada
+
+```{r gráficos explorátórios de diffS}
+df_md |> 
+  ggplot(aes(x=p,y=diffS)) +
+  geom_point(alpha=0.3) +
+  geom_smooth(method="gam",se=F) +
+  geom_hline(yintercept = 0,color="red") +
+  facet_wrap(~land_hyp,ncol=3)
+```
+
+__Figura A2 5 __ Gráficos Exploratórios geom_smoother(method="gam")
+
+```{r graf exp diffS md + lik}
+md_diffs <- lmer(diffS ~ land_hyp * p + (1|SiteCode),df_md)
+p_dharma <- simulateResiduals(md_diffs,n = 1000)
+plot(p_dharma)
+```
+
+__Figura A2 6__ Gráficos diagnósticos do pacote DHARMa para o modelo mais plausível para descrever o erro na riqueza estimada
+
+__Janela de output R console 4__ sumário do modelo mais plausível para descrever o erro na riqueza estimada
+
+```{r sumário do modelo mais plausível para descrever o erro na riqueza estimada}
+summary(md_diffs)
+```
 
