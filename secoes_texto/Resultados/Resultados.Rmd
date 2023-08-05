@@ -338,7 +338,7 @@ df_tabelaSelecao
 ```{r figura 5 log odds ratio contrastes intervalo de predicao e observado}
 f_SML.gamm <- \(df){md <- l_md.logOR[[df$pair[1]]][[df$modelo[[1]]]]}
 l_p <- dlply(df_tabelaSelecao,"pair",f_SML.gamm) |> 
-  f_l_mdGAMM_FiguraFinal_1dGAMM()
+  d_f_l_mdGAMM_FiguraFinal_1dGAMM()
 grid.arrange(grobs=l_p,ncol=3)
 ```
 
