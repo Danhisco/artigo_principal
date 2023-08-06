@@ -385,7 +385,7 @@ l_ply(names(l_md_plot),\(string) f_validaGAMM(md_name = string,l_md=l_md_plot))
 
 ## Congruência com a SAD observada
 
-### Diferença na Riqueza Estimada
+### Erro na Riqueza Estimada
 
 ```{r gráficos explorátórios de diffS}
 df_md |> 
