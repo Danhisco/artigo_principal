@@ -495,11 +495,30 @@ l_p[[2]] <- df_md |>
   geom_final() +
   facet_grid(name~pair)
 grid.arrange(grobs=l_p,ncol=1)
+df_md |> 
+  filter(pair=="cont.non_frag") |> 
+  pivot_longer(contU_z:contSAD_z) |> 
+  ggplot(aes(x=value,y=logOR_value)) +
+  geom_final() +
+  facet_wrap(~name,ncol=2,scales="free")
+df_md |> 
+  filter(pair=="cont.non_frag") |> 
+  ggplot(aes(x=contU_z,y=contSAD_z)) +
+  geom_final()
 ```
 
 ### GAMM
 
 ```{r logOR GAMM candidatas,echo=T,eval=F}
+l_f <- list()
+l_f[[1]] <- "logOR_value ~ s(k_z,bs='cr') + s(p_z,bs='cr') + ti(k_z,p_z) + s(k_z, SiteCode, bs='fs',xt=list(bs='cr')) +s(SiteCode,bs='re')"
+l_f[[2]] <- "logOR_value ~ s(contU_z,bs='cr') + s(p_z,bs='cr') + ti(k_z,p_z) + s(k_z, SiteCode, bs='fs',xt=list(bs='cr')) +s(SiteCode,bs='re')"
+
+f_gam <- \(f){
+  gam(formula = f,data = filter(df_md,pair=="cont.non_frag"),method = "REML")
+}
+md_teste <- f_gam(teste)
+
 f_gam_logOR <- function(df){
   l_md <- list()
   l_md[[1]] <- gam(logOR_value ~ 
