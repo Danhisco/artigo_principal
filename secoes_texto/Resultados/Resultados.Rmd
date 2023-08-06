@@ -75,26 +75,15 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |>
 # df_intePred_contrastes.csv
 df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
 ## df_md: dados necessários para os modelos
-df_md <- df_ad |> 
-  inner_join(df_contrastes |> 
-               select(SiteCode:efeito_conf) |> 
-               mutate(across(.cols=c(p,k,contains("efeito")),f_z,.names="{.col}_z")) |> 
-               select(-c(p,efeito_area:efeito_conf)) |> 
-               pivot_longer(starts_with("efeito_"),names_to="logOR_pair",values_to="contraste_z") |> 
-               mutate(logOR_pair = case_when(logOR_pair == "efeito_area_z" ~ "non_frag.ideal",
-                                             logOR_pair == "efeito_frag_z" ~ "cont.non_frag",
-                                             TRUE ~ "cont.ideal")),
-             by=c("SiteCode","k","logOR_pair")) |> 
-  mutate(SiteCode = factor(SiteCode),
-         land_hyp = factor(land_type))
+df_md <- read_csv("dados/csv/df_md.csv")
 ## df_newdata
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
   select(-starts_with("log_"))
 ## df_congContrastetsREP.cvs
 df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
   inner_join(df_md |> 
-               select(SiteCode,p,k,logOR_pair,contraste_z,k_z,p_z),
-             by=c("SiteCode","k","pair" = "logOR_pair")) |> 
+               select(SiteCode,p,k,pair,contU_z,k_z,p_z),
+             by=c("SiteCode","k","pair")) |> 
   arrange(p) |> 
   relocate(p,.after=k) |> 
   mutate(SiteCode = factor(SiteCode))
@@ -198,11 +187,11 @@ __Figura 1__ Intervalo de Predição estimado pelos GAMM.
 ```{r figura 2 gamm para descreve contraste de frag per se em funcao do contraste de area per se}
 # dados
 df <- df_md |> 
-  filter(logOR_pair == "cont.non_frag") |> 
-  rename(frag_z=contraste_z) |> 
+  filter(pair == "cont.non_frag") |> 
+  rename(frag_z=contU_z) |> 
   mutate(area_z = df_md |> 
-           filter(logOR_pair == "non_frag.ideal") |> 
-           pull(contraste_z),
+           filter(pair == "non_frag.ideal") |> 
+           pull(contU_z),
          SiteCode = factor(SiteCode))
 df_newpred <- data.frame(area_z = seq(min(df$area_z),max(df$area_z),length.out=200)) |> 
   mutate(SiteCode = "SPigua1")
@@ -324,14 +313,14 @@ geom_final <- \(){
 }
 l_p <- list()
 l_p[[1]] <- df_md |> 
-  ggplot(aes(x=contraste_z,y=logOR_value)) +
+  ggplot(aes(x=contU_z,y=logOR_value)) +
   geom_final() +
-  facet_wrap(~logOR_pair,ncol=3)
+  facet_wrap(~pair,ncol=3)
 l_p[[2]] <- df_md |> 
   pivot_longer(p:k) |> 
   ggplot(aes(x=value,y=logOR_value)) +
   geom_final() +
-  facet_grid(name~logOR_pair)
+  facet_grid(name~pair)
 grid.arrange(grobs=l_p,ncol=1)
 ```
 
