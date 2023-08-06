@@ -90,16 +90,8 @@ df_md <- df_ad |>
   select(-land_type) |> 
   rename(nCong=nCongKS)
   # df_newdata
-write_csv(df_md,"dados/csv/df_md_logOR.csv")
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
   select(-starts_with("log_"))
-# df_pred
-# df_pred <- read_csv("dados/csv/resultados_MN/MNEE/df_pred.csv")
-# df_newdat <- expand.grid(p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
-#                          k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150))
-# df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,SiteCode,log_S_obs_z,log_Ntotal_z))))
-# write_csv(df_newdat,"dados/csv/df_newdataSADs.csv")
-#
 # df_intePred_contrastes.csv
 df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
 # df_congContrastetsREP.cvs
@@ -109,7 +101,18 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |
              by=c("SiteCode","k","pair" = "logOR_pair")) |> 
   arrange(p) |> 
   relocate(p,.after=k) |> 
-  mutate(SiteCode = factor(SiteCode))
+  mutate(SiteCode = factor(SiteCode),
+         contrasteSAD_z = ifelse(nCong==500,499.9,nCong),
+         contrasteSAD_z = log((contrasteSAD_z/500)/(1-(contrasteSAD_z/500))),
+         contrasteSAD_z = f_z(contrasteSAD_z))
+# comentar a seguir caso atrapalhe algum código antigo
+df_md <- df_md |> 
+  select(SiteCode:k,Ntotal:S_obs,land_hyp,nCong,diffS,logOR_pair,logOR_value) |>
+  inner_join(y = df_congContrastes |> 
+               select(SiteCode,pair,k,starts_with("cont")),
+             by=c("SiteCode","k","logOR_pair"="pair")) |> 
+  rename(contU_z = contraste_z, contSAD_z = contrasteSAD_z,pair=logOR_pair)
+write_csv(df_md,"dados/csv/df_md.csv")
 ```
 
 # GE Gerais
