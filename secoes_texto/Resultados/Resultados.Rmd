@@ -46,8 +46,7 @@ source("source/nameModel.R")
 source("source/GAMMtools.R")
 f_z <- function(x) (x-mean(x))/sd(x)
 # Rdata e data frames
-load("dados/Rdata/l_md.contrastes.Rdata")
-load("dados/Rdata/l_md_congContrastes.Rdata")
+# load("dados/Rdata/l_md.contrastes.Rdata")
 load("dados/Rdata/l_md.logOR.Rdata")
 load("dados/Rdata/md_frag_area.Rdata")
 ## df_dados_disponiveis
@@ -229,6 +228,7 @@ __Figura 2__ Intervalo de Predição estimado pelos GAMM.
 ## congruência da SAD predita 
 
 ```{r tabela 1 selecao dos GAMM mais plausiveis para descrever,cache=TRUE}
+load("dados/Rdata/l_md_congContrastes.Rdata")
 df_tab <- ldply(l_md_congContrastes,f_TabSelGAMM)
 df_tab |> 
   gt(groupname_col = "pair",
@@ -253,6 +253,7 @@ df_tab |>
                  x == "f(k_z,p_z)" ~ "~ f(k, p)",
                  .default = "",.locations = cells_body(columns = "modelo")) |> 
   cols_width(modelo ~ px(130),where(is.numeric) ~ px(100))
+rm(l_md_congContrastes)
 ```
 
 

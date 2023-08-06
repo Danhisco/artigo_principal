@@ -107,7 +107,7 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |
          contrasteSAD_z = f_z(contrasteSAD_z))
 # comentar a seguir caso atrapalhe algum código antigo
 df_md <- df_md |> 
-  select(SiteCode:k,Ntotal:S_obs,land_hyp,nCong,diffS,logOR_pair,logOR_value) |>
+  select(SiteCode:k,Ntotal:S_obs,land_hyp,nCong,diffS,logOR_pair,logOR_value,p_z,k_z) |>
   inner_join(y = df_congContrastes |> 
                select(SiteCode,pair,k,starts_with("cont")),
              by=c("SiteCode","k","logOR_pair"="pair")) |> 
@@ -486,14 +486,14 @@ geom_final <- \(){
 }
 l_p <- list()
 l_p[[1]] <- df_md |> 
-  ggplot(aes(x=contraste_z,y=logOR_value)) +
+  ggplot(aes(x=contU_z,y=logOR_value)) +
   geom_final() +
-  facet_wrap(~logOR_pair,ncol=3)
+  facet_wrap(~pair,ncol=3)
 l_p[[2]] <- df_md |> 
   pivot_longer(p:k) |> 
   ggplot(aes(x=value,y=logOR_value)) +
   geom_final() +
-  facet_grid(name~logOR_pair)
+  facet_grid(name~pair)
 grid.arrange(grobs=l_p,ncol=1)
 ```
 
