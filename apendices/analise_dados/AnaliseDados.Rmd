@@ -511,31 +511,24 @@ df_md |>
 
 ```{r logOR GAMM candidatas,echo=T,eval=F}
 l_f <- list()
-l_f[[1]] <- "logOR_value ~ s(k_z,bs='cr') + s(p_z,bs='cr') + ti(k_z,p_z) + s(k_z, SiteCode, bs='fs',xt=list(bs='cr')) +s(SiteCode,bs='re')"
-l_f[[2]] <- "logOR_value ~ s(contU_z,bs='cr') + s(p_z,bs='cr') + ti(k_z,p_z) + s(k_z, SiteCode, bs='fs',xt=list(bs='cr')) +s(SiteCode,bs='re')"
-
-f_gam <- \(f){
-  gam(formula = f,data = filter(df_md,pair=="cont.non_frag"),method = "REML")
+l_f[[1]] <- "logOR_value ~ s(k_z,bs='cr') + s(p_z,bs='cr') + ti(k_z,p_z) + s(k_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+l_f[[2]] <- "logOR_value ~ s(contU_z,bs='cr') + s(contSAD_z,bs='cr') + ti(contU_z,contSAD_z) + s(contU_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+l_f[[3]] <- "logOR_value ~ s(contU_z,bs='cr') + s(contSAD_z,bs='cr') + ti(contU_z,contSAD_z) + s(contSAD_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+# 
+# l_f[[2]] <- "logOR_value ~ s(contU_z,bs='cr') + s(contU_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+# l_f[[3]] <- gsub("contU","contSAD",l_f[[2]])
+# l_f[[4]] <- "logOR_value ~ s(contU_z,bs='cr') + s(contSAD_z,bs='cr') + s(contU_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+# l_f[[5]] <- gsub("s\\(contU_z, SiteCode","s\\(contSAD_z, SiteCode",l_f[[4]])
+# l_f[[6]] <- gsub(" \\+ s\\(contU_z, SiteCode, bs='fs',xt=list\\(bs='cr'\\)\\)","",l_f[[4]])
+# l_f[[7]] <- gsub("( \\+ s\\(contSAD_z,bs='cr'\\))","\\1 \\+ ti\\(contU_z,contSAD_z\\)",l_f[[4]])
+# l_f[[8]] <- gsub("( \\+ s\\(contSAD_z,bs='cr'\\))","\\1 \\+ ti\\(contU_z,contSAD_z\\)",l_f[[5]])
+f_gam <- \(f) gam(formula = f,data = filter(df_md,pair=="cont.non_frag"),method = "REML")
+# l_md <- llply(l_f,\(s) f_gam(as.formula(s)))
+l_md_logOR <- list()
+for(i in 2:length(l_f)){
+  l_md_logOR[[i]] <- f_gam(as.formula(l_f[[i]]))
 }
-md_teste <- f_gam(teste)
-
-f_gam_logOR <- function(df){
-  l_md <- list()
-  l_md[[1]] <- gam(logOR_value ~ 
-                     s(k_z,bs = "cr") + s(p_z,bs = "cr") + ti(p_z,k_z) +
-                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                     s(SiteCode,bs="re"),
-                   data=df, method="REML")
-  l_md[[2]] <- gam(logOR_value ~ 
-                     s(contraste_z,bs = "cr") + 
-                     s(contraste_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                     s(SiteCode,bs="re"),
-                   data=df, method="REML")
-  names(l_md) <- llply(l_md,f_nameModel)
-  return(l_md) 
-}
-l_md.logOR <- dlply(df_md,"logOR_pair",f_gam_logOR)
-save(l_md.logOR,file="dados/Rdata/l_md.logOR.Rdata")
+save(l_md_logOR,file="dados/Rdata/l_md_logOR.Rdata")
 ```
 
 __Tabela X__ O peso de evidência (AICc) e a deviance explained dos GAMM usados para descrever o log OR da chance de congruência da SAD predita quando se pressupõe a paisagem contemporânea em relação à paisagem sem isolamento estrutural
