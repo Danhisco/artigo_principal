@@ -514,6 +514,8 @@ l_f <- list()
 l_f[[1]] <- "logOR_value ~ s(k_z,bs='cr') + s(p_z,bs='cr') + ti(k_z,p_z) + s(k_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
 l_f[[2]] <- "logOR_value ~ s(contU_z,bs='cr') + s(contSAD_z,bs='cr') + ti(contU_z,contSAD_z) + s(contU_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
 l_f[[3]] <- "logOR_value ~ s(contU_z,bs='cr') + s(contSAD_z,bs='cr') + ti(contU_z,contSAD_z) + s(contSAD_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+l_f[[4]] <- gsub("\\+ s\\(contSAD_z,bs='cr'\\) \\+ ti\\(contU_z,contSAD_z\\)","",l_f[[2]])
+l_f[[5]] <- gsub("contU","contSAD",l_f[[4]])
 # 
 # l_f[[2]] <- "logOR_value ~ s(contU_z,bs='cr') + s(contU_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
 # l_f[[3]] <- gsub("contU","contSAD",l_f[[2]])
@@ -524,17 +526,18 @@ l_f[[3]] <- "logOR_value ~ s(contU_z,bs='cr') + s(contSAD_z,bs='cr') + ti(contU_
 # l_f[[8]] <- gsub("( \\+ s\\(contSAD_z,bs='cr'\\))","\\1 \\+ ti\\(contU_z,contSAD_z\\)",l_f[[5]])
 f_gam <- \(f) gam(formula = f,data = filter(df_md,pair=="cont.non_frag"),method = "REML")
 # l_md <- llply(l_f,\(s) f_gam(as.formula(s)))
-l_md_logOR <- list()
-for(i in 2:length(l_f)){
+# l_md_logOR <- list()
+for(i in 4:length(l_f)){
   l_md_logOR[[i]] <- f_gam(as.formula(l_f[[i]]))
 }
+names(l_md_logOR) <- c("f(k,p,k|Site)","f(U,SAD,U|Site)","f(U,SAD,SAD|Site)","f(U,U|Site)","f(SAD,SAD|Site)")
 save(l_md_logOR,file="dados/Rdata/l_md_logOR.Rdata")
 ```
 
 __Tabela X__ O peso de evidência (AICc) e a deviance explained dos GAMM usados para descrever o log OR da chance de congruência da SAD predita quando se pressupõe a paisagem contemporânea em relação à paisagem sem isolamento estrutural
 
 ```{r tabela de selecao dos GAMM logOR}
-load("dados/Rdata/l_md.logOR.Rdata")
+load("dados/Rdata/l_md_logOR.Rdata")
 f_correcaoNomes <- \(l_md){
   names(l_md) <- str_remove(names(l_md),",ssbs.type") # corrigir na próxima versão de f_nameModel 
   return(l_md)
@@ -552,8 +555,8 @@ grid.arrange(grobs=l_p,ncol=3)
 
 ```{r}
 # validação
-for(pair in names(l_md_congContrastes)){
-  md <- l_md_congContrastes[[pair]]
+for(pair in names(l_md_logOR)){
+  md <- l_md_logOR[[pair]]
   print(pair)
   print(k.check(md))
   print(summary(md))
@@ -564,8 +567,8 @@ for(pair in names(l_md_congContrastes)){
   print(p)
   askYesNo("próximo?")
 }
-l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
-grid.arrange(grobs=l_p,ncol=3)
+# l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
+# grid.arrange(grobs=l_p,ncol=3)
 ```
 
 ## Pr(Cong)_contemporaneo:observado
