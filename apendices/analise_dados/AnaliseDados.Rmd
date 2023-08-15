@@ -607,6 +607,30 @@ ggsave("./apendices/analise_dados/figuras/GE_Pr(Cong)_LandHyp.png",
        plot = p,width = 18, height = 60, units = "cm")
 ```
 
+
+```{r}
+l_f <- list()
+l_f[[1]] <- "cbind(nCong,100-nCong) ~ s(p_z,bs='cr') + s(k_z,bs='cr') + ti(p_z,k_z) + s(k_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+l_f[[2]] <- "cbind(nCong,100-nCong) ~ s(contempU_z,bs='cr') + s(contempU_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')" 
+l_f[[3]] <- gsub("U_z","SAD_z",l_f[[2]])
+l_f[[4]] <- "cbind(nCong,100-nCong) ~ s(areaU_z,bs='cr') + s(fragU_z,bs='cr') + ti(areaU_z,fragU_z) + s(areaU_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+l_f[[5]] <- gsub("areaU_z, SiteCode","fragU_z, SiteCode",l_f[[4]])
+l_f[[6]] <- gsub("U_z","SAD_z",l_f[[4]])
+l_f[[7]] <- gsub("U_z","SAD_z",l_f[[5]])
+names(l_f) <- c("f(p,k|Site)",
+                "f(contempU|Site)", "f(contempSAD|Site)",
+                "f(fragU,areaU|Site)","f(areaU,fragU|Site)",
+                "f(fragSAD,areaSAD|Site)","f(areaSAD,fragSAD|Site)")
+f_gam <- \(df){
+  l_gam <- llply(l_f,\(string) gam(as.formula(string),family = "binomial",data = df,method = "REML"))
+  names(l_gam) <- names(l_f)
+  return(l_gam)
+}
+l_md <- dlply(df_md,"land_hyp",f_gam)
+```
+
+
+
 __Figura X__ 
 
 ```{r GAMM Pr(Cong)_contemp:obs}
