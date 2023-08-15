@@ -114,19 +114,6 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |
          contrasteSAD_z = ifelse(nCong==500,499.9,nCong),
          contrasteSAD_z = log((contrasteSAD_z/500)/(1-(contrasteSAD_z/500))),
          contrasteSAD_z = f_z(contrasteSAD_z))
-# comentar a seguir caso atrapalhe algum código antigo
-df_md <- df_md |> 
-  select(SiteCode:k,Ntotal:S_obs,land_hyp,nCong,diffS,logOR_pair,logOR_value,p_z,k_z) |>
-  inner_join(y = df_congContrastes |> 
-               select(SiteCode,pair,k,starts_with("cont")),
-             by=c("SiteCode","k","logOR_pair"="pair")) |> 
-  rename(U_z = contraste_z, SAD_z = contrasteSAD_z,pair=logOR_pair) |> 
-  mutate(col_names = case_when(pair == "cont.non_frag"~"frag",
-                               pair == "cont.ideal"~"contemp",
-                               pair == "non_frag.ideal"~"area")) |> 
-  pivot_wider(names_from = col_names, 
-              values_from = U_z,
-              names_glue = "{col_names}U_z") |> head()
 write_csv(df_md,"dados/csv/df_md.csv")
 ```
 
@@ -627,6 +614,8 @@ f_gam <- \(df){
   return(l_gam)
 }
 l_md <- dlply(df_md,"land_hyp",f_gam)
+l_md_PrCong <- l_md
+save(l_md_PrCong,file="/dados/Rdata/l_md_PrCong.Rdata")
 ```
 
 

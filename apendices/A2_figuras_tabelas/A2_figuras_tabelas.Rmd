@@ -114,7 +114,7 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |
 load("dados/Rdata/l_md.contrastes.Rdata")
 load("dados/Rdata/md_frag_area.Rdata")
 load("dados/Rdata/l_md_congContrastes.Rdata")
-load("dados/Rdata/l_md.logOR.Rdata")
+load("dados/Rdata/l_md_PrCong.Rdata")
 ```
 
 
@@ -410,5 +410,16 @@ __Janela de output R console 4__ sumário do modelo mais plausível para descrev
 
 ```{r sumário do modelo mais plausível para descrever o erro na riqueza estimada}
 summary(md_diffs)
+```
+
+### Pr(Cong)
+
+```{r}
+df_tab <- ldply(l_md_PrCong,f_TabSelGAMM)
+# df_tab
+df_mdlik <- df_tab |> filter(dAICc == 0) |> select(pair,modelo)
+l_md_plot <- alply(df_mdlik,1,\(df) l_md_congContrastes[[df$pair]][[df$modelo]])
+names(l_md_plot) <- df_mdlik$pair
+l_ply(names(l_md_plot),\(string) f_validaGAMM(md_name = string,l_md=l_md_plot))
 ```
 
