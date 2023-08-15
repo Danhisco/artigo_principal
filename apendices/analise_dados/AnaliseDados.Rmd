@@ -73,23 +73,32 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |>
          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
          SiteCode = factor(SiteCode)) |> 
   select(-c(N:log.S))
-# df_md: dados necessários 
+# df_md: dados para os GAMMs de congruência com o empírico  
+f_dfpmd <- \(df){
+  df <- df |> 
+    mutate(col_names = case_when(pair == "cont.non_frag"~"frag",
+                                 pair == "cont.ideal"~"contemp",
+                                 pair == "non_frag.ideal"~"area"))
+  df1 <- df |> select(SiteCode,k,col_names,contraste_z) |> 
+    pivot_wider(names_from = col_names,
+                values_from = contraste_z,
+                names_glue = "{col_names}U_z")
+  df2 <- df |> select(SiteCode,k,col_names,contrasteSAD_z) |> 
+    pivot_wider(names_from = col_names,
+                values_from = contrasteSAD_z,
+                names_glue = "{col_names}SAD_z")
+  inner_join(df1,df2)
+}
 df_md <- df_ad |> 
-  inner_join(df_contrastes |> 
-               select(SiteCode:efeito_conf) |> 
-               mutate(across(.cols=c(p,k,contains("efeito")),f_z,.names="{.col}_z")) |> 
-               select(-c(p,efeito_area:efeito_conf)) |> 
-               pivot_longer(starts_with("efeito_"),names_to="logOR_pair",values_to="contraste_z") |> 
-               mutate(logOR_pair = case_when(logOR_pair == "efeito_area_z" ~ "non_frag.ideal",
-                                             logOR_pair == "efeito_frag_z" ~ "cont.non_frag",
-                                             TRUE ~ "cont.ideal")),
-             by=c("SiteCode","k","logOR_pair")) |> 
+  select(SiteCode,k,land_type,nCongKS) |> 
+  inner_join(df_congContrastes |> f_dfpmd()) |> 
   mutate(SiteCode = factor(SiteCode),
-         land_hyp = factor(land_type),
-         contrasteSAD_z = f(logOR_value)) |> 
+         land_hyp = factor(land_type)) |> 
   select(-land_type) |> 
-  rename(nCong=nCongKS)
-  # df_newdata
+  rename(nCong=nCongKS) |> 
+  inner_join(df_contrastes |> select(SiteCode,k,p_z:log.S_z)) |> 
+  relocate(land_hyp,.after = SiteCode)
+# df_newdata
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
   select(-starts_with("log_"))
 # df_intePred_contrastes.csv
@@ -111,7 +120,13 @@ df_md <- df_md |>
   inner_join(y = df_congContrastes |> 
                select(SiteCode,pair,k,starts_with("cont")),
              by=c("SiteCode","k","logOR_pair"="pair")) |> 
-  rename(contU_z = contraste_z, contSAD_z = contrasteSAD_z,pair=logOR_pair)
+  rename(U_z = contraste_z, SAD_z = contrasteSAD_z,pair=logOR_pair) |> 
+  mutate(col_names = case_when(pair == "cont.non_frag"~"frag",
+                               pair == "cont.ideal"~"contemp",
+                               pair == "non_frag.ideal"~"area")) |> 
+  pivot_wider(names_from = col_names, 
+              values_from = U_z,
+              names_glue = "{col_names}U_z") |> head()
 write_csv(df_md,"dados/csv/df_md.csv")
 ```
 
@@ -574,30 +589,22 @@ for(pair in names(l_md_logOR)){
 ## Pr(Cong)_contemporaneo:observado
 
 ```{r dados e GE Pr(Cong)_contemporaneo:observado}
-# dados
-f_wider <- \(df){
-  df_y <- df |> filter(land_hyp == "frag") |> select(SiteCode:p_z)
-  df_x <- df |> select(SiteCode,k_z,land_hyp:last_col()) |> 
-    pivot_wider(names_from=land_hyp,values_from = c(U_z,SAD_z),names_glue = "{land_hyp}.{.value}")
-  inner_join(df_y,df_x)
+f_ggplot <- \(x_var){
+  df_md |> 
+    ggplot(aes(y=nCong,x=.data[[x_var]])) +
+    geom_point(alpha=0.3) +
+    geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkgreen") +
+    geom_smooth(method = "gam",se=F) +
+    facet_wrap(~land_hyp,ncol = 3,
+               labeller = as_labeller(c("cont" = "observada",
+                                        "ideal" = "idealizada",
+                                        "non_frag" = "habitat aglomerado")))
+    
 }
-df_md1 <- df_md |> 
-  select(SiteCode,nCong,k_z,p_z,land_hyp,contrasteSAD_z,contraste_z) |> 
-  rename(U_z=contraste_z,
-         SAD_z=contrasteSAD_z) |> 
-  mutate(land_hyp = case_when(land_hyp == "cont" ~ "frag",
-                              land_hyp == "ideal" ~ "cont",
-                              land_hyp == "non_frag" ~ "area",
-                              TRUE ~ NA)) |> 
-  f_wider()
-# GE
-df_md1 |> 
-  pivot_longer(-(SiteCode:nCong)) |> 
-  ggplot(aes(x=value,y=nCong)) +
-  geom_line(aes(group=SiteCode),alpha=0.4) +
-  geom_point() +
-  geom_smooth(method = "gam",se=F)+
-  facet_wrap(~name,ncol=4,scales="free")
+l_p <- alply(names(select(df_md,ends_with("_z"))),1,f_ggplot)
+p <- grid.arrange(grobs=l_p,ncol=1)
+ggsave("./apendices/analise_dados/figuras/GE_Pr(Cong)_LandHyp.png",
+       plot = p,width = 18, height = 60, units = "cm")
 ```
 
 __Figura X__ 
