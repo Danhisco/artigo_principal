@@ -613,9 +613,8 @@ f_gam <- \(df){
   names(l_gam) <- names(l_f)
   return(l_gam)
 }
-l_md <- dlply(df_md,"land_hyp",f_gam)
-l_md_PrCong <- l_md
-save(l_md_PrCong,file="/dados/Rdata/l_md_PrCong.Rdata")
+l_md_PrCong <- dlply(df_md,"land_hyp",f_gam)
+save(l_md_PrCong,file="./dados/Rdata/l_md_PrCong.Rdata")
 ```
 
 
