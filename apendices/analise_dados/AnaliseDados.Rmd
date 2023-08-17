@@ -74,6 +74,19 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |>
          SiteCode = factor(SiteCode)) |> 
   select(-c(N:log.S))
 # df_md: dados para os GAMMs de congruência com o empírico  
+# df_congContrastetsREP.cvs
+df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
+  mutate(SiteCode = factor(SiteCode),
+         contrasteSAD_z = ifelse(nCong==500,499.9,nCong),
+         contrasteSAD_z = log((contrasteSAD_z/500)/(1-(contrasteSAD_z/500))),
+         contrasteSAD_z = f_z(contrasteSAD_z)) |> 
+  inner_join(df_contrastes |> 
+               pivot_longer(cols=starts_with("efeito"),
+                            names_to="pair",
+                            values_to="contraste_z") |> 
+               mutate(pair = case_when(pair == "efeito_frag"~"cont.non_frag",
+                                       pair == "efeito_area"~"non_frag.ideal",
+                                       pair == "efeito_conf"~"cont.ideal")) )
 f_dfpmd <- \(df){
   df <- df |> 
     mutate(col_names = case_when(pair == "cont.non_frag"~"frag",
@@ -90,7 +103,7 @@ f_dfpmd <- \(df){
   inner_join(df1,df2)
 }
 df_md <- df_ad |> 
-  select(SiteCode,k,land_type,nCongKS) |> 
+  select(SiteCode,k,land_type,nCongKS,diffS) |> 
   inner_join(df_congContrastes |> f_dfpmd()) |> 
   mutate(SiteCode = factor(SiteCode),
          land_hyp = factor(land_type)) |> 
@@ -98,22 +111,18 @@ df_md <- df_ad |>
   rename(nCong=nCongKS) |> 
   inner_join(df_contrastes |> select(SiteCode,k,p_z:log.S_z)) |> 
   relocate(land_hyp,.after = SiteCode)
+# update df_congCongtrastes
+df_congContrastes <- df_congContrastes |> 
+  inner_join(df_md |> 
+               select(SiteCode,k,land_hyp,contraste_z,k_z,p_z),
+             by=c("SiteCode","k","pair" = "logOR_pair")) |> 
+  arrange(p) |> 
+  relocate(p,.after=k)
 # df_newdata
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
   select(-starts_with("log_"))
 # df_intePred_contrastes.csv
 df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
-# df_congContrastetsREP.cvs
-df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
-  inner_join(df_md |> 
-               select(SiteCode,p,k,logOR_pair,contraste_z,k_z,p_z),
-             by=c("SiteCode","k","pair" = "logOR_pair")) |> 
-  arrange(p) |> 
-  relocate(p,.after=k) |> 
-  mutate(SiteCode = factor(SiteCode),
-         contrasteSAD_z = ifelse(nCong==500,499.9,nCong),
-         contrasteSAD_z = log((contrasteSAD_z/500)/(1-(contrasteSAD_z/500))),
-         contrasteSAD_z = f_z(contrasteSAD_z))
 write_csv(df_md,"dados/csv/df_md.csv")
 ```
 
@@ -617,6 +626,9 @@ l_md_PrCong <- dlply(df_md,"land_hyp",f_gam)
 save(l_md_PrCong,file="./dados/Rdata/l_md_PrCong.Rdata")
 ```
 
+```{r}
+df_tab <- ldply(l_md_PrCong,f_TabSelGAMM,.id="land_hyp")
+```
 
 
 __Figura X__ 
