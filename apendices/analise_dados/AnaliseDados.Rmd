@@ -632,30 +632,7 @@ df_tab <- ldply(l_md_PrCong,f_TabSelGAMM,.id="land_hyp")
 write_csv(df_tab,file="./dados/csv/ts_PrCong_LandHyp_GAMMs.csv")
 ```
 
-
-__Figura X__ 
-
-```{r GAMM Pr(Cong)_contemp:obs}
-f_formulaGAMM <- \(string){
-  if(string == "f(p,k)"){
-    as.formula(paste("cbind(nCong,100-nCong)",
-                     "~ s(p_z,bs='cr') + s(k_z,bs='cr') + ti(p_z,k_z,bs=c('cr','cr')) + s(k_z,Site,bs = 'fs') + s(Site, bs = 're')"))
-  }else if(string == "f(areaU,fragU)"){
-    as.formula(paste("cbind(nCong,100-nCong)",
-                     "~ s(area.U_z,bs='cr') + s(frag.U_z,bs='cr') + ti(area.U_z,frag.U_z,bs=c('cr','cr')) + s(k_z,Site,bs = 'fs') + s(Site, bs = 're')"))
-  }
-}
-f_GAMM <- \(string,df=df_md1){
-  f_ <- f_formulaGAMM(string)
-  mgcv::gam(formula = f_,data = df,method = "REML")
-}
-v_md <- c("f(p,k)","f(areaU,fragU)","f(areaSAD,fragSAD)","f(contU)","f(contSAD)")
-l_md <- alply(v_md,1,f_GAMM)
-
-
-```
-
-
+Todos os modelos mais plausíveis são aquelas que consideram splines e tensores de p e k. Porém as estimativas parciais dos splines de p estão sendo mal estimados. Estudos anteriores descrevendo 
 
 # Processo Gerador dos dados
 

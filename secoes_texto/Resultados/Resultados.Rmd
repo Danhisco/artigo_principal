@@ -228,7 +228,7 @@ __Figura 2__ Intervalo de Predição estimado pelos GAMM.
 
 ## congruência da SAD predita 
 
-```{r tabela 1 selecao dos GAMM mais plausiveis para descrever,cache=TRUE}
+```{r tabela 1 selecao dos GAMM congCont,cache=TRUE}
 df_tab <- ldply(l_md_congContrastes,f_TabSelGAMM)
 df_tab |> 
   gt(groupname_col = "pair",
@@ -311,71 +311,3 @@ df_tab |>
 ```
 
 
-
-
-############### será removido:
-
-## Log Odds Ratio
-
-```{r figura 4 GE logOR contemp em relacao ao sem frag}
-geom_final <- \(){
-  list(
-    geom_point(alpha=0.4),
-    geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),
-                  lambda=0.1,color="darkgreen",linewidth=1.5,alpha=0.5),
-    geom_smooth(method="gam"),
-    geom_hline(yintercept = 0,color="darkred")
-  )
-}
-l_p <- list()
-l_p[[1]] <- df_md |> 
-  ggplot(aes(x=contU_z,y=logOR_value)) +
-  geom_final() +
-  facet_wrap(~pair,ncol=3)
-l_p[[2]] <- df_md |> 
-  pivot_longer(p:k) |> 
-  ggplot(aes(x=value,y=logOR_value)) +
-  geom_final() +
-  facet_grid(name~pair)
-grid.arrange(grobs=l_p,ncol=1)
-```
-
-__Figura 4__ Gráficos exploratórios do log odds ratio em função das possíveis preditoras.
-  
-    
-__Tabela 1__ Seleção de GAMM 
-
-```{r tabela 1 de selecao dos GAMM criacao,eval=T,include=FALSE}
-f_correcaoNomes <- \(l_md){
-  names(l_md) <- str_remove(names(l_md),",ssbs.type") # corrigir na próxima versão de f_nameModel 
-  return(l_md)
-}
-l_md.logOR <- llply(l_md.logOR,f_correcaoNomes)
-# não entendo qual o problema...
-# Error in get(mnames) : objeto 'l_md' não encontrado
-# gambiarra:
-l_md <- l_md.logOR[[1]] # gambiarra
-df_tabelaSelecao <- ldply(l_md.logOR,\(x) f_TabSelGAMM(l_md=x),.id="pair")
-write_csv(df_tabelaSelecao,file="dados/csv/df_tabSel_GAMM_congSADobs.csv")
-# ldply(l_md.logOR,f_teste,.id="pair")
-# alternativa que funciona normal
-# l_df <- list()
-# for(i in 1:length(l_md.logOR)){
-#   l_df[[i]] <- f_TabSelGAMM(l_md.logOR[[i]])
-#   l_df[[i]] <- cbind(pair=names(l_md.logOR)[i],l_df[[i]])
-# }
-# rbind.fill(l_df)
-```
-```{r display tabela selecao GAMM cong SADobs}
-df_tabelaSelecao <- read_csv("dados/csv/df_tabSel_GAMM_congSADobs.csv") |> as.data.frame()
-df_tabelaSelecao
-```
-
-```{r figura 5 log odds ratio contrastes intervalo de predicao e observado}
-f_SML.gamm <- \(df){md <- l_md.logOR[[df$pair[1]]][[df$modelo[[1]]]]}
-l_p <- dlply(df_tabelaSelecao,"pair",f_SML.gamm) |> 
-  d_f_l_mdGAMM_FiguraFinal_1dGAMM()
-grid.arrange(grobs=l_p,ncol=3)
-```
-
-__Figura 5__ Log Odds Ratio ~ contrastes: intervalo de predição e observado
