@@ -604,7 +604,7 @@ ggsave("./apendices/analise_dados/figuras/GE_Pr(Cong)_LandHyp.png",
 ```
 
 
-```{r}
+```{r PrCong ~ land hyp GAMMs}
 l_f <- list()
 l_f[[1]] <- "cbind(nCong,100-nCong) ~ s(p_z,bs='cr') + s(k_z,bs='cr') + ti(p_z,k_z) + s(k_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
 l_f[[2]] <- "cbind(nCong,100-nCong) ~ s(contempU_z,bs='cr') + s(contempU_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')" 
@@ -627,7 +627,9 @@ save(l_md_PrCong,file="./dados/Rdata/l_md_PrCong.Rdata")
 ```
 
 ```{r}
+load("./dados/Rdata/l_md_PrCong.Rdata")
 df_tab <- ldply(l_md_PrCong,f_TabSelGAMM,.id="land_hyp")
+write_csv(df_tab,file="./dados/csv/ts_PrCong_LandHyp_GAMMs.csv")
 ```
 
 

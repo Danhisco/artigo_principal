@@ -415,11 +415,12 @@ summary(md_diffs)
 ### Pr(Cong)
 
 ```{r}
-df_tab <- ldply(l_md_PrCong,f_TabSelGAMM)
+df_tab <- read_csv("./dados/csv/ts_PrCong_LandHyp_GAMMs.csv")
+load("./dados/Rdata/l_md_PrCong.Rdata")
 # df_tab
-df_mdlik <- df_tab |> filter(dAICc == 0) |> select(pair,modelo)
-l_md_plot <- alply(df_mdlik,1,\(df) l_md_congContrastes[[df$pair]][[df$modelo]])
-names(l_md_plot) <- df_mdlik$pair
+df_mdlik <- df_tab |> filter(dAICc == 0) |> select(land_hyp,modelo)
+l_md_plot <- alply(df_mdlik,1,\(df) l_md_PrCong[[df$land_hyp]][[df$modelo]])
+names(l_md_plot) <- df_mdlik$land_hyp
 l_ply(names(l_md_plot),\(string) f_validaGAMM(md_name = string,l_md=l_md_plot))
 ```
 
