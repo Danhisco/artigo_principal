@@ -64,6 +64,7 @@ df_ad <- df_resultados |>
   arrange(p) |> 
   inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
   mutate(diffS = (Smed - S_obs)/S_obs)
+
 # df_contrastes: contrastes por sítio e grau de limitação de dispersão
 df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
   inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
@@ -86,7 +87,8 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |
                             values_to="contraste_z") |> 
                mutate(pair = case_when(pair == "efeito_frag"~"cont.non_frag",
                                        pair == "efeito_area"~"non_frag.ideal",
-                                       pair == "efeito_conf"~"cont.ideal")) )
+                                       pair == "efeito_conf"~"cont.ideal")) ) |> 
+  relocate(contraste_z,.before = contrasteSAD_z)
 f_dfpmd <- \(df){
   df <- df |> 
     mutate(col_names = case_when(pair == "cont.non_frag"~"frag",
@@ -111,13 +113,6 @@ df_md <- df_ad |>
   rename(nCong=nCongKS) |> 
   inner_join(df_contrastes |> select(SiteCode,k,p_z:log.S_z)) |> 
   relocate(land_hyp,.after = SiteCode)
-# update df_congCongtrastes
-df_congContrastes <- df_congContrastes |> 
-  inner_join(df_md |> 
-               select(SiteCode,k,land_hyp,contraste_z,k_z,p_z),
-             by=c("SiteCode","k","pair" = "logOR_pair")) |> 
-  arrange(p) |> 
-  relocate(p,.after=k)
 # df_newdata
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
   select(-starts_with("log_"))
@@ -342,6 +337,9 @@ md_frag_area <- gam(frag_z ~
 save(md_frag_area,file="dados/Rdata/md_frag_area.Rdata")
 ```
 
+
+
+
 ```{r protocolo de validacao simples GAMM frag ~ area|Site}
 load("dados/Rdata/md_frag_area.Rdata")
 k.check(md_frag_area)
@@ -443,6 +441,7 @@ ldply(l_md_congContrastes,f_TabSelGAMM)
 # l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
 # grid.arrange(grobs=l_p,ncol=3)
 df_tab <- ldply(l_md_congContrastes,f_TabSelGAMM)
+write_csv(df_tab,"./dados/csv/ts_congCont.csv")
 # df_tab
 df_mdlik <- df_tab |> filter(dAICc == 0) |> select(pair,modelo)
 l_md_plot <- alply(df_mdlik,1,\(df) l_md_congContrastes[[df$pair]][[df$modelo]])
@@ -462,24 +461,25 @@ Figura Final Congruência da SAD entre pares de contrastes em função dos contr
 
 ## diffS
 
-```{r diffS GE}
+```{r Tabela de Seleção LMERs Diferença na Riqueza Estimada}
 l_f <- list()
-l_f[[1]] <- diffS ~ land_hyp * k * p + (1|SiteCode)
-l_f[[2]] <- diffS ~ land_hyp * p + (1|SiteCode)
+l_f[[1]] <- diffS ~ land_hyp * k * p_z + (1|SiteCode)
+l_f[[2]] <- diffS ~ land_hyp * p_z + (1|SiteCode)
 l_f[[3]] <- diffS ~ land_hyp * k + (1|SiteCode)
-l_f[[4]] <- diffS ~ k * p + (1|SiteCode)
+l_f[[4]] <- diffS ~ k * p_z + (1|SiteCode)
 l_f[[5]] <- diffS ~ land_hyp + (1|SiteCode)
 l_f[[6]] <- diffS ~ k + (1|SiteCode)
-l_f[[7]] <- diffS ~ p + (1|SiteCode)
+l_f[[7]] <- diffS ~ p_z + (1|SiteCode)
 l_f[[8]] <- diffS ~ 1 + (1|SiteCode)
 l_md <- llply(l_f,\(f) lmer(f,data=df_md))
 names(l_md) <- llply(l_md,f_nameModel)
 df_seldiffs<- AICctab(l_md,weights=T) |> as.data.frame()
 df_seldiffs$modelo <- row.names(df_seldiffs)
 md_diffs <- l_md[[df_seldiffs$modelo[1]]]
-#
+df_seldiffs |> 
+  gt()
 df_newpred <- f_diffSBtsIntPred(md_diffs)
-
+write_csv(df_newpred,"./dados/csv/df_ip_diffS.csv")
 ```
 
 
@@ -633,6 +633,22 @@ write_csv(df_tab,file="./dados/csv/ts_PrCong_LandHyp_GAMMs.csv")
 ```
 
 Todos os modelos mais plausíveis são aquelas que consideram splines e tensores de p e k. Porém as estimativas parciais dos splines de p estão sendo mal estimados. Estudos anteriores descrevendo 
+
+
+```{r}
+md_PrCong_land.hyp_k <- gam(cbind(nCong,100-nCong) ~ p_z * k_factor * land_hyp + 
+                              s(SiteCode,land_hyp,bs='re') +
+                              s(SiteCode,bs='re'),
+                              family = "binomial",data=mutate(df_md,
+                                                              k_factor = factor(round(k,2))))
+f_validaGAMM(md_name="md_PrCong_land.hyp_k",l_md=md_PrCong_land.hyp_k,size=1)
+p_dharma <- simulateResiduals(md_PrCong_land.hyp_k,n=1000)
+plot(p_dharma)
+teste_outlier <- testOutliers(p_dharma,type = "bootstrap")
+df_ip_prcong_landhpyp_k <- f_calcPI(gamm = md_PrCong_land.hyp_k,prcong_glmer = TRUE)
+write_csv(df_ip_prcong_landhpyp_k,"./dados/csv/df_ip_prcong_landhpyp_k.csv")
+```
+
 
 # Processo Gerador dos dados
 

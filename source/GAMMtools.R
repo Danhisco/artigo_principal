@@ -79,7 +79,8 @@ f_PredInt.GAMM <- \(gamm,
 f_calcPI <- \(gamm,
               site.posteriori ="SPigua1",
               length_pred = 150,
-              n.posteriori_samples = 10000){
+              n.posteriori_samples = 10000,
+              prcong_glmer=FALSE){
     # take the GAMM objects:
     f_invlink <- gamm$family$linkinv
     if(gamm$family$family=="binomial"){
@@ -96,6 +97,17 @@ f_calcPI <- \(gamm,
       df_newpred <- data.frame(x = seq(min(df_obs[,x_var]),max(df_obs[,x_var]),length.out=length_pred)) |> 
         mutate(SiteCode = site.posteriori)
       names(df_newpred)[1] <- x_var  
+    }else if(prcong_glmer){
+      y_var <- names(df_obs)[1]
+      x1_var <- "p_z"
+      x2_var <- "k_factor"
+      x3_var <- "land_hyp"
+      df_newpred <- expand.grid(x1 = seq(min(df_obs[,x1_var]),max(df_obs[,x1_var]),length.out=length_pred),
+                                x2 = levels(df_obs[[x2_var]]),
+                                x3 = levels(df_obs[[x3_var]])) |> 
+        mutate(SiteCode = site.posteriori)
+      names(df_newpred)[1:3] <- c(x1_var,x2_var,x3_var)
+      x_var <- x1_var
     }else{
       y_var <- names(df_obs)[1]
       x1_var <- names(df_obs)[2]
@@ -106,11 +118,16 @@ f_calcPI <- \(gamm,
       names(df_newpred)[1:2] <- c(x1_var,x2_var)
       x_var <- "k_z"
     }
+    if(prcong_glmer){
+      v_toexclude <- "s(SiteCode)"
+    }else{
+      v_toexclude <- c(paste0("s(",x_var,",SiteCode)"),"s(SiteCode)")
+    }
     # obtain the predictions
     ## new predictions without variability between sites
     df_newpred <- f_PredInt.GAMM(data=df_newpred,gamm=gamm,
                                  nsim=n.posteriori_samples,
-                                 v_exclude=c(paste0("s(",x_var,",SiteCode)"),"s(SiteCode)"))
+                                 v_exclude=v_toexclude)
     ## predictions for the observed data (with variability between sites)
     ## apply the inverse link function
     ### if the case is a binomial GAMM
@@ -197,6 +214,7 @@ f_titleContraste <- \(string){
 f_plotCongCont <- \(df){
   df_pred <- read_csv(paste0("./dados/csv/df_PIcongCont",df$pair[1],".csv"))
   if(any(names(df_pred)=="contraste_z")){
+    if(!exists("l_md_congContrastes")) load("dados/Rdata/l_md_congContrastes.Rdata")
     df$predito <- predict.gam(object = l_md_congContrastes[[df$pair[1]]][["f(contraste_z)"]],
                               type = "response") * 500
     title_contraste <- f_titleContraste(df$pair[1])
@@ -219,7 +237,7 @@ f_diffSBtsIntPred <- \(lme){
   df_obs <- lme@frame
   #new data
   df_newdat <- expand.grid(SiteCode="SPigua1", 
-                           p = seq(min(df_obs$p),max(df_obs$p), length=150),
+                           p_z = seq(min(df_obs$p_z),max(df_obs$p_z), length=150),
                            land_hyp = unique(df_obs$land_hyp))
   ## Passo 2: crie as função que devem ser calculadas dos modelos a cada simulação
   ## Previstos por efeitos fixos e aleatórios
@@ -244,16 +262,16 @@ f_diffSplotPI <- \(lme,df_newpred){
   levels(df_obs$land_hyp) <- levels(df_obs$land_hyp)[c(1,3,2)] 
   #
   df_obs %>% 
-    ggplot(aes(x=p,y=diffS)) + 
+    ggplot(aes(x=p_z,y=diffS)) + 
     geom_point(alpha=0.1) + 
     geom_hline(yintercept = 0,color="red",alpha=0.8) +
     geom_ribbon(aes(y = mean, ymin=IC.low, ymax=IC.upp), 
                 data=df_newpred, fill="grey15", alpha=0.5) +
     geom_ribbon(aes(y=mean, ymin=IC.low.fixed, ymax=IC.upp.fixed), 
                 data=df_newpred, fill="white", alpha=0.5) +
-    geom_line(aes(x=p, y=mean.fixed), 
+    geom_line(aes(x=p_z, y=mean.fixed), 
               data=df_newpred,color="lightgreen") +
-    labs(x="p",y="erro na estimativa da riqueza") +
+    labs(x="z(p)",y="erro na estimativa da riqueza") +
     facet_wrap(~land_hyp,ncol=3,
                labeller = as_labeller(c("cont" = "Cont.",
                                         "ideal" = "Ideal.",
