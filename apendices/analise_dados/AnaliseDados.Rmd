@@ -730,9 +730,13 @@ f_plot_PrCong <- \(level_land.hyp){
   df_obs |> 
     ggplot(aes(x=p_z,y=logitCong)) +
     geom_point(alpha=0.5) +
-    geom_line(data=df_pred,
-              mapping = aes(x=p_z,y=value,group=name,color=name)) +
+    geom_smooth(method = "gam",se=F,color="black",aes(linetype="gam without |Site")) + # ,linetype = "longdash"
+    geom_line(data=df_pred, linetype = "solid",
+              mapping = aes(x=p_z,y=value,group=name,color=name,linetype="glmer")) +
     geom_hline(yintercept = 0,col="darkred") + 
+    scale_linetype_manual("",values=c("gam without |Site"=5,"glmer"=1)) +
+    guides(linetype=guide_legend(keywidth = 3, keyheight = 1),
+           colour=guide_legend(keywidth = 3, keyheight = 1)) +
     scale_colour_manual(values=v_cols) +
     labs(y="logito(Cong)",
          title=case_when(level_land.hyp == "cont" ~ "Paisagem Contemporânea",
