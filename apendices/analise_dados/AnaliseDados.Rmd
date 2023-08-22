@@ -25,6 +25,7 @@ library(sads)
 library(doMC)
 library(metR)
 library(gridExtra)
+library(ggpubr)
 library(ggplot2)
 library(readr)
 library(purrr)
@@ -634,20 +635,146 @@ write_csv(df_tab,file="./dados/csv/ts_PrCong_LandHyp_GAMMs.csv")
 
 Todos os modelos mais plausíveis são aquelas que consideram splines e tensores de p e k. Porém as estimativas parciais dos splines de p estão sendo mal estimados. Estudos anteriores descrevendo 
 
+```{r criação de l_md_Cong_landhyp}
+l_f <- list()
+l_f[[1]] <- "cbind(nCong,100-nCong) ~ p_z * k_factor * land_hyp + s(SiteCode,land_hyp,bs='re') + s(SiteCode,bs='re')"
+l_f[[2]] <- gsub("p_z \\* ","",l_f[[1]])
+l_f[[3]] <- gsub(" \\* land_hyp \\+ s\\(SiteCode,land_hyp,bs=\\'re\\'\\) ","",l_f[[1]])
+l_f[[4]] <- gsub(" \\* land_hyp","",l_f[[2]]) %>% gsub("\\+ s\\(SiteCode,land_hyp,bs=\\'re\\'\\)","",.)
+f_gam <- \(s){
+  gam(as.formula(s),family = "binomial",data=mutate(df_md,k_factor = factor(round(k,2))),method = "REML")
+}
+l_md_Cong_landhyp <- llply(l_f,f_gam)
+names(l_md_Cong_landhyp) <- c("f(p,k factor,land hyp|Site)","f(k factor,land hyp|Site)","f(p,k_factor,1|Site)","f(k 
+factor,1|Site)")
+save(l_md_Cong_landhyp,file = "./dados/Rdata/l_md_Cong_landhyp.Rdata")
+```
 
-```{r}
-md_PrCong_land.hyp_k <- gam(cbind(nCong,100-nCong) ~ p_z * k_factor * land_hyp + 
-                              s(SiteCode,land_hyp,bs='re') +
-                              s(SiteCode,bs='re'),
-                              family = "binomial",data=mutate(df_md,
-                                                              k_factor = factor(round(k,2))))
+
+```{r md_PrCong_land.hyp_k}
+load("./dados/Rdata/l_md_Cong_landhyp.Rdata")
+df_ts <- AICctab(l_md_Cong_landhyp,weights=T) %>% as.data.frame()
+# modelo mais simples plausivel
+md_PrCong_land.hyp_k <- row.names(df_ts[df_ts$dAICc==0,]) %>% l_md_Cong_landhyp[[.]]
 f_validaGAMM(md_name="md_PrCong_land.hyp_k",l_md=md_PrCong_land.hyp_k,size=1)
 p_dharma <- simulateResiduals(md_PrCong_land.hyp_k,n=1000)
 plot(p_dharma)
-teste_outlier <- testOutliers(p_dharma,type = "bootstrap")
-df_ip_prcong_landhpyp_k <- f_calcPI(gamm = md_PrCong_land.hyp_k,prcong_glmer = TRUE)
+(teste_outlier <- testOutliers(p_dharma,type = "bootstrap"))
+df_ip_prcong_landhpyp_k <- f_calcPI(gamm = md_PrCong_land.hyp_k,prcong_glmer = TRUE,link_scale = TRUE)
 write_csv(df_ip_prcong_landhpyp_k,"./dados/csv/df_ip_prcong_landhpyp_k.csv")
+# interpretação
+l_df <- list()
+l_df[[1]] <- read_csv("./dados/csv/df_ip_prcong_landhpyp_k.csv")
+f_typetopair <- \(df,dfmd=FALSE){
+  v_i <- unique(df$land_hyp)
+  df_i <- data.frame(p1=v_i[c(1,1,3)],p2=v_i[c(3,2,2)])
+  if(dfmd){
+    df <- df %>% select(SiteCode:nCong,p_z) %>% 
+      mutate(nCong = case_when(nCong == 100 ~ 99.2,
+                             nCong == 0 ~ 0.8,
+                             TRUE ~ nCong),
+           nCong = nCong / 100,
+           logitCong = log(nCong / (1-nCong)),
+           k = factor(round(k,2)))
+    v_names <- "logitCong"
+    # v_names <- 
+  }else{
+    v_names <- names(select(df,starts_with("Q_0.")))
+  }
+  f_adply <- \(df_i1r){
+    df1 <- df |> filter(land_hyp==df_i1r$p1)
+    df2 <- df |> filter(land_hyp==df_i1r$p2)
+    f_ <- \(colname) df1[[colname]] - df2[[colname]]
+    if(dfmd){
+      df_return <- cbind(select(df1,1:k,p_z),
+                         f_(colname=v_names) %>% 
+                           as.data.frame() %>% 
+                           rename(logitCong=`.`,.data=.)) %>% 
+        mutate(pair = paste0(df_i1r$p1,".",df_i1r$p2)) |> 
+        select(-land_hyp) |> 
+        relocate(pair,.before = SiteCode)
+    }else{
+      df_return <- as.data.frame(do.call(cbind, alply(v_names,1,f_)))
+      names(df_return) <- v_names
+      df_return <- cbind(select(df1,1:SiteCode),df_return) |> 
+        mutate(pair = paste0(df_i1r$p1,".",df_i1r$p2)) |> 
+        select(-land_hyp) |> 
+        relocate(pair,.before = SiteCode)
+    }
+    return(df_return)
+  }
+  adply(df_i,1,f_adply,.id=NULL) |> select(-c(p1,p2))
+}
+l_df[[2]] <- l_df[[1]] |> f_typetopair()
+names(l_df) <- c("PrCong","logOR")
+# graficos diagnostico: observado e predito
+f_plot_PrCong <- \(level_land.hyp){
+  df_pred <- l_df[["PrCong"]] |> 
+    filter(land_hyp == level_land.hyp) |> rename(k=k_factor) |> 
+    pivot_longer(cols=starts_with("Q_0.")) |> 
+    mutate(k = factor(round(k,2)))
+  df_pred$name <- gsub("Q_0.","",df_pred$name) %>% gsub("^5$","50",.)
+  df_obs <- df_md |> 
+    select(SiteCode:nCong,p_z) |> 
+    filter(land_hyp == level_land.hyp) |> 
+    mutate(nCong = case_when(nCong == 100 ~ 99.2,
+                             nCong == 0 ~ 0.8,
+                             TRUE ~ nCong),
+           nCong = nCong / 100,
+           logitCong = log(nCong / (1-nCong)),
+           k = factor(round(k,2)))
+  # gráfico
+  v_cols <- rep("darkblue",5)
+  v_cols[c(2,4)] <- "darkgray"
+  v_cols[3] <- "darkgreen"
+  df_obs |> 
+    ggplot(aes(x=p_z,y=logitCong)) +
+    geom_point(alpha=0.5) +
+    geom_line(data=df_pred,
+              mapping = aes(x=p_z,y=value,group=name,color=name)) +
+    geom_hline(yintercept = 0,col="darkred") + 
+    scale_colour_manual(values=v_cols) +
+    labs(y="logito(Cong)",
+         title=case_when(level_land.hyp == "cont" ~ "Paisagem Contemporânea",
+                         level_land.hyp == "non_frag" ~ "Paisagem Aglomerada",
+                         level_land.hyp == "ideal" ~ "Paisagem Idealizada"),
+         color="Int. Pred. Quant.") +
+    theme(legend.position = "bottom",
+          legend.margin=margin(-10, 0, 0, 0)) +
+    facet_wrap(~k,ncol=5)
+}
+l_plot <- alply(unique(l_df[["PrCong"]]$land_hyp),1,f_plot_PrCong)
+ggarrange(plotlist = l_plot,nrow=1, common.legend = TRUE, legend="bottom")
+ggsave("apendices/analise_dados/figuras/logitoCong_lmer_p_k_landhyp.png",
+       width = 30,
+       height = 10)
+# graficos para interpretação: logOR(contrastes) ~ p_z * k
+f_plot_logOR <- \(level_landhyp=T){
+  df_pred <- l_df[["logOR"]]
+  
+  f_ggplot <- \(rvar){
+    v_cols <- rep("darkblue",5)
+    v_cols[c(2,4)] <- "darkgray"
+    v_cols[3] <- "darkgreen"
+    names(v_cols) <- names(select(df,starts_with("Q_0.")))
+    df |> 
+      filter(pair=="cont.non_frag") |> 
+      pivot_longer(cols=starts_with("Q_0.")) |> 
+      mutate(k_factor=factor(k_factor)) |> 
+      ggplot(aes(x=p_z,y=value,group=name,color=name)) + # ,group=k_factor,color=k_factor
+      geom_hline(yintercept = 0,col="darkred") +
+      geom_line() +
+      scale_colour_manual(values=v_cols) +
+      facet_wrap(~k_factor,ncol=5)
+  }
+  
+  if(justmedian){
+    v_rvar <- v_rvar[3]
+    f_ggplot(v_rvar) + ggtitle(name_df)
+  }
+}
 ```
+
 
 
 # Processo Gerador dos dados

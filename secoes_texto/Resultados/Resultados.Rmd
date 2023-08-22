@@ -317,49 +317,6 @@ df_tab |>
 ```
 
 ```{r ip logOR_prcong ~ p * land_hyp, fig.cap="\\label{ip_logOR_prcong}ip_logOR_prcong"}
-l_df <- list()
-l_df[[1]] <- read_csv("./dados/csv/df_ip_prcong_landhpyp_k.csv")
-f_typetopair <- \(df){
-  v_i <- unique(df$land_hyp)
-  df_i <- data.frame(p1=v_i[c(1,1,3)],p2=v_i[c(3,2,2)])
-  v_names <- names(select(df,starts_with("Q_0.")))
-  f_adply <- \(df_i1r){
-    df1 <- df |> filter(land_hyp==df_i1r$p1)
-    df2 <- df |> filter(land_hyp==df_i1r$p2)
-    f_ <- \(colname) df1[[colname]] - df2[[colname]]
-    df_return <- as.data.frame(do.call(cbind, alply(v_names,1,f_)))
-    names(df_return) <- v_names
-    cbind(select(df1,1:SiteCode),df_return) |> 
-      mutate(pair = paste0(df_i1r$p1,".",df_i1r$p2)) |> 
-      select(-land_hyp) |> 
-      relocate(pair,.before = SiteCode)
-  }
-  adply(df_i,1,f_adply,.id=NULL) |> select(-c(p1,p2))
-}
-l_df[[2]] <- l_df[[1]] |> f_typetopair()
-names(l_df) <- c("PrCong","logOR")
-
-f_plot <- \(df,name_df,justmedian=T){
-  f_ggplot <- \(rvar){
-    v_cols <- rep("darkblue",5)
-    v_cols[3] <- "darkgreen"
-    names(v_cols) <- names(select(df,starts_with("Q_0.")))
-    df |> 
-      filter(pair=="cont.non_frag") |> 
-      pivot_longer(cols=starts_with("Q_0.")) |> 
-      mutate(k_factor=factor(k_factor)) |> 
-      ggplot(aes(x=p_z,y=value,group=name,color=name)) + # ,group=k_factor,color=k_factor
-      geom_hline(yintercept = 0,col="darkred") +
-      geom_line() +
-      scale_colour_manual(values=v_cols) +
-      facet_wrap(~k_factor,ncol=5)
-  }
-  
-  if(justmedian){
-    v_rvar <- v_rvar[3]
-    f_ggplot(v_rvar) + ggtitle(name_df)
-  }
-}
 
   
 ```

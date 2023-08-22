@@ -80,7 +80,8 @@ f_calcPI <- \(gamm,
               site.posteriori ="SPigua1",
               length_pred = 150,
               n.posteriori_samples = 10000,
-              prcong_glmer=FALSE){
+              prcong_glmer=FALSE,
+              link_scale=FALSE){
     # take the GAMM objects:
     f_invlink <- gamm$family$linkinv
     if(gamm$family$family=="binomial"){
@@ -129,6 +130,9 @@ f_calcPI <- \(gamm,
                                  nsim=n.posteriori_samples,
                                  v_exclude=v_toexclude)
     ## predictions for the observed data (with variability between sites)
+    if(link_scale){
+      return(df_newpred)
+    }
     ## apply the inverse link function
     ### if the case is a binomial GAMM
     if(gamm$family$family=="binomial"){
