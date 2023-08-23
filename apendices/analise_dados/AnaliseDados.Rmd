@@ -707,7 +707,48 @@ f_typetopair <- \(df,dfmd=FALSE){
 }
 l_df[[2]] <- l_df[[1]] |> f_typetopair()
 names(l_df) <- c("PrCong","logOR")
+l_df[["logOR"]] %>% 
+  filter(k_factor=="0.05") %>% 
+  ggplot(aes(x=p_z,y=Q_0.5,color=pair)) +
+  geom_point()
+
+
 # graficos diagnostico: observado e predito
+f_ggplot2 <- \(v_title,logito=T){
+  v_cols <- rep("darkblue",5)
+  v_cols[c(2,4)] <- "darkgray"
+  v_cols[3] <- "darkgreen"
+  if(logito){
+    title <- case_when(v_title == "cont" ~ "Paisagem Contemporânea",
+                       v_title == "non_frag" ~ "Paisagem Aglomerada",
+                       v_title == "ideal" ~ "Paisagem Idealizada")
+    y_var <- "logito(Cong)"
+  }else{
+    title <- case_when(v_title == "cont.non_frag" ~ "Contemporâneo : Habitat Aglomerado",
+                       v_title == "cont.ideal" ~ "Contemporâneo : Sem Perda de Habitat",
+                       v_title == "non_frag.ideal" ~ "Habitat Aglomerado : Sem Perda de Habitat")   
+    y_var <- "logOR(Cong)"
+  }
+  df_obs |> 
+    ggplot(aes(x=p_z,y=logitCong)) +
+    geom_point(alpha=0.5) +
+    geom_smooth(method = "gam",se=F,color="black",aes(linetype="gam without |Site")) + # ,linetype = "longdash"
+    # geom_line(data=df_pred, linetype = "solid",
+    #           mapping = aes(x=p_z,y=value,group=name,color=name,linetype="glmer")) +
+    geom_point(data=df_pred %>% filter(name == "Q_0.5"),
+              mapping = aes(x=p_z,y=value),color="darkblue",alpha=0.5) +
+    geom_hline(yintercept = 0,col="darkred") + 
+    scale_linetype_manual("",values=c("gam without |Site"=5,"glmer"=1)) +
+    guides(linetype=guide_legend(keywidth = 3, keyheight = 1),
+           colour=guide_legend(keywidth = 3, keyheight = 1)) +
+    scale_colour_manual(values=v_cols) +
+    labs(y=y_var,
+         title=v_title,
+         color="Int. Pred. Quant.") +
+    theme(legend.position = "bottom",
+          legend.margin=margin(-10, 0, 0, 0)) +
+    facet_wrap(~k,ncol=5,scales="free")
+}
 f_plot_PrCong <- \(level_land.hyp){
   df_pred <- l_df[["PrCong"]] |> 
     filter(land_hyp == level_land.hyp) |> rename(k=k_factor) |> 
@@ -724,28 +765,7 @@ f_plot_PrCong <- \(level_land.hyp){
            logitCong = log(nCong / (1-nCong)),
            k = factor(round(k,2)))
   # gráfico
-  v_cols <- rep("darkblue",5)
-  v_cols[c(2,4)] <- "darkgray"
-  v_cols[3] <- "darkgreen"
-  df_obs |> 
-    ggplot(aes(x=p_z,y=logitCong)) +
-    geom_point(alpha=0.5) +
-    geom_smooth(method = "gam",se=F,color="black",aes(linetype="gam without |Site")) + # ,linetype = "longdash"
-    geom_line(data=df_pred, linetype = "solid",
-              mapping = aes(x=p_z,y=value,group=name,color=name,linetype="glmer")) +
-    geom_hline(yintercept = 0,col="darkred") + 
-    scale_linetype_manual("",values=c("gam without |Site"=5,"glmer"=1)) +
-    guides(linetype=guide_legend(keywidth = 3, keyheight = 1),
-           colour=guide_legend(keywidth = 3, keyheight = 1)) +
-    scale_colour_manual(values=v_cols) +
-    labs(y="logito(Cong)",
-         title=case_when(level_land.hyp == "cont" ~ "Paisagem Contemporânea",
-                         level_land.hyp == "non_frag" ~ "Paisagem Aglomerada",
-                         level_land.hyp == "ideal" ~ "Paisagem Idealizada"),
-         color="Int. Pred. Quant.") +
-    theme(legend.position = "bottom",
-          legend.margin=margin(-10, 0, 0, 0)) +
-    facet_wrap(~k,ncol=5)
+  f_ggplot2(title=level_land.hyp,logito = T)
 }
 l_plot <- alply(unique(l_df[["PrCong"]]$land_hyp),1,f_plot_PrCong)
 ggarrange(plotlist = l_plot,nrow=1, common.legend = TRUE, legend="bottom")
@@ -753,29 +773,34 @@ ggsave("apendices/analise_dados/figuras/logitoCong_lmer_p_k_landhyp.png",
        width = 30,
        height = 10)
 # graficos para interpretação: logOR(contrastes) ~ p_z * k
-f_plot_logOR <- \(level_landhyp=T){
-  df_pred <- l_df[["logOR"]]
-  
-  f_ggplot <- \(rvar){
-    v_cols <- rep("darkblue",5)
-    v_cols[c(2,4)] <- "darkgray"
-    v_cols[3] <- "darkgreen"
-    names(v_cols) <- names(select(df,starts_with("Q_0.")))
-    df |> 
-      filter(pair=="cont.non_frag") |> 
-      pivot_longer(cols=starts_with("Q_0.")) |> 
-      mutate(k_factor=factor(k_factor)) |> 
-      ggplot(aes(x=p_z,y=value,group=name,color=name)) + # ,group=k_factor,color=k_factor
-      geom_hline(yintercept = 0,col="darkred") +
-      geom_line() +
-      scale_colour_manual(values=v_cols) +
-      facet_wrap(~k_factor,ncol=5)
-  }
-  
-  if(justmedian){
-    v_rvar <- v_rvar[3]
-    f_ggplot(v_rvar) + ggtitle(name_df)
-  }
+f_plot_logOR <- \(level_pair){
+  df_pred <- l_df[["logOR"]] %>% 
+    pivot_longer(cols=starts_with("Q_0.")) %>% 
+    filter(pair == level_pair)
+  df_obs <- df_md |> 
+    f_typetopair(dfmd=T) %>% 
+    filter(pair == level_pair)
+  f_ggplot2(title=level_pair,logito = F)
+  # f_ggplot <- \(rvar){
+  #   v_cols <- rep("darkblue",5)
+  #   v_cols[c(2,4)] <- "darkgray"
+  #   v_cols[3] <- "darkgreen"
+  #   names(v_cols) <- names(select(df,starts_with("Q_0.")))
+  #   df |> 
+  #     filter(pair=="cont.non_frag") |> 
+  #     pivot_longer(cols=starts_with("Q_0.")) |> 
+  #     mutate(k_factor=factor(k_factor)) |> 
+  #     ggplot(aes(x=p_z,y=value,group=name,color=name)) + # ,group=k_factor,color=k_factor
+  #     geom_hline(yintercept = 0,col="darkred") +
+  #     geom_line() +
+  #     scale_colour_manual(values=v_cols) +
+  #     facet_wrap(~k_factor,ncol=5)
+  # }
+  # 
+  # if(justmedian){
+  #   v_rvar <- v_rvar[3]
+  #   f_ggplot(v_rvar) + ggtitle(name_df)
+  # }
 }
 ```
 
