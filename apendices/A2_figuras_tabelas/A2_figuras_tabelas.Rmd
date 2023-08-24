@@ -111,18 +111,17 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |
   relocate(p,.after=k) |> 
   mutate(SiteCode = factor(SiteCode))
 # loads
-load("dados/Rdata/l_md.contrastes.Rdata")
-load("dados/Rdata/md_frag_area.Rdata")
-load("dados/Rdata/l_md_congContrastes.Rdata")
-load("dados/Rdata/l_md_PrCong.Rdata")
+# load("dados/Rdata/l_md.contrastes.Rdata")
+# load("dados/Rdata/md_frag_area.Rdata")
+# load("dados/Rdata/l_md_congContrastes.Rdata")
+# load("dados/Rdata/l_md_PrCong.Rdata")
 ```
 
 
 ## Sítios Selecionados 
 ### Figura A2 1
 
-
-```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6}
+```{r fig 1 code to run off render,eval=FALSE,include=FALSE}
 df_plot <- df_dados_disponiveis |> 
   select(SiteCode, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
 l_p <- list()
@@ -155,6 +154,11 @@ l_p[[3]] <- df_plot |>
   geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
   labs(x="classificação de estágio sucessional do TreeCo",
        y="countagem",subtitle="c)")
+save(l_p,file="./dados/Rdata/figA21.Rdata")
+```
+
+```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6}
+load("./dados/Rdata/figA21.Rdata")
 grid.arrange(grobs=l_p,ncol=3)
 ```
 
@@ -168,7 +172,7 @@ Nas paisagens com pouco habitat o padrão médio é similar ao esperado em paisa
 
 ### Figura A2 2
 
-```{r Fig A2 2 - Graf Exp dos contrastes,fig.width=10,fig.height=4}
+```{r fig2 ctror,eval=F,include=F}
 l_p <- list()
 l_p[[1]] <- df_U |> 
   mutate(Ucv = Usd / Umed,
@@ -203,14 +207,19 @@ l_p[[2]] <- df_U |>
         legend.margin=margin(-26, 0, 0, 0),
         strip.background = element_blank(),
         strip.placement = "outside")
+save(l_p,file="./dados/Rdata/figA21.Rdata")
+```
+
+
+```{r Fig A2 2 - Graf Exp dos contrastes,fig.width=10,fig.height=4}
+load("./dados/Rdata/figA21.Rdata")
 grid.arrange(grobs=l_p,layout_matrix = rbind(c(1,2,2)))
 ```
 
 __Figura A2 2__ Gráficos exploratórios da taxa U estimada e dos contrastes calculados. No painel da esquerda superior, coeficiente de variação da taxa U estimada por MNEE. Cada ponto representa uma bateria de simulação com 10 réplicas cada; no eixo x há a média da taxa U e no eixo y o correspondente desvio padrão. Todas as retas passam pela origem, em preto a reta com inclinação de 1, em verde a com inclinação de 0.1, e em vermelho com inclinaçãao de 0.01. A maior parte dos pontos tem coeficiente de inclinação entre 10% e 1%. Nos paineis da direita superior e da linha de baixo há os gráficos exploratórios dos contrastes, respectivamente: boxplots dos contrastes calculados, gráfico de dispersão dos contrastes de fragmentação per se e área per se, e o contraste contemporâneo em função de p e colorido por k. 
 
 ### Figura A2 3
-
-```{r fig A2 3 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=30,fig.width=15}
+```{r fig A23 ctror, eval=F,include=F}
 df_plot <- df_Urep |> select(-d) |> 
   pivot_longer(-c(SiteCode:k),names_to = "rep",values_to = "U") |>
   inner_join(df_p) |> 
@@ -221,7 +230,7 @@ df_plot <- df_Urep |> select(-d) |>
 #   arrange(p) |> 
 #   mutate(label = paste0(SiteCode,", p=",round(p,2))) #, " ,S=",S_obs
 df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
-df_plot |> 
+p <- df_plot |> 
   ggplot(aes(x=k,y=U,color=land_type)) +
   geom_point(alpha=0.1) +
   # geom_line() +
@@ -237,15 +246,20 @@ df_plot |>
                      labels=c("contemporâneo","idealizado","sem fragmentação")) +
   facet_wrap(~label,ncol=5,scales="free")
 ggsave("apendices/taxaU/figuras/Umed_k_landType_Site.png",
-       width = 7,
-       height = 30)
+       width = 7,height = 30)
+save(p,file="./dados/Rdata/figA23.Rdata")
+```
+
+```{r fig A2 3 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=30,fig.width=15}
+load("./dados/Rdata/figA23.Rdata")
+p
 ```
 
 __Figura A2 3__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados. Os sítios estão organizados pela pela proporção de cobertura vegetal 
 
 ### Figura A2 4
 
-```{r Figura A2 4 GE contrastes}
+```{r fig A2 4 ctror,eval=F,include=F}
 l_p <- list()
 l_p[[1]] <- df_contrastes |>
   pivot_longer(efeito_area:efeito_conf) |>
@@ -310,6 +324,11 @@ l_p[[3]] <- df_contrastes |>
                                  resp_class = c(efeito_area = "área per se",
                                                 efeito_conf = "contemporaneidade",
                                                 efeito_frag = "fragmentação per se")))
+save(l_p,file="./dados/Rdata/figA24.Rdata")
+```
+
+```{r Figura A2 4 GE contrastes}
+load("./dados/Rdata/figA24.Rdata")
 grid.arrange(grobs=l_p,
              layout_matrix = rbind(c(1,1,2,2),
                                    c(3,3,3,3),
@@ -373,12 +392,18 @@ f_validaGAMM(md_name = "Frag. per se ~ Area",l_md = md_frag_area,size = 1)
 
 __Janela de output R console 3__ Validação dos GAMMs mais plausíveis
 
-```{r Janela de output R console 3}
-df_tab <- ldply(l_md_congContrastes,f_TabSelGAMM)
+```{r janela output 3 ctror,eval=F,include=F}
+load("./dados/Rdata/l_md_congContrastes.Rdata")
+df_tab <- read_csv("./dados/csv/ts_congCont.csv") %>% as.data.frame()
 # df_tab
 df_mdlik <- df_tab |> filter(dAICc == 0) |> select(pair,modelo)
 l_md_plot <- alply(df_mdlik,1,\(df) l_md_congContrastes[[df$pair]][[df$modelo]])
 names(l_md_plot) <- df_mdlik$pair
+save(l_md_plot,file="./dados/Rdata/janelaA23.Rdata")
+```
+
+```{r Janela de output R console 3}
+load("./dados/Rdata/janelaA23.Rdata")
 l_ply(names(l_md_plot),\(string) f_validaGAMM(md_name = string,l_md=l_md_plot))
 ```
 
@@ -398,9 +423,14 @@ df_md |>
 
 __Figura A2 5 __ Gráficos Exploratórios geom_smoother(method="gam")
 
-```{r graf exp diffS md + lik}
+```{r figA26 ctror,eval=F,include=F}
 md_diffs <- lmer(diffS ~ land_hyp * p + (1|SiteCode),df_md)
 p_dharma <- simulateResiduals(md_diffs,n = 1000)
+save(p_dharma,md_diffs,file="./dados/Rdata/figA26.Rdata")
+```
+
+```{r graf exp diffS md + lik}
+load("./dados/Rdata/figA26.Rdata")
 plot(p_dharma)
 ```
 
@@ -409,18 +439,23 @@ __Figura A2 6__ Gráficos diagnósticos do pacote DHARMa para o modelo mais plau
 __Janela de output R console 4__ sumário do modelo mais plausível para descrever o erro na riqueza estimada
 
 ```{r sumário do modelo mais plausível para descrever o erro na riqueza estimada}
+load("./dados/Rdata/figA26.Rdata")
 summary(md_diffs)
 ```
 
 ### Pr(Cong)
-
-```{r}
+```{r figA27 ctror,eval=F,include=F}
 df_tab <- read_csv("./dados/csv/ts_PrCong_LandHyp_GAMMs.csv")
 load("./dados/Rdata/l_md_PrCong.Rdata")
 # df_tab
 df_mdlik <- df_tab |> filter(dAICc == 0) |> select(land_hyp,modelo)
 l_md_plot <- alply(df_mdlik,1,\(df) l_md_PrCong[[df$land_hyp]][[df$modelo]])
 names(l_md_plot) <- df_mdlik$land_hyp
+save(l_md_plot,file="./dados/Rdata/figA27.Rdata")
+```
+
+```{r figA27 - janela de código da validacao dos submodelos}
+load("./dados/Rdata/figA27.Rdata")
 l_ply(names(l_md_plot),\(string) f_validaGAMM(md_name = string,l_md=l_md_plot))
 ```
 
