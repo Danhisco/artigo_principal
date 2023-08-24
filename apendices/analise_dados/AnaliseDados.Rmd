@@ -338,7 +338,6 @@ md_frag_area <- gam(frag_z ~
 # save(md_frag_area,file="dados/Rdata/md_frag_area.Rdata")
 #
 # load("./dados/Rdata/md_frag_area.Rdata")
-save(df,df_pred_newdata,"./dados/Rdata/frag_area_taxaU.Rdata")
 # dados
 df <- df_congContrastes |> 
   filter(pair == "cont.non_frag") |> 
@@ -455,7 +454,10 @@ load("dados/Rdata/l_md_congContrastes.Rdata")
 # validação
 l_ply(names(l_md_congContrastes),\(string) f_validaGAMM(md_name = string,l_md=l_md_congContrastes))
 ldply(l_md_congContrastes,f_TabSelGAMM)
+l_p <- dlply(df_congContrastes,"pair",f_plotCongCont)
+save(l_p,file="./dados/Rdata/ip_congCont.Rdata")
 ```
+
 
 
 ```{r modelos mais plausíveis GAMM CongContrastes}
@@ -500,7 +502,9 @@ md_diffs <- l_md[[df_seldiffs$modelo[1]]]
 df_seldiffs |> 
   gt()
 df_newpred <- f_diffSBtsIntPred(md_diffs)
-write_csv(df_newpred,"./dados/csv/df_ip_diffS.csv")
+# write_csv(df_newpred,"./dados/csv/df_ip_diffS.csv")
+p <- f_diffSplotPI(md_diffs,df_newpred) + theme_bw()
+save(df_seldiffs,md_diffs,df_newpred,p,file = "./dados/Rdata/ts_diffs_E_ip_diffS")
 ```
 
 

@@ -3,7 +3,7 @@ title: "Resultados Completos"
 author: "Mori, Danilo"
 date: "19/11/2022"
 output: 
-  html_document:
+  bookdown::html_document2:
     toc: true
     toc_depth: 5
     fig_caption: yes
@@ -110,7 +110,6 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
-
 # Inventários Florestais Selecionados
 
 As coordenadas dos sítios variaram entre -31° e -7° de latit”ude e entre -55° e -35° de longitude (figura A2 1a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo (Figura A2 1c). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (Figura A2 1b). Portanto, todos os sítios dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Uma paisagem foi descartada, pois não foi possível delimitar uma área amostral quadrada por conta da particular configuração espacial do habitat remanescente. 
@@ -130,9 +129,8 @@ Comparamos as simulações nas 3 paisagens hipotéticas par a par. Avaliamos 2 t
 ## taxa U
 Quando há pouca perda de habitat a estimativa da taxa U não difere entre paisagens hipotéticas (Figura A2 2 e 3). Com a redução da cobertura vegetal a estimativa da taxa U pode ser distinta entre paisagens hipotéticas. Em graus de limitação de dispersão mais relaxados pode existir o aumento da taxa U estimada nas paisagem contemporâneas ou sem fragmentação (Figura A2 3). Em geral a taxa U estimada nas paisagens contemporâneas é a maior das três paisagens hipotéticas (Figura A2 3). Em alguns casos a paisagem sem fragmentação per se pode apresentar estimativas superiores (Figura A2 3). Nos graus onde há pouca variação no efeito de escalar (k entre 0.80 e 0.55) também há pouca variação entre paisagens hipotéticas (Figura A2 2 e 3). As diferenças entre paisagens hipotéticas ocorre em geral em graus de limitação de dispersão mais brandos (Figura A2 2 e 3). Em paisagens com baixa proporção de cobertura florestal as estimativas em graus severos de limitação de dispersão também podem ser distintas entre paisagens hipotéticas (Figura A2 2 e 3). 
 
-A distribuição de contrastes apresenta elevada assimetria, com a maioria dos valores próximos do observado em paisagens com pouca perda de habitat e poucos casos distante desta faixa de valores (Figura A2 4). O contraste de fragmentação per se apresentou alguns sítios com valores negativos maiores do que a faixa de valores dos sítios em paisagens com pouca perda de habitat (Figura A2 4). O contraste de área per se apresentou os menores valores em magnitude (Figura A2 4). Os contrastes aumentam com a perda de habitat e com o redução da limitação de dispersão (Figura A2 4). Os GAMMs podem fazer boa predição dos contrastes observados (Apêndice 2, avaliação GAMM 1). O intervalo de predição dos GAMMs informa que o contraste entre paisagens hipotéticas aumenta com a perda de cobertura florestal e redução da limitação de dispersão (Figura \ref{contrastes_pk}). Os intervalos de predição do contraste de contemporaneidade podem apresentar aumento do contraste em graus de limitação de dispersão severos em paisagens com pouca cobertura vegetal (Figura \ref{contrastes_pk}).
-O GAMM que descreve o contraste de fragmentação per se em função do contraste de área per se não apresenta um boa predição dos valores observados (Figura \ref{frag_area_taxaU} e Apêndice 2, avaliação GAMM 2). O intervalo de predição sugere que o contraste de fragmentação per se aumenta com o contraste de área per se, porém, em valores diminutos de área per se há diversos valores elevados de fragmentação per se (Figura \ref{frag_area_taxaU}). 
-
+A distribuição de contrastes apresenta elevada assimetria, com a maioria dos valores próximos do observado em paisagens com pouca perda de habitat e poucos casos distante desta faixa de valores (Figura A2 4). O contraste de fragmentação per se apresentou alguns sítios com valores negativos maiores do que a faixa de valores dos sítios em paisagens com pouca perda de habitat (Figura A2 4). O contraste de área per se apresentou os menores valores em magnitude (Figura A2 4). Os contrastes aumentam com a perda de habitat e com o redução da limitação de dispersão (Figura A2 4). Os GAMMs podem fazer boa predição dos contrastes observados (Apêndice 2, avaliação GAMM 1). O intervalo de predição dos GAMMs informa que o contraste entre paisagens hipotéticas aumenta com a perda de cobertura florestal e redução da limitação de dispersão (Figura \@ref{contrastes_pk}). Os intervalos de predição do contraste de contemporaneidade podem apresentar aumento do contraste em graus de limitação de dispersão severos em paisagens com pouca cobertura vegetal (Figura \@ref{contrastes_pk}).
+O GAMM que descreve o contraste de fragmentação per se em função do contraste de área per se não apresenta um boa predição dos valores observados (Figura \@ref{frag_area_taxaU} e Apêndice 2, avaliação GAMM 2). O intervalo de predição sugere que o contraste de fragmentação per se aumenta com o contraste de área per se, porém, em valores diminutos de área per se há diversos valores elevados de fragmentação per se (Figura \@ref{frag_area_taxaU}). 
 
 ```{r ip contrastes ~ p k,fig.height=8,fig.width=12,fig.cap="\\label{contrastes_pk}ip contrastes ~ p k"}
 df_plot <- df_intPred |> 
@@ -185,7 +183,7 @@ ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
        height = 9)
 ```
 
-__Figura \ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM. 
+__Figura \@ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM. 
 
 
 
@@ -213,11 +211,11 @@ df |>
   theme(plot.caption = element_text(hjust=0))
 ```
 
-__Figura \ref{frag_area_taxaU}__ Intervalo de Predição estimado pelos GAMM. 
+__Figura \@ref{frag_area_taxaU}__ Intervalo de Predição estimado pelos GAMM. 
 
 ## congruência da SAD predita 
 
-Tabela \ref{ts_congCont} (tabela de seleção dos gamm usados para descrever congCont)
+Tabela \@ref{ts_congCont} (tabela de seleção dos gamm usados para descrever congCont)
 
 ```{r ts congCont,cache=TRUE,tab.cap="\\label{ts_congCont}ts congCont"}
 df_tab <- read_csv("./dados/csv/ts_congCont.csv")
@@ -249,35 +247,22 @@ df_tab |>
 
 
 ```{r ip congCont,fig.cap="\\label{ip_congCont}ip congCont"}
-l_p <- dlply(df_congContrastes,"pair",f_plotCongCont)
+load("./dados/Rdata/ip_congCont.Rdata")
 grid.arrange(grobs=l_p,
              layout_matrix=rbind(c(1,2),
                                  c(3,2)))
 ```
 
-__Figura \ref{ip_congCont}__ Congruência da SAD predita entre contrastes: observada e estimada quando se pressupõe ausência de variabilidade entre sítios. 
+__Figura \@ref{ip_congCont}__ Congruência da SAD predita entre contrastes: observada e estimada quando se pressupõe ausência de variabilidade entre sítios. 
 
 # SAD observada e SAD predita entre paisagens hipotéticas
 
 ## Diferença na Riqueza Estimada
 
-__Tabela \ref{ts_diffs}__ Seleção dos LMERs usados para descrever o erro na Riqueza Estimada
+__Tabela \@ref{ts_diffs}__ Seleção dos LMERs usados para descrever o erro na Riqueza Estimada
 
 ```{r ts diffS,tab.cap="\\label{ts_diffs}ts diffS"}
-l_f <- list()
-l_f[[1]] <- diffS ~ land_hyp * k * p_z + (1|SiteCode)
-l_f[[2]] <- diffS ~ land_hyp * p_z + (1|SiteCode)
-l_f[[3]] <- diffS ~ land_hyp * k + (1|SiteCode)
-l_f[[4]] <- diffS ~ k * p_z + (1|SiteCode)
-l_f[[5]] <- diffS ~ land_hyp + (1|SiteCode)
-l_f[[6]] <- diffS ~ k + (1|SiteCode)
-l_f[[7]] <- diffS ~ p_z + (1|SiteCode)
-l_f[[8]] <- diffS ~ 1 + (1|SiteCode)
-l_md <- llply(l_f,\(f) lmer(f,data=df_md))
-names(l_md) <- llply(l_md,f_nameModel)
-df_seldiffs<- AICctab(l_md,weights=T) |> as.data.frame()
-df_seldiffs$modelo <- row.names(df_seldiffs)
-md_diffs <- l_md[[df_seldiffs$modelo[1]]]
+load("./dados/Rdata/ts_diffs_E_ip_diffS")
 df_seldiffs |> 
   gt()
 ```
@@ -285,15 +270,14 @@ df_seldiffs |>
 O modelo mais plausível é aquele que descreve o erro na estimativa da riqueza por uma interação entre o tipo da paisagem hipotética e a proporção de cobertura vegetal na paisagem.
 
 ```{r diffS md + lik ip,fig.cap="\\label{ip_diffS}ip diffS"}
-df_newpred <- read_csv("./dados/csv/df_ip_diffS.csv")
-f_diffSplotPI(md_diffs,df_newpred) + theme_bw()
+p
 ```
 
-__Figura \ref{ip_diffS}__ Intervalo de predição diffS
+__Figura \@ref{ip_diffS}__ Intervalo de predição diffS
 
 ## Pr(Cong) ~  landscape hypothesis
 
-__tabela \ref{ts_prcong}__ GAMMs usados para descreever a probabilidade de congruência com o observado em cada paisagem hipotética 
+__tabela \@ref{ts_prcong}__ GAMMs usados para descreever a probabilidade de congruência com o observado em cada paisagem hipotética 
 
 ```{r ts  Pr(Cong),fig.cap="\\label{ts_prcong}ts_prcong"}
 df_tab <- read_csv("./dados/csv/ts_PrCong_LandHyp_GAMMs.csv")
@@ -305,4 +289,3 @@ df_tab |>
 
   
 ```
-
