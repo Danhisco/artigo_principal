@@ -335,7 +335,27 @@ md_frag_area <- gam(frag_z ~
                       s(area_z,SiteCode,bs="fs",xt=list(bs="tp")) + 
                       s(SiteCode,bs="re"),
                       data=df,method = "REML")
-save(md_frag_area,file="dados/Rdata/md_frag_area.Rdata")
+# save(md_frag_area,file="dados/Rdata/md_frag_area.Rdata")
+#
+# load("./dados/Rdata/md_frag_area.Rdata")
+save(df,df_pred_newdata,"./dados/Rdata/frag_area_taxaU.Rdata")
+# dados
+df <- df_congContrastes |> 
+  filter(pair == "cont.non_frag") |> 
+  rename(frag_z=contraste_z) |> 
+  mutate(area_z = df_congContrastes |> 
+           filter(pair == "non_frag.ideal") |> 
+           pull(contraste_z),
+         SiteCode = factor(SiteCode))
+df_newpred <- data.frame(area_z = seq(min(df$area_z),max(df$area_z),length.out=200)) |> 
+  mutate(SiteCode = "SPigua1")
+df_pred_newdata <- f_PredInt.GAMM(data=df_newpred,
+                                  gamm=md_frag_area,
+                                  v_exclude=c("s(area_z,SiteCode)","s(SiteCode)"))
+df$predito <- predict(md_frag_area)
+# gráfico
+# v_devexp <- summary(md_frag_area)$dev.exp
+save(df,df_pred_newdata,"./dados/Rdata/frag_area_taxaU.Rdata")
 ```
 
 
@@ -707,12 +727,6 @@ f_typetopair <- \(df,dfmd=FALSE){
 }
 l_df[[2]] <- l_df[[1]] |> f_typetopair()
 names(l_df) <- c("PrCong","logOR")
-l_df[["logOR"]] %>% 
-  filter(k_factor=="0.05") %>% 
-  ggplot(aes(x=p_z,y=Q_0.5,color=pair)) +
-  geom_point()
-
-
 # graficos diagnostico: observado e predito
 f_ggplot2 <- \(v_title,logito=T){
   v_cols <- rep("darkblue",5)

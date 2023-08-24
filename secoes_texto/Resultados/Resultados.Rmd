@@ -190,22 +190,7 @@ __Figura \ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM.
 
 
 ```{r frag ~ area Taxa U, fig.cap="\\label{frag_area_taxaU}frag ~ area Taxa U"}
-# dados
-df <- df_congContrastes |> 
-  filter(pair == "cont.non_frag") |> 
-  rename(frag_z=contraste_z) |> 
-  mutate(area_z = df_congContrastes |> 
-           filter(pair == "non_frag.ideal") |> 
-           pull(contraste_z),
-         SiteCode = factor(SiteCode))
-df_newpred <- data.frame(area_z = seq(min(df$area_z),max(df$area_z),length.out=200)) |> 
-  mutate(SiteCode = "SPigua1")
-df_pred_newdata <- f_PredInt.GAMM(data=df_newpred,
-                                  gamm=md_frag_area,
-                                  v_exclude=c("s(area_z,SiteCode)","s(SiteCode)"))
-df$predito <- predict(md_frag_area)
-# gráfico
-v_devexp <- summary(md_frag_area)$dev.exp
+load("./dados/Rdata/frag_area_taxaU.Rdata")
 df |> 
   ggplot(aes(x=area_z,y=frag_z)) +
   geom_point(alpha=0.2) +
