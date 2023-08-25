@@ -607,7 +607,7 @@ for(pair in names(l_md_logOR)){
 # grid.arrange(grobs=l_p,ncol=3)
 ```
 
-## Pr(Cong)_contemporaneo:observado
+## Pr(Cong)_predito:empirico
 
 ```{r dados e GE Pr(Cong)_contemporaneo:observado}
 f_ggplot <- \(x_var){
@@ -627,7 +627,6 @@ p <- grid.arrange(grobs=l_p,ncol=1)
 ggsave("./apendices/analise_dados/figuras/GE_Pr(Cong)_LandHyp.png",
        plot = p,width = 18, height = 60, units = "cm")
 ```
-
 
 ```{r PrCong ~ land hyp GAMMs}
 l_f <- list()
@@ -822,6 +821,18 @@ f_plot_logOR <- \(level_pair){
 }
 ```
 
+__Reunião de 24 de Agosto 2023__
+
+Uma diretriz é desenvolver modelos que incluam a variável categórica land_hyp, como fiz nos modelos tipo glmer em que k foi fator (também apresentaram ajuste ruim). Penso em desenvolver um gamm com spline individual de k variando por land_hyp e o spline aleatório de k variando por land_hyp também.
+
+```{r}
+l_f <- list()
+l_f[[1]] <- "cbind(nCong,100-nCong) ~ land_hyp + s(k_z,by=land_hyp,bs='cr',k=3) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=3) + s(SiteCode,bs='re')"
+f_gam <- \(f) gam(formula = as.formula(f),data=df_md,family="binomial",method="REML")
+l_md <- lapply(l_f, f_gam)
+save(l_md,file="./dados/Rdata/PrCong_analise3_k_land_hyp.Rdata")
+# md <- glmer(cbind(nCong,100-nCong) ~ land_hyp * k_factor + )
+```
 
 
 # Processo Gerador dos dados
