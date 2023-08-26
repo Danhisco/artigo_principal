@@ -828,10 +828,30 @@ Uma diretriz é desenvolver modelos que incluam a variável categórica land_hyp
 ```{r}
 l_f <- list()
 l_f[[1]] <- "cbind(nCong,100-nCong) ~ land_hyp + s(k_z,by=land_hyp,bs='cr',k=3) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=3) + s(SiteCode,bs='re')"
-f_gam <- \(f) gam(formula = as.formula(f),data=df_md,family="binomial",method="REML")
-l_md <- lapply(l_f, f_gam)
+l_f[[2]] <- "cbind(nCong,100-nCong) ~ land_hyp * k + s(land_hyp,SiteCode,bs='re') + s(SiteCode,bs='re')"
+l_f[[3]] <- "cbind(nCong,100-nCong) ~ land_hyp + s(land_hyp,SiteCode,bs='re') + s(SiteCode,bs='re')"
+l_f[[4]] <- "cbind(nCong,100-nCong) ~ 1 + s(SiteCode,bs='re')"
+f_gam <- \(f) gam(formula = as.formula(f),data=mutate(df_md,k=factor(round(k,2))),family="binomial",method="REML")
+l_md <- lapply(l_f[-1], f_gam)
+# l_md[[3]] <- f_gam(l_f[[3]])
+# l_md2 <- l_md
+# load("./dados/Rdata/PrCong_analise3_k_land_hyp.Rdata")
+# l_md <- c(l_md,l_md2)
+names(l_md) <- c("~f(land hyp * k_z|Site)","~f(k_factor,land hyp|Site)","~f(land hyp|Site)","~f(1|Site)")
 save(l_md,file="./dados/Rdata/PrCong_analise3_k_land_hyp.Rdata")
-# md <- glmer(cbind(nCong,100-nCong) ~ land_hyp * k_factor + )
+```
+
+```{r}
+load("./dados/Rdata/PrCong_analise3_k_land_hyp.Rdata")
+df_tab <- AICctab(l_md,weights=T) %>% as.data.frame()
+md_prcong <- l_md[[rownames(df_tab[1,])]]
+l_df <- list()
+l_df[[1]] <- f_calcPI(md_prcong,link_scale = T,land_kz=T)
+l_df[[2]] <- l_df[[1]] %>% mutate(across(starts_with("Q_"),\(x) f_invlink(x) * sum(gamm$model[1,1])))
+names(l_df) <- c("link_s","resp_s")
+l_df[[2]] %>% 
+  ggplot(aes(x=k_z,))
+write_csv(l_df[[1]],file="./dados/csv/")
 ```
 
 

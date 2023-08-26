@@ -81,6 +81,7 @@ f_calcPI <- \(gamm,
               length_pred = 150,
               n.posteriori_samples = 10000,
               prcong_glmer=FALSE,
+              land_kz=FALSE,
               link_scale=FALSE){
     # take the GAMM objects:
     f_invlink <- gamm$family$linkinv
@@ -109,6 +110,15 @@ f_calcPI <- \(gamm,
         mutate(SiteCode = site.posteriori)
       names(df_newpred)[1:3] <- c(x1_var,x2_var,x3_var)
       x_var <- x1_var
+    }else if(land_kz){
+      y_var <- names(df_obs)[1]
+      x1_var <- "land_hyp"
+      x2_var <- "k_z"
+      df_newpred <- expand.grid(x1 = levels(df_obs[[x1_var]]),
+                                x2 = seq(min(df_obs[,x2_var]),max(df_obs[,x2_var]),length.out=length_pred)) %>% 
+        mutate(SiteCode = site.posteriori)
+      names(df_newpred)[1:2] <- c(x1_var,x2_var)
+      x_var <- x2_var
     }else{
       y_var <- names(df_obs)[1]
       x1_var <- names(df_obs)[2]
