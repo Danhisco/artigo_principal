@@ -825,33 +825,52 @@ __Reunião de 24 de Agosto 2023__
 
 Uma diretriz é desenvolver modelos que incluam a variável categórica land_hyp, como fiz nos modelos tipo glmer em que k foi fator (também apresentaram ajuste ruim). Penso em desenvolver um gamm com spline individual de k variando por land_hyp e o spline aleatório de k variando por land_hyp também.
 
+
+
 ```{r}
-l_f <- list()
-l_f[[1]] <- "cbind(nCong,100-nCong) ~ land_hyp + s(k_z,by=land_hyp,bs='cr',k=3) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=3) + s(SiteCode,bs='re')"
-l_f[[2]] <- "cbind(nCong,100-nCong) ~ land_hyp * k + s(land_hyp,SiteCode,bs='re') + s(SiteCode,bs='re')"
-l_f[[3]] <- "cbind(nCong,100-nCong) ~ land_hyp + s(land_hyp,SiteCode,bs='re') + s(SiteCode,bs='re')"
-l_f[[4]] <- "cbind(nCong,100-nCong) ~ 1 + s(SiteCode,bs='re')"
-f_gam <- \(f) gam(formula = as.formula(f),data=mutate(df_md,k=factor(round(k,2))),family="binomial",method="REML")
-l_md <- lapply(l_f[-1], f_gam)
-# l_md[[3]] <- f_gam(l_f[[3]])
-# l_md2 <- l_md
-# load("./dados/Rdata/PrCong_analise3_k_land_hyp.Rdata")
-# l_md <- c(l_md,l_md2)
-names(l_md) <- c("~f(land hyp * k_z|Site)","~f(k_factor,land hyp|Site)","~f(land hyp|Site)","~f(1|Site)")
-save(l_md,file="./dados/Rdata/PrCong_analise3_k_land_hyp.Rdata")
+f0 <- "cbind(nCong,100-nCong) ~ land_hyp + s(k_z,by=land_hyp,bs='cr',k=3) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=3) + s(land_hyp,SiteCode,bs='re')"
+l_f <- as.list(paste0("land_hyp + s(",names(select(df_md,contempU_z:p_z)),",by=land_hyp,bs='cr',k=3) + "))
+l_f[length(l_f)+1] <- "land_hyp + s(areaU_z,by=land_hyp,bs='cr',k=3) + s(fragU_z,by=land_hyp,bs='cr',k=3) + "
+l_f[length(l_f)+1] <- gsub("U_z","SAD_z",l_f[length(l_f)])
+l_f <- sapply(l_f, \(s) str_replace(f0,"land_hyp\\s\\+\\s",s))
+l_f[length(l_f)+1] <- f0
+names(l_f) <- c(paste0("f(",gsub("_z","",names(select(df_md,contempU_z:p_z))),",k|Site)"),
+                "f(areaU,fragU,k|Site)",
+                "f(areaSAD,fragSAD,k|Site)",
+                "f(k|Site)")
+f_gam <- \(f) gam(formula = as.formula(f),data=df_md,family="binomial",method="REML")
+l_md <- lapply(l_f, f_gam)
+names(l_md) <- names(l_f)
+save(l_md,file="./dados/Rdata/PrCong_analise4.Rdata")
 ```
 
 ```{r}
-load("./dados/Rdata/PrCong_analise3_k_land_hyp.Rdata")
-df_tab <- AICctab(l_md,weights=T) %>% as.data.frame()
-md_prcong <- l_md[[rownames(df_tab[1,])]]
+f_validaGAMM(md_name="~f(U(area,frag),k|Site)",l_md = md_prcong,size=1)
+p_plot <- simulateResiduals(md_prcong,n = 1000)
+plot(p_plot)
+testOutliers(md_prcong)
+df_tab %>% 
+  gt::gt()
+```
+
+
+```{r}
+load("./dados/Rdata/PrCong_analise4.Rdata")
+df_tab <- f_TabSelGAMM(l_md)
+write_csv(df_tab,file="./dados/csv/df_ts_prconganalise4.csv")
+md_prcong <- l_md[[df_tab[1,"modelo"]]]
 l_df <- list()
-l_df[[1]] <- f_calcPI(md_prcong,link_scale = T,land_kz=T)
+l_df[[1]] <- f_calcPI(md_prcong,link_scale = T,analise4=T)
+write_csv(l_df[[1]],file="./dados/csv/df_ip_prcong_kz_landhyp.csv")
 l_df[[2]] <- l_df[[1]] %>% mutate(across(starts_with("Q_"),\(x) f_invlink(x) * sum(gamm$model[1,1])))
-names(l_df) <- c("link_s","resp_s")
-l_df[[2]] %>% 
-  ggplot(aes(x=k_z,))
-write_csv(l_df[[1]],file="./dados/csv/")
+names(l_df) <- c("link_scale","resp_scale")
+#
+l_md_klandhyp <- l_md
+load("./dados/Rdata/l_md_Cong_landhyp.Rdata")
+l_md <- c(l_md_klandhyp,l_md_Cong_landhyp)
+# l_md %>% length()
+names(l_md) <- gsub("\\~","",names(l_md))
+AICctab(l_md,weights=T)
 ```
 
 

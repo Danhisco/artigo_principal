@@ -82,7 +82,8 @@ f_calcPI <- \(gamm,
               n.posteriori_samples = 10000,
               prcong_glmer=FALSE,
               land_kz=FALSE,
-              link_scale=FALSE){
+              link_scale=FALSE,
+              analise4=FALSE){
     # take the GAMM objects:
     f_invlink <- gamm$family$linkinv
     if(gamm$family$family=="binomial"){
@@ -99,6 +100,8 @@ f_calcPI <- \(gamm,
       df_newpred <- data.frame(x = seq(min(df_obs[,x_var]),max(df_obs[,x_var]),length.out=length_pred)) |> 
         mutate(SiteCode = site.posteriori)
       names(df_newpred)[1] <- x_var  
+    }else if(analise4){
+      
     }else if(prcong_glmer){
       y_var <- names(df_obs)[1]
       x1_var <- "p_z"
