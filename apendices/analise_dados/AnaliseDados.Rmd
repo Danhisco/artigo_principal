@@ -873,6 +873,12 @@ names(l_md) <- gsub("\\~","",names(l_md))
 AICctab(l_md,weights=T)
 ```
 
+```{r}
+l_f <- list()
+l_f[[1]] <- "areaU_z ~ s(k_z,bs='cr',k=3) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=3) + s(SiteCode,bs='re'"
+l_f[[2]] <- "fragU_z ~ s(areaU_z,bs='cr',k=3) + s(k_z,bs='cr',k=3) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=3) + s(SiteCode,bs='re'"
+```
+
 
 # Processo Gerador dos dados
 
