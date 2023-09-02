@@ -80,10 +80,8 @@ f_calcPI <- \(gamm,
               site.posteriori ="SPigua1",
               length_pred = 150,
               n.posteriori_samples = 10000,
-              prcong_glmer=FALSE,
-              land_kz=FALSE,
-              link_scale=FALSE,
-              analise4=FALSE){
+              ad = c("prcong_glmer","land_kz","ad4_camada1","ad4_camada2","padrao"),
+              link_scale=FALSE){
     # take the GAMM objects:
     f_invlink <- gamm$family$linkinv
     if(gamm$family$family=="binomial"){
@@ -100,9 +98,15 @@ f_calcPI <- \(gamm,
       df_newpred <- data.frame(x = seq(min(df_obs[,x_var]),max(df_obs[,x_var]),length.out=length_pred)) |> 
         mutate(SiteCode = site.posteriori)
       names(df_newpred)[1] <- x_var  
-    }else if(analise4){
-      
-    }else if(prcong_glmer){
+    }else if(ad=="ad4_camada1"){
+      y_var <- names(df_obs)[1]
+      x_var <- names(df_obs)[2]
+      df_newpred <- data.frame(x = seq(min(df_obs[,x_var]),max(df_obs[,x_var]),length.out=length_pred)) |> 
+        mutate(SiteCode = site.posteriori)
+      names(df_newpred)[1] <- x_var  
+    }else if(ad=="ad4_camada2"){
+      stop()
+    }else if(ad=="prcong_glmer"){
       y_var <- names(df_obs)[1]
       x1_var <- "p_z"
       x2_var <- "k_factor"
@@ -113,7 +117,7 @@ f_calcPI <- \(gamm,
         mutate(SiteCode = site.posteriori)
       names(df_newpred)[1:3] <- c(x1_var,x2_var,x3_var)
       x_var <- x1_var
-    }else if(land_kz){
+    }else if(ad=="land_kz"){
       y_var <- names(df_obs)[1]
       x1_var <- "land_hyp"
       x2_var <- "k_z"
@@ -132,7 +136,7 @@ f_calcPI <- \(gamm,
       names(df_newpred)[1:2] <- c(x1_var,x2_var)
       x_var <- "k_z"
     }
-    if(prcong_glmer){
+    if(ad=="prcong_glmer"){
       v_toexclude <- "s(SiteCode)"
     }else{
       v_toexclude <- c(paste0("s(",x_var,",SiteCode)"),"s(SiteCode)")

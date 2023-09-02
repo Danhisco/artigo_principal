@@ -899,6 +899,16 @@ f_validaGAMM(md_name = "areaU ~ f(k|Site)",l_md = l_md[["areaU ~ f(k|Site)"]],si
 p_plot <- simulateResiduals(l_md[["areaU ~ f(k|Site)"]],n = 1000)
 plot(p_plot)
 testOutliers(l_md[["areaU ~ f(k|Site)"]])
+#
+l_md_newdata <- l_md[names(l_md)[c(1,3)]]
+```
+
+```{r}
+f_newdata_ad4 <- \(l_md_newdata){
+  #1a camada: k -> areaU
+  df1 <- f_calcPI(l_md_newdata[[1]],ad = "ad4_camada1",link_scale = FALSE)
+  
+}
 ```
 
 
