@@ -875,8 +875,30 @@ AICctab(l_md,weights=T)
 
 ```{r}
 l_f <- list()
-l_f[[1]] <- "areaU_z ~ s(k_z,bs='cr',k=3) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=3) + s(SiteCode,bs='re'"
-l_f[[2]] <- "fragU_z ~ s(areaU_z,bs='cr',k=3) + s(k_z,bs='cr',k=3) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=3) + s(SiteCode,bs='re'"
+l_f[[1]] <- "areaU_z ~ s(k_z,bs='cr',k=3) + s(k_z,SiteCode,bs='fs',k=3) + s(SiteCode,bs='re')"
+l_f[[2]] <- sub("areaU_z","fragU_z",l_f[[1]])
+l_f[[3]] <- sub("~ ","~ s(areaU_z,bs='cr',k=3) + ",l_f[[2]])
+f_gam <- \(f) gam(as.formula(f),data = filter(df_md,land_hyp=="cont"),method = "REML")
+registerDoMC(2)
+l_md <- llply(l_f,f_gam,.parallel = T)
+names(l_md) <- c("areaU ~ f(k|Site)","fragU ~ f(k|Site)","fragU ~ f(areaU,k|Site)")
+save(l_md,file="./dados/Rdata/l_md_p_newdatapred_analise4.Rdata")
+```
+
+```{r}
+load("./dados/Rdata/l_md_p_newdatapred_analise4.Rdata")
+summary(l_md[[1]])
+l_aictab <- l_md[-1]
+AICctab(l_aictab,weights=T)
+f_validaGAMM(md_name = "fragU ~ f(areaU,k|Site)",l_md = l_md[["fragU ~ f(areaU,k|Site)"]],size=1)
+p_plot <- simulateResiduals(l_md[["fragU ~ f(areaU,k|Site)"]],n = 1000)
+plot(p_plot)
+testOutliers(l_md[["fragU ~ f(areaU,k|Site)"]])
+# 
+f_validaGAMM(md_name = "areaU ~ f(k|Site)",l_md = l_md[["areaU ~ f(k|Site)"]],size=1)
+p_plot <- simulateResiduals(l_md[["areaU ~ f(k|Site)"]],n = 1000)
+plot(p_plot)
+testOutliers(l_md[["areaU ~ f(k|Site)"]])
 ```
 
 
