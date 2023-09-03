@@ -909,37 +909,8 @@ save(l_md_quant_ad4,file = "./dados/Rdata/l_md_quant_ad4.Rdata")
 ```{r}
 library(qgam)
 load("./dados/Rdata/l_md_quant_ad4.Rdata")
-f_newdata_ad4 <- \(l_md_newdata,quantiles=c(0.05,0.95)){
-  # funções
-  f_predict <- \(mdq){
-    df[[vname]] <- predict(mdq,type="response",
-                          newdata=df,
-                          exclude = c("s(k_z,SiteCode)","s(SiteCode)"))
-    relocate(df, any_of(vname)) }
-  f_newdf <- \(d){
-    d <- d %>% 
-      mutate(diff = Q95-Q05,maxsize = round((150*diff)/max(diff),digits = 0)) %>% 
-      select(-diff)
-    f_seq <- \(X){
-      areaU_z <- do.call("seq", as.list(c(from=X$Q05,to=X$Q95,length.out=X$maxsize)))
-      cbind(select(X,k_z,SiteCode),areaU_z)
-      }
-    adply(d,1,f_seq) %>% 
-      select(k_z:areaU_z)}
-  # 1a camada areaU_z ~ f(k)
-  md <- l_md_newdata[[names(l_md_newdata) %>% str_which(.,"areaU ~")]]
-  df <- data.frame(k_z = do.call("seq", as.list(c(range(md$model$k_z),length.out=150))),
-                   SiteCode = "SPigua1")
-  vname="areaU_z"
-  df_newdata <- ddply(data.frame(q = c("Q05","Q95"),quantiles),
-                      "q",\(d) qgam::qdo(md,d$quantiles,f_predict)) %>% 
-    pivot_wider(names_from="q",values_from="areaU_z") %>% 
-    f_newdf()
-  # 2a camada: frag ~ f(area,k)
-  md <- l_md_newdata[[names(l_md_newdata) %>% str_which(.,"fragU ~")]]
-  vname="fragU_z"
-  
-}
+df_newdata <- f_newdata_ad4(l_md_quant_ad4)
+write_csv(df_newdata,file="./dados/csv/df_newdata_ad4.csv")
 ```
 
 

@@ -467,3 +467,56 @@ d_f_l_mdGAMM_FiguraFinal_1dGAMM <- \(l_md){
   }
   return(l_p)
 }
+###################
+# criação de novo conjunto de dados para predição da análise 4
+##
+#
+# contexto:
+# - os contrastes apresentam elevada assimétria: são diminutos em k elevado, e podem ser elevados em k baixos
+# - avaliando os gams para descrever os valores médios conclui que:
+# -- é plausível descrever fragU por um modelo que considera k e areaU, em comparação a um modelo que considera apenas k
+# - k é a preditora progenitora das outras: se k -> 100%, então não há influência da paisagem na dinâmica local
+# pressupostos:
+# areaU ~ k;  fragU ~ f(areaU,k)
+# objetivo:
+# criar um conjunto de dados que seja coerentes com a amplitude de combinações das 3 preditoras contínuas
+# 
+f_newdata_ad4 <- \(l_md_newdata,quantiles=c(0.05,0.95)){
+  # funções
+  f_predict <- \(mdq){
+    df[[vname]] <- predict(mdq,type="response",
+                           newdata=df,
+                           exclude = c("s(k_z,SiteCode)","s(SiteCode)"))
+    relocate(df, any_of(vname)) 
+  }
+  f_newdf <- \(d){
+    d <- d %>% 
+      mutate(diff = Q95-Q05,maxsize = round((150*diff)/max(diff),digits = 0)) %>% 
+      select(-diff)
+    f_seq <- \(X){
+      v <- do.call("seq", as.list(c(from=X$Q05,to=X$Q95,length.out=X$maxsize)))
+      X <- cbind(X,v)
+      names(X)[ncol(X)] <- vname
+      relocate(X, any_of(vname)) }
+    adply(d,1,f_seq) %>% 
+      select(-starts_with("Q"),-maxsize)
+  }
+  f_ddply <- \(){
+    ddply(data.frame(q = c("Q05","Q95"),quantiles),
+          "q",\(d) qgam::qdo(md,d$quantiles,f_predict)) %>% 
+      pivot_wider(names_from="q",values_from=vname) %>% 
+      f_newdf()
+  }
+  f_l <- \(s) l_md_newdata[[names(l_md_newdata) %>% str_which(.,sub("_z"," ~",s))]] 
+  # 1a camada areaU_z ~ f(k)
+  vname="areaU_z"
+  md <- f_l(vname)
+  df <- data.frame(k_z = do.call("seq", as.list(c(range(md$model$k_z),length.out=150))),
+                   SiteCode = "SPigua1")
+  df <- f_ddply()
+  # 2a camada: frag ~ f(area,k)
+  vname="fragU_z"
+  md <- f_l(vname)
+  f_ddply()
+}
+
