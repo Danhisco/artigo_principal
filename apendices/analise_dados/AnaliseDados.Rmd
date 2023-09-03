@@ -889,7 +889,8 @@ save(l_md,file="./dados/Rdata/l_md_p_newdatapred_analise4.Rdata")
 load("./dados/Rdata/l_md_p_newdatapred_analise4.Rdata")
 summary(l_md[[1]])
 l_aictab <- l_md[-1]
-AICctab(l_aictab,weights=T)
+df_tab <- f_TabSelGAMM(l_aictab)
+write_csv(df_tab,file="./dados/csv/ts_ad4_camada2.csv")
 f_validaGAMM(md_name = "fragU ~ f(areaU,k|Site)",l_md = l_md[["fragU ~ f(areaU,k|Site)"]],size=1)
 p_plot <- simulateResiduals(l_md[["fragU ~ f(areaU,k|Site)"]],n = 1000)
 plot(p_plot)
@@ -901,12 +902,42 @@ plot(p_plot)
 testOutliers(l_md[["areaU ~ f(k|Site)"]])
 #
 l_md_newdata <- l_md[names(l_md)[c(1,3)]]
+l_md_quant_ad4 <- llply(l_md_newdata,\(md) mqgam(form=md$formula,data=md$model,qu=c(0.05,0.95)))
+save(l_md_quant_ad4,file = "./dados/Rdata/l_md_quant_ad4.Rdata")
 ```
 
 ```{r}
-f_newdata_ad4 <- \(l_md_newdata){
-  #1a camada: k -> areaU
-  df1 <- f_calcPI(l_md_newdata[[1]],ad = "ad4_camada1",link_scale = FALSE)
+library(qgam)
+load("./dados/Rdata/l_md_quant_ad4.Rdata")
+f_newdata_ad4 <- \(l_md_newdata,quantiles=c(0.05,0.95)){
+  # funções
+  f_predict <- \(mdq){
+    df[[vname]] <- predict(mdq,type="response",
+                          newdata=df,
+                          exclude = c("s(k_z,SiteCode)","s(SiteCode)"))
+    relocate(df, any_of(vname)) }
+  f_newdf <- \(d){
+    d <- d %>% 
+      mutate(diff = Q95-Q05,maxsize = round((150*diff)/max(diff),digits = 0)) %>% 
+      select(-diff)
+    f_seq <- \(X){
+      areaU_z <- do.call("seq", as.list(c(from=X$Q05,to=X$Q95,length.out=X$maxsize)))
+      cbind(select(X,k_z,SiteCode),areaU_z)
+      }
+    adply(d,1,f_seq) %>% 
+      select(k_z:areaU_z)}
+  # 1a camada areaU_z ~ f(k)
+  md <- l_md_newdata[[names(l_md_newdata) %>% str_which(.,"areaU ~")]]
+  df <- data.frame(k_z = do.call("seq", as.list(c(range(md$model$k_z),length.out=150))),
+                   SiteCode = "SPigua1")
+  vname="areaU_z"
+  df_newdata <- ddply(data.frame(q = c("Q05","Q95"),quantiles),
+                      "q",\(d) qgam::qdo(md,d$quantiles,f_predict)) %>% 
+    pivot_wider(names_from="q",values_from="areaU_z") %>% 
+    f_newdf()
+  # 2a camada: frag ~ f(area,k)
+  md <- l_md_newdata[[names(l_md_newdata) %>% str_which(.,"fragU ~")]]
+  vname="fragU_z"
   
 }
 ```
