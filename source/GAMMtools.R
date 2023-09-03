@@ -80,7 +80,7 @@ f_calcPI <- \(gamm,
               site.posteriori ="SPigua1",
               length_pred = 150,
               n.posteriori_samples = 10000,
-              ad = c("prcong_glmer","land_kz","ad4_camada1","ad4_camada2","padrao"),
+              ad = c("prcong_glmer","land_kz","ad4","padrao"),
               link_scale=FALSE){
     # take the GAMM objects:
     f_invlink <- gamm$family$linkinv

@@ -825,9 +825,16 @@ __Reunião de 24 de Agosto 2023__
 
 Uma diretriz é desenvolver modelos que incluam a variável categórica land_hyp, como fiz nos modelos tipo glmer em que k foi fator (também apresentaram ajuste ruim). Penso em desenvolver um gamm com spline individual de k variando por land_hyp e o spline aleatório de k variando por land_hyp também.
 
+Análise 4 - proposta:
+
+__Contexto__
+
+Os contrastes de U (area e frag.) apresentam elevada assimetria, são pequenos em k elevado e podem ser elevados em k pequenos.
+Entendo que é adequado simular o conjunto de dados para predição que explore combinações representativas da relação entre preditoras (k, area e frag.).
+Busco descrever como o intervalo quantílico varia com
 
 
-```{r}
+```{r análise 4,echo=T,eval=F}
 f0 <- "cbind(nCong,100-nCong) ~ land_hyp + s(k_z,by=land_hyp,bs='cr',k=3) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=3) + s(land_hyp,SiteCode,bs='re')"
 l_f <- as.list(paste0("land_hyp + s(",names(select(df_md,contempU_z:p_z)),",by=land_hyp,bs='cr',k=3) + "))
 l_f[length(l_f)+1] <- "land_hyp + s(areaU_z,by=land_hyp,bs='cr',k=3) + s(fragU_z,by=land_hyp,bs='cr',k=3) + "
@@ -845,24 +852,22 @@ save(l_md,file="./dados/Rdata/PrCong_analise4.Rdata")
 ```
 
 ```{r}
-f_validaGAMM(md_name="~f(U(area,frag),k|Site)",l_md = md_prcong,size=1)
-p_plot <- simulateResiduals(md_prcong,n = 1000)
-plot(p_plot)
-testOutliers(md_prcong)
-df_tab %>% 
-  gt::gt()
-```
-
-
-```{r}
 load("./dados/Rdata/PrCong_analise4.Rdata")
-df_tab <- f_TabSelGAMM(l_md)
-write_csv(df_tab,file="./dados/csv/df_ts_prconganalise4.csv")
+if(file.exists("./dados/csv/df_ts_prconganalise4.csv")){
+  df_tab <- read_csv("./dados/csv/df_ts_prconganalise4.csv") %>% as.data.frame()
+}else{
+  df_tab <- f_TabSelGAMM(l_md)
+  write_csv(df_tab,file="./dados/csv/df_ts_prconganalise4.csv")
+}
 md_prcong <- l_md[[df_tab[1,"modelo"]]]
 l_df <- list()
-l_df[[1]] <- f_calcPI(md_prcong,link_scale = T,analise4=T)
-write_csv(l_df[[1]],file="./dados/csv/df_ip_prcong_kz_landhyp.csv")
-l_df[[2]] <- l_df[[1]] %>% mutate(across(starts_with("Q_"),\(x) f_invlink(x) * sum(gamm$model[1,1])))
+if(file.exists("./dados/csv/df_ip_prcong_kz_landhyp.csv")){
+  l_df[[1]] <- read_csv("./dados/csv/df_ip_prcong_kz_landhyp.csv") 
+}else{
+  l_df[[1]] <- f_calcPI(md_prcong,link_scale = T,analise4=T)
+  write_csv(l_df[[1]],file="./dados/csv/df_ip_prcong_kz_landhyp.csv")
+}
+l_df[[2]] <- l_df[[1]] %>% mutate(across(starts_with("Q_"),\(x) f_invlink(x) * sum(md_prcong$model[1,1])))
 names(l_df) <- c("link_scale","resp_scale")
 #
 l_md_klandhyp <- l_md
@@ -872,6 +877,17 @@ l_md <- c(l_md_klandhyp,l_md_Cong_landhyp)
 names(l_md) <- gsub("\\~","",names(l_md))
 AICctab(l_md,weights=T)
 ```
+
+
+```{r}
+f_validaGAMM(md_name="~f(U(area,frag),k|Site)",l_md = md_prcong,size=1)
+p_plot <- simulateResiduals(md_prcong,n = 1000)
+plot(p_plot)
+testOutliers(md_prcong)
+df_tab %>% 
+  gt::gt()
+```
+
 
 ```{r}
 l_f <- list()
@@ -911,6 +927,10 @@ library(qgam)
 load("./dados/Rdata/l_md_quant_ad4.Rdata")
 df_newdata <- f_newdata_ad4(l_md_quant_ad4)
 write_csv(df_newdata,file="./dados/csv/df_newdata_ad4.csv")
+```
+
+```{r}
+
 ```
 
 
