@@ -889,15 +889,17 @@ df_tab %>%
 ```
 
 
-```{r}
+```{r modelos para construir o conjunto de dados}
 l_f <- list()
 l_f[[1]] <- "areaU_z ~ s(k_z,bs='cr',k=3) + s(k_z,SiteCode,bs='fs',k=3) + s(SiteCode,bs='re')"
 l_f[[2]] <- sub("areaU_z","fragU_z",l_f[[1]])
 l_f[[3]] <- sub("~ ","~ s(areaU_z,bs='cr',k=3) + ",l_f[[2]])
+l_f[[4]] <- "fragU_z ~ s(areaU_z,bs='cr',k=3) + s(SiteCode,bs='re')"
 f_gam <- \(f) gam(as.formula(f),data = filter(df_md,land_hyp=="cont"),method = "REML")
 registerDoMC(2)
 l_md <- llply(l_f,f_gam,.parallel = T)
-names(l_md) <- c("areaU ~ f(k|Site)","fragU ~ f(k|Site)","fragU ~ f(areaU,k|Site)")
+names(l_md) <- c("areaU ~ f(k|Site)","fragU ~ f(k|Site)","fragU ~ f(areaU,k|Site)",
+                 "fragU ~ f(areaU,1|Site)")
 save(l_md,file="./dados/Rdata/l_md_p_newdatapred_analise4.Rdata")
 ```
 
@@ -905,6 +907,8 @@ save(l_md,file="./dados/Rdata/l_md_p_newdatapred_analise4.Rdata")
 load("./dados/Rdata/l_md_p_newdatapred_analise4.Rdata")
 summary(l_md[[1]])
 l_aictab <- l_md[-1]
+# load("./dados/Rdata/md_frag_area.Rdata")
+# l_aictab[[3]] <- 
 df_tab <- f_TabSelGAMM(l_aictab)
 write_csv(df_tab,file="./dados/csv/ts_ad4_camada2.csv")
 f_validaGAMM(md_name = "fragU ~ f(areaU,k|Site)",l_md = l_md[["fragU ~ f(areaU,k|Site)"]],size=1)
@@ -940,6 +944,9 @@ df_nd_k <- df_nd %>% f_proxk()
 df_nd_k %>% ggplot(aes(x=areaU_z,y=fragU_z)) +
   geom_point() +
   facet_wrap(~k_z,ncol=5)
+#
+
+
 ```
 
 
