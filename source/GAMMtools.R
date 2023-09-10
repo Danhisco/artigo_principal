@@ -81,6 +81,7 @@ f_calcPI <- \(gamm,
               length_pred = 150,
               n.posteriori_samples = 10000,
               ad = c("prcong_glmer","land_kz","ad4","padrao"),
+              newdata_path=NULL,
               link_scale=FALSE){
     # take the GAMM objects:
     f_invlink <- gamm$family$linkinv
