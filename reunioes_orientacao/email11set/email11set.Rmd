@@ -33,27 +33,25 @@ df_md <- read_csv("dados/csv/df_md.csv")
 library(trackdown)
 # both overwrite: 
 # overwrite the current google drive file with the current Rmd:
-# upload_file(file="reunioes_orientacao/email11set/email11set.Rmd",
-#             gpath="mestrado/reunioes_orientacao/",
-#             hide_code=TRUE)
-update_file(file="reunioes_orientacao/email11set/email11set.Rmd",
+upload_file(file="reunioes_orientacao/email11set/email11set.Rmd",
             gpath="mestrado/reunioes_orientacao/",
             hide_code=TRUE)
+update_file(file ="secoes_texto/Resultados/Resultados.Rmd",
+            gpath = "mestrado/artigo_principal/secoes_texto/",
+            hide_code = TRUE)
 # overwrite the current Rmd with the current google drive 
-download_file(file="reunioes_orientacao/email11set/email11set.Rmd",
-              gpath="mestrado/reunioes_orientacao/")
+download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
+              gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
-
 
 Olá Paulo, tdo bem? Espero que sim!
 Para explicar a duvida vou primeiro fazer um SCORE.
 nota: Análise 4 é a tag no .Rmd
 
-#### Detalhes da análise dos dados
+# SCORE
 
-__Contexto__
-
-Para descrever a probabilidade de boa congruência entre SAD predita e empírica utilizei GAMMs binomial. Há uma estrutura comum entre todos os modelos candidatos: um spline individual geral (estrutura fixa) para `k_z`, um spline para `k_z` para cada sítio de amostragem, e um intercepto por sítio de amostragem - para cada um desses 3 termos há uma cópia por tipo de paisagem hipotética: contemporânea, sem fragmentação, e idealizada. Entre os modelos candidatos há diferentes possibilidades de covariáveis de k que também são copiados para cada tipo de paisagem (sensu Pedersen et al 2019). Cada um dos 3 tipos de contrastes (area per se, frag. per se., e contemporaneidade per se) e 2 tipos de variáveis (taxa U e logito da congruência entre SADs preditas) e a proporção de cobertura vegetal (p) tiveram um modelo com um spline indivíduo geral (estrutura fixa). Também considerei modelos que combinavam os contrastes de área per se e frag. per se com um spline individual geral (estrutura fixa) para cada contraste. Totalizando 10 modelos. A seguir as formulas usada para construir os modelos: 
+Para descrever a probabilidade de boa congruência entre SAD predita e empírica utilizei GAMMs binomial. Há uma estrutura comum entre todos os modelos candidatos: um spline individual geral (estrutura fixa) para `k_z`, um spline para `k_z` para cada sítio de amostragem, e um intercepto por sítio de amostragem - para cada um desses 3 termos há uma cópia por tipo de paisagem hipotética: contemporânea, sem fragmentação, e idealizada. Entre os modelos candidatos há diferentes covariáveis de k que também são copiados para cada tipo de paisagem (sensu Pedersen et al 2019). Atribui um spline individual na estrutura fixa para cada covariável:  os 3 tipos de contrastes (area per se, frag. per se., e contemporaneidade per se) e 2 tipos de variáveis (taxa U e logito da congruência entre SADs preditas); e a proporção de cobertura vegetal (p). Também considerei modelos que combinavam os contrastes de área per se e frag. per se com um spline individual geral (estrutura fixa) para cada contraste. Totalizando 10 modelos.  A seguir as formulas usada para construir os modelos:
+ 
 
 ```{r lista dos 10 modelos usados para descrever a probabilidade}
 f0 <- "cbind(nCong,100-nCong) ~ land_hyp + s(k_z,by=land_hyp,bs='cr',k=3) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=3,xt=list(bs='cr')) + s(land_hyp,SiteCode,bs='re')"
@@ -67,12 +65,10 @@ adply(l_f,1,\(s) sub("cbind\\(nCong,100-nCong\\) ","",s) %>%
         gsub(",k\\=3","",.) %>%
         gsub(",xt\\=list\\(bs\\=\\'cr\\'\\)","",.)) %>%
   select(-X1) %>% 
-  rename(`modelos para descrever cbind(nCong,100-nCong)` = V1)
+  rename(modelos = V1)
 ```
 
-Esses formulas foram aplicadas a
 
-O único modelo plausível foi aquele com splines na estrutura fixa para k e os contrastes de área e frag. 
 
 ```{r tabela de seleção ad4}
 df_tab <- read_csv("./dados/csv/df_ts_prconganalise4.csv") %>% as.data.frame()
@@ -80,17 +76,25 @@ df_tab %>%
   gt::gt()
 ```
 
+O único modelo plausível foi aquele com splines na estrutura fixa os contrastes de área e frag. 
+Esse modelo apresenta ajuste razoável, com boas estimativas dos efeitos parciais médio para todos os splines individuais na estrutura aleatória, exceto para o spline de k em paisagens contemporâneas. Assim, a interpretação dos resultados usando um intervalo de predição a posteriori será feita com esse modelo mais plausível.
 
-Esse modelo apresenta ajuste razoável, com boas estimativas dos efeitos parciais médio para todos os splines individuais na estrutura aleatória, exceto para o spline de k em paisagens contemporâneas. Portanto, a interpretação dos resultados usando um intervalo de predição a posteriori será feita com esse modelo mais plausível.
+# Dúvida
+
+O conjunto de dados que será usado para construir o intervalo de predição a posteriori precisa considerar as relações entre as preditoras contínuas? Entendo que sim, o que você acha? Optei por prosseguir com a ideia. Para isso comparei modelos que descrevem a média dos contrastes de área e frag. As formulas dos modelos mais plausíveis serão usadas para descrever os quantils de 5% e 95% dos contrastes. Com esses modelos pretendo construir o conjunto de dados para predição a posteriori. 
 
 
-## Construção do conjunto de dados para construir os intervalos de predição 
 
-Entendo que é adequado criar um conjunto de dados para interpretação do intervalo de predição a posteriori que explore combinações representativas da relação entre preditoras (k, area e frag.).
-Os contrastes de U (area e frag.) apresentam elevada assimetria, são pequenos sob severa limitação de dispersão e podem ser elevados sob limitação mais branda (Figura 1). Além disso, há motivações teóricas tanto no programa de pesquisa da teoria neutra, quanto dos dois programas de pesquisa em ecologia de paisagens para esperar uma relação entre preditoras. A variável k pode ser interpretada como geradora das outras duas preditoras, pois o que permite a influência da paisagem ao redor na dinâmica local é o potencial dos indivíduos arbóreos colonizarem áreas fora da copa do progenitor. Os dois programas de pesquisa da ecológia de paisagens entendem que o efeito de área per se não pode ser gerado pelo efeito de fragmentação per se, ou seja, o contraste de área pode ser uma preditora do contraste de fragmentação per se - o contrário, não. O programa de pesquisa padronista, pressupõe que  os efeitos de área e fragmentação per se, são ortogonais e, portanto, apenas k deve ser uma preditora adequada para descrever o contraste de fragmentação per se (Fahrig 2018/2019, ...). Já o programa de pesquisa processista pressupõe que existem efeitos indiretos da perda de área de habitat associadas aos efeitos de fragmentação per se (Putker et al. 2020), e portanto tanto k quanto o contraste de área podem ser preditoras adequadas para descrever o contraste de fragmentação per se. 
-O conjunto de dados que será usado para construir o intervalo de predição a posteriori precisa considerar as relações entre as preditoras contínuas? Entendo que sim, o que você acha? Optei por prosseguir com a ideia. Para isso vou comparar modelos que descrevem a média dos contrastes de área e frag. As formulas dos modelos mais plausíveis serão usadas para descrever os quantils de 5% e 95% dos contrastes. Com esses modelos pretendo construir o conjunto de dados para predição a posteriori. 
+## Conjunto de dados para construir os intervalos de predição a posteriori
 
-## Modelos candidatos
+Em minha primeira tentativa tentei construir um conjunto de dados para predição interpolando os valores das 3 preditoras contínuas (k, areaU e fragU).
+Entendo que é adequado criar um conjunto de dados para interpretação da predição que explore combinações representativas da relação entre preditoras (k, areaU e fragU).
+Os contrastes de U (area e frag.) apresentam elevada assimetria, são pequenos sob severa limitação de dispersão e podem ser elevados sob limitação mais branda (Figura 1). Além disso, há motivações teóricas tanto no programa de pesquisa da teoria neutra, quanto dos dois programas de pesquisa em ecologia de paisagens para esperar uma relação entre essas 3 preditoras. A variável k pode ser interpretada como geradora das outras duas preditoras, pois o que permite a influência da paisagem ao redor na dinâmica local é o potencial dos indivíduos arbóreos colonizarem áreas fora da copa do progenitor. Os dois programas de pesquisa da ecológia de paisagens entendem que o efeito de área per se não pode ser gerado pelo efeito de fragmentação per se, ou seja, o contraste de área pode ser uma preditora do contraste de fragmentação per se - o contrário, não. O programa de pesquisa padronista, pressupõe que os efeitos de área e fragmentação per se, são ortogonais e, portanto, apenas k deve ser uma preditora adequada para descrever o contraste de fragmentação per se (Fahrig 2018/2019, ...). Já o programa de pesquisa processista pressupõe que existem efeitos indiretos da perda de área de habitat associadas aos efeitos de fragmentação per se (Putker et al. 2020), e portanto tanto k quanto o contraste de área podem ser preditoras adequadas para descrever o contraste de fragmentação per se. 
+
+
+
+
+## Modelos Estatísticos
 
 Para avaliar a expectativa comum de que k será uma preditora adequada para descrever o contraste de área, basta ajustar um GAMM com k com spline individual na estrutura aleatória (por sítio de amostragem) e estrutura fixa (padrão comum a todos os sítios). O sumário desse modelo oferece uma comparação de cada spline com um intercepto, modelo nulo (Wood 2016).  
 Para avaliar as expectativas sobre o conjunto adequada de preditoras para descrever o contraste de fragmentação per se é possível comparar 3 modelos: 1) splines índivíduais para k, fixos e aleatórios; 2) splines individuais para k e spline fixo para área; e 3) spline fixo para área com intercepto por sítio.
@@ -99,5 +103,4 @@ Para avaliar as expectativas sobre o conjunto adequada de preditoras para descre
 
 Para descrever o contraste de área foi adequado considera os splines individuais de k, fixo e aleatórios (summario do modelo). Para descrever o contraste de fragmentação per se o mais plausível foi considerar o spline fixo do contraste de área em adição aos splines de k, fixos e aleatórios (tabela de seleção). 
 
-Avaliei como os quantis de 5% e 95% são descritos segundo a relação proposta pela formula do modelo mais plausível. Esses dois quantis foram usados como valores extremos para criar uma sequência de valores intermediários. Esse conjunto de dados será usado para construir dois tipos de intervalo de predição a posteriorido logito. O primeiro será comparando o predito pelo modelo mais plausível e o observado, agrupando para um mesmo valor de k e tipo de paisagem hipotética a variabilidade predita associada aos contrastes. No segundo, conjunto de dados irei filtrar os 20 valores de k simulados inicialmente, e então explorar a relação entre os contrastes de área e frag. per se e o logito de cada tipo de paisagem hipotética.
-
+Avaliei como os quantis de 5% e 95% são descritos segundo a relação proposta pela formula do modelo mais plausível. Esses dois quantis foram usados como valores extremos para criar uma sequência de valores intermediários.
