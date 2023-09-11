@@ -101,10 +101,8 @@ f_calcPI <- \(gamm,
       names(df_newpred)[1] <- x_var  
     }else if(ad=="ad4"){
       y_var <- names(df_obs)[1]
-      x_var <- names(df_obs)[2]
-      df_newpred <- data.frame(x = seq(min(df_obs[,x_var]),max(df_obs[,x_var]),length.out=length_pred)) |> 
-        mutate(SiteCode = site.posteriori)
-      names(df_newpred)[1] <- x_var  
+      df_newpred <- read_csv(newdata_path)
+      X <- names(df_newpred %>% select(-SiteCode))
     }else if(ad=="prcong_glmer"){
       y_var <- names(df_obs)[1]
       x1_var <- "p_z"
@@ -137,6 +135,9 @@ f_calcPI <- \(gamm,
     }
     if(ad=="prcong_glmer"){
       v_toexclude <- "s(SiteCode)"
+    }else if(ad=="ad4"){
+      v_toexclude <- c(paste0("s(k_z,SiteCode):land_hyp",c("cont","ideal","non_frag")),
+                       "s(land_hyp,SiteCode)")
     }else{
       v_toexclude <- c(paste0("s(",x_var,",SiteCode)"),"s(SiteCode)")
     }

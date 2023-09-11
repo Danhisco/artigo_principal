@@ -928,8 +928,12 @@ if(file.exists("./dados/csv/df_ts_prconganalise4.csv")){
   write_csv(df_tab,file="./dados/csv/df_ts_prconganalise4.csv")
 }
 md_prcong <- l_md[[df_tab[1,"modelo"]]]
+save(md_prcong,file = "./dados/Rdata/md_prcong.Rdata")
 l_df <- list()
-l_df[[1]] <- f_calcPI(gamm=md_prcong,ad = "ad4",newdata_path="./dados/csv/df_newdata_ad4.csv")
+l_df[[1]] <- f_calcPI(gamm=md_prcong,
+                      ad = "ad4",
+                      newdata_path="./dados/csv/df_newdata_ad4.csv",
+                      link_scale = TRUE)
 
 
 ## versão antiga
