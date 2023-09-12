@@ -80,7 +80,7 @@ f_calcPI <- \(gamm,
               site.posteriori ="SPigua1",
               length_pred = 150,
               n.posteriori_samples = 10000,
-              ad = c("prcong_glmer","land_kz","ad4","padrao"),
+              ad = c("prcong_glmer","land_kz","ad4","padrao","obs"),
               newdata_path=NULL,
               link_scale=FALSE){
     # take the GAMM objects:
@@ -103,6 +103,8 @@ f_calcPI <- \(gamm,
       y_var <- names(df_obs)[1]
       df_newpred <- read_csv(newdata_path)
       X <- names(df_newpred %>% select(-SiteCode))
+    }else if(newdata_path=="obs"){
+      df_newpred <- df_obs %>% select(-nCong,-SiteCode)
     }else if(ad=="prcong_glmer"){
       y_var <- names(df_obs)[1]
       x1_var <- "p_z"

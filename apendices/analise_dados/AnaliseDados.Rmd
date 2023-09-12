@@ -659,13 +659,20 @@ md_prcong <- l_md[[df_tab[1,"modelo"]]]
 ```
 
 ```{r validacao modelo mais plausivel }
-if(!exists("l_md") & length(l_md)==10) load("./dados/Rdata/PrCong_analise4.Rdata")  
-df_tab <- f_TabSelGAMM(l_md)
+if(!exists("l_md")) load("./dados/Rdata/PrCong_analise4.Rdata")  
+if(file.exists("./dados/csv/df_ts_prconganalise4.csv")){
+  df_tab <- read_csv(file="./dados/csv/df_ts_prconganalise4.csv")
+}else{
+  df_tab <- f_TabSelGAMM(l_md)
+}
 md_prcong <- l_md[[df_tab[1,"modelo"]]]
+save(md_prcong,file="./dados/Rdata/md_prcong.Rdata")
+
 f_validaGAMM(md_name="~f(U(area,frag),k|Site)",l_md = md_prcong,size=1)
 p_plot <- simulateResiduals(md_prcong,n = 1000)
 plot(p_plot)
-testOutliers(md_prcong)
+to_prcong <- testOutliers(md_prcong)
+to_prcong$estimate
 ```
 
 ```{r new data para análise 4, eval=FALSE, include=FALSE}
@@ -723,7 +730,7 @@ df_nd_k %>% ggplot(aes(x=areaU_z,y=fragU_z)) +
 
 
 ```{r predicao a posteiori modelo mais plausivel}
-if(!exists("l_md") & length(l_md)==10) load("./dados/Rdata/PrCong_analise4.Rdata")  
+if(!exists("l_md")) load("./dados/Rdata/PrCong_analise4.Rdata")  
 if(file.exists("./dados/csv/df_ts_prconganalise4.csv")){
   df_tab <- read_csv("./dados/csv/df_ts_prconganalise4.csv") %>% as.data.frame()
 }else{
@@ -735,16 +742,14 @@ save(md_prcong,file = "./dados/Rdata/md_prcong.Rdata")
 l_df <- list()
 l_df[[1]] <- f_calcPI(gamm=md_prcong,
                       ad = "ad4",
-                      newdata_path="./dados/csv/df_newdata_ad4.csv",
+                      newdata_path="obs",
                       link_scale = TRUE)
-
-
+write_csv(l_df[[1]],file="./dados/csv/df_ad4.csv")
 ## versão antiga
 # if(file.exists("./dados/csv/df_ip_prcong_kz_landhyp.csv")){
 #   l_df[[1]] <- read_csv("./dados/csv/df_ip_prcong_kz_landhyp.csv") 
 # }else{
 #   l_df[[1]] <- f_calcPI(md_prcong,link_scale = T,analise4=T)
-#   write_csv(l_df[[1]],file="./dados/csv/df_ip_prcong_kz_landhyp.csv")
 # }
 # l_df[[2]] <- l_df[[1]] %>% mutate(across(starts_with("Q_"),\(x) f_invlink(x) * sum(md_prcong$model[1,1])))
 # names(l_df) <- c("link_scale","resp_scale")

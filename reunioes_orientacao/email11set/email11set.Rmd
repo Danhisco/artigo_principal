@@ -68,31 +68,38 @@ adply(l_f,1,\(s) sub("cbind\\(nCong,100-nCong\\) ","",s) %>%
   rename(modelos = V1)
 ```
 
-
-
 ```{r tabela de seleção ad4}
 df_tab <- read_csv("./dados/csv/df_ts_prconganalise4.csv") %>% as.data.frame()
 df_tab %>% 
   gt::gt()
 ```
 
+
+
+
 O único modelo plausível foi aquele com splines na estrutura fixa os contrastes de área e frag. 
+
+```{r validacao modelo mais plausivel prcong}
+load(file="./dados/Rdata/md_prcong.Rdata")
+summary(md_prcong)
+
+```
+
+
 Esse modelo apresenta ajuste razoável, com boas estimativas dos efeitos parciais médio para todos os splines individuais na estrutura aleatória, exceto para o spline de k em paisagens contemporâneas. Assim, a interpretação dos resultados usando um intervalo de predição a posteriori será feita com esse modelo mais plausível.
+
+
+
 
 # Dúvida
 
 O conjunto de dados que será usado para construir o intervalo de predição a posteriori precisa considerar as relações entre as preditoras contínuas? Entendo que sim, o que você acha? Optei por prosseguir com a ideia. Para isso comparei modelos que descrevem a média dos contrastes de área e frag. As formulas dos modelos mais plausíveis serão usadas para descrever os quantils de 5% e 95% dos contrastes. Com esses modelos pretendo construir o conjunto de dados para predição a posteriori. 
-
-
 
 ## Conjunto de dados para construir os intervalos de predição a posteriori
 
 Em minha primeira tentativa tentei construir um conjunto de dados para predição interpolando os valores das 3 preditoras contínuas (k, areaU e fragU).
 Entendo que é adequado criar um conjunto de dados para interpretação da predição que explore combinações representativas da relação entre preditoras (k, areaU e fragU).
 Os contrastes de U (area e frag.) apresentam elevada assimetria, são pequenos sob severa limitação de dispersão e podem ser elevados sob limitação mais branda (Figura 1). Além disso, há motivações teóricas tanto no programa de pesquisa da teoria neutra, quanto dos dois programas de pesquisa em ecologia de paisagens para esperar uma relação entre essas 3 preditoras. A variável k pode ser interpretada como geradora das outras duas preditoras, pois o que permite a influência da paisagem ao redor na dinâmica local é o potencial dos indivíduos arbóreos colonizarem áreas fora da copa do progenitor. Os dois programas de pesquisa da ecológia de paisagens entendem que o efeito de área per se não pode ser gerado pelo efeito de fragmentação per se, ou seja, o contraste de área pode ser uma preditora do contraste de fragmentação per se - o contrário, não. O programa de pesquisa padronista, pressupõe que os efeitos de área e fragmentação per se, são ortogonais e, portanto, apenas k deve ser uma preditora adequada para descrever o contraste de fragmentação per se (Fahrig 2018/2019, ...). Já o programa de pesquisa processista pressupõe que existem efeitos indiretos da perda de área de habitat associadas aos efeitos de fragmentação per se (Putker et al. 2020), e portanto tanto k quanto o contraste de área podem ser preditoras adequadas para descrever o contraste de fragmentação per se. 
-
-
-
 
 ## Modelos Estatísticos
 
