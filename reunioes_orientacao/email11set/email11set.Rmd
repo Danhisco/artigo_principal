@@ -17,6 +17,11 @@ text-align: justify}
 
 ```{r setup,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE)
+library(png)
+library(grid)
+library(gridExtra)
+library(gt)
+library(ggplot2)
 library(readr)
 library(stringr)
 library(tidyr)
@@ -28,7 +33,7 @@ source("source/GAMMtools.R")
 df_md <- read_csv("dados/csv/df_md.csv")
 ```
 
-```{r trackdown chunk, include=FALSE}
+```{r trackdown chunk, include=FALSE,eval=FALSE}
 # pacotes
 library(trackdown)
 # both overwrite: 
@@ -74,22 +79,28 @@ df_tab %>%
   gt::gt()
 ```
 
-
-
-
 O único modelo plausível foi aquele com splines na estrutura fixa os contrastes de área e frag. 
 
 ```{r validacao modelo mais plausivel prcong}
 load(file="./dados/Rdata/md_prcong.Rdata")
 summary(md_prcong)
-
+k.check(md_prcong)
+# gráficos diagnósticos
+l_p <- list.files("./apendices/analise_dados/figuras",pattern = "diagGAMM",full.names = T) %>% 
+  llply(.,readPNG) %>% 
+  llply(.,\(p) ggplot() +
+          annotation_custom(rasterGrob(p), xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
+          theme_void())
+grid.arrange(grobs=l_p,
+             layout_matrix = rbind(c(1,1,1),
+                                   c(1,1,1),
+                                   c(2,2,2),
+                                   c(2,2,2),
+                                   c(2,2,2),
+                                   c(3,3,4)))
 ```
 
-
-Esse modelo apresenta ajuste razoável, com boas estimativas dos efeitos parciais médio para todos os splines individuais na estrutura aleatória, exceto para o spline de k em paisagens contemporâneas. Assim, a interpretação dos resultados usando um intervalo de predição a posteriori será feita com esse modelo mais plausível.
-
-
-
+O resultado da função 'mgcv::k.test' sugere que pode ser adequado aumentar o número de funções base para construir os splines indivíduais. Todos os splines são considerados uma descrição mais adequada dos dados do que um intercepto simples por preditora. Os resíduos quantílicos e teste de outliers indicam que há desvios dos pressupostos do modelo binomial proposto, com observações consideradas outliers. Considerando apenas a relação entre predito e observado, o modelo apresenta ajuste razoável, com estimativas razoáveis dos efeitos parciais médio para todos os splines individuais na estrutura aleatória, exceto para o spline de k em paisagens contemporâneas, onde o efeito parcial tende à uma reta com o erro na esimativa aumentando linearmente nos extremos do gradiente da preditora. Uma vez que o modelo faz predições razoáveis, a interpretação dos resultados usando um intervalo de predição a posteriori será feita com esse modelo mais plausível.
 
 # Dúvida
 
@@ -106,8 +117,106 @@ Os contrastes de U (area e frag.) apresentam elevada assimetria, são pequenos s
 Para avaliar a expectativa comum de que k será uma preditora adequada para descrever o contraste de área, basta ajustar um GAMM com k com spline individual na estrutura aleatória (por sítio de amostragem) e estrutura fixa (padrão comum a todos os sítios). O sumário desse modelo oferece uma comparação de cada spline com um intercepto, modelo nulo (Wood 2016).  
 Para avaliar as expectativas sobre o conjunto adequada de preditoras para descrever o contraste de fragmentação per se é possível comparar 3 modelos: 1) splines índivíduais para k, fixos e aleatórios; 2) splines individuais para k e spline fixo para área; e 3) spline fixo para área com intercepto por sítio.
 
+
+```{r construcao do conjunto de dados para predicao}
+l_f <- list()
+l_f[[1]] <- "areaU_z ~ s(k_z,bs='cr',k=3) + s(k_z,SiteCode,bs='fs',k=3) + s(SiteCode,bs='re')"
+l_f[[2]] <- sub("areaU_z","fragU_z",l_f[[1]])
+l_f[[3]] <- sub("~ ","~ s(areaU_z,bs='cr',k=3) + ",l_f[[2]])
+l_f[[4]] <- "fragU_z ~ s(areaU_z,bs='cr',k=3) + s(SiteCode,bs='re')"
+names(l_f) <- c("areaU ~ f(k|Site)","fragU ~ f(k|Site)","fragU ~ f(areaU,k|Site)",
+                "fragU ~ f(areaU,1|Site)")
+l_f
+```
+
+
 ## Resultados 
 
-Para descrever o contraste de área foi adequado considera os splines individuais de k, fixo e aleatórios (summario do modelo). Para descrever o contraste de fragmentação per se o mais plausível foi considerar o spline fixo do contraste de área em adição aos splines de k, fixos e aleatórios (tabela de seleção). 
+Para descrever o contraste de área foi adequado considerar os splines individuais de k, fixo e aleatórios. 
+
+```{r sumario do modelo para a 1a camada}
+load("./dados/Rdata/l_md_p_newdatapred_analise4.Rdata")
+summary(l_md[[1]])
+```
+
+Para descrever o contraste de fragmentação per se o mais plausível foi considerar o spline fixo do contraste de área em adição aos splines de k, fixos e aleatórios (tabela de seleção). 
+
+```{r ts_ad4_camada2}
+df_tab <- read_csv(file="./dados/csv/ts_ad4_camada2.csv")
+df_tab %>% gt()
+```
+
 
 Avaliei como os quantis de 5% e 95% são descritos segundo a relação proposta pela formula do modelo mais plausível. Esses dois quantis foram usados como valores extremos para criar uma sequência de valores intermediários.
+
+```{r echo=TRUE,eval=FALSE}
+library(qgam)
+l_md_newdata <- l_md[names(l_md)[c("areaU ~ f(k|Site)",df_tab$modelo[1])]]
+l_md_quant_ad4 <- llply(l_md_newdata,\(md) mqgam(form=md$formula,data=md$model,qu=c(0.05,0.95)))
+```
+
+Com esse modelo criei o conjunto de dados que considera as relações entre as preditoras. Na figura a seguir há os valores para os contrastes facetado pelos graus de limitação de dispersão simulados (20 valores)
+
+```{r}
+df_nd_k <- read_csv("./dados/csv/df_nd_k.csv")
+df_nd_k %>% ggplot(aes(x=areaU_z,y=fragU_z)) +
+  geom_point() +
+  facet_wrap(~k_z,ncol=5)
+```
+
+## Próximos passos
+
+Meu computador não tem memória RAM suficiente para construir o intervalo de predição a posteriori criado a partir desse conjunto de dados (~908 mil linhas). Então optei por construir o intervalo de predição a posteriori usando os valores observados e apenas plotar o scatterplot de número de SADs congruentes por grau de limitação de dispersão, colorir os pontos e as estimativas pelo tipo de paisagem hipotética. O
+
+
+#### SI: 
+
+função usada para criar o novo conjunto de dados
+
+```{r função para criar novo conjunto de dados,echo=TRUE,eval=FALSE}
+f_newdata_ad4 <- \(l_md_newdata,quantiles=c(0.05,0.95)){
+  # funções
+  f_predict <- \(mdq){
+    df[[vname]] <- predict(mdq,type="response",
+                           newdata=df,
+                           exclude = c("s(k_z,SiteCode)","s(SiteCode)"))
+    relocate(df, any_of(vname)) 
+  }
+  f_newdf <- \(d){
+    d <- d %>% 
+      mutate(diff = Q95-Q05,maxsize = round((150*diff)/max(diff),digits = 0)) %>% 
+      select(-diff)
+    f_seq <- \(X){
+      v <- do.call("seq", as.list(c(from=X$Q05,to=X$Q95,length.out=X$maxsize)))
+      X <- cbind(X,v)
+      names(X)[ncol(X)] <- vname
+      relocate(X, any_of(vname)) }
+    adply(d,1,f_seq) %>% 
+      select(-starts_with("Q"),-maxsize)
+  }
+  f_ddply <- \(){
+    ddply(data.frame(q = c("Q05","Q95"),quantiles),
+          "q",\(d) qgam::qdo(md,d$quantiles,f_predict)) %>% 
+      pivot_wider(names_from="q",values_from=vname) %>% 
+      f_newdf()
+  }
+  f_l <- \(s) l_md_newdata[[names(l_md_newdata) %>% str_which(.,sub("_z"," ~",s))]] 
+  # 1a camada areaU_z ~ f(k)
+  vname="areaU_z"
+  md <- f_l(vname)
+  df <- data.frame(k_z = do.call("seq", as.list(c(range(md$model$k_z),length.out=150))),
+                   SiteCode = "SPigua1")
+  df <- f_ddply()
+  # 2a camada: frag ~ f(area,k)
+  vname="fragU_z"
+  md <- f_l(vname)
+  f_ddply()
+}
+```
+
+
+
+```{r}
+
+```
+
