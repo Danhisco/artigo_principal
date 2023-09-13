@@ -1,7 +1,7 @@
 ---
-title: "Apêndice 2: Figuras e Tabelas"
+title: "Dúvida de como proceder na análise dos dados"
 author: "Mori, Danilo"
-date: "19/11/2022"
+date: ""
 output: 
   html_document:
     toc: true
@@ -69,8 +69,7 @@ adply(l_f,1,\(s) sub("cbind\\(nCong,100-nCong\\) ","",s) %>%
         gsub(",bs\\=\\'cr\\',k\\=3","",.) %>%
         gsub(",k\\=3","",.) %>%
         gsub(",xt\\=list\\(bs\\=\\'cr\\'\\)","",.)) %>%
-  select(-X1) %>% 
-  rename(modelos = V1)
+  select(-X1) %>% as.vector() %>% unname()
 ```
 
 ```{r tabela de seleção ad4}
@@ -81,7 +80,7 @@ df_tab %>%
 
 O único modelo plausível foi aquele com splines na estrutura fixa os contrastes de área e frag. 
 
-```{r validacao modelo mais plausivel prcong}
+```{r validacao modelo mais plausivel prcong,eval=FALSE,include=FALSE}
 load(file="./dados/Rdata/md_prcong.Rdata")
 summary(md_prcong)
 k.check(md_prcong)
