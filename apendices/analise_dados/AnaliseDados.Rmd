@@ -741,11 +741,49 @@ if(file.exists("./dados/csv/df_ts_prconganalise4.csv")){
 md_prcong <- l_md[[df_tab[1,"modelo"]]]
 save(md_prcong,file = "./dados/Rdata/md_prcong.Rdata")
 l_df <- list()
-l_df[[1]] <- f_calcPI(gamm=md_prcong,
+if(file.exists("./dados/csv/df_ts_prconganalise4.csv")){
+  l_df[[1]] <- read_csv(file="./dados/csv/df_ad4.csv")  
+}else{
+  l_df[[1]] <- f_calcPI(gamm=md_prcong,
                       ad = "ad4",
                       newdata_path="obs",
                       link_scale = TRUE)
-write_csv(l_df[[1]],file="./dados/csv/df_ad4.csv")
+  write_csv(l_df[[1]],file="./dados/csv/df_ad4.csv")
+}
+# plot 
+df_plot <- l_df[[1]] %>% 
+  arrange(k_z,areaU_z,fragU_z) %>% 
+  cbind(.,df_md %>% 
+          arrange(k_z,areaU_z,fragU_z) %>% 
+          select(SiteCode,nCong)) %>% 
+  relocate(SiteCode) %>% 
+  mutate(logitoObs=case_when(nCong==100 ~ 99.92,
+                             nCong==0 ~ 00.08,
+                             TRUE ~ nCong),
+         logitoObs = log(nCong/(100-nCong))) %>% 
+  relocate(logitoObs,.after=SiteCode)
+  
+  # pivot_longer(starts_with("Q_0."),names_to = "quantiles",values_to = "q") %>% 
+  # pivot_longer(ends_with("U_z"),names_to = "contrastes",values_to = "c") %>% 
+  # mutate(quantiles = factor(gsub("Q_","",quantiles)))
+df_md %>% 
+  select(SiteCode:nCong,k_z,fragU_z:areaU_z) %>% 
+  mutate(logitoObs=case_when(nCong==100 ~ 99.92,
+                             nCong==0 ~ 00.08,
+                             TRUE ~ nCong),
+         logitoObs = log(nCong/(100-nCong)) ) %>% 
+  ggplot(aes(x=k_z,y=))
+
+###
+# df_plot %>% 
+#   ggplot(aes(x=k_z,y=q,group=quantiles))  +
+#   geom_point() +
+#   geom_
+
+
+
+
+
 ## versão antiga
 # if(file.exists("./dados/csv/df_ip_prcong_kz_landhyp.csv")){
 #   l_df[[1]] <- read_csv("./dados/csv/df_ip_prcong_kz_landhyp.csv") 

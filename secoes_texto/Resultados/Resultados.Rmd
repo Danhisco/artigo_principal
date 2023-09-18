@@ -279,13 +279,3 @@ __Figura \@ref{ip_diffS}__ Intervalo de predição diffS
 
 __tabela \@ref{ts_prcong}__ GAMMs usados para descreever a probabilidade de congruência com o observado em cada paisagem hipotética 
 
-```{r ts  Pr(Cong),fig.cap="\\label{ts_prcong}ts_prcong"}
-df_tab <- read_csv("./dados/csv/ts_PrCong_LandHyp_GAMMs.csv")
-df_tab |> 
-  gt()
-```
-
-```{r ip logOR_prcong ~ p * land_hyp, fig.cap="\\label{ip_logOR_prcong}ip_logOR_prcong"}
-
-  
-```
