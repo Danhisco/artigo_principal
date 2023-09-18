@@ -757,8 +757,8 @@ df_plot <- l_df[[1]] %>%
           arrange(k_z,areaU_z,fragU_z) %>% 
           select(SiteCode,nCong)) %>% 
   relocate(SiteCode) %>% 
-  mutate(logitoObs=case_when(nCong==100 ~ 99.92,
-                             nCong==0 ~ 00.08,
+  mutate(logitoObs=case_when(nCong==100 ~ 99.02,
+                             nCong==0 ~ 00.8,
                              TRUE ~ nCong),
          logitoObs = log(nCong/(100-nCong))) %>% 
   relocate(logitoObs,.after=SiteCode)

@@ -126,6 +126,45 @@ Pressupomos que a extensão espacial da paisagem adequada é aquela que acumula 
 
 Comparamos as simulações nas 3 paisagens hipotéticas par a par. Avaliamos 2 tipos de contrastes: entre a taxa U estimada; e a congruência nas SADs preditas. Os contraste entre a paisagem contemporânea e a idealizada podem ser compreendidos como o efeito completo da conectividade contemporânea entre parcela e paisagem ao redor na manutenção do padrão avaliado. Os contrastes entre a paisagem contemporânea e sem fragmentação per se podem ser interpretados como o efeito da fragmentação per se, o componente da conectividade contemporânea que depende apenas da configuração espacial do habitat remanescente. Os contrastes entre a paisagem sem fragmentação per se e a idealizada podem ser interpretados como o efeito da perda de área, o componente da conectividade contemporânea que depende apenas da quantia de habitat perdido. Uma vez que a extensão da paisagem ao redor de 4x4km2 é suficiente para simular todos os graus de limitação de dispersão (Apêndice 1 Efeito de Escala), os contrastes entre paisagens contemporâneas e idealizadas são condicionais apenas à escala espacial determinada pelo grau de limitação de dispersão e a configuração espacial do habitat remanescente. A estimativa da taxa U e a SAD predita nas paisagens sem fragmentação per se são condicionais também à extensão espacial de 4x4km2, pois ela é usada como referência para determinar a quantidade de habitat que será aglomerado ao redor da parcela (Figura A1 1). Um conjunto de simulações que não fizemos foi o de usar a menor extensão espacial adequada para cada respectivo grau de limitação de dispersão, assim teríamos simulações também nas extensão de 1x1 km2 e 2x2km2 para alguns graus de limitação de dispersão (Figura A1 6).
 
+```{r}
+l_df <- list()
+l_df[[1]] <- data.frame(`predição` = c("taxa U","SAD"),
+                        `descrição` = c("Probabilidade per nascimento 
+                                        do colonizador do habitat disponível ser uma nova espécie na paisagem",
+                                        "Distribuição de Abundância de Espécies na área amostrada"),
+                        `comparações` = c("em um contraste, 
+                                          a diferença na taxa U média 
+                                          dividido pela tava U média estimada em paisagens sem perda de habitat",
+                                          "teste do tipo Kolmogorov-Smirnov: 
+                                          dois vetores são comparados pela maior diferença entre suas curvas acumuladas; 
+                                          se o p-valor for maior do 5% então atribuímos boa congruência entre as duas SADs testadas"),
+                        `análises` = c("modelos gaussianos: média da diferença entre o par do contraste",
+                                       "modelos binomiais: probabilidade de boa congruência entre SADs"),
+                        obs = c("estimado para obter a riqueza observado",
+                                "aplicado entre SADs preditas e entre preditas e empírica"))
+l_df[[2]] <- data.frame(contraste = c("área per se","fragmentação per se","contemporaneidade"),
+                 par = c("i) habitat aglomerado e ii) sem perda de habitat",
+                         "i) configuração contemporanea do habitat e ii) habitat aglomerado",
+                         "i) configuração contemporanea do habitat e ii) sem perda de habitat"),
+                 `descrição` = c("efeito de perda de habitat:
+                                 Componente da conectividade contemporânea que depende apenas da quantidade do habitat remanescente",
+                                 "efeito de fragmentação per se:
+                                 Componente da conectividade contemporânea que depende apenas da configuração espacial do habitat remanescente",
+                                 "efeito da conectividade contemporânea:
+                                 diferença entre a conectividade na paisagem observada no mesmo momento da amostragem e na paisagem sem perda de habitat")
+                 )
+names(l_df) <- c("predições","contrastes")
+v_title <- c("tipos de predições","tipos de contrastes")
+l_df <- l_df %>% 
+  f_gt(.,v_title) %>% 
+  f_gt_to_ggplot()
+gridExtra::grid.arrange(grobs=l_df,layout_matrix=rbind(c(1,1),
+                                                       c(2,2)),
+                        top="Glossário")
+```
+
+
+
 ## taxa U
 Quando há pouca perda de habitat a estimativa da taxa U não difere entre paisagens hipotéticas (Figura A2 2 e 3). Com a redução da cobertura vegetal a estimativa da taxa U pode ser distinta entre paisagens hipotéticas. Em graus de limitação de dispersão mais relaxados pode existir o aumento da taxa U estimada nas paisagem contemporâneas ou sem fragmentação (Figura A2 3). Em geral a taxa U estimada nas paisagens contemporâneas é a maior das três paisagens hipotéticas (Figura A2 3). Em alguns casos a paisagem sem fragmentação per se pode apresentar estimativas superiores (Figura A2 3). Nos graus onde há pouca variação no efeito de escalar (k entre 0.80 e 0.55) também há pouca variação entre paisagens hipotéticas (Figura A2 2 e 3). As diferenças entre paisagens hipotéticas ocorre em geral em graus de limitação de dispersão mais brandos (Figura A2 2 e 3). Em paisagens com baixa proporção de cobertura florestal as estimativas em graus severos de limitação de dispersão também podem ser distintas entre paisagens hipotéticas (Figura A2 2 e 3). 
 
@@ -277,5 +316,88 @@ __Figura \@ref{ip_diffS}__ Intervalo de predição diffS
 
 ## Pr(Cong) ~  landscape hypothesis
 
-__tabela \@ref{ts_prcong}__ GAMMs usados para descreever a probabilidade de congruência com o observado em cada paisagem hipotética 
+__tabela \@ref{ts_prcong}__ GAMMs usados para descreever a probabilidade de congruência com o observado. Em todos os modelos há um spline fixo e aleatório para a variável k (grau de limitação de dispersão )
+
+```{r tabela de seleção ad4}
+df_tab <- read_csv("./dados/csv/df_ts_prconganalise4.csv") %>% as.data.frame()
+df_tab %>% 
+  gt::gt()
+```
+
+
+#### figuras para descrever Probabilidade de Congruência
+
+```{r}
+f_plot <- \(df_md,newpred_path="./dados/csv/df_ad4.csv",mdRdata_path="./dados/Rdata/md_prcong.Rdata"){
+  # model
+  md_name <- load(mdRdata_path,verbose=TRUE)
+  md <- eval(as.name(md_name))
+  rm(list=md_name)
+  # df_newpred sem variabilidade entre sítios: efeito médio em função da preditora
+  if(file.exists("./dados/csv/df_ad4.csv")){
+    df_newpred <- read_csv(file="./dados/csv/df_ad4.csv")  
+  }else{
+    df_newpred <- f_calcPI(gamm=md,
+                           ad = "ad4",
+                           newdata_path="obs",
+                           link_scale = TRUE)
+    write_csv(df_newpred,file="./dados/csv/df_ad4.csv")
+  }
+  # df_predtoobs
+  df_md$predtoobs <- predict.gam(md)
+  df_newpred <- df_newpred %>% 
+    arrange(k_z,areaU_z,fragU_z) %>% 
+    cbind(.,df_md %>% 
+          arrange(k_z,areaU_z,fragU_z) %>% 
+          select(SiteCode,nCong,predtoobs)) %>% 
+    relocate(SiteCode) %>% 
+    mutate(logitoObs = case_when(nCong==100~99.9,
+                                 nCong==0~0.1,
+                                 TRUE~nCong),
+           logitoObs = log((logitoObs/(100-logitoObs))))
+  # l_p
+  df_newpred %>% 
+    pivot_longer(starts_with("Q_0.")) %>% 
+    filter(name=="Q_0.5") %>% 
+    ggplot(aes(x=k_z,y=logitoObs)) +
+    geom_point(alpha=0.3) +
+    geom_point(aes(y=value),color="red",alpha=0.3) +
+    facet_wrap(~land_hyp)
+}
+
+
+if(!exists("l_md")) load("./dados/Rdata/PrCong_analise4.Rdata")  
+if(file.exists("./dados/csv/df_ts_prconganalise4.csv")){
+  df_tab <- read_csv("./dados/csv/df_ts_prconganalise4.csv") %>% as.data.frame()
+}else{
+  df_tab <- f_TabSelGAMM(l_md)
+  write_csv(df_tab,file="./dados/csv/df_ts_prconganalise4.csv")
+}
+md_prcong <- l_md[[df_tab[1,"modelo"]]]
+save(md_prcong,file = "./dados/Rdata/md_prcong.Rdata")
+l_df <- list()
+if(file.exists("./dados/csv/df_ad4.csv")){
+  l_df[[1]] <- read_csv(file="./dados/csv/df_ad4.csv")  
+}else{
+  l_df[[1]] <- f_calcPI(gamm=md_prcong,
+                      ad = "ad4",
+                      newdata_path="obs",
+                      link_scale = TRUE)
+  write_csv(l_df[[1]],file="./dados/csv/df_ad4.csv")
+}
+# plot 
+df_plot <- l_df[[1]] %>% 
+  arrange(k_z,areaU_z,fragU_z) %>% 
+  cbind(.,df_md %>% 
+          arrange(k_z,areaU_z,fragU_z) %>% 
+          select(SiteCode,nCong)) %>% 
+  relocate(SiteCode) %>% 
+  mutate(logitoObs=case_when(nCong==100 ~ 99.92,
+                             nCong==0 ~ 00.08,
+                             TRUE ~ nCong),
+         logitoObs = log(nCong/(100-nCong))) %>% 
+  relocate(logitoObs,.after=SiteCode)
+
+```
+
 

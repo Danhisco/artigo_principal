@@ -446,17 +446,40 @@ summary(md_diffs)
 
 ### Pr(Cong)
 ```{r figA27 ctror,eval=F,include=F}
-df_tab <- read_csv("./dados/csv/ts_PrCong_LandHyp_GAMMs.csv")
-load("./dados/Rdata/l_md_PrCong.Rdata")
-# df_tab
-df_mdlik <- df_tab |> filter(dAICc == 0) |> select(land_hyp,modelo)
-l_md_plot <- alply(df_mdlik,1,\(df) l_md_PrCong[[df$land_hyp]][[df$modelo]])
-names(l_md_plot) <- df_mdlik$land_hyp
-save(l_md_plot,file="./dados/Rdata/figA27.Rdata")
+# df_tab <- read_csv("./dados/csv/ts_PrCong_LandHyp_GAMMs.csv")
+# load("./dados/Rdata/l_md_PrCong.Rdata")
+# # df_tab
+# df_mdlik <- df_tab |> filter(dAICc == 0) |> select(land_hyp,modelo)
+# l_md_plot <- alply(df_mdlik,1,\(df) l_md_PrCong[[df$land_hyp]][[df$modelo]])
+# names(l_md_plot) <- df_mdlik$land_hyp
+# save(l_md_plot,file="./dados/Rdata/figA27.Rdata")
 ```
 
 ```{r figA27 - janela de código da validacao dos submodelos}
-load("./dados/Rdata/figA27.Rdata")
-l_ply(names(l_md_plot),\(string) f_validaGAMM(md_name = string,l_md=l_md_plot))
+# load("./dados/Rdata/figA27.Rdata")
+# l_ply(names(l_md_plot),\(string) f_validaGAMM(md_name = string,l_md=l_md_plot))
 ```
+
+O único modelo plausível foi aquele com splines na estrutura fixa os contrastes de área e frag. 
+
+```{r validacao modelo mais plausivel prcong,eval=FALSE,include=FALSE}
+load(file="./dados/Rdata/md_prcong.Rdata")
+summary(md_prcong)
+k.check(md_prcong)
+# gráficos diagnósticos
+l_p <- list.files("./apendices/analise_dados/figuras",pattern = "diagGAMM",full.names = T) %>% 
+  llply(.,readPNG) %>% 
+  llply(.,\(p) ggplot() +
+          annotation_custom(rasterGrob(p), xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
+          theme_void())
+grid.arrange(grobs=l_p,
+             layout_matrix = rbind(c(1,1,1),
+                                   c(1,1,1),
+                                   c(2,2,2),
+                                   c(2,2,2),
+                                   c(2,2,2),
+                                   c(3,3,4)))
+```
+
+O resultado da função 'mgcv::k.test' sugere que pode ser adequado aumentar o número de funções base para construir os splines indivíduais. Todos os splines são considerados uma descrição mais adequada dos dados do que um intercepto simples por preditora. Os resíduos quantílicos e teste de outliers indicam que há desvios dos pressupostos do modelo binomial proposto, com observações consideradas outliers. Considerando apenas a relação entre predito e observado, o modelo apresenta ajuste razoável, com estimativas razoáveis dos efeitos parciais médio para todos os splines individuais na estrutura aleatória, exceto para o spline de k em paisagens contemporâneas, onde o efeito parcial tende à uma reta com o erro na esimativa aumentando linearmente nos extremos do gradiente da preditora. Uma vez que o modelo faz predições razoáveis, a interpretação dos resultados usando um intervalo de predição a posteriori será feita com esse modelo mais plausível.
 
