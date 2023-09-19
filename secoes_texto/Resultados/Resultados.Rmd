@@ -175,12 +175,14 @@ v_title <- c("tipos de predições simuladas",
              "tipos de contrastes entre simulações",
              "tipos de preditoras no modelo estatístico")
 l_df <- l_df %>% 
-  f_gt(.,v_title,v_footnote) %>% 
-  f_gt_to_ggplot()
-gridExtra::grid.arrange(grobs=l_df,layout_matrix=rbind(c(1,1),
-                                                       c(2,2),
-                                                       c(3,3)),
-                        top="Glossário")
+  f_gt(.,v_title,v_footnote) 
+l_df
+# %>% 
+#   f_gt_to_ggplot()
+# gridExtra::grid.arrange(grobs=l_df,layout_matrix=rbind(c(1,1),
+#                                                        c(2,2),
+#                                                        c(3,3)),
+#                         top="Glossário")
 ```
 
 
