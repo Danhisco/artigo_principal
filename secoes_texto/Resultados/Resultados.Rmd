@@ -46,7 +46,7 @@ library(lme4)
 library(gamm4)
 library(plyr)
 library(dplyr)
-source("source/nameModel.R")
+source("source/general_tools.R")
 source("source/GAMMtools.R")
 f_z <- function(x) (x-mean(x))/sd(x)
 ## df_dados_disponiveis
@@ -146,20 +146,40 @@ l_df[[2]] <- data.frame(contraste = c("área per se","fragmentação per se","co
                  par = c("i) habitat aglomerado e ii) sem perda de habitat",
                          "i) configuração contemporanea do habitat e ii) habitat aglomerado",
                          "i) configuração contemporanea do habitat e ii) sem perda de habitat"),
-                 `descrição` = c("efeito de perda de habitat:
-                                 Componente da conectividade contemporânea que depende apenas da quantidade do habitat remanescente",
+                 `interpretação` = c("efeito de perda de habitat:
+                                 componente da conectividade contemporânea 
+                                 que depende apenas da quantidade do habitat remanescente",
                                  "efeito de fragmentação per se:
-                                 Componente da conectividade contemporânea que depende apenas da configuração espacial do habitat remanescente",
+                                 componente da conectividade contemporânea 
+                                 que depende apenas da configuração espacial do habitat remanescente",
                                  "efeito da conectividade contemporânea:
-                                 diferença entre a conectividade na paisagem observada no mesmo momento da amostragem e na paisagem sem perda de habitat")
+                                 diferença entre a conectividade 
+                                 na paisagem observada no mesmo momento da amostragem e 
+                                 na paisagem sem perda de habitat")
                  )
-names(l_df) <- c("predições","contrastes")
-v_title <- c("tipos de predições","tipos de contrastes")
+l_df[[3]] <- data.frame(nome = c("k","p","areaU","fragU","contempU","areaSAD","fragSAD","contempSAD"),
+  `descrição` = c("grau de limitação de dispersão per capita",
+                  "proporção de cobertura vegetal na extensão de 4x4 km2",
+                  "contraste de área per se na taxa U",
+                  "contraste de frag. per se na taxa U",
+                  "contraste de contemp. na taxa U",
+                  "contraste de área per se na congruência da SAD predita",
+                  "contraste de frag. per se na congruência da SAD predita",
+                  "contraste de contemp.  na congruência da SAD predita"))
+v_footnote <- c(NA,NA,"variável que controla a influência da paisagem ao redor na dinâmica local,
+            possui efeito fixo e aleatório (i.e. por sítio de amostragem); as outras possuem apenas efeito fixo")
+names(l_df) <- c("predições",
+                 "contrastes",
+                 "preditoras")
+v_title <- c("tipos de predições simuladas",
+             "tipos de contrastes entre simulações",
+             "tipos de preditoras no modelo estatístico")
 l_df <- l_df %>% 
-  f_gt(.,v_title) %>% 
+  f_gt(.,v_title,v_footnote) %>% 
   f_gt_to_ggplot()
 gridExtra::grid.arrange(grobs=l_df,layout_matrix=rbind(c(1,1),
-                                                       c(2,2)),
+                                                       c(2,2),
+                                                       c(3,3)),
                         top="Glossário")
 ```
 

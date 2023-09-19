@@ -1,3 +1,4 @@
+source("source/nameModel.R")
 ll_ggpng <- \(l_paths){
   if(!is.list(l_paths)) l_paths <- as.list(l_paths)
   lapply(l_paths,png::readPNG) %>% 
@@ -5,15 +6,22 @@ ll_ggpng <- \(l_paths){
              annotation_custom(grid::rasterGrob(p), xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
              theme_void())
 }
-f_gt <- \(l_d,vtitle){
+f_gt <- \(l_d,vtitle,v_footnote){
   # vtitle <- c("Códigos atuais para FluA ('PCR_FLUASU')",
   #             "Códigos atuais para FluB ('PCR_FLUBLI')",
   #             "Códigos dicionário 09-12 ('*_ETIOL')",
   #             "Códigos dicionário 13-18 ('RES_FLUASU')")
   names(vtitle) <- names(l_d)
+  names(v_footnote) <- names(l_d)
   l_d <- lapply(names(l_d),\(s) l_d[[s]] %>% 
                   gt() %>% 
-                  tab_header(title=vtitle[s]))
+                  tab_header(title=vtitle[s]) %>% 
+                  {if(!is.na(v_footnote[s]))  tab_footnote(.,
+                    footnote = v_footnote[s],
+                    locations = cells_body(
+                      columns = nome,
+                      rows = 1)
+                  ) else .})
   names(l_d) <- names(vtitle)
   return(l_d)
 } # f especifica para esse chunk: correspondência entre os nomes dos df e os títulos das tabelas
