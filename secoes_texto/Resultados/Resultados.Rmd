@@ -19,7 +19,8 @@ text-align: justify}
 </style>
 
 ```{r setup,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,fig.align='center',tab.align='center')
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
+                      fig.align='center',tab.align='center')
 # pacotes
 library(ggpubr)
 library(gt)
@@ -126,7 +127,7 @@ Pressupomos que a extensão espacial da paisagem adequada é aquela que acumula 
 
 Comparamos as simulações nas 3 paisagens hipotéticas par a par. Avaliamos 2 tipos de contrastes: entre a taxa U estimada; e a congruência nas SADs preditas. Os contraste entre a paisagem contemporânea e a idealizada podem ser compreendidos como o efeito completo da conectividade contemporânea entre parcela e paisagem ao redor na manutenção do padrão avaliado. Os contrastes entre a paisagem contemporânea e sem fragmentação per se podem ser interpretados como o efeito da fragmentação per se, o componente da conectividade contemporânea que depende apenas da configuração espacial do habitat remanescente. Os contrastes entre a paisagem sem fragmentação per se e a idealizada podem ser interpretados como o efeito da perda de área, o componente da conectividade contemporânea que depende apenas da quantia de habitat perdido. Uma vez que a extensão da paisagem ao redor de 4x4km2 é suficiente para simular todos os graus de limitação de dispersão (Apêndice 1 Efeito de Escala), os contrastes entre paisagens contemporâneas e idealizadas são condicionais apenas à escala espacial determinada pelo grau de limitação de dispersão e a configuração espacial do habitat remanescente. A estimativa da taxa U e a SAD predita nas paisagens sem fragmentação per se são condicionais também à extensão espacial de 4x4km2, pois ela é usada como referência para determinar a quantidade de habitat que será aglomerado ao redor da parcela (Figura A1 1). Um conjunto de simulações que não fizemos foi o de usar a menor extensão espacial adequada para cada respectivo grau de limitação de dispersão, assim teríamos simulações também nas extensão de 1x1 km2 e 2x2km2 para alguns graus de limitação de dispersão (Figura A1 6).
 
-```{r}
+```{r glossário 3 tabelas CRIACAO,eval=FALSE,include=FALSE}
 l_df <- list()
 l_df[[1]] <- data.frame(`predição` = c("taxa U","SAD"),
                         `descrição` = c("Probabilidade per nascimento 
@@ -153,8 +154,7 @@ l_df[[2]] <- data.frame(contraste = c("área per se","fragmentação per se","co
                                  componente da conectividade contemporânea 
                                  que depende apenas da configuração espacial do habitat remanescente",
                                  "efeito da conectividade contemporânea:
-                                 diferença entre a conectividade 
-                                 na paisagem observada no mesmo momento da amostragem e 
+                                 diferença entre a conectividade na configuração espacial contemporânea ao evento de amostragem da SAD e 
                                  na paisagem sem perda de habitat")
                  )
 l_df[[3]] <- data.frame(nome = c("k","p","areaU","fragU","contempU","areaSAD","fragSAD","contempSAD"),
@@ -166,25 +166,32 @@ l_df[[3]] <- data.frame(nome = c("k","p","areaU","fragU","contempU","areaSAD","f
                   "contraste de área per se na congruência da SAD predita",
                   "contraste de frag. per se na congruência da SAD predita",
                   "contraste de contemp.  na congruência da SAD predita"))
-v_footnote <- c(NA,NA,"variável que controla a influência da paisagem ao redor na dinâmica local,
-            possui efeito fixo e aleatório (i.e. por sítio de amostragem); as outras possuem apenas efeito fixo")
+v_footnote <- c(
+  NA,
+  "Conectividade = movimentação de indivíduos entre área amostrada e paisagem ao redor",
+  "variável que controla a influência da paisagem ao redor na dinâmica local,
+  possui efeito fixo e aleatório (i.e. por sítio de amostragem); as outras possuem apenas efeito fixo")
 names(l_df) <- c("predições",
                  "contrastes",
                  "preditoras")
 v_title <- c("tipos de predições simuladas",
              "tipos de contrastes entre simulações",
              "tipos de preditoras no modelo estatístico")
-l_df <- l_df %>% 
-  f_gt(.,v_title,v_footnote) 
-l_df
-# %>% 
-#   f_gt_to_ggplot()
+l_p <- l_df %>% 
+  f_gt(.,v_title,v_footnote) %>% 
+  f_gt_to_ggplot()
+save(l_p,file="./dados/Rdata/l_glossario.Rdata")
 # gridExtra::grid.arrange(grobs=l_df,layout_matrix=rbind(c(1,1),
 #                                                        c(2,2),
 #                                                        c(3,3)),
 #                         top="Glossário")
 ```
 
+```{r glossario display,cache=FALSE}
+load("./dados/Rdata/l_glossario.Rdata")
+unname(l_p)
+rm(l_p)
+```
 
 
 ## taxa U
@@ -248,7 +255,7 @@ __Figura \@ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM.
 
 
 
-```{r frag ~ area Taxa U, fig.cap="\\label{frag_area_taxaU}frag ~ area Taxa U"}
+```{r frag ~ area Taxa U, fig.cap="\\label{frag_area_taxaU}frag ~ area Taxa U",eval=FALSE,include=FALSE}
 load("./dados/Rdata/frag_area_taxaU.Rdata")
 df |> 
   ggplot(aes(x=area_z,y=frag_z)) +
@@ -272,7 +279,7 @@ df |>
   theme(plot.caption = element_text(hjust=0))
 ```
 
-__Figura \@ref{frag_area_taxaU}__ Intervalo de Predição estimado pelos GAMM. 
+<!-- __Figura \@ref{frag_area_taxaU}__ Intervalo de Predição estimado pelos GAMM.  -->
 
 ## congruência da SAD predita 
 

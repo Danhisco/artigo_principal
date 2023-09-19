@@ -16,11 +16,17 @@ f_gt <- \(l_d,vtitle,v_footnote){
   l_d <- lapply(names(l_d),\(s) l_d[[s]] %>% 
                   gt() %>% 
                   tab_header(title=vtitle[s]) %>% 
-                  {if(!is.na(v_footnote[s]))  tab_footnote(.,
+                  {if(s=="preditoras")  tab_footnote(.,
                     footnote = v_footnote[s],
                     locations = cells_body(
                       columns = nome,
                       rows = 1)
+                  ) else .} %>% 
+                  {if(s=="contrastes")  tab_footnote(.,
+                                                     footnote = v_footnote[s],
+                                                     locations = cells_body(
+                                                       columns = `interpretação`,
+                                                       rows = 3)
                   ) else .})
   names(l_d) <- names(vtitle)
   return(l_d)
