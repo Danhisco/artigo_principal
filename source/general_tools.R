@@ -36,5 +36,6 @@ f_gt_to_ggplot <- \(l_d){
   a_ply(1:length(l_d),1,\(i) gtsave(data = l_d[[i]],filename = l_temp[i]))
   l_p <- ll_ggpng(l_temp)
   names(l_p) <- names(l_d)
+  l_ply(l_temp,file.remove)
   return(l_p)
 }

@@ -484,6 +484,8 @@ Figura Final Congruência da SAD entre pares de contrastes em função dos contr
 
 ## diffS
 
+
+
 ```{r Tabela de Seleção LMERs Diferença na Riqueza Estimada}
 l_f <- list()
 l_f[[1]] <- diffS ~ land_hyp * k * p_z + (1|SiteCode)

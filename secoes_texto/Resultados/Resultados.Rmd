@@ -129,20 +129,24 @@ Comparamos as simulações nas 3 paisagens hipotéticas par a par. Avaliamos 2 t
 
 ```{r glossário 3 tabelas CRIACAO,eval=FALSE,include=FALSE}
 l_df <- list()
-l_df[[1]] <- data.frame(`predição` = c("taxa U","SAD"),
-                        `descrição` = c("Probabilidade per nascimento 
+l_df[[1]] <- data.frame(`resultado` = c("taxa U","SAD","diff(S)"),
+                        `nome` = c("Probabilidade per nascimento 
                                         do colonizador do habitat disponível ser uma nova espécie na paisagem",
-                                        "Distribuição de Abundância de Espécies na área amostrada"),
+                                        "Distribuição de Abundância de Espécies na área amostrada",
+                                        "Erro na riqueza estimada"),
                         `comparações` = c("em um contraste, 
                                           a diferença na taxa U média 
                                           dividido pela tava U média estimada em paisagens sem perda de habitat",
                                           "teste do tipo Kolmogorov-Smirnov: 
                                           dois vetores são comparados pela maior diferença entre suas curvas acumuladas; 
-                                          se o p-valor for maior do 5% então atribuímos boa congruência entre as duas SADs testadas"),
+                                          se o p-valor for maior do 5% então atribuímos boa congruência entre as duas SADs testadas",
+                                          "(S - Sobs) / Sobs, S = riqueza simulada, Sobs = riqueza observada"),
                         `análises` = c("modelos gaussianos: média da diferença entre o par do contraste",
-                                       "modelos binomiais: probabilidade de boa congruência entre SADs"),
+                                       "modelos binomiais: probabilidade de boa congruência entre SADs",
+                                       "modelos gaussianos: média do erro na estimativa da riqueza"),
                         obs = c("estimado para obter a riqueza observado",
-                                "aplicado entre SADs preditas e entre preditas e empírica"))
+                                "aplicado entre SADs preditas e empírica",
+                                "aplicado entre SADs preditas e empírica"))
 l_df[[2]] <- data.frame(contraste = c("área per se","fragmentação per se","contemporaneidade"),
                  par = c("i) habitat aglomerado e ii) sem perda de habitat",
                          "i) configuração contemporanea do habitat e ii) habitat aglomerado",
@@ -171,10 +175,10 @@ v_footnote <- c(
   "Conectividade = movimentação de indivíduos entre área amostrada e paisagem ao redor",
   "variável que controla a influência da paisagem ao redor na dinâmica local,
   possui efeito fixo e aleatório (i.e. por sítio de amostragem); as outras possuem apenas efeito fixo")
-names(l_df) <- c("predições",
+names(l_df) <- c("resultados",
                  "contrastes",
                  "preditoras")
-v_title <- c("tipos de predições simuladas",
+v_title <- c("tipos de resultados",
              "tipos de contrastes entre simulações",
              "tipos de preditoras no modelo estatístico")
 l_p <- l_df %>% 
@@ -193,12 +197,10 @@ unname(l_p)
 rm(l_p)
 ```
 
-
 ## taxa U
-Quando há pouca perda de habitat a estimativa da taxa U não difere entre paisagens hipotéticas (Figura A2 2 e 3). Com a redução da cobertura vegetal a estimativa da taxa U pode ser distinta entre paisagens hipotéticas. Em graus de limitação de dispersão mais relaxados pode existir o aumento da taxa U estimada nas paisagem contemporâneas ou sem fragmentação (Figura A2 3). Em geral a taxa U estimada nas paisagens contemporâneas é a maior das três paisagens hipotéticas (Figura A2 3). Em alguns casos a paisagem sem fragmentação per se pode apresentar estimativas superiores (Figura A2 3). Nos graus onde há pouca variação no efeito de escalar (k entre 0.80 e 0.55) também há pouca variação entre paisagens hipotéticas (Figura A2 2 e 3). As diferenças entre paisagens hipotéticas ocorre em geral em graus de limitação de dispersão mais brandos (Figura A2 2 e 3). Em paisagens com baixa proporção de cobertura florestal as estimativas em graus severos de limitação de dispersão também podem ser distintas entre paisagens hipotéticas (Figura A2 2 e 3). 
+A distribuição de contrastes apresenta elevada assimetria, com a maioria dos valores próximos do observado em paisagens com pouca perda de habitat e poucos casos distante desta faixa de valores (Figura A2 4). Quando há pouca perda de habitat a estimativa da taxa U não difere entre paisagens hipotéticas (Figuras A2, 2 e 3). Com a redução da cobertura vegetal a estimativa da taxa U pode ser distinta entre paisagens hipotéticas. Em graus de limitação de dispersão mais relaxados pode existir o aumento da taxa U estimada nas paisagem contemporâneas ou sem fragmentação (Figura 1). Em geral a taxa U estimada nas paisagens contemporâneas é a maior das três paisagens hipotéticas (Figura A2 3). Em alguns casos a paisagem sem fragmentação per se pode apresentar estimativas superiores (Figura A2 3). Nos graus onde há pouca variação no efeito de escalar (k entre 0.80 e 0.55) também há pouca variação entre paisagens hipotéticas (Figura A2 2 e 3). As maiores diferenças entre paisagens hipotéticas ocorre em graus de limitação de dispersão mais brandos (Figura A2 2 e 3). Em paisagens com baixa proporção de cobertura florestal as estimativas em graus severos de limitação de dispersão também podem ser distintas entre paisagens hipotéticas (Figura A2 2 e 3). Alguns sítios apresentaram contraste de fragmentação per se com valores negativos maiores do que o observado nos sítios em paisagens com pouca perda de habitat (Figura A2 4). O contraste de área per se apresentou os menores valores em magnitude (Figura A2 4). 
 
-A distribuição de contrastes apresenta elevada assimetria, com a maioria dos valores próximos do observado em paisagens com pouca perda de habitat e poucos casos distante desta faixa de valores (Figura A2 4). O contraste de fragmentação per se apresentou alguns sítios com valores negativos maiores do que a faixa de valores dos sítios em paisagens com pouca perda de habitat (Figura A2 4). O contraste de área per se apresentou os menores valores em magnitude (Figura A2 4). Os contrastes aumentam com a perda de habitat e com o redução da limitação de dispersão (Figura A2 4). Os GAMMs podem fazer boa predição dos contrastes observados (Apêndice 2, avaliação GAMM 1). O intervalo de predição dos GAMMs informa que o contraste entre paisagens hipotéticas aumenta com a perda de cobertura florestal e redução da limitação de dispersão (Figura \@ref{contrastes_pk}). Os intervalos de predição do contraste de contemporaneidade podem apresentar aumento do contraste em graus de limitação de dispersão severos em paisagens com pouca cobertura vegetal (Figura \@ref{contrastes_pk}).
-O GAMM que descreve o contraste de fragmentação per se em função do contraste de área per se não apresenta um boa predição dos valores observados (Figura \@ref{frag_area_taxaU} e Apêndice 2, avaliação GAMM 2). O intervalo de predição sugere que o contraste de fragmentação per se aumenta com o contraste de área per se, porém, em valores diminutos de área per se há diversos valores elevados de fragmentação per se (Figura \@ref{frag_area_taxaU}). 
+Os GAMMs podem fazer boa predição dos contrastes observados (Apêndice 2, avaliação GAMM 1). O intervalo de predição dos GAMMs informa que o contraste entre paisagens hipotéticas aumenta com a perda de cobertura florestal e redução da limitação de dispersão (Figura \@ref{contrastes_pk}). Os intervalos de predição do contraste de contemporaneidade podem apresentar aumento do contraste em graus de limitação de dispersão severos em paisagens com pouca cobertura vegetal (Figura \@ref{contrastes_pk}).
 
 ```{r ip contrastes ~ p k,fig.height=8,fig.width=12,fig.cap="\\label{contrastes_pk}ip contrastes ~ p k"}
 df_plot <- df_intPred |> 
@@ -253,76 +255,6 @@ ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
 
 __Figura \@ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM. 
 
-
-
-```{r frag ~ area Taxa U, fig.cap="\\label{frag_area_taxaU}frag ~ area Taxa U",eval=FALSE,include=FALSE}
-load("./dados/Rdata/frag_area_taxaU.Rdata")
-df |> 
-  ggplot(aes(x=area_z,y=frag_z)) +
-  geom_point(alpha=0.2) +
-  geom_line(aes(y=predito,group=SiteCode),alpha=0.2) +
-  # geom_line(data=df_pred_newdata,aes(x=area_z,y=predito),color="darkgreen") +
-  geom_line(data=df_pred_newdata,aes(x=area_z,y=Q_0.5),color="darkred") +
-  geom_line(data = df_pred_newdata |> 
-              select(-Q_0.5) |> 
-              pivot_longer(starts_with("Q_0.")),
-            aes(x=area_z,y=value,group=name),color="darkblue") +
-  # scale_y_continuous(limits=range(df$frag_z)) +
-  # annotate("rect",xmin = -1,xmax=1,ymin=14,ymax=16) +
-  # annotate("text",x = 0,y = 15,
-  #          label=paste0("dev. exp. = ",round(v_devexp*100,digits = 1),"%*"),color="white") +
-  labs(x="z(contraste área per se)",y="z(contraste frag. per se)",
-       title="observado e predito pelo modelo completo e sem a variação entre sítios",
-       subtitle = "horizontal lines = quantile(x, probs=c(0.95,0.99))") +
-  geom_vline(xintercept = quantile(df$area_z,probs = c(0.95,0.99)),linetype="dashed",alpha=0.3) +
-  theme_bw() +
-  theme(plot.caption = element_text(hjust=0))
-```
-
-<!-- __Figura \@ref{frag_area_taxaU}__ Intervalo de Predição estimado pelos GAMM.  -->
-
-## congruência da SAD predita 
-
-Tabela \@ref{ts_congCont} (tabela de seleção dos gamm usados para descrever congCont)
-
-```{r ts congCont,cache=TRUE,tab.cap="\\label{ts_congCont}ts congCont"}
-df_tab <- read_csv("./dados/csv/ts_congCont.csv")
-df_tab |> 
-  gt(groupname_col = "pair",
-     # rowname_col = "modelo",
-     rownames_to_stub = F) |> 
-  # tab_header(title = "GAMM usados para descrever a congruência na SAD entre contrastes") |> 
-  fmt_number(columns = dAICc:dev.expl,decimals = 2, suffixing = TRUE) |> 
-  cols_label(dev.expl = "dev. expl.") |> 
-  tab_row_group(label = md("<center><b>Sem Fragmentação <i>per se</i> : Idealizado<b/></center>"),
-                rows = 5:6) |> 
-  tab_row_group(label = md("<center><b>Contemporâneo : Sem Fragmentação <i>per se</i><b/></center>"),
-                rows = 3:4) |>
-  tab_row_group(label = md("<center><b>Contemporâneo : Idealizado</center></b>"),
-                rows = 1:2) |>
-  tab_style(style = cell_fill(color = "gray75"),
-            locations = cells_row_groups(groups = 1:3)) |> 
-  cols_align(align = "right") |> 
-  tab_style(style = cell_text(align = "left",
-                              weight = "bold"),
-            locations = cells_column_labels(columns = modelo:dev.expl)) |> 
-  text_case_when(x == "f(contraste_z)" ~ "~ f(contraste U)",
-                 x == "f(k_z,p_z)" ~ "~ f(k, p)",
-                 .default = "",.locations = cells_body(columns = "modelo")) |> 
-  cols_width(modelo ~ px(130),where(is.numeric) ~ px(100))
-```
-
-
-
-```{r ip congCont,fig.cap="\\label{ip_congCont}ip congCont"}
-load("./dados/Rdata/ip_congCont.Rdata")
-grid.arrange(grobs=l_p,
-             layout_matrix=rbind(c(1,2),
-                                 c(3,2)))
-```
-
-__Figura \@ref{ip_congCont}__ Congruência da SAD predita entre contrastes: observada e estimada quando se pressupõe ausência de variabilidade entre sítios. 
-
 # SAD observada e SAD predita entre paisagens hipotéticas
 
 ## Diferença na Riqueza Estimada
@@ -352,7 +284,6 @@ df_tab <- read_csv("./dados/csv/df_ts_prconganalise4.csv") %>% as.data.frame()
 df_tab %>% 
   gt::gt()
 ```
-
 
 #### figuras para descrever Probabilidade de Congruência
 
@@ -394,7 +325,6 @@ f_plot <- \(df_md,newpred_path="./dados/csv/df_ad4.csv",mdRdata_path="./dados/Rd
     facet_wrap(~land_hyp)
 }
 
-
 if(!exists("l_md")) load("./dados/Rdata/PrCong_analise4.Rdata")  
 if(file.exists("./dados/csv/df_ts_prconganalise4.csv")){
   df_tab <- read_csv("./dados/csv/df_ts_prconganalise4.csv") %>% as.data.frame()
@@ -429,4 +359,30 @@ df_plot <- l_df[[1]] %>%
 
 ```
 
-
+<!-- ### antigo, util?-->
+```{r exemplo tabela,eval=FALSE,include=FALSE}
+df_tab <- read_csv("./dados/csv/ts_congCont.csv")
+df_tab |> 
+  gt(groupname_col = "pair",
+     # rowname_col = "modelo",
+     rownames_to_stub = F) |> 
+  # tab_header(title = "GAMM usados para descrever a congruência na SAD entre contrastes") |> 
+  fmt_number(columns = dAICc:dev.expl,decimals = 2, suffixing = TRUE) |> 
+  cols_label(dev.expl = "dev. expl.") |> 
+  tab_row_group(label = md("<center><b>Sem Fragmentação <i>per se</i> : Idealizado<b/></center>"),
+                rows = 5:6) |> 
+  tab_row_group(label = md("<center><b>Contemporâneo : Sem Fragmentação <i>per se</i><b/></center>"),
+                rows = 3:4) |>
+  tab_row_group(label = md("<center><b>Contemporâneo : Idealizado</center></b>"),
+                rows = 1:2) |>
+  tab_style(style = cell_fill(color = "gray75"),
+            locations = cells_row_groups(groups = 1:3)) |> 
+  cols_align(align = "right") |> 
+  tab_style(style = cell_text(align = "left",
+                              weight = "bold"),
+            locations = cells_column_labels(columns = modelo:dev.expl)) |> 
+  text_case_when(x == "f(contraste_z)" ~ "~ f(contraste U)",
+                 x == "f(k_z,p_z)" ~ "~ f(k, p)",
+                 .default = "",.locations = cells_body(columns = "modelo")) |> 
+  cols_width(modelo ~ px(130),where(is.numeric) ~ px(100))
+```
