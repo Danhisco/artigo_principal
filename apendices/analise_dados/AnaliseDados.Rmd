@@ -326,6 +326,35 @@ f_PredInt.GAMM <- \(gamm,
 2 variáveis respostas (diffS e nCong), mesmo conjunto de modelos candidatos
 
 ```{r}
+## versão para defesa
+l_f <- list()
+l_f[[1]] <- "~ k_z * land_hyp + (k_z * land_hyp|SiteCode)"
+l_f[[2]] <- "~ k_z + land_hyp + (k_z + land_hyp|SiteCode)"
+l_f[[3]] <- "~ land_hyp + (land_hyp|SiteCode)"
+l_f[[4]] <- "~ 1 + (1|SiteCode)"
+names(l_f) <- laply(l_f,\(s) trimws(str_extract(s, "~(.*?)(?=\\+)")))
+f_lmd <- \(lf,Rdata_path="./dados/Rdata/glmm_"){
+  df_code <- data.frame(nome=c("diffS","nCong"),
+                        funcao=c("function(f) lmer(as.formula(f),data=df_md)",
+                                 "function(f) glmer(as.formula(f),family='binomial',data=df_md,control=glmerControl(optimizer='bobyqa',optCtrl=list(maxfun=2e9)))"),
+                        f_resp = c("diffS ~",
+                                   "cbind(nCong,100-nCong) ~"))
+  f_a_ply <- \(df){
+    env <- environment()
+    f_md <- eval(parse(text = df$funcao),envir=env)
+    f <- gsub("~",df$f_resp,lf)
+    l_md <- llply(f,f_md)
+    names(l_md) <- names(lf)
+    name_l <- paste0("l_md_",df$nome)
+    assign(name_l,l_md)
+    save(list=name_l,file=paste0(Rdata_path,name_l,".Rdata"))
+  }
+  a_ply(df_lme4,1,f_a_ply)
+}
+l_f %>% f_lmd()
+
+
+## versão ad4
 l_f <- list()
 l_f[[1]] <- "~ land_hyp + s(land_hyp,SiteCode,bs='re')"
 l_f[[2]] <- gsub("\\+",

@@ -1,4 +1,5 @@
 source("source/nameModel.R")
+f_evalhere <- \(s) eval(parse(text = s),envir=env)
 ll_ggpng <- \(l_paths){
   if(!is.list(l_paths)) l_paths <- as.list(l_paths)
   lapply(l_paths,png::readPNG) %>% 

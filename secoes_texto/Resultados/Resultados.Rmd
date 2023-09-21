@@ -162,12 +162,13 @@ l_df[[3]] <- data.frame(contraste = c("área per se","fragmentação per se","co
                                  diferença entre a conectividade na configuração espacial contemporânea ao evento de amostragem da SAD e 
                                  na paisagem sem perda de habitat")
                  )
-l_df[[4]] <- data.frame(nome = c("k","p","areaU","fragU","contempU"),
+l_df[[4]] <- data.frame(nome = c("k","p","areaU","fragU","contempU","land hyp","Site"),
   `descrição` = c("grau de limitação de dispersão per capita",
                   "proporção de cobertura vegetal na extensão de 4x4 km2",
                   "contraste de área per se na taxa U",
                   "contraste de frag. per se na taxa U",
-                  "contraste de contemp. na taxa U"))
+                  "contraste de contemp. na taxa U",
+                  "classe da paisagem simulada"))
 v_footnote <- c(
   NA,
   NA,
@@ -182,7 +183,7 @@ v_title <- c("tipos de paisagens",
              "tipos de resultados",
              "tipos de contrastes entre simulações",
              "tipos de preditoras no modelo estatístico")
-# l_df %>% f_gt(.,v_title,v_footnote)
+l_df %>% f_gt(.,v_title,v_footnote)
 # l_p <- l_df %>% 
 #   f_gt(.,v_title,v_footnote) %>% 
 #   f_gt_to_ggplot()
@@ -194,9 +195,9 @@ v_title <- c("tipos de paisagens",
 ```
 
 ```{r glossario display,cache=FALSE}
-# load("./dados/Rdata/l_glossario.Rdata")
-# unname(l_p)
-# rm(l_p)
+load("./dados/Rdata/l_glossario.Rdata")
+unname(l_p)
+rm(l_p)
 ```
 
 ## taxa U
