@@ -366,26 +366,6 @@ l_ply(names(l_md.contrastes),\(string) f_validaGAMM(md_name = string,l_md=l_md.c
 O GAMM do contraste de área apresenta o melhor ajuste entre os GAMMs para os 3 contrastes. O spline indivídual para a variável p apresenta a melhor estimativa do efeito parcial médio, com o desvio padrão sendo mais uniforme ao longo da estimativa do efeito parcial médio (gráfico 's(p_z)' no output da função 'gratia::draw'; e outputs das funções 'mgcv::k.check' e 'mgcv::summary'). Os splines indivíduos para a variável p nos GAMMs dos outros dois contrastes (contemporâneo e fragmentação per se) apresentam estimativa do efeito médio que tendem à uma reta ; o ajuste do GAMM para o contraste de contemporaneidade parece ser mais adequado do que o fragmentação per se, pois o desvio padrão ao redor da estimativa de efeito médio é mais uniforme ao longo do gradiente da preditora (gráfico 's(p_z)' do output da função 'gratia::draw'). Os 3 GAMMs não fazem um bom ajuste de valores extremos dos contrastes (output da função 'gratia:appraise - QQplot of residuals'), o quê explica a melhor qualidade do GAMM para o contraste de área per se. O deviance explained  dos GAMMs foram 96.2%, 98.1% e 98.1% para os contrastes de área, contemporaneidade e fragmentação per se, respectivamente. As estimativas de efeitos médios dos splines da variável k de cada inventário florestal podem apresentar variação qualitativa do padrão dos efeitos médios do spline geral para a variável k ou do tensor entre a variável k e a variável p (output da função 'gratia::draw').
 
 
-## Contrastes - Congruência SADs preditas
-
-__Janela de output R console 3__ Validação dos GAMMs mais plausíveis
-
-```{r janela output 3 ctror,eval=F,include=F}
-load("./dados/Rdata/l_md_congContrastes.Rdata")
-df_tab <- read_csv("./dados/csv/ts_congCont.csv") %>% as.data.frame()
-# df_tab
-df_mdlik <- df_tab |> filter(dAICc == 0) |> select(pair,modelo)
-l_md_plot <- alply(df_mdlik,1,\(df) l_md_congContrastes[[df$pair]][[df$modelo]])
-names(l_md_plot) <- df_mdlik$pair
-save(l_md_plot,file="./dados/Rdata/janelaA23.Rdata")
-```
-
-```{r Janela de output R console 3}
-load("./dados/Rdata/janelaA23.Rdata")
-l_ply(names(l_md_plot),\(string) f_validaGAMM(md_name = string,l_md=l_md_plot))
-```
-
-
 ## Congruência com a SAD observada
 
 ### Erro na Riqueza Estimada
