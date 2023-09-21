@@ -320,193 +320,62 @@ f_PredInt.GAMM <- \(gamm,
 }
 ```
 
-### Fragmentação per se ~ Área per se
-
-```{r frag per se em funcao de area per se}
-df <- df_md |> 
-  filter(logOR_pair == "cont.non_frag") |> 
-  rename(frag_z=contraste_z) |> 
-  mutate(area_z = df_md |> 
-           filter(logOR_pair == "non_frag.ideal") |> 
-           pull(contraste_z),
-         SiteCode = factor(SiteCode))
-md_frag_area <- gam(frag_z ~ 
-                      s(area_z,bs="tp") + 
-                      s(area_z,SiteCode,bs="fs",xt=list(bs="tp")) + 
-                      s(SiteCode,bs="re"),
-                      data=df,method = "REML")
-# save(md_frag_area,file="dados/Rdata/md_frag_area.Rdata")
-#
-# load("./dados/Rdata/md_frag_area.Rdata")
-# dados
-df <- df_congContrastes |> 
-  filter(pair == "cont.non_frag") |> 
-  rename(frag_z=contraste_z) |> 
-  mutate(area_z = df_congContrastes |> 
-           filter(pair == "non_frag.ideal") |> 
-           pull(contraste_z),
-         SiteCode = factor(SiteCode))
-df_newpred <- data.frame(area_z = seq(min(df$area_z),max(df$area_z),length.out=200)) |> 
-  mutate(SiteCode = "SPigua1")
-df_pred_newdata <- f_PredInt.GAMM(data=df_newpred,
-                                  gamm=md_frag_area,
-                                  v_exclude=c("s(area_z,SiteCode)","s(SiteCode)"))
-df$predito <- predict(md_frag_area)
-# gráfico
-# v_devexp <- summary(md_frag_area)$dev.exp
-save(df,df_pred_newdata,"./dados/Rdata/frag_area_taxaU.Rdata")
-```
-
-
-
-
-```{r protocolo de validacao simples GAMM frag ~ area|Site}
-load("dados/Rdata/md_frag_area.Rdata")
-k.check(md_frag_area)
-summary(md_frag_area)
-gratia::appraise(md_frag_area)
-gratia::draw(md_frag_area)
-```
-```{r GAMM frag ~ area|Site intervalo de predicao a posteriori}
-# dados
-df <- df_md |> 
-  filter(logOR_pair == "cont.non_frag") |> 
-  rename(frag_z=contraste_z) |> 
-  mutate(area_z = df_md |> 
-           filter(logOR_pair == "non_frag.ideal") |> 
-           pull(contraste_z),
-         SiteCode = factor(SiteCode))
-df_newpred <- data.frame(area_z = seq(min(df$area_z),max(df$area_z),length.out=200)) |> 
-  mutate(SiteCode = "SPigua1")
-df_pred_newdata <- f_PredInt.GAMM(data=df_newpred,
-                                  gamm=md_frag_area,
-                                  v_exclude=c("s(area_z,SiteCode)","s(SiteCode)"))
-df$predito <- predict(md_frag_area)
-# gráfico
-v_devexp <- summary(md_frag_area)$dev.exp
-df |> 
-  ggplot(aes(x=area_z,y=frag_z)) +
-  geom_point(alpha=0.2) +
-  geom_line(aes(y=predito,group=SiteCode),alpha=0.2) +
-  # geom_line(data=df_pred_newdata,aes(x=area_z,y=predito),color="darkgreen") +
-  geom_line(data=df_pred_newdata,aes(x=area_z,y=Q_0.5),color="darkred") +
-  geom_line(data = df_pred_newdata |> 
-              select(-Q_0.5) |> 
-              pivot_longer(starts_with("Q_0.")),
-            aes(x=area_z,y=value,group=name),color="darkblue") +
-  # scale_y_continuous(limits=range(df$frag_z)) +
-  annotate("rect",xmin = -1,xmax=1,ymin=14,ymax=16) +
-  annotate("text",x = 0,y = 15,
-           label=paste0("dev. exp. = ",round(v_devexp*100,digits = 1),"%*"),color="white") +
-  labs(x="z(contraste área per se)",y="z(contraste frag. per se)",
-       title="observado e predito pelo modelo completo e sem a variação entre sítios",
-       subtitle = "horizontal lines = quantile(x, probs=c(0.95,0.99))",
-       caption = "*full model") +
-  geom_vline(xintercept = quantile(df$area_z,probs = c(0.95,0.99)),linetype="dashed",alpha=0.3) +
-  theme_bw() +
-  theme(plot.caption = element_text(hjust=0))
-```
-
-
-
-### Probabilidade de Congruência entre as SADs preditas nos contrastes
-
-```{r GE relacao entre respectiva congruencia e contraste nos pares da comparacao}
-f_ggplot <- \(df){
-  df |> 
-    ggplot(aes(x=contraste_z,y=nCong)) +
-    geom_point() +
-    geom_smooth(method = "gam") +
-    labs(x="") +
-    facet_wrap(~pair,strip.position = "bottom",
-               labeller = as_labeller(c(cont.ideal='diff(cont., ideal.)',
-                                        cont.non_frag='diff(cont., non frag.)',
-                                        non_frag.ideal='diff(non frag., ideal.)'))) +
-    theme(strip.background = element_blank(),
-          strip.placement='outside')
-}
-l_p <- dlply(df_congContrastes,"pair",f_ggplot)
-grid.arrange(grobs=l_p,ncol=3,bottom="eixo x está z transformado")
-```
-
-```{r GAMM para descrever a relacao entre congruencia e contraste de U}
-f_GAMMcongCont <- function(df){
-  l_md <- list()
-  l_md[[1]] <- gam(cbind(nCong,500-nCong) ~ 
-                     s(k_z,bs = "cr") + s(p_z,bs = "cr") + ti(p_z,k_z) +
-                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                     s(SiteCode,bs="re"),
-                   data=df, method="REML",family="binomial")
-  l_md[[2]] <- gam(cbind(nCong,500-nCong) ~ 
-                     s(contraste_z,bs = "cr") + 
-                     s(contraste_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                     s(SiteCode,bs="re"),
-                   data=df, method="REML",family="binomial")
-  names(l_md) <- llply(l_md,f_nameModel)
-  return(l_md) 
-}
-l_md_congContrastes <- dlply(df_congContrastes,"pair",f_GAMMcongCont)
-# l_md_congContrastes <- l_md
-save(l_md_congContrastes,file="dados/Rdata/l_md_congContrastes.Rdata")
-```
-```{r validacao dos GAMMs Cong contrastes}
-load("dados/Rdata/l_md_congContrastes.Rdata")
-# validação
-l_ply(names(l_md_congContrastes),\(string) f_validaGAMM(md_name = string,l_md=l_md_congContrastes))
-ldply(l_md_congContrastes,f_TabSelGAMM)
-l_p <- dlply(df_congContrastes,"pair",f_plotCongCont)
-save(l_p,file="./dados/Rdata/ip_congCont.Rdata")
-```
-
-
-
-```{r modelos mais plausíveis GAMM CongContrastes}
-# l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
-# grid.arrange(grobs=l_p,ncol=3)
-df_tab <- ldply(l_md_congContrastes,f_TabSelGAMM)
-write_csv(df_tab,"./dados/csv/ts_congCont.csv")
-# df_tab
-df_mdlik <- df_tab |> filter(dAICc == 0) |> select(pair,modelo)
-l_md_plot <- alply(df_mdlik,1,\(df) l_md_congContrastes[[df$pair]][[df$modelo]])
-names(l_md_plot) <- df_mdlik$pair
-f_calcPIandSAVE <- \(mnames,path="dados/csv/df_PIcongCont",l_md=l_md_plot){
-  file_path <- paste0(path,mnames,".csv")
-  df_write <- f_calcPI(gamm=l_md[[mnames]])
-  write_csv(df_write,file = file_path)
-}
-a_ply(names(l_md_plot),1,f_calcPIandSAVE)
-```
-
-Figura Final Congruência da SAD entre pares de contrastes em função dos contrastes estimados para a taxa U.
-
 
 # Congruência com o observado
 
+2 variáveis respostas (diffS e nCong), mesmo conjunto de modelos candidatos
+
+```{r}
+l_f <- list()
+l_f[[1]] <- "~ land_hyp + s(land_hyp,SiteCode,bs='re')"
+l_f[[2]] <- gsub("\\+",
+                 "\\+ s\\(k_z,by\\=land_hyp,bs\\='cr',k\\=1\\) \\+ s\\(k_z,by\\=land_hyp,SiteCode,bs\\='fs',k\\=1\\) \\+",
+                 l_f[[1]])
+l0 <- as.list(paste0("land_hyp + s(",
+                     names(select(df_md,p_z,ends_with("U_z"))),
+                     ",by=land_hyp,bs='cr',k=1) + "))
+l0[length(l0)+1] <- "land_hyp + s(areaU_z,by=land_hyp,bs='cr',k=1) + s(fragU_z,by=land_hyp,bs='cr',k=1) + "
+l0 <- sapply(l0, \(s) str_replace(l_f[[2]],"land_hyp\\s\\+\\s",s))
+l_f <- c(l_f,l0)
+l0 <- c("f(land. hyp.|Site)","f(k * land. hyp.|Site)")
+names(l_f) <- c(l0,
+                sapply(paste0("(",gsub("_z","",names(select(df_md,p_z,ends_with("U_z")))),", k") %>% 
+                         gsub("U","",.), 
+                       \(s) sub("\\(k",s,l0[2])),
+                "f(area, frag, k * land. hyp.|Site)") %>% unname()
+df_formulas <- data.frame(nome = names(l_f),
+                          formula = unlist(l_f))  
+write_csv(df_formulas,file="./apendices/analise_dados/csv/df_formulas.csv")
+df_formulas %>% 
+  gt() %>% 
+  tab_header(title = "Modelos candidatos para investigar a congruência entre predito e observado")
+```
+
+
+
+
+#############
 ## diffS
 
 
-
 ```{r Tabela de Seleção LMERs Diferença na Riqueza Estimada}
-l_f <- list()
-l_f[[1]] <- diffS ~ land_hyp * k * p_z + (1|SiteCode)
-l_f[[2]] <- diffS ~ land_hyp * p_z + (1|SiteCode)
-l_f[[3]] <- diffS ~ land_hyp * k + (1|SiteCode)
-l_f[[4]] <- diffS ~ k * p_z + (1|SiteCode)
-l_f[[5]] <- diffS ~ land_hyp + (1|SiteCode)
-l_f[[6]] <- diffS ~ k + (1|SiteCode)
-l_f[[7]] <- diffS ~ p_z + (1|SiteCode)
-l_f[[8]] <- diffS ~ 1 + (1|SiteCode)
-l_md <- llply(l_f,\(f) lmer(f,data=df_md))
-names(l_md) <- llply(l_md,f_nameModel)
-df_seldiffs<- AICctab(l_md,weights=T) |> as.data.frame()
-df_seldiffs$modelo <- row.names(df_seldiffs)
-md_diffs <- l_md[[df_seldiffs$modelo[1]]]
-df_seldiffs |> 
-  gt()
-df_newpred <- f_diffSBtsIntPred(md_diffs)
-# write_csv(df_newpred,"./dados/csv/df_ip_diffS.csv")
-p <- f_diffSplotPI(md_diffs,df_newpred) + theme_bw()
-save(df_seldiffs,md_diffs,df_newpred,p,file = "./dados/Rdata/ts_diffs_E_ip_diffS")
+df_formulas <- read_csv(file="./apendices/analise_dados/csv/df_formulas.csv") %>% 
+  mutate(formula = sub("~","diffS ~",formula))
+l_md <- dlply(df_formulas,"nome",\(f) gam(formula=as.formula(f$formula),data=df_md,method="REML"))
+save(l_md,file="./dados/Rdata/l_md_diffS.Rdata")
+#
+df_formulas <- df_formulas %>% 
+  mutate(formula = sub("diffS","cbind\\(nCong,100-nCong\\)",formula))
+l_md <- dlply(df_formulas,"nome",\(f) gam(formula=as.formula(f$formula),data=df_md,method="REML",family="binomial"))
+save(l_md,file="./dados/Rdata/l_md_PrCong_ad4k1.Rdata")
+```
+
+```{r}
+#
+df_formulas <- df_formulas %>% 
+  mutate(formula = sub("diffS","cbind\\(nCong,100-nCong\\)",formula))
+l_md <- dlply(df_formulas,"nome",\(f) gam(formula=as.formula(f$formula),data=df_md,method="REML",family="binomial"))
+save(l_md,file="./dados/Rdata/l_md_PrCong_ad4k1.Rdata")
 ```
 
 
