@@ -332,6 +332,9 @@ l_f[[1]] <- "~ k_z * land_hyp + (k_z * land_hyp|SiteCode)"
 l_f[[2]] <- "~ k_z + land_hyp + (k_z + land_hyp|SiteCode)"
 l_f[[3]] <- "~ land_hyp + (land_hyp|SiteCode)"
 l_f[[4]] <- "~ 1 + (1|SiteCode)"
+#
+# allFit(l_nRef__modeloCheio[v_glmerUpdate][[i]],maxfun = 1e5, parallel = 'multicore', ncpus = 3)
+#
 names(l_f) <- laply(l_f,\(s) trimws(str_extract(s, "~(.*?)(?=\\+)")))
 f_lmd <- \(lf,Rdata_path="./dados/Rdata/glmm_"){
   df_code <- data.frame(nome=c("diffS","nCong"),
