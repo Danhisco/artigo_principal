@@ -1,4 +1,49 @@
 source("source/nameModel.R")
+f_ts_converg.md <- \(l_md_i){
+  f_warning <- function(x) x@optinfo$conv$lme4$messages %>% 
+    paste(.,collapse = " , ") %>% sub("$","NA",.)
+  f_pseudoR2 <- \(md){
+    MuMIn::r.squaredGLMM(md) %>% as.data.frame() %>% apply(.,2,mean)
+  }
+  df_warnings <- ldply(l_md_i,f_warning,.id="glmer")
+  v_convmd <- df_warnings %>% filter(V1=="NA") %>% pull("glmer") %>% as.character()
+  l_md_i <- l_md_i[v_convmd]
+  df_ts <- AICctab(l_md_i,weights=TRUE,mnames = names(l_md_i)) %>% 
+    {if(length(v_convmd)==1) as.data.frame(.,row.names = v_convmd) else as.data.frame(.)} %>% 
+    mutate(.,md=rownames(.))
+  row.names(df_ts) <- NULL
+  df_r2 <- ldply(l_md_i,f_pseudoR2,.id = "md")
+  inner_join(df_ts,df_r2,by="md") %>% relocate(md)
+}
+f_loadll <- \(l_path){
+  v_name <- c()
+  l_md <- list()
+  for(i in 1:length(l_path)){
+    v_name[i] <- load(l_path[[i]],verbose = TRUE)
+    l_md[[i]] <- get(v_name[i])
+  }
+  names(l_md) <- v_name
+  return(l_md)
+}
+f_glmm <- \(lf,Rdata_path="./dados/Rdata/glmm_"){
+  df_code <- data.frame(nome=c("diffS","nCong"),
+                        funcao=c("function(f) lmer(as.formula(f),data=df_md)",
+                                 "function(f) glmer(as.formula(f),family='binomial',data=df_md,control=glmerControl(optimizer='bobyqa',optCtrl=list(maxfun=2e9)))"),
+                        f_resp = c("diffS ~",
+                                   "cbind(nCong,100-nCong) ~"))
+  
+  f_a_ply <- \(df){
+    env <- environment()
+    f_md <- eval(parse(text = df$funcao),envir=env)
+    f <- gsub("~",df$f_resp,lf[[df$nome]])
+    l_md <- llply(f,f_md)
+    names(l_md) <- names(lf[[df$nome]])
+    name_l <- paste0("l_md_",df$nome)
+    assign(name_l,l_md)
+    save(list=name_l,file=paste0(Rdata_path,name_l,".Rdata"))
+  }
+  a_ply(df_code,1,f_a_ply)
+}
 f_evalhere <- \(s) eval(parse(text = s),envir=env)
 ll_ggpng <- \(l_paths){
   if(!is.list(l_paths)) l_paths <- as.list(l_paths)

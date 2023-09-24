@@ -326,63 +326,69 @@ f_PredInt.GAMM <- \(gamm,
 2 variáveis respostas (diffS e nCong), mesmo conjunto de modelos candidatos
 
 ```{r}
-## versão para defesa
 l_f <- list()
 l_f[[1]] <- "~ k_z * land_hyp + (k_z * land_hyp|SiteCode)"
-l_f[[2]] <- "~ k_z + land_hyp + (k_z + land_hyp|SiteCode)"
-l_f[[3]] <- "~ land_hyp + (land_hyp|SiteCode)"
-l_f[[4]] <- "~ 1 + (1|SiteCode)"
-#
-# allFit(l_nRef__modeloCheio[v_glmerUpdate][[i]],maxfun = 1e5, parallel = 'multicore', ncpus = 3)
-#
-names(l_f) <- laply(l_f,\(s) trimws(str_extract(s, "~(.*?)(?=\\+)")))
-f_lmd <- \(lf,Rdata_path="./dados/Rdata/glmm_"){
-  df_code <- data.frame(nome=c("diffS","nCong"),
-                        funcao=c("function(f) lmer(as.formula(f),data=df_md)",
-                                 "function(f) glmer(as.formula(f),family='binomial',data=df_md,control=glmerControl(optimizer='bobyqa',optCtrl=list(maxfun=2e9)))"),
-                        f_resp = c("diffS ~",
-                                   "cbind(nCong,100-nCong) ~"))
-  f_a_ply <- \(df){
-    env <- environment()
-    f_md <- eval(parse(text = df$funcao),envir=env)
-    f <- gsub("~",df$f_resp,lf)
-    l_md <- llply(f,f_md)
-    names(l_md) <- names(lf)
-    name_l <- paste0("l_md_",df$nome)
-    assign(name_l,l_md)
-    save(list=name_l,file=paste0(Rdata_path,name_l,".Rdata"))
-  }
-  a_ply(df_lme4,1,f_a_ply)
-}
-l_f %>% f_lmd()
-
-
-## versão ad4
-l_f <- list()
-l_f[[1]] <- "~ land_hyp + s(land_hyp,SiteCode,bs='re')"
-l_f[[2]] <- gsub("\\+",
-                 "\\+ s\\(k_z,by\\=land_hyp,bs\\='cr',k\\=1\\) \\+ s\\(k_z,by\\=land_hyp,SiteCode,bs\\='fs',k\\=1\\) \\+",
-                 l_f[[1]])
-l0 <- as.list(paste0("land_hyp + s(",
-                     names(select(df_md,p_z,ends_with("U_z"))),
-                     ",by=land_hyp,bs='cr',k=1) + "))
-l0[length(l0)+1] <- "land_hyp + s(areaU_z,by=land_hyp,bs='cr',k=1) + s(fragU_z,by=land_hyp,bs='cr',k=1) + "
-l0 <- sapply(l0, \(s) str_replace(l_f[[2]],"land_hyp\\s\\+\\s",s))
-l_f <- c(l_f,l0)
-l0 <- c("f(land. hyp.|Site)","f(k * land. hyp.|Site)")
-names(l_f) <- c(l0,
-                sapply(paste0("(",gsub("_z","",names(select(df_md,p_z,ends_with("U_z")))),", k") %>% 
-                         gsub("U","",.), 
-                       \(s) sub("\\(k",s,l0[2])),
-                "f(area, frag, k * land. hyp.|Site)") %>% unname()
-df_formulas <- data.frame(nome = names(l_f),
-                          formula = unlist(l_f))  
-write_csv(df_formulas,file="./apendices/analise_dados/csv/df_formulas.csv")
-df_formulas %>% 
-  gt() %>% 
-  tab_header(title = "Modelos candidatos para investigar a congruência entre predito e observado")
+l_f[[2]] <- "~ k_z * land_hyp + (land_hyp|SiteCode)"
+l_f[[3]] <- "~ k_z * land_hyp + (1|SiteCode)"
+names(l_f) <- laply(l_f,\(s) sub(" \\+ \\(","",trimws(str_extract(s, "\\((.*?)\\)"))))
+l_f %>% f_glmm(.,Rdata_path="./dados/Rdata/glmm_re_")
+Rdata_path="./dados/Rdata/glmm_re_"
+l_md <- list.files(path = "./dados/Rdata",pattern="glmm_re_",full.names = TRUE) %>% 
+  f_loadll()
+df_ts <- ldply(l_md,f_ts_converg.md,.id="resp_var") %>% 
+  mutate(resp_var = sub("l_md_","",resp_var))
+write_csv(df_ts,"./dados/csv/df_ts_glmm_re.csv")
 ```
 
+
+
+```{r construcao de modelos simulado e predito}
+df_ts <- read_csv("./dados/csv/df_ts_glmm_re.csv") %>% filter(dAICc==0) %>% as.data.frame()
+## versão para defesa
+l_f <- list()
+l_f[[1]] <- "~ k_z * land_hyp +_"
+l_f[[2]] <- "~ k_z + land_hyp +_"
+l_f[[3]] <- "~ land_hyp +_"
+l_f[[4]] <- "~ 1 + (1|SiteCode)"
+# adequando para a estrutura aleatória adequada:
+l_f <- dlply(df_ts,"resp_var",\(df) llply(l_f,\(x) sub("\\+_",paste0(" + ",df$md),x) ))
+# cria o Rdata que contem os objetos de interesse 
+l_f <- llply(l_f,\(l){
+  names(l) <- laply(l,\(string) sub(" \\+ \\(","",trimws(str_extract(string, "~(.*?)\\("))))
+  return(l)
+})
+l_f %>% f_glmm()
+## versão ad4
+# write_csv(df_formulas,file="./apendices/analise_dados/csv/df_formulas.csv")
+# df_formulas %>% 
+#   gt() %>% 
+#   tab_header(title = "Modelos candidatos para investigar a congruência entre predito e observado")
+```
+
+```{r}
+n <- load("./dados/Rdata/glmm_l_md_nCong.Rdata",verbose = TRUE)
+l_md <- eval(as.name(n))
+rm(list=n)# 
+# f_bestfit <- \(md_i){
+#   lmd_allfit <- allFit(md_i,maxfun = 1e5, parallel = 'multicore', ncpus = 2)
+#   lmd_allfit_diag <- lmd_allfit[sapply(lmd_allfit, is, "merMod")]
+#   n_lmd <- ldply(lmd_allfit_diag,f_warning,.id="glmer") %>% 
+#     filter(V1!="OK") %>% pull("glmer")
+# }
+f_warning <- function(x) x@optinfo$conv$lme4$messages %>% 
+  paste(.,collapse = " , ") %>% sub("$","NA",.)
+v_convmd <- ldply(l_md,f_warning,.id="glmer") %>%
+    filter(V1=="NA") %>% pull("glmer")
+l_md <- l_md[v_convmd]
+names(l_md)
+df_ts <- AICctab(l_md,weights=TRUE) %>% as.data.frame()
+l_md[[rownames(df_ts)[1]]]
+p_plot <- simulateResiduals(l_md[[rownames(df_ts)[1]]],n = 500)
+plot(p_plot)
+testOutliers(l_md[[rownames(df_ts)[1]]])
+plot(l_md[[rownames(df_ts)[1]]])
+
+```
 
 
 
