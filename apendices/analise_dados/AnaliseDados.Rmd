@@ -24,6 +24,7 @@ library(gratia)
 library(sads)
 library(doMC)
 library(metR)
+library(sjPlot)
 library(gridExtra)
 library(ggpubr)
 library(ggplot2)
@@ -41,7 +42,7 @@ library(lme4)
 library(gamm4)
 library(plyr)
 library(dplyr)
-source("source/nameModel.R")
+source("source/general_tools.R")
 source("source/GAMMtools.R")
 # objetos
 # load("dados/Rdata/md_MNEE.Rdata")
@@ -326,6 +327,8 @@ f_PredInt.GAMM <- \(gamm,
 2 variáveis respostas (diffS e nCong), mesmo conjunto de modelos candidatos
 
 ```{r}
+# qual a estrutura aleatória mais adequada?
+## aqui removo os modelos em que não há convergêmcia; ma EF o modelo cheio
 l_f <- list()
 l_f[[1]] <- "~ k_z * land_hyp + (k_z * land_hyp|SiteCode)"
 l_f[[2]] <- "~ k_z * land_hyp + (land_hyp|SiteCode)"
@@ -338,11 +341,8 @@ l_md <- list.files(path = "./dados/Rdata",pattern="glmm_re_",full.names = TRUE) 
 df_ts <- ldply(l_md,f_ts_converg.md,.id="resp_var") %>% 
   mutate(resp_var = sub("l_md_","",resp_var))
 write_csv(df_ts,"./dados/csv/df_ts_glmm_re.csv")
-```
-
-
-
-```{r construcao de modelos simulado e predito}
+# quais os modelos mais plausíveis, daod a estrutura aleatória mais plausível?
+## a estrutura fixa é comum entre os modelos
 df_ts <- read_csv("./dados/csv/df_ts_glmm_re.csv") %>% filter(dAICc==0) %>% as.data.frame()
 ## versão para defesa
 l_f <- list()
@@ -358,35 +358,33 @@ l_f <- llply(l_f,\(l){
   return(l)
 })
 l_f %>% f_glmm()
+v_path <- formals(f_glmm)$Rdata_path
+l_md <- list.files(path = sub("\\/glmm_","",v_path),pattern="glmm_l_md_",full.names = TRUE) %>% 
+  f_loadll()
+df_ts <- ldply(l_md,f_ts_converg.md,.id="resp_var") %>% 
+  mutate(resp_var = sub("l_md_","",resp_var))
+write_csv(df_ts,file="./dados/csv/df_ts_defesa_congruencias.csv")
 ## versão ad4
 # write_csv(df_formulas,file="./apendices/analise_dados/csv/df_formulas.csv")
 # df_formulas %>% 
-#   gt() %>% 
+#   gt() %>%
 #   tab_header(title = "Modelos candidatos para investigar a congruência entre predito e observado")
 ```
 
-```{r}
-n <- load("./dados/Rdata/glmm_l_md_nCong.Rdata",verbose = TRUE)
-l_md <- eval(as.name(n))
-rm(list=n)# 
-# f_bestfit <- \(md_i){
-#   lmd_allfit <- allFit(md_i,maxfun = 1e5, parallel = 'multicore', ncpus = 2)
-#   lmd_allfit_diag <- lmd_allfit[sapply(lmd_allfit, is, "merMod")]
-#   n_lmd <- ldply(lmd_allfit_diag,f_warning,.id="glmer") %>% 
-#     filter(V1!="OK") %>% pull("glmer")
-# }
-f_warning <- function(x) x@optinfo$conv$lme4$messages %>% 
-  paste(.,collapse = " , ") %>% sub("$","NA",.)
-v_convmd <- ldply(l_md,f_warning,.id="glmer") %>%
-    filter(V1=="NA") %>% pull("glmer")
-l_md <- l_md[v_convmd]
-names(l_md)
-df_ts <- AICctab(l_md,weights=TRUE) %>% as.data.frame()
-l_md[[rownames(df_ts)[1]]]
-p_plot <- simulateResiduals(l_md[[rownames(df_ts)[1]]],n = 500)
-plot(p_plot)
-testOutliers(l_md[[rownames(df_ts)[1]]])
-plot(l_md[[rownames(df_ts)[1]]])
+```{r estudo dos parametros dos modelos mais plausíveis}
+v_path <- formals(f_glmm)$Rdata_path
+l_md <- list.files(path = sub("\\/glmm_","",v_path),pattern="glmm_l_md_",full.names = TRUE) %>% 
+  f_loadll()
+df_ts <- read_csv(file="./dados/csv/df_ts_defesa_congruencias.csv")
+l_md <- alply(filter(df_ts,dAICc==0),1,
+              \(x) l_md[[paste0("l_md_",x$resp_var)]][[paste0(x$md," ")]] )
+names(l_md) <- filter(df_ts,dAICc==0) %>% pull(resp_var)
+f_coef_glmm <- \(md){
+  df_ret <- coef(summary(md)) %>% as.data.frame() %>% mutate(coef = row.names(.)) %>% relocate(coef)
+  row.names(df_ret) <- NULL
+  return(df_ret)
+}
+l_dfcoef <- llply(l_md,f_coef_glmm)
 
 ```
 
