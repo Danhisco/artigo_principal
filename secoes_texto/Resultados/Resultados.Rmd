@@ -260,33 +260,29 @@ __Figura \@ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM.
 
 # SAD observada e SAD predita entre paisagens hipotéticas
 
-## Diferença na Riqueza Estimada
 
-__Tabela \@ref{ts_diffs}__ Seleção dos LMERs usados para descrever o erro na Riqueza Estimada
+### tabelas com os coeficientes dos modelos mais plausíveis
 
-```{r ts diffS,tab.cap="\\label{ts_diffs}ts diffS"}
-load("./dados/Rdata/ts_diffs_E_ip_diffS")
-df_seldiffs |> 
-  gt()
+```{r estudo dos parametros dos modelos mais plausíveis}
+v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
+l_md <- list.files(path = v_path,pattern="glmm_l_md_",full.names = TRUE) %>% 
+  f_loadll()
+df_ts <- read_csv(file="./dados/csv/df_ts_defesa_congruencias.csv")
+l_md <- alply(filter(df_ts,dAICc==0),1,
+              \(x) l_md[[paste0("l_md_",x$resp_var)]][[paste0(x$md," ")]] )
+names(l_md) <- filter(df_ts,dAICc==0) %>% pull(resp_var)
+f_coef_glmm <- \(md){
+  df_ret <- coef(summary(md)) %>% as.data.frame() %>% mutate(coef = row.names(.)) %>% relocate(coef)
+  row.names(df_ret) <- NULL
+  return(df_ret)
+}
+l_df <- llply(l_md,f_coef_glmm)
+v_title <- c("Erro na riqueza estimada",
+             "Número de SADs simuladas congruentes com a empírica")
+l_df %>% f_gt(.,v_title)
 ```
 
-O modelo mais plausível é aquele que descreve o erro na estimativa da riqueza por uma interação entre o tipo da paisagem hipotética e a proporção de cobertura vegetal na paisagem.
 
-```{r diffS md + lik ip,fig.cap="\\label{ip_diffS}ip diffS"}
-p
-```
-
-__Figura \@ref{ip_diffS}__ Intervalo de predição diffS
-
-## Pr(Cong) ~  landscape hypothesis
-
-__tabela \@ref{ts_prcong}__ GAMMs usados para descreever a probabilidade de congruência com o observado. Em todos os modelos há um spline fixo e aleatório para a variável k (grau de limitação de dispersão )
-
-```{r tabela de seleção ad4}
-df_tab <- read_csv("./dados/csv/df_ts_prconganalise4.csv") %>% as.data.frame()
-df_tab %>% 
-  gt::gt()
-```
 
 #### figuras para descrever Probabilidade de Congruência
 
@@ -397,7 +393,6 @@ df_plot <- l_df[[1]] %>%
                              TRUE ~ nCong),
          logitoObs = log(nCong/(100-nCong))) %>% 
   relocate(logitoObs,.after=SiteCode)
-
 ```
 
 <!-- ### antigo, util?-->

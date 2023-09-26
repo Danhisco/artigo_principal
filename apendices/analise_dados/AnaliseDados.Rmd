@@ -372,8 +372,8 @@ write_csv(df_ts,file="./dados/csv/df_ts_defesa_congruencias.csv")
 ```
 
 ```{r estudo dos parametros dos modelos mais plausíveis}
-v_path <- formals(f_glmm)$Rdata_path
-l_md <- list.files(path = sub("\\/glmm_","",v_path),pattern="glmm_l_md_",full.names = TRUE) %>% 
+v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
+l_md <- list.files(path = v_path,pattern="glmm_l_md_",full.names = TRUE) %>% 
   f_loadll()
 df_ts <- read_csv(file="./dados/csv/df_ts_defesa_congruencias.csv")
 l_md <- alply(filter(df_ts,dAICc==0),1,
