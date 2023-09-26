@@ -335,7 +335,7 @@ l_f[[2]] <- "~ k_z * land_hyp + (land_hyp|SiteCode)"
 l_f[[3]] <- "~ k_z * land_hyp + (1|SiteCode)"
 names(l_f) <- laply(l_f,\(s) sub(" \\+ \\(","",trimws(str_extract(s, "\\((.*?)\\)"))))
 l_f %>% f_glmm(.,Rdata_path="./dados/Rdata/glmm_re_")
-Rdata_path="./dados/Rdata/glmm_re_"
+v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
 l_md <- list.files(path = "./dados/Rdata",pattern="glmm_re_",full.names = TRUE) %>% 
   f_loadll()
 df_ts <- ldply(l_md,f_ts_converg.md,.id="resp_var") %>% 

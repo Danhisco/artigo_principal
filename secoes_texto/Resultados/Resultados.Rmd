@@ -260,6 +260,13 @@ __Figura \@ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM.
 
 # SAD observada e SAD predita entre paisagens hipotéticas
 
+```{r}
+df_ts_re <- read_csv("./dados/csv/df_ts_glmm_re.csv")
+df_ts <- read_csv("./dados/csv/df_ts_defesa_congruencias.csv")
+```
+
+
+
 ```{r estudo dos parametros dos modelos mais plausíveis}
 v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
 l_md <- list.files(path = v_path,pattern="glmm_l_md_",full.names = TRUE) %>% 

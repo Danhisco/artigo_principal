@@ -25,7 +25,7 @@ f_loadll <- \(l_path){
   names(l_md) <- v_name
   return(l_md)
 }
-f_glmm <- \(lf,Rdata_path="./dados/Rdata/glmm_"){
+f_glmm <- \(lf,Rdata_path="./dados/Rdata/glmm_",re=TRUE){
   df_code <- data.frame(nome=c("diffS","nCong"),
                         funcao=c("function(f) lmer(as.formula(f),data=df_md)",
                                  "function(f) glmer(as.formula(f),family='binomial',data=df_md,control=glmerControl(optimizer='bobyqa',optCtrl=list(maxfun=2e9)))"),
@@ -35,10 +35,18 @@ f_glmm <- \(lf,Rdata_path="./dados/Rdata/glmm_"){
   f_a_ply <- \(df){
     env <- environment()
     f_md <- eval(parse(text = df$funcao),envir=env)
-    f <- gsub("~",df$f_resp,lf[[df$nome]])
+    if(re){
+      f <- gsub("~",df$f_resp,lf)
+    }else{
+      f <- gsub("~",df$f_resp,lf[[df$nome]])
+    }
     l_md <- llply(f,f_md)
-    names(l_md) <- names(lf[[df$nome]])
-    name_l <- paste0("l_md_",df$nome)
+    if(re){
+      names(l_md) <- names(lf)
+    }else{
+      f <- gsub("~",df$f_resp,lf[[df$nome]])
+    }
+    name_l <- df$nome
     assign(name_l,l_md)
     save(list=name_l,file=paste0(Rdata_path,name_l,".Rdata"))
   }
