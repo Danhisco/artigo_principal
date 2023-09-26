@@ -52,23 +52,23 @@ ll_ggpng <- \(l_paths){
              annotation_custom(grid::rasterGrob(p), xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
              theme_void())
 }
-f_gt <- \(l_d,vtitle,v_footnote){
+f_gt <- \(l_d,vtitle=NULL,v_footnote=NULL){
   # vtitle <- c("Códigos atuais para FluA ('PCR_FLUASU')",
   #             "Códigos atuais para FluB ('PCR_FLUBLI')",
   #             "Códigos dicionário 09-12 ('*_ETIOL')",
   #             "Códigos dicionário 13-18 ('RES_FLUASU')")
   names(vtitle) <- names(l_d)
-  names(v_footnote) <- names(l_d)
+  if(!is.null(v_footnote)) names(v_footnote) <- names(l_d)
   l_d <- lapply(names(l_d),\(s) l_d[[s]] %>% 
-                  gt() %>% 
-                  tab_header(title=vtitle[s]) %>% 
-                  {if(s=="preditoras")  tab_footnote(.,
+                  gt::gt() %>% 
+                  gt::tab_header(title=vtitle[s]) %>% 
+                  {if(s=="preditoras")  gt::tab_footnote(.,
                     footnote = v_footnote[s],
                     locations = cells_body(
                       columns = nome,
                       rows = 1)
                   ) else .} %>% 
-                  {if(s=="contrastes")  tab_footnote(.,
+                  {if(s=="contrastes")  gt::tab_footnote(.,
                                                      footnote = v_footnote[s],
                                                      locations = cells_body(
                                                        columns = `interpretação`,

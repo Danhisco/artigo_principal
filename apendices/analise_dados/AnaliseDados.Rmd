@@ -384,8 +384,10 @@ f_coef_glmm <- \(md){
   row.names(df_ret) <- NULL
   return(df_ret)
 }
-l_dfcoef <- llply(l_md,f_coef_glmm)
-
+l_df <- llply(l_md,f_coef_glmm)
+v_title <- c("Erro na riqueza estimada",
+             "Número de SADs simuladas congruentes com a empírica")
+l_df %>% f_gt(.,v_title)
 ```
 
 
