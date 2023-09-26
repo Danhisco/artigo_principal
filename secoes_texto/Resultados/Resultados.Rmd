@@ -260,9 +260,6 @@ __Figura \@ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM.
 
 # SAD observada e SAD predita entre paisagens hipotéticas
 
-
-### tabelas com os coeficientes dos modelos mais plausíveis
-
 ```{r estudo dos parametros dos modelos mais plausíveis}
 v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
 l_md <- list.files(path = v_path,pattern="glmm_l_md_",full.names = TRUE) %>% 
@@ -282,118 +279,6 @@ v_title <- c("Erro na riqueza estimada",
 l_df %>% f_gt(.,v_title)
 ```
 
-
-
-#### figuras para descrever Probabilidade de Congruência
-
-```{r fig ad4}
-newpred_path="./dados/csv/df_ad4.csv";mdRdata_path="./dados/Rdata/md_prcong.Rdata"
-md_name <- load(mdRdata_path,verbose=TRUE)
-  md <- eval(as.name(md_name))
-  rm(list=md_name)
-  # df_newpred sem variabilidade entre sítios: efeito médio em função da preditora
-  if(file.exists("./dados/csv/df_ad4.csv")){
-    df_newpred <- read_csv(file="./dados/csv/df_ad4.csv")  
-  }else{
-    df_newpred <- f_calcPI(gamm=md,
-                           ad = "ad4",
-                           newdata_path="obs",
-                           link_scale = TRUE)
-    write_csv(df_newpred,file="./dados/csv/df_ad4.csv")
-  }
-  # df_predtoobs
-  df_md$predtoobs <- predict.gam(md)
-  df_newpred <- df_newpred %>% 
-    arrange(k_z,areaU_z,fragU_z) %>% 
-    cbind(.,df_md %>% 
-          arrange(k_z,areaU_z,fragU_z) %>% 
-          select(SiteCode,nCong,predtoobs)) %>% 
-    relocate(SiteCode) %>% 
-    mutate(logitoObs = case_when(nCong==100~99.9,
-                                 nCong==0~0.1,
-                                 TRUE~nCong),
-           logitoObs = log((logitoObs/(100-logitoObs))))
-  # l_p
-  df_newpred %>% 
-    pivot_longer(starts_with("Q_0.")) %>% 
-    filter(name=="Q_0.5") %>% 
-    ggplot(aes(x=k_z,y=logitoObs)) +
-    geom_point(alpha=0.3) +
-    geom_point(aes(y=value),color="red",alpha=0.3) +
-    facet_wrap(~land_hyp)
-```
-
-
-```{r eval=FALSE,include=FALSE}
-f_plot <- \(df_md,newpred_path="./dados/csv/df_ad4.csv",mdRdata_path="./dados/Rdata/md_prcong.Rdata"){
-  # model
-  md_name <- load(mdRdata_path,verbose=TRUE)
-  md <- eval(as.name(md_name))
-  rm(list=md_name)
-  # df_newpred sem variabilidade entre sítios: efeito médio em função da preditora
-  if(file.exists("./dados/csv/df_ad4.csv")){
-    df_newpred <- read_csv(file="./dados/csv/df_ad4.csv")  
-  }else{
-    df_newpred <- f_calcPI(gamm=md,
-                           ad = "ad4",
-                           newdata_path="obs",
-                           link_scale = TRUE)
-    write_csv(df_newpred,file="./dados/csv/df_ad4.csv")
-  }
-  # df_predtoobs
-  df_md$predtoobs <- predict.gam(md)
-  df_newpred <- df_newpred %>% 
-    arrange(k_z,areaU_z,fragU_z) %>% 
-    cbind(.,df_md %>% 
-          arrange(k_z,areaU_z,fragU_z) %>% 
-          select(SiteCode,nCong,predtoobs)) %>% 
-    relocate(SiteCode) %>% 
-    mutate(logitoObs = case_when(nCong==100~99.9,
-                                 nCong==0~0.1,
-                                 TRUE~nCong),
-           logitoObs = log((logitoObs/(100-logitoObs))))
-  # l_p
-  df_newpred %>% 
-    pivot_longer(starts_with("Q_0.")) %>% 
-    filter(name=="Q_0.5") %>% 
-    ggplot(aes(x=k_z,y=logitoObs)) +
-    geom_point(alpha=0.3) +
-    geom_point(aes(y=value),color="red",alpha=0.3) +
-    facet_wrap(~land_hyp)
-}
-
-if(!exists("l_md")) load("./dados/Rdata/PrCong_analise4.Rdata")  
-if(file.exists("./dados/csv/df_ts_prconganalise4.csv")){
-  df_tab <- read_csv("./dados/csv/df_ts_prconganalise4.csv") %>% as.data.frame()
-}else{
-  df_tab <- f_TabSelGAMM(l_md)
-  write_csv(df_tab,file="./dados/csv/df_ts_prconganalise4.csv")
-}
-md_prcong <- l_md[[df_tab[1,"modelo"]]]
-save(md_prcong,file = "./dados/Rdata/md_prcong.Rdata")
-l_df <- list()
-if(file.exists("./dados/csv/df_ad4.csv")){
-  l_df[[1]] <- read_csv(file="./dados/csv/df_ad4.csv")  
-}else{
-  l_df[[1]] <- f_calcPI(gamm=md_prcong,
-                      ad = "ad4",
-                      newdata_path="obs",
-                      link_scale = TRUE)
-  write_csv(l_df[[1]],file="./dados/csv/df_ad4.csv")
-}
-# plot 
-df_plot <- l_df[[1]] %>% 
-  arrange(k_z,areaU_z,fragU_z) %>% 
-  cbind(.,df_md %>% 
-          arrange(k_z,areaU_z,fragU_z) %>% 
-          select(SiteCode,nCong)) %>% 
-  relocate(SiteCode) %>% 
-  mutate(logitoObs=case_when(nCong==100 ~ 99.92,
-                             nCong==0 ~ 00.08,
-                             TRUE ~ nCong),
-         logitoObs = log(nCong/(100-nCong))) %>% 
-  relocate(logitoObs,.after=SiteCode)
-```
 
 <!-- ### antigo, util?-->
 ```{r exemplo tabela,eval=FALSE,include=FALSE}
