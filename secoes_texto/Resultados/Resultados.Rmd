@@ -183,11 +183,11 @@ v_title <- c("tipos de paisagens",
              "tipos de resultados",
              "tipos de contrastes entre simulações",
              "tipos de preditoras no modelo estatístico")
-l_df %>% f_gt(.,v_title,v_footnote)
-# l_p <- l_df %>% 
-#   f_gt(.,v_title,v_footnote) %>% 
-#   f_gt_to_ggplot()
-# save(l_p,file="./dados/Rdata/l_glossario.Rdata")
+# l_df %>% f_gt(.,v_title,v_footnote)
+l_p <- l_df %>%
+  f_gt(.,v_title,v_footnote) %>%
+  f_gt_to_ggplot()
+save(l_p,file="./dados/Rdata/l_glossario.Rdata")
 # gridExtra::grid.arrange(grobs=l_df,layout_matrix=rbind(c(1,1),
 #                                                        c(2,2),
 #                                                        c(3,3)),
@@ -266,8 +266,7 @@ df_ts <- read_csv("./dados/csv/df_ts_defesa_congruencias.csv")
 ```
 
 
-
-```{r estudo dos parametros dos modelos mais plausíveis}
+```{r estudo dos parametros dos modelos mais plausíveis,eval=FALSE,include=FALSE}
 v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
 l_md <- list.files(path = v_path,pattern="glmm_l_md_",full.names = TRUE) %>% 
   f_loadll()
@@ -283,8 +282,21 @@ f_coef_glmm <- \(md){
 l_df <- llply(l_md,f_coef_glmm)
 v_title <- c("Erro na riqueza estimada",
              "Número de SADs simuladas congruentes com a empírica")
-l_df %>% f_gt(.,v_title)
+l_p <- l_df %>%
+  f_gt(.,v_title) %>%
+  f_gt_to_ggplot()
+save(l_p,file="./dados/Rdata/l_ts_glmm.Rdata")
+# gridExtra::grid.arrange(grobs=l_df,layout_matrix=rbind(c(1,1),
+#                                                        c(2,2),
+#                                                        c(3,3)),
+#                         top="Glossário")
 ```
+
+```{r ts glmm display,cache=FALSE}
+vname <- load("./dados/Rdata/l_ts_glmm.Rdata",verbose = T)
+get(vname)
+```
+
 
 
 <!-- ### antigo, util?-->
