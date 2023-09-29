@@ -167,7 +167,10 @@ f_plot <- \(namecol){
     } 
 }
 l_p <- alply(v_cols,1,f_plot)
+
+
 grid.arrange(grobs=l_p,ncol=2)
+
 df_plot %>% 
   filter(land_hyp=="cont") %>% 
   distinct() %>% 
@@ -175,7 +178,14 @@ df_plot %>%
   # geom_density()
   geom_boxplot() +
   geom_jitter(alpha=0.7)
-
+df_plot %>% 
+  ggplot(aes(x=land_hyp,y=nCong)) +
+  geom_jitter(alpha=0.7) +
+  geom_boxplot() 
+df_plot %>% 
+  ggplot(aes(x=p,y=nCong,color=land_hyp)) +
+  geom_point() +
+  geom_smooth(se=FALSE) + facet_wrap(~k_f+forest_succession,margins = TRUE)
 ```
 
 
@@ -382,7 +392,8 @@ f_PredInt.GAMM <- \(gamm,
 
 
 ```{r}
-
+l_f <- list()
+l_[[1]] <- "~ p_z * forest_succession * k_f * land_hyp "
 ```
 
 
@@ -420,7 +431,7 @@ l_f <- llply(l_f,\(l){
   names(l) <- laply(l,\(string) sub(" \\+ \\(","",trimws(str_extract(string, "~(.*?)\\("))))
   return(l)
 })
-l_f %>% f_glmm()
+l_f %>% f_glmm(.,re = FALSE)
 v_path <- formals(f_glmm)$Rdata_path
 l_md <- list.files(path = sub("\\/glmm_","",v_path),pattern="glmm_l_md_",full.names = TRUE) %>% 
   f_loadll()
