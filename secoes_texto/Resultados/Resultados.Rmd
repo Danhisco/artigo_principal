@@ -115,6 +115,16 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 As coordenadas dos sítios variaram entre -31° e -7° de latit”ude e entre -55° e -35° de longitude (figura A2 1a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo (Figura A2 1c). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (Figura A2 1b). Portanto, todos os sítios dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Uma paisagem foi descartada, pois não foi possível delimitar uma área amostral quadrada por conta da particular configuração espacial do habitat remanescente. 
 
+
+```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6}
+load("./dados/Rdata/figA21.Rdata")
+grid.arrange(grobs=l_p,nrow=1)
+```
+
+__Figura 1__ Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão)).
+
+
+
 # Efeito de Escalar
 
 Dentre os 36 sítios usados para avaliar o efeito de escalar (Figura A1 1), o observado na maior extensão (lado 16 km) é qualitativamente similar ao padrão médio esperado em paisagens infinitas (figura A1 2). Em paisagens infinitas sem perda de habitat a taxa U necessária para manter uma determinada riqueza na parcela apresenta um máximo global quando o grau de limitação de dispersão é pouco brando (@May2012). Em graus de limitação à dispersão severa a taxa U estimada é baixa, pois a perda de espécies é pequena: a maior parte das substituições ocorre entre coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies aumenta com a redução da substituição de coespecíficos, aumentando a perda de espécies por deriva ecológica. Com o aumento da capacidade de dispersão, há o aumento da contribuição de subpopulações da paisagem mais distante da parcela, reduzindo a estimativa da taxa U.
@@ -123,9 +133,77 @@ Na escala do sítio de amostragem o padrão da taxa U estimada difere do padrão
 
 Pressupomos que a extensão espacial da paisagem adequada é aquela que acumula pelo menos 95% de toda diminuição na taxa U observada ao aumentar a extensão espacial de 0.5 km de lado até 16 km de lado (figura A1 5). A extensão espacial adequada tende a aumentar com a redução da limitação de à dispersão (figura A1 5). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km de lado (Figura A1 5). Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U; a variação entre escalas para um mesmo sítio é baixa (figura A1 4). Nesses graus de limitação de dispersão, o aumento do número de espécies per capita pode aumentar a divergência da média geral de estabilidade e apresentar padrões não lineares (Figuras A1 2 e 3). Os graus de limitação de dispersão com k entre 0.80 e 0.55, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U (Figura A1 2). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura A1 5 e 6). 
 
-# Contrastes entre paisagens hipotéticas
 
-Comparamos as simulações nas 3 paisagens hipotéticas par a par. Avaliamos 2 tipos de contrastes: entre a taxa U estimada; e a congruência nas SADs preditas. Os contraste entre a paisagem contemporânea e a idealizada podem ser compreendidos como o efeito completo da conectividade contemporânea entre parcela e paisagem ao redor na manutenção do padrão avaliado. Os contrastes entre a paisagem contemporânea e sem fragmentação per se podem ser interpretados como o efeito da fragmentação per se, o componente da conectividade contemporânea que depende apenas da configuração espacial do habitat remanescente. Os contrastes entre a paisagem sem fragmentação per se e a idealizada podem ser interpretados como o efeito da perda de área, o componente da conectividade contemporânea que depende apenas da quantia de habitat perdido. Uma vez que a extensão da paisagem ao redor de 4x4km2 é suficiente para simular todos os graus de limitação de dispersão (Apêndice 1 Efeito de Escala), os contrastes entre paisagens contemporâneas e idealizadas são condicionais apenas à escala espacial determinada pelo grau de limitação de dispersão e a configuração espacial do habitat remanescente. A estimativa da taxa U e a SAD predita nas paisagens sem fragmentação per se são condicionais também à extensão espacial de 4x4km2, pois ela é usada como referência para determinar a quantidade de habitat que será aglomerado ao redor da parcela (Figura A1 1). Um conjunto de simulações que não fizemos foi o de usar a menor extensão espacial adequada para cada respectivo grau de limitação de dispersão, assim teríamos simulações também nas extensão de 1x1 km2 e 2x2km2 para alguns graus de limitação de dispersão (Figura A1 6).
+
+<!-- # Contrastes entre paisagens hipotéticas -->
+
+<!-- Comparamos as simulações nas 3 paisagens hipotéticas par a par. Avaliamos 2 tipos de contrastes: entre a taxa U estimada; e a congruência nas SADs preditas. Os contraste entre a paisagem contemporânea e a idealizada podem ser compreendidos como o efeito completo da conectividade contemporânea entre parcela e paisagem ao redor na manutenção do padrão avaliado. Os contrastes entre a paisagem contemporânea e sem fragmentação per se podem ser interpretados como o efeito da fragmentação per se, o componente da conectividade contemporânea que depende apenas da configuração espacial do habitat remanescente. Os contrastes entre a paisagem sem fragmentação per se e a idealizada podem ser interpretados como o efeito da perda de área, o componente da conectividade contemporânea que depende apenas da quantia de habitat perdido. Uma vez que a extensão da paisagem ao redor de 4x4km2 é suficiente para simular todos os graus de limitação de dispersão (Apêndice 1 Efeito de Escala), os contrastes entre paisagens contemporâneas e idealizadas são condicionais apenas à escala espacial determinada pelo grau de limitação de dispersão e a configuração espacial do habitat remanescente. A estimativa da taxa U e a SAD predita nas paisagens sem fragmentação per se são condicionais também à extensão espacial de 4x4km2, pois ela é usada como referência para determinar a quantidade de habitat que será aglomerado ao redor da parcela (Figura A1 1). Um conjunto de simulações que não fizemos foi o de usar a menor extensão espacial adequada para cada respectivo grau de limitação de dispersão, assim teríamos simulações também nas extensão de 1x1 km2 e 2x2km2 para alguns graus de limitação de dispersão (Figura A1 6). -->
+
+
+# taxa U
+<!-- A distribuição de contrastes apresenta elevada assimetria, com a maioria dos valores próximos do observado em paisagens com pouca perda de habitat e poucos casos distante desta faixa de valores (Figura A2 4). Quando há pouca perda de habitat a estimativa da taxa U não difere entre paisagens hipotéticas (Figuras A2, 2 e 3). Com a redução da cobertura vegetal a estimativa da taxa U pode ser distinta entre paisagens hipotéticas. Em graus de limitação de dispersão mais relaxados pode existir o aumento da taxa U estimada nas paisagem contemporâneas ou sem fragmentação (Figura 1). Em geral a taxa U estimada nas paisagens contemporâneas é a maior das três paisagens hipotéticas (Figura A2 3). Em alguns casos a paisagem sem fragmentação per se pode apresentar estimativas superiores (Figura A2 3). Nos graus onde há pouca variação no efeito de escalar (k entre 0.80 e 0.55) também há pouca variação entre paisagens hipotéticas (Figura A2 2 e 3). As maiores diferenças entre paisagens hipotéticas ocorre em graus de limitação de dispersão mais brandos (Figura A2 2 e 3). Em paisagens com baixa proporção de cobertura florestal as estimativas em graus severos de limitação de dispersão também podem ser distintas entre paisagens hipotéticas (Figura A2 2 e 3). Alguns sítios apresentaram contraste de fragmentação per se com valores negativos maiores do que o observado nos sítios em paisagens com pouca perda de habitat (Figura A2 4). O contraste de área per se apresentou os menores valores em magnitude (Figura A2 4).  -->
+
+<!-- Os GAMMs podem fazer boa predição dos contrastes observados (Apêndice 2, avaliação GAMM 1). O intervalo de predição dos GAMMs informa que o contraste entre paisagens hipotéticas aumenta com a perda de cobertura florestal e redução da limitação de dispersão (Figura \@ref{contrastes_pk}). Os intervalos de predição do contraste de contemporaneidade podem apresentar aumento do contraste em graus de limitação de dispersão severos em paisagens com pouca cobertura vegetal (Figura \@ref{contrastes_pk}). -->
+
+```{r ip contrastes ~ p k,fig.height=8,fig.width=12,eval=FALSE,include=FALSE}
+df_plot <- df_intPred |> 
+  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
+         k = k_z*sd(df_ad$k) + mean(df_ad$k),
+         name=factor(name,levels=paste0("efeito_",c("area","frag","conf")))) |> 
+  select(-contains("_z"),-predito) |> 
+  pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
+# gráficos
+v_range <- range(df_plot$pred)
+v_breaks1 <- c(-0.2,0,0.2,0.5,1)
+f_plot <- function(df){
+  f_ggplot <- function(df,facets=2){
+  ggplot(df,aes(x=p,y=k,z=pred,fill=pred)) +
+    geom_raster() +
+    geom_contour(aes(z=pred),
+                 size=0.5,color="darkblue",
+                 breaks=v_breaks1) +
+    geom_text_contour(aes(z=pred),
+                      breaks=v_breaks1,
+                      label.placer = label_placer_flattest()) +
+    scale_fill_gradient2(low="green",
+                         mid="red",
+                         high="black",
+                         midpoint = 0.5,
+                         limits=v_range,
+                         # round(seq(v_range[1],v_range[2],length.out = 5)[1:4],2)
+                         breaks=v_breaks1) +
+    scale_y_reverse() +
+    theme_classic() +
+    guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
+    coord_cartesian(expand = FALSE) +
+    labs(fill=df$name[1]) +
+    facet_wrap(~label,ncol = facets,scales="free")
+  }
+  l_p <- list()
+  l_p[[1]] <- df |> 
+    filter(label == "Q_0.5") |>
+    f_ggplot() + labs(x="")
+  l_p[[2]] <- df |> 
+    filter(label != "Q_0.5") |>
+    f_ggplot()
+  ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+}
+l_plot <- dlply(df_plot,"name",f_plot)
+p <- grid.arrange(grobs=l_plot,ncol=3)
+ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
+       width = 13,
+       height = 9)
+```
+
+<!-- __Figura \@ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM.  -->
+
+```{r fig A2 3 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=30,fig.width=15}
+load("./dados/Rdata/figA23.Rdata")
+p
+```
+
+__Figura 2__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2.
 
 ```{r glossário 3 tabelas CRIACAO,eval=FALSE,include=FALSE}
 l_df <- list()
@@ -196,67 +274,12 @@ save(l_p,file="./dados/Rdata/l_glossario.Rdata")
 
 ```{r glossario display,cache=FALSE}
 load("./dados/Rdata/l_glossario.Rdata")
-unname(l_p)
+unname(l_p[1:2])
 rm(l_p)
 ```
 
-## taxa U
-A distribuição de contrastes apresenta elevada assimetria, com a maioria dos valores próximos do observado em paisagens com pouca perda de habitat e poucos casos distante desta faixa de valores (Figura A2 4). Quando há pouca perda de habitat a estimativa da taxa U não difere entre paisagens hipotéticas (Figuras A2, 2 e 3). Com a redução da cobertura vegetal a estimativa da taxa U pode ser distinta entre paisagens hipotéticas. Em graus de limitação de dispersão mais relaxados pode existir o aumento da taxa U estimada nas paisagem contemporâneas ou sem fragmentação (Figura 1). Em geral a taxa U estimada nas paisagens contemporâneas é a maior das três paisagens hipotéticas (Figura A2 3). Em alguns casos a paisagem sem fragmentação per se pode apresentar estimativas superiores (Figura A2 3). Nos graus onde há pouca variação no efeito de escalar (k entre 0.80 e 0.55) também há pouca variação entre paisagens hipotéticas (Figura A2 2 e 3). As maiores diferenças entre paisagens hipotéticas ocorre em graus de limitação de dispersão mais brandos (Figura A2 2 e 3). Em paisagens com baixa proporção de cobertura florestal as estimativas em graus severos de limitação de dispersão também podem ser distintas entre paisagens hipotéticas (Figura A2 2 e 3). Alguns sítios apresentaram contraste de fragmentação per se com valores negativos maiores do que o observado nos sítios em paisagens com pouca perda de habitat (Figura A2 4). O contraste de área per se apresentou os menores valores em magnitude (Figura A2 4). 
 
-Os GAMMs podem fazer boa predição dos contrastes observados (Apêndice 2, avaliação GAMM 1). O intervalo de predição dos GAMMs informa que o contraste entre paisagens hipotéticas aumenta com a perda de cobertura florestal e redução da limitação de dispersão (Figura \@ref{contrastes_pk}). Os intervalos de predição do contraste de contemporaneidade podem apresentar aumento do contraste em graus de limitação de dispersão severos em paisagens com pouca cobertura vegetal (Figura \@ref{contrastes_pk}).
 
-```{r ip contrastes ~ p k,fig.height=8,fig.width=12,fig.cap="\\label{contrastes_pk}ip contrastes ~ p k"}
-df_plot <- df_intPred |> 
-  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
-         k = k_z*sd(df_ad$k) + mean(df_ad$k),
-         name=factor(name,levels=paste0("efeito_",c("area","frag","conf")))) |> 
-  select(-contains("_z"),-predito) |> 
-  pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
-df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
-# gráficos
-v_range <- range(df_plot$pred)
-v_breaks1 <- c(-0.2,0,0.2,0.5,1)
-f_plot <- function(df){
-  f_ggplot <- function(df,facets=2){
-  ggplot(df,aes(x=p,y=k,z=pred,fill=pred)) +
-    geom_raster() +
-    geom_contour(aes(z=pred),
-                 size=0.5,color="darkblue",
-                 breaks=v_breaks1) +
-    geom_text_contour(aes(z=pred),
-                      breaks=v_breaks1,
-                      label.placer = label_placer_flattest()) +
-    scale_fill_gradient2(low="green",
-                         mid="red",
-                         high="black",
-                         midpoint = 0.5,
-                         limits=v_range,
-                         # round(seq(v_range[1],v_range[2],length.out = 5)[1:4],2)
-                         breaks=v_breaks1) +
-    scale_y_reverse() +
-    theme_classic() +
-    guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
-    coord_cartesian(expand = FALSE) +
-    labs(fill=df$name[1]) +
-    facet_wrap(~label,ncol = facets,scales="free")
-  }
-  l_p <- list()
-  l_p[[1]] <- df |> 
-    filter(label == "Q_0.5") |>
-    f_ggplot() + labs(x="")
-  l_p[[2]] <- df |> 
-    filter(label != "Q_0.5") |>
-    f_ggplot()
-  ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
-}
-l_plot <- dlply(df_plot,"name",f_plot)
-p <- grid.arrange(grobs=l_plot,ncol=3)
-ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
-       width = 13,
-       height = 9)
-```
-
-__Figura \@ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM. 
 
 # SAD observada e SAD predita entre paisagens hipotéticas
 
