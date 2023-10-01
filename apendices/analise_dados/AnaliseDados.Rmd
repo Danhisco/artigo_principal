@@ -76,6 +76,20 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |>
          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
          SiteCode = factor(SiteCode)) |> 
   select(-c(N:log.S))
+# df_congContrastetsREP.cvs
+df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
+  mutate(SiteCode = factor(SiteCode),
+         contrasteSAD_z = ifelse(nCong==500,499.9,nCong),
+         contrasteSAD_z = log((contrasteSAD_z/500)/(1-(contrasteSAD_z/500))),
+         contrasteSAD_z = f_z(contrasteSAD_z)) |> 
+  inner_join(df_contrastes |> 
+               pivot_longer(cols=starts_with("efeito"),
+                            names_to="pair",
+                            values_to="contraste_z") |> 
+               mutate(pair = case_when(pair == "efeito_frag"~"cont.non_frag",
+                                       pair == "efeito_area"~"non_frag.ideal",
+                                       pair == "efeito_conf"~"cont.ideal")) ) |> 
+  relocate(contraste_z,.before = contrasteSAD_z)
 # df_md: dados para os GAMMs de congruência com o empírico  
 f_dfpmd <- \(df){
   df <- df |> 
@@ -107,12 +121,26 @@ df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |>
 # df_intePred_contrastes.csv
 df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
 write_csv(df_md,"dados/csv/df_md.csv")
+# 
+df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
+  inner_join(df_p) |> 
+  inner_join(df_dados_disponiveis |> 
+               filter(forest_succession != "capoeira") %>% 
+               select(SiteCode, forest_succession)) %>% 
+  arrange(p) |> 
+  mutate(succession = case_when(forest_succession == "primary" ~ "1°",
+                                forest_succession == "secondary" ~ "2°",
+                                forest_succession == "primary/secondary" ~ "1.5°"),
+         label = paste0(SiteCode,", p=",round(p,2)," ,suc=",succession),
+         k_f=factor(round(k,2))) %>% 
+  select(-succession)
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 ```
 
 # GE Gerais
 
 ```{r GE nCong por site k em x e colorido por paisagem,eval=FALSE}
-df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
+df_plot <- df_md |> select(SiteCode:diffS,p_z:k_z) |> 
   inner_join(df_p) |> 
   inner_join(df_dados_disponiveis |> 
                filter(forest_succession != "capoeira") %>% 
@@ -124,31 +152,38 @@ df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |>
          label = paste0(SiteCode,", p=",round(p,2)," ,suc=",succession)) %>% 
   select(-succession)
 df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
-p <- df_plot |> 
-  ggplot(aes(x=k,y=nCong,color=land_hyp)) +
-  geom_point(alpha=0.5) +
-  geom_line(alpha=0.5) +
-  # geom_smooth(method = "gam",se=FALSE) +
-  scale_x_reverse() +
-  # scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-  theme_bw() +
-  labs(color="landscape hyp.") +
-  theme(legend.position = "top",
-        axis.text=element_text(size=4.5),
-        strip.text = element_text(size = 4.5, margin = margin())) +
-  scale_color_manual(values=c("darkred","darkblue","darkgreen"),
-                     labels=c("contemporâneo","idealizado","sem fragmentação")) +
-  facet_wrap(~label,ncol=5)
-ggsave("apendices/analise_dados/figuras/nCong_k_land.hyp_site.png",
-       width = 7,height = 30)
-save(p,file="./dados/Rdata/nCong_k_land.hyp_site.Rdata")
+#
+f_plot <- \(nvresp,
+            png_repo = "apendices/analise_dados/figuras/",
+            end_name = "_k_land.hyp_site"){
+  p <- df_plot %>% 
+    ggplot(aes(x=k,y=.data[[nvresp]],color=land_hyp)) +
+    geom_point(alpha=0.5) +
+    geom_line(alpha=0.5) +
+    # geom_smooth(method = "gam",se=FALSE) +
+    scale_x_reverse() +
+    # scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+    theme_bw() +
+    labs(color="landscape hyp.") +
+    theme(legend.position = "top",
+          axis.text=element_text(size=4.5),
+          strip.text = element_text(size = 4.5, margin = margin())) +
+    scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                       labels=c("contemporâneo","idealizado","sem fragmentação")) +
+    facet_wrap(~label,ncol=5)
+  ggsave(paste0(png_repo,nvresp,end_name,".png"),
+         plot = p,
+         width = 7,height = 30)
+  save(p,file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
+}
+a_ply(c("diffS","nCong"),1,f_plot)
 ```
 
 ```{r}
 df_plot <- df_plot %>% 
   mutate(k_f=factor(round(k,2))) 
 v_cols <- c("k_f","k_z","p_z","forest_succession")
-f_plot <- \(namecol){
+f_plot <- \(namecol,nameresp){
   p <- df_plot %>% 
     ggplot(aes(x=.data[[namecol]],y=nCong,color=land_hyp)) +
     scale_color_manual(values=c("darkred","darkblue","darkgreen"),
@@ -167,10 +202,7 @@ f_plot <- \(namecol){
     } 
 }
 l_p <- alply(v_cols,1,f_plot)
-
-
 grid.arrange(grobs=l_p,ncol=2)
-
 df_plot %>% 
   filter(land_hyp=="cont") %>% 
   distinct() %>% 
@@ -393,7 +425,81 @@ f_PredInt.GAMM <- \(gamm,
 
 ```{r}
 l_f <- list()
-l_[[1]] <- "~ p_z * forest_succession * k_f * land_hyp "
+l_f[[1]] <- "~ p_z * forest_succession * k_z * land_hyp + (land_hyp|SiteCode)"
+l_f[[2]] <- "~ p_z * forest_succession * k_z * land_hyp + (1|SiteCode)"
+names(l_f) <- laply(l_f,\(s) sub(" \\+ \\(","",trimws(str_extract(s, "\\((.*?)\\)"))))
+l_f %>% f_glmm(.,df_data=df_plot,Rdata_path="./dados/Rdata/glmm_re_")
+v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
+l_md <- list.files(path = "./dados/Rdata",pattern="glmm_re_",full.names = TRUE)[2] %>% 
+  f_loadll()
+md <- l_md[[1]]$`(land_hyp|SiteCode)`
+ss <- getME(md,c("theta","fixef"))
+md2 <- update(md,start=ss,control=glmerControl(optCtrl=list(maxfun=2e4)))
+summary(md2)
+l_md["(land_hyp|SiteCode)"] <- md2
+df_ts <- AICctab(l_md,weights=TRUE) %>% as.data.frame()
+#
+f0 <- l_f[row.names(df_ts)[1]]
+# f0 <- "~ p_z * forest_succession * k_z * land_hyp + (land_hyp|SiteCode)"
+l_f <- list()
+l_f[[1]] <- f0 %>% sub("p_z \\* ","",.)
+l_f[[2]] <- f0 %>% sub("forest_succession \\* ","",.)
+l_f[[3]] <- l_f[[2]] %>%  sub("p_z \\* ","",.)
+names(l_f) <- laply(l_f,\(s) str_extract(s,"(?<=~ )(.*?)(?= \\+)"))
+##
+# l_f %>% f_glmm(.,df_data=df_plot,Rdata_path="./dados/Rdata/glmm_",only_nCong = TRUE,re=FALSE)
+l <- c(md,l_md)
+names(l)[1] <- "p_z * forest_succession * k_z * land_hyp"
+save(l,file=paste0(Rdata_path,name_l,"com_forestsuc_.Rdata"))
+# 
+f_refit <- \(md){
+  v_mes <- md@optinfo$conv$lme4$messages
+  if(is.null(v_mes)){
+    return(md)
+  }else{
+    ss <- getME(md,c("theta","fixef"))
+    md <- update(md,start=ss,control=glmerControl(optCtrl=list(maxfun=2e4)))
+    l_ms_ss <- list("modelo" = md, "starts" = ss)
+    # md <- update(md,control=glmerControl(optCtrl=list(maxfun=2e6)))  
+    return(l_ms_ss)
+  }
+}
+f_ts_R2 <- \(l_md){
+  f_R2 <- \(namemd){
+    ss <- l_starts[[namemd]]
+    md <- l_mds[[namemd]]
+    MuMIn::r.squaredGLMM(md) %>% as.data.frame() %>% apply(.,2,mean)
+  }
+  v_starts <- sapply(l_md,is.list)
+  l_starts <- sapply(l_md, \(l){
+    if(is.list(l)){
+      return(l$starts)
+    }else{
+      return(NA)
+    }
+  })
+  # l_starts <- l_starts[sapply(l_starts,\(l) all(!is.na(l)))]
+  l_mds <- lapply(l_md,\(l){
+    if(is.list(l)){
+      return(l$modelo)
+    }else{
+      return(l)
+    }
+  })
+  df_ts <- AICctab(l_mds,weights=TRUE) %>% as.data.frame() %>% 
+    mutate(modelo = names(l_mds))
+  row.names(df_ts) <- NULL
+  df_r2 <- adply(names(l_md),1,f_R2,.id = "md")
+  df_r2$md <- names(l_md)
+  inner_join(df_ts,df_r2,by=c("modelo"="md")) %>% relocate(modelo)
+}
+l_md <- load("./dados/Rdata/glmm_nCongcom_forestsuc_.Rdata")
+l_md <- get(l_md)
+df_data <- df_plot
+registerDoMC(2)
+l_md <- llply(l_md,f_refit,.parallel = TRUE)
+df_ts <- l_md %>% f_ts_R2()
+write_csv(df_ts,file="./dados/csv/df_ts_defesa_congruencias.csv")
 ```
 
 

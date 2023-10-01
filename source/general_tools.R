@@ -25,13 +25,13 @@ f_loadll <- \(l_path){
   names(l_md) <- v_name
   return(l_md)
 }
-f_glmm <- \(lf,Rdata_path="./dados/Rdata/glmm_",re=TRUE){
+f_glmm <- \(lf,df_data=df_md,Rdata_path="./dados/Rdata/glmm_",re=TRUE,only_nCong=TRUE){
   df_code <- data.frame(nome=c("diffS","nCong"),
-                        funcao=c("function(f) lmer(as.formula(f),data=df_md)",
-                                 "function(f) glmer(as.formula(f),family='binomial',data=df_md,control=glmerControl(optimizer='bobyqa',optCtrl=list(maxfun=2e9)))"),
+                        funcao=c("function(f) lmer(as.formula(f),data=df_data)",
+                                 "function(f) glmer(as.formula(f),family='binomial',data=df_data,control=glmerControl(optimizer='bobyqa',optCtrl=list(maxfun=2e9)))"),
                         f_resp = c("diffS ~",
                                    "cbind(nCong,100-nCong) ~"))
-  
+  if(only_nCong) df_code <- df_code %>% filter(nome=="nCong")
   f_a_ply <- \(df){
     env <- environment()
     f_md <- eval(parse(text = df$funcao),envir=env)
