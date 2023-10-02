@@ -284,7 +284,7 @@ rm(l_p)
 # SAD observada e SAD predita entre paisagens hipotéticas
 
 ```{r}
-df_ts_re <- read_csv("./dados/csv/df_ts_glmm_re.csv")
+df_ts_re <- read_csv("./dados/csv/df_ts_re_nCong.csv")
 df_ts <- read_csv("./dados/csv/df_ts_defesa_congruencias.csv")
 ```
 

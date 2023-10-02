@@ -432,14 +432,12 @@ l_f %>% f_glmm(.,df_data=df_plot,Rdata_path="./dados/Rdata/glmm_re_")
 v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
 l_md <- list.files(path = "./dados/Rdata",pattern="glmm_re_",full.names = TRUE)[2] %>% 
   f_loadll()
-md <- l_md[[1]]$`(land_hyp|SiteCode)`
-ss <- getME(md,c("theta","fixef"))
-md2 <- update(md,start=ss,control=glmerControl(optCtrl=list(maxfun=2e4)))
-summary(md2)
-l_md["(land_hyp|SiteCode)"] <- md2
-df_ts <- AICctab(l_md,weights=TRUE) %>% as.data.frame()
+l_md <- l_md[[1]]
+l_md <- llply(l_md,f_refit)
+df_ts_re <- l_md %>% f_ts_R2()
+write_csv(df_ts_re,file="./dados/csv/df_ts_re_nCong.csv")
 #
-f0 <- l_f[row.names(df_ts)[1]]
+f0 <- l_f[df_ts_re$modelo[1]]
 # f0 <- "~ p_z * forest_succession * k_z * land_hyp + (land_hyp|SiteCode)"
 l_f <- list()
 l_f[[1]] <- f0 %>% sub("p_z \\* ","",.)
@@ -465,6 +463,7 @@ f_refit <- \(md){
   }
 }
 f_ts_R2 <- \(l_md){
+  df_data <- df_plot
   f_R2 <- \(namemd){
     ss <- l_starts[[namemd]]
     md <- l_mds[[namemd]]
@@ -478,7 +477,6 @@ f_ts_R2 <- \(l_md){
       return(NA)
     }
   })
-  # l_starts <- l_starts[sapply(l_starts,\(l) all(!is.na(l)))]
   l_mds <- lapply(l_md,\(l){
     if(is.list(l)){
       return(l$modelo)
