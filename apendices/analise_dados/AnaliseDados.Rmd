@@ -484,7 +484,7 @@ f_ts_R2 <- \(l_md){
       return(l)
     }
   })
-  df_ts <- AICctab(l_mds,weights=TRUE) %>% as.data.frame() %>% 
+  df_ts <- AICctab(l_mds,mnames = names(l_mds),weights=TRUE) %>% as.data.frame() %>% 
     mutate(modelo = names(l_mds))
   row.names(df_ts) <- NULL
   df_r2 <- adply(names(l_md),1,f_R2,.id = "md")
@@ -493,6 +493,9 @@ f_ts_R2 <- \(l_md){
 }
 l_md <- load("./dados/Rdata/glmm_nCongcom_forestsuc_.Rdata")
 l_md <- get(l_md)
+l_md %>% names()
+l_md[[length(l_md)+1]] <- update(l_md[[length(l_md)]],. ~ . - k_z - land_hyp - k_z:land_hyp - (land_hyp|SiteCode) + 1 + (1|SiteCode))
+names(l_md)[length(l_md)] <- "1"
 df_data <- df_plot
 registerDoMC(2)
 l_md <- llply(l_md,f_refit,.parallel = TRUE)

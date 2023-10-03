@@ -1,4 +1,28 @@
 source("source/nameModel.R")
+f_diffSBtsIntPred <- \(lme){
+  df_obs <- lme@frame
+  #new data
+  df_newdat <- expand.grid(SiteCode="SPigua1", 
+                           p_z = seq(min(df_obs$p_z),max(df_obs$p_z), length=150),
+                           land_hyp = unique(df_obs$land_hyp))
+  ## Passo 2: crie as função que devem ser calculadas dos modelos a cada simulação
+  ## Previstos por efeitos fixos e aleatórios
+  f1 <- function(.) predict(., newdata=df_newdat)
+  ## Previstos por efeitos fixos (argumento re.form=~0)
+  f2 <- function(.) predict(., newdata=df_newdat, re.form=~0)
+  ## Os dois bootstraps. Ajuste o argumento ncpus para o numero de cores de seu computador
+  b3 <- bootMer(lme, FUN = f1, nsim=1000, parallel="multicore", ncpus=2)
+  b4 <- bootMer(lme, FUN = f2, nsim=1000, parallel="multicore", ncpus=2)
+  ## calcula as médias e intervalos de confiança quantílicos para cada combinação de preditoras
+  ## no novo conjunto de dados
+  df_newdat$mean <- apply(b3$t,2,mean)
+  df_newdat$IC.low <- apply(b3$t,2,quantile, 0.025)
+  df_newdat$IC.upp <- apply(b3$t,2,quantile, 0.975)
+  df_newdat$mean.fixed <- apply(b4$t,2,mean)
+  df_newdat$IC.low.fixed <- apply(b4$t,2,quantile, 0.025)
+  df_newdat$IC.upp.fixed <- apply(b4$t,2,quantile, 0.975)
+  return(df_newdat)
+}
 f_ts_converg.md <- \(l_md_i){
   f_warning <- function(x) x@optinfo$conv$lme4$messages %>% 
     paste(.,collapse = " , ") %>% sub("$","NA",.)
