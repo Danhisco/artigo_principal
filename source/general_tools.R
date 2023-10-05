@@ -1,10 +1,46 @@
 source("source/nameModel.R")
-f_diffSBtsIntPred <- \(lme){
-  df_obs <- lme@frame
-  #new data
-  df_newdat <- expand.grid(SiteCode="SPigua1", 
-                           p_z = seq(min(df_obs$p_z),max(df_obs$p_z), length=150),
-                           land_hyp = unique(df_obs$land_hyp))
+f_refit <- \(md){
+  v_mes <- md@optinfo$conv$lme4$messages
+  if(is.null(v_mes)){
+    return(md)
+  }else{
+    ss <- getME(md,c("theta","fixef"))
+    md <- update(md,start=ss,control=glmerControl(optCtrl=list(maxfun=2e4)))
+    l_ms_ss <- list("modelo" = md, "starts" = ss)
+    # md <- update(md,control=glmerControl(optCtrl=list(maxfun=2e6)))  
+    return(l_ms_ss)
+  }
+}
+f_ts_R2 <- \(l_md){
+  df_data <- df_plot
+  f_R2 <- \(namemd){
+    ss <- l_starts[[namemd]]
+    md <- l_mds[[namemd]]
+    MuMIn::r.squaredGLMM(md) %>% as.data.frame() %>% apply(.,2,mean)
+  }
+  v_starts <- sapply(l_md,is.list)
+  l_starts <- sapply(l_md, \(l){
+    if(is.list(l)){
+      return(l$starts)
+    }else{
+      return(NA)
+    }
+  })
+  l_mds <- lapply(l_md,\(l){
+    if(is.list(l)){
+      return(l$modelo)
+    }else{
+      return(l)
+    }
+  })
+  df_ts <- AICctab(l_mds,mnames = names(l_mds),weights=TRUE) %>% as.data.frame() %>% 
+    mutate(modelo = names(l_mds))
+  row.names(df_ts) <- NULL
+  df_r2 <- adply(names(l_md),1,f_R2,.id = "md")
+  df_r2$md <- names(l_md)
+  inner_join(df_ts,df_r2,by=c("modelo"="md")) %>% relocate(modelo)
+}
+f_predicaoBootStrap <- \(lme,df_newdat){
   ## Passo 2: crie as função que devem ser calculadas dos modelos a cada simulação
   ## Previstos por efeitos fixos e aleatórios
   f1 <- function(.) predict(., newdata=df_newdat)

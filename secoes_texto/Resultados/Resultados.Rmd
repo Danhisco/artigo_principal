@@ -203,89 +203,19 @@ load("./dados/Rdata/figA23.Rdata")
 p
 ```
 
-__Figura 2__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2.
-
-```{r glossário 3 tabelas CRIACAO,eval=FALSE,include=FALSE}
-l_df <- list()
-l_df[[1]] <- data.frame(nome = c("paisagem contemporânea","paisagem sem fragmentação","paisagem idealizada"),
-                        `descrição` = c("paisagem com a configuração espacial espacial do habitat remanescente do mesmo ano que a amostragem da SAD empírica",
-                                        "paisagem com o habitat remanescente na paisagem contemporânea todo aglomerado ao redor do sítio de amostragem",
-                                        "paisagem sem perda de habitat"))
-l_df[[2]] <- data.frame(`resultado` = c("taxa U","SAD","diff(S)"),
-                        `nome` = c("Probabilidade per nascimento do colonizador do habitat disponível ser uma nova espécie na paisagem",
-                                   "Distribuição de Abundância de Espécies na área amostrada",
-                                   "Erro na riqueza estimada"),
-                        `comparações` = c("(Ui - Uii)  / U_{paisageem idealizada} por par do contraste. U = taxa U média. A diferença na taxa média dividido pela taxa média na paisagem idealizada sem perda de habitat",
-                                          "teste do tipo Kolmogorov-Smirnov: 
-                                          dois vetores são comparados pela maior diferença entre suas curvas acumuladas; 
-                                          se o p-valor for maior do 5% então atribuímos boa congruência entre as duas SADs testadas",
-                                          "(S - Sobs) / Sobs, S = riqueza simulada, Sobs = riqueza observada"),
-                        `análises` = c("modelos gaussianos: média da diferença entre o par do contraste",
-                                       "modelos binomiais: probabilidade de boa congruência entre SADs",
-                                       "modelos gaussianos: média do erro na estimativa da riqueza"),
-                        obs = c("estimado para obter a riqueza observado",
-                                "aplicado entre SADs preditas e empírica",
-                                "aplicado entre SADs preditas e empírica"))
-l_df[[3]] <- data.frame(contraste = c("área per se","fragmentação per se","contemporaneidade"),
-                 par = c("i) habitat aglomerado e ii) sem perda de habitat",
-                         "i) configuração contemporanea do habitat e ii) habitat aglomerado",
-                         "i) configuração contemporanea do habitat e ii) sem perda de habitat"),
-                 `interpretação` = c("efeito de perda de habitat:
-                                 componente da conectividade contemporânea 
-                                 que depende apenas da quantidade do habitat remanescente",
-                                 "efeito de fragmentação per se:
-                                 componente da conectividade contemporânea 
-                                 que depende apenas da configuração espacial do habitat remanescente",
-                                 "efeito da conectividade contemporânea:
-                                 diferença entre a conectividade na configuração espacial contemporânea ao evento de amostragem da SAD e 
-                                 na paisagem sem perda de habitat")
-                 )
-l_df[[4]] <- data.frame(nome = c("k","p","areaU","fragU","contempU","land hyp","Site"),
-  `descrição` = c("grau de limitação de dispersão per capita",
-                  "proporção de cobertura vegetal na extensão de 4x4 km2",
-                  "contraste de área per se na taxa U",
-                  "contraste de frag. per se na taxa U",
-                  "contraste de contemp. na taxa U",
-                  "classe da paisagem simulada"))
-v_footnote <- c(
-  NA,
-  NA,
-  "Conectividade = movimentação de indivíduos entre área amostrada e paisagem ao redor",
-  "variável que controla a influência da paisagem ao redor na dinâmica local,
-  possui efeito fixo e aleatório (i.e. por sítio de amostragem); as outras possuem apenas efeito fixo")
-names(l_df) <- c("paisagens",
-                 "resultados",
-                 "contrastes",
-                 "preditoras")
-v_title <- c("tipos de paisagens",
-             "tipos de resultados",
-             "tipos de contrastes entre simulações",
-             "tipos de preditoras no modelo estatístico")
-# l_df %>% f_gt(.,v_title,v_footnote)
-l_p <- l_df %>%
-  f_gt(.,v_title,v_footnote) %>%
-  f_gt_to_ggplot()
-save(l_p,file="./dados/Rdata/l_glossario.Rdata")
-# gridExtra::grid.arrange(grobs=l_df,layout_matrix=rbind(c(1,1),
-#                                                        c(2,2),
-#                                                        c(3,3)),
-#                         top="Glossário")
-```
-
-```{r glossario display,cache=FALSE}
-load("./dados/Rdata/l_glossario.Rdata")
-unname(l_p[1:2])
-rm(l_p)
-```
-
-
+__Figura 2__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo ()
 
 
 # SAD observada e SAD predita entre paisagens hipotéticas
 
 ```{r}
-df_ts_re <- read_csv("./dados/csv/df_ts_re_nCong.csv")
-df_ts <- read_csv("./dados/csv/df_ts_defesa_congruencias.csv")
+df_ts_re <- read.csv("./dados/csv/df_ts_re_nCong.csv")
+df_ts <- read.csv("./dados/csv/df_ts_defesa_congruencias.csv")
+df_ts_re %>% 
+  gt() %>% 
+  tab_header(title = "Seleção da Estrutura Aleatória") %>% 
+  tab_footnote(footnote = "estrutura fixa do modelo cheio usada na comparação")
+  
 ```
 
 
@@ -315,7 +245,7 @@ save(l_p,file="./dados/Rdata/l_ts_glmm.Rdata")
 #                         top="Glossário")
 ```
 
-```{r ts glmm display,cache=FALSE}
+```{r ts glmm display,cache=FALSE,eval=FALSE,include=FALSE}
 vname <- load("./dados/Rdata/l_ts_glmm.Rdata",verbose = T)
 get(vname)
 ```

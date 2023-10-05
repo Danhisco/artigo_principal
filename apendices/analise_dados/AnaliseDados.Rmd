@@ -450,57 +450,36 @@ l <- c(md,l_md)
 names(l)[1] <- "p_z * forest_succession * k_z * land_hyp"
 save(l,file=paste0(Rdata_path,name_l,"com_forestsuc_.Rdata"))
 # 
-f_refit <- \(md){
-  v_mes <- md@optinfo$conv$lme4$messages
-  if(is.null(v_mes)){
-    return(md)
-  }else{
-    ss <- getME(md,c("theta","fixef"))
-    md <- update(md,start=ss,control=glmerControl(optCtrl=list(maxfun=2e4)))
-    l_ms_ss <- list("modelo" = md, "starts" = ss)
-    # md <- update(md,control=glmerControl(optCtrl=list(maxfun=2e6)))  
-    return(l_ms_ss)
-  }
-}
-f_ts_R2 <- \(l_md){
-  df_data <- df_plot
-  f_R2 <- \(namemd){
-    ss <- l_starts[[namemd]]
-    md <- l_mds[[namemd]]
-    MuMIn::r.squaredGLMM(md) %>% as.data.frame() %>% apply(.,2,mean)
-  }
-  v_starts <- sapply(l_md,is.list)
-  l_starts <- sapply(l_md, \(l){
-    if(is.list(l)){
-      return(l$starts)
-    }else{
-      return(NA)
-    }
-  })
-  l_mds <- lapply(l_md,\(l){
-    if(is.list(l)){
-      return(l$modelo)
-    }else{
-      return(l)
-    }
-  })
-  df_ts <- AICctab(l_mds,mnames = names(l_mds),weights=TRUE) %>% as.data.frame() %>% 
-    mutate(modelo = names(l_mds))
-  row.names(df_ts) <- NULL
-  df_r2 <- adply(names(l_md),1,f_R2,.id = "md")
-  df_r2$md <- names(l_md)
-  inner_join(df_ts,df_r2,by=c("modelo"="md")) %>% relocate(modelo)
-}
-l_md <- load("./dados/Rdata/glmm_nCongcom_forestsuc_.Rdata")
-l_md <- get(l_md)
+oname <- load("./dados/Rdata/glmm_nCongcom_forestsuc_.Rdata",verbose = TRUE)
+l_md <- get(oname)
 l_md %>% names()
-l_md[[length(l_md)+1]] <- update(l_md[[length(l_md)]],. ~ . - k_z - land_hyp - k_z:land_hyp - (land_hyp|SiteCode) + 1 + (1|SiteCode))
-names(l_md)[length(l_md)] <- "1"
+# l_md[[length(l_md)+1]] <- update(l_md[[length(l_md)]],. ~ . - k_z - land_hyp - k_z:land_hyp - (land_hyp|SiteCode) + 1 + (1|SiteCode))
+# names(l_md)[length(l_md)] <- "1"
 df_data <- df_plot
 registerDoMC(2)
 l_md <- llply(l_md,f_refit,.parallel = TRUE)
+save(l_md,file="./dados/Rdata/glmm_nCongcom_forestsuc_.Rdata")
 df_ts <- l_md %>% f_ts_R2()
 write_csv(df_ts,file="./dados/csv/df_ts_defesa_congruencias.csv")
+df_ts <- read.csv(file="./dados/csv/df_ts_defesa_congruencias.csv")
+#
+# criação das predições
+l_md_e_start <- l_md[[df_ts$modelo[1]]]
+df_newdata <- l_md_e_start$modelo@frame[,-1]
+df_newdata <- with(df_newdata,{
+  expand.grid(SiteCode = "SPigua1",
+              forest_succession = unique(forest_succession),
+              k_z = unique(k_z),
+              land_hyp = unique(land_hyp),
+              p_z = seq(min(p_z),max(p_z),length.out=150))
+})
+f_pred <- \(md_e_starts,newdata){
+  ss <- md_e_starts$starts
+  md <- md_e_starts$modelo
+  f_predicaoBootStrap(lme=md,df_newdat = newdata)
+}  
+df_newpred <- f_pred(l_md_e_start,df_newdata)
+
 ```
 
 
