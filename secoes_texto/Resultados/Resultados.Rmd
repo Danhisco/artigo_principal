@@ -7,7 +7,7 @@ output:
     toc: true
     toc_depth: 5
     fig_caption: yes
-  pdf_document:
+  bookdown::pdf_document2:
     fig_caption: yes
 editor_options: 
   chunk_output_type: console
@@ -93,6 +93,14 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |
                                        pair == "efeito_area"~"non_frag.ideal",
                                        pair == "efeito_conf"~"cont.ideal")) ) |> 
   relocate(contraste_z,.before = contrasteSAD_z)
+# themes
+basic_theme <- function(data, ...){
+  data %>% 
+    tab_options(
+      table.background.color = "white",
+      ...
+    )
+}
 ```
 
 ```{r trackdown chunk, include=FALSE}
@@ -116,12 +124,12 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 As coordenadas dos sítios variaram entre -31° e -7° de latit”ude e entre -55° e -35° de longitude (figura A2 1a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo (Figura A2 1c). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (Figura A2 1b). Portanto, todos os sítios dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Uma paisagem foi descartada, pois não foi possível delimitar uma área amostral quadrada por conta da particular configuração espacial do habitat remanescente. 
 
 
-```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6}
+```{r GE-sitios-amostrados,fig.width=12,fig.height=6,fig.cap="Características dos sítios selecionados",cache=TRUE}
 load("./dados/Rdata/figA21.Rdata")
 grid.arrange(grobs=l_p,nrow=1)
 ```
 
-__Figura 1__ Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão)).
+__\@ref(fig:GE-sitios-amostrados)__ Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão)).
 
 
 
@@ -198,25 +206,78 @@ ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
 
 <!-- __Figura \@ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM.  -->
 
-```{r fig A2 3 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=30,fig.width=15}
+```{r GE-Urep-sitio-k-land,eval=TRUE,fig.height=30,fig.width=15,fig.cap="Características dos Sítios Selecionados"}
 load("./dados/Rdata/figA23.Rdata")
 p
 ```
 
-__Figura 2__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo ()
+__\@ref(fig:GE-Urep-sitio-k-land)__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo (\@ref(fig:GE-sitios-amostrados))
 
 
 # SAD observada e SAD predita entre paisagens hipotéticas
 
-```{r}
-df_ts_re <- read.csv("./dados/csv/df_ts_re_nCong.csv")
-df_ts <- read.csv("./dados/csv/df_ts_defesa_congruencias.csv")
-df_ts_re %>% 
-  gt() %>% 
-  tab_header(title = "Seleção da Estrutura Aleatória") %>% 
-  tab_footnote(footnote = "estrutura fixa do modelo cheio usada na comparação")
-  
+```{r GE-nCong,eval=TRUE,fig.height=30,fig.width=15,fig.cap="nCong por sítio, k, land, forest s"}
+df_plot <- df_md |> select(SiteCode:diffS,p_z:k_z) |> 
+  inner_join(df_p) |> 
+  inner_join(df_dados_disponiveis |> 
+               filter(forest_succession != "capoeira") %>% 
+               select(SiteCode, forest_succession)) %>% 
+  arrange(p) |> 
+  mutate(succession = case_when(forest_succession == "primary" ~ "1°",
+                                forest_succession == "secondary" ~ "2°",
+                                forest_succession == "primary/secondary" ~ "1.5°"),
+         label = paste0(SiteCode,", p=",round(p,2)," ,suc=",succession)) %>% 
+  select(-succession)
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+#
+f_plot <- \(nvresp,
+            png_repo = "apendices/analise_dados/figuras/",
+            end_name = "_k_land.hyp_site"){
+  p <- df_plot %>% 
+    ggplot(aes(x=k,y=.data[[nvresp]],color=land_hyp)) +
+    geom_point(alpha=0.5) +
+    geom_line(alpha=0.5) +
+    # geom_smooth(method = "gam",se=FALSE) +
+    scale_x_reverse() +
+    # scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+    theme_bw() +
+    labs(color="landscape hyp.") +
+    theme(legend.position = "top",
+          axis.text=element_text(size=4.5),
+          strip.text = element_text(size = 4.5, margin = margin())) +
+    scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                       labels=c("contemporâneo","idealizado","sem fragmentação")) +
+    facet_wrap(~label,ncol=5)
+  ggsave(paste0(png_repo,nvresp,end_name,".png"),
+         plot = p,
+         width = 7,height = 30)
+  save(p,file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
+  return(p)
+}
+f_plot("nCong")
 ```
+
+__Figura \@ref(fig:GE-nCong)__ Número de SADs simuladas congruentes com a SAD empírica (eixo y). A classificação da SAD simulada como congruente ocorreu quando a comparação entre SADs segundo um teste de Kolmogorov-Smirnov apresentou p-valor igual ou maior do que 0.05. No eixo x há o grau de limitação de dispersão per capita (k). Os pontos são coloridos pelo tipo de paisagem hipotética pressuposta pela simulação. Os paíneis estão organizados pela proporção de cobertura vegetal na paisagem ao redor de 4x4km2.
+
+```{r ts-re-ncong}
+df_ts_re <- read.csv("./dados/csv/df_ts_re_nCong.csv")
+df_ts_re %>% 
+  gt(caption = "Seleção da Estrutura Aleatória") %>% 
+  tab_source_note(source_note = "estrutura fixa do modelo cheio usada em ambos modelos") %>% 
+  basic_theme()
+```
+
+A estrutura aleatória mais plausível dentre os modelos candidatos é aquela com 1 intercepto por tipo de paisagem hipotética por sítio de amostragem (\@ref(tab:ts-re-ncong)) 
+
+
+```{r ts-ncong}
+df_ts <- read.csv("./dados/csv/df_ts_defesa_congruencias.csv")
+df_ts %>% 
+  gt(caption = "Seleção da Estrutura Fixa") %>% 
+  tab_source_note(source_note = "estrutura aleatória mais plausível usada em todos os modelos")
+```
+
+O único modelo plausível é o modelo cheio  \@ref(tab:ts-ncong), que tem como preditoras: proporção de cobertura vegetal (p, variável contínua); forest succession (variável categórica com 3 níveis, ver \@ref(fig:GE-sitios-amostrados)) ;grau de limitação de dispersão (k, variável contínua); e o tipo da paisagem hipotética (land. hyp., com 3 níveis). As variáveis contínuas estão 'z' transformadas. 
 
 
 ```{r estudo dos parametros dos modelos mais plausíveis,eval=FALSE,include=FALSE}
