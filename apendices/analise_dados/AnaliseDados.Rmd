@@ -479,6 +479,21 @@ f_pred <- \(md_e_starts,newdata){
   f_predicaoBootStrap(lme=md,df_newdat = newdata)
 }  
 df_newpred <- f_pred(l_md_e_start,df_newdata)
+#################
+```{r}
+p <- df_plot %>% 
+  ggplot(aes(x=p,y=nCong,color=land_hyp)) +
+  geom_smooth(se=FALSE,alpha=0.2,method="glm") + 
+  geom_point() +
+  facet_wrap(~k_f+forest_succession) +
+  scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                     labels=c("contemporâneo","idealizado","sem fragmentação")) + 
+  labs(color="landscape hyp.") + 
+  theme(legend.position = "top")
+ggsave("./secoes_texto/Resultados/figuras/proposta_figura_final.png",
+       plot = p,
+       width = 15,height = 20)
+```
 
 ```
 

@@ -10,3 +10,5 @@ dados/
 *.png
 *.pdf
 *.html
+*.log
+*.tex

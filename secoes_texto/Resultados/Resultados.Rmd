@@ -3,11 +3,11 @@ title: "Resultados Completos"
 author: "Mori, Danilo"
 date: "19/11/2022"
 output: 
+  bookdown::pdf_document2:
+    fig_caption: yes
   bookdown::html_document2:
     toc: true
     toc_depth: 5
-    fig_caption: yes
-  bookdown::pdf_document2:
     fig_caption: yes
 editor_options: 
   chunk_output_type: console
@@ -123,7 +123,6 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 As coordenadas dos sítios variaram entre -31° e -7° de latit”ude e entre -55° e -35° de longitude (figura A2 1a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo (Figura A2 1c). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (Figura A2 1b). Portanto, todos os sítios dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Uma paisagem foi descartada, pois não foi possível delimitar uma área amostral quadrada por conta da particular configuração espacial do habitat remanescente. 
 
-
 ```{r GE-sitios-amostrados,fig.width=12,fig.height=6,fig.cap="Características dos sítios selecionados",cache=TRUE}
 load("./dados/Rdata/figA21.Rdata")
 grid.arrange(grobs=l_p,nrow=1)
@@ -146,7 +145,6 @@ Pressupomos que a extensão espacial da paisagem adequada é aquela que acumula 
 <!-- # Contrastes entre paisagens hipotéticas -->
 
 <!-- Comparamos as simulações nas 3 paisagens hipotéticas par a par. Avaliamos 2 tipos de contrastes: entre a taxa U estimada; e a congruência nas SADs preditas. Os contraste entre a paisagem contemporânea e a idealizada podem ser compreendidos como o efeito completo da conectividade contemporânea entre parcela e paisagem ao redor na manutenção do padrão avaliado. Os contrastes entre a paisagem contemporânea e sem fragmentação per se podem ser interpretados como o efeito da fragmentação per se, o componente da conectividade contemporânea que depende apenas da configuração espacial do habitat remanescente. Os contrastes entre a paisagem sem fragmentação per se e a idealizada podem ser interpretados como o efeito da perda de área, o componente da conectividade contemporânea que depende apenas da quantia de habitat perdido. Uma vez que a extensão da paisagem ao redor de 4x4km2 é suficiente para simular todos os graus de limitação de dispersão (Apêndice 1 Efeito de Escala), os contrastes entre paisagens contemporâneas e idealizadas são condicionais apenas à escala espacial determinada pelo grau de limitação de dispersão e a configuração espacial do habitat remanescente. A estimativa da taxa U e a SAD predita nas paisagens sem fragmentação per se são condicionais também à extensão espacial de 4x4km2, pois ela é usada como referência para determinar a quantidade de habitat que será aglomerado ao redor da parcela (Figura A1 1). Um conjunto de simulações que não fizemos foi o de usar a menor extensão espacial adequada para cada respectivo grau de limitação de dispersão, assim teríamos simulações também nas extensão de 1x1 km2 e 2x2km2 para alguns graus de limitação de dispersão (Figura A1 6). -->
-
 
 # taxa U
 <!-- A distribuição de contrastes apresenta elevada assimetria, com a maioria dos valores próximos do observado em paisagens com pouca perda de habitat e poucos casos distante desta faixa de valores (Figura A2 4). Quando há pouca perda de habitat a estimativa da taxa U não difere entre paisagens hipotéticas (Figuras A2, 2 e 3). Com a redução da cobertura vegetal a estimativa da taxa U pode ser distinta entre paisagens hipotéticas. Em graus de limitação de dispersão mais relaxados pode existir o aumento da taxa U estimada nas paisagem contemporâneas ou sem fragmentação (Figura 1). Em geral a taxa U estimada nas paisagens contemporâneas é a maior das três paisagens hipotéticas (Figura A2 3). Em alguns casos a paisagem sem fragmentação per se pode apresentar estimativas superiores (Figura A2 3). Nos graus onde há pouca variação no efeito de escalar (k entre 0.80 e 0.55) também há pouca variação entre paisagens hipotéticas (Figura A2 2 e 3). As maiores diferenças entre paisagens hipotéticas ocorre em graus de limitação de dispersão mais brandos (Figura A2 2 e 3). Em paisagens com baixa proporção de cobertura florestal as estimativas em graus severos de limitação de dispersão também podem ser distintas entre paisagens hipotéticas (Figura A2 2 e 3). Alguns sítios apresentaram contraste de fragmentação per se com valores negativos maiores do que o observado nos sítios em paisagens com pouca perda de habitat (Figura A2 4). O contraste de área per se apresentou os menores valores em magnitude (Figura A2 4).  -->
@@ -213,7 +211,6 @@ p
 
 __\@ref(fig:GE-Urep-sitio-k-land)__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo (\@ref(fig:GE-sitios-amostrados))
 
-
 # SAD observada e SAD predita entre paisagens hipotéticas
 
 ```{r GE-nCong,eval=TRUE,fig.height=30,fig.width=15,fig.cap="nCong por sítio, k, land, forest s"}
@@ -269,7 +266,6 @@ df_ts_re %>%
 
 A estrutura aleatória mais plausível dentre os modelos candidatos é aquela com 1 intercepto por tipo de paisagem hipotética por sítio de amostragem (\@ref(tab:ts-re-ncong)) 
 
-
 ```{r ts-ncong}
 df_ts <- read.csv("./dados/csv/df_ts_defesa_congruencias.csv")
 df_ts %>% 
@@ -278,7 +274,6 @@ df_ts %>%
 ```
 
 O único modelo plausível é o modelo cheio  \@ref(tab:ts-ncong), que tem como preditoras: proporção de cobertura vegetal (p, variável contínua); forest succession (variável categórica com 3 níveis, ver \@ref(fig:GE-sitios-amostrados)) ;grau de limitação de dispersão (k, variável contínua); e o tipo da paisagem hipotética (land. hyp., com 3 níveis). As variáveis contínuas estão 'z' transformadas. 
-
 
 ```{r estudo dos parametros dos modelos mais plausíveis,eval=FALSE,include=FALSE}
 v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
