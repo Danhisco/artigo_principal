@@ -422,8 +422,9 @@ f_PredInt.GAMM <- \(gamm,
 
 2 variáveis respostas (diffS e nCong), mesmo conjunto de modelos candidatos
 
+## seleção da estrutura aleatória
 
-```{r}
+```{r ncong estrutura aleatória}
 l_f <- list()
 l_f[[1]] <- "~ p_z * forest_succession * k_z * land_hyp + (land_hyp|SiteCode)"
 l_f[[2]] <- "~ p_z * forest_succession * k_z * land_hyp + (1|SiteCode)"
@@ -436,6 +437,11 @@ l_md <- l_md[[1]]
 l_md <- llply(l_md,f_refit)
 df_ts_re <- l_md %>% f_ts_R2()
 write_csv(df_ts_re,file="./dados/csv/df_ts_re_nCong.csv")
+```
+
+## seleção da estrutura fixa
+
+```{r}
 #
 f0 <- l_f[df_ts_re$modelo[1]]
 # f0 <- "~ p_z * forest_succession * k_z * land_hyp + (land_hyp|SiteCode)"
@@ -469,7 +475,7 @@ df_newdata <- l_md_e_start$modelo@frame[,-1]
 df_newdata <- with(df_newdata,{
   expand.grid(SiteCode = "SPigua1",
               forest_succession = unique(forest_succession),
-              k_z = unique(k_z),
+              k_z = seq(min(k_z),max(k_z),length.out=150),
               land_hyp = unique(land_hyp),
               p_z = seq(min(p_z),max(p_z),length.out=150))
 })
@@ -478,8 +484,31 @@ f_pred <- \(md_e_starts,newdata){
   md <- md_e_starts$modelo
   f_predicaoBootStrap(lme=md,df_newdat = newdata)
 }  
-df_newpred <- f_pred(l_md_e_start,df_newdata)
-#################
+# df_newpred <- f_pred(l_md_e_start,df_newdata)
+df_newdata$pred <- predict(l_md_e_start$modelo,newdata=df_newdata, re.form=~0)
+v_range <- range(df_newdata$pred)
+# v_breaks1 <- c(-0.2,0,0.2,0.5,1)
+df_newdata %>% 
+  ggplot(aes(x=p_z,y=k_z,fill=pred,z=pred)) +
+  geom_raster() +
+  # geom_contour(aes(z=pred),
+  #              size=0.5,color="darkblue") +
+  metR::geom_contour2(aes(z = pred, label = stat(level))) +
+  # geom_text_contour(aes(z=pred),
+  #                   label.placer = label_placer_flattest()) +
+  scale_fill_gradient2(low="green",
+                       mid="red",
+                       high="black",
+                       midpoint = 2,
+                       limits=v_range) +
+  scale_y_reverse() +
+  theme_classic() +
+  # guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
+  coord_cartesian(expand = FALSE) +
+  # labs(fill=df$name[1]) +
+  facet_grid(land_hyp~forest_succession)
+```
+
 ```{r}
 p <- df_plot %>% 
   ggplot(aes(x=p,y=nCong,color=land_hyp)) +
@@ -495,7 +524,6 @@ ggsave("./secoes_texto/Resultados/figuras/proposta_figura_final.png",
        width = 15,height = 20)
 ```
 
-```
 
 
 
