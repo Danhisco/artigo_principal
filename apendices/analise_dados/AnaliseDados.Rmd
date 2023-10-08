@@ -471,6 +471,12 @@ df_ts <- read.csv(file="./dados/csv/df_ts_defesa_congruencias.csv")
 #
 # criação das predições
 l_md_e_start <- l_md[[df_ts$modelo[1]]]
+save(l_md_e_start,file="./dados/Rdata/glmm_nCong_selecionado.Rdata")
+```
+
+```{r}
+oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata",verbose = TRUE)
+l_md_e_start <- get(oname)
 df_newdata <- l_md_e_start$modelo@frame[,-1]
 df_newdata <- with(df_newdata,{
   expand.grid(SiteCode = "SPigua1",
@@ -488,14 +494,13 @@ f_pred <- \(md_e_starts,newdata){
 df_newdata$pred <- predict(l_md_e_start$modelo,newdata=df_newdata, re.form=~0)
 v_range <- range(df_newdata$pred)
 # v_breaks1 <- c(-0.2,0,0.2,0.5,1)
-df_newdata %>% 
+df_newdata %>%
+  mutate(land_hyp = factor(land_hyp,
+                           levels=c("cont","non_frag","ideal"),
+                           labels=c("contemp.","sem frag.","ideal."))) %>% 
   ggplot(aes(x=p_z,y=k_z,fill=pred,z=pred)) +
   geom_raster() +
-  # geom_contour(aes(z=pred),
-  #              size=0.5,color="darkblue") +
-  metR::geom_contour2(aes(z = pred, label = stat(level))) +
-  # geom_text_contour(aes(z=pred),
-  #                   label.placer = label_placer_flattest()) +
+  geomtextpath::geom_textcontour(aes(z=pred),color="blue",straight = TRUE) +
   scale_fill_gradient2(low="green",
                        mid="red",
                        high="black",
@@ -503,11 +508,13 @@ df_newdata %>%
                        limits=v_range) +
   scale_y_reverse() +
   theme_classic() +
-  # guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
+  guides(fill = guide_colourbar(title = "logito")) +
   coord_cartesian(expand = FALSE) +
-  # labs(fill=df$name[1]) +
+  labs(x="z(p)",y="z(k)") +
+  theme(legend.position = "top") +
   facet_grid(land_hyp~forest_succession)
 ```
+
 
 ```{r}
 p <- df_plot %>% 
