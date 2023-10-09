@@ -1,4 +1,15 @@
 source("source/nameModel.R")
+#
+f_glmm_predboot_withou_re <- \(md,data_to_predict){
+
+  f_pred <- \(){
+    boot_df <- data_to_predict %>% select(p_z,k_z) %>% distinct()
+    predict(md,newdata=boot_df, re.form=~0)
+  }
+  
+}
+
+#
 f_refit <- \(md){
   v_mes <- md@optinfo$conv$lme4$messages
   if(is.null(v_mes)){

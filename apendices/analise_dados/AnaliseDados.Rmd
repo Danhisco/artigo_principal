@@ -474,7 +474,7 @@ l_md_e_start <- l_md[[df_ts$modelo[1]]]
 save(l_md_e_start,file="./dados/Rdata/glmm_nCong_selecionado.Rdata")
 ```
 
-```{r}
+```{r figura do logi predito para nCong e os 3 tipos de }
 oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata",verbose = TRUE)
 l_md_e_start <- get(oname)
 df_newdata <- l_md_e_start$modelo@frame[,-1]

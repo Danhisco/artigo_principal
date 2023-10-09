@@ -275,38 +275,6 @@ df_ts %>%
 
 O único modelo plausível é o modelo cheio  \@ref(tab:ts-ncong), que tem como preditoras: proporção de cobertura vegetal (p, variável contínua); forest succession (variável categórica com 3 níveis, ver \@ref(fig:GE-sitios-amostrados)) ;grau de limitação de dispersão (k, variável contínua); e o tipo da paisagem hipotética (land. hyp., com 3 níveis). As variáveis contínuas estão 'z' transformadas. 
 
-```{r estudo dos parametros dos modelos mais plausíveis,eval=FALSE,include=FALSE}
-v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
-l_md <- list.files(path = v_path,pattern="glmm_l_md_",full.names = TRUE) %>% 
-  f_loadll()
-df_ts <- read_csv(file="./dados/csv/df_ts_defesa_congruencias.csv")
-l_md <- alply(filter(df_ts,dAICc==0),1,
-              \(x) l_md[[paste0("l_md_",x$resp_var)]][[paste0(x$md," ")]] )
-names(l_md) <- filter(df_ts,dAICc==0) %>% pull(resp_var)
-f_coef_glmm <- \(md){
-  df_ret <- coef(summary(md)) %>% as.data.frame() %>% mutate(coef = row.names(.)) %>% relocate(coef)
-  row.names(df_ret) <- NULL
-  return(df_ret)
-}
-l_df <- llply(l_md,f_coef_glmm)
-v_title <- c("Erro na riqueza estimada",
-             "Número de SADs simuladas congruentes com a empírica")
-l_p <- l_df %>%
-  f_gt(.,v_title) %>%
-  f_gt_to_ggplot()
-save(l_p,file="./dados/Rdata/l_ts_glmm.Rdata")
-# gridExtra::grid.arrange(grobs=l_df,layout_matrix=rbind(c(1,1),
-#                                                        c(2,2),
-#                                                        c(3,3)),
-#                         top="Glossário")
-```
-
-```{r ts glmm display,cache=FALSE,eval=FALSE,include=FALSE}
-vname <- load("./dados/Rdata/l_ts_glmm.Rdata",verbose = T)
-get(vname)
-```
-
-
 
 <!-- ### antigo, util?-->
 ```{r exemplo tabela,eval=FALSE,include=FALSE}
