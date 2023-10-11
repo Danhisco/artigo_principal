@@ -135,6 +135,13 @@ __\@ref(fig:GE-sitios-amostrados)__ Sítios selecionados na base de dados TreeCo
 
 # Efeito de Escalar
 
+```{r fig caption EE 1}
+cap <- ""
+```
+```{r EE-setup,fig.height=3.5,fig.width=10,fig.cap=""}
+load(file="./apendices/EfeitoEscala/Rdata/fig1_grobs.Rdata")
+grid.arrange(grobs=l_p,nrow=1)
+```
 
 
 

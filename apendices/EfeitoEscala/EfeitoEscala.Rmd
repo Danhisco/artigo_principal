@@ -4,10 +4,10 @@ author:
   - Danilo Pereira Mori, Laboratório de Ecologia Teórica (IBUSP)
 date: ""
 output:
-  html_document: default
   pdf_document:
     latex_engine: xelatex
     extra_dependencies: ["tabu"]
+  html_document: default
 editor_options:
   chunk_output_type: console
 # bibliography: citations.bib
@@ -176,6 +176,7 @@ l_p[[3]] <- df_sim |>
        y = "d",
        title = "c) 20 graus de dispersão")
 grid.arrange(grobs=l_p,nrow=1)
+save(l_p,file="./apendices/EfeitoEscala/Rdata/fig1_grobs.Rdata")
 ```
 
 <font size="1"> 
@@ -228,7 +229,7 @@ __Figura 2b__ U estimado (eixo y) por cenário de limitação de dispersão (eix
 A taxa U estimada na extensão de 16x16 km2 apresenta padrão não linear com máximo em graus pouco severos de limitação de dispersão (Figura 2a,b), qualitativamente é semelhante ao esperado em paisagens infinitas (texto principal CONFIRMAR). Há muita variação entre os sítios, por isso na figura 2b o eixo y varia entre paineis. A variação das réplicas em torno da média também pode ser elevada (Figura 2b). Os valores médios sugerem um padrão de patamares, com valores baixos de U quando a limitação de dispersão é severa e em graus pouco severos um aumento brusco que suavemente diminui com o relaxamento da limitação de dispersão (Figura 2b). Uma vez que observamos um padrão qualitativamente similar ao esperado em paisagens infinitas, iremos considerar a extensão espacial de 16x16 km2 como maior escala de referência para os graus de limitação de dispersão. 
 
 
-```{r figura 2+1 relacoes nao triviais da riqueza e do numero de individuos}
+```{r figura 2+1 relacoes nao triviais da riqueza e do numero de individuos,eval=FALSE,include=FALSE}
 df_Unull |> 
   group_by(SiteCode,Ntotal,S_obs,k,lado_km) |> 
   summarise(Umed = mean(U)) |> 
@@ -249,7 +250,7 @@ df_p <- df_Usoe.rep |>
          label = paste(SiteCode,S_obs,Ntotal,round(DA,1),sep = ", "),
          k = round(k,2)) 
 df_p$label <- factor(df_p$label,levels = unique(df_p$label))
-df_p |>
+p <- df_p |>
   ggplot(aes(x=lado_km,y=U,color=k,group=factor(k))) +
   geom_point(alpha=0.4) +
   stat_summary(geom = "line",fun.data = mean_se) +
@@ -272,6 +273,8 @@ df_p |>
 # ggsave("apendices/EfeitoEscala/fig3_Uk_ladoKM.png",
 #        width = 17.2,
 #        height = 6.7)
+p
+save(p,file="./apendices/EfeitoEscala/Rdata/fig3_EfeitoEscalarObs.Rdata")
 ```
 
 <font size="1"> 
@@ -412,9 +415,9 @@ Com a redução da limitação de dispersão há aumento na escala adequada (Fig
 
 
 ```{r figura 6 scale e k adequados, fig.height=5,fig.width=6}
-df_plot |> 
+p <- df_plot |> 
   ggplot(aes(x=k_factor,y=SoE_0.95)) +
-  geom_hline(yintercept = 4,color="red") +
+  # geom_hline(yintercept = 4,color="red") +
   geom_point() +
   # geom_rect(aes(xmin=4, xmax=13.5, ymin=0.99, ymax=2.1),alpha=0.01) +
   scale_y_continuous(trans = log2_trans(), 
@@ -424,9 +427,11 @@ df_plot |>
        y="lado da paisagem (km)",
        title="lado da paisagem que acumula a maior parte do efeito da escala") +
   theme_bw()
+p
 ggsave("apendices/EfeitoEscala/figuras/fig6_SoE_resumo.png",
        width = 8.5,
        height = 6.7)
+save(p,file="./apendices/EfeitoEscala/Rdata/fig6_resumo_EscalaAdequada_k.Rdata")
 ```
   
 <font size="1"> 
