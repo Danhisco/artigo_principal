@@ -441,10 +441,49 @@ write_csv(df_ts_re,file="./dados/csv/df_ts_re_nCong.csv")
 
 ## seleção da estrutura fixa
 
+```{r l_md_nCong}
+# formulas usadas para selecionar a estrutura aleatória
+l_f <- list()
+l_f[[1]] <- "~ p_z * forest_succession * k_z * land_hyp + (land_hyp|SiteCode)"
+l_f[[2]] <- "~ p_z * forest_succession * k_z * land_hyp + (1|SiteCode)"
+names(l_f) <- laply(l_f,\(s) sub(" \\+ \\(","",trimws(str_extract(s, "\\((.*?)\\)"))))
+# tabela de seleção da estrutura aleatória
+df_ts_re <- read_csv(file="./dados/csv/df_ts_re_nCong.csv")
+# formulas para comparação da estrutura fixa
+f0 <- l_f[[df_ts_re$modelo[1]]]
+l_f <- list()
+l_f[[1]] <- f0 %>% sub("p_z \\* ","",.)
+l_f[[2]] <- f0 %>% sub("forest_succession \\* ","",.)
+l_f[[3]] <- l_f[[2]] %>%  sub("p_z \\* ","",.)
+l_f <- c(f0,l_f)
+l_f <- c(l_f,
+         l_f %>% gsub("land_hyp","1",.) %>% gsub(" \\* 1","",.))
+names(l_f) <- laply(l_f,\(s) str_extract(s,"(?<=~ )(.*?)(?= \\+)"))
+# ajuste das formulas
+f_glmm(l_f,df_data=df_plot)
+# leitura e refit se necessário
+oname <- formals(f_glmm)$Rdata_path
+oname <- list.files(path = sub("\\/glmm_","",oname),pattern = "glmm_l_md_nCong",full.names = TRUE)
+oname <- load(file=oname)
+l_md <- get(oname)
+rm(list=oname)
+l_md <- llply(l_md,f_refit)
+oname <- formals(f_glmm)$Rdata_path
+oname <- list.files(path = sub("\\/glmm_","",oname),pattern = "glmm_l_md_nCong",full.names = TRUE)
+save(l_md,file=oname)
+# tabela de seleção
+df_ts <- l_md %>% f_ts_R2()
+write_csv(df_ts,file = "./dados/csv/df_ts_nCong.csv")
+# modelo mais plausível
+md <- l_md[[df_ts$modelo[1]]]$modelo
+save(md,file=paste0(formals(f_glmm)$Rdata_path,"md_nCong.Rdata"))
+```
+
+
 ```{r}
 # 
 df_ts_re <- read_csv(file="./dados/csv/df_ts_re_nCong.csv")
-f0 <- l_f[df_ts_re$modelo[1]]
+f0 <- "~ p_z * forest_succession * k_z * land_hyp + (land_hyp|SiteCode)"
 # f0 <- "~ p_z * forest_succession * k_z * land_hyp + (land_hyp|SiteCode)"
 l_f <- list()
 l_f[[1]] <- f0 %>% sub("p_z \\* ","",.)
@@ -453,16 +492,22 @@ l_f[[3]] <- l_f[[2]] %>%  sub("p_z \\* ","",.)
 names(l_f) <- laply(l_f,\(s) str_extract(s,"(?<=~ )(.*?)(?= \\+)"))
 l_f2 <- c(f0,l_f)
 names(l_f2)[1] <- c("p_z * forest_succession * k_z * land_hyp")
-
+l_f2 <- l_f2 %>% gsub("land_hyp","1",.) %>% gsub(" \\* 1","",.)
+names(l_f2) <- laply(l_f2,\(s) str_extract(s,"(?<=~ )(.*?)(?= \\+)"))
+l_md2 <- l_f2 %>% f_glmm(.,df_data=df_plot,Rdata_path="./dados/Rdata/glmm_",only_nCong = TRUE,re=TRUE)
+l_md2 <- load("./dados/Rdata/glmm_l_md_sem_land_nCong.Rdata")
+l_md2 <- get(l_md2)
+l_md2 <- llply(l_md2,f_refit)
 ##
 # l_f %>% f_glmm(.,df_data=df_plot,Rdata_path="./dados/Rdata/glmm_",only_nCong = TRUE,re=FALSE)
-l <- c(md,l_md)
-names(l)[1] <- "p_z * forest_succession * k_z * land_hyp"
-save(l,file=paste0(Rdata_path,name_l,"com_forestsuc_.Rdata"))
+# l <- c(md,l_md)
+# names(l)[1] <- "p_z * forest_succession * k_z * land_hyp"
+# save(l,file=paste0(Rdata_path,name_l,"com_forestsuc_.Rdata"))
 # 
 oname <- load("./dados/Rdata/glmm_nCongcom_forestsuc_.Rdata")
 l_md <- get(oname)
 l_md %>% names()
+l_md <- c(l_md,l_md2)
 # l_md[[length(l_md)+1]] <- update(l_md[[length(l_md)]],. ~ . - k_z - land_hyp - k_z:land_hyp - (land_hyp|SiteCode) + 1 + (1|SiteCode))
 # names(l_md)[length(l_md)] <- "1"
 df_data <- df_plot

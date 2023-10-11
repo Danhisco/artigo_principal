@@ -1,15 +1,5 @@
 source("source/nameModel.R")
 #
-f_glmm_predboot_withou_re <- \(md,data_to_predict){
-
-  f_pred <- \(){
-    boot_df <- data_to_predict %>% select(p_z,k_z) %>% distinct()
-    predict(md,newdata=boot_df, re.form=~0)
-  }
-  
-}
-
-#
 f_refit <- \(md){
   v_mes <- md@optinfo$conv$lme4$messages
   if(is.null(v_mes)){
@@ -96,28 +86,19 @@ f_loadll <- \(l_path){
   names(l_md) <- v_name
   return(l_md)
 }
-f_glmm <- \(lf,df_data=df_md,Rdata_path="./dados/Rdata/glmm_",re=TRUE,only_nCong=TRUE){
-  df_code <- data.frame(nome=c("diffS","nCong"),
-                        funcao=c("function(f) lmer(as.formula(f),data=df_data)",
-                                 "function(f) glmer(as.formula(f),family='binomial',data=df_data,control=glmerControl(optimizer='bobyqa',optCtrl=list(maxfun=2e9)))"),
-                        f_resp = c("diffS ~",
-                                   "cbind(nCong,100-nCong) ~"))
-  if(only_nCong) df_code <- df_code %>% filter(nome=="nCong")
+f_glmm <- \(lf,df_data=df_md,Rdata_path="./dados/Rdata/glmm_"){
+  df_code <- data.frame(
+    nome=c("nCong"),
+    funcao=c("function(f) glmer(as.formula(f),family='binomial',data=df_data,control=glmerControl(optimizer='bobyqa',optCtrl=list(maxfun=2e9)))"),
+    f_resp = c("cbind(nCong,100-nCong) ~"))
   f_a_ply <- \(df){
     env <- environment()
     f_md <- eval(parse(text = df$funcao),envir=env)
-    if(re){
-      f <- gsub("~",df$f_resp,lf)
-    }else{
-      f <- gsub("~",df$f_resp,lf[[df$nome]])
-    }
-    l_md <- llply(f,f_md)
-    if(re){
-      names(l_md) <- names(lf)
-    }else{
-      f <- gsub("~",df$f_resp,lf[[df$nome]])
-    }
+    f <- gsub("~",df$f_resp,lf)
+    l_md <- lapply(f,f_md)
+    names(l_md) <- names(lf)
     name_l <- df$nome
+    name_l <- paste0("l_md_",name_l)
     assign(name_l,l_md)
     save(list=name_l,file=paste0(Rdata_path,name_l,".Rdata"))
   }
