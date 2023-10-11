@@ -3,11 +3,12 @@ title: "Resultados Completos"
 author: "Mori, Danilo"
 date: "19/11/2022"
 output: 
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption: yes
   bookdown::html_document2:
     toc: true
     toc_depth: 5
-    fig_caption: yes
-  bookdown::pdf_document2:
     fig_caption: yes
 editor_options: 
   chunk_output_type: console
