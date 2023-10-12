@@ -301,28 +301,35 @@ f_plot("nCong")
 
 ```{r caption-ts-re-ncong}
 cap <- "Seleção da Estrutura Aleatória"
+snote <- "estrutura fixa do modelo cheio usada em ambos modelos"
 ```
 ```{r ts-re-ncong}
 df_ts_re <- read.csv("./dados/csv/df_ts_re_nCong.csv")
 df_ts_re %>% 
   gt(caption = cap) %>% 
-  tab_source_note(source_note = "estrutura fixa do modelo cheio usada em ambos modelos") %>% 
+  tab_source_note(source_note = snote) %>% 
   basic_theme()
 ```
 
 A estrutura aleatória mais plausível dentre os modelos candidatos é aquela com 1 intercepto por tipo de paisagem hipotética por sítio de amostragem (\@ref(tab:ts-re-ncong)) 
 
+```{r}
+cap <- "Seleção da Estrutura Fixa"
+snote <- "estrutura aleatória mais plausível usada em todos os modelos"
+```
 ```{r ts-ncong}
 df_ts <- read.csv("./dados/csv/df_ts_defesa_congruencias.csv")
 df_ts %>% 
-  gt(caption = "Seleção da Estrutura Fixa") %>% 
-  tab_source_note(source_note = "estrutura aleatória mais plausível usada em todos os modelos")
+  gt(caption = cap) %>% 
+  tab_source_note(source_note = snote)
 ```
 
 O único modelo plausível é o modelo cheio  \@ref(tab:ts-ncong), que tem como preditoras: proporção de cobertura vegetal (p, variável contínua); forest succession (variável categórica com 3 níveis, ver \@ref(fig:GE-sitios-amostrados)) ;grau de limitação de dispersão (k, variável contínua); e o tipo da paisagem hipotética (land. hyp., com 3 níveis). As variáveis contínuas estão 'z' transformadas. 
 
-
-```{r nCong-md-predito,fig.height=8,fig.width=8,fig.cap="Predito pelo modelo mais plausível para nCong"}
+```{r}
+cap <- "Predito pelo modelo mais plausível para descrever a congruência entre SAD empírica e simulada"
+```
+```{r nCong-md-predito,fig.height=8,fig.width=8,fig.cap=cap}
 oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata")
 l_md_e_start <- get(oname)
 df_newdata <- l_md_e_start$modelo@frame[,-1]
