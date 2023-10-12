@@ -245,7 +245,7 @@ p <- df_plot |>
         strip.text = element_text(size = 4.5, margin = margin())) +
   scale_color_manual(values=c("darkred","darkblue","darkgreen"),
                      labels=c("contemporâneo","idealizado","sem fragmentação")) +
-  facet_wrap(~label,ncol=5,scales="free")
+  facet_wrap(~label,ncol=10,scales="free")
 ggsave("apendices/taxaU/figuras/Umed_k_landType_Site.png",
        width = 7,height = 30)
 save(p,file="./dados/Rdata/figA23.Rdata")

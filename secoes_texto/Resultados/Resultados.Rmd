@@ -236,18 +236,22 @@ ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
 
 <!-- __Figura \@ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM.  -->
 
+\newpage
+
 PROPOSTA DE LEGENDA:
 Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo
 
 ```{r caption GE características dos Sítios Selecionados}
 cap <- "Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo"
 ```
-```{r GE-Urep-sitio-k-land,eval=TRUE,fig.height=30,fig.width=15,fig.cap="Características dos Sítios Selecionados"}
+```{r GE-Urep-sitio-k-land,eval=TRUE,fig.height=30,fig.width=30,fig.cap=cap}
 load("./dados/Rdata/figA23.Rdata")
 p
 ```
 
 __\@ref(fig:GE-Urep-sitio-k-land)__  (\@ref(fig:GE-sitios-amostrados))
+
+\newpage
 
 # SAD observada e SAD predita entre paisagens hipotéticas
 
@@ -298,6 +302,7 @@ f_plot <- \(nvresp,
 f_plot("nCong")
 ```
 
+\newpage
 
 ```{r caption-ts-re-ncong}
 cap <- "Seleção da Estrutura Aleatória"
