@@ -135,15 +135,16 @@ __\@ref(fig:GE-sitios-amostrados)__ Sítios selecionados na base de dados TreeCo
 
 # Efeito de Escalar
 
-```{r fig caption EE 1}
-cap <- ""
+Proposta de legenda: (versão para GD)
+a) Mudança na extensão espacial da paisagem a proporção de cobertura vegetal. Cada ponto representa a proporção de cobertura vegetal (eixo y) para aquela determinada extensão espacial da paisagem ao redor (eixo x), as linhas ligam pontos de um sítio de amostragem. b) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). c) Cenários de limitação de dispersão simulados. k = proporção de propágulos que permanece até a vizinhança imediata (distância média entre indivíduos); d = desvio padrão da função de dispersão com distribuição de Laplace. Para detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal.
+
+```{r fig caption EE 1 }
+cap <- "a) Mudança na extensão espacial da paisagem a proporção de cobertura vegetal. Cada ponto representa a proporção de cobertura vegetal (eixo y) para aquela determinada extensão espacial da paisagem ao redor (eixo x), as linhas ligam pontos de um sítio de amostragem. b) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). c) Cenários de limitação de dispersão simulados. k = proporção de propágulos que permanece até a vizinhança imediata (distância média entre indivíduos); d = desvio padrão da função de dispersão com distribuição de Laplace. Para detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal."
 ```
-```{r EE-setup,fig.height=3.5,fig.width=10,fig.cap=""}
+```{r EE-setup,fig.height=3.5,fig.width=10,fig.cap=cap}
 load(file="./apendices/EfeitoEscala/Rdata/fig1_grobs.Rdata")
 grid.arrange(grobs=l_p,nrow=1)
 ```
-
-
 
 Dentre os 36 sítios usados para avaliar o efeito de escalar (Figura A1 1), o observado na maior extensão (lado 16 km) é qualitativamente similar ao padrão médio esperado em paisagens infinitas (figura A1 2). Em paisagens infinitas sem perda de habitat a taxa U necessária para manter uma determinada riqueza na parcela apresenta um máximo global quando o grau de limitação de dispersão é pouco brando (@May2012). Em graus de limitação à dispersão severa a taxa U estimada é baixa, pois a perda de espécies é pequena: a maior parte das substituições ocorre entre coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies aumenta com a redução da substituição de coespecíficos, aumentando a perda de espécies por deriva ecológica. Com o aumento da capacidade de dispersão, há o aumento da contribuição de subpopulações da paisagem mais distante da parcela, reduzindo a estimativa da taxa U.
 
@@ -151,9 +152,29 @@ Na escala do sítio de amostragem o padrão da taxa U estimada difere do padrão
 
 Pressupomos que a extensão espacial da paisagem adequada é aquela que acumula pelo menos 95% de toda diminuição na taxa U observada ao aumentar a extensão espacial de 0.5 km de lado até 16 km de lado (figura A1 5). A extensão espacial adequada tende a aumentar com a redução da limitação de à dispersão (figura A1 5). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km de lado (Figura A1 5). Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U; a variação entre escalas para um mesmo sítio é baixa (figura A1 4). Nesses graus de limitação de dispersão, o aumento do número de espécies per capita pode aumentar a divergência da média geral de estabilidade e apresentar padrões não lineares (Figuras A1 2 e 3). Os graus de limitação de dispersão com k entre 0.80 e 0.55, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U (Figura A1 2). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura A1 5 e 6). 
 
+PROPOSTA DE LEGENDA:
+U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para os 20 graus de limitação de dispersão (cor dos pontos e linhas). Pontos representam a média de 10 réplicas por bateria de simulação e as linhas ligam os pontos médos. Eixo y varia entre paineis.
+
+```{r caption EfeitoEscalar-obs}
+cap <- "U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para os 20 graus de limitação de dispersão (cor dos pontos e linhas). Pontos representam a média de 10 réplicas por bateria de simulação e as linhas ligam os pontos médos. Eixo y varia entre paineis."
+```
+```{r EfeitoEscalar-obs, fig.width=14,fig.height=8.5,fig.cap=cap}
+load(file="./apendices/EfeitoEscala/Rdata/fig3_EfeitoEscalarObs.Rdata")
+p
+```
+
+PROPOSTA DE LEGENDA:
+Lado da paisagem que acumula a maior parte do efeito da escala no grau de limitação de dispersão. Em cinza a área com incerteza: os lados de 1 e 2 km podem ser adequados.
+
+```{r cap-resumo-EscalaAdequada}
+cap <- "Lado da paisagem que acumula a maior parte do efeito da escala no grau de limitação de dispersão. Em cinza a área com incerteza: os lados de 1 e 2 km podem ser adequados."
+```
+```{r resumo-EscalaAdequada-k,fig.height=5,fig.width=6,fig.cap=cap}
+load(file="./apendices/EfeitoEscala/Rdata/fig6_resumo_EscalaAdequada_k.Rdata")
+p
+```
 
 
-<!-- # Contrastes entre paisagens hipotéticas -->
 
 <!-- Comparamos as simulações nas 3 paisagens hipotéticas par a par. Avaliamos 2 tipos de contrastes: entre a taxa U estimada; e a congruência nas SADs preditas. Os contraste entre a paisagem contemporânea e a idealizada podem ser compreendidos como o efeito completo da conectividade contemporânea entre parcela e paisagem ao redor na manutenção do padrão avaliado. Os contrastes entre a paisagem contemporânea e sem fragmentação per se podem ser interpretados como o efeito da fragmentação per se, o componente da conectividade contemporânea que depende apenas da configuração espacial do habitat remanescente. Os contrastes entre a paisagem sem fragmentação per se e a idealizada podem ser interpretados como o efeito da perda de área, o componente da conectividade contemporânea que depende apenas da quantia de habitat perdido. Uma vez que a extensão da paisagem ao redor de 4x4km2 é suficiente para simular todos os graus de limitação de dispersão (Apêndice 1 Efeito de Escala), os contrastes entre paisagens contemporâneas e idealizadas são condicionais apenas à escala espacial determinada pelo grau de limitação de dispersão e a configuração espacial do habitat remanescente. A estimativa da taxa U e a SAD predita nas paisagens sem fragmentação per se são condicionais também à extensão espacial de 4x4km2, pois ela é usada como referência para determinar a quantidade de habitat que será aglomerado ao redor da parcela (Figura A1 1). Um conjunto de simulações que não fizemos foi o de usar a menor extensão espacial adequada para cada respectivo grau de limitação de dispersão, assim teríamos simulações também nas extensão de 1x1 km2 e 2x2km2 para alguns graus de limitação de dispersão (Figura A1 6). -->
 
@@ -215,16 +236,28 @@ ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
 
 <!-- __Figura \@ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM.  -->
 
+PROPOSTA DE LEGENDA:
+Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo
+
+```{r caption GE características dos Sítios Selecionados}
+cap <- "Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo"
+```
 ```{r GE-Urep-sitio-k-land,eval=TRUE,fig.height=30,fig.width=15,fig.cap="Características dos Sítios Selecionados"}
 load("./dados/Rdata/figA23.Rdata")
 p
 ```
 
-__\@ref(fig:GE-Urep-sitio-k-land)__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo (\@ref(fig:GE-sitios-amostrados))
+__\@ref(fig:GE-Urep-sitio-k-land)__  (\@ref(fig:GE-sitios-amostrados))
 
 # SAD observada e SAD predita entre paisagens hipotéticas
 
-```{r GE-nCong,eval=TRUE,fig.height=30,fig.width=15,fig.cap="nCong por sítio, k, land, forest s"}
+PROPOSTA DE LEGENDA:
+Número de SADs simuladas congruentes com a SAD empírica (eixo y). A classificação da SAD simulada como congruente ocorreu quando a comparação entre SADs segundo um teste de Kolmogorov-Smirnov apresentou p-valor igual ou maior do que 0.05. No eixo x há o grau de limitação de dispersão per capita (k). Os pontos são coloridos pelo tipo de paisagem hipotética pressuposta pela simulação. Os paíneis estão organizados pela proporção de cobertura vegetal na paisagem ao redor de 4x4km2.
+
+```{r caption GE nCong }
+cap <- "Número de SADs simuladas congruentes com a SAD empírica (eixo y). A classificação da SAD simulada como congruente ocorreu quando a comparação entre SADs segundo um teste de Kolmogorov-Smirnov apresentou p-valor igual ou maior do que 0.05. No eixo x há o grau de limitação de dispersão per capita (k). Os pontos são coloridos pelo tipo de paisagem hipotética pressuposta pela simulação. Os paíneis estão organizados pela proporção de cobertura vegetal na paisagem ao redor de 4x4km2."
+```
+```{r GE-nCong,eval=TRUE,fig.height=30,fig.width=15,fig.cap=cap}
 df_plot <- df_md |> select(SiteCode:diffS,p_z:k_z) |> 
   inner_join(df_p) |> 
   inner_join(df_dados_disponiveis |> 
@@ -265,12 +298,14 @@ f_plot <- \(nvresp,
 f_plot("nCong")
 ```
 
-__Figura \@ref(fig:GE-nCong)__ Número de SADs simuladas congruentes com a SAD empírica (eixo y). A classificação da SAD simulada como congruente ocorreu quando a comparação entre SADs segundo um teste de Kolmogorov-Smirnov apresentou p-valor igual ou maior do que 0.05. No eixo x há o grau de limitação de dispersão per capita (k). Os pontos são coloridos pelo tipo de paisagem hipotética pressuposta pela simulação. Os paíneis estão organizados pela proporção de cobertura vegetal na paisagem ao redor de 4x4km2.
 
+```{r caption-ts-re-ncong}
+cap <- "Seleção da Estrutura Aleatória"
+```
 ```{r ts-re-ncong}
 df_ts_re <- read.csv("./dados/csv/df_ts_re_nCong.csv")
 df_ts_re %>% 
-  gt(caption = "Seleção da Estrutura Aleatória") %>% 
+  gt(caption = cap) %>% 
   tab_source_note(source_note = "estrutura fixa do modelo cheio usada em ambos modelos") %>% 
   basic_theme()
 ```
