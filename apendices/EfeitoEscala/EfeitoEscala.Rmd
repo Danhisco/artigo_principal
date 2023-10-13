@@ -415,7 +415,7 @@ Com a redução da limitação de dispersão há aumento na escala adequada (Fig
 
 
 ```{r figura 6 scale e k adequados, fig.height=5,fig.width=6}
-p <- df_plot |> 
+p <- df_plot |>
   ggplot(aes(x=k_factor,y=SoE_0.95)) +
   # geom_hline(yintercept = 4,color="red") +
   geom_point() +

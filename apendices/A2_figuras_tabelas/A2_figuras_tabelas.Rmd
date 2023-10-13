@@ -38,7 +38,7 @@ library(bbmle)
 library(DHARMa)
 library(mgcv)
 library(lme4)
-library(gamm4)
+library(data.table)
 library(plyr)
 library(dplyr)
 source("source/nameModel.R")
@@ -53,12 +53,12 @@ df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv")
 # df_Urep
-df_Urep <- list.files(path = "dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) |> 
-  purrr::map_df(~read_csv(.)) |> na.omit()
+df_Urep <- list.files(path = "dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) %>%  
+  adply(.,1,data.table::fread,.id=NULL) %>% na.omit()
 # df_U
-df_U <- read_csv("dados/csv/taxaU/df_U.csv")
+df_U <- fread("dados/csv/taxaU/df_U.csv")
 # df_contrastes
-df_contrastes <- read_csv("dados/csv/taxaU/df_contrastes.csv")
+df_contrastes <- fread("dados/csv/taxaU/df_contrastes.csv")
 # df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
 f_z <- function(x) (x-mean(x))/sd(x)
 df_ad <- df_resultados |>
@@ -66,7 +66,7 @@ df_ad <- df_resultados |>
   inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
   mutate(diffS = (Smed - S_obs)/S_obs)
 # df_contrastes: contrastes por sítio e grau de limitação de dispersão
-df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
+df_contrastes <- fread(file="dados/csv/taxaU/df_contrastes.csv") |> 
   inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
              by="SiteCode") |> 
   rename(N=Ntotal,S=S_obs) |> 
@@ -91,8 +91,8 @@ df_md <- df_ad |>
   select(-land_type) |> 
   rename(nCong=nCongKS)
   # df_newdata
-write_csv(df_md,"dados/csv/df_md_logOR.csv")
-df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
+fwrite(df_md,"dados/csv/df_md_logOR.csv")
+df_newpred <- fread(file="dados/csv/df_newpred.csv") |> 
   select(-starts_with("log_"))
 # df_pred
 # df_pred <- read_csv("dados/csv/resultados_MN/MNEE/df_pred.csv")
@@ -102,9 +102,9 @@ df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |>
 # write_csv(df_newdat,"dados/csv/df_newdataSADs.csv")
 #
 # df_intePred_contrastes.csv
-df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
+df_intPred <- fread("dados/csv/df_intePred_contrastes.csv")
 # df_congContrastetsREP.cvs
-df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
+df_congContrastes <- fread("dados/csv/resultados_MN/df_congContrastes.csv") |> 
   inner_join(df_md |> 
                select(SiteCode,p,k,logOR_pair,contraste_z),
              by=c("SiteCode","k","pair" = "logOR_pair")) |> 
@@ -221,7 +221,7 @@ __Figura A2 2__ Gráficos exploratórios da taxa U estimada e dos contrastes cal
 
 ### Figura A2 3
 ```{r fig A23 ctror, eval=F,include=F}
-df_plot <- df_Urep |> select(-d) |> 
+df_plot <- df_Urep %>% select(-d) %>% 
   pivot_longer(-c(SiteCode:k),names_to = "rep",values_to = "U") |>
   inner_join(df_p) |> 
   arrange(p) |> 
@@ -245,7 +245,7 @@ p <- df_plot |>
         strip.text = element_text(size = 4.5, margin = margin())) +
   scale_color_manual(values=c("darkred","darkblue","darkgreen"),
                      labels=c("contemporâneo","idealizado","sem fragmentação")) +
-  facet_wrap(~label,ncol=10,scales="free")
+  facet_wrap(~label,ncol=14,scales="free")
 ggsave("apendices/taxaU/figuras/Umed_k_landType_Site.png",
        width = 7,height = 30)
 save(p,file="./dados/Rdata/figA23.Rdata")

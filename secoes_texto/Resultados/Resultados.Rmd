@@ -20,7 +20,7 @@ text-align: justify}
 </style>
 
 ```{r setup,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,
                       fig.align='center',tab.align='center')
 # pacotes
 library(ggpubr)
@@ -45,16 +45,38 @@ library(bbmle)
 library(DHARMa)
 library(mgcv)
 library(lme4)
-library(gamm4)
+library(data.table)
 library(plyr)
 library(dplyr)
 source("source/general_tools.R")
 source("source/GAMMtools.R")
+# tamanho da fonte dos títulos dos gráficos dos resultados por síio de amosttragem (Umed e nCong)
+v_titleS <- 20
+v_ncol_fatetwrap <- 14
+figHeight=28
+figWidth=40
+#
 f_z <- function(x) (x-mean(x))/sd(x)
+##
+# df p extensões
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+# df dados da proporção de cobertura vegetal
+df_p <- read_csv("dados/df_p.csv")
+# df dados para simulação
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  inner_join(x=df_p,by="SiteCode")
+# df_SoE
+df_Usoe.rep <- read_csv("dados/csv/df_Usoe.csv") |> 
+  pivot_longer(cols=`1`:`10`, names_to = "n", values_to = "U") |> 
+  inner_join(x=distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
+  arrange(S_obs,k)
+# df_Urep
+df_Urep <- list.files(path = "dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) %>%  
+  adply(.,1,data.table::fread,.id=NULL) %>% na.omit()
+# df_Unull
+df_Unull <- df_Usoe.rep |> filter(round(lado_km) == 16)
 ## df_dados_disponiveis
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
-## df_p
-df_p <- read_csv("dados/df_p.csv")
 ## df_resultados 
 df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
 ## df_sim
@@ -94,6 +116,7 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |
                                        pair == "efeito_area"~"non_frag.ideal",
                                        pair == "efeito_conf"~"cont.ideal")) ) |> 
   relocate(contraste_z,.before = contrasteSAD_z)
+df_plot <- fread("dados/csv/df_plotSoE.csv")
 # themes
 basic_theme <- function(data, ...){
   data %>% 
@@ -104,7 +127,7 @@ basic_theme <- function(data, ...){
 }
 ```
 
-```{r trackdown chunk, include=FALSE}
+```{r trackdown chunk, include=FALSE,eval=FALSE}
 # pacotes
 library(trackdown)
 # both overwrite: 
@@ -138,8 +161,39 @@ __\@ref(fig:GE-sitios-amostrados)__ Sítios selecionados na base de dados TreeCo
 Proposta de legenda: (versão para GD)
 a) Mudança na extensão espacial da paisagem a proporção de cobertura vegetal. Cada ponto representa a proporção de cobertura vegetal (eixo y) para aquela determinada extensão espacial da paisagem ao redor (eixo x), as linhas ligam pontos de um sítio de amostragem. b) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). c) Cenários de limitação de dispersão simulados. k = proporção de propágulos que permanece até a vizinhança imediata (distância média entre indivíduos); d = desvio padrão da função de dispersão com distribuição de Laplace. Para detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal.
 
-```{r fig caption EE 1 }
+```{r fig caption EE 1 e figura }
 cap <- "a) Mudança na extensão espacial da paisagem a proporção de cobertura vegetal. Cada ponto representa a proporção de cobertura vegetal (eixo y) para aquela determinada extensão espacial da paisagem ao redor (eixo x), as linhas ligam pontos de um sítio de amostragem. b) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). c) Cenários de limitação de dispersão simulados. k = proporção de propágulos que permanece até a vizinhança imediata (distância média entre indivíduos); d = desvio padrão da função de dispersão com distribuição de Laplace. Para detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal."
+df_p <- df_sim |>
+  filter(k==0.05) |> 
+  mutate(sorteio_site = ifelse(SiteCode %in% unique(df_Unull$SiteCode),"SoE","non SoE"),
+         DA = Ntotal / effort_ha)
+l_p <- list()
+l_p[[1]] <- df_p_extensoes |> filter(lado_km<=16.02) |> 
+  ggplot(aes(x=lado_km,y=p)) + 
+  geom_point(alpha=0.2,size=0.2) +
+  geom_line(aes(group=SiteCode),linewidth=0.2,alpha=0.2) +
+  labs(x="lado da paisagem quadrada (km)",y="proporção de cobertura vegetal",
+       title="a) %CV ~ scale") +
+  scale_y_continuous(breaks = seq(0,1,by=0.1)) +
+  coord_cartesian(expand = F) +
+  theme_light()
+l_p[[2]] <- df_p |> 
+  ggplot(aes(x=DA,y=S_obs,color=sorteio_site)) +
+  geom_point(alpha=0.8) +
+  scale_color_manual(values=c("black","red"),name="SoE: 36 sites") +
+  labs(x="density (individuals / ha)", 
+       y="spp richness",
+       title="b) 36 sítios no estudo da escala") +
+  theme(legend.position = "bottom")
+l_p[[3]] <- df_sim |> 
+  ggplot(aes(x=k,y=d,group=k)) +
+  geom_jitter() +
+  geom_boxplot() +
+  labs(x = "k",
+       y = "d",
+       title = "c) 20 graus de dispersão")
+# grid.arrange(grobs=l_p,nrow=1)
+save(l_p,file="./apendices/EfeitoEscala/Rdata/fig1_grobs.Rdata")
 ```
 ```{r EE-setup,fig.height=3.5,fig.width=10,fig.cap=cap}
 load(file="./apendices/EfeitoEscala/Rdata/fig1_grobs.Rdata")
@@ -168,8 +222,21 @@ Lado da paisagem que acumula a maior parte do efeito da escala no grau de limita
 
 ```{r cap-resumo-EscalaAdequada}
 cap <- "Lado da paisagem que acumula a maior parte do efeito da escala no grau de limitação de dispersão. Em cinza a área com incerteza: os lados de 1 e 2 km podem ser adequados."
+p <- df_plot |>
+  ggplot(aes(x=k_factor,y=SoE_0.95)) +
+  # geom_hline(yintercept = 4,color="red") +
+  geom_point() +
+  # geom_rect(aes(xmin=4, xmax=13.5, ymin=0.99, ymax=2.1),alpha=0.01) +
+  scale_y_continuous(trans = scales::log2_trans(), 
+                     limits = c(1, 16),
+                     breaks = 2^(0:4)) +
+  labs(x="k",
+       y="lado da paisagem (km)",
+       title="lado da paisagem que acumula a maior parte do efeito da escala") +
+  theme_bw()
+save(p,file="./apendices/EfeitoEscala/Rdata/fig6_resumo_EscalaAdequada_k.Rdata")
 ```
-```{r resumo-EscalaAdequada-k,fig.height=5,fig.width=6,fig.cap=cap}
+```{r resumo-EscalaAdequada-k,fig.height=2.5,fig.width=3,fig.cap=cap}
 load(file="./apendices/EfeitoEscala/Rdata/fig6_resumo_EscalaAdequada_k.Rdata")
 p
 ```
@@ -183,7 +250,7 @@ p
 
 <!-- Os GAMMs podem fazer boa predição dos contrastes observados (Apêndice 2, avaliação GAMM 1). O intervalo de predição dos GAMMs informa que o contraste entre paisagens hipotéticas aumenta com a perda de cobertura florestal e redução da limitação de dispersão (Figura \@ref{contrastes_pk}). Os intervalos de predição do contraste de contemporaneidade podem apresentar aumento do contraste em graus de limitação de dispersão severos em paisagens com pouca cobertura vegetal (Figura \@ref{contrastes_pk}). -->
 
-```{r ip contrastes ~ p k,fig.height=8,fig.width=12,eval=FALSE,include=FALSE}
+```{r ip contrastes ~ p k,fig.height=figHeight,fig.width=figWidth,eval=FALSE,include=FALSE}
 df_plot <- df_intPred |> 
   mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
          k = k_z*sd(df_ad$k) + mean(df_ad$k),
@@ -240,11 +307,37 @@ ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
 
 PROPOSTA DE LEGENDA:
 Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo
-
-```{r caption GE características dos Sítios Selecionados}
+```{r caption GE  características dos Sítios Selecionados}
+# caption
 cap <- "Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo"
 ```
-```{r GE-Urep-sitio-k-land,eval=TRUE,fig.height=30,fig.width=30,fig.cap=cap}
+```{r figura GE características dos Sítios Selecionados, eval=FALSE,include=FALSE}
+# figura
+df_plot <- df_Urep %>% select(-d) %>% 
+  pivot_longer(-c(SiteCode:k),names_to = "rep",values_to = "U") |>
+  inner_join(df_p) |> 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+p <- df_plot |> 
+  ggplot(aes(x=k,y=U,color=land_type)) +
+  geom_point(alpha=0.1) +
+  # geom_line() +
+  stat_summary(geom = "line",fun.data = mean_se,alpha=0.5) +
+  scale_x_reverse() +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  theme_bw() +
+  labs(color="landscape type") +
+  theme(legend.position = "top",
+        axis.text=element_text(size=4.5),
+        strip.text = element_text(size = 4.5, margin = margin()),
+        legend.title=element_text(size=v_titleS)) +
+  scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                     labels=c("contemporâneo","idealizado","sem fragmentação")) +
+  facet_wrap(~label,ncol=v_ncol_fatetwrap,scales="free")
+save(p,file="./dados/Rdata/figA23.Rdata")
+```
+```{r GE-Urep-sitio-k-land,eval=TRUE,fig.height=figHeight,fig.width=figWidth,fig.cap=cap}
 load("./dados/Rdata/figA23.Rdata")
 p
 ```
@@ -261,7 +354,7 @@ Número de SADs simuladas congruentes com a SAD empírica (eixo y). A classifica
 ```{r caption GE nCong }
 cap <- "Número de SADs simuladas congruentes com a SAD empírica (eixo y). A classificação da SAD simulada como congruente ocorreu quando a comparação entre SADs segundo um teste de Kolmogorov-Smirnov apresentou p-valor igual ou maior do que 0.05. No eixo x há o grau de limitação de dispersão per capita (k). Os pontos são coloridos pelo tipo de paisagem hipotética pressuposta pela simulação. Os paíneis estão organizados pela proporção de cobertura vegetal na paisagem ao redor de 4x4km2."
 ```
-```{r GE-nCong,eval=TRUE,fig.height=30,fig.width=15,fig.cap=cap}
+```{r ggplot2code GE nCong,eval=FALSE,include=FALSE}
 df_plot <- df_md |> select(SiteCode:diffS,p_z:k_z) |> 
   inner_join(df_p) |> 
   inner_join(df_dados_disponiveis |> 
@@ -289,17 +382,23 @@ f_plot <- \(nvresp,
     labs(color="landscape hyp.") +
     theme(legend.position = "top",
           axis.text=element_text(size=4.5),
-          strip.text = element_text(size = 4.5, margin = margin())) +
+          strip.text = element_text(size = 4.5, margin = margin()),
+          legend.title=element_text(size=v_titleS)) +
     scale_color_manual(values=c("darkred","darkblue","darkgreen"),
                        labels=c("contemporâneo","idealizado","sem fragmentação")) +
-    facet_wrap(~label,ncol=5)
+    facet_wrap(~label,ncol=v_ncol_fatetwrap)
   ggsave(paste0(png_repo,nvresp,end_name,".png"),
          plot = p,
          width = 7,height = 30)
   save(p,file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
   return(p)
 }
-f_plot("nCong")
+p <- f_plot("nCong")
+save(p,file="dados/Rdata/nCongObs_porSitio_k_landHyp.Rdata")
+```
+```{r GE-nCong,eval=TRUE,fig.height=figHeight,fig.width=figWidth,fig.cap=cap}
+load(file="dados/Rdata/nCongObs_porSitio_k_landHyp.Rdata")
+p
 ```
 
 \newpage
