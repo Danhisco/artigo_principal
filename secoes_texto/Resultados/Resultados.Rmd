@@ -145,7 +145,7 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 # Inventários Florestais Selecionados
 
-As coordenadas dos sítios variaram entre -31° e -7° de latit”ude e entre -55° e -35° de longitude (figura A2 1a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo (Figura A2 1c). A área amostrada mediana foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (Figura A2 1b). Portanto, todos os sítios dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Uma paisagem foi descartada, pois não foi possível delimitar uma área amostral quadrada por conta da particular configuração espacial do habitat remanescente. 
+Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção. As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (figura 1a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo, apenas 2 sítios possuiam menos de 20 anos de recuperação desde o último grande disturbio na área (figura 1c) e foram removidas. A área amostrada mediana foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (Figura 1b). Portanto, todos os 107 sítios restantes dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Não foi possível estimar a taxa U em um sítio com baixa densidade de espécies por número de indivíduos e de baixa proporção de cobertura vegetal na paisagem ao redor. Em outro sítio não foi possível desenhar a parcela quadrado no centro da paisagem devido a configuração espacial da paisagem. Esses dois sítios foram removidos, totalizando 105 sítios simulados.
 
 ```{r GE-sitios-amostrados,fig.width=12,fig.height=6,fig.cap="Características dos sítios selecionados",cache=TRUE}
 load("./dados/Rdata/figA21.Rdata")
@@ -200,11 +200,11 @@ load(file="./apendices/EfeitoEscala/Rdata/fig1_grobs.Rdata")
 grid.arrange(grobs=l_p,nrow=1)
 ```
 
-Dentre os 36 sítios usados para avaliar o efeito de escalar (Figura A1 1), o observado na maior extensão (lado 16 km) é qualitativamente similar ao padrão médio esperado em paisagens infinitas (figura A1 2). Em paisagens infinitas sem perda de habitat a taxa U necessária para manter uma determinada riqueza na parcela apresenta um máximo global quando o grau de limitação de dispersão é pouco brando (@May2012). Em graus de limitação à dispersão severa a taxa U estimada é baixa, pois a perda de espécies é pequena: a maior parte das substituições ocorre entre coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies aumenta com a redução da substituição de coespecíficos, aumentando a perda de espécies por deriva ecológica. Com o aumento da capacidade de dispersão, há o aumento da contribuição de subpopulações da paisagem mais distante da parcela, reduzindo a estimativa da taxa U.
+Para o estudo do efeito de escalar, 36 sítios foram sorteados e selecionados ao longo do gradiente de número de indivíduos e de espécies na parcela (Figura 2b). O objetivo da estudo do efeito de escalar é determinar a extensão espacial adequada para simular os 20 graus de limitação de dispersão (Figura 2c). A extensão espacial determina a quantidade de habitat remanescente na paisagem (Figura 2a). Para esse estudo as paisagens simuladas foram todas preenchidas com habitat para descontar o efeito do isolamento estrutural; e 6 escalas foram simuladas de 0.5km de lado até 16km de lado. O observado na maior extensão (lado 16 km) é qualitativamente similar ao padrão médio esperado em paisagens infinitas (figura A1 2). Em paisagens infinitas sem perda de habitat a taxa U necessária para manter uma determinada riqueza na parcela apresenta um máximo global quando o grau de limitação de dispersão é pouco brando (@May2012). Em graus de limitação à dispersão severa a taxa U estimada é baixa, pois a perda de espécies é pequena: a maior parte das substituições ocorre entre coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies aumenta com a redução da substituição de coespecíficos, aumentando a perda de espécies por deriva ecológica. Com o aumento da capacidade de dispersão, há o aumento da contribuição de subpopulações da paisagem mais distante da parcela, reduzindo a estimativa da taxa U.
 
-Na escala do sítio de amostragem o padrão da taxa U estimada difere do padrão médio por apresentar um padrão de patamares (Figura A1 2a e 2b). Nos graus de limitação de dispersão mais severos a taxa U permanece em um valor médio (Figura A1 2b). O máximo global é atingido de forma brusca com a mudança na limitação de dispersão e pode seguir nesse valor máximo por todos os graus de limitação de dispersão simulados nos sítios com os maiores números de indivíduos na parcela (figura A1 2b). O maior relaxamaneto da limitação de dispersão reduz os valores médios da taxa U (figura A1 2). O tamanho dos patamares e a forma com que a redução na taxa U ocorre parece depender de uma relação não trivial entre número de indivíduos e de espécies (figura A1 2b). 
+O padrão observado quando agrupamos os dados por sítio de amostragem apresenta um padrão de patamares (Figura A1 2a e 2b). Nos graus de limitação de dispersão mais severos a taxa U permanece em um valor médio (Figura A1 2b). O máximo global é atingido de forma brusca com a mudança na limitação de dispersão e pode permanecer nesse patamar com a redução da limitação de dispersão nos sítios com os maiores números de indivíduos na parcela (figura A1 2b). Em geral, o maior relaxamaneto da limitação de dispersão reduz os valores médios da taxa U (figura A1 2). O tamanho dos patamares e a forma com que a redução na taxa U ocorre parece depender de uma relação não trivial entre número de indivíduos e de espécies (figura A1 2b). 
 
-Pressupomos que a extensão espacial da paisagem adequada é aquela que acumula pelo menos 95% de toda diminuição na taxa U observada ao aumentar a extensão espacial de 0.5 km de lado até 16 km de lado (figura A1 5). A extensão espacial adequada tende a aumentar com a redução da limitação de à dispersão (figura A1 5). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km de lado (Figura A1 5). Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U; a variação entre escalas para um mesmo sítio é baixa (figura A1 4). Nesses graus de limitação de dispersão, o aumento do número de espécies per capita pode aumentar a divergência da média geral de estabilidade e apresentar padrões não lineares (Figuras A1 2 e 3). Os graus de limitação de dispersão com k entre 0.80 e 0.55, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U (Figura A1 2). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura A1 5 e 6). 
+Pressupomos que a extensão espacial da paisagem adequada é aquela que acumula pelo menos 95% de toda diminuição na taxa U esperada ao aumentar a extensão espacial de 0.5 km de lado até 16 km de lado. A extensão espacial adequada tende a aumentar com a redução da limitação de à dispersão (figura 3). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km de lado (Figura 3). Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U (Figura 3); a variação entre escalas para um mesmo sítio é baixa (detalhes em Apêndice: Efeito de Escalar). Nesses graus de limitação de dispersão, o aumento do número de espécies per capita pode aumentar a divergência da média geral de estabilidade e apresentar padrões não lineares (Figuras A1 2 e 3). Os graus de limitação de dispersão com k entre 0.80 e 0.55, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U (Figura A1 2). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura A1 5 e 6). 
 
 PROPOSTA DE LEGENDA:
 U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para os 20 graus de limitação de dispersão (cor dos pontos e linhas). Pontos representam a média de 10 réplicas por bateria de simulação e as linhas ligam os pontos médos. Eixo y varia entre paineis.
@@ -243,12 +243,9 @@ p
 
 
 
-<!-- Comparamos as simulações nas 3 paisagens hipotéticas par a par. Avaliamos 2 tipos de contrastes: entre a taxa U estimada; e a congruência nas SADs preditas. Os contraste entre a paisagem contemporânea e a idealizada podem ser compreendidos como o efeito completo da conectividade contemporânea entre parcela e paisagem ao redor na manutenção do padrão avaliado. Os contrastes entre a paisagem contemporânea e sem fragmentação per se podem ser interpretados como o efeito da fragmentação per se, o componente da conectividade contemporânea que depende apenas da configuração espacial do habitat remanescente. Os contrastes entre a paisagem sem fragmentação per se e a idealizada podem ser interpretados como o efeito da perda de área, o componente da conectividade contemporânea que depende apenas da quantia de habitat perdido. Uma vez que a extensão da paisagem ao redor de 4x4km2 é suficiente para simular todos os graus de limitação de dispersão (Apêndice 1 Efeito de Escala), os contrastes entre paisagens contemporâneas e idealizadas são condicionais apenas à escala espacial determinada pelo grau de limitação de dispersão e a configuração espacial do habitat remanescente. A estimativa da taxa U e a SAD predita nas paisagens sem fragmentação per se são condicionais também à extensão espacial de 4x4km2, pois ela é usada como referência para determinar a quantidade de habitat que será aglomerado ao redor da parcela (Figura A1 1). Um conjunto de simulações que não fizemos foi o de usar a menor extensão espacial adequada para cada respectivo grau de limitação de dispersão, assim teríamos simulações também nas extensão de 1x1 km2 e 2x2km2 para alguns graus de limitação de dispersão (Figura A1 6). -->
-
 # taxa U
-<!-- A distribuição de contrastes apresenta elevada assimetria, com a maioria dos valores próximos do observado em paisagens com pouca perda de habitat e poucos casos distante desta faixa de valores (Figura A2 4). Quando há pouca perda de habitat a estimativa da taxa U não difere entre paisagens hipotéticas (Figuras A2, 2 e 3). Com a redução da cobertura vegetal a estimativa da taxa U pode ser distinta entre paisagens hipotéticas. Em graus de limitação de dispersão mais relaxados pode existir o aumento da taxa U estimada nas paisagem contemporâneas ou sem fragmentação (Figura 1). Em geral a taxa U estimada nas paisagens contemporâneas é a maior das três paisagens hipotéticas (Figura A2 3). Em alguns casos a paisagem sem fragmentação per se pode apresentar estimativas superiores (Figura A2 3). Nos graus onde há pouca variação no efeito de escalar (k entre 0.80 e 0.55) também há pouca variação entre paisagens hipotéticas (Figura A2 2 e 3). As maiores diferenças entre paisagens hipotéticas ocorre em graus de limitação de dispersão mais brandos (Figura A2 2 e 3). Em paisagens com baixa proporção de cobertura florestal as estimativas em graus severos de limitação de dispersão também podem ser distintas entre paisagens hipotéticas (Figura A2 2 e 3). Alguns sítios apresentaram contraste de fragmentação per se com valores negativos maiores do que o observado nos sítios em paisagens com pouca perda de habitat (Figura A2 4). O contraste de área per se apresentou os menores valores em magnitude (Figura A2 4).  -->
 
-<!-- Os GAMMs podem fazer boa predição dos contrastes observados (Apêndice 2, avaliação GAMM 1). O intervalo de predição dos GAMMs informa que o contraste entre paisagens hipotéticas aumenta com a perda de cobertura florestal e redução da limitação de dispersão (Figura \@ref{contrastes_pk}). Os intervalos de predição do contraste de contemporaneidade podem apresentar aumento do contraste em graus de limitação de dispersão severos em paisagens com pouca cobertura vegetal (Figura \@ref{contrastes_pk}). -->
+Quando há pouca perda de habitat a estimativa da taxa U não difere entre paisagens hipotéticas (Figuras 5). Com a redução da cobertura vegetal a estimativa da taxa U pode ser distinta entre paisagens hipotéticas. Em graus de limitação de dispersão mais relaxados pode existir o aumento da taxa U estimada nas paisagem contemporâneas ou sem fragmentação (Figura 5). Em geral a taxa U estimada nas paisagens contemporâneas é a maior das três paisagens hipotéticas (Figura 5). Em alguns casos a paisagem sem fragmentação per se pode apresentar estimativas superiores (Figura 5). Nos graus onde há pouca variação no efeito de escalar (k entre 0.80 e 0.55) também há pouca variação entre paisagens hipotéticas (Figura A2 2 e 3). As maiores diferenças entre paisagens hipotéticas ocorre em graus de limitação de dispersão mais brandos (Figura 5). Em paisagens com baixa proporção de cobertura florestal as estimativas em graus severos de limitação de dispersão também podem ser distintas entre paisagens hipotéticas (Figura 5). Em alguns sítios a taxa U estimada em paisagem sem isolamento estrutural pode ser superior ao estimado em paisagens contemporâneas (Figura 5). Em geral a diferença na estimativa entre paisagens idealizadas e sem fragmentação é pequena e a diferença na estimativa entre paisagens idealizadas e contemporâneas pode ser maior (Figura 5).
 
 ```{r ip contrastes ~ p k,fig.height=figHeight,fig.width=figWidth,eval=FALSE,include=FALSE}
 df_plot <- df_intPred |> 
@@ -346,7 +343,21 @@ __\@ref(fig:GE-Urep-sitio-k-land)__  (\@ref(fig:GE-sitios-amostrados))
 
 \newpage
 
+
+
+
+
+
+
+
+
 # SAD observada e SAD predita entre paisagens hipotéticas
+
+## Descrição do padrão observado
+
+Há muita diversidade de padrões entre sítios de amostragem (Figura 6). Em alguns há pouca variação na congruência da SAD simulada e predita, nesses casos, em geral  com boa congruência para todos os graus de limitação de dispersão e tipos de paisagens (Figura 6). Em outros há variação na congruência com a variação no grau de limitação de dispersão, nesses casos pode existir variabilidade entre tipos de paisagens hipotéticas, em que o tipo de paisagem hipotética com melhor congruência pode variar entre sítios (Figura 6). Ao ordenar os gráficos dos sítios por porcentagem de cobertura vegetal na paisagem de 4x4km (p) é possível observar que os sítios com pouca perda de habitat não apresentam diferença entre os tipos de paisagens hipotéticas (Figura 6). A partir de um valor de p é possível observar diferença entre tipos de paisagens (Figura 6). O simulado nas paisagens idealizadas e sem isolamento estrutural em geral apresentam diferença menor e o simulado na paisagem contemporânea pode apresentam maior diferença em alguns graus de limitação de dispersão (Figura 6). 
+
+
 
 PROPOSTA DE LEGENDA:
 Número de SADs simuladas congruentes com a SAD empírica (eixo y). A classificação da SAD simulada como congruente ocorreu quando a comparação entre SADs segundo um teste de Kolmogorov-Smirnov apresentou p-valor igual ou maior do que 0.05. No eixo x há o grau de limitação de dispersão per capita (k). Os pontos são coloridos pelo tipo de paisagem hipotética pressuposta pela simulação. Os paíneis estão organizados pela proporção de cobertura vegetal na paisagem ao redor de 4x4km2.
@@ -403,6 +414,19 @@ p
 
 \newpage
 
+## Modelos Estatísticos
+
+Para descrever o número de SADs simuladas congruentes com a SAD empírica, utilizamos modelos mistos generalizados binomiais. Como possíveis variáveis preditoras consideramos: a proporção de cobertura vegetal na paisagem de 4x4km2 (p), o grau de limitação de dispersão (k, proporção de propágulos até a vizinhança imediata do progenitor), o tipo de paisagem hipotética (contemporânea, sem isolamento estrutural, e idealizada), e a classe de sucessão do sítio de amostragem (olhar Figura 1). A variável p informa um componente da heterogeneidade da paisagem contemporânea, a proporção de habitat remanescente na paisagem ao redor. A variável classe de sucessão do sítio de amostragem apresenta 3 classes, uma vez que removemos os dois sítios com menos de 20 anos de regeneração desde o último grande distúrbio (Figura 1). Nas 3 classes de sucessão do sítio de amostragem a distribuição de sítios ocorre em todo gradiente de p (Figura A2 1).
+
+ADICIONAR: tabela com a sigla das variáveis preditoras
+
+Comparamos 8 modelos candidatos para descrever a probabilidade de congruência da SAD simulada: o modelo cheio, com interação entre p, k, tipo de paisagem hipotética, e classe de sucessão do sítio de amostragem; o modelo cheio sem a variável p; o modelo cheio sem a variável classe de sucessão; e os 4 modelos anteriores sem o tipo de paisagem hipotética. Primeiro avaliamos qual a melhor maneira de agrupar os dados por sítio de amostragem. Usamos o modelo cheio para comparar 3 tipos de estruturas aleatórias: 1 intercepto por sítio de amostragem; 1 intercepto por tipo de paisagem hipotética e sítio de amostragem; 1 intercepto e 1 inclinação para o grau de limitação de dispersão por tipo de paisagem hipotética e sítio de amostragem. A estrutura aleatória mais plausível foi usada para comparar os 8 modelos candidatos. 
+Os modelos foram comparados via AICc (REF) e pelo coeficiente de determinação condicional e marginal (Nagaka REF).
+
+
+
+### - Seleção da Estrutura Aleatória
+
 ```{r caption-ts-re-ncong}
 cap <- "Seleção da Estrutura Aleatória"
 snote <- "estrutura fixa do modelo cheio usada em ambos modelos"
@@ -415,7 +439,9 @@ df_ts_re %>%
   basic_theme()
 ```
 
-A estrutura aleatória mais plausível dentre os modelos candidatos é aquela com 1 intercepto por tipo de paisagem hipotética por sítio de amostragem (\@ref(tab:ts-re-ncong)) 
+Não foi possível ajustar os coeficientes do modelo com 1 intercepto e 1 inclinação para o grau de limitação de dispersão  por tipo de paisagem hipotética e sítio de amostragem (detalhes em A2). Dentre os modelos em que houve convergência na estimativa dos coeficientes, a estrutura aleatória mais plausível é aquela com 1 intercepto por tipo de paisagem hipotética por sítio de amostragem (\@ref(tab:ts-re-ncong)). Os coeficientes de determinação condicional e marginal dos modelos candidatos são similares: ~0.98 e ~0.07, respectivamente (\@ref(tab:ts-re-ncong)). Esse resultado é coerente com o observado no padrão de congruência com os dados organizados por sítio de amostragem (Figura 6). 
+
+### - Seleção da Estrutura Fixa
 
 ```{r}
 cap <- "Seleção da Estrutura Fixa"
@@ -428,7 +454,17 @@ df_ts %>%
   tab_source_note(source_note = snote)
 ```
 
-O único modelo plausível é o modelo cheio  \@ref(tab:ts-ncong), que tem como preditoras: proporção de cobertura vegetal (p, variável contínua); forest succession (variável categórica com 3 níveis, ver \@ref(fig:GE-sitios-amostrados)) ;grau de limitação de dispersão (k, variável contínua); e o tipo da paisagem hipotética (land. hyp., com 3 níveis). As variáveis contínuas estão 'z' transformadas. 
+O único modelo plausível é o modelo cheio  (\@ref(tab:ts-ncong)), que tem como preditoras: proporção de cobertura vegetal (p, variável contínua); forest succession (variável categórica com 3 níveis, ver \@ref(fig:GE-sitios-amostrados)) ;grau de limitação de dispersão (k, variável contínua); e o tipo da paisagem hipotética (land. hyp., com 3 níveis). As variáveis contínuas estão 'z' transformadas.
+Os 4 modelos com menor DAICc são aqueles que consideram a variável tipo de paisagem hipotética. A redução dos coeficientes de determinação marginal são maiores do que os coeficientes de determinação condionais que se mantém próximos de 0.98 (\@ref(tab:ts-ncong)). As variáveis proporção de cobertura vegetal (p) e a classe de sucessão dos sítios apresentam poder similar de explicação da variação, uma vez que os modelos candidatos que apresentam ou p ou a classe de sucessão apresentam coeficiente de determinação marginal similar (\@ref(tab:ts-ncong)). Apesar do modelo mais plausível contar com a variável tipo de paisagem hipotética, essa variável apresenta o menor poder de explicação com relação às outras preditoras, uma vez que os modelos sem essa variável apresentam coeficientes de determinação muito similares (\@ref(tab:ts-ncong)).
+ 
+
+## Interpretação do modelo mais plausível
+
+O modelo mais plausível apresenta desvios do esperado (detalhes em A2), mas será usado para interpretação. Iremos interpretar o predito quando pressupomos ausência de variação entre sítios, ou seja, apenas a variabilidade associada com as variáveis da estrutura fixa: proporção de cobertura vegetal, p; grau de limitação de dispersão, k; tipo de paisagem hipotética; e classe de sucessão. Na figura 7 há o predito pelo modelo mais plausível quando desconsiderado a variabilidade entre sítios. No eixo x há a variável p e no eixo y a variável k, ambas na z transformadas. Note que o eixo y está reverso, de modo que quanto mais distante da origem, maior é a capacidade de dispersão per capita. Os paineis estão dividos pela classe de sucessão (colunas) e tipo de paisagem hipotética (linhas). A escala de cor preenche os quadros segundo a relação com o predito para o logito da probabilidade de congruência da SAD simulada com a SAD empírica (legenda no topo).
+ 
+
+
+
 
 ```{r}
 cap <- "Predito pelo modelo mais plausível para descrever a congruência entre SAD empírica e simulada"
@@ -468,6 +504,10 @@ df_newdata %>%
   theme(legend.position = "top") +
   facet_grid(land_hyp~forest_succession)
 ```
+
+O modelo prediz que o logito da probabilidade de congruência da SAD simulada na paisagem contemporânea é similar ao logito na paisagem sem isolamento estrutural. A maior diferença entre esses dois tipos de paisagem são nos valores médios, mas não na influência da proporção de cobertura vegetal remanescente na paisagem, grau de limitação de dispersão ou classe de sucessão (Figura 7). O logito predito na paisagem idealizada apresenta menor variação na congruência em função das preditoras, apresentando boa congruência em geral (Figura 7). Nos 3 tipos de paisagem hipotéticas a maior variação ocorreu nos sítios em que o tempo desde a última perturbação no sítio de amostragem foi entre 50 e 80 anos (‘primary/secondary’ Figura 7). Nos sítios de amostragem classificados como primary/secondary o logito varia com a redução da proporção de cobertura vegetal, aumentando com a redução da capacidade de dispersão e diminuindo com o aumento da capacidade de dispersão (Figura 7). Esse padrão é mais acentuado no logito na paisagem contemporânea e na sem isolamento estrutural (Figura 7). Nos sítios classificados como primary (pelo menos 80 anos desde a última perturbação no sítio de amostragem) e nos classificados como secondary (entre 20 e 50 anos), o logito predito é elevado (Figura 7).
+
+
 
 
 <!-- ### antigo, util?-->
