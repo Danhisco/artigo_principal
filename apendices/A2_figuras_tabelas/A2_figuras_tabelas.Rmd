@@ -1,11 +1,15 @@
 ---
-title: "Apêndice 2: Figuras e Tabelas"
+title: "Apêndice 2: Support Information"
 author: "Mori, Danilo"
 date: "19/11/2022"
 output: 
-  html_document:
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption: yes
+  bookdown::html_document2:
     toc: true
     toc_depth: 5
+    fig_caption: yes
 editor_options: 
   chunk_output_type: console
 ---
@@ -116,52 +120,68 @@ df_congContrastes <- fread("dados/csv/resultados_MN/df_congContrastes.csv") |>
 # load("dados/Rdata/md_frag_area.Rdata")
 # load("dados/Rdata/l_md_congContrastes.Rdata")
 # load("dados/Rdata/l_md_PrCong.Rdata")
+df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
+  inner_join(df_p) |> 
+  inner_join(df_dados_disponiveis |> 
+               filter(forest_succession != "capoeira") %>% 
+               select(SiteCode, forest_succession)) %>% 
+  arrange(p) |> 
+  mutate(succession = case_when(forest_succession == "primary" ~ "1°",
+                                forest_succession == "secondary" ~ "2°",
+                                forest_succession == "primary/secondary" ~ "1.5°"),
+         label = paste0(SiteCode,", p=",round(p,2)," ,suc=",succession),
+         k_f=factor(round(k,2))) %>% 
+  select(-succession)
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+
 ```
 
+# Texto e tabelas
 
-# Sítios Selecionados 
+Todas as análises dos dados foram feitas em R (REF).
 
-```{r fig 1 code to run off render,eval=FALSE,include=FALSE}
-df_plot <- df_dados_disponiveis |> 
-  select(SiteCode, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
-l_p <- list()
-l_p[[1]] <- df_plot |> 
-  ggplot(aes(y=lat,x=long)) +
-  geom_point(alpha=0.5) +
-  theme_light() +
-  labs(subtitle = "a)")
-v_labels <- c("effort_ha" = "plot area (ha)",
-              "Ntotal" = "# ind",
-              "S_obs" = "riqueza",
-              "year_bestProxy" = "approx. data year")
-df_plot[grep("\\_",df_plot$year_bestProxy),"year_bestProxy"] <- "2012.5"
-l_p[[2]] <- df_plot |>
-  mutate(year_bestProxy = as.numeric(year_bestProxy)) |> 
-  pivot_longer(effort_ha:year_bestProxy) |> 
-  ggplot(aes(x=name,y=value)) +
-  geom_jitter(alpha=0.4) +
+## GLMM binomial
+
+Utilizamos funções do pacote lme4 (REF) para ajustar os GLMM binomiais. O modelo com estrutura aleatória mais complexa, com 1 intercepto e 1 inclinação no grau de limitação de dispersão por sítio de amostragem e tipo de paisagem hipotética, teve alerta de não convergência e mesmo depois de ajustar com outros otimizadores o alerta permaneceu. Como era um modelo que demorava muito para ajustar não fiz mais explorações com ele. Outro modelo explorado e descartado foi o modelo cheio que interpretava o grau de limitação de dispersão como variável categórica. Esse modelo demorou muito para rodar e sua execução foi interrompida antes de terminar a estimativa dos coeficientes.
+A tabela de seleção, com o delta AICc e peso de evidência, foi obtida usando a função AICctab do pacote bbmle (REF) e os coeficientes de determinação foram obtidos usando a função r.squaredGLMM do pacote MuMIn (REF).
+Avaliamos a qualidade de ajuste do modelo explorando os resíduos quantílicos (FIGURA A2 REF) usados no pacote DHARMa (REF). Também plotamos o predito e o observado (FIGURA A2 REF).
+
+# Figuras 
+
+```{r caption 1}
+cap <- "Relação entre preditoras: p ~ forest sucession. Olhar texto principal  para descrição das variáveis"
+```
+```{r fig-p-k,fig.cap=cap,fig.pos="H"}
+df_plot %>% filter(k==0.05) %>% distinct() %>% 
+  ggplot(aes(x=forest_succession,y=p)) +
   geom_boxplot() +
-  labs(x="",y="",subtitle="b)") +
-  facet_wrap(~name,ncol=1,scales="free", labeller = as_labeller(v_labels), strip.position = "bottom") +
-  theme(axis.ticks.y = element_blank(),
-        axis.text.y = element_blank(),
-        strip.background = element_blank(),
-        strip.placement = "outside") +
-  coord_flip()
-l_p[[3]] <- df_plot |> 
-  ggplot(aes(x=forest_succession)) +
-  geom_bar() +
-  geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
-  labs(x="classificação de estágio sucessional do TreeCo",
-       y="countagem",subtitle="c)")
-save(l_p,file="./dados/Rdata/figA21.Rdata")
+  geom_jitter() +
+  labs(x="forest succession")
 ```
 
-```{r fig 1 - sitios amostrados e grau de limitação de dispersao,fig.width=12,fig.height=6,include=FALSE,eval=FALSE}
-load("./dados/Rdata/figA21.Rdata")
-grid.arrange(grobs=l_p,ncol=3)
+```{r caption 2}
+cap <- "Gráficos diagnósticos"
+```
+```{r fig-DHARMaResidual,fig.cap=cap,fig.pos="H"}
+oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata",verbose = TRUE)
+l_md_e_start <- get(oname)
+p_plot <- simulateResiduals(l_md_e_start$modelo,n = 1000)
+plot(p_plot)
 ```
 
-<!-- __Figura A2 1__ Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão)). -->
-
-## Congruência com a SAD observada
+```{r caption 3}
+cap <- "Observado e predito para o número de SADs simuladas congruentes com a SAD observada."
+```
+```{r fig-preditoObs,fig.cap=cap,fig.pos="H"}
+oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata",verbose = TRUE)
+l_md_e_start <- get(oname)
+df_obs <- l_md_e_start$modelo@frame[,-1]
+df_obs$nCong <- l_md_e_start$modelo@frame[,1][,1]
+df_obs$predito <- predict(l_md_e_start$modelo,type="response")*sum(l_md_e_start$modelo@frame[,1][1,])
+df_obs %>% 
+  ggplot(aes(x=nCong,y=predito,group=SiteCode)) +
+  geom_line(alpha=0.4) +
+  geom_point(alpha=0.4) +
+  geom_abline(intercept = 0,slope=1,color="red")+
+  facet_grid(land_hyp~forest_succession)
+```
