@@ -136,6 +136,23 @@ df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 
 ```
 
+```{r trackdown chunk, include=FALSE,eval=FALSE}
+# pacotes
+library(trackdown)
+# both overwrite: 
+# overwrite the current google drive file with the current Rmd:
+# upload_file(file ="apendices/A2_figuras_tabelas/A2_figuras_tabelas.Rmd",
+#             gpath = "mestrado/artigo_principal/apendices/",
+#             hide_code = TRUE)
+update_file(file ="apendices/A2_figuras_tabelas/A2_figuras_tabelas.Rmd",
+            gpath = "mestrado/artigo_principal/apendices/",
+            hide_code = TRUE)
+# overwrite the current Rmd with the current google drive 
+download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
+              gpath = "mestrado/artigo_principal/secoes_texto/")
+```
+
+
 # Texto e tabelas
 
 Todas as análises dos dados foram feitas em R (REF).
