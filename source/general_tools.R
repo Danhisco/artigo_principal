@@ -3,7 +3,8 @@ f_kableExtra <- \(df, string_caption,footnote=NULL,col_width_index=2,col_width_v
   kableExtra::kbl(df,format = "latex",
                   caption = string_caption,
                   booktabs = TRUE, linesep = "", align = "c")  %>%
-    kableExtra::kable_styling(latex_options = c("striped", "HOLD_position")) %>%
+    kableExtra::kable_styling(latex_options = c("striped", "HOLD_position"),
+                              position="left") %>%
     {if(col_control) kableExtra::column_spec(.,col_width_index, width = col_width_value) else .} %>% 
     {if(!is.null(footnote)) add_footnote(.,footnote, notation="alphabet") else .}
 }

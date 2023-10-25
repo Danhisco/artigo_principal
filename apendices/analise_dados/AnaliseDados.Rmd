@@ -383,7 +383,7 @@ ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
 ```
 
 
-__figura 2__ Intervalo de predição do GAMM para os contrastes, desconsiderando os efeitos parciais associados com o sítio de amostragem.
+<!-- __figura 2__ Intervalo de predição do GAMM para os contrastes, desconsiderando os efeitos parciais associados com o sítio de amostragem. -->
 
 
 __Janela de Código 2__ Código usado para obter o Intervalo de Predição. Adaptado de https://fromthebottomoftheheap.net/2016/12/15/simultaneous-interval-revisited/
@@ -423,6 +423,21 @@ f_PredInt.GAMM <- \(gamm,
 2 variáveis respostas (diffS e nCong), mesmo conjunto de modelos candidatos
 
 ## seleção da estrutura aleatória
+
+```{r}
+df_md <- inner_join(df_plot,
+                    df_dados_disponiveis %>% 
+                      mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+                             long = ifelse(is.na(long_correct),long,long_correct)) %>% 
+                      select(SiteCode,lat,long)) %>% 
+  mutate(across(.cols=c(SiteCode,forest_succession,land_hyp),factor))
+v_f <- "cbind(nCong,100-nCong) ~ p_z * forest_succession * k_z * land_hyp + s(lat,long) + s(land_hyp,SiteCode,bs='re')"
+f_gam <- \(stringf){
+  gam(formula = as.formula(stringf),data=df_md,family = binomial)
+}
+md_latlong <- gam(formula = as.formula(v_f),data=df_md,family = "binomial",method="REML")
+```
+
 
 ```{r ncong estrutura aleatória}
 l_f <- list()
