@@ -164,7 +164,29 @@ df_class <- adply(df_plot$SiteCode %>% unique,1,\(Site){
   dev.off()
   return(df_return)
 },.id=NULL)
+Site <- df_class %>% filter(land_diff=="contemp") %>% pull(SiteCode)
+df_class[df_class$land_diff=="contemp","land_diff"] <- "contemp pior"
+df_class[df_class$land_diff=="contemp pio","land_diff"] <- "contemp pior"
+df_class$land_diff %>% table()
+
+df_class[df_class$Cong=="boa excetoe em graus brandos","Cong"] <- "boa exceto em graus brandos"
+df_class$Cong %>% table()
+df_class <- df_class[,-4]
 write_csv(df_class,file="./dados/csv/df_class.csv")
+```
+```{r união das classes}
+df_class <- read.csv(file="./dados/csv/df_class.csv")
+df_class$land_diff %>% table()
+v_landdiff <- df_class$land_diff %>% unique()
+df_class$Cong %>% table()
+v_cong <- df_class$land_diff %>% unique()
+
+df_class <- df_class %>% mutate(
+  classi_land = case_when(land_diff %in% c("similar","igual") ~ "similares",
+                          land_diff %in% v_landdiff[str_which(v_landdiff,"contemp")] ~ "contemp. diferente", 
+                          land_diff %in% v_landdiff[str_which(v_landdiff,"ideal")] ~ "ideal. diferente",
+                          land_diff == "sem frag pior" ~ "sem frag. diferente"))
+
 ```
 
 
