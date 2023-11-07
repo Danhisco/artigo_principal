@@ -135,6 +135,7 @@ df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |>
          k_f=factor(round(k,2))) %>% 
   select(-succession)
 df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+write_csv(df_plot,"dados/csv/df_plot_geral.csv")
 ```
 
 # GE Gerais

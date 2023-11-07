@@ -53,7 +53,7 @@ source("source/general_tools.R")
 source("source/GAMMtools.R")
 # tamanho da fonte dos títulos dos gráficos dos resultados por síio de amosttragem (Umed e nCong)
 v_titleS <- 1000
-v_ncol_fatetwrap <- 14
+v_ncol_fatetwrap <- 5
 figHeight=28
 figWidth=40
 #
@@ -117,7 +117,7 @@ df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |
                                        pair == "efeito_area"~"non_frag.ideal",
                                        pair == "efeito_conf"~"cont.ideal")) ) |> 
   relocate(contraste_z,.before = contrasteSAD_z)
-df_plot <- fread("dados/csv/df_plotSoE.csv")
+df_plot <- fread("dados/csv/df_plot_geral.csv")
 # themes
 basic_theme <- function(data, ...){
   data %>% 
@@ -320,39 +320,47 @@ df_plot <- df_md |> select(SiteCode:diffS,p_z:k_z) |>
   select(-succession)
 df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 #
-f_plot <- \(nvresp,
+f_plot <- \(nvresp="nCong",
             png_repo = "apendices/analise_dados/figuras/",
             end_name = "_k_land.hyp_site"){
-  p <- df_plot %>% 
-    ggplot(aes(x=k,y=.data[[nvresp]],color=land_hyp)) +
-    geom_point(alpha=0.5) +
-    geom_line(alpha=0.5) +
-    # geom_smooth(method = "gam",se=FALSE) +
-    scale_x_reverse() +
-    # scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-    theme_bw() +
-    labs(color="landscape hyp.") +
-    theme(legend.position = "top",
-          axis.text=element_text(size=4.5),
-          axis.title = element_text(size = 20),
-          strip.text = element_text(size = 4.5, margin = margin()),
-          legend.title=element_text(size=v_titleS),
-          legend.text = element_text(size = v_titleS)) +
-    scale_color_manual(values=c("darkred","darkblue","darkgreen"),
-                       labels=c("contemporâneo","idealizado","sem fragmentação")) +
-    facet_wrap(~label,ncol=v_ncol_fatetwrap)
-  ggsave(paste0(png_repo,nvresp,end_name,".png"),
-         plot = p,
-         width = 7,height = 30)
-  save(p,file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
+  f_ <- \(dfi){
+    dfi %>% 
+      ggplot(aes(x=k,y=.data[[nvresp]],color=land_hyp)) +
+      geom_point(alpha=0.5) +
+      geom_line(alpha=0.5) +
+      scale_x_reverse() +
+      theme_bw() +
+      labs(color="landscape hyp.") +
+      theme(legend.position = "top",
+            axis.text=element_text(size=4.5),
+            axis.title = element_text(size = 20),
+            strip.text = element_text(size = 4.5, margin = margin())) +
+            # legend.title=element_text(size=v_titleS),
+            # legend.text = element_text(size = v_titleS)) +
+      scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                         labels=c("contemporâneo","idealizado","sem fragmentação")) +
+      facet_wrap(~label,ncol=v_ncol_fatetwrap)
+  }
+  l_p <- dlply(df_plot,"forest_succession",f_)
+  # ggsave(paste0(png_repo,nvresp,end_name,".png"),
+  #        plot = p,
+  #        width = 7,height = 30)
+  save(l_p,file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
   return(p)
 }
 p <- f_plot("nCong")
 save(p,file="dados/Rdata/nCongObs_porSitio_k_landHyp.Rdata")
 ```
 ```{r GE-nCong,eval=TRUE,fig.height=figHeight,fig.width=figWidth,fig.cap=cap,fig.pos="H"}
-load(file="dados/Rdata/nCongObs_porSitio_k_landHyp.Rdata")
-p
+nvresp="nCong";png_repo = "apendices/analise_dados/figuras/";end_name = "_k_land.hyp_site"
+oname <- load(file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
+l_p <- get(oname)
+l_p <- alply(names(l_p),1,\(nli){
+  l_p[[nli]] + labs(title = nli) + theme(plot.title = element_text(hjust = 0.5))
+})
+p <- ggpubr::ggarrange(plotlist = l_p,nrow=1, common.legend = TRUE, legend="top")
+ggsave(filename = "./secoes_texto/Resultados/figuras/GE_nCong_Site.png",
+       plot = p,width = 40, height = 40, units = "cm")
 ```
 
 \newpage
