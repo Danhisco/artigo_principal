@@ -140,6 +140,34 @@ write_csv(df_plot,"dados/csv/df_plot_geral.csv")
 
 # GE Gerais
 
+```{r classificação dos sítios por tipo de congruência}
+df_class <- adply(df_plot$SiteCode %>% unique,1,\(Site){
+  df_return <- data.frame(SiteCode = Site,land_diff = "NA",Cong = "NA")
+  p <- df_plot %>% 
+    filter(SiteCode == Site) %>% 
+    ggplot(aes(x=k,y=nCong,color=land_hyp)) +
+      geom_point(alpha=0.5) +
+      geom_line(alpha=0.5) +
+      scale_x_reverse() +
+      scale_y_continuous(limits = c(0,100)) +
+      theme_bw() +
+      labs(color="landscape hyp.",title=Site) +
+      theme(legend.position = "bottom",
+            axis.text=element_text(size=4.5),
+            axis.title = element_text(size = 20),
+            strip.text = element_text(size = 4.5, margin = margin())) +
+      scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                         labels=c("contemporâneo","idealizado","sem fragmentação"))
+  x11()
+  print(p)
+  df_return <- edit(name = df_return)
+  dev.off()
+  return(df_return)
+},.id=NULL)
+write_csv(df_class,file="./dados/csv/df_class.csv")
+```
+
+
 ```{r GE nCong por site k em x e colorido por paisagem,eval=FALSE}
 df_plot <- df_md |> select(SiteCode:diffS,p_z:k_z) |> 
   inner_join(df_p) |> 
