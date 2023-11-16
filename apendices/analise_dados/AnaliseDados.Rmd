@@ -18,28 +18,28 @@ text-align: justify}
 ```{r setup,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE)
 # pacotes
-library(dagitty)
-library(ggdag)
-library(gratia)
-library(sads)
+# library(dagitty)
+# library(ggdag)
+# library(gratia)
+# library(sads)
 library(doMC)
-library(metR)
-library(sjPlot)
+# library(metR)
+# library(sjPlot)
 library(gridExtra)
-library(ggpubr)
+# library(ggpubr)
 library(ggplot2)
 library(readr)
 library(purrr)
 library(stringr)
 library(tidyr)
 library(MuMIn)
-library(AICcmodavg)
-library(insight)
+# library(AICcmodavg)
+# library(insight)
 library(bbmle)
 library(DHARMa)
 library(mgcv)
 library(lme4)
-library(gamm4)
+# library(gamm4)
 library(plyr)
 library(dplyr)
 source("source/general_tools.R")
@@ -179,14 +179,17 @@ df_class <- read.csv(file="./dados/csv/df_class.csv")
 df_class$land_diff %>% table()
 v_landdiff <- df_class$land_diff %>% unique()
 df_class$Cong %>% table()
-v_cong <- df_class$land_diff %>% unique()
+v_cong <- df_class$Cong %>% unique()
 
 df_class <- df_class %>% mutate(
   classi_land = case_when(land_diff %in% c("similar","igual") ~ "similares",
                           land_diff %in% v_landdiff[str_which(v_landdiff,"contemp")] ~ "contemp. diferente", 
                           land_diff %in% v_landdiff[str_which(v_landdiff,"ideal")] ~ "ideal. diferente",
-                          land_diff == "sem frag pior" ~ "sem frag. diferente"))
-
+                          land_diff == "sem frag pior" ~ "sem frag. diferente"),
+  classi_cong = case_when(Cong %in% c("ruim exceto em graus brandos","melhor em graus brandos") ~ "boa em graus brandos",
+                          Cong == "ruim em intermediário e boa em graus brandos" ~ "ruim em graus intermediários",
+                          TRUE ~ Cong))
+df_class$classi_cong %>% table()
 ```
 
 
