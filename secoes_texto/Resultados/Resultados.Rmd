@@ -53,7 +53,7 @@ source("source/general_tools.R")
 source("source/GAMMtools.R")
 # tamanho da fonte dos títulos dos gráficos dos resultados por síio de amosttragem (Umed e nCong)
 v_titleS <- 1000
-v_ncol_fatetwrap <- 5
+v_ncol_fatetwrap <- 14
 figHeight=28
 figWidth=40
 #
@@ -151,6 +151,41 @@ Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios
 ```{r caption 1}
 cap <- "Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão))."
 ```
+```{r GE-sitios-amostrados criacao,eval=FALSE,include=FALSE}
+df_plot <- df_dados_disponiveis |> 
+  select(SiteCode, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
+l_p <- list()
+l_p[[1]] <- df_plot |> 
+  ggplot(aes(y=lat,x=long)) +
+  geom_point(alpha=0.5) +
+  theme_light() +
+  labs(subtitle = "a)")
+v_labels <- c("effort_ha" = "plot area (ha)",
+              "Ntotal" = "# ind",
+              "S_obs" = "riqueza",
+              "year_bestProxy" = "approx. data year")
+df_plot[grep("\\_",df_plot$year_bestProxy),"year_bestProxy"] <- "2012.5"
+l_p[[2]] <- df_plot |>
+  mutate(year_bestProxy = as.numeric(year_bestProxy)) |> 
+  pivot_longer(effort_ha:year_bestProxy) |> 
+  ggplot(aes(x=name,y=value)) +
+  geom_jitter(alpha=0.4) +
+  geom_boxplot() +
+  labs(x="",y="",subtitle="b)") +
+  facet_wrap(~name,ncol=1,scales="free", labeller = as_labeller(v_labels), strip.position = "bottom") +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        strip.background = element_blank(),
+        strip.placement = "outside") +
+  coord_flip()
+l_p[[3]] <- df_plot |> 
+  ggplot(aes(x=forest_succession)) +
+  geom_bar() +
+  geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
+  labs(x="classificação de estágio sucessional do TreeCo",
+       y="countagem",subtitle="c)")
+save(l_p,file="./dados/Rdata/figA21.Rdata")
+```
 ```{r GE-sitios-amostrados,fig.width=12,fig.height=6,fig.cap=cap,cache=TRUE,fig.pos="H"}
 load("./dados/Rdata/figA21.Rdata")
 grid.arrange(grobs=l_p,nrow=1)
@@ -163,7 +198,7 @@ grid.arrange(grobs=l_p,nrow=1)
 cap <- "a) Mudança na extensão espacial da paisagem a proporção de cobertura vegetal. Cada ponto representa a proporção de cobertura vegetal (eixo y) para aquela determinada extensão espacial da paisagem ao redor (eixo x), as linhas ligam pontos de um sítio de amostragem. b) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). c) Cenários de limitação de dispersão simulados. k = proporção de propágulos que permanece até a vizinhança imediata (distância média entre indivíduos); d = desvio padrão da função de dispersão com distribuição de Laplace. Para detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal."
 ```
 ```{r fig caption EE 1 e figura,fig.cap=cap,fig.pos="H"}
-df_p <- df_sim |>
+df_p2 <- df_sim |>
   filter(k==0.05) |> 
   mutate(sorteio_site = ifelse(SiteCode %in% unique(df_Unull$SiteCode),"SoE","non SoE"),
          DA = Ntotal / effort_ha)
@@ -177,7 +212,7 @@ l_p[[1]] <- df_p_extensoes |> filter(lado_km<=16.02) |>
   scale_y_continuous(breaks = seq(0,1,by=0.1)) +
   coord_cartesian(expand = F) +
   theme_light()
-l_p[[2]] <- df_p |> 
+l_p[[2]] <- df_p2 |> 
   ggplot(aes(x=DA,y=S_obs,color=sorteio_site)) +
   geom_point(alpha=0.8) +
   scale_color_manual(values=c("black","red"),name="SoE: 36 sites") +
@@ -218,6 +253,7 @@ p + theme(plot.title = element_text(size = 12))
 
 ```{r cap-resumo-EscalaAdequada,cache=FALSE}
 cap <- "Lado da paisagem que acumula a maior parte do efeito da escala no grau de limitação de dispersão. Em cinza a área com incerteza: os lados de 1 e 2 km podem ser adequados."
+df_plot <- read.csv("dados/csv/df_plotSoE.csv")
 p <- df_plot |>
   ggplot(aes(x=k_factor,y=SoE_0.95)) +
   geom_hline(yintercept = 4,color="red") +
@@ -271,9 +307,9 @@ p <- df_plot |>
   labs(color="landscape type") +
   theme(legend.position = "top",
         axis.text=element_text(size=4.5),
-        strip.text = element_text(size = 4.5, margin = margin()),
-        legend.title=element_text(size=v_titleS),
-        legend.text = element_text(size = v_titleS)) +
+        strip.text = element_text(size = 4.5, margin = margin())) +
+        # legend.title=element_text(size=v_titleS),
+        # legend.text = element_text(size = v_titleS)) +
   scale_color_manual(values=c("darkred","darkblue","darkgreen"),
                      labels=c("contemporâneo","idealizado","sem fragmentação")) +
   facet_wrap(~label,ncol=v_ncol_fatetwrap,scales="free")
@@ -307,7 +343,7 @@ Há muita diversidade de padrões entre sítios de amostragem (Figura 6). Em alg
 cap <- "Número de SADs simuladas congruentes com a SAD empírica (eixo y). A classificação da SAD simulada como congruente ocorreu quando a comparação entre SADs segundo um teste de Kolmogorov-Smirnov apresentou p-valor igual ou maior do que 0.05. No eixo x há o grau de limitação de dispersão per capita (k). Os pontos são coloridos pelo tipo de paisagem hipotética pressuposta pela simulação. Os paíneis estão organizados pela proporção de cobertura vegetal na paisagem ao redor de 4x4km2."
 ```
 ```{r ggplot2code GE nCong,eval=FALSE,include=FALSE,fig.cap=cap}
-df_plot <- df_md |> select(SiteCode:diffS,p_z:k_z) |> 
+df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
   inner_join(df_p) |> 
   inner_join(df_dados_disponiveis |> 
                filter(forest_succession != "capoeira") %>% 
@@ -339,37 +375,109 @@ f_plot <- \(nvresp="nCong",
             # legend.text = element_text(size = v_titleS)) +
       scale_color_manual(values=c("darkred","darkblue","darkgreen"),
                          labels=c("contemporâneo","idealizado","sem fragmentação")) +
-      facet_wrap(~label,ncol=v_ncol_fatetwrap)
+      facet_wrap(~label,ncol=5)
   }
   l_p <- dlply(df_plot,"forest_succession",f_)
-  # ggsave(paste0(png_repo,nvresp,end_name,".png"),
-  #        plot = p,
-  #        width = 7,height = 30)
+  l_p <- alply(names(l_p),1,\(nli){
+    l_p[[nli]] + labs(title = nli) + theme(plot.title = element_text(hjust = 0.5))
+  })
   save(l_p,file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
-  return(p)
 }
-p <- f_plot("nCong")
-save(p,file="dados/Rdata/nCongObs_porSitio_k_landHyp.Rdata")
+f_plot()
 ```
 ```{r GE-nCong,eval=TRUE,fig.height=figHeight,fig.width=figWidth,fig.cap=cap,fig.pos="H"}
 nvresp="nCong";png_repo = "apendices/analise_dados/figuras/";end_name = "_k_land.hyp_site"
 oname <- load(file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
 l_p <- get(oname)
-l_p <- alply(names(l_p),1,\(nli){
-  l_p[[nli]] + labs(title = nli) + theme(plot.title = element_text(hjust = 0.5))
-})
 p <- ggpubr::ggarrange(plotlist = l_p,nrow=1, common.legend = TRUE, legend="top")
 ggsave(filename = "./secoes_texto/Resultados/figuras/GE_nCong_Site.png",
        plot = p,width = 40, height = 40, units = "cm")
+p
 ```
 
 \newpage
 
-## Modelos Estatísticos
+```{r caption next figure}
+cap <- "Distribuição espacial da avaliação visual e das preditoras empíricas. Na primeira linha (a e b) as classificações visuais do padrão de congruência com o observado: a) diferença entre as paisagens hipotéticas; b) congruência do predito pelo modelo neutro (independente do tipo de paisagem) com a SAD observada ao longo dos graus de dispersão simulados. Na segunda linha (c e d) as preditoras empíricas: c) proporção de cobertura vegetal (p); e d) classe de sucessão ecológica do TreeCo (primary =>80 anos desde o dist., primary/secondary = entre 80 e 50 anos, secondary = entre 50 e 20 anos)"
+```
+```{r GE-coordenadas-preditoras,fig.cap=cap,fig.height=10,fig.width=10}
+# Install and load necessary packages
+# library(sf)
+# dados
+df_class <- read.csv(file="./dados/csv/df_class.csv")
+# df_class$land_diff %>% table()
+v_landdiff <- df_class$land_diff %>% unique()
+# df_class$Cong %>% table()
+v_cong <- df_class$Cong %>% unique()
+df_class <- df_class %>% mutate(
+  classi_land = case_when(land_diff %in% c("similar","igual") ~ "similares",
+                          land_diff %in% v_landdiff[str_which(v_landdiff,"contemp")] ~ "contemp. dif.", 
+                          land_diff %in% v_landdiff[str_which(v_landdiff,"ideal")] ~ "ideal. dif.",
+                          land_diff == "sem frag pior" ~ "sem frag. dif."),
+  classi_cong = case_when(Cong %in% c("ruim exceto em graus brandos","melhor em graus brandos") ~ "boa em brandos",
+                          Cong == "ruim em intermediário e boa em graus brandos" ~ "ruim em intermed",
+                          TRUE ~ Cong))
+df_class$classi_cong <- gsub(" graus","",df_class$classi_cong) %>% 
+  gsub("intermediários","intermed",.) %>% 
+  gsub(" em"," em\n",.)
+#
+df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
+  inner_join(df_p) |> 
+  inner_join(df_dados_disponiveis |> 
+               filter(forest_succession != "capoeira") %>% 
+               select(SiteCode, forest_succession)) %>% 
+  arrange(p) |> 
+  mutate(succession = case_when(forest_succession == "primary" ~ "1°",
+                                forest_succession == "secondary" ~ "2°",
+                                forest_succession == "primary/secondary" ~ "1.5°"),
+         label = paste0(SiteCode,", p=",round(p,2)," ,suc=",succession)) %>% 
+  select(-succession)
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot <- inner_join(df_plot,df_class) %>% 
+  inner_join(.,df_dados_disponiveis %>% select(SiteCode, lat:long_correct))
+#
+v_labels <- c("classi_land"="a) Diferença entre paisagens","classi_cong"="b) Congruência do modelo neutro",
+              "p"="c) % cobertura vegetal (p)","forest_succession"="d) classe de tempo desde o último dist. no local")
+l_vcolors <- list()
+l_vcolors[[1]] <- c("similares"="black","sem frag. dif."="#003300","contemp. dif."="#CC0000","ideal. dif."="darkblue")
+l_vcolors[[2]] <- c("boa"="#003300","boa exceto em\n brandos"="yellow","boa em\n intermed"="darkblue","boa em\n brandos"="#CCCCCC","ruim em\n intermed"="#CC0000","ruim"="#FF0000")
+l_vcolors[[3]] <- NA
+l_vcolors[[4]] <- c("secondary"="darkblue","primary/secondary"="darkred","primary"="darkgreen")
+names(l_vcolors) <- names(v_labels)
+#
+f_plot <- \(cname){
+  v_colors <- l_vcolors[[cname]]
+  df_plot |> 
+  mutate(lat=ifelse(is.na(lat),lat_correct,lat),
+         long=ifelse(is.na(long),long_correct,long)) %>% 
+  filter(k==0.05,land_hyp=="cont") %>% 
+  ggplot(aes(y=lat,x=long,color=.data[[cname]])) +
+    geom_point(shape=15,size=5,alpha=0.8) + # alpha=0.5
+    {if(cname=="p") scale_colour_gradientn(colours = terrain.colors(10),
+                                           trans="reverse") else scale_color_manual(values=v_colors)} +
+    theme_light() +
+    theme(legend.position = "right") +
+    labs(subtitle = v_labels[cname],
+         color="")  
+}
+l_p <- alply(names(v_labels),1,f_plot)
+grid.arrange(grobs=l_p,ncol=2)
+# save(p,file="./dados/Rdata/coordenadas_preditoras.Rdata")
+```
+```{r GE-coordenadas-preditoras0,fig.cap=cap,eval=FALSE}
+# load(file="./dados/Rdata/coordenadas_preditoras.Rdata")
+# p
+```
 
-Para descrever o número de SADs simuladas congruentes com a SAD empírica, utilizamos modelos mistos generalizados binomiais. Como possíveis variáveis preditoras consideramos: a proporção de cobertura vegetal na paisagem de 4x4km2 (p), o grau de limitação de dispersão (k, proporção de propágulos até a vizinhança imediata do progenitor), o tipo de paisagem hipotética (contemporânea, sem isolamento estrutural, e idealizada), e a classe de sucessão do sítio de amostragem (olhar Figura 1). A variável p informa um componente da heterogeneidade da paisagem contemporânea, a proporção de habitat remanescente na paisagem ao redor. A variável classe de sucessão do sítio de amostragem apresenta 3 classes, uma vez que removemos os dois sítios com menos de 20 anos de regeneração desde o último grande distúrbio (Figura 1). Nas 3 classes de sucessão do sítio de amostragem a distribuição de sítios ocorre em todo gradiente de p, exceto a classe 'primary/secondary' que não sítios com paisagens contemporâneas totalmente preenchidas (Figura A2 1).
 
-```{r tabela com o nome das predioras}
+<!-- shapefile do terrabrasilis do INPE (http://terrabrasilis.dpi.inpe.br/en/download-2/) -->
+
+
+<!-- ## Modelos Estatísticos -->
+
+<!-- Para descrever o número de SADs simuladas congruentes com a SAD empírica, utilizamos modelos mistos generalizados binomiais. Como possíveis variáveis preditoras consideramos: a proporção de cobertura vegetal na paisagem de 4x4km2 (p), o grau de limitação de dispersão (k, proporção de propágulos até a vizinhança imediata do progenitor), o tipo de paisagem hipotética (contemporânea, sem isolamento estrutural, e idealizada), e a classe de sucessão do sítio de amostragem (olhar Figura 1). A variável p informa um componente da heterogeneidade da paisagem contemporânea, a proporção de habitat remanescente na paisagem ao redor. A variável classe de sucessão do sítio de amostragem apresenta 3 classes, uma vez que removemos os dois sítios com menos de 20 anos de regeneração desde o último grande distúrbio (Figura 1). Nas 3 classes de sucessão do sítio de amostragem a distribuição de sítios ocorre em todo gradiente de p, exceto a classe 'primary/secondary' que não sítios com paisagens contemporâneas totalmente preenchidas (Figura A2 1). -->
+
+```{r tabela com o nome das predioras,eval=FALSE,include=FALSE}
 df_glossario <- data.frame(
   nome = c("k","p","forest succession","land hyp","SiteCode"),
   `descrição` = c("grau de limitação de dispersão per capita",
@@ -381,51 +489,51 @@ f_kableExtra(df_glossario,string_caption = "Descrição das variáveis preditora
 ```
 
 
-Comparamos 8 modelos candidatos para descrever a probabilidade de congruência da SAD simulada: o modelo cheio, com interação entre p, k, tipo de paisagem hipotética, e classe de sucessão do sítio de amostragem; o modelo cheio sem a variável p; o modelo cheio sem a variável classe de sucessão; e os 4 modelos anteriores sem o tipo de paisagem hipotética. Primeiro avaliamos qual a melhor maneira de agrupar os dados por sítio de amostragem. Usamos o modelo cheio para comparar 3 tipos de estruturas aleatórias: 1 intercepto por sítio de amostragem; 1 intercepto por tipo de paisagem hipotética e sítio de amostragem; 1 intercepto e 1 inclinação para o grau de limitação de dispersão por tipo de paisagem hipotética e sítio de amostragem. A estrutura aleatória mais plausível foi usada para comparar os 8 modelos candidatos. 
-Os modelos foram comparados via AICc (REF) e pelo coeficiente de determinação condicional e marginal (Nagaka REF).
+<!-- Comparamos 8 modelos candidatos para descrever a probabilidade de congruência da SAD simulada: o modelo cheio, com interação entre p, k, tipo de paisagem hipotética, e classe de sucessão do sítio de amostragem; o modelo cheio sem a variável p; o modelo cheio sem a variável classe de sucessão; e os 4 modelos anteriores sem o tipo de paisagem hipotética. Primeiro avaliamos qual a melhor maneira de agrupar os dados por sítio de amostragem. Usamos o modelo cheio para comparar 3 tipos de estruturas aleatórias: 1 intercepto por sítio de amostragem; 1 intercepto por tipo de paisagem hipotética e sítio de amostragem; 1 intercepto e 1 inclinação para o grau de limitação de dispersão por tipo de paisagem hipotética e sítio de amostragem. A estrutura aleatória mais plausível foi usada para comparar os 8 modelos candidatos.  -->
+<!-- Os modelos foram comparados via AICc (REF) e pelo coeficiente de determinação condicional e marginal (Nagaka REF). -->
 
 
 
-### - Seleção da Estrutura Aleatória
+<!-- ### - Seleção da Estrutura Aleatória -->
 
-```{r caption-ts-re-ncong}
+```{r caption-ts-re-ncong,eval=FALSE,include=FALSE}
 cap <- "Seleção da Estrutura Aleatória"
 snote <- "estrutura fixa do modelo cheio usada em ambos modelos"
 ```
-```{r ts-re-ncong}
+```{r ts-re-ncong,eval=FALSE,include=FALSE}
 df_ts_re <- read.csv("./dados/csv/df_ts_re_nCong.csv")
 f_kableExtra(df_ts_re,string_caption = cap,footnote = snote,col_control = FALSE)
 ```
 
-Não foi possível ajustar os coeficientes do modelo com 1 intercepto e 1 inclinação para o grau de limitação de dispersão  por tipo de paisagem hipotética e sítio de amostragem (detalhes em A2). Dentre os modelos em que houve convergência na estimativa dos coeficientes, a estrutura aleatória mais plausível é aquela com 1 intercepto por tipo de paisagem hipotética por sítio de amostragem (\@ref(tab:ts-re-ncong)). Os coeficientes de determinação condicional e marginal dos modelos candidatos são similares: ~0.98 e ~0.07, respectivamente (\@ref(tab:ts-re-ncong)). Esse resultado é coerente com o observado no padrão de congruência com os dados organizados por sítio de amostragem (Figura 6). 
+<!-- Não foi possível ajustar os coeficientes do modelo com 1 intercepto e 1 inclinação para o grau de limitação de dispersão  por tipo de paisagem hipotética e sítio de amostragem (detalhes em A2). Dentre os modelos em que houve convergência na estimativa dos coeficientes, a estrutura aleatória mais plausível é aquela com 1 intercepto por tipo de paisagem hipotética por sítio de amostragem (\@ref(tab:ts-re-ncong)). Os coeficientes de determinação condicional e marginal dos modelos candidatos são similares: ~0.98 e ~0.07, respectivamente (\@ref(tab:ts-re-ncong)). Esse resultado é coerente com o observado no padrão de congruência com os dados organizados por sítio de amostragem (Figura 6).  -->
 
-### - Seleção da Estrutura Fixa
+<!-- ### - Seleção da Estrutura Fixa -->
 
-```{r}
+```{r c1,eval=FALSE,include=FALSE}
 cap <- "Seleção da Estrutura Fixa"
 snote <- "estrutura aleatória mais plausível usada em todos os modelos"
 ```
-```{r ts-ncong}
+```{r ts-ncong,eval=FALSE,include=FALSE}
 df_ts <- read.csv("./dados/csv/df_ts_defesa_congruencias.csv")
 f_kableExtra(df_ts,string_caption = cap,footnote = snote,col_control = FALSE)
 ```
 
-O único modelo plausível é o modelo cheio  (\@ref(tab:ts-ncong)), que tem como preditoras: proporção de cobertura vegetal (p, variável contínua); forest succession (variável categórica com 3 níveis, ver \@ref(fig:GE-sitios-amostrados)) ;grau de limitação de dispersão (k, variável contínua); e o tipo da paisagem hipotética (land. hyp., com 3 níveis). As variáveis contínuas estão 'z' transformadas.
-Os 4 modelos com menor DAICc são aqueles que consideram a variável tipo de paisagem hipotética. A redução dos coeficientes de determinação marginal são maiores do que os coeficientes de determinação condionais que se mantém próximos de 0.98 (\@ref(tab:ts-ncong)). As variáveis proporção de cobertura vegetal (p) e a classe de sucessão dos sítios apresentam poder similar de explicação da variação, uma vez que os modelos candidatos que apresentam ou p ou a classe de sucessão apresentam coeficiente de determinação marginal similar (\@ref(tab:ts-ncong)). Apesar do modelo mais plausível contar com a variável tipo de paisagem hipotética, essa variável apresenta o menor poder de explicação com relação às outras preditoras, uma vez que os modelos sem essa variável apresentam coeficientes de determinação muito similares (\@ref(tab:ts-ncong)).
- 
+<!-- O único modelo plausível é o modelo cheio  (\@ref(tab:ts-ncong)), que tem como preditoras: proporção de cobertura vegetal (p, variável contínua); forest succession (variável categórica com 3 níveis, ver \@ref(fig:GE-sitios-amostrados)) ;grau de limitação de dispersão (k, variável contínua); e o tipo da paisagem hipotética (land. hyp., com 3 níveis). As variáveis contínuas estão 'z' transformadas. -->
+<!-- Os 4 modelos com menor DAICc são aqueles que consideram a variável tipo de paisagem hipotética. A redução dos coeficientes de determinação marginal são maiores do que os coeficientes de determinação condionais que se mantém próximos de 0.98 (\@ref(tab:ts-ncong)). As variáveis proporção de cobertura vegetal (p) e a classe de sucessão dos sítios apresentam poder similar de explicação da variação, uma vez que os modelos candidatos que apresentam ou p ou a classe de sucessão apresentam coeficiente de determinação marginal similar (\@ref(tab:ts-ncong)). Apesar do modelo mais plausível contar com a variável tipo de paisagem hipotética, essa variável apresenta o menor poder de explicação com relação às outras preditoras, uma vez que os modelos sem essa variável apresentam coeficientes de determinação muito similares (\@ref(tab:ts-ncong)). -->
 
-## Interpretação do modelo mais plausível
 
-O modelo mais plausível apresenta desvios do esperado (detalhes em A2), mas será usado para interpretação. Iremos interpretar o predito quando pressupomos ausência de variação entre sítios, ou seja, apenas a variabilidade associada com as variáveis da estrutura fixa: proporção de cobertura vegetal, p; grau de limitação de dispersão, k; tipo de paisagem hipotética; e classe de sucessão. Na figura 7 há o predito pelo modelo mais plausível quando desconsiderado a variabilidade entre sítios. No eixo x há a variável p e no eixo y a variável k, ambas na z transformadas. Note que o eixo y está reverso, de modo que quanto mais distante da origem, maior é a capacidade de dispersão per capita. Os paineis estão dividos pela classe de sucessão (colunas) e tipo de paisagem hipotética (linhas). A escala de cor preenche os quadros segundo a relação com o predito para o logito da probabilidade de congruência da SAD simulada com a SAD empírica (legenda no topo).
- 
+<!-- ## Interpretação do modelo mais plausível -->
 
+<!-- O modelo mais plausível apresenta desvios do esperado (detalhes em A2), mas será usado para interpretação. Iremos interpretar o predito quando pressupomos ausência de variação entre sítios, ou seja, apenas a variabilidade associada com as variáveis da estrutura fixa: proporção de cobertura vegetal, p; grau de limitação de dispersão, k; tipo de paisagem hipotética; e classe de sucessão. Na figura 7 há o predito pelo modelo mais plausível quando desconsiderado a variabilidade entre sítios. No eixo x há a variável p e no eixo y a variável k, ambas na z transformadas. Note que o eixo y está reverso, de modo que quanto mais distante da origem, maior é a capacidade de dispersão per capita. Os paineis estão dividos pela classe de sucessão (colunas) e tipo de paisagem hipotética (linhas). A escala de cor preenche os quadros segundo a relação com o predito para o logito da probabilidade de congruência da SAD simulada com a SAD empírica (legenda no topo). -->
 
 
 
-```{r}
+
+
+```{r c2,eval=FALSE,include=FALSE}
 cap <- "Predito pelo modelo mais plausível para descrever a congruência entre SAD empírica e simulada"
 ```
-```{r nCong-md-predito,fig.height=8,fig.width=8,fig.cap=cap,fig.pos="H"}
+```{r nCong-md-predito,fig.height=8,fig.width=8,fig.cap=cap,fig.pos="H",eval=FALSE,include=FALSE}
 oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata")
 l_md_e_start <- get(oname)
 df_newdata <- l_md_e_start$modelo@frame[,-1]
@@ -461,7 +569,7 @@ df_newdata %>%
   facet_grid(land_hyp~forest_succession)
 ```
 
-O modelo prediz que o logito da probabilidade de congruência da SAD simulada na paisagem contemporânea é similar ao logito na paisagem sem isolamento estrutural. A maior diferença entre esses dois tipos de paisagem são nos valores médios, mas não na influência da proporção de cobertura vegetal remanescente na paisagem, grau de limitação de dispersão ou classe de sucessão (Figura 7). O logito predito na paisagem idealizada apresenta menor variação na congruência em função das preditoras, apresentando boa congruência em geral (Figura 7). Nos 3 tipos de paisagem hipotéticas a maior variação ocorreu nos sítios em que o tempo desde a última perturbação no sítio de amostragem foi entre 50 e 80 anos (‘primary/secondary’ Figura 7). Nos sítios de amostragem classificados como primary/secondary o logito varia com a redução da proporção de cobertura vegetal, aumentando com a redução da capacidade de dispersão e diminuindo com o aumento da capacidade de dispersão (Figura 7). Esse padrão é mais acentuado no logito na paisagem contemporânea e na sem isolamento estrutural (Figura 7). Nos sítios classificados como primary (pelo menos 80 anos desde a última perturbação no sítio de amostragem) e nos classificados como secondary (entre 20 e 50 anos), o logito predito é elevado (Figura 7).
+<!-- O modelo prediz que o logito da probabilidade de congruência da SAD simulada na paisagem contemporânea é similar ao logito na paisagem sem isolamento estrutural. A maior diferença entre esses dois tipos de paisagem são nos valores médios, mas não na influência da proporção de cobertura vegetal remanescente na paisagem, grau de limitação de dispersão ou classe de sucessão (Figura 7). O logito predito na paisagem idealizada apresenta menor variação na congruência em função das preditoras, apresentando boa congruência em geral (Figura 7). Nos 3 tipos de paisagem hipotéticas a maior variação ocorreu nos sítios em que o tempo desde a última perturbação no sítio de amostragem foi entre 50 e 80 anos (‘primary/secondary’ Figura 7). Nos sítios de amostragem classificados como primary/secondary o logito varia com a redução da proporção de cobertura vegetal, aumentando com a redução da capacidade de dispersão e diminuindo com o aumento da capacidade de dispersão (Figura 7). Esse padrão é mais acentuado no logito na paisagem contemporânea e na sem isolamento estrutural (Figura 7). Nos sítios classificados como primary (pelo menos 80 anos desde a última perturbação no sítio de amostragem) e nos classificados como secondary (entre 20 e 50 anos), o logito predito é elevado (Figura 7). -->
 
 
 
