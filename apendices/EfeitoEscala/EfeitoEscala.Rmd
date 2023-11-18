@@ -101,7 +101,7 @@ md_SoE <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor 
 # dados usados na simulação com os valores preditos e os residuos z transformados
 df_plot <- df_md |> 
   select(SiteCode, logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
-# df_plot$deviance <- residuals(md_SoE,scale=T)
+df_plot$deviance <- residuals(md_SoE,scale=T)
 df_plot$predict <- predict(md_SoE)
 df_plot <- df_plot |> 
   mutate(Umed = exp(logit_Umed) / exp(1-logit_Umed),

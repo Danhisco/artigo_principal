@@ -180,7 +180,6 @@ df_class$land_diff %>% table()
 v_landdiff <- df_class$land_diff %>% unique()
 df_class$Cong %>% table()
 v_cong <- df_class$Cong %>% unique()
-
 df_class <- df_class %>% mutate(
   classi_land = case_when(land_diff %in% c("similar","igual") ~ "similares",
                           land_diff %in% v_landdiff[str_which(v_landdiff,"contemp")] ~ "contemp. diferente", 
