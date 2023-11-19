@@ -129,6 +129,7 @@ basic_theme <- function(data, ...){
 ```
 
 ```{r trackdown chunk, include=FALSE,eval=FALSE}
+# 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
 # pacotes
 library(trackdown)
 # both overwrite: 
@@ -336,7 +337,7 @@ __\@ref(fig:GE-Urep-sitio-k-land)__  (\@ref(fig:GE-sitios-amostrados))
 
 ## Descrição do padrão observado
 
-Há muita diversidade de padrões entre sítios de amostragem (Figura 6). Em alguns há pouca variação na congruência da SAD simulada e predita, nesses casos, em geral  com boa congruência para todos os graus de limitação de dispersão e tipos de paisagens (Figura 6). Em outros há variação na congruência com a variação no grau de limitação de dispersão, nesses casos pode existir variabilidade entre tipos de paisagens hipotéticas, em que o tipo de paisagem hipotética com melhor congruência pode variar entre sítios (Figura 6). Ao ordenar os gráficos dos sítios por porcentagem de cobertura vegetal na paisagem de 4x4km (p) é possível observar que os sítios com pouca perda de habitat não apresentam diferença entre os tipos de paisagens hipotéticas (Figura 6). A partir de um valor de p é possível observar diferença entre tipos de paisagens (Figura 6). O simulado nas paisagens idealizadas e sem isolamento estrutural em geral apresentam diferença menor e o simulado na paisagem contemporânea pode apresentam maior diferença em alguns graus de limitação de dispersão (Figura 6). 
+Há muita diversidade de padrões entre sítios de amostragem \@ref(fig:GE-nCong). Em alguns há pouca variação na congruência da SAD simulada e predita, nesses casos, em geral  com boa congruência para todos os graus de limitação de dispersão e tipos de paisagens (Figura 6). Em outros há variação na congruência com a variação no grau de limitação de dispersão, nesses casos pode existir variabilidade entre tipos de paisagens hipotéticas, em que o tipo de paisagem hipotética com melhor congruência pode variar entre sítios (Figura 6). Ao ordenar os gráficos dos sítios por porcentagem de cobertura vegetal na paisagem de 4x4km (p) é possível observar que os sítios com pouca perda de habitat não apresentam diferença entre os tipos de paisagens hipotéticas (Figura 6). A partir de um valor de p é possível observar diferença entre tipos de paisagens (Figura 6). O simulado nas paisagens idealizadas e sem isolamento estrutural em geral apresentam diferença menor e o simulado na paisagem contemporânea pode apresentam maior diferença em alguns graus de limitação de dispersão (Figura 6). 
 
 
 ```{r caption GE nCong }
@@ -393,6 +394,42 @@ p <- ggpubr::ggarrange(plotlist = l_p,nrow=1, common.legend = TRUE, legend="top"
 ggsave(filename = "./secoes_texto/Resultados/figuras/GE_nCong_Site.png",
        plot = p,width = 40, height = 40, units = "cm")
 p
+
+
+#
+df_plot %>% filter(land_hyp=="cont",k==0.05) %>% pull(forest_succession) %>% table()
+laymat <- cbind(rep(1,))
+f_plot <- \(listplot,laymat){
+  # legenda comum
+  plot_table <- ggplot_gtable(ggplot_build(listplot[[1]])) # get tabular interpretation of plot 
+  index_legend_plot <- which(sapply(plot_table$grobs, function(x) x$name) == "guide-box") #  Mark only legend in plot 
+  common_legend <- plot_table$grobs[[index_legend_plot]] # extract legend 
+  # títulos associados
+  l_title <- llply(listplot,\(li){
+    p_title <- ggplot_gtable(ggplot_build(li))  
+    index_title <- str_which(sapply(p_title$grobs, function(x) x$name),"plot.title")
+    p_title$grobs[[index_title]] 
+  })
+  # adequação de cada elementeo da lista
+  listplot <- llply(listplot,\(li){
+    # arrumar título
+    p_title <- ggplot_gtable(ggplot_build(li))  
+    index_title <- str_which(sapply(p_title$grobs, function(x) x$name),"plot.title")
+    p_title <- p_title$grobs[[index_title]] 
+    # remoção de legenda
+    li + theme(legend.position = "none",plot.title = element_blank()) # li <- 
+    # # arranjo dos gráficos
+    # arrangeGrob(p_title,li,ncol=1,heights=c(1,10)) %>% as_ggplot()
+  })
+  arrenged_plot <- arrangeGrob(grobs=listplot,layout_matrix = laymat)
+  if(legend_position=="bottom"){
+    p_return <- grid.arrange(common_legend,arrenged_plot,ncol=1,heights = c(10, 1))
+  }else if(legend_position=="top"){
+    p_return <- grid.arrange(arrenged_plot,common_legend,ncol=1,heights = c(10, 1))
+  }
+  p_return <- 
+  return(p_return)
+}
 ```
 
 \newpage
