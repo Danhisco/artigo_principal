@@ -153,17 +153,17 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 ```
 
 
-# Texto e tabelas
+<!-- # Texto e tabelas -->
 
-Todas as análises dos dados foram feitas em R (REF).
+<!-- Todas as análises dos dados foram feitas em R (REF). -->
 
-## GLMM binomial
+<!-- ## GLMM binomial -->
 
-Utilizamos funções do pacote lme4 (REF) para ajustar os GLMM binomiais. O modelo com estrutura aleatória mais complexa, com 1 intercepto e 1 inclinação no grau de limitação de dispersão por sítio de amostragem e tipo de paisagem hipotética, teve alerta de não convergência e mesmo depois de ajustar com outros otimizadores o alerta permaneceu. Como era um modelo que demorava muito para ajustar não fiz mais explorações com ele. Outro modelo explorado e descartado foi o modelo cheio que interpretava o grau de limitação de dispersão como variável categórica. Esse modelo demorou muito para rodar e sua execução foi interrompida antes de terminar a estimativa dos coeficientes.
-A tabela de seleção, com o delta AICc e peso de evidência, foi obtida usando a função AICctab do pacote bbmle (REF) e os coeficientes de determinação foram obtidos usando a função r.squaredGLMM do pacote MuMIn (REF).
-Avaliamos a qualidade de ajuste do modelo explorando os resíduos quantílicos (FIGURA A2 REF) usados no pacote DHARMa (REF). Também plotamos o predito e o observado (FIGURA A2 REF).
+<!-- Utilizamos funções do pacote lme4 (REF) para ajustar os GLMM binomiais. O modelo com estrutura aleatória mais complexa, com 1 intercepto e 1 inclinação no grau de limitação de dispersão por sítio de amostragem e tipo de paisagem hipotética, teve alerta de não convergência e mesmo depois de ajustar com outros otimizadores o alerta permaneceu. Como era um modelo que demorava muito para ajustar não fiz mais explorações com ele. Outro modelo explorado e descartado foi o modelo cheio que interpretava o grau de limitação de dispersão como variável categórica. Esse modelo demorou muito para rodar e sua execução foi interrompida antes de terminar a estimativa dos coeficientes. -->
+<!-- A tabela de seleção, com o delta AICc e peso de evidência, foi obtida usando a função AICctab do pacote bbmle (REF) e os coeficientes de determinação foram obtidos usando a função r.squaredGLMM do pacote MuMIn (REF). -->
+<!-- Avaliamos a qualidade de ajuste do modelo explorando os resíduos quantílicos (FIGURA A2 REF) usados no pacote DHARMa (REF). Também plotamos o predito e o observado (FIGURA A2 REF). -->
 
-# Figuras 
+<!-- # Figuras  -->
 
 ```{r caption 1}
 cap <- "Relação entre preditoras: p ~ forest sucession. Olhar texto principal  para descrição das variáveis"
@@ -176,20 +176,20 @@ df_plot %>% filter(k==0.05) %>% distinct() %>%
   labs(x="forest succession")
 ```
 
-```{r caption 2}
+```{r caption 2,include=FALSE,eval=FALSE}
 cap <- "Gráficos diagnósticos"
 ```
-```{r fig-DHARMaResidual,fig.cap=cap,fig.pos="H"}
+```{r fig-DHARMaResidual,fig.cap=cap,fig.pos="H",include=FALSE,eval=FALSE}
 oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata",verbose = TRUE)
 l_md_e_start <- get(oname)
 p_plot <- simulateResiduals(l_md_e_start$modelo,n = 1000)
 plot(p_plot)
 ```
 
-```{r caption 3}
+```{r caption 3,include=FALSE,eval=FALSE}
 cap <- "Observado e predito para o número de SADs simuladas congruentes com a SAD observada."
 ```
-```{r fig-preditoObs,fig.cap=cap,fig.pos="H"}
+```{r fig-preditoObs,fig.cap=cap,fig.pos="H",include=FALSE,eval=FALSE}
 oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata",verbose = TRUE)
 l_md_e_start <- get(oname)
 df_obs <- l_md_e_start$modelo@frame[,-1]
