@@ -56,6 +56,7 @@ v_titleS <- 1000
 v_ncol_fatetwrap <- 14
 figHeight=28
 figWidth=40
+textsize=30
 #
 f_z <- function(x) (x-mean(x))/sd(x)
 ##
@@ -343,18 +344,14 @@ Há muita diversidade de padrões entre sítios de amostragem \@ref(fig:GE-nCong
 ```{r caption GE nCong }
 cap <- "Número de SADs simuladas congruentes com a SAD empírica (eixo y). A classificação da SAD simulada como congruente ocorreu quando a comparação entre SADs segundo um teste de Kolmogorov-Smirnov apresentou p-valor igual ou maior do que 0.05. No eixo x há o grau de limitação de dispersão per capita (k). Os pontos são coloridos pelo tipo de paisagem hipotética pressuposta pela simulação. Os paíneis estão organizados pela proporção de cobertura vegetal na paisagem ao redor de 4x4km2."
 ```
-```{r ggplot2code GE nCong,eval=FALSE,include=FALSE,fig.cap=cap}
+```{r ggplot2code GE nCong,eval=TRUE,include=FALSE,cache=TRUE}
 df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
   inner_join(df_p) |> 
   inner_join(df_dados_disponiveis |> 
                filter(forest_succession != "capoeira") %>% 
                select(SiteCode, forest_succession)) %>% 
   arrange(p) |> 
-  mutate(succession = case_when(forest_succession == "primary" ~ "1°",
-                                forest_succession == "secondary" ~ "2°",
-                                forest_succession == "primary/secondary" ~ "1.5°"),
-         label = paste0(SiteCode,", p=",round(p,2)," ,suc=",succession)) %>% 
-  select(-succession)
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
 df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 #
 f_plot <- \(nvresp="nCong",
@@ -371,7 +368,7 @@ f_plot <- \(nvresp="nCong",
       theme(legend.position = "top",
             axis.text=element_text(size=4.5),
             axis.title = element_text(size = 20),
-            strip.text = element_text(size = 4.5, margin = margin())) +
+            strip.text = element_text(size = textsize*1000, margin = margin())) +
             # legend.title=element_text(size=v_titleS),
             # legend.text = element_text(size = v_titleS)) +
       scale_color_manual(values=c("darkred","darkblue","darkgreen"),
@@ -390,56 +387,53 @@ f_plot()
 nvresp="nCong";png_repo = "apendices/analise_dados/figuras/";end_name = "_k_land.hyp_site"
 oname <- load(file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
 l_p <- get(oname)
-p <- ggpubr::ggarrange(plotlist = l_p,nrow=1, common.legend = TRUE, legend="top")
-ggsave(filename = "./secoes_texto/Resultados/figuras/GE_nCong_Site.png",
-       plot = p,width = 40, height = 40, units = "cm")
-# p
-#
-# df_plot %>% filter(land_hyp=="cont",k==0.05) %>% pull(forest_succession) %>% table()
+# p <- ggpubr::ggarrange(plotlist = l_p,nrow=1, common.legend = TRUE, legend="top")
+# ggsave(filename = "./secoes_texto/Resultados/figuras/GE_nCong_Site.png",
+#        plot = p,width = 40, height = 40, units = "cm")
+# plot final
 laymat <- cbind(rep(1,10),
                 c(NA,NA,rep(2,6),NA,NA),
                 c(NA,rep(3,6),NA,NA,NA))
-f_plot <- \(listplot,laymat=laymat,legend_position="top",textsize=10){
-  # legenda comum
-  listplot[[1]] <- listplot[[1]] + 
-    guides(color=guide_legend(title.theme = element_text(size=textsize*1.5),
-                              label.theme = element_text(size=textsize*1.5)))
-  plot_table <- ggplot_gtable(ggplot_build(listplot[[1]])) # get tabular interpretation of plot 
-  index_legend_plot <- which(sapply(plot_table$grobs, function(x) x$name) == "guide-box") #  Mark only legend in plot 
-  common_legend <- plot_table$grobs[[index_legend_plot]] # extract legend 
-  # títulos associados
-  l_title <- llply(listplot,\(li){
-    li <- li + theme(plot.title = element_text(size=textsize*1.2))
-    p_title <- ggplot_gtable(ggplot_build(li))  
-    index_title <- str_which(sapply(p_title$grobs, function(x) x$name),"plot.title")
-    p_title$grobs[[index_title]] 
+legend_position="top"
+# legenda comum
+l_p[[1]] <- l_p[[1]] + 
+  guides(color=guide_legend(title.theme = element_text(size=textsize*1.5),
+                            label.theme = element_text(size=textsize*1.5)))
+plot_table <- ggplot_gtable(ggplot_build(l_p[[1]])) # get tabular interpretation of plot 
+index_legend_plot <- which(sapply(plot_table$grobs, function(x) x$name) == "guide-box") #  Mark only legend in plot 
+common_legend <- plot_table$grobs[[index_legend_plot]] # extract legend 
+# títulos associados
+l_title <- llply(l_p,\(li){
+  li <- li + theme(plot.title = element_text(size=textsize*1.2))
+  p_title <- ggplot_gtable(ggplot_build(li))  
+  index_title <- str_which(sapply(p_title$grobs, function(x) x$name),"plot.title")
+  p_title$grobs[[index_title]] 
+})
+# remoção dos títulos e das legendas
+l_p <- llply(l_p,\(li){
+  # arrumar título
+  p_title <- ggplot_gtable(ggplot_build(li))  
+  index_title <- str_which(sapply(p_title$grobs, function(x) x$name),"plot.title")
+  p_title <- p_title$grobs[[index_title]] 
+  # remoção de legenda e ajuste eixos
+  li +  
+    theme(legend.position = "none",
+          plot.title = element_blank(),
+          axis.title = element_text(size = textsize)) +
+    labs(y="#SADs cong")
+  # # arranjo dos gráficos
   })
-  # remoção dos títulos e das legendas
-  listplot <- llply(listplot,\(li){
-    # arrumar título
-    p_title <- ggplot_gtable(ggplot_build(li))  
-    index_title <- str_which(sapply(p_title$grobs, function(x) x$name),"plot.title")
-    p_title <- p_title$grobs[[index_title]] 
-    # remoção de legenda e ajuste eixos
-    li +  
-      theme(legend.position = "none",
-            plot.title = element_blank(),
-            axis.title = element_text(size = textsize)) +
-      labs(y="#SADs cong")
-    # # arranjo dos gráficos
-  })
-  arrenged_plot <- arrangeGrob(grobs=listplot,layout_matrix = laymat) %>% as_ggplot()
-  arrenged_plot <- arrangeGrob(arrangeGrob(grobs = l_title,nrow = 1),
-                               arrenged_plot,
-                               heights = c(0.5, 10)) %>% as_ggplot()
-  
-  if(legend_position=="bottom"){
-    p_return <- grid.arrange(common_legend,arrenged_plot,ncol=1,heights = c(10, 1))
-  }else if(legend_position=="top"){
-    p_return <- grid.arrange(common_legend,arrenged_plot,ncol=1,heights = c(1, 10))
-  }
-  return(p_return)
+arrenged_plot <- arrangeGrob(grobs=l_p,layout_matrix = laymat) %>% as_ggplot()
+arrenged_plot <- arrangeGrob(arrangeGrob(grobs = l_title,nrow = 1),
+                             arrenged_plot,
+                             heights = c(0.5, 10)) %>% as_ggplot()
+if(legend_position=="bottom"){
+  p <- arrangeGrob(common_legend,arrenged_plot,ncol=1,heights = c(10, 1)) %>% as_ggplot()
+}else if(legend_position=="top"){
+  p <- arrangeGrob(common_legend,arrenged_plot,ncol=1,heights = c(1, 10)) %>% as_ggplot()
 }
+p
+# save(p,file="./dados/Rdata/p_fig6_GE_nCong_Site.Rdata")
 ```
 
 \newpage
