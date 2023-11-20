@@ -47,6 +47,7 @@ library(plyr)
 library(dplyr)
 source("source/nameModel.R")
 source("source/GAMMtools.R")
+source("source/general_tools.R")
 # dados
 # df_dados_disponiveis
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
@@ -181,18 +182,36 @@ df_plot %>% filter(k==0.05) %>% distinct() %>%
 
 
 ## Paisagens Contemporâneas
-
-```{r}
-df_plot <- df_tif_txt %>% inner_join()
-m <- read_table(df$txt.path) |> as.matrix()
-image(m,main=paste0(df$SiteCode,", p=",round(df$p,3)),axes=FALSE)
+```{r caption 2}
+cap <- "Paisagens contemporâneas aos eventos de amostragem da SAD na área amostrada. Mapas de cobertura da coleção 6 do mapbiomas."
+figHeight=28
+figWidth=40
+```
+```{r fig-contempLandscape,fig.cap=cap,fig.pos="H",fig.width=figWidth,fig.height=figHeight}
+v_pngfiles <- list.files(path="./dados/paisagens/png_land_sim/",pattern=".png",full.names = TRUE)
+l_p <- v_pngfiles %>% ll_ggpng()
+grid.arrange(grobs=l_p,ncol=10)
+# 
+# 
+# df_p <- df_tif_txt %>% inner_join(df_plot %>% select(SiteCode,p) %>% distinct())
+# f_plot <- \(df){
+#   m <- read_table(df$txt.path) |> as.matrix()
+#   image(m,
+#         main=paste0(df$SiteCode,", p=",round(df$p,3)),
+#         axes=FALSE,
+#         zlim=c(0,2),
+#         col=terrain.colors(12,rev = TRUE))
+# }
+# par(mfrow=c(11,10),
+#     mar = c(mar=c(0.2,0.2,2.2,0.2)))
+# a_ply(df_p,1,f_plot)
 ```
 
 
 
 <!-- antigo -->
 
-```{r caption 2,include=FALSE,eval=FALSE}
+```{r include=FALSE,eval=FALSE}
 cap <- "Gráficos diagnósticos"
 ```
 ```{r fig-DHARMaResidual,fig.cap=cap,fig.pos="H",include=FALSE,eval=FALSE}
