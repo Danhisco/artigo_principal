@@ -60,7 +60,7 @@ df_sim <- read_csv("dados/df_simulacao.csv")
 df_Urep <- list.files(path = "dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) %>%  
   adply(.,1,data.table::fread,.id=NULL) %>% na.omit()
 # df_U
-df_U <- fread("dados/csv/taxaU/df_U.csv")
+df_U <- data.table::fread("dados/csv/taxaU/df_U.csv")
 # df_contrastes
 df_contrastes <- fread("dados/csv/taxaU/df_contrastes.csv")
 # df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
@@ -133,7 +133,8 @@ df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |>
          k_f=factor(round(k,2))) %>% 
   select(-succession)
 df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
-
+#
+df_tif_txt <- read.csv(file="./dados/csv/df_txt_tif_landscape_paths.csv")
 ```
 
 ```{r trackdown chunk, include=FALSE,eval=FALSE}
@@ -165,6 +166,8 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 <!-- # Figuras  -->
 
+## Gráficos
+
 ```{r caption 1}
 cap <- "Relação entre preditoras: p ~ forest sucession. Olhar texto principal  para descrição das variáveis"
 ```
@@ -175,6 +178,19 @@ df_plot %>% filter(k==0.05) %>% distinct() %>%
   geom_jitter() +
   labs(x="forest succession")
 ```
+
+
+## Paisagens Contemporâneas
+
+```{r}
+df_plot <- df_tif_txt %>% inner_join()
+m <- read_table(df$txt.path) |> as.matrix()
+image(m,main=paste0(df$SiteCode,", p=",round(df$p,3)),axes=FALSE)
+```
+
+
+
+<!-- antigo -->
 
 ```{r caption 2,include=FALSE,eval=FALSE}
 cap <- "Gráficos diagnósticos"

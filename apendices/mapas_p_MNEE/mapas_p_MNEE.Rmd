@@ -28,7 +28,7 @@ library(plyr)
 library(dplyr)
 # df_dados
 df_dados <- read_csv("dados/df_dados_disponiveis.csv") |> 
-  select(SiteCode, effort_ha, Ntotal, S_obs) |> 
+  dplyr::select(SiteCode, effort_ha, Ntotal, S_obs) |> 
   inner_join(data.frame(tif.path = list.files(path="dados/paisagens/paisagens_mapbiomas6_padronizadas",
                                               pattern=".tif",full.names=T),
                         SiteCode = str_extract(list.files(path="dados/paisagens/paisagens_mapbiomas6_padronizadas",
@@ -54,6 +54,8 @@ df_auditoria <- data.frame(txt.path = list.files(path = "dados/simulacao",
                                                  full.names = T)) |>
   mutate(SiteCode = str_extract(txt.path,"(?<=o\\/).*?(?=.txt)")) |>
   inner_join(df_dados,by="SiteCode")
+write_csv(df_auditoria,file="./dados/csv/df_txt_tif_landscape_paths.csv")
+
 # df_aud2
 
 # paisagens sorteadas para usar em SoE

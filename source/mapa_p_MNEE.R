@@ -52,7 +52,7 @@ f_area.simulada <- function(matriz, N, coordenada_central=TRUE,index_janela=8/4)
   }
 }
 # função que aplica as duas funções anteriores e salva o resultado em .txt
-f_landscape_for_MNEE <- function(df,txt_repo = "dados/simulacao//"){
+f_landscape_for_MNEE <- function(df,txt_repo = "dados/simulacao/"){
   # colunas de df:
   # @ tif.path: caminho para o arquivo .tif com o mapa completo da paisagem ao redor
   # @ lado_km: númerico que indica a dimensão da extensão esspacial, por exemplo, 16.02 (km) 
