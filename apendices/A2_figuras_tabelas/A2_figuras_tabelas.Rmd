@@ -48,6 +48,8 @@ library(dplyr)
 source("source/nameModel.R")
 source("source/GAMMtools.R")
 source("source/general_tools.R")
+figHeight=28
+figWidth=40
 # dados
 # df_dados_disponiveis
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
@@ -167,7 +169,22 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 <!-- # Figuras  -->
 
-## Gráficos
+
+
+## Paisagens Contemporâneas
+```{r caption 2}
+cap <- "Paisagens contemporâneas aos eventos de amostragem da SAD na área amostrada. Mapas de cobertura da coleção 6 do mapbiomas."
+```
+```{r fig-contempLandscape,fig.cap=cap,fig.pos="H",fig.width=figWidth,fig.height=figHeight}
+v_pngfiles <- list.files(path="./dados/paisagens/png_land_sim/",pattern=".png",full.names = TRUE)
+l_p <- v_pngfiles %>% ll_ggpng()
+grid.arrange(grobs=l_p,ncol=10)
+```
+
+
+\newpage
+
+## Gráficos Exploratórios
 
 ```{r caption 1}
 cap <- "Relação entre preditoras: p ~ forest sucession. Olhar texto principal  para descrição das variáveis"
@@ -180,32 +197,68 @@ df_plot %>% filter(k==0.05) %>% distinct() %>%
   labs(x="forest succession")
 ```
 
+\newpage
 
-## Paisagens Contemporâneas
-```{r caption 2}
-cap <- "Paisagens contemporâneas aos eventos de amostragem da SAD na área amostrada. Mapas de cobertura da coleção 6 do mapbiomas."
-figHeight=28
-figWidth=40
+## Predito para o contraste na taxa U entre paisagens
+
+```{r ip contrastes ~ p k,fig.height=figHeight,fig.width=figWidth,eval=FALSE,include=FALSE}
+df_plot <- df_intPred |> 
+  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
+         k = k_z*sd(df_ad$k) + mean(df_ad$k),
+         name=factor(name,levels=paste0("efeito_",c("area","frag","contemp")))) |> 
+  select(-contains("_z"),-predito) |> 
+  pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
+# gráficos
+v_range <- range(df_plot$pred)
+v_breaks1 <- c(-0.2,0,0.2,0.5,1)
+f_plot <- function(df){
+  f_ggplot <- function(df,facets=2){
+  ggplot(df,aes(x=p,y=k,z=pred,fill=pred)) +
+    geom_raster() +
+    geom_contour(aes(z=pred),
+                 size=0.5,color="darkblue",
+                 breaks=v_breaks1) +
+    geom_text_contour(aes(z=pred),
+                      breaks=v_breaks1,
+                      label.placer = label_placer_flattest()) +
+    scale_fill_gradient2(low="green",
+                         mid="red",
+                         high="black",
+                         midpoint = 0.5,
+                         limits=v_range,
+                         # round(seq(v_range[1],v_range[2],length.out = 5)[1:4],2)
+                         breaks=v_breaks1) +
+    scale_y_reverse() +
+    theme_classic() +
+    guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
+    coord_cartesian(expand = FALSE) +
+    labs(fill=df$name[1]) +
+    facet_wrap(~label,ncol = facets,scales="free")
+  }
+  l_p <- list()
+  l_p[[1]] <- df |> 
+    filter(label == "Q_0.5") |>
+    f_ggplot() + labs(x="")
+  l_p[[2]] <- df |> 
+    filter(label != "Q_0.5") |>
+    f_ggplot()
+  ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+}
+l_plot <- dlply(df_plot,"name",f_plot)
+p <- grid.arrange(grobs=l_plot,ncol=3)
+ggsave("figuras/FigFinal_contrastes.png",p,
+       width = 13,
+       height = 9)
 ```
-```{r fig-contempLandscape,fig.cap=cap,fig.pos="H",fig.width=figWidth,fig.height=figHeight}
-v_pngfiles <- list.files(path="./dados/paisagens/png_land_sim/",pattern=".png",full.names = TRUE)
-l_p <- v_pngfiles %>% ll_ggpng()
-grid.arrange(grobs=l_p,ncol=10)
-# 
-# 
-# df_p <- df_tif_txt %>% inner_join(df_plot %>% select(SiteCode,p) %>% distinct())
-# f_plot <- \(df){
-#   m <- read_table(df$txt.path) |> as.matrix()
-#   image(m,
-#         main=paste0(df$SiteCode,", p=",round(df$p,3)),
-#         axes=FALSE,
-#         zlim=c(0,2),
-#         col=terrain.colors(12,rev = TRUE))
-# }
-# par(mfrow=c(11,10),
-#     mar = c(mar=c(0.2,0.2,2.2,0.2)))
-# a_ply(df_p,1,f_plot)
+```{r}
+cap <- "Predito para os contrastes na taxa U entre paisagens hipotéticas. Para cada sítio e grau de limitação de dispersão foi calculada a diferença entre a média da taxa U entre pares de paisagens hipotéticas e então dividido pela média na paisagem idealizada. Os contrastes são: área (sem fragmentação -  idealizado); fragmentação per se (contemporâneo - sem fragmentação); contemporaneidade (contemporâneo - idealizado). Um GAMM com distribuição normal foi ajustado aos contrastes observados (com splines indivíduais para p e k, tensor entre p e k, e com splines aleatórios de k para cada sítio de amostragem), o intervalo de predição foi construído pressupondo que os coeficientes do GAMM podem ser bem aproximados por uma normal multivariada e então 10 mil sorteios foram feitos dessa normal multivariada e para cada uma foi obtido uma predição. Na figura há os quantis da distribuição de predições."
 ```
+```{r contrastes-taxaU,fig.cap=cap}
+p <- ll_ggpng("figuras/FigFinal_contrastes.png")[[1]]
+p
+```
+
 
 
 
