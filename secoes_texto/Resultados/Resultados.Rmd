@@ -56,7 +56,7 @@ v_titleS <- 1000
 v_ncol_fatetwrap <- 14
 figHeight=28
 figWidth=40
-textsize=30
+textsize=1
 #
 f_z <- function(x) (x-mean(x))/sd(x)
 ##
@@ -359,7 +359,8 @@ f_plot <- \(nvresp="nCong",
             end_name = "_k_land.hyp_site"){
   f_ <- \(dfi){
     dfi %>% 
-      ggplot(aes(x=k,y=.data[[nvresp]],color=land_hyp)) +
+      ggplot(aes(x=k,y=.data[[nvresp]],color=land_hyp,fill = p)) +
+      geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf)) +
       geom_point(alpha=0.5) +
       geom_line(alpha=0.5) +
       scale_x_reverse() +
@@ -368,11 +369,13 @@ f_plot <- \(nvresp="nCong",
       theme(legend.position = "top",
             axis.text=element_text(size=4.5),
             axis.title = element_text(size = 20),
-            strip.text = element_text(size = textsize*1000, margin = margin())) +
+            strip.text = element_text(size = textsize, margin = margin())) +
             # legend.title=element_text(size=v_titleS),
             # legend.text = element_text(size = v_titleS)) +
       scale_color_manual(values=c("darkred","darkblue","darkgreen"),
                          labels=c("contemporâneo","idealizado","sem fragmentação")) +
+      scale_fill_gradientn(colours = terrain.colors(10),trans="reverse",values = c(0,0.5,1),guide = "none") +
+      # scale_fill_gradient2(low="white",mid = "brown",high="green",midpoint = 0.5,limi)
       facet_wrap(~label,ncol=5)
   }
   l_p <- dlply(df_plot,"forest_succession",f_)
@@ -392,19 +395,19 @@ l_p <- get(oname)
 #        plot = p,width = 40, height = 40, units = "cm")
 # plot final
 laymat <- cbind(rep(1,10),
-                c(NA,NA,rep(2,6),NA,NA),
-                c(NA,rep(3,6),NA,NA,NA))
+                c(NA,rep(2,6),NA,NA,NA),
+                c(rep(3,6),NA,NA,NA,NA))
 legend_position="top"
 # legenda comum
-l_p[[1]] <- l_p[[1]] + 
-  guides(color=guide_legend(title.theme = element_text(size=textsize*1.5),
-                            label.theme = element_text(size=textsize*1.5)))
+# l_p[[1]] <- l_p[[1]] + 
+#   guides(color=guide_legend(title.theme = element_text(size=textsize*1.5),
+#                             label.theme = element_text(size=textsize*1.5)))
 plot_table <- ggplot_gtable(ggplot_build(l_p[[1]])) # get tabular interpretation of plot 
 index_legend_plot <- which(sapply(plot_table$grobs, function(x) x$name) == "guide-box") #  Mark only legend in plot 
 common_legend <- plot_table$grobs[[index_legend_plot]] # extract legend 
 # títulos associados
 l_title <- llply(l_p,\(li){
-  li <- li + theme(plot.title = element_text(size=textsize*1.2))
+  # li <- li + theme(plot.title = element_text(size=textsize))
   p_title <- ggplot_gtable(ggplot_build(li))  
   index_title <- str_which(sapply(p_title$grobs, function(x) x$name),"plot.title")
   p_title$grobs[[index_title]] 
@@ -432,7 +435,15 @@ if(legend_position=="bottom"){
 }else if(legend_position=="top"){
   p <- arrangeGrob(common_legend,arrenged_plot,ncol=1,heights = c(1, 10)) %>% as_ggplot()
 }
-p
+p2 <- df_plot %>% filter(k==0.05) %>% distinct() %>% 
+  ggplot(aes(x=forest_succession,y=p,color=p)) +
+  geom_boxplot() +
+  geom_jitter() +
+  scale_color_gradientn(colours = terrain.colors(10),trans="reverse",values = c(0,0.5,1),guide = "none") +
+  labs(x="forest succession") +
+  theme(legend.position = "top") +
+  theme_grey()
+p + annotation_custom(ggplotGrob(p2),xmin = 1, xmax = 3, ymin = -0.3, ymax = 0.6)
 # save(p,file="./dados/Rdata/p_fig6_GE_nCong_Site.Rdata")
 ```
 
