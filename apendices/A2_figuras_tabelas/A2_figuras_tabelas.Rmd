@@ -173,7 +173,7 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 ## Paisagens Contemporâneas
 ```{r caption 2}
-cap <- "Paisagens contemporâneas aos eventos de amostragem da SAD na área amostrada. Mapas de cobertura da coleção 6 do mapbiomas."
+cap <- "Paisagens contemporâneas (4x4 km2) aos eventos de amostragem da SAD na área amostrada. Mapas de cobertura da coleção 6 do mapbiomas."
 ```
 ```{r fig-contempLandscape,fig.cap=cap,fig.pos="H",fig.width=figWidth,fig.height=figHeight}
 v_pngfiles <- list.files(path="./dados/paisagens/png_land_sim/",pattern=".png",full.names = TRUE)
