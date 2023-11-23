@@ -184,12 +184,12 @@ grid.arrange(grobs=l_p,ncol=10)
 
 \newpage
 
-## Gráficos Exploratórios
+<!-- ## Gráficos Exploratórios -->
 
 ```{r caption 1}
 cap <- "Relação entre preditoras: p ~ forest sucession. Olhar texto principal  para descrição das variáveis"
 ```
-```{r fig-p-k,fig.cap=cap,fig.pos="H"}
+```{r fig-p-k,fig.cap=cap,fig.pos="H",eval=FALSE,include=FALSE}
 df_plot %>% filter(k==0.05) %>% distinct() %>% 
   ggplot(aes(x=forest_succession,y=p)) +
   geom_boxplot() +
