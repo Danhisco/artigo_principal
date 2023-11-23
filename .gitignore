@@ -14,3 +14,4 @@ dados/
 **/*.log
 **/*.tex
 .Rproj.user
+*.Rdata
