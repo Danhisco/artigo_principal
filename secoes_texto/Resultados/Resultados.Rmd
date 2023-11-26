@@ -23,6 +23,8 @@ text-align: justify}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
                       fig.align='center',tab.align='center')
 # pacotes
+library(grid)
+library(gtable)
 library(ggpubr)
 # library(gt)
 # library(dagitty)
@@ -385,29 +387,19 @@ f_plot <- \(nvresp="nCong",
   save(l_p,file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
 }
 f_plot()
-```
-```{r GE-nCong,eval=TRUE,fig.height=figHeight,fig.width=figWidth,fig.cap=cap,fig.pos="H"}
+########
 nvresp="nCong";png_repo = "apendices/analise_dados/figuras/";end_name = "_k_land.hyp_site"
 oname <- load(file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
 l_p <- get(oname)
-# p <- ggpubr::ggarrange(plotlist = l_p,nrow=1, common.legend = TRUE, legend="top")
-# ggsave(filename = "./secoes_texto/Resultados/figuras/GE_nCong_Site.png",
-#        plot = p,width = 40, height = 40, units = "cm")
-# plot final
 laymat <- cbind(rep(1,10),
                 c(NA,rep(2,6),NA,NA,NA),
                 c(rep(3,6),NA,NA,NA,NA))
 legend_position="top"
-# legenda comum
-# l_p[[1]] <- l_p[[1]] + 
-#   guides(color=guide_legend(title.theme = element_text(size=textsize*1.5),
-#                             label.theme = element_text(size=textsize*1.5)))
 plot_table <- ggplot_gtable(ggplot_build(l_p[[1]])) # get tabular interpretation of plot 
 index_legend_plot <- which(sapply(plot_table$grobs, function(x) x$name) == "guide-box") #  Mark only legend in plot 
 common_legend <- plot_table$grobs[[index_legend_plot]] # extract legend 
 # títulos associados
 l_title <- llply(l_p,\(li){
-  # li <- li + theme(plot.title = element_text(size=textsize))
   p_title <- ggplot_gtable(ggplot_build(li))  
   index_title <- str_which(sapply(p_title$grobs, function(x) x$name),"plot.title")
   p_title$grobs[[index_title]] 
@@ -437,26 +429,24 @@ if(legend_position=="bottom"){
 }
 l_plot <- list()
 l_plot[[1]] <- p %>% as_ggplot()
-l_plot[[2]] <- df_plot %>% filter(k==0.05) %>% distinct() %>% 
-  ggplot(aes(x=forest_succession,y=p,color=p)) +
+l_plot[[2]] <- df_plot %>% filter(k==0.05) %>% distinct() %>%
+  ggplot(aes(x=forest_succession,y=p,colour=p)) +
   geom_boxplot() +
   geom_jitter(size=2) +
-  scale_color_gradientn(colours = terrain.colors(10),trans="reverse",values = c(0,0.5,1),guide = "none") +
-  labs(x="forest succession") +
-  theme(legend.position = "top") +
-  theme_grey()
-grid.arrange(grobs=l_plot,layout_matrix=rbind(c(1,1,1),
-                                              c(1,1,1),
-                                              c(1,1,1),
-                                              c(1,1,1),
-                                              c(1,1,1),
-                                              c(NA,NA,2)))
-# p + annotation_custom(ggplotGrob(p2),xmin = 1, xmax = 3, ymin = -0.3, ymax = 0.6)
-# p_final <- gtable::gtable_add_grob(p, ggplotGrob(p2), t = 8, l=7)
-# grid.newpage()
-# grid::grid.draw(p_final)
-# as_ggplot(p_final)
-# save(p,file="./dados/Rdata/p_fig6_GE_nCong_Site.Rdata")
+  theme_grey() +
+  scale_colour_gradientn(colours = terrain.colors(10),trans="reverse",values = c(0,0.5,1),
+                         guide=guide_colourbar(reverse = TRUE,barheight = 10)) +
+  theme(legend.position = "left",
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.title.y = element_blank()) +
+  labs(x="forest succession")
+l_plot[[1]]
+print(l_plot[[2]],vp=viewport(0.70, 0, 0.3, 0.3,just = "bottom"))
+```
+```{r GE-nCong,eval=TRUE,fig.height=figHeight,fig.width=figWidth,fig.cap=cap,fig.pos="H"}
+p <- ll_ggpng("./figuras/fig6_final.png")[[1]]
+p
 ```
 
 \newpage
