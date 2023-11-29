@@ -390,7 +390,7 @@ nvresp="nCong";png_repo = "apendices/analise_dados/figuras/";end_name = "_k_land
 oname <- load(file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
 l_p <- get(oname)
 laymat <- cbind(rep(1,10),
-                c(NA,rep(2,6),NA,NA,NA),
+                c(rep(2,6),NA,NA,NA,NA),
                 c(rep(3,6),NA,NA,NA,NA))
 legend_position="top"
 plot_table <- ggplot_gtable(ggplot_build(l_p[[1]])) # get tabular interpretation of plot 
@@ -433,22 +433,32 @@ l_plot[[2]] <- df_plot %>% filter(k==0.05,land_hyp=="cont") %>% distinct() %>%
   geom_jitter(size=2) +
   theme_grey() +
   scale_colour_gradientn(colours = terrain.colors(10),trans="reverse",values = c(0,0.5,1),
-                         guide=guide_colourbar(reverse = TRUE,barheight = 10)) +
+                         guide=guide_colourbar(reverse = TRUE,barheight = 15)) +
+  scale_x_discrete(labels=c("secondary" = "2a", "primary" = "1a", "primary/secondary"="1a/2a")) +
   theme(legend.position = "left",
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.title.y = element_blank(),
+        # axis.text.y=element_blank(),
+        # axis.ticks.y=element_blank(),
+        # axis.title.y = element_blank(),
         axis.title.x = element_blank()) +
   labs(x="forest succession")
+save(l_plot,file="./figuras/fig6_final.Rdata")
+#
+v_size = 3
+# v_w <- 860
+png("./figuras/fig6_final.png",width = 860 * v_size, height = 792 * v_size,res = 72 * v_size)
 l_plot[[1]]
-print(l_plot[[2]],vp=viewport(0.70, 0, 0.3, 0.3,just = "bottom"))
+print(l_plot[[2]],vp=viewport(0.85, 0, 0.3, 0.3,just = "bottom"))
+dev.off()
 ```
 ```{r caption GE nCong }
 cap <- "Número de SADs simuladas congruentes com a SAD empírica (eixo y). A classificação da SAD simulada como congruente ocorreu quando a comparação entre SADs segundo um teste de Kolmogorov-Smirnov apresentou p-valor igual ou maior do que 0.05. No eixo x há o grau de limitação de dispersão per capita (k). Os pontos são coloridos pelo tipo de paisagem hipotética pressuposta pela simulação. Os paíneis estão organizados pela proporção de cobertura vegetal na paisagem ao redor de 4x4km2."
 ```
-```{r GE-nCong,eval=TRUE,fig.height=figHeight,fig.width=figWidth,fig.cap=cap,fig.pos="H",cache=FALSE}
+```{r GE-nCong,eval=TRUE,fig.height=figHeight-4,fig.width=figWidth,fig.cap=cap,fig.pos="H",cache=FALSE}
 p <- ll_ggpng("./figuras/fig6_final.png")[[1]]
 p
+# load("./figuras/fig6_final.Rdata")
+# l_plot[[1]]
+# print(l_plot[[2]],vp=viewport(0.70, 0, 0.3, 0.3,just = "bottom"))
 ```
 
 \newpage
