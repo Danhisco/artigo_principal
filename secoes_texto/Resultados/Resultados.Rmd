@@ -340,8 +340,15 @@ __\@ref(fig:GE-Urep-sitio-k-land)__  (\@ref(fig:GE-sitios-amostrados))
 
 ## Descrição do padrão observado
 
-Há muita diversidade de padrões entre sítios de amostragem  (fig. \@ref(fig:GE-nCong)). Em alguns há pouca variação na congruência da SAD simulada e predita, nesses casos, em geral  com boa congruência para todos os graus de limitação de dispersão e tipos de paisagens (fig. \@ref(fig:GE-nCong)). Em outros há variação na congruência com a variação no grau de limitação de dispersão, nesses casos pode existir variabilidade entre tipos de paisagens hipotéticas, em que o tipo de paisagem hipotética com melhor congruência pode variar entre sítios (fig. \@ref(fig:GE-nCong)). Ao ordenar os gráficos dos sítios por porcentagem de cobertura vegetal na paisagem de 4x4km (p) é possível observar que os sítios com pouca perda de habitat não apresentam diferença entre os tipos de paisagens hipotéticas (fig. \@ref(fig:GE-nCong)). A partir de um valor de p é possível observar diferença entre tipos de paisagens (fig. \@ref(fig:GE-nCong)). O simulado nas paisagens idealizadas e sem isolamento estrutural em geral apresentam diferença menor e o simulado na paisagem contemporânea pode apresentam maior diferença em alguns graus de limitação de dispersão (fig. \@ref(fig:GE-nCong)). 
+Na figura \@ref(fig:GE-nCong) há os gráficos de congruência da SAD simulada e observada (número de SADs simuladas congruentes com a SAD observada) em cada sítio de amostragem. No eixo x há o grau de limitação de dispersão per capita (k, proporção de propágulos que permanece até a vizinhança imediata da progenitora). O fundo dos painéis está colorido pela proporção de cobertura vegetal (p). Os painéis estão agrupados pela classe de estado sucessional da base de dados TreeCo. No canto inferior direito a distribuição de sítios em função de p e da classe de sucessão. 
+Em paisagens com cobertura vegetal abaixo de 0.92 é possível observar, em alguns graus de limitação de dispersão, diferença no predito entre paisagens hipotéticas, apesar da similaridade. A diferença entre paisagens hipotéticas pode aumentar com a redução da cobertura vegetal.  O predito em paisagens idealizadas e sem fragmentação apresenta menor divergência.  Em geral, o predito em paisagens contemporâneas pode apresentar congruência melhor ou pior, com maior diferença das outras duas paisagens hipotéticas, em graus de limitação de dispersão mais brandos. Existe muita diversidade entre sítios, mas podemos classificar os padrões de congruência com o observado em tipos: sempre bom ou ruim; ruim ou bom em graus de limitação de dispersão brandos; ruim ou bom em graus de limitação de dispersão intermediários. Ou seja, pode apresentar variabilidade em todo o gradiente de limitação de dispersão simulada, com maior variabilidade em graus brandos de limitação de dispersão, seguido de graus severos, e menor variabilidade em graus de limitação intermediários. A classe sucessional do sítio de amostragem parece aumentar a variabilidade no padrão de congruência: em sítios primary e secondary, paisagens contemporâneas parecem ser tão boas quanto ruins; em sítios secondary, paisagens idealizadas tendem a ser melhores
 
+
+
+Há muita diversidade de padrões entre sítios de amostragem na figura \@ref(fig:GE-nCong). Em alguns há pouca variação na congruência da SAD simulada e predita, nesses casos, em geral  com boa congruência para todos os graus de limitação de dispersão e tipos de paisagens (figura \@ref(fig:GE-nCong)). Em outros há variação na congruência com a variação no grau de limitação de dispersão, nesses casos pode existir variabilidade entre tipos de paisagens hipotéticas, em que o tipo de paisagem hipotética com melhor congruência pode variar entre sítios (figura \@ref(fig:GE-nCong)). Ao ordenar os gráficos dos sítios por percentagem de cobertura vegetal na paisagem de 4x4km (p) e classe de sucessão ecológica é possível observar que os sítios com pouca perda de habitat não apresentam diferença entre os tipos de paisagens hipotéticas (figura \@ref(fig:GE-nCong)). A partir de um valor de p é possível observar diferenças entre tipos de paisagens (figura \@ref(fig:GE-nCong)). 
+
+
+O simulado nas paisagens idealizadas e sem isolamento estrutural em geral apresentam diferença menor e o simulado na paisagem contemporânea pode apresentar maior diferença em alguns graus de limitação de dispersão (figura \@ref(fig:GE-nCong)). 
 
 
 ```{r ggplot2code GE nCong,eval=TRUE,include=FALSE,cache=TRUE}
@@ -478,11 +485,14 @@ v_cong <- df_class$Cong %>% unique()
 df_class <- df_class %>% mutate(
   classi_land = case_when(land_diff %in% c("similar","igual") ~ "similares",
                           land_diff %in% v_landdiff[str_which(v_landdiff,"contemp")] ~ "contemp. dif.", 
-                          land_diff %in% v_landdiff[str_which(v_landdiff,"ideal")] ~ "ideal. dif.",
-                          land_diff == "sem frag pior" ~ "sem frag. dif."),
+                          land_diff %in% v_landdiff[str_which(v_landdiff,"ideal")] ~ "ideal.\ndif.",
+                          land_diff == "sem frag pior" ~ "sem frag.\ndif."),
+  classi_land2 = case_when(land_diff %in% v_landdiff[str_which(v_landdiff,"contemp")] ~ gsub("contemp ","cont. \n",land_diff),
+                           TRUE ~ classi_land),
   classi_cong = case_when(Cong %in% c("ruim exceto em graus brandos","melhor em graus brandos") ~ "boa em brandos",
                           Cong == "ruim em intermediário e boa em graus brandos" ~ "ruim em intermed",
-                          TRUE ~ Cong))
+                          TRUE ~ Cong)) %>% 
+  select(-land_diff,-Cong)
 df_class$classi_cong <- gsub(" graus","",df_class$classi_cong) %>% 
   gsub("intermediários","intermed",.) %>% 
   gsub(" em"," em\n",.)
@@ -502,10 +512,12 @@ df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 df_plot <- inner_join(df_plot,df_class) %>% 
   inner_join(.,df_dados_disponiveis %>% select(SiteCode, lat:long_correct))
 #
-v_labels <- c("classi_land"="a) Diferença entre paisagens","classi_cong"="b) Congruência do modelo neutro",
+v_labels <- c("classi_land2"="a) Diferença entre paisagens","classi_cong"="b) Congruência do modelo neutro",
               "p"="c) % cobertura vegetal (p)","forest_succession"="d) classe de tempo desde o último dist. no local")
 l_vcolors <- list()
-l_vcolors[[1]] <- c("similares"="black","sem frag. dif."="#003300","contemp. dif."="#CC0000","ideal. dif."="darkblue")
+# l_vcolors[[1]] <- c("similares"="black","sem frag. dif."="#003300","contemp. dif."="#CC0000","ideal. dif."="darkblue")
+l_vcolors[[1]] <- c("similares"="black","sem frag.\ndif."="#003300","ideal.\ndif."="darkblue",
+                    "cont. \nmelhor"="darkred","cont. \npior"="#E69F00","cont. \ndiferente"="darkgrey")
 l_vcolors[[2]] <- c("boa"="#003300","boa exceto em\n brandos"="yellow","boa em\n intermed"="darkblue","boa em\n brandos"="#CCCCCC","ruim em\n intermed"="#CC0000","ruim"="#FF0000")
 l_vcolors[[3]] <- NA
 l_vcolors[[4]] <- c("secondary"="darkblue","primary/secondary"="darkred","primary"="darkgreen")
@@ -513,7 +525,7 @@ names(l_vcolors) <- names(v_labels)
 #
 f_plot <- \(cname){
   v_colors <- l_vcolors[[cname]]
-  df_plot |> 
+  p <- df_plot |> 
   mutate(lat=ifelse(is.na(lat),lat_correct,lat),
          long=ifelse(is.na(long),long_correct,long)) %>% 
   filter(k==0.05,land_hyp=="cont") %>% 
@@ -522,9 +534,23 @@ f_plot <- \(cname){
     {if(cname=="p") scale_colour_gradientn(colours = terrain.colors(10),
                                            trans="reverse") else scale_color_manual(values=v_colors)} +
     theme_light() +
-    theme(legend.position = "right") +
-    labs(subtitle = v_labels[cname],
-         color="")  
+    theme(legend.position = c(.95, .5),
+          legend.title = element_blank(),
+          # aspect.ratio = 1,
+          legend.justification = c("right", "top"),
+          legend.box.just = "right",
+          legend.margin = margin(0, 0, 0, 0)
+          # legend.background = element_blank(),
+          # legend.box.background = element_rect(colour = "black")
+          ) +
+    # guides(color = guide_legend(override.aes = list(size = 1))) +
+    labs(subtitle = v_labels[cname])
+  p_return <- if(cname!="p"){
+    p + theme(legend.background = element_blank(),legend.box.background = element_rect(colour = "black"))
+  }else{
+    p
+  }
+  return(p_return)
 }
 l_p <- alply(names(v_labels),1,f_plot)
 grid.arrange(grobs=l_p,ncol=2)
