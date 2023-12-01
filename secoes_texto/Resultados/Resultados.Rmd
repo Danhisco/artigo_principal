@@ -452,7 +452,7 @@ save(l_plot,file="./figuras/fig6_final.Rdata")
 #
 v_size = 3
 # v_w <- 860
-png("./figuras/fig6_final.png",width = 860 * v_size, height = 792 * v_size,res = 72 * v_size)
+png("./figuras/fig6_final.png",width = 743 * v_size, height = 712 * v_size,res = 72 * v_size)
 l_plot[[1]]
 print(l_plot[[2]],vp=viewport(0.85, 0, 0.3, 0.3,just = "bottom"))
 dev.off()
@@ -460,7 +460,7 @@ dev.off()
 ```{r caption GE nCong }
 cap <- "Número de SADs simuladas congruentes com a SAD empírica (eixo y). A classificação da SAD simulada como congruente ocorreu quando a comparação entre SADs segundo um teste de Kolmogorov-Smirnov apresentou p-valor igual ou maior do que 0.05. No eixo x há o grau de limitação de dispersão per capita (k). Os pontos são coloridos pelo tipo de paisagem hipotética pressuposta pela simulação. Os paíneis estão organizados pela proporção de cobertura vegetal na paisagem ao redor de 4x4km2."
 ```
-```{r GE-nCong,eval=TRUE,fig.height=figHeight-4,fig.width=figWidth,fig.cap=cap,fig.pos="H",cache=FALSE}
+```{r GE-nCong,eval=TRUE,fig.height=10,fig.width=figWidth,fig.cap=cap,fig.pos="H",cache=FALSE}
 p <- ll_ggpng("./figuras/fig6_final.png")[[1]]
 p
 # load("./figuras/fig6_final.Rdata")
@@ -534,7 +534,7 @@ f_plot <- \(cname){
     {if(cname=="p") scale_colour_gradientn(colours = terrain.colors(10),
                                            trans="reverse") else scale_color_manual(values=v_colors)} +
     theme_light() +
-    theme(legend.position = c(.95, .5),
+    theme(legend.position = c(.95, .35),
           legend.title = element_blank(),
           # aspect.ratio = 1,
           legend.justification = c("right", "top"),
