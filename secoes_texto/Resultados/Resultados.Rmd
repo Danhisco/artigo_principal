@@ -518,7 +518,7 @@ l_vcolors <- list()
 # l_vcolors[[1]] <- c("similares"="black","sem frag. dif."="#003300","contemp. dif."="#CC0000","ideal. dif."="darkblue")
 l_vcolors[[1]] <- c("similares"="black","sem frag.\ndif."="#003300","ideal.\ndif."="darkblue",
                     "cont. \nmelhor"="darkred","cont. \npior"="#E69F00","cont. \ndiferente"="darkgrey")
-l_vcolors[[2]] <- c("boa"="#003300","boa exceto em\n brandos"="yellow","boa em\n intermed"="darkblue","boa em\n brandos"="#CCCCCC","ruim em\n intermed"="#CC0000","ruim"="#FF0000")
+l_vcolors[[2]] <- c("boa"="#003300","boa exceto em\n brandos"="yellow","boa em\n intermed"="darkblue","boa em\n brandos"="purple","ruim em\n intermed"="#CC0000","ruim"="#FF0000")
 l_vcolors[[3]] <- NA
 l_vcolors[[4]] <- c("secondary"="darkblue","primary/secondary"="darkred","primary"="darkgreen")
 names(l_vcolors) <- names(v_labels)
@@ -563,6 +563,16 @@ grid.arrange(grobs=l_p,ncol=2)
 
 
 A figura \@ref(fig:GE-coordenadas-preditoras) apresenta a avaliação visual dos padrão observado na figura \@ref(fig:GE-nCong)
+
+<!-- ```{r estudo shapefile} -->
+<!-- library(sf) -->
+<!-- df_geomAF <- sf::st_read("./dados/shapefiles/FlorestaAtlantica_limites/biome_border.shx") -->
+<!-- df_geomAF %>%  -->
+<!--   ggplot() + -->
+<!--   geom_sf() -->
+<!-- ``` -->
+
+
 
 <!-- shapefile do terrabrasilis do INPE (http://terrabrasilis.dpi.inpe.br/en/download-2/) -->
 
