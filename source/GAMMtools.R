@@ -64,9 +64,14 @@ f_PredInt.GAMM <- \(gamm,
   set.seed(1)
   nus <- rnorm(num_beta_vecs * length(beta))
   beta_sims <- beta + t(Cv) %*% matrix(nus, nrow = length(beta), ncol = num_beta_vecs)
-  matrix_lprediction <- predict(gamm,type="lpmatrix",
-                                exclude = v_exclude,
-                                newdata=data,newdata.guaranteed=TRUE) 
+  if(is.null(v_exclude)){
+    matrix_lprediction <- predict(gamm,type="lpmatrix",
+                                  newdata=data,newdata.guaranteed=TRUE)
+  }else{
+    matrix_lprediction <- predict(gamm,type="lpmatrix",
+                                  exclude = v_exclude,
+                                  newdata=data,newdata.guaranteed=TRUE)   
+  }
   predict_link <- matrix_lprediction %*% beta_sims
   df_pred <- t(apply(predict_link,1,\(X) quantile(X,probs = quantiles))) %>% 
     as.data.frame()

@@ -184,18 +184,96 @@ grid.arrange(grobs=l_p,ncol=10)
 
 \newpage
 
-<!-- ## Gráficos Exploratórios -->
-
-```{r caption 1}
-cap <- "Relação entre preditoras: p ~ forest sucession. Olhar texto principal  para descrição das variáveis"
-```
-```{r fig-p-k,fig.cap=cap,fig.pos="H",eval=FALSE,include=FALSE}
-df_plot %>% filter(k==0.05) %>% distinct() %>% 
+```{r preditoras empiricas criacao codigo,eval=FALSE,include=FALSE}
+# ajuste dos modelos
+df_md <- df_plot %>% select(SiteCode,forest_succession,p) %>% distinct() %>% 
+  mutate(logit_p = car::logit(p=p))
+l_md <- list()
+l_md[[1]] <- lm(formula = logit_p ~ forest_succession,data = df_md)
+l_md[[2]] <- lm(formula = logit_p ~ 1,data = df_md)
+names(l_md) <- c("~forest suscession","~1")
+# construção dos dados
+## tabela de seleção
+df_AICctab <- AICctab(l_md,weights=TRUE) %>% as.data.frame()
+df_AICctab$modelo <- row.names(df_AICctab)
+md_p_fsc <- l_md[[row.names(df_AICctab)[1]]]
+row.names(df_AICctab) <- NULL
+df_AICctab$R2 <- sapply(l_md,\(x) summary(x)$adj.r.squared)
+df_AICctab <- df_AICctab %>% relocate(modelo) %>% mutate(across(2:5,\(x) round(x,digits=3)),
+                                                         R2 = R2*100) %>% 
+  rename(`R2(%)`=R2)
+## tabela do modelo mais plausível
+df_plot1 <- broom::tidy(md_p_fsc) %>% 
+  mutate(`IC upp` = estimate + std.error,`IC low` = estimate - std.error) %>% 
+  select(-c(std.error:p.value)) %>% 
+  mutate(across(c(-term),\(x) exp(x)/(1+exp(x)))) %>% 
+  pivot_longer(-term) %>% 
+  rename(forest_succession = term) %>%
+  mutate(forest_succession = case_when(forest_succession == "(Intercept)" ~ "primary",
+                                       forest_succession == "forest_successionprimary/secondary" ~ "primary/secondary",
+                                       TRUE ~ "secondary"))
+df_table <- broom::tidy(md_p_fsc) %>% 
+  mutate(`IC upp` = estimate + std.error,`IC low` = estimate - std.error) %>% 
+  select(-c(std.error:statistic)) %>%
+  mutate(across(c(-term,-p.value),\(x) exp(x)/(1+exp(x)))) %>% 
+  rename(`forest succession` = term) %>%
+  relocate(p.value,.after = last_col()) %>% 
+  mutate(`forest succession` = case_when(`forest succession` == "(Intercept)" ~ "primary",
+                                         `forest succession` == "forest_successionprimary/secondary" ~ "primary/secondary",
+                                          TRUE ~ "secondary")) %>% 
+  mutate(across(2:4,\(x) round(x,3)))
+df_p2 <- data.frame(x = rep(1:3,1),
+                    y_0 = df_plot1 %>% filter(name=="IC low") %>% pull(value),
+                    y_1 = df_plot1 %>% filter(name=="IC upp") %>% pull(value))
+# obj para ggplot2
+v_colors <- c("black",rep("darkred",2))
+names(v_colors) <- df_plot1$name %>% unique()
+# gráficos
+library("ggpmisc")
+l_p <- list()
+l_p[[1]] <- ggplot() + theme_void() + annotate(geom="table",x=1,y=1,label = list(df_AICctab)) + 
+  labs(title="Seleção de Modelos",subtitle = "~N(logit(p),sd)") +
+  theme(plot.title = element_text(hjust = 0.5, vjust = 0),
+        plot.subtitle = element_text(hjust = 0.5, vjust = 0))
+l_p[[2]] <- df_plot %>% 
   ggplot(aes(x=forest_succession,y=p)) +
-  geom_boxplot() +
-  geom_jitter() +
-  labs(x="forest succession")
+  geom_jitter(alpha=0.6) +
+  geom_point(data=df_plot1,aes(x=forest_succession,y=value,color=name),shape="_",size=15) +
+  geom_segment(data = df_p2,aes(x=x,xend=x,y=y_0,yend=y_1,group=x)) +
+  scale_color_manual(values=v_colors) +
+  geom_vline(xintercept = c(1.5,2.5)) + 
+  theme(legend.title = element_blank(),
+        legend.position = "top",
+        legend.margin = margin(0, 0, 0, 0),
+        legend.box.spacing = unit(0, "pt"),
+        plot.title = element_text(hjust = 0.5, vjust = -1),
+        axis.title.x = element_blank()) +
+  guides(color = guide_legend(override.aes = list(size=1))) +
+  labs(x="classe de sucessão",title="Modelo mais plausível")
+l_p[[3]] <- ggplot() +
+  theme_void() +
+  annotate(geom = "table",
+           x = 1,
+           y = 1,
+           label = list(df_table)) + labs(title="Coef. modelo mais plausível") +
+  theme(plot.title = element_text(hjust = 0.5, vjust = 0))
+save(l_p,file="./figuras/figSI2_relacaoPredEmp_normal_logit_p.Rdata")
+load(file="./figuras/figSI2_relacaoPredEmp_normal_logit_p.Rdata")
+grid.arrange(grobs=l_p,layout_matrix=rbind(c(1,3,3),
+                                           c(2,2,2),
+                                           c(2,2,2),
+                                           c(2,2,2),
+                                           c(2,2,2)),
+             top="PREDITORAS EMPÍRICAS")
 ```
+```{r caption preditoras empiricas}
+cap <- "Modelos Lineares Gaussianos da relação entre as preditoras empíricas (p e classe de sucessão). A estimativa da média de p diferem entre as classes de sucessão. Para ajustar os modelo normais p foi transformada usando a função logito."
+```
+```{r preditoras-empiricas-SI,fig.cap=cap,fig.pos="H"}
+p <- ll_ggpng("./figuras/figSI_2.png")[[1]]
+p
+```
+
 
 \newpage
 
