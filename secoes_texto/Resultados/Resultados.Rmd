@@ -347,6 +347,9 @@ Outro ponto importante que não avaliamos é a influência da complexidade espac
 
 
 
+\newpage
+
+
 ```{r ggplot2code GE nCong,eval=TRUE,include=FALSE,cache=TRUE}
 df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
   inner_join(df_p) |> 
@@ -464,7 +467,6 @@ p
 # print(l_plot[[2]],vp=viewport(0.70, 0, 0.3, 0.3,just = "bottom"))
 ```
 
-\newpage
 
 ```{r caption next figure}
 cap <- "Distribuição espacial da avaliação visual e das preditoras empíricas. Na primeira linha (a e b) as classificações visuais do padrão de congruência com o observado: a) diferença entre as paisagens hipotéticas; b) congruência do predito pelo modelo neutro (independente do tipo de paisagem) com a SAD observada ao longo dos graus de dispersão simulados. Na segunda linha (c e d) as preditoras empíricas: c) proporção de cobertura vegetal (p); e d) classe de sucessão ecológica do TreeCo (primary =>80 anos desde o dist., primary/secondary = entre 80 e 50 anos, secondary = entre 50 e 20 anos)"
@@ -557,156 +559,8 @@ grid.arrange(grobs=l_p,ncol=2)
 # p
 ```
 
-```{r tabela com o nome das predioras,eval=FALSE,include=FALSE}
-df_glossario <- data.frame(
-  nome = c("k","p","forest succession","land hyp","SiteCode"),
-  `descrição` = c("grau de limitação de dispersão per capita",
-                  "proporção de cobertura vegetal na extensão de 4x4 km2",
-                  "classe de sucessão ecológica",
-                  "classe da paisagem simulada",
-                  "código do sítio de amostragem"))
-f_kableExtra(df_glossario,string_caption = "Descrição das variáveis preditoras",col_control=FALSE)
-```
 
-```{r caption-ts-re-ncong,eval=FALSE,include=FALSE}
-cap <- "Seleção da Estrutura Aleatória"
-snote <- "estrutura fixa do modelo cheio usada em ambos modelos"
-```
-
-```{r ts-re-ncong,eval=FALSE,include=FALSE}
-df_ts_re <- read.csv("./dados/csv/df_ts_re_nCong.csv")
-f_kableExtra(df_ts_re,string_caption = cap,footnote = snote,col_control = FALSE)
-```
-
-```{r c1,eval=FALSE,include=FALSE}
-cap <- "Seleção da Estrutura Fixa"
-snote <- "estrutura aleatória mais plausível usada em todos os modelos"
-```
-
-```{r ts-ncong,eval=FALSE,include=FALSE}
-df_ts <- read.csv("./dados/csv/df_ts_defesa_congruencias.csv")
-f_kableExtra(df_ts,string_caption = cap,footnote = snote,col_control = FALSE)
-```
-
-```{r c2,eval=FALSE,include=FALSE}
-cap <- "Predito pelo modelo mais plausível para descrever a congruência entre SAD empírica e simulada"
-```
-
-```{r nCong-md-predito,fig.height=8,fig.width=8,fig.cap=cap,fig.pos="H",eval=FALSE,include=FALSE}
-oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata")
-l_md_e_start <- get(oname)
-df_newdata <- l_md_e_start$modelo@frame[,-1]
-df_newdata <- with(df_newdata,{
-  expand.grid(SiteCode = "SPigua1",
-              forest_succession = unique(forest_succession),
-              k_z = seq(min(k_z),max(k_z),length.out=150),
-              land_hyp = unique(land_hyp),
-              p_z = seq(min(p_z),max(p_z),length.out=150))
-})
-# gráficos
-df_newdata$pred <- predict(l_md_e_start$modelo,newdata=df_newdata, re.form=~0)
-v_range <- range(df_newdata$pred)
-# v_breaks1 <- c(-0.2,0,0.2,0.5,1)
-df_newdata %>%
-  mutate(land_hyp = factor(land_hyp,
-                           levels=c("cont","non_frag","ideal"),
-                           labels=c("contemp.","sem frag.","ideal."))) %>% 
-  ggplot(aes(x=p_z,y=k_z,fill=pred,z=pred)) +
-  geom_raster() +
-  geomtextpath::geom_textcontour(aes(z=pred),color="blue",straight = TRUE) +
-  scale_fill_gradient2(low="green",
-                       mid="red",
-                       high="black",
-                       midpoint = 2,
-                       limits=v_range) +
-  scale_y_reverse() +
-  theme_classic() +
-  guides(fill = guide_colourbar(title = "logito")) +
-  coord_cartesian(expand = FALSE) +
-  labs(x="z(p)",y="z(k)") +
-  theme(legend.position = "top") +
-  facet_grid(land_hyp~forest_succession)
-```
-
-```{r exemplo tabela,eval=FALSE,include=FALSE}
-df_tab <- read_csv("./dados/csv/ts_congCont.csv")
-df_tab |> 
-  gt(groupname_col = "pair",
-     # rowname_col = "modelo",
-     rownames_to_stub = F) |> 
-  # tab_header(title = "GAMM usados para descrever a congruência na SAD entre contrastes") |> 
-  fmt_number(columns = dAICc:dev.expl,decimals = 2, suffixing = TRUE) |> 
-  cols_label(dev.expl = "dev. expl.") |> 
-  tab_row_group(label = md("<center><b>Sem Fragmentação <i>per se</i> : Idealizado<b/></center>"),
-                rows = 5:6) |> 
-  tab_row_group(label = md("<center><b>Contemporâneo : Sem Fragmentação <i>per se</i><b/></center>"),
-                rows = 3:4) |>
-  tab_row_group(label = md("<center><b>Contemporâneo : Idealizado</center></b>"),
-                rows = 1:2) |>
-  tab_style(style = cell_fill(color = "gray75"),
-            locations = cells_row_groups(groups = 1:3)) |> 
-  cols_align(align = "right") |> 
-  tab_style(style = cell_text(align = "left",
-                              weight = "bold"),
-            locations = cells_column_labels(columns = modelo:dev.expl)) |> 
-  text_case_when(x == "f(contraste_z)" ~ "~ f(contraste U)",
-                 x == "f(k_z,p_z)" ~ "~ f(k, p)",
-                 .default = "",.locations = cells_body(columns = "modelo")) |> 
-  cols_width(modelo ~ px(130),where(is.numeric) ~ px(100))
-```
-
-```{r ip contrastes ~ p k,fig.height=figHeight,fig.width=figWidth,eval=FALSE,include=FALSE}
-df_plot <- df_intPred |> 
-  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
-         k = k_z*sd(df_ad$k) + mean(df_ad$k),
-         name=factor(name,levels=paste0("efeito_",c("area","frag","conf")))) |> 
-  select(-contains("_z"),-predito) |> 
-  pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
-df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
-# gráficos
-v_range <- range(df_plot$pred)
-v_breaks1 <- c(-0.2,0,0.2,0.5,1)
-f_plot <- function(df){
-  f_ggplot <- function(df,facets=2){
-  ggplot(df,aes(x=p,y=k,z=pred,fill=pred)) +
-    geom_raster() +
-    geom_contour(aes(z=pred),
-                 size=0.5,color="darkblue",
-                 breaks=v_breaks1) +
-    geom_text_contour(aes(z=pred),
-                      breaks=v_breaks1,
-                      label.placer = label_placer_flattest()) +
-    scale_fill_gradient2(low="green",
-                         mid="red",
-                         high="black",
-                         midpoint = 0.5,
-                         limits=v_range,
-                         # round(seq(v_range[1],v_range[2],length.out = 5)[1:4],2)
-                         breaks=v_breaks1) +
-    scale_y_reverse() +
-    theme_classic() +
-    guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
-    coord_cartesian(expand = FALSE) +
-    labs(fill=df$name[1]) +
-    facet_wrap(~label,ncol = facets,scales="free")
-  }
-  l_p <- list()
-  l_p[[1]] <- df |> 
-    filter(label == "Q_0.5") |>
-    f_ggplot() + labs(x="")
-  l_p[[2]] <- df |> 
-    filter(label != "Q_0.5") |>
-    f_ggplot()
-  ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
-}
-l_plot <- dlply(df_plot,"name",f_plot)
-p <- grid.arrange(grobs=l_plot,ncol=3)
-ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
-       width = 13,
-       height = 9)
-```
-
-A figura \@ref(fig:GE-coordenadas-preditoras) apresenta a avaliação visual dos padrão observado na figura \@ref(fig:GE-nCong)
+\newpage
 
 <!-- ```{r estudo shapefile} -->
 <!-- library(sf) -->
