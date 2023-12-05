@@ -195,7 +195,6 @@ load("./dados/Rdata/figA21.Rdata")
 grid.arrange(grobs=l_p,nrow=1)
 ```
 
-
 # Efeito de Escalar
 
 ```{r cap 2}
@@ -245,7 +244,6 @@ O padrão observado quando agrupamos os dados por sítio de amostragem apresenta
 
 Pressupomos que a extensão espacial da paisagem adequada é aquela que acumula pelo menos 95% de toda diminuição na taxa U esperada ao aumentar a extensão espacial de 0.5 km de lado até 16 km de lado. A extensão espacial adequada tende a aumentar com a redução da limitação de à dispersão (figura 3). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90 a extensão espacial da paisagem adequada é de 1 km de lado (Figura 3). Em k entre 0.80 e 0.55 não é possível determinar uma tendência de redução da média da estimativa de U (Figura 3); a variação entre escalas para um mesmo sítio é baixa (detalhes em Apêndice: Efeito de Escalar). Nesses graus de limitação de dispersão, o aumento do número de espécies per capita pode aumentar a divergência da média geral de estabilidade e apresentar padrões não lineares (Figuras A1 2 e 3). Os graus de limitação de dispersão com k entre 0.80 e 0.55, onde não foi possível determinar a escala mínima adequada ou há incerteza, são os graus onde o modelo neutro espacialmente explícito opera no máximo global da estimativa média da taxa U (Figura A1 2). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura A1 5 e 6). 
 
-
 ```{r caption EfeitoEscalar-obs}
 cap <- "U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para os 20 graus de limitação de dispersão (cor dos pontos e linhas). Pontos representam a média de 10 réplicas por bateria de simulação e as linhas ligam os pontos médos. Eixo y varia entre paineis."
 ```
@@ -253,7 +251,6 @@ cap <- "U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para 
 load(file="./apendices/EfeitoEscala/Rdata/fig3_EfeitoEscalarObs.Rdata")
 p + theme(plot.title = element_text(size = 12)) 
 ```
-
 
 ```{r cap-resumo-EscalaAdequada,cache=FALSE}
 cap <- "Lado da paisagem que acumula a maior parte do efeito da escala no grau de limitação de dispersão. Em cinza a área com incerteza: os lados de 1 e 2 km podem ser adequados."
@@ -284,7 +281,6 @@ p
 # taxa U
 
 Quando há pouca perda de habitat a estimativa da taxa U não difere entre paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Com a redução da cobertura vegetal a estimativa da taxa U pode ser distinta entre paisagens hipotéticas. Em graus de limitação de dispersão mais relaxados pode existir o aumento da taxa U estimada nas paisagem contemporâneas ou sem fragmentação (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em geral a taxa U estimada nas paisagens contemporâneas é a maior das três paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em alguns casos a paisagem sem fragmentação per se pode apresentar estimativas superiores (fig. \@ref(fig:GE-Urep-sitio-k-land)). Nos graus onde há pouca variação no efeito de escalar (k entre 0.80 e 0.55) também há pouca variação entre paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). As maiores diferenças entre paisagens hipotéticas ocorre em graus de limitação de dispersão mais brandos (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em paisagens com baixa proporção de cobertura florestal as estimativas em graus severos de limitação de dispersão também podem ser distintas entre paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em alguns sítios a taxa U estimada em paisagem sem isolamento estrutural pode ser superior ao estimado em paisagens contemporâneas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em geral a diferença na estimativa entre paisagens idealizadas e sem fragmentação é pequena e a diferença na estimativa entre paisagens idealizadas e contemporâneas pode ser maior (fig. \@ref(fig:GE-Urep-sitio-k-land)).
-
 
 \newpage
 
@@ -335,20 +331,20 @@ __\@ref(fig:GE-Urep-sitio-k-land)__  (\@ref(fig:GE-sitios-amostrados))
 
 
 
-
 # SAD observada e SAD predita entre paisagens hipotéticas
 
 ## Descrição do padrão observado
 
-Na figura \@ref(fig:GE-nCong) há os gráficos de congruência da SAD simulada e observada (número de SADs simuladas congruentes com a SAD observada) em cada sítio de amostragem. No eixo x há o grau de limitação de dispersão per capita (k, proporção de propágulos que permanece até a vizinhança imediata da progenitora). O fundo dos painéis está colorido pela proporção de cobertura vegetal (p). Os painéis estão agrupados pela classe de estado sucessional da base de dados TreeCo. No canto inferior direito a distribuição de sítios em função de p e da classe de sucessão. 
-Em paisagens com cobertura vegetal abaixo de 0.92 é possível observar, em alguns graus de limitação de dispersão, diferença no predito entre paisagens hipotéticas, apesar da similaridade. A diferença entre paisagens hipotéticas pode aumentar com a redução da cobertura vegetal.  O predito em paisagens idealizadas e sem fragmentação apresenta menor divergência.  Em geral, o predito em paisagens contemporâneas pode apresentar congruência melhor ou pior, com maior diferença das outras duas paisagens hipotéticas, em graus de limitação de dispersão mais brandos. Existe muita diversidade entre sítios, mas podemos classificar os padrões de congruência com o observado em tipos: sempre bom ou ruim; ruim ou bom em graus de limitação de dispersão brandos; ruim ou bom em graus de limitação de dispersão intermediários. Ou seja, pode apresentar variabilidade em todo o gradiente de limitação de dispersão simulada, com maior variabilidade em graus brandos de limitação de dispersão, seguido de graus severos, e menor variabilidade em graus de limitação intermediários. A classe sucessional do sítio de amostragem parece aumentar a variabilidade no padrão de congruência: em sítios primary e secondary, paisagens contemporâneas parecem ser tão boas quanto ruins; em sítios secondary, paisagens idealizadas tendem a ser melhores
+Na figura \@ref(fig:GE-nCong) há os gráficos de congruência da SAD simulada e observada (número de SADs simuladas congruentes com a SAD observada) em cada sítio de amostragem. No eixo x há o grau de limitação de dispersão per capita (k, proporção de propágulos que permanece até a vizinhança imediata da progenitora). O fundo dos painéis está colorido pela proporção de cobertura vegetal (p). Os painéis estão agrupados pela classe de estado sucessional da base de dados TreeCo. No canto inferior direito a distribuição de sítios em função de p e da classe de sucessão. É possível observar, em alguns graus de limitação de dispersão, diferença no predito entre paisagens hipotéticas em paisagens com cobertura vegetal abaixo de 0.92 e pode aumentar com a redução da cobertura vegetal (fig.  \@ref(fig:GE-nCong)).  O predito em paisagens idealizadas e sem fragmentação apresenta menor divergência.  Em geral, o predito em paisagens contemporâneas pode apresentar congruência melhor ou pior, em relação às outras duas paisagens hipotéticas, em graus de limitação de dispersão mais brandos. Existe muita diversidade entre sítios, mas podemos classificar os padrões de congruência com o observado em tipos: sempre bom ou ruim; ruim ou bom em graus de limitação de dispersão brandos; ruim ou bom em graus de limitação de dispersão intermediários. Ou seja, observamos variabilidade em todo o gradiente de limitação de dispersão simulada, com maior variabilidade em graus brandos de limitação de dispersão, seguido de graus severos, e menor variabilidade em graus de limitação intermediários. A classe sucessional do sítio de amostragem parece aumentar a variabilidade no padrão de congruência: em sítios primary e secondary, paisagens contemporâneas parecem ser tão boas quanto ruins; em sítios secondary, paisagens idealizadas tendem a ser melhores. 
+  
 
+Especulamos que parte da diversidade observada pode estar relacionada com a distribuição espacial dos sítios. As paisagens contemporâneas sugerem que algumas parcelas  foram amostradas em paisagens locais com alto grau de sobreposição espaço-temporal (Fig. SI 1). 
+Além disso, possíveis determinantes da diversidade local observada na Floresta Atlântica podem estar associados às variáveis preditoras empíricas (p e classe de sucessão) por conta da sua localidade (e.g. fig SI 2). [...[a]]
+Na figura \@ref(fig:GE-coordenadas-preditoras) há os resultados dessa classificação visual dos painéis da figura \@ref(fig:GE-nCong) e as preditoras empíricas, proporção de cobertura vegetal (p) e classe de sucessão do local de amostragem,  em função das coordenadas geográficas dos sítios de amostragem. As preditoras empíricas, proporção de cobertura vegetal (p) e classe de sucessão, parecem apresentar distribuição espacial não negligenciável (figura \@ref(fig:GE-nCong) c:d), com agregação de paisagens com alta proporção de cobertura vegetal na região costeira. 
+Para realizar uma avaliação preliminar da possível influência do espaço nos padrões de congruência observados (figura \@ref(fig:GE-nCong)), fiz uma classificação visual dos sítios em dois eixos: similaridade e diferença entre os tipos de paisagens hipotéticas e congruência do modelo neutro (considerando simultaneamente os 3 tipos de paisagens). Os sítios em que a paisagem contemporânea apresenta melhor ou pior congruência parecem apresentar autocorrelação positiva, porém as outras características da congruência com o observado são de difícil avaliação visual. 
 
+Outro ponto importante que não avaliamos é a influência da complexidade espacial da cobertura espacial na paisagem local. Em paisagens contemporâneas em que todo o habitat remanescente está empiricamente aglomerado podemos não observar diferença entre as paisagens, principalmente entre os tipos de paisagens hipotéticas contemporâneos e sem fragmentação. Nesse contexto, eu havia desenvolvido uma métrica de fragmentação per se baseado no contraste da taxa U no simulado entre paisagens contemporâneas e sem fragmentação per se.  A taxa U pode ser usada para desenvolver uma métrica de conectividade que depende tanto da capacidade de dispersão quanto da particular configuração espacial do habitat. Eu defini que o efeito de fragmentação per se é a diferença entre a taxa U estimada na paisagem contemporânea, menos a estimada na paisagem sem fragmentação per se, o resultado dividido pelo estimado na paisagem idealizada. Apliquei essa lógica para todos os 3 possíveis contrastes par a par das 3 paisagens hipotéticas. Na figura SI 3 há o predito para o contraste entre cada possível par de paisagens hipotéticas, na figura \@ref(fig:GE-Urep-sitio-k-land) há as taxas U estimadas. 
 
-Há muita diversidade de padrões entre sítios de amostragem na figura \@ref(fig:GE-nCong). Em alguns há pouca variação na congruência da SAD simulada e predita, nesses casos, em geral  com boa congruência para todos os graus de limitação de dispersão e tipos de paisagens (figura \@ref(fig:GE-nCong)). Em outros há variação na congruência com a variação no grau de limitação de dispersão, nesses casos pode existir variabilidade entre tipos de paisagens hipotéticas, em que o tipo de paisagem hipotética com melhor congruência pode variar entre sítios (figura \@ref(fig:GE-nCong)). Ao ordenar os gráficos dos sítios por percentagem de cobertura vegetal na paisagem de 4x4km (p) e classe de sucessão ecológica é possível observar que os sítios com pouca perda de habitat não apresentam diferença entre os tipos de paisagens hipotéticas (figura \@ref(fig:GE-nCong)). A partir de um valor de p é possível observar diferenças entre tipos de paisagens (figura \@ref(fig:GE-nCong)). 
-
-
-O simulado nas paisagens idealizadas e sem isolamento estrutural em geral apresentam diferença menor e o simulado na paisagem contemporânea pode apresentar maior diferença em alguns graus de limitação de dispersão (figura \@ref(fig:GE-nCong)). 
 
 
 ```{r ggplot2code GE nCong,eval=TRUE,include=FALSE,cache=TRUE}
@@ -561,26 +557,6 @@ grid.arrange(grobs=l_p,ncol=2)
 # p
 ```
 
-
-A figura \@ref(fig:GE-coordenadas-preditoras) apresenta a avaliação visual dos padrão observado na figura \@ref(fig:GE-nCong)
-
-<!-- ```{r estudo shapefile} -->
-<!-- library(sf) -->
-<!-- df_geomAF <- sf::st_read("./dados/shapefiles/FlorestaAtlantica_limites/biome_border.shx") -->
-<!-- df_geomAF %>%  -->
-<!--   ggplot() + -->
-<!--   geom_sf() -->
-<!-- ``` -->
-
-
-
-<!-- shapefile do terrabrasilis do INPE (http://terrabrasilis.dpi.inpe.br/en/download-2/) -->
-
-
-<!-- ## Modelos Estatísticos -->
-
-<!-- Para descrever o número de SADs simuladas congruentes com a SAD empírica, utilizamos modelos mistos generalizados binomiais. Como possíveis variáveis preditoras consideramos: a proporção de cobertura vegetal na paisagem de 4x4km2 (p), o grau de limitação de dispersão (k, proporção de propágulos até a vizinhança imediata do progenitor), o tipo de paisagem hipotética (contemporânea, sem isolamento estrutural, e idealizada), e a classe de sucessão do sítio de amostragem (olhar Figura 1). A variável p informa um componente da heterogeneidade da paisagem contemporânea, a proporção de habitat remanescente na paisagem ao redor. A variável classe de sucessão do sítio de amostragem apresenta 3 classes, uma vez que removemos os dois sítios com menos de 20 anos de regeneração desde o último grande distúrbio (Figura 1). Nas 3 classes de sucessão do sítio de amostragem a distribuição de sítios ocorre em todo gradiente de p, exceto a classe 'primary/secondary' que não sítios com paisagens contemporâneas totalmente preenchidas (Figura A2 1). -->
-
 ```{r tabela com o nome das predioras,eval=FALSE,include=FALSE}
 df_glossario <- data.frame(
   nome = c("k","p","forest succession","land hyp","SiteCode"),
@@ -592,51 +568,30 @@ df_glossario <- data.frame(
 f_kableExtra(df_glossario,string_caption = "Descrição das variáveis preditoras",col_control=FALSE)
 ```
 
-
-<!-- Comparamos 8 modelos candidatos para descrever a probabilidade de congruência da SAD simulada: o modelo cheio, com interação entre p, k, tipo de paisagem hipotética, e classe de sucessão do sítio de amostragem; o modelo cheio sem a variável p; o modelo cheio sem a variável classe de sucessão; e os 4 modelos anteriores sem o tipo de paisagem hipotética. Primeiro avaliamos qual a melhor maneira de agrupar os dados por sítio de amostragem. Usamos o modelo cheio para comparar 3 tipos de estruturas aleatórias: 1 intercepto por sítio de amostragem; 1 intercepto por tipo de paisagem hipotética e sítio de amostragem; 1 intercepto e 1 inclinação para o grau de limitação de dispersão por tipo de paisagem hipotética e sítio de amostragem. A estrutura aleatória mais plausível foi usada para comparar os 8 modelos candidatos.  -->
-<!-- Os modelos foram comparados via AICc (REF) e pelo coeficiente de determinação condicional e marginal (Nagaka REF). -->
-
-
-
-<!-- ### - Seleção da Estrutura Aleatória -->
-
 ```{r caption-ts-re-ncong,eval=FALSE,include=FALSE}
 cap <- "Seleção da Estrutura Aleatória"
 snote <- "estrutura fixa do modelo cheio usada em ambos modelos"
 ```
+
 ```{r ts-re-ncong,eval=FALSE,include=FALSE}
 df_ts_re <- read.csv("./dados/csv/df_ts_re_nCong.csv")
 f_kableExtra(df_ts_re,string_caption = cap,footnote = snote,col_control = FALSE)
 ```
 
-<!-- Não foi possível ajustar os coeficientes do modelo com 1 intercepto e 1 inclinação para o grau de limitação de dispersão  por tipo de paisagem hipotética e sítio de amostragem (detalhes em A2). Dentre os modelos em que houve convergência na estimativa dos coeficientes, a estrutura aleatória mais plausível é aquela com 1 intercepto por tipo de paisagem hipotética por sítio de amostragem (\@ref(tab:ts-re-ncong)). Os coeficientes de determinação condicional e marginal dos modelos candidatos são similares: ~0.98 e ~0.07, respectivamente (\@ref(tab:ts-re-ncong)). Esse resultado é coerente com o observado no padrão de congruência com os dados organizados por sítio de amostragem (Figura 6).  -->
-
-<!-- ### - Seleção da Estrutura Fixa -->
-
 ```{r c1,eval=FALSE,include=FALSE}
 cap <- "Seleção da Estrutura Fixa"
 snote <- "estrutura aleatória mais plausível usada em todos os modelos"
 ```
+
 ```{r ts-ncong,eval=FALSE,include=FALSE}
 df_ts <- read.csv("./dados/csv/df_ts_defesa_congruencias.csv")
 f_kableExtra(df_ts,string_caption = cap,footnote = snote,col_control = FALSE)
 ```
 
-<!-- O único modelo plausível é o modelo cheio  (\@ref(tab:ts-ncong)), que tem como preditoras: proporção de cobertura vegetal (p, variável contínua); forest succession (variável categórica com 3 níveis, ver \@ref(fig:GE-sitios-amostrados)) ;grau de limitação de dispersão (k, variável contínua); e o tipo da paisagem hipotética (land. hyp., com 3 níveis). As variáveis contínuas estão 'z' transformadas. -->
-<!-- Os 4 modelos com menor DAICc são aqueles que consideram a variável tipo de paisagem hipotética. A redução dos coeficientes de determinação marginal são maiores do que os coeficientes de determinação condionais que se mantém próximos de 0.98 (\@ref(tab:ts-ncong)). As variáveis proporção de cobertura vegetal (p) e a classe de sucessão dos sítios apresentam poder similar de explicação da variação, uma vez que os modelos candidatos que apresentam ou p ou a classe de sucessão apresentam coeficiente de determinação marginal similar (\@ref(tab:ts-ncong)). Apesar do modelo mais plausível contar com a variável tipo de paisagem hipotética, essa variável apresenta o menor poder de explicação com relação às outras preditoras, uma vez que os modelos sem essa variável apresentam coeficientes de determinação muito similares (\@ref(tab:ts-ncong)). -->
-
-
-<!-- ## Interpretação do modelo mais plausível -->
-
-<!-- O modelo mais plausível apresenta desvios do esperado (detalhes em A2), mas será usado para interpretação. Iremos interpretar o predito quando pressupomos ausência de variação entre sítios, ou seja, apenas a variabilidade associada com as variáveis da estrutura fixa: proporção de cobertura vegetal, p; grau de limitação de dispersão, k; tipo de paisagem hipotética; e classe de sucessão. Na figura 7 há o predito pelo modelo mais plausível quando desconsiderado a variabilidade entre sítios. No eixo x há a variável p e no eixo y a variável k, ambas na z transformadas. Note que o eixo y está reverso, de modo que quanto mais distante da origem, maior é a capacidade de dispersão per capita. Os paineis estão dividos pela classe de sucessão (colunas) e tipo de paisagem hipotética (linhas). A escala de cor preenche os quadros segundo a relação com o predito para o logito da probabilidade de congruência da SAD simulada com a SAD empírica (legenda no topo). -->
-
-
-
-
-
 ```{r c2,eval=FALSE,include=FALSE}
 cap <- "Predito pelo modelo mais plausível para descrever a congruência entre SAD empírica e simulada"
 ```
+
 ```{r nCong-md-predito,fig.height=8,fig.width=8,fig.cap=cap,fig.pos="H",eval=FALSE,include=FALSE}
 oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata")
 l_md_e_start <- get(oname)
@@ -673,12 +628,6 @@ df_newdata %>%
   facet_grid(land_hyp~forest_succession)
 ```
 
-<!-- O modelo prediz que o logito da probabilidade de congruência da SAD simulada na paisagem contemporânea é similar ao logito na paisagem sem isolamento estrutural. A maior diferença entre esses dois tipos de paisagem são nos valores médios, mas não na influência da proporção de cobertura vegetal remanescente na paisagem, grau de limitação de dispersão ou classe de sucessão (Figura 7). O logito predito na paisagem idealizada apresenta menor variação na congruência em função das preditoras, apresentando boa congruência em geral (Figura 7). Nos 3 tipos de paisagem hipotéticas a maior variação ocorreu nos sítios em que o tempo desde a última perturbação no sítio de amostragem foi entre 50 e 80 anos (‘primary/secondary’ Figura 7). Nos sítios de amostragem classificados como primary/secondary o logito varia com a redução da proporção de cobertura vegetal, aumentando com a redução da capacidade de dispersão e diminuindo com o aumento da capacidade de dispersão (Figura 7). Esse padrão é mais acentuado no logito na paisagem contemporânea e na sem isolamento estrutural (Figura 7). Nos sítios classificados como primary (pelo menos 80 anos desde a última perturbação no sítio de amostragem) e nos classificados como secondary (entre 20 e 50 anos), o logito predito é elevado (Figura 7). -->
-
-
-
-
-<!-- ### antigo, util?-->
 ```{r exemplo tabela,eval=FALSE,include=FALSE}
 df_tab <- read_csv("./dados/csv/ts_congCont.csv")
 df_tab |> 
@@ -757,4 +706,18 @@ ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
        height = 9)
 ```
 
-<!-- __Figura \@ref{contrastes_pk}__ Intervalo de Predição estimado pelos GAMM.  -->
+A figura \@ref(fig:GE-coordenadas-preditoras) apresenta a avaliação visual dos padrão observado na figura \@ref(fig:GE-nCong)
+
+<!-- ```{r estudo shapefile} -->
+<!-- library(sf) -->
+<!-- df_geomAF <- sf::st_read("./dados/shapefiles/FlorestaAtlantica_limites/biome_border.shx") -->
+<!-- df_geomAF %>%  -->
+<!--   ggplot() + -->
+<!--   geom_sf() -->
+<!-- ``` -->
+
+
+
+<!-- shapefile do terrabrasilis do INPE (http://terrabrasilis.dpi.inpe.br/en/download-2/) -->
+
+[a]Explicação: Além disso, a riqueza de espécies arbóreas na Floresta Atlântica muda em função da topografia, latitude e distribuição de tipos de solo (REF). O esforço amostral também deve depender da disponibilidade operacional do estudo, por exemplo, acesso dos locais candidatos em relação aos centros de pesquisa, e do conhecimento prévio dos locais candidatos (REF). A topografia também deve influenciar as variáveis preditoras, proporção de cobertura vegetal (p) e classe de sucessão, pois a capacidade de mecanização da paisagem pode aumentar a chance da paisagem ter baixa proporção de cobertura vegetal e do local amostrado ser em uma área com pouco tempo de regeneração desde o último grande distúrbio (REF).

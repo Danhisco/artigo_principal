@@ -15,3 +15,5 @@ dados/
 **/*.tex
 .Rproj.user
 *.Rdata
+*.md
+*.Rdata
