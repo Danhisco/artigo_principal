@@ -281,11 +281,11 @@ p
 
 
 
-# taxa U[a]
+# taxa U
 
-Quando há pouca perda de habitat a estimativa da taxa U não difere entre paisagens hipotéticas[b] (fig. \@ref(fig:GE-Urep-sitio-k-land)). Com a redução da cobertura vegetal a estimativa da taxa U pode ser distinta entre paisagens hipotéticas. Em graus de limitação de dispersão mais relaxados pode existir o aumento da taxa U estimada nas paisagem contemporâneas ou sem fragmentação (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em geral a taxa U estimada nas paisagens contemporâneas é a maior das três paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em alguns casos a paisagem sem fragmentação per se pode apresentar estimativas superiores[c] (fig. \@ref(fig:GE-Urep-sitio-k-land)). Nos graus onde há pouca variação no efeito de escalar (k entre 0.80 e 0.55) também há pouca variação[d] entre paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). As maiores diferenças entre paisagens hipotéticas ocorre [e]em graus de limitação de dispersão mais brandos (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em paisagens com baixa proporção de cobertura florestal as estimativas em graus severos de limitação de dispersão também podem ser distintas entre paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em alguns sítios a taxa U estimada em paisagem sem isolamento estrutural pode ser superior ao estimado em paisagens contemporâneas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em geral a diferença na estimativa entre paisagens idealizadas e sem fragmentação é pequena e a diferença na estimativa entre paisagens idealizadas e contemporâneas pode ser maior (fig. \@ref(fig:GE-Urep-sitio-k-land)).
 
-\newpage
+
+A partir dessa seção iremos analisar os dados das simulações feitas nos 3 tipos de paisagens hipotéticas: a paisagem contemporâneas, com a configuração espacial do habitat remanescente observada no mesmo ano que a melhor aproximação do ano da amostragem da parcela; a paisagem sem fragmentação per se, onde todo o habitat remanescente na paisagem contemporânea é aglomerado ao redor  da parcela em forma de quadrado; e a paisagem idealizada, sem perda de habitat. Quando há pouca perda de habitat a estimativa da taxa U não difere entre as 3 paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Para paisagens contemporâneas com proporção de cobertura vegetal abaixo de 0.95, observamos que a estimativa da taxa U pode ser distinta entre paisagens hipotéticas para alguns graus de limitação de dispersão (fig. \@ref(fig:GE-Urep-sitio-k-land)). A maior variação entre graus de limitação de dispersão ocorre nos graus de limitação de dispersão mais brandos simulados, seguido pelos graus mais severos; nos graus de limitação de dispersão pouco severos, onde há o máximo global nas paisagens infinitas e sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre tipos de paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em geral a paisagem hipotética contemporânea apresenta maior divergência com as outras duas paisagens hipotéticas, sem fragmentação per se e idealizada (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em alguns casos, a paisagem sem fragmentação per se pode apresentar maior diferença com o simulado na paisagem idealizada, e pode apresentar estimativas superiores de U em relação às outras 2 paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em resumo: i) quanto maior a perda de habitat e mais branda a limitação de dispersão, maior a potencial diferença entre as 3 paisagens hipotéticas; ii) em geral a taxa U estimada em paisagens contemporâneas é superior ao estimado nos outros 2 tipos de paisagens hipotéticas; porém, para alguns sítios, o estimado em  paisagem sem fragmentação per se pode ser superior. 
 
 ```{r caption GE  características dos Sítios Selecionados}
 # caption
@@ -336,17 +336,17 @@ __\@ref(fig:GE-Urep-sitio-k-land)__  (\@ref(fig:GE-sitios-amostrados))
 
 # SAD observada e SAD predita entre paisagens hipotéticas
 
-## Descrição do padrão observado[f]
+## Descrição do padrão observado[a]
 
-Na figura \@ref(fig:GE-nCong) há os gráficos de congruência da SAD simulada e observada (número de SADs simuladas congruentes com a SAD observada) em cada sítio de amostragem. No eixo x há o grau de limitação de dispersão per capita (k, proporção de propágulos que permanece até a vizinhança imediata da progenitora). O fundo dos painéis está colorido pela proporção de cobertura vegetal (p). Os painéis estão agrupados pela classe de estado sucessional da base de dados TreeCo. No canto inferior direito a distribuição de sítios em função de p e da classe de sucessão[g]. É possível observar, em alguns graus de limitação de dispersão, diferença no predito entre paisagens hipotéticas em paisagens com cobertura vegetal abaixo de 0.92 e pode aumentar com a redução da cobertura vegeta[h]l (fig.  \@ref(fig:GE-nCong)).  O predito em paisagens idealizadas e sem fragmentação apresenta menor divergência.  Em geral, o predito em paisagens contemporâneas pode apresentar congruência melhor ou pior, em relação às outras duas paisagens hipotéticas, em graus de limitação de dispersão mais brandos[i]. Existe muita diversidade entre sítios, mas podemos classificar os padrões de congruência com o observado em tipos: sempre [j]bom ou ruim; ruim ou bom em graus de limitação de dispersão brandos; ruim ou bom em graus de limitação de dispersão intermediários. Ou seja, observamos variabilidade[k] em todo o gradiente de limitação de dispersão simulada, com maior variabilidade em graus brandos de limitação de dispersão, seguido de graus severos, e menor variabilidade em graus de limitação intermediários. A classe sucessional do sítio de amostragem parece aumentar a variabilidade no padrão de congruência: em sítios primary e secondar[l]y, paisagens contemporâneas parecem ser tão boas quanto ruins[m]; em sítios secondary, paisagens idealizadas tendem a ser melhores. [n]
+Na figura \@ref(fig:GE-nCong) há os gráficos de congruência da SAD simulada e observada (número de SADs simuladas congruentes com a SAD observada) em cada sítio de amostragem. No eixo x há o grau de limitação de dispersão per capita (k, proporção de propágulos que permanece até a vizinhança imediata da progenitora). O fundo dos painéis está colorido pela proporção de cobertura vegetal (p). Os painéis estão agrupados pela classe de estado sucessional da base de dados TreeCo. No canto inferior direito a distribuição de sítios em função de p e da classe de sucessão[b]. É possível observar, em alguns graus de limitação de dispersão, diferença no predito entre paisagens hipotéticas em paisagens com cobertura vegetal abaixo de 0.92 e pode aumentar com a redução da cobertura vegeta[c]l (fig.  \@ref(fig:GE-nCong)).  O predito em paisagens idealizadas e sem fragmentação apresenta menor divergência.  Em geral, o predito em paisagens contemporâneas pode apresentar congruência melhor ou pior, em relação às outras duas paisagens hipotéticas, em graus de limitação de dispersão mais brandos[d]. Existe muita diversidade entre sítios, mas podemos classificar os padrões de congruência com o observado em tipos: sempre [e]bom ou ruim; ruim ou bom em graus de limitação de dispersão brandos; ruim ou bom em graus de limitação de dispersão intermediários. Ou seja, observamos variabilidade[f] em todo o gradiente de limitação de dispersão simulada, com maior variabilidade em graus brandos de limitação de dispersão, seguido de graus severos, e menor variabilidade em graus de limitação intermediários. A classe sucessional do sítio de amostragem parece aumentar a variabilidade no padrão de congruência: em sítios primary e secondar[g]y, paisagens contemporâneas parecem ser tão boas quanto ruins[h]; em sítios secondary, paisagens idealizadas tendem a ser melhores. [i]
   
 
-Especulamos que parte da diversidade observada[o] pode estar relacionada com a distribuição espacial dos sítios. As paisagens contemporâneas sugerem que algumas parcelas  foram amostradas em paisagens locais com alto grau de sobreposição espaço-temporal (Fig. SI 1). [p]
-Além disso, possíveis determinantes da diversidade local observada na Floresta Atlântica podem estar associados às variáveis preditoras empíricas (p e classe de sucessão) por conta da sua localidade (e.g. fig SI 2). [...[q]][r]
-Na figura \@ref(fig:GE-coordenadas-preditoras) há os resultados dessa classificação visual [s]dos painéis da figura \@ref(fig:GE-nCong) e as preditoras empíricas[t], proporção de cobertura vegetal (p) e classe de sucessão do local de amostragem,  em função das coordenadas geográficas dos sítios de amostragem. As preditoras empíricas, proporção de cobertura vegetal (p) e classe de sucessão, parecem apresentar distribuição espacial não negligenciável[u] (figura \@ref(fig:GE-nCong) c:d), com agregação de paisagens com alta proporção de cobertura vegetal na região costeira[v]. 
-Para realizar uma avaliação preliminar da possível influência do espaço nos padrões de congruência observados (figura \@ref(fig:GE-nCong)), fiz uma classificação visual dos sítios em dois eixos: similaridade e diferença entre os tipos de paisagens hipotéticas e congruência do modelo neutro[w] (considerando simultaneamente os 3 tipos de paisagens). Os sítios em que a paisagem contemporânea apresenta melhor ou pior congruência parecem apresentar autocorrelação positiva[x], porém as outras características da congruência com o observado são de difícil avaliação visual. 
+Especulamos que parte da diversidade observada[j] pode estar relacionada com a distribuição espacial dos sítios. As paisagens contemporâneas sugerem que algumas parcelas  foram amostradas em paisagens locais com alto grau de sobreposição espaço-temporal (Fig. SI 1). [k]
+Além disso, possíveis determinantes da diversidade local observada na Floresta Atlântica podem estar associados às variáveis preditoras empíricas (p e classe de sucessão) por conta da sua localidade (e.g. fig SI 2). [...[l]][m]
+Na figura \@ref(fig:GE-coordenadas-preditoras) há os resultados dessa classificação visual [n]dos painéis da figura \@ref(fig:GE-nCong) e as preditoras empíricas[o], proporção de cobertura vegetal (p) e classe de sucessão do local de amostragem,  em função das coordenadas geográficas dos sítios de amostragem. As preditoras empíricas, proporção de cobertura vegetal (p) e classe de sucessão, parecem apresentar distribuição espacial não negligenciável[p] (figura \@ref(fig:GE-nCong) c:d), com agregação de paisagens com alta proporção de cobertura vegetal na região costeira[q]. 
+Para realizar uma avaliação preliminar da possível influência do espaço nos padrões de congruência observados (figura \@ref(fig:GE-nCong)), fiz uma classificação visual dos sítios em dois eixos: similaridade e diferença entre os tipos de paisagens hipotéticas e congruência do modelo neutro[r] (considerando simultaneamente os 3 tipos de paisagens). Os sítios em que a paisagem contemporânea apresenta melhor ou pior congruência parecem apresentar autocorrelação positiva[s], porém as outras características da congruência com o observado são de difícil avaliação visual. 
 
-Outro ponto importante que não avaliamos é a influência da complexidade espacial da cobertura espacial na paisagem local. Em paisagens contemporâneas em que todo o habitat remanescente está empiricamente aglomerado podemos não observar diferença entre as paisagens, principalmente entre os tipos de paisagens hipotéticas contemporâneos e sem fragmentação. Nesse contexto, eu havia desenvolvido uma métrica de fragmentação per se baseado no contraste da taxa U no simulado entre paisagens contemporâneas e sem fragmentação per se.[y]  A taxa U pode ser usada para desenvolver uma métrica de conectividade que depende tanto da capacidade de dispersão quanto da particular configuração espacial do habitat. Eu defini que o efeito de fragmentação per se é a diferença entre a taxa U estimada na paisagem contemporânea, menos a estimada na paisagem sem fragmentação per se, o resultado dividido pelo estimado na paisagem idealizada. Apliquei essa lógica para todos os 3 possíveis contrastes par a par das 3 paisagens hipotéticas. Na figura SI 3 há o predito para o contraste entre cada possível par de paisagens hipotéticas, na figura \@ref(fig:GE-Urep-sitio-k-land) há as taxas U estimadas. [z]
+Outro ponto importante que não avaliamos é a influência da complexidade espacial da cobertura espacial na paisagem local. Em paisagens contemporâneas em que todo o habitat remanescente está empiricamente aglomerado podemos não observar diferença entre as paisagens, principalmente entre os tipos de paisagens hipotéticas contemporâneos e sem fragmentação. Nesse contexto, eu havia desenvolvido uma métrica de fragmentação per se baseado no contraste da taxa U no simulado entre paisagens contemporâneas e sem fragmentação per se.[t]  A taxa U pode ser usada para desenvolver uma métrica de conectividade que depende tanto da capacidade de dispersão quanto da particular configuração espacial do habitat. Eu defini que o efeito de fragmentação per se é a diferença entre a taxa U estimada na paisagem contemporânea, menos a estimada na paisagem sem fragmentação per se, o resultado dividido pelo estimado na paisagem idealizada. Apliquei essa lógica para todos os 3 possíveis contrastes par a par das 3 paisagens hipotéticas. Na figura SI 3 há o predito para o contraste entre cada possível par de paisagens hipotéticas, na figura \@ref(fig:GE-Urep-sitio-k-land) há as taxas U estimadas. [u]
 
 
 
@@ -723,16 +723,7 @@ A figura \@ref(fig:GE-coordenadas-preditoras) apresenta a avaliação visual dos
 
 <!-- shapefile do terrabrasilis do INPE (http://terrabrasilis.dpi.inpe.br/en/download-2/) -->
 
-[a]no geral achei uma boa descrição sucinta do que se vê nas figuras. Acho que duas coisas podem melhorar: 
-1 - A ordem com que os padrões são descritos. Há algumas descrições de padrões (amarelo) que me parecem meio desconexas no texto. Sei que é difícil juntar tantos padrões num texto consistente, mas senti falta de algumas expressões para guira o leitor.
-2 - como são muitos padrões. sugiro 1-2 sentenças resumindo o que se pode concluir de tuo o que foi descrito. Ou pelo menos as tendências mais importantes.
-[b]seriam a paisagem sem perda de habitat e a sem fragmentação? Ou as 3 paisagens? Acho que chamar a paisagem observada de hipotética pode confundir. 
-
-De toda forma, em algum ponto do texto é muito importante definir nomes simples destas paisagens e manter sempre estes. Sugiro: paisagem sem perda de habitat, paisagem sem fragmentação e paisagem observada. E para se referir a todas, chamaria de as 3 paisagens usadas apenas.
-[c]superiores a qual outra estimativa?
-[d]pouca variação nas estimativas de U?
-[e]se daqui para frente vc vai falar dessas maiores diferenças, sugiro separar em outro parágrafo
-[f]Sugestão para esta seção: 
+[a]Sugestão para esta seção: 
 Primeira parte: propondo uma maneira de interpretar a variação de respostas:
 1 - Guiar o leitor pela figura 5, mostrando que há bastante variação na congruência das SADs obtidas das simulações (indique alguns casos emblemáticos apontando alguns dos paineis de algumas paisagens)
 2 - Mostre como essa variação pode ser entendida como dois componentes principais: resposta da congruência a K, e diferenças nestas respostas entre as sads obtidas das simulações nas 3 paisagens.
@@ -743,23 +734,23 @@ Segunda seção: há relações entre as classes de padrões e as variáveis da 
 
 Terceira seção: padrões geográficos
 há algum padrão na distribuição geográfica dos padrões? Quais? descrever.
-[g]acho que é só redação, mas não está claro
-[h]o que pode aumentar?
-[i]isso me pareceu muito vago
-[j]acho que sempre não é apropriado. Sugiro: congruência constante em relação a k, queda da congruência com aumento de k, e aumento da congruência em relação a k. E aí ajudadrai indicar alguns exemplos para cada caso.
-[k]variabilidade do que?
-[l]usar os termos em português
-[m]boas e ruin quanto a que?
-[n]melhores no que?
-[o]diversidade de que?
-[p]acho que isso já é discussão
-[q]Explicação: Além disso, a riqueza de espécies arbóreas na Floresta Atlântica muda em função da topografia, latitude e distribuição de tipos de solo (REF). O esforço amostral também deve depender da disponibilidade operacional do estudo, por exemplo, acesso dos locais candidatos em relação aos centros de pesquisa, e do conhecimento prévio dos locais candidatos (REF). A topografia também deve influenciar as variáveis preditoras, proporção de cobertura vegetal (p) e classe de sucessão, pois a capacidade de mecanização da paisagem pode aumentar a chance da paisagem ter baixa proporção de cobertura vegetal e do local amostrado ser em uma área com pouco tempo de regeneração desde o último grande distúrbio (REF).
-[r]isso me parece discussão
-[s]qual classificação visual? Veja minha sugestão geral a esta seção.
-[t]pq chamar de preditoras, se não há um modelo ajustado?
-[u]vago. Se vc vê padrão espacila nesta variáveis, pode usar os resultados para descrevê-los
-[v]o único padrão é este? Se sim, batas manter isso. Mas se vc vê outras tendências no mapa, importante descrevê-las de maneira tão clara quanto esta
-[w]Massa! Te sugiro explicar esta classificação no início desta seção, ver comentários gerai, no título da seção.
-[x]por que? descreva algum resultado ou padrão na figura que ajude a sustentar isto
-[y]não entendi como estimar fragmentação per se da paisagem observada resolve o problema explicado nas sentenças anteriores.
-[z]Não entendi totalmente o propósito desta parte. Suspeito que pode ficar melhor como itemd e discussão
+[b]acho que é só redação, mas não está claro
+[c]o que pode aumentar?
+[d]isso me pareceu muito vago
+[e]acho que sempre não é apropriado. Sugiro: congruência constante em relação a k, queda da congruência com aumento de k, e aumento da congruência em relação a k. E aí ajudadrai indicar alguns exemplos para cada caso.
+[f]variabilidade do que?
+[g]usar os termos em português
+[h]boas e ruin quanto a que?
+[i]melhores no que?
+[j]diversidade de que?
+[k]acho que isso já é discussão
+[l]Explicação: Além disso, a riqueza de espécies arbóreas na Floresta Atlântica muda em função da topografia, latitude e distribuição de tipos de solo (REF). O esforço amostral também deve depender da disponibilidade operacional do estudo, por exemplo, acesso dos locais candidatos em relação aos centros de pesquisa, e do conhecimento prévio dos locais candidatos (REF). A topografia também deve influenciar as variáveis preditoras, proporção de cobertura vegetal (p) e classe de sucessão, pois a capacidade de mecanização da paisagem pode aumentar a chance da paisagem ter baixa proporção de cobertura vegetal e do local amostrado ser em uma área com pouco tempo de regeneração desde o último grande distúrbio (REF).
+[m]isso me parece discussão
+[n]qual classificação visual? Veja minha sugestão geral a esta seção.
+[o]pq chamar de preditoras, se não há um modelo ajustado?
+[p]vago. Se vc vê padrão espacila nesta variáveis, pode usar os resultados para descrevê-los
+[q]o único padrão é este? Se sim, batas manter isso. Mas se vc vê outras tendências no mapa, importante descrevê-las de maneira tão clara quanto esta
+[r]Massa! Te sugiro explicar esta classificação no início desta seção, ver comentários gerai, no título da seção.
+[s]por que? descreva algum resultado ou padrão na figura que ajude a sustentar isto
+[t]não entendi como estimar fragmentação per se da paisagem observada resolve o problema explicado nas sentenças anteriores.
+[u]Não entendi totalmente o propósito desta parte. Suspeito que pode ficar melhor como itemd e discussão
