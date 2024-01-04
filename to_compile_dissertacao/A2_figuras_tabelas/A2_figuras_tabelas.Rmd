@@ -269,7 +269,7 @@ grid.arrange(grobs=l_p,layout_matrix=rbind(c(1,3,3),
 ```{r caption preditoras empiricas}
 cap <- "Modelos Lineares Gaussianos da relação entre as preditoras empíricas (p e classe de sucessão). A estimativa da média de p diferem entre as classes de sucessão. Para ajustar os modelo normais p foi transformada usando a função logito."
 ```
-```{r preditoras-empiricas-SI,fig.cap=cap,fig.pos="H",eval=FALSE,include=FALSE}
+```{r preditoras-empiricas-SI,fig.cap=cap,fig.pos="H"}
 p <- ll_ggpng("./figuras/figSI_2.png")[[1]]
 p
 ```
