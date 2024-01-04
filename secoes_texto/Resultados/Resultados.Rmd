@@ -263,7 +263,7 @@ cap <- "Lado da paisagem que acumula a maior parte do efeito da escala no grau d
 df_plot <- read.csv("dados/csv/df_plotSoE.csv")
 p <- df_plot |>
   ggplot(aes(x=k_factor,y=SoE_0.95)) +
-  geom_hline(yintercept = 4,color="red") +
+  # geom_hline(yintercept = 4,color="red") +
   geom_point() +
   # geom_rect(aes(xmin=4, xmax=13.5, ymin=0.99, ymax=2.1),alpha=0.01) +
   scale_y_continuous(trans = scales::log2_trans(), 
