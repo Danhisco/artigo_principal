@@ -114,10 +114,3 @@ Para cada sítio de amostragem e tipo de paisagem hipotética foram simuladas 20
 Avaliamos a congruência na forma das SADs simuladas em relação à SAD empírica usando um teste de Kolmogorov-Smirnov bootstrap (@2samples), cuja hipotese nula asserta que as duas SADs comparadas são amostras de uma mesma distribuição de abundância de espécies. As SADs simuladas foram classificadas como congruentes se o p-valor do teste for maior ou igual a 5%. Contabilizamos o número de SADs congruêntes. Usamos um modelo misto generalizado binomial para descrever a probabilidade de congruência da SAD neutra simulada. 
 
 \newpage
-
-[c]Leroi, A.M., Lambert, B., Rosindell, J. et al. Neutral syndrome. Nat Hum Behav 4, 780–790 (2020). https://doi.org/10.1038/s41562-020-0844-7
-[d]artigo em que ele explica o programa de pesquisa da teoria neutra como aquele que procura explorar até onde é razoável pressupor equivalência funcional. Dentro da proposta original de Lakatos isso seria o mesmo que ser um programa de pesquisa degenerado a priori: explorar ao máximo os pressupostos auxiliares ao pressuposto central com intenção de manter o pressuposto central. Tem dois artigos que abordam bem esse tema em uma revista de filosofia.
-[e]mais novo: https://www.jstor.org/stable/26948089
-[f]Leroi, A.M., Lambert, B., Rosindell, J. et al. Neutral syndrome. Nat Hum Behav 4, 780–790 (2020). https://doi.org/10.1038/s41562-020-0844-7
-[g]Munoz, F., & Huneman, P. (2016). From the neutral theory to a comprehensive and multiscale theory of ecological equivalence. The Quarterly Review of Biology, 91(3), 321-342.
-[h]Munoz, F., & Huneman, P. (2016). From the neutral theory to a comprehensive and multiscale theory of ecological equivalence. The Quarterly Review of Biology, 91(3), 321-342.
