@@ -1,19 +1,5 @@
----
-title: "Efeito de escala na estimativa da taxa U necessária para manter a riqueza local no equilíbrio em um modelo neutro espacialmente explícito"
-author: 
-  - Danilo Pereira Mori, Laboratório de Ecologia Teórica (IBUSP)
-date: ""
-output:
-  pdf_document:
-    latex_engine: xelatex
-    extra_dependencies: ["tabu"]
-  html_document: default
-editor_options:
-  chunk_output_type: console
-# bibliography: citations.bib
-csl: plos.csl
----
-```{r setup, include=FALSE}
+
+```{r setup3, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE)
 # pacotes
 library(lubridate)

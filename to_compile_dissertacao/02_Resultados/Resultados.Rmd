@@ -19,7 +19,7 @@ body {
 text-align: justify}
 </style>
 
-```{r setup,include=FALSE}
+```{r setup2,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
                       fig.align='center',tab.align='center')
 # pacotes

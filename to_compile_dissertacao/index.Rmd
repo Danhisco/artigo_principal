@@ -1,5 +1,5 @@
 ---
-title: "Resultados Completos"
+title: "Documentos para 2o Comitê"
 author: "Mori, Danilo"
 date: "19/11/2022"
 output: 
@@ -29,7 +29,7 @@ text-align: justify}
 ```{r Resultados, child='./to_compile_dissertacao/02_Resultados/Resultados.Rmd'}
 ```
 
-# Efeito de Escalar
+# Efeito de escala na estimativa da taxa U necessária para manter a riqueza local no equilíbrio em um modelo neutro espacialmente explícito
 ```{r Efeito de Escalar, child='./to_compile_dissertacao/03_EfeitoEscala/EfeitoEscala.Rmd'}
 ```
 
