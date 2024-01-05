@@ -28,3 +28,5 @@ text-align: justify}
 # Resultados
 ```{r Resultados, child='./to_compile_dissertacao/02_Resultados/Resultados.Rmd'}
 ```
+
+# Referências
