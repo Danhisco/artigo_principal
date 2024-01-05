@@ -1,23 +1,4 @@
----
-title: "Resultados Completos"
-author: "Mori, Danilo"
-date: "19/11/2022"
-output: 
-  bookdown::pdf_document2:
-    latex_engine: xelatex
-    fig_caption: yes
-  bookdown::html_document2:
-    toc: true
-    toc_depth: 5
-    fig_caption: yes
-editor_options: 
-  chunk_output_type: console
----
 
-<style>
-body {
-text-align: justify}
-</style>
 
 ```{r setup,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
@@ -148,7 +129,7 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
-# Inventários Florestais Selecionados
+## Inventários Florestais Selecionados
 
 Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção. As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig. \@ref(fig:GE-sitios-amostrados) a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo. Apenas 2 sítios possuíam menos de 20 anos de recuperação desde o último grande distúrbio na área (fig. \@ref(fig:GE-sitios-amostrados) c) e foram removidos. A mediana da área amostrada foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. \@ref(fig:GE-sitios-amostrados) b). Portanto, todos os 107 sítios restantes dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Não foi possível estimar a taxa U em um sítio com baixa densidade de espécies por número de indivíduos e de baixa proporção de cobertura vegetal na paisagem ao redor. Em outro sítio não foi possível desenhar a parcela quadrado no centro da paisagem devido a configuração espacial da paisagem. Esses dois sítios foram removidos, totalizando 105 sítios simulados.
 
@@ -195,7 +176,7 @@ load("./dados/Rdata/figA21.Rdata")
 grid.arrange(grobs=l_p,nrow=1)
 ```
 
-# Efeito de Escalar
+## Efeito de Escalar
 
 ```{r cap 2}
 cap <- "a) Mudança na extensão espacial da paisagem a proporção de cobertura vegetal. Cada ponto representa a proporção de cobertura vegetal (eixo y) para aquela determinada extensão espacial da paisagem ao redor (eixo x), as linhas ligam pontos de um sítio de amostragem. b) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). c) Cenários de limitação de dispersão simulados. k = proporção de propágulos que permanece até a vizinhança imediata (distância média entre indivíduos); d = desvio padrão da função de dispersão com distribuição de Laplace. Para detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal."
@@ -284,7 +265,7 @@ p
 
 
 
-# taxa U
+## taxa U
 
 A partir dessa seção iremos analisar os dados das simulações feitas nos 3 tipos de paisagens hipotéticas: a paisagem contemporâneas, com a configuração espacial do habitat remanescente observada no mesmo ano que a melhor aproximação do ano da amostragem da parcela; a paisagem sem fragmentação per se, onde todo o habitat remanescente na paisagem contemporânea é aglomerado ao redor  da parcela em forma de quadrado; e a paisagem idealizada, sem perda de habitat. Quando há pouca perda de habitat a estimativa da taxa U não difere entre as 3 paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Para paisagens contemporâneas com proporção de cobertura vegetal abaixo de 0.95, observamos que a estimativa da taxa U pode ser distinta entre paisagens hipotéticas para alguns graus de limitação de dispersão (fig. \@ref(fig:GE-Urep-sitio-k-land)). A maior variação entre graus de limitação de dispersão ocorre nos graus de limitação de dispersão mais brandos simulados, seguido pelos graus mais severos; nos graus de limitação de dispersão pouco severos, onde há o máximo global nas paisagens infinitas e sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre tipos de paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em geral, a paisagem hipotética contemporânea apresenta estimativas superiores da taxa U em comparação com as outras duas paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em alguns casos, a estimativa em paisagem sem fragmentação per se pode ser superior ao estimado na paisagem contemporânea (fig. \@ref(fig:GE-Urep-sitio-k-land), na 2a coluna e 4a linha e na 10a coluna e 1a linha ). Sobre a estimativa da taxa U, em resumo: i) quanto maior a perda de habitat e mais branda a limitação de dispersão, maior a potencial diferença entre as 3 paisagens hipotéticas; ii) em geral a estimativa em paisagens contemporâneas é superior ao estimado nos outros 2 tipos de paisagens hipotéticas; iii) em geral o estimado nas paisagens sem fragmentação per se e sem perda de habitat são similares, porém, para alguns sítios com pouca proporção de cobertura vegetal, o estimado em paisagem sem fragmentação per se pode ser superior. 
 
@@ -334,9 +315,9 @@ __\@ref(fig:GE-Urep-sitio-k-land)__  (\@ref(fig:GE-sitios-amostrados))
 
 
 
-# SAD observada e SAD predita entre paisagens hipotéticas
+## SAD observada e SAD predita entre paisagens hipotéticas
 
-## Descrição do padrão observado
+### Descrição do padrão observado
 
 Buscamos diferentes estratégias para analisar os dados de congruência das SADs simuladas  com a SAD empírica, mas não concluímos nenhuma de maneira satisfatória. Então decidimos apresentar algumas figuras exploratórias, para avaliarmos se existem alguns padrões importantes. A primeira figura exploratória que avaliamos está na figura \@ref(fig:GE-nCong), onde cada painel apresenta os resultados de congruência agrupados por sítio de amostragem (no eixo x há os graus de limitação de dispersão, k, e no eixo y o número de SADs simuladas congruentes com a SAD observada), os pontos e linhas estão coloridos pelo tipo de paisagem hipotética, o fundo dos painéis está colorido pela proporção de cobertura vegetal contemporânea e os painéis estão agrupados pela classe de sucessão dos sítios amostrados usada na base de dados TreeCo. No canto inferior esquerdo, há um boxplot da proporção de cobertura vegetal (eixo y) em função da classe de sucessão (eixo x). Entendemos que podemos classificar os padrões de congruência por sítio de amostragem em função do grau de limitação de dispersão (k) em dois componentes: a congruência do modelo neutro em função de k, avaliando a nuvem de pontos considerando os 3 tipos de paisagem hipotética como um só (congruência do modelo neutro); e a diferença na congruência entre os 3 tipos de paisagem hipotética (congruência do tipo de paisagem hipotética). E após a classificação destes padrões de congruência podemos avaliar possíveis associações em função das possíveis preditoras empíricas (proporção de cobertura vegetal na paisagem local e classe de sucessão do sítio de amostragem). 
 
@@ -467,7 +448,7 @@ p
 
 \newpage
 
-## Discussão para o 2o Comitê de Acompanhamento
+### Discussão para o 2o Comitê de Acompanhamento
 
 Tentamos algumas abordagens para analisar os dados. Por conta da falta de tempo, não consegui organizar os documentos das análises passadas para mostrar. Segue um resumo das abordagens
 
