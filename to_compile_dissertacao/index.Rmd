@@ -12,8 +12,8 @@ output:
     fig_caption: yes
 editor_options: 
   chunk_output_type: console
-bibliography: ["./to_compile_dissertacao/bib_csl/citations.bib"]
-csl: "./to_compile_dissertacao/bib_csl/plos.csl"
+bibliography: ["/home/danilopereiramori/Documents/artigo_principal/to_compile_dissertacao/resources/citations.bib"]
+csl: "/home/danilopereiramori/Documents/artigo_principal/to_compile_dissertacao/resources//plos.csl"
 ---
 
 <style>

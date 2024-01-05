@@ -120,7 +120,7 @@ df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 df_tif_txt <- read.csv(file="./dados/csv/df_txt_tif_landscape_paths.csv")
 ```
 
-```{r trackdown chunk, include=FALSE,eval=FALSE}
+```{r trackdown chunk SI, include=FALSE,eval=FALSE}
 # pacotes
 library(trackdown)
 # both overwrite: 
@@ -259,7 +259,7 @@ p
 
 ## Predito para o contraste na taxa U entre paisagens
 
-```{r ip contrastes ~ p k,fig.height=figHeight,fig.width=figWidth,eval=FALSE,include=FALSE}
+```{r ip contrastes ~ p k 2,fig.height=figHeight,fig.width=figWidth,eval=FALSE,include=FALSE}
 df_plot <- df_intPred |> 
   mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
          k = k_z*sd(df_ad$k) + mean(df_ad$k),
