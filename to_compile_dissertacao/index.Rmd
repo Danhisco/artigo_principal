@@ -28,14 +28,3 @@ text-align: justify}
 # Resultados
 ```{r Resultados, child='./to_compile_dissertacao/02_Resultados/Resultados.Rmd'}
 ```
-
-# Efeito de escala na estimativa da taxa U necessária para manter a riqueza local no equilíbrio em um modelo neutro espacialmente explícito
-```{r Efeito de Escalar, child='./to_compile_dissertacao/03_EfeitoEscala/EfeitoEscala.Rmd'}
-```
-
-# Support Information
-
-```{r SI, child='./to_compile_dissertacao/04_SI/SI.Rmd'}
-```
-
-

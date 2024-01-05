@@ -1,6 +1,6 @@
 
 
-```{r setup,include=FALSE}
+```{r setup resultados,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
                       fig.align='center',tab.align='center')
 # pacotes
@@ -112,7 +112,7 @@ basic_theme <- function(data, ...){
 }
 ```
 
-```{r trackdown chunk, include=FALSE,eval=FALSE}
+```{r trackdown chunk resultados, include=FALSE,eval=FALSE}
 # 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
 # pacotes
 library(trackdown)
