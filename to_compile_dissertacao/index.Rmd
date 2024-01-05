@@ -21,15 +21,21 @@ body {
 text-align: justify}
 </style>
 
-# Materiais e Métodos 
+# Materiais e Método 
 ```{r MeM, child='./to_compile_dissertacao/01_MeM/MaterialeMetodo.Rmd'}
 ```
 
-# Chapter 2
+# Resultados
 ```{r Resultados, child='./to_compile_dissertacao/02_Resultados/Resultados.Rmd'}
 ```
 
-# Chapter 3
-```{r Efeito de Escalar, child='./to_compile_dissertacao/01_MeM/MaterialeMetodo.Rmd'}
+# Efeito de Escalar
+```{r Efeito de Escalar, child='./to_compile_dissertacao/03_EfeitoEscala/EfeitoEscala.Rmd'}
 ```
+
+# Support Information
+
+```{r SI, child='./to_compile_dissertacao/04_SI/SI.Rmd'}
+```
+
 
