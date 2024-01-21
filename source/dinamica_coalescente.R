@@ -147,6 +147,7 @@ f_writeSADcsv <- function(df_bySite, land_matrix = FALSE,
 }
 
 f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06,general_path){
+  # nessa função já é feito todo o processo: U -> SADs
   SAD_path <- paste0(general_path,"/csv/SADs_neutras/MNEE/",df$land_type[1],"/",df$SiteCode[1],".csv")
   if(file.exists(SAD_path)){
     return(NA)
@@ -172,4 +173,10 @@ f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06,general_path){
   # SAD
   folder_path <- paste0(general_path,"/csv/SADs_neutras/MNEE/",df$land_type[1],"/")
   f_writeSADcsv(df_bySite = df_simSAD,land_matrix = m_land, path_csv = folder_path,n_replicas = SAD_rep)
+}
+
+f_simMNEE2 <- \(df,SAD_rep=100,general_path, U_path="../csv/taxaU/df_U.csv"){
+  df_U <- read_csv(U_path) %>% 
+    filter(land_type=="ideal",SiteCode==df$SiteCode[1]) %>% select(-land_type)
+  
 }
