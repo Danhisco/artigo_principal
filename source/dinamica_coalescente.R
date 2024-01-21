@@ -175,8 +175,19 @@ f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06,general_path){
   f_writeSADcsv(df_bySite = df_simSAD,land_matrix = m_land, path_csv = folder_path,n_replicas = SAD_rep)
 }
 
-f_simMNEE2 <- \(df,SAD_rep=100,general_path, U_path="../csv/taxaU/df_U.csv"){
+f_simMNEE2 <- \(df, SAD_rep=100, repo_path="../csv/SADs_neutras/MNEE_Uidealizado/", U_path="../csv/taxaU/df_U.csv"){
   df_U <- read_csv(U_path) %>% 
     filter(land_type=="ideal",SiteCode==df$SiteCode[1]) %>% select(-land_type)
+  df_simSAD <- inner_join(df,df_U) %>% select(SiteCode,k:p,Umed)
+  l_mland <- list()
+  l_mland[[1]] <- read.table(df$txt.path[1]) |> as.matrix()
+  l_mland[[2]] <- f_nonFragLand(l_mland[[1]])
+  names(l_mland) <- c("contemp","non_frag")
+  a_ply(names(l_mland),1,\(vname){
+    f_writeSADcsv(df_bySite = df_simSAD,
+                  land_matrix = l_mland[[vname]], 
+                  path_csv = paste0(repo_path,vname,"__"),
+                  n_replicas = SAD_rep)  
+  })
   
 }
