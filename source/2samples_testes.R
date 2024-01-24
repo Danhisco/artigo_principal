@@ -70,6 +70,18 @@ f_congContrastes <- \(df_pSite,n_ks=500,n_replicate=500,repo="dados/csv/congruen
   df_toWrite <- adply(df_adply,1,f_aply)
   write_csv(df_toWrite,file = paste0(repo,df_pSite$SiteCode[1],".csv"))
 }
+#
+# f_summarise_SAD_MNEE
+f_summarise_SAD_MNEE <- \(df){
+#@ df: df por site, k, e  land_type
+ cbind(df[1,1:3],with(df,data.frame(
+   nCongKS = sum(p.KS>0.05),
+   Smed = mean(S),
+   Ssd = sd(S),
+   Smin = min(S),
+   Smax = max(S)))
+  )
+}
 
 # 
 # 
