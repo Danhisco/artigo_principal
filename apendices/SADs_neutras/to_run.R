@@ -18,4 +18,4 @@ df_SADrep2 <- mutate(data.frame(
 # rotina
 registerDoMC(3)
 df_repMNEE <- adply(df_SADrep2,1,f_resultsMN,.parallel = TRUE)
-write_csv(select(df_repMNEE,SiteCode:S), file = "dados/csv/resultados_MN/MNEE/df_repMNEE2.csv")
+write_csv(df_repMNEE, file = "dados/csv/resultados_MN/MNEE/df_repMNEE2.csv")
