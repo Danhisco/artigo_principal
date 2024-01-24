@@ -66,6 +66,13 @@ df_SADrep <- mutate(data.frame(
   SiteCode = str_extract(SADrep.path,"(?<=[cont|frag|ideal]\\/).*?(?=.csv)"),
   land_type = str_extract(SADrep.path,"(?<=MNEE\\/).*?(?=\\/)"),
   SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv"))
+# df_SADrep
+df_SADrep2 <- mutate(data.frame(
+  SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE_taxaU_idealizado",
+                           pattern = ".csv",full.names = T,recursive = T)),
+  SiteCode = str_extract(SADrep.path,"(?<=\\_\\_).*?(?=.csv)"),
+  land_type = str_extract(SADrep.path,"(?<=zado\\/).*?(?=\\_\\_)"),
+  SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv"))
 # # df_repMNEE
 df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
 # # df_resultMNEE
@@ -82,11 +89,18 @@ df_logOR <- df_resultados |>
 
 ### testes KS e a contagem de espécies
 
-```{r testes KS e S}
+```{r testes KS e S - taxa U por tipo de paisagem}
 registerDoMC(3)
 df_repMNEE <- adply(df_SADrep,1,f_resultsMN,.parallel = TRUE)
 write_csv(select(df_repMNEE,SiteCode:S), file = "dados/csv/resultados_MN/MNEE/df_repMNEE")
 ```
+
+```{r testes KS e S - taxa U idealizado}
+registerDoMC(3)
+df_repMNEE <- adply(df_SADrep2,1,f_resultsMN,.parallel = TRUE)
+write_csv(select(df_repMNEE,SiteCode:S), file = "dados/csv/resultados_MN/MNEE/df_repMNEE")
+```
+
 
 ```{r summarise resultados de MNEE}
 # resultados base
