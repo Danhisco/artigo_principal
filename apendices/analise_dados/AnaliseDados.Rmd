@@ -18,13 +18,13 @@ text-align: justify}
 ```{r setup,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE)
 # pacotes
-# library(dagitty)
-# library(ggdag)
-# library(gratia)
-# library(sads)
+library(dagitty)
+library(ggdag)
+library(gratia)
+library(sads)
 library(doMC)
-# library(metR)
-# library(sjPlot)
+library(metR)
+library(sjPlot)
 library(gridExtra)
 # library(ggpubr)
 library(ggplot2)
@@ -33,8 +33,8 @@ library(purrr)
 library(stringr)
 library(tidyr)
 library(MuMIn)
-# library(AICcmodavg)
-# library(insight)
+library(AICcmodavg)
+library(insight)
 library(bbmle)
 library(DHARMa)
 library(mgcv)
@@ -42,6 +42,7 @@ library(lme4)
 # library(gamm4)
 library(plyr)
 library(dplyr)
+source("source/2samples_testes.R")
 source("source/general_tools.R")
 source("source/GAMMtools.R")
 # objetos
@@ -66,7 +67,6 @@ df_ad <- df_resultados |>
   arrange(p) |> 
   inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
   mutate(diffS = (Smed - S_obs)/S_obs)
-
 # df_contrastes: contrastes por sítio e grau de limitação de dispersão
 df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
   inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
@@ -136,6 +136,13 @@ df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |>
   select(-succession)
 df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 write_csv(df_plot,"dados/csv/df_plot_geral.csv")
+# 
+registerDoMC(3)
+df_MNEE_Uidealizado <- read.csv("./dados/csv/resultados_MN/MNEE/df_repRes2.csv") %>% 
+  rbind.fill(df_resultados %>% filter(land_type=="ideal") %>% select(SiteCode,k:Smax)) %>% 
+  arrange(SiteCode,k) %>%
+  ddply(.,c("SiteCode","k"),f_logOR_land_type,.parallel = TRUE)
+
 ```
 
 # GE Gerais

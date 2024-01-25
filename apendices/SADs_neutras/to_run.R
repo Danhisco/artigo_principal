@@ -20,11 +20,21 @@ if(!file.exists("dados/csv/resultados_MN/MNEE/df_repMNEE2.csv")){
   registerDoMC(3)
   df_repMNEE <- adply(df_SADrep2,1,f_resultsMN,.parallel = TRUE)
   write_csv(df_repMNEE, file = "dados/csv/resultados_MN/MNEE/df_repMNEE2.csv")  
-}else if(file.exists("./dados/csv/resultados_MN/MNEE/df_repMNEE2.csv")){
+}else if(!file.exists("./dados/csv/resultados_MN/MNEE/df_repMNEE2.csv")){
   registerDoMC(3)
   df_repMNEE <- read_csv("./dados/csv/resultados_MN/MNEE/df_repMNEE2.csv")
   df_repRes <- ddply(df_repMNEE,c("SiteCode","k","land_type"),f_summarise_SAD_MNEE,.parallel = TRUE)
-  write_csv(df_repRes, file = "dados/csv/resultados_MN/MNEE/df_repRes2.csv")  
+  write_csv(df_repRes, file = "dados/csv/resultados_MN/MNEE/df_repRes2.csv") 
+}else if(file.exists("./dados/csv/resultados_MN/MNEE/df_repMNEE2.csv") &
+         !file.exists("./dados/csv/resultados_MN/MNEE/df_resultados2.csv")){
+  df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
+  registerDoMC(3)
+  df_MNEE_Uidealizado <- read.csv("./dados/csv/resultados_MN/MNEE/df_repRes2.csv") %>% 
+    rbind.fill(df_resultados %>% filter(land_type=="ideal") %>% select(SiteCode,k:Smax)) %>% 
+    arrange(SiteCode,k) %>%
+    ddply(.,c("SiteCode","k"),f_logOR_land_type,.parallel = TRUE)
+  write_csv(df_MNEE_Uidealizado,
+            file="./dados/csv/resultados_MN/MNEE/df_resultados2.csv")
 }else{
   warning("Tem trabalho para fazer? Se sim, remover os .csv")
 }

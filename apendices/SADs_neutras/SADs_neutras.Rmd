@@ -117,8 +117,15 @@ df_resultados <- df_repMNEE |>
                               TRUE ~ nCongKS / 100)) |> 
   inner_join(x=df_p,by="SiteCode")
 #
-f_ddply <- \(df,
-             pairs = list(c("cont","non_frag"),c("cont","ideal"),c("non_frag","ideal"))){
+
+
+f_logOR_land_type <- \(df,
+                       pairs=list(c("contemp","non_frag"),
+                                  c("contemp","ideal"))){
+                         # pairs=list(c("contemp","non_frag"),
+                         #          c("contemp","ideal"),
+                         #          c("non_frag","ideal"))){
+  
   f <- \(v_string){
     p1 <- df |> filter(land_type == v_string[1]) |> pull(propCong)
     p1 <- p1 / (1-p1)
