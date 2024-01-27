@@ -150,6 +150,52 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 <!-- # Figuras  -->
 
 
+# Sítios Selecionados
+
+```{r caption 1}
+cap <- "Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão))."
+```
+```{r GE-sitios-amostrados criacao,eval=FALSE,include=FALSE}
+df_plot <- df_dados_disponiveis |> 
+  select(SiteCode, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
+l_p <- list()
+l_p[[1]] <- df_plot |> 
+  ggplot(aes(y=lat,x=long)) +
+  geom_point(alpha=0.5) +
+  theme_light() +
+  labs(subtitle = "a)")
+v_labels <- c("effort_ha" = "plot area (ha)",
+              "Ntotal" = "# ind",
+              "S_obs" = "riqueza",
+              "year_bestProxy" = "approx. data year")
+df_plot[grep("\\_",df_plot$year_bestProxy),"year_bestProxy"] <- "2012.5"
+l_p[[2]] <- df_plot |>
+  mutate(year_bestProxy = as.numeric(year_bestProxy)) |> 
+  pivot_longer(effort_ha:year_bestProxy) |> 
+  ggplot(aes(x=name,y=value)) +
+  geom_jitter(alpha=0.4) +
+  geom_boxplot() +
+  labs(x="",y="",subtitle="b)") +
+  facet_wrap(~name,ncol=1,scales="free", labeller = as_labeller(v_labels), strip.position = "bottom") +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        strip.background = element_blank(),
+        strip.placement = "outside") +
+  coord_flip()
+l_p[[3]] <- df_plot |> 
+  ggplot(aes(x=forest_succession)) +
+  geom_bar() +
+  geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
+  labs(x="classificação de estágio sucessional do TreeCo",
+       y="countagem",subtitle="c)")
+save(l_p,file="./dados/Rdata/figA21.Rdata")
+```
+```{r GE-sitios-amostrados,fig.width=12,fig.height=6,fig.cap=cap,cache=TRUE,fig.pos="H"}
+load("./dados/Rdata/figA21.Rdata")
+grid.arrange(grobs=l_p,nrow=1)
+```
+
+
 
 ## Paisagens Contemporâneas
 ```{r caption 2}
