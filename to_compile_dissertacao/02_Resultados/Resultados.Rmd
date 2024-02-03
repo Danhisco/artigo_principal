@@ -34,6 +34,7 @@ library(plyr)
 library(dplyr)
 source("source/general_tools.R")
 source("source/GAMMtools.R")
+source("source/fig_tools.R")
 # tamanho da fonte dos títulos dos gráficos dos resultados por síio de amosttragem (Umed e nCong)
 v_titleS <- 1000
 v_ncol_fatetwrap <- 14
@@ -157,6 +158,9 @@ FUTURAMENTE:
 1a parte) 3 quadros cada uma agregada por tipo de paisagem e com todos os sítios com traço mais claro e a média geral em destaque
 2a parte) Efeitos da Paisagem: contraste entre as esimativas das taxas Us entre tipos de paisagens
 
+```{r fig-taxaU}
+
+```
 
 
 

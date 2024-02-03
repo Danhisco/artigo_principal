@@ -145,6 +145,47 @@ df_MNEE_Uidealizado <- read.csv("./dados/csv/resultados_MN/MNEE/df_repRes2.csv")
 
 ```
 
+
+# taxa U
+
+## média geral e por sítio a partir de U rep
+
+__modelos ajustados__
+```{r U media a partir da U rep}
+df_md <- df_Urep %>% 
+  pivot_longer(cols = -c(SiteCode:d),names_to = "rep",values_to = "U") %>% 
+  mutate(k = factor(round(k,digits = 2)))
+l_f <- list()
+l_f[[1]] <- "U ~ land_type * k + (k|SiteCode)"
+l_f[[2]] <- "U ~ k + (k|SiteCode)"
+names(l_f) <- c("U ~ land type * k", "U ~ k")
+registerDoMC(2)
+l_md <- llply(l_f, \(li) lmer(as.formula(li),data=df_md),.parallel = TRUE)
+AICctab(l_md,weights=TRUE)
+saveRDS(l_md,file="./apendices/analise_dados/Rdata/l_md_taxaUrep.rds")
+```
+
+__comparação de modelos e diagnosticos__
+```{r}
+# tabela de seleção
+l_md <- readRDS("./apendices/analise_dados/Rdata/l_md_taxaUrep.rds")
+df_tab <- AICctab(l_md,weights=TRUE) %>% as.data.frame()
+#
+md <- l_md[[row.names(df_tab)[1]]]
+#
+resDharma <- simulateResiduals(md,n=1000)
+plot(resDharma)
+```
+
+
+
+
+
+
+########## antigos:
+
+
+
 # GE Gerais
 
 ```{r classificação dos sítios por tipo de congruência}
