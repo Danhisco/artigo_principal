@@ -70,6 +70,41 @@ f_congContrastes <- \(df_pSite,n_ks=500,n_replicate=500,repo="dados/csv/congruen
   df_toWrite <- adply(df_adply,1,f_aply)
   write_csv(df_toWrite,file = paste0(repo,df_pSite$SiteCode[1],".csv"))
 }
+#
+# f_summarise_SAD_MNEE
+f_summarise_SAD_MNEE <- \(df){
+#@ df: df por site, k, e  land_type
+ cbind(df[1,1:3],with(df,data.frame(
+   nCongKS = sum(p.KS>0.05),
+   Smed = mean(S),
+   Ssd = sd(S),
+   Smin = min(S),
+   Smax = max(S)))
+  )
+}
+# f_logOR_land_type
+f_logOR_land_type <- \(df,
+                       # pairs=list(c("contemp","non_frag"),
+                       #            c("contemp","ideal"))){
+  pairs=list(c("contemp","non_frag"),
+           c("contemp","ideal"),
+           c("non_frag","ideal"))){
+  df <- df %>% 
+    mutate(propCong = case_when(nCongKS == 100 ~ 99.9 / 100,
+                                nCongKS == 0 ~ 0.1 / 100,
+                                TRUE ~ nCongKS / 100))
+  f <- \(v_string){
+    p1 <- df |> filter(land_type == v_string[1]) |> pull(propCong)
+    p1 <- p1 / (1-p1)
+    p2 <- df |> filter(land_type == v_string[2]) |> pull(propCong)
+    p2 <- p2 / (1-p2)
+    data.frame(logOR_pair = paste(v_string,collapse = "."),
+               logOR_value = log( p1 / p2 ) )
+  }
+  cbind(df,ldply(pairs,f))
+}
+
+
 
 # 
 # 

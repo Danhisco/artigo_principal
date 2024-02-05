@@ -150,6 +150,52 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 <!-- # Figuras  -->
 
 
+# Sítios Selecionados
+
+```{r caption 1}
+cap <- "Sítios selecionados na base de dados TreeCo. a) latitude e longitude das coordenadas centrais dos inventários florestais. b) boxplot de variáveis dos inventários: área da parcela, número de indivíduos amostrado, riqueza de espécies observado, e ano da amostragem ou da publicação. c) Classificação do estado de conservação ou sucessional da área amostrada no inventário: primary (floresta primária, não-alterada, primitiva, old-growth (≥80 anos de sucessão) ); primary/secondary (floresta em estágio avançado de sucessão (50 a 80 anos de sucessão)); secondary (floresta secundária, alterada, em estágio médio de regeneração (20 a 50 anos de sucessão)); capoeira (floresta em estado inicial de sucessão (<20 anos de sucessão))."
+```
+```{r GE-sitios-amostrados criacao,eval=FALSE,include=FALSE}
+df_plot <- df_dados_disponiveis |> 
+  select(SiteCode, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
+l_p <- list()
+l_p[[1]] <- df_plot |> 
+  ggplot(aes(y=lat,x=long)) +
+  geom_point(alpha=0.5) +
+  theme_light() +
+  labs(subtitle = "a)")
+v_labels <- c("effort_ha" = "plot area (ha)",
+              "Ntotal" = "# ind",
+              "S_obs" = "riqueza",
+              "year_bestProxy" = "approx. data year")
+df_plot[grep("\\_",df_plot$year_bestProxy),"year_bestProxy"] <- "2012.5"
+l_p[[2]] <- df_plot |>
+  mutate(year_bestProxy = as.numeric(year_bestProxy)) |> 
+  pivot_longer(effort_ha:year_bestProxy) |> 
+  ggplot(aes(x=name,y=value)) +
+  geom_jitter(alpha=0.4) +
+  geom_boxplot() +
+  labs(x="",y="",subtitle="b)") +
+  facet_wrap(~name,ncol=1,scales="free", labeller = as_labeller(v_labels), strip.position = "bottom") +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        strip.background = element_blank(),
+        strip.placement = "outside") +
+  coord_flip()
+l_p[[3]] <- df_plot |> 
+  ggplot(aes(x=forest_succession)) +
+  geom_bar() +
+  geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
+  labs(x="classificação de estágio sucessional do TreeCo",
+       y="countagem",subtitle="c)")
+save(l_p,file="./dados/Rdata/figA21.Rdata")
+```
+```{r GE-sitios-amostrados,fig.width=12,fig.height=6,fig.cap=cap,cache=TRUE,fig.pos="H"}
+load("./dados/Rdata/figA21.Rdata")
+grid.arrange(grobs=l_p,nrow=1)
+```
+
+
 
 ## Paisagens Contemporâneas
 ```{r caption 2}
@@ -160,6 +206,48 @@ v_pngfiles <- list.files(path="./dados/paisagens/png_land_sim/",pattern=".png",f
 l_p <- v_pngfiles %>% ll_ggpng()
 grid.arrange(grobs=l_p,ncol=10)
 ```
+
+
+## Taxa U estimado em cada paisagem teórica
+
+```{r caption GE  características dos Sítios Selecionados}
+# caption
+cap <- "Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo"
+```
+```{r figura GE características dos Sítios Selecionados, eval=FALSE,include=FALSE,fig.cap=cap}
+# figura
+df_plot <- df_Urep %>% select(-d) %>% 
+  pivot_longer(-c(SiteCode:k),names_to = "rep",values_to = "U") |>
+  inner_join(df_p) |> 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+p <- df_plot |> 
+  ggplot(aes(x=k,y=U,color=land_type)) +
+  geom_point(alpha=0.1) +
+  # geom_line() +
+  stat_summary(geom = "line",fun.data = mean_se,alpha=0.5) +
+  scale_x_reverse() +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  theme_bw() +
+  labs(color="landscape type") +
+  theme(legend.position = "top",
+        axis.text=element_text(size=4.5),
+        strip.text = element_text(size = 4.5, margin = margin())) +
+        # legend.title=element_text(size=v_titleS),
+        # legend.text = element_text(size = v_titleS)) +
+  scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                     labels=c("contemporâneo","idealizado","sem fragmentação")) +
+  facet_wrap(~label,ncol=v_ncol_fatetwrap,scales="free")
+save(p,file="./dados/Rdata/figA23.Rdata")
+```
+```{r GE-Urep-sitio-k-land,eval=TRUE,fig.height=figHeight,fig.width=figWidth,fig.cap=cap,fig.pos="H"}
+load("./dados/Rdata/figA23.Rdata")
+p
+```
+
+
+### 
 
 
 \newpage
@@ -253,6 +341,223 @@ cap <- "Modelos Lineares Gaussianos da relação entre as preditoras empíricas 
 p <- ll_ggpng("./figuras/figSI_2.png")[[1]]
 p
 ```
+
+
+# Congruência com a SAD Observada 
+
+
+
+```{r ggplot2code GE nCong,eval=FALSE,include=FALSE,cache=TRUE}
+df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
+  inner_join(df_p) |> 
+  inner_join(df_dados_disponiveis |> 
+               filter(forest_succession != "capoeira") %>% 
+               select(SiteCode, forest_succession)) %>% 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+#
+f_plot <- \(nvresp="nCong",
+            png_repo = "apendices/analise_dados/figuras/",
+            end_name = "_k_land.hyp_site"){
+  f_ <- \(dfi){
+    dfi %>% 
+      ggplot(aes(x=k,y=.data[[nvresp]],color=land_hyp,fill = p)) +
+      geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf)) +
+      geom_point(alpha=0.5) +
+      geom_line(alpha=0.5) +
+      scale_x_reverse() +
+      theme_bw() +
+      labs(color="landscape hyp.") +
+      theme(legend.position = "top",
+            axis.text=element_text(size=4.5),
+            axis.title = element_text(size = 20),
+            strip.text = element_text(size = textsize, margin = margin())) +
+            # legend.title=element_text(size=v_titleS),
+            # legend.text = element_text(size = v_titleS)) +
+      scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                         labels=c("contemporâneo","idealizado","sem fragmentação")) +
+      scale_fill_gradientn(colours = terrain.colors(10),trans="reverse",values = c(0,0.5,1),guide = "none") +
+      # scale_fill_gradient2(low="white",mid = "brown",high="green",midpoint = 0.5,limi)
+      facet_wrap(~label,ncol=5)
+  }
+  l_p <- dlply(df_plot,"forest_succession",f_)
+  l_p <- alply(names(l_p),1,\(nli){
+    l_p[[nli]] + labs(title = nli) + theme(plot.title = element_text(hjust = 0.5))
+  })
+  save(l_p,file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
+}
+f_plot()
+########
+nvresp="nCong";png_repo = "apendices/analise_dados/figuras/";end_name = "_k_land.hyp_site"
+oname <- load(file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
+l_p <- get(oname)
+laymat <- cbind(rep(1,10),
+                c(rep(2,6),NA,NA,NA,NA),
+                c(rep(3,6),NA,NA,NA,NA))
+legend_position="top"
+plot_table <- ggplot_gtable(ggplot_build(l_p[[1]])) # get tabular interpretation of plot 
+index_legend_plot <- which(sapply(plot_table$grobs, function(x) x$name) == "guide-box") #  Mark only legend in plot 
+common_legend <- plot_table$grobs[[index_legend_plot]] # extract legend 
+# títulos associados
+l_title <- llply(l_p,\(li){
+  p_title <- ggplot_gtable(ggplot_build(li))  
+  index_title <- str_which(sapply(p_title$grobs, function(x) x$name),"plot.title")
+  p_title$grobs[[index_title]] 
+})
+# remoção dos títulos e das legendas
+l_p <- llply(l_p,\(li){
+  # arrumar título
+  p_title <- ggplot_gtable(ggplot_build(li))  
+  index_title <- str_which(sapply(p_title$grobs, function(x) x$name),"plot.title")
+  p_title <- p_title$grobs[[index_title]] 
+  # remoção de legenda e ajuste eixos
+  li +  
+    theme(legend.position = "none",
+          plot.title = element_blank(),
+          axis.title = element_text(size = textsize)) +
+    labs(y="#SADs cong")
+  # # arranjo dos gráficos
+  })
+arrenged_plot <- arrangeGrob(grobs=l_p,layout_matrix = laymat)
+arrenged_plot <- arrangeGrob(arrangeGrob(grobs = l_title,nrow = 1),
+                             arrenged_plot,
+                             heights = c(0.5, 10))
+if(legend_position=="bottom"){
+  p <- arrangeGrob(common_legend,arrenged_plot,ncol=1,heights = c(10, 1))
+}else if(legend_position=="top"){
+  p <- arrangeGrob(common_legend,arrenged_plot,ncol=1,heights = c(1, 10))
+}
+l_plot <- list()
+l_plot[[1]] <- p %>% as_ggplot()
+l_plot[[2]] <- df_plot %>% filter(k==0.05,land_hyp=="cont") %>% distinct() %>%
+  ggplot(aes(x=forest_succession,y=p,colour=p)) +
+  geom_boxplot() +
+  geom_jitter(size=2) +
+  theme_grey() +
+  scale_colour_gradientn(colours = terrain.colors(10),trans="reverse",values = c(0,0.5,1),
+                         guide=guide_colourbar(reverse = TRUE,barheight = 15)) +
+  scale_x_discrete(labels=c("secondary" = "2a", "primary" = "1a", "primary/secondary"="1a/2a")) +
+  theme(legend.position = "left",
+        # axis.text.y=element_blank(),
+        # axis.ticks.y=element_blank(),
+        # axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  labs(x="forest succession")
+save(l_plot,file="./figuras/fig6_final.Rdata")
+#
+v_size = 3
+# v_w <- 860
+png("./figuras/fig6_final.png",width = 743 * v_size, height = 712 * v_size,res = 72 * v_size)
+l_plot[[1]]
+print(l_plot[[2]],vp=viewport(0.85, 0, 0.3, 0.3,just = "bottom"))
+dev.off()
+```
+```{r caption GE nCong }
+cap <- "Número de SADs simuladas congruentes com a SAD empírica (eixo y). A classificação da SAD simulada como congruente ocorreu quando a comparação entre SADs segundo um teste de Kolmogorov-Smirnov apresentou p-valor igual ou maior do que 0.05. No eixo x há o grau de limitação de dispersão per capita (k). Os pontos são coloridos pelo tipo de paisagem hipotética pressuposta pela simulação. Os paíneis estão organizados pela proporção de cobertura vegetal na paisagem ao redor de 4x4km2."
+```
+```{r GE-nCong,eval=TRUE,fig.height=10,fig.width=figWidth,fig.cap=cap,fig.pos="H",cache=FALSE}
+p <- ll_ggpng("./figuras/fig6_final.png")[[1]]
+p
+# load("./figuras/fig6_final.Rdata")
+# l_plot[[1]]
+# print(l_plot[[2]],vp=viewport(0.70, 0, 0.3, 0.3,just = "bottom"))
+```
+
+## Gráficos da distribuição espacial do padrão observado 
+
+
+```{r caption next figure}
+cap <- "Distribuição espacial da avaliação visual e das preditoras empíricas. Na primeira linha (a e b) as classificações visuais do padrão de congruência com o observado: a) diferença entre as paisagens hipotéticas; b) congruência do predito pelo modelo neutro (independente do tipo de paisagem) com a SAD observada ao longo dos graus de dispersão simulados. Na segunda linha (c e d) as preditoras empíricas: c) proporção de cobertura vegetal (p); e d) classe de sucessão ecológica do TreeCo (primary =>80 anos desde o dist., primary/secondary = entre 80 e 50 anos, secondary = entre 50 e 20 anos)"
+```
+```{r GE-coordenadas-preditoras,fig.cap=cap,fig.height=10,fig.width=10}
+# Install and load necessary packages
+# library(sf)
+# dados
+df_class <- read.csv(file="./dados/csv/df_class.csv")
+# df_class$land_diff %>% table()
+v_landdiff <- df_class$land_diff %>% unique()
+# df_class$Cong %>% table()
+v_cong <- df_class$Cong %>% unique()
+df_class <- df_class %>% mutate(
+  classi_land = case_when(land_diff %in% c("similar","igual") ~ "similares",
+                          land_diff %in% v_landdiff[str_which(v_landdiff,"contemp")] ~ "contemp. dif.", 
+                          land_diff %in% v_landdiff[str_which(v_landdiff,"ideal")] ~ "ideal.\ndif.",
+                          land_diff == "sem frag pior" ~ "sem frag.\ndif."),
+  classi_land2 = case_when(land_diff %in% v_landdiff[str_which(v_landdiff,"contemp")] ~ gsub("contemp ","cont. \n",land_diff),
+                           TRUE ~ classi_land),
+  classi_cong = case_when(Cong %in% c("ruim exceto em graus brandos","melhor em graus brandos") ~ "boa em brandos",
+                          Cong == "ruim em intermediário e boa em graus brandos" ~ "ruim em intermed",
+                          TRUE ~ Cong)) %>% 
+  select(-land_diff,-Cong)
+df_class$classi_cong <- gsub(" graus","",df_class$classi_cong) %>% 
+  gsub("intermediários","intermed",.) %>% 
+  gsub(" em"," em\n",.)
+#
+df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
+  inner_join(df_p) |> 
+  inner_join(df_dados_disponiveis |> 
+               filter(forest_succession != "capoeira") %>% 
+               select(SiteCode, forest_succession)) %>% 
+  arrange(p) |> 
+  mutate(succession = case_when(forest_succession == "primary" ~ "1°",
+                                forest_succession == "secondary" ~ "2°",
+                                forest_succession == "primary/secondary" ~ "1.5°"),
+         label = paste0(SiteCode,", p=",round(p,2)," ,suc=",succession)) %>% 
+  select(-succession)
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot <- inner_join(df_plot,df_class) %>% 
+  inner_join(.,df_dados_disponiveis %>% select(SiteCode, lat:long_correct))
+#
+v_labels <- c("classi_land2"="a) Diferença entre paisagens","classi_cong"="b) Congruência do modelo neutro",
+              "p"="c) % cobertura vegetal (p)","forest_succession"="d) classe de tempo desde o último dist. no local")
+l_vcolors <- list()
+# l_vcolors[[1]] <- c("similares"="black","sem frag. dif."="#003300","contemp. dif."="#CC0000","ideal. dif."="darkblue")
+l_vcolors[[1]] <- c("similares"="black","sem frag.\ndif."="#003300","ideal.\ndif."="darkblue",
+                    "cont. \nmelhor"="darkred","cont. \npior"="#E69F00","cont. \ndiferente"="darkgrey")
+l_vcolors[[2]] <- c("boa"="#003300","boa exceto em\n brandos"="yellow","boa em\n intermed"="darkblue","boa em\n brandos"="purple","ruim em\n intermed"="#CC0000","ruim"="#FF0000")
+l_vcolors[[3]] <- NA
+l_vcolors[[4]] <- c("secondary"="darkblue","primary/secondary"="darkred","primary"="darkgreen")
+names(l_vcolors) <- names(v_labels)
+#
+f_plot <- \(cname){
+  v_colors <- l_vcolors[[cname]]
+  p <- df_plot |> 
+  mutate(lat=ifelse(is.na(lat),lat_correct,lat),
+         long=ifelse(is.na(long),long_correct,long)) %>% 
+  filter(k==0.05,land_hyp=="cont") %>% 
+  ggplot(aes(y=lat,x=long,color=.data[[cname]])) +
+    geom_point(shape=15,size=5,alpha=0.8) + # alpha=0.5
+    {if(cname=="p") scale_colour_gradientn(colours = terrain.colors(10),
+                                           trans="reverse") else scale_color_manual(values=v_colors)} +
+    theme_light() +
+    theme(legend.position = c(.95, .35),
+          legend.title = element_blank(),
+          # aspect.ratio = 1,
+          legend.justification = c("right", "top"),
+          legend.box.just = "right",
+          legend.margin = margin(0, 0, 0, 0)
+          # legend.background = element_blank(),
+          # legend.box.background = element_rect(colour = "black")
+          ) +
+    # guides(color = guide_legend(override.aes = list(size = 1))) +
+    labs(subtitle = v_labels[cname])
+  p_return <- if(cname!="p"){
+    p + theme(legend.background = element_blank(),legend.box.background = element_rect(colour = "black"))
+  }else{
+    p
+  }
+  return(p_return)
+}
+l_p <- alply(names(v_labels),1,f_plot)
+grid.arrange(grobs=l_p,ncol=2)
+# save(p,file="./dados/Rdata/coordenadas_preditoras.Rdata")
+```
+```{r GE-coordenadas-preditoras0,fig.cap=cap,eval=FALSE}
+# load(file="./dados/Rdata/coordenadas_preditoras.Rdata")
+# p
+```
+
 
 
 \newpage
