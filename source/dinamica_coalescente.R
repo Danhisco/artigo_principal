@@ -142,7 +142,7 @@ f_writeSADcsv <- function(df_bySite, land_matrix = FALSE,
                           n_replicas=100, path_csv){
   f_adply <- \(X) f_simSAD(df_1row = X, land_mat = land_matrix,n = n_replicas)
   m_SADreplicas <- adply(df_bySite,1,f_adply)
-  write_csv(select(m_SADreplicas,-c(effort_ha:S_obs,d:p,Umed)),
+  write_csv(select(m_SADreplicas,-c(d:Umed)),
             file = paste0(path_csv,df_bySite$SiteCode[1],".csv"))
 }
 
@@ -175,7 +175,7 @@ f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06,general_path){
   f_writeSADcsv(df_bySite = df_simSAD,land_matrix = m_land, path_csv = folder_path,n_replicas = SAD_rep)
 }
 
-f_simMNEE2 <- \(df, SAD_rep=100, repo_path="../csv/SADs_neutras/MNEE_Uidealizado/", U_path="../csv/taxaU/df_U.csv"){
+f_simMNEE2 <- \(df, SAD_rep=100, repo_path="../csv/SADs_neutras/MNEE_taxaU_idealizado/", U_path="../csv/taxaU/df_U.csv"){
   df_U <- read_csv(U_path) %>% 
     filter(land_type=="ideal",SiteCode==df$SiteCode[1]) %>% select(-land_type)
   df_simSAD <- inner_join(df,df_U) %>% select(SiteCode,k:p,Umed)

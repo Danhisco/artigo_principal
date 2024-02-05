@@ -12,7 +12,7 @@ f_kableExtra <- \(df, string_caption,footnote=NULL,col_width_index=2,col_width_v
 
 
 #
-source("/home/danilopereiramori/Documents/artigo_principal/source/nameModel.R")
+source("./source/nameModel.R")
 #
 f_refit <- \(md){
   v_mes <- md@optinfo$conv$lme4$messages
