@@ -169,10 +169,12 @@ __comparação de modelos e diagnosticos__
 ```{r}
 # tabela de seleção
 l_md <- readRDS("./apendices/analise_dados/Rdata/l_md_taxaUrep.rds")
-df_tab <- AICctab(l_md,weights=TRUE) %>% as.data.frame()
-#
-md <- l_md[[row.names(df_tab)[1]]]
-#
+df_tab <- l_md %>% f_tselR2()
+saveRDS(df_tab,file="./secoes_texto/Resultados/dados/df_tselR2_Urep.rds")
+# gráficos diagnósticos
+f_resDharma(md = l_md[[df_tab$formula[1]]],
+            png_fullpath = "./secoes_texto/Resultados/figuras/resDharma_Urep_maisplaus.png",
+            width = 800,height = 600,units = "px", res = 100)
 resDharma <- simulateResiduals(md,n=1000)
 plot(resDharma)
 ```
