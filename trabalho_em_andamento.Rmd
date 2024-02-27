@@ -1,0 +1,21 @@
+---
+title: "Trabalho em Andamento"
+author: "Danilo Pereira Mori"
+date: "2024-02-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 27fev2024
+
+
+
+# 26fev2024
+
+Anteriormente, 
+simulei as SADs preditas nas paisagens contemporâneas e aglomeradas. Agora irei continuar as análises das SADs preditas nas paisagens contemporânea e aglomerada com o U prístino. 
+
+Ontem fiz o pedido de prorrogação por conta da influência da pandemia.

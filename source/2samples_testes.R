@@ -74,6 +74,7 @@ f_congContrastes <- \(df_pSite,n_ks=500,n_replicate=500,repo="dados/csv/congruen
 # f_summarise_SAD_MNEE
 f_summarise_SAD_MNEE <- \(df){
 #@ df: df por site, k, e  land_type
+#@ e.g. ddply(.,c("SiteCode","k","land_type"))
  cbind(df[1,1:3],with(df,data.frame(
    nCongKS = sum(p.KS>0.05),
    Smed = mean(S),

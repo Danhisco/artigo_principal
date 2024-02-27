@@ -138,11 +138,14 @@ df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
 write_csv(df_plot,"dados/csv/df_plot_geral.csv")
 # 
 registerDoMC(3)
-df_MNEE_Uidealizado <- read.csv("./dados/csv/resultados_MN/MNEE/df_repRes2.csv") %>% 
-  rbind.fill(df_resultados %>% filter(land_type=="ideal") %>% select(SiteCode,k:Smax)) %>% 
-  arrange(SiteCode,k) %>%
-  ddply(.,c("SiteCode","k"),f_logOR_land_type,.parallel = TRUE)
-
+df_resultados_completos <- read.csv("./dados/csv/resultados_MN/MNEE/df_repMNEE2.csv") %>% 
+  ddply(.,c("SiteCode","k","land_type"),f_summarise_SAD_MNEE,.parallel = TRUE) %>% 
+  mutate(Uestimado="U prístino") %>% 
+  rbind.fill(df_resultados %>% 
+               mutate(Uestimado="U livre") %>% 
+               select(SiteCode,k:Smax,Uestimado)) %>% 
+  arrange(SiteCode,k) %>% 
+  relocate(Uestimado,.after="land_type")
 ```
 
 

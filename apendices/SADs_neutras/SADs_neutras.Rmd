@@ -141,6 +141,17 @@ df_resultados <- ddply(df_resultados,c("SiteCode","k"),f_ddply)
 write_csv(df_resultados,file = "dados/csv/resultados_MN/df_resultados.csv")
 ```
 
+
+```{r}
+df_repMNEE2 <- read.csv("./dados/csv/resultados_MN/MNEE/df_repMNEE2.csv")
+registerDoMC(3)
+df_repMNEE2 <- ddply(df_repMNEE2,c("SiteCode","k","land_type"),f_summarise_SAD_MNEE,.parallel = TRUE)
+
+
+```
+
+
+
 ### Gráficos Exploratórios
 
 ```{r GE1 nCongKS ~ k by land type ~ |SiteCode ~ p AJUSTAR DIMENSÕES}
