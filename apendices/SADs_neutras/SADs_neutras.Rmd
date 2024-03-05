@@ -122,7 +122,7 @@ f_ldply <- \(vname){
   dfi <- l_df[[vname]] %>% 
     mutate(land_type=ifelse(land_type=="cont","contemp",land_type),
            Uestimad = vname)
-  registerDoMC(3)
+  registerDoMC(2)
   ddply(dfi,c("SiteCode","k","land_type"),f_summarise_SAD_MNEE,.parallel = TRUE)
 }
 df_resultados <- ldply(names(l_df),f_ldply)

@@ -75,7 +75,17 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |>
   mutate(across(N:S,log,.names="log.{.col}"),
          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
          SiteCode = factor(SiteCode)) |> 
-  select(-c(N:log.S))
+  select(-c(N:log.S)) %>% 
+  pivot_longer(cols = all_of(matches("dif|ratio|logratio")),
+               names_to = "efeitos",
+               values_to="valores") %>%
+  mutate(classe = case_when(grepl("area",efeitos) ~ "aglomerada, prístina",
+                            grepl("perse",efeitos) ~ "contemp, aglomerado",
+                            grepl("total",efeitos) ~ "contemp, prístina"),
+         tipo = case_when(grepl("dif",efeitos) ~ "diferença",
+                          grepl("_ratio",efeitos) ~ "razão",
+                          grepl("logratio",efeitos) ~ "log10(razão)"),
+         tipo = factor(tipo,levels=c("diferença","razão","log10(razão)")))
 # df_congContrastetsREP.cvs
 df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
   mutate(SiteCode = factor(SiteCode),

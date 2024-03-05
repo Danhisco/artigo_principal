@@ -66,22 +66,29 @@ df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
 df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
 ## df_sim
 df_sim <- read_csv("dados/df_simulacao.csv")
-## df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
-df_ad <- df_resultados |>
-  arrange(p) |> 
-  inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
-  mutate(diffS = (Smed - S_obs)/S_obs)
 ## df_contrastes: contrastes por sítio e grau de limitação de dispersão
-df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
-  inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
-             by="SiteCode") |> 
-  rename(N=Ntotal,S=S_obs) |> 
-  mutate(across(N:S,log,.names="log.{.col}"),
-         across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
-         SiteCode = factor(SiteCode)) |> 
-  select(-c(N:log.S))
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") %>% select(-p)
+               
+#
+# |> 
+#   inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
+#              by="SiteCode") |> 
+#   rename(N=Ntotal,S=S_obs) |> 
+#   mutate(across(N:S,log,.names="log.{.col}"),
+#          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
+#          SiteCode = factor(SiteCode)) |> 
+#   select(-c(N:log.S))
+#
+#
 # df_intePred_contrastes.csv
 df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
+## df_ad: resultados completos + preditoras comuns, falta as métricas de efeito da paisagem
+df_ad <- df_resultados  %>% 
+  inner_join(x=df_p,y=.) %>% 
+  arrange(p) |> 
+  inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
+  mutate(diffS = (Smed - S_obs)/S_obs) %>% 
+  inner_join(df_contrastes,by=c("SiteCode","k"))
 ## df_md: dados necessários para os modelos
 df_md <- read_csv("dados/csv/df_md.csv")
 ## df_newdata
@@ -388,14 +395,23 @@ l_p2
 #
 ```
 
+## SAD observada e SAD predita entre paisagens hipotéticas
+
+### Fragmentação per se é relevante?
 
 ```{r}
-
+df_md <- inner_join(df_contrastes %>%select(SiteCode,k,matches("frag.perse|area")),
+                    df_ad %>% filter(land_type %in% c("contemp","non_frag")),
+                    by=c("SiteCode","k")) %>% 
+  select(SiteCode:nCongKS,Ntotal:diffS) %>% 
+  rename(nCong=nCongKS) %>% 
+  relocate(nCong,.after = "k") %>% 
+  relocate(c(p,land_type,Uestimad),.before="k")
 ```
 
 
 
-## SAD observada e SAD predita entre paisagens hipotéticas
+ANTIGO:::::::::
 
 ### Descrição do padrão observado
 
