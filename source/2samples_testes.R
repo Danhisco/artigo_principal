@@ -75,7 +75,7 @@ f_congContrastes <- \(df_pSite,n_ks=500,n_replicate=500,repo="dados/csv/congruen
 f_summarise_SAD_MNEE <- \(df){
 #@ df: df por site, k, e  land_type
 #@ e.g. ddply(.,c("SiteCode","k","land_type"))
- cbind(df[1,1:3],with(df,data.frame(
+ cbind(df[1,c("SiteCode","k","land_type","Uestimad")],with(df,data.frame(
    nCongKS = sum(p.KS>0.05),
    Smed = mean(S),
    Ssd = sd(S),
@@ -88,8 +88,8 @@ f_logOR_land_type <- \(df,
                        # pairs=list(c("contemp","non_frag"),
                        #            c("contemp","ideal"))){
   pairs=list(c("contemp","non_frag"),
-           c("contemp","ideal"),
-           c("non_frag","ideal"))){
+             c("contemp","ideal"),
+             c("non_frag","ideal"))){
   df <- df %>% 
     mutate(propCong = case_when(nCongKS == 100 ~ 99.9 / 100,
                                 nCongKS == 0 ~ 0.1 / 100,
@@ -105,6 +105,32 @@ f_logOR_land_type <- \(df,
   cbind(df,ldply(pairs,f))
 }
 
+f_contraste_Umed <- \(dfUrep,
+                      path_U="dados/csv/taxaU/df_U.csv",
+                      path_land_effect="dados/csv/taxaU/df_contrastes.csv",
+                      nobj_export=c("df_U","df_contrastes")){
+  df_U <- dfUrep |> select(SiteCode:k)
+  df_U$Umed <- apply(select(df_Urep,-c(SiteCode:d)),1,mean)
+  df_U$Usd <- apply(select(df_Urep,-c(SiteCode:d)),1,sd)
+  df_contrastes <- df_U |>  
+    inner_join(df_p,by="SiteCode") |>
+    pivot_wider(names_from = land_type, values_from = c(Umed,Usd)) |> 
+    mutate(area_dif = Umed_non_frag - Umed_ideal,
+           frag.perse_dif = Umed_contemp - Umed_non_frag,
+           frag.total_dif = Umed_contemp - Umed_ideal,
+           area_ratio = Umed_non_frag / Umed_ideal,
+           frag.perse_ratio = Umed_contemp / Umed_non_frag,
+           frag.total_ratio = Umed_contemp / Umed_ideal,
+           area_logratio = log(area_ratio),
+           frag.perse_logratio = log(frag.perse_ratio),
+           frag.total_logratio = log(frag.total_ratio)) |> 
+    select(-starts_with("U"))
+  write_csv(df_contrastes,file=path_land_effect)
+  write_csv(df_U,file=path_U)
+  if(!is.null(nobj_export)){
+    sapply(nobj_export,\(i) assign(i,get(i),envir = .GlobalEnv))
+  }
+}
 
 
 # 

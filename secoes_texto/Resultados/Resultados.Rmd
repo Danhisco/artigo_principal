@@ -236,7 +236,7 @@ cap <- "U estimado (eixo y) nas diferentes extensões espaciais (eixo x) e para 
 ```
 ```{r EfeitoEscalar-obs, fig.width=14,fig.height=8.5,fig.cap=cap,fig.pos="H"}
 load(file="./apendices/EfeitoEscala/Rdata/fig3_EfeitoEscalarObs.Rdata")
-p + theme(plot.title = element_text(size = 12)) 
+p + theme(plot.title = element_text(size = 12)) + theme_bw()
 ```
 
 ```{r cap-resumo-EscalaAdequada,cache=FALSE}
@@ -253,14 +253,14 @@ p <- df_plot |>
   scale_x_reverse() +
   labs(x="k",
        y="lado da paisagem (km)",
-       title="A escala de 4x4 km2 é adequada\n para todos os graus de dispersão") +
+       title="A escala de 4x4 km2 é adequada para todos os graus de dispersão") +
   theme_bw() + 
   theme(plot.title = element_text(size = 3)) 
 save(p,file="./apendices/EfeitoEscala/Rdata/fig6_resumo_EscalaAdequada_k.Rdata")
 ```
 ```{r resumo-EscalaAdequada-k,fig.height=2.5,fig.width=3,fig.cap=cap,fig.pos="H"}
 load(file="./apendices/EfeitoEscala/Rdata/fig6_resumo_EscalaAdequada_k.Rdata")
-p
+p  + theme(plot.title = element_text(size = 12)) + theme_bw()
 ```
 
 
@@ -309,9 +309,89 @@ __\@ref(fig:GE-Urep-sitio-k-land)__  (\@ref(fig:GE-sitios-amostrados))
 
 \newpage
 
+### Métricas de efeito da paisagem ao redor
+
+No modelo neutro espacialmente explícito, quando consideramos a diversidade total da paisagem após um indivíduo ser sorteado para morrer (resultando em extinção ou variação na abundância relativa), a riqueza da paisagem aumenta quando uma nova espécie coloniza uma unidade de habitat, evento com probabilidade U. A riqueza da paisagem se mantem nos 1-U casos, em que a colonização do habitat disponível é feito por um propágulo de uma espécies presente na paisagem.
+Quando consideramos a riqueza local na parcela amostrada, a interpretação da probabilidade U é a mesma: como o nascimento de uma nova espécie na paisagem que resulta tanto no aumento da riqueza local e total. A interpretação de 1-U muda na parcela, pois, o nascimento pode ser de um indivíduo de uma espécie presente na parcela ou de uma nova espécie na parcela. Assim, os 1-U eventos na parcela que aumentam a riqueza local são certamente resultado da imigração de um propágulo de fora da parcela. Os 1-U eventos na parcela que mudam a abundância relativa de espécies locais pode ocorrer por propágulos locais ou imigrantes.
+Portanto, a conectividade entre parcela e paisagem ao redor simulada é proporcional à 1-U, uma vez que a taxa U é ajustada de modo que a riqueza local simulada seja igual à riqueza observada (REF). Como a única diferença entre simulações de um mesmo sítio de amostragem e grau de limitação de dispersão é a paisagem hipotética, podemos atribuir diferenças na taxa U estimada entre paisagens hipotética como efeito da paisagem ao redor na probabilidade 1-U.
+
+```{r criacao da fig1 dos contrastes,eval=FALSE,include=FALSE,echo=FALSE}
+f_plot <- \(v_col){
+  df_contrastes %>% 
+    mutate(color=ifelse(p>=0.93,"p>=0.93","p<0.93")) %>% 
+    ggplot(aes(x=k, y=.data[[v_col]],group=SiteCode,col=color)) +
+    geom_line(alpha=0.7) +
+    geom_point(alpha=0.7) + 
+    scale_color_manual(values=c("p>=0.93"="darkgreen",
+                                "p<0.93"="darkgray")) +
+    labs(
+      y=case_when(v_col == "area_dif" ~ "aglomerada - prístina",
+                  v_col == "area_ratio" ~ "aglomerada / prístina",
+                  v_col == "area_logratio" ~ "log10(aglomerada / prístina)",
+                  v_col == "frag.perse_dif" ~ "contemp - aglomerado",
+                  v_col == "frag.perse_ratio" ~ "contemp / aglomerado",
+                  v_col == "frag.perse_logratio" ~ "log10(contemp / aglomerado)",
+                  v_col == "frag.total_dif" ~ "contemp - prístina",
+                  v_col == "frag.total_ratio" ~ "contemp / prístina",
+                  v_col == "frag.total_logratio" ~ "log10(contemp / prístina)"))) +
+    scale_x_reverse() +
+    coord_flip() +
+    theme(legend.title = element_blank(),
+          legend.position = c(0.8,0.2))
+}
+#
+v_cols <- select(df_contrastes,matches("dif|ratio")) %>% names()
+l_p <- alply(v_cols,1,f_plot)
+names(l_p) <- v_cols
+#
+v_ind <- str_which(names(l_p),"ratio")
+l_p[v_ind+3] <- llply(names(l_p)[v_ind],\(i){
+  l_p[[i]] + 
+    scale_y_continuous(trans = "log10") +
+    labs(
+      y=case_when(i == "area_ratio" ~ "log10(aglomerada / prístina)",
+                  i == "frag.perse_ratio" ~ "log10(contemp / aglomerada)",
+                  i == "frag.total_ratio" ~ "log10(aglomerada / prístina)")
+      )})
+names(l_p)[v_ind+3] <- gsub("ratio","logratio",names(l_p)[v_ind])
+######
+l_p2 <- df_contrastes %>%
+  pivot_longer(cols = all_of(v_cols),
+               names_to = "efeitos",
+               values_to="valores") %>%
+  mutate(classe = case_when(grepl("area",efeitos) ~ "aglomerada, prístina",
+                            grepl("perse",efeitos) ~ "contemp, aglomerado",
+                            grepl("total",efeitos) ~ "contemp, prístina"),
+         tipo = case_when(grepl("dif",efeitos) ~ "diferença",
+                          grepl("_ratio",efeitos) ~ "razão",
+                          grepl("logratio",efeitos) ~ "log10(razão)"),
+         tipo = factor(tipo,levels=c("diferença","razão","log10(razão)")),
+         color=ifelse(p>=0.93,"p>=0.93","p<0.93")) %>%
+  ggplot(aes(x=k, y=valores,group=SiteCode,col=color)) +
+  geom_line(alpha=0.7) +
+  geom_point(alpha=0.7) +
+  scale_color_manual(values=c("p>=0.93"="darkgreen",
+                              "p<0.93"="darkgray")) +
+  scale_x_reverse() +
+  # coord_flip() +
+  labs(y="",
+       x="k (aumenta a limitação de dispersão)") +
+  theme(legend.title = element_blank(),
+        legend.position = "top",
+        strip.placement.y = "outside",
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold")) +
+  facet_grid(tipo ~ classe, scales="free", switch = "y")
+l_p2
+#
+# grid.arrange(grobs=l_p,ncol=3)
+#
+```
 
 
+```{r}
 
+```
 
 
 

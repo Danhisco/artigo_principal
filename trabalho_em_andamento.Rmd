@@ -9,7 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 4 mar 2024
+
+Revisão dos resultados para avaliação da adequação
+
+
 # 27fev2024
+
 
 
 

@@ -73,6 +73,8 @@ df_SADrep2 <- mutate(data.frame(
   SiteCode = str_extract(SADrep.path,"(?<=\\_\\_).*?(?=.csv)"),
   land_type = str_extract(SADrep.path,"(?<=zado\\/).*?(?=\\_\\_)"),
   SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv"))
+l_SADreps <- list(df_SADrep,df_SADrep2)
+names(l_SADreps) <- c("Ulivre","Upristino")
 # # df_repMNEE
 df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
 # # df_resultMNEE
@@ -101,47 +103,6 @@ df_repMNEE <- adply(df_SADrep2,1,f_resultsMN,.parallel = TRUE)
 write_csv(select(df_repMNEE,SiteCode:S), file = "dados/csv/resultados_MN/MNEE/df_repMNEE")
 ```
 
-
-```{r summarise resultados de MNEE}
-# resultados base
-df_resultados <- df_repMNEE |> 
-  group_by(SiteCode,k,land_type) |> 
-  summarise(nCongKS = sum(p.KS>0.05),
-            Smed = mean(S),
-            Ssd = sd(S),
-            Smin = min(S),
-            Smax = max(S),
-            .groups = "drop") |> 
-  mutate(propCong = case_when(nCongKS == 100 ~ 99.9/100,
-                              nCongKS == 0 ~ 0.1/100,
-                              TRUE ~ nCongKS / 100)) |> 
-  inner_join(x=df_p,by="SiteCode")
-#
-
-
-f_logOR_land_type <- \(df,
-                       pairs=list(c("contemp","non_frag"),
-                                  c("contemp","ideal"))){
-                         # pairs=list(c("contemp","non_frag"),
-                         #          c("contemp","ideal"),
-                         #          c("non_frag","ideal"))){
-  
-  f <- \(v_string){
-    p1 <- df |> filter(land_type == v_string[1]) |> pull(propCong)
-    p1 <- p1 / (1-p1)
-    p2 <- df |> filter(land_type == v_string[2]) |> pull(propCong)
-    p2 <- p2 / (1-p2)
-    data.frame(logOR_pair = paste(v_string,collapse = "."),
-               logOR_value = log( p1 / p2 ) )
-  }
-  cbind(df,ldply(pairs,f))
-}
-df_resultados <- ddply(df_resultados,c("SiteCode","k"),f_ddply)
-#
-write_csv(df_resultados,file = "dados/csv/resultados_MN/df_resultados.csv")
-```
-
-
 ```{r}
 df_repMNEE2 <- read.csv("./dados/csv/resultados_MN/MNEE/df_repMNEE2.csv")
 registerDoMC(3)
@@ -149,6 +110,25 @@ df_repMNEE2 <- ddply(df_repMNEE2,c("SiteCode","k","land_type"),f_summarise_SAD_M
 
 
 ```
+
+
+
+```{r summarise resultados de MNEE}
+l_df <- 
+  list.files("./dados/csv/resultados_MN/MNEE", pattern = "df_repMNEE",full.names = TRUE) %>% 
+  llply(.,read.csv)
+names(l_df) <- c("Ulivre","Upristino")
+f_ldply <- \(vname){
+  dfi <- l_df[[vname]] %>% 
+    mutate(land_type=ifelse(land_type=="cont","contemp",land_type),
+           Uestimad = vname)
+  registerDoMC(3)
+  ddply(dfi,c("SiteCode","k","land_type"),f_summarise_SAD_MNEE,.parallel = TRUE)
+}
+df_resultados <- ldply(names(l_df),f_ldply)
+write_csv(df_resultados,file = "dados/csv/resultados_MN/df_resultados.csv")
+```
+
 
 
 
@@ -243,9 +223,16 @@ não é simples fazer essa classificação, em alguns casos (SiteCode) ambos par
 ```{r congruencia entre contrastes - obtenção dos dados}
 #  obtenção dos dados
 registerDoMC(3)
+l_SADreps %>% names()
+f_lSADreps <- \(li){
+  df_SADrep <- li
+  d_ply(df_SADrep,"SiteCode",f_congContrastes,.parallel = T)
+}
+
+
 # df_congContrastes <- d_ply(df_SADrep,"SiteCode",f_congContrastes,.parallel = T)
 # write_csv(df_congContrastes,file="dados/csv/resultados_MN/df_congContrastesREP.csv")
-d_ply(df_SADrep,"SiteCode",f_congContrastes,.parallel = T)
+
 ```
 
 ```{r congruencia entre contrastes - sintese dos dados}

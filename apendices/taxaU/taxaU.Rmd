@@ -57,20 +57,7 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
 df_Urep <- list.files(path = "dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) |> 
   purrr::map_df(~read_csv(.)) |> na.omit() #na.omit para remover o Sítio em que não foi possível rodar pela relação N / p
 # sumarização
-df_U <- df_Urep |> select(SiteCode:k)
-df_U$Umed <- apply(select(df_Urep,-c(SiteCode:d)),1,mean)
-df_U$Usd <- apply(select(df_Urep,-c(SiteCode:d)),1,sd)
-df_contrastes <- df_U |>  
-  inner_join(df_p,by="SiteCode") |>
-  pivot_wider(names_from = land_type, values_from = c(Umed,Usd)) |> 
-  mutate(efeito_area = (Umed_non_frag - Umed_ideal) / Umed_ideal,
-         efeito_frag = (Umed_contemp - Umed_non_frag) / Umed_ideal,
-         efeito_conf = (Umed_contemp - Umed_ideal) / Umed_ideal) |> 
-         #,
-         # across(starts_with("efeito"),~sign(.x) * abs(.x)^(1/5),.names = "cubeR_{.col}")|> 
-  select(-starts_with("U"))
-write_csv(df_contrastes,file="dados/csv/taxaU/df_contrastes.csv")
-write_csv(df_U,file="dados/csv/taxaU/df_U.csv")
+f_contraste_Umed(df_Urep) # em 2samples_testes.R
 # df_ad
 ```
 
