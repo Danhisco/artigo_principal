@@ -321,10 +321,11 @@ As métricas de efeito da paisagem foram obtidas pela comparação entre a estim
 Quando consideramos a riqueza local na parcela amostrada, a interpretação da probabilidade U é a mesma: como o nascimento de uma nova espécie na paisagem que resulta tanto no aumento da riqueza local e total. A interpretação de 1-U muda na parcela, pois, o nascimento pode ser de um indivíduo de uma espécie presente na parcela ou de uma nova espécie na parcela. Assim, os 1-U eventos na parcela que aumentam a riqueza local são certamente resultado da imigração de um propágulo de fora da parcela. Os 1-U eventos na parcela que mudam a abundância relativa de espécies locais pode ocorrer por propágulos locais ou imigrantes. 
 Portanto, a conectividade entre parcela e paisagem ao redor simulada é proporcional à 1-U, uma vez que a taxa U é ajustada de modo que a riqueza local simulada seja igual à riqueza observada (REF). Como a única diferença entre simulações de um mesmo sítio de amostragem e grau de limitação de dispersão é a paisagem hipotética, podemos atribuir diferenças na taxa U estimada entre paisagens hipotética como efeito da paisagem ao redor na probabilidade 1-U dos nascimentos na parcela.
 
+```{r caption contrastes1 GE}
+cap <- "Contraste entre pares de paisagens hipotéticas (indicadas no topo dos paineis)"
+```
 ```{r criacao da fig1 dos contrastes,eval=FALSE,include=FALSE,echo=FALSE}
 #### caption
-cap <- "Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados e coloridos pelo tipo de paisagem hipotética. Os sítios estão organizados pela proporção de cobertura vegetal na paisagem de 4x4 km2 (p). Nos rótulos dos paineis há o código do sítio de amostragem, a proporção de cobertura vegetal (p), e a classe do estágio sucessional da área amostrada segundo o TreeCo"
-
 ######
 v_cols <- select(df_contrastes,matches("dif|ratio|logit")) %>% names()
 l_p2 <- df_contrastes %>%
@@ -355,14 +356,15 @@ l_p2 <- df_contrastes %>%
         strip.background = element_blank(),
         strip.text = element_text(face = "bold")) +
   facet_grid(tipo ~ classe, scales="free", switch = "y")
-l_p2
-#
-# grid.arrange(grobs=l_p,ncol=3)
-#
+l_plot <- list()
+l_plot$plot <- l_p2
+l_plot$caption <- cap
+save(l_plot,file="./secoes_texto/Resultados/figuras/l_plot_contrastes1.Rdata")
 ```
-
-
-
+```{r GE_contrastes,eval=TRUE,fig.height=figHeight,fig.width=figWidth,fig.cap=cap,fig.pos="H"}
+load("./secoes_texto/Resultados/figuras/l_plot_contrastes1.Rdata")
+l_plot$plot
+```
 
 
 
