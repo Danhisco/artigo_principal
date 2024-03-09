@@ -104,6 +104,13 @@ f_logOR_land_type <- \(df,
   }
   cbind(df,ldply(pairs,f))
 }
+f_logOR_dfi <- \(x,y){
+  x <- x/(1-x)
+  y <- y/(1-y)
+  log(x/y)
+}
+
+
 
 f_contraste_Umed <- \(dfUrep,
                       path_U="dados/csv/taxaU/df_U.csv",
@@ -123,7 +130,10 @@ f_contraste_Umed <- \(dfUrep,
            frag.total_ratio = Umed_contemp / Umed_ideal,
            area_logratio = log(area_ratio),
            frag.perse_logratio = log(frag.perse_ratio),
-           frag.total_logratio = log(frag.total_ratio)) |> 
+           frag.total_logratio = log(frag.total_ratio),
+           area_logit = f_logOR_dfi(Umed_non_frag, Umed_ideal),
+           frag.perse_logit = f_logOR_dfi(Umed_contemp, Umed_non_frag),
+           frag.total_logit = f_logOR_dfi(Umed_contemp, Umed_ideal)) |> 
     select(-starts_with("U"))
   write_csv(df_contrastes,file=path_land_effect)
   write_csv(df_U,file=path_U)
