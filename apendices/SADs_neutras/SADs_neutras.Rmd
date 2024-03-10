@@ -120,7 +120,10 @@ l_df <-
 names(l_df) <- c("Ulivre","Upristino")
 f_ldply <- \(vname){
   dfi <- l_df[[vname]] %>% 
-    mutate(land_type=ifelse(land_type=="cont","contemp",land_type),
+    mutate(land_type=case_when(land_type=="cont" ~ "contemp",
+                               land_type=="non_frag" ~ "aglomer",
+                               land_type=="ideal" ~ "pristin",
+                               TRUE ~ land_type),
            Uestimad = vname)
   registerDoMC(2)
   ddply(dfi,c("SiteCode","k","land_type"),f_summarise_SAD_MNEE,.parallel = TRUE)

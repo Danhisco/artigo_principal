@@ -195,6 +195,38 @@ plot(resDharma)
 
 # SADs rep
 
+## frag per se?
+
+
+
+```{r frag per se?}
+# dados
+v_cols <- str_detect(names(df_resultados), "^S(?!.*de$)")
+df_md <- df_resultados[,!v_cols] %>% 
+  filter(land_type!="pristin") %>% 
+  rename(nCong = nCongKS) %>% 
+  inner_join(df_p) %>% 
+  inner_join(df_dados_disponiveis %>% 
+               select(SiteCode,forest_type,forest_succession)) %>% 
+  inner_join(df_contrastes %>% select(SiteCode:k,starts_with("frag.perse")))
+# formulas
+l_f <- list()
+l_f[[1]] <- "cbind(nCong,100-nCong) ~ land_type * Uestimad * metrica + (land_type * Uestimad * metrica|SiteCode)"
+names(l_f) <- "base"
+
+```
+
+Não é possível utilizar as variáveis categoricas tipo florestal e grau de perturbação florestal com interação, não há exemplares sucificentes. Para usar essas variáveis será necessário remover 2 observações que apresentam 1 classe única de tipo floresal e 2 observações que na classificação de perturbação são capoeiras.
+
+```{r}
+df_md %>% 
+  select(SiteCode,forest_succession,forest_type) %>% 
+  distinct() %>% 
+  count(forest_type,forest_succession) %>%
+  ggplot(aes(x=forest_type,y=forest_succession,fill=n)) + 
+  geom_tile()
+```
+
 
 
 

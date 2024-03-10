@@ -401,7 +401,10 @@ cap <- "Número de SADs simuladas congruentes com a SAD empírica (eixo y) por s
 #
 df_ad <- df_resultados %>% 
   inner_join(df_p) %>% 
-  filter(p<0.93)
+  filter(p<0.93) %>% 
+  arrange(p) %>% 
+  mutate(label = paste0(SiteCode, ", p = ",round(p,2)))
+df_ad$label <- factor(df_ad$label,levels=unique(df_ad$label))
 # 
 df_ad %>% 
   ggplot(aes(x=k,y=nCongKS,color=land_type,shape=Uestimad)) +
@@ -410,8 +413,12 @@ df_ad %>%
   scale_x_reverse() +
   labs(x="k(aumenta a limitação de dispersão)",
        y="número de SADs simuladas congruentes com a SAD empírica") +
-  facet_wrap(~SiteCode)
+  facet_wrap(~label) +
+  theme(strip.text = element_text(margin = margin()))
 ```
+
+
+
 
 
 

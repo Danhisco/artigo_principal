@@ -131,9 +131,9 @@ f_contraste_Umed <- \(dfUrep,
            area_logratio = log(area_ratio),
            frag.perse_logratio = log(frag.perse_ratio),
            frag.total_logratio = log(frag.total_ratio),
-           area_logit = f_logOR_dfi(Umed_non_frag, Umed_ideal),
-           frag.perse_logit = f_logOR_dfi(Umed_contemp, Umed_non_frag),
-           frag.total_logit = f_logOR_dfi(Umed_contemp, Umed_ideal)) |> 
+           area_logOR = f_logOR_dfi(Umed_non_frag, Umed_ideal),
+           frag.perse_logOR = f_logOR_dfi(Umed_contemp, Umed_non_frag),
+           frag.total_logOR = f_logOR_dfi(Umed_contemp, Umed_ideal)) |> 
     select(-starts_with("U"))
   write_csv(df_contrastes,file=path_land_effect)
   write_csv(df_U,file=path_U)
