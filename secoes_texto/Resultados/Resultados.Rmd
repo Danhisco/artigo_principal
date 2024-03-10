@@ -311,18 +311,20 @@ load("./dados/Rdata/figA23.Rdata")
 p
 ```
 
-__\@ref(fig:GE-Urep-sitio-k-land)__  (\@ref(fig:GE-sitios-amostrados))
+<!-- __\@ref(fig:GE-Urep-sitio-k-land)__   -->
 
 \newpage
 
 ### Métricas de efeito da paisagem ao redor
 
-As métricas de efeito da paisagem foram obtidas pela comparação entre a estimativa da taxa U entre paisagens hipotéticas para um mesmo sítio de amostragem e grau de limitação de dispersão. As métricas baseadas na taxa U podem ter interpretações no nível da dinâmica ecológica simulada pelo modelo neutro. No modelo neutro espacialmente explícito, quando consideramos a diversidade total da paisagem após um indivíduo ser sorteado para morrer (resultando em extinção na paisagem ou variação na abundância relativa), a riqueza da paisagem aumenta quando uma nova espécie coloniza uma unidade de habitat, evento com probabilidade U. A riqueza da paisagem se mantem nos 1-U casos, em que a colonização do habitat disponível é feito por um propágulo de uma espécies presente na paisagem.
+As métricas de efeito da paisagem foram obtidas pela comparação da estimativa da taxa U entre paisagens hipotéticas para um mesmo sítio de amostragem e grau de limitação de dispersão. As métricas baseadas na taxa U podem ter interpretações no nível da dinâmica ecológica simulada pelo modelo neutro. No modelo neutro espacialmente explícito, quando consideramos a diversidade total da paisagem após um indivíduo ser sorteado para morrer (resultando em extinção na paisagem ou variação na abundância relativa), a riqueza da paisagem aumenta quando uma nova espécie na paisagem coloniza uma unidade de habitat, evento com probabilidade U. A riqueza da paisagem se mantem nos 1-U casos, em que a colonização do habitat disponível é feito por um propágulo de uma espécies presente na paisagem.
 Quando consideramos a riqueza local na parcela amostrada, a interpretação da probabilidade U é a mesma: como o nascimento de uma nova espécie na paisagem que resulta tanto no aumento da riqueza local e total. A interpretação de 1-U muda na parcela, pois, o nascimento pode ser de um indivíduo de uma espécie presente na parcela ou de uma nova espécie na parcela. Assim, os 1-U eventos na parcela que aumentam a riqueza local são certamente resultado da imigração de um propágulo de fora da parcela. Os 1-U eventos na parcela que mudam a abundância relativa de espécies locais pode ocorrer por propágulos locais ou imigrantes. 
-Portanto, a conectividade entre parcela e paisagem ao redor simulada é proporcional à 1-U, uma vez que a taxa U é ajustada de modo que a riqueza local simulada seja igual à riqueza observada (REF). Como a única diferença entre simulações de um mesmo sítio de amostragem e grau de limitação de dispersão é a paisagem hipotética, podemos atribuir diferenças na taxa U estimada entre paisagens hipotética como efeito da paisagem ao redor na probabilidade 1-U dos nascimentos na parcela.
+Portanto, a conectividade entre parcela e paisagem ao redor simulada é proporcional à 1-U, uma vez que a taxa U é ajustada para que a riqueza local simulada seja igual à riqueza local observada. Como a única diferença entre simulações de um mesmo sítio de amostragem e grau de limitação de dispersão é a paisagem hipotética, podemos atribuir diferenças na taxa U estimada entre paisagens hipotética como efeito da paisagem ao redor na probabilidade 1-U dos nascimentos na parcela.
+
+Como as estimativas podem ser interpretadas como probabilidades por evento de nascimento algumas possíveis formas de comparar essas estimativas par a par são pela diferença, razão, log da razão e log odds ratio (\@ref(GE_contrastes)). O log da razão e o log odds ratio apresentam alta similariedade nas formas pois os valores de U são muito pequenos, de modo que 1-U é próximo de 1. O padrão das comparações entre estimativas reflete o observado nas taxas U (\@ref(fig:GE-Urep-sitio-k-land)). A taxa U estimada na paisagem contemporânea em geral é superior ao estimados nas outras paisagens hipotéticas; em algumas casos, a paisagem aglomerada apresentou taxa U superior, indicado pela comparação entre contemporânea e aglomerada abaixo do observado em paisagens com pouca perda de cobertura (p>=0.93).
 
 ```{r caption contrastes1 GE}
-cap <- "Contraste entre pares de paisagens hipotéticas (indicadas no topo dos paineis)"
+cap <- "Contraste entre pares de paisagens hipotéticas (indicadas no topo dos paineis) e possíveis formas de comparação entre as paisagens hipotéticas (eixos y) por grau de limitação de dispersão (eixo x). Os pontos representam cada comparação e aqueles de paisagem com cobertura florestal igual ou superior à 0.93, situação em que não se observa diferença entre paisagens hipotéticas, estão em verde."
 ```
 ```{r criacao da fig1 dos contrastes,eval=FALSE,include=FALSE,echo=FALSE}
 #### caption
@@ -338,8 +340,8 @@ l_p2 <- df_contrastes %>%
          tipo = case_when(grepl("dif",efeitos) ~ "diferença",
                           grepl("_ratio",efeitos) ~ "razão",
                           grepl("logratio",efeitos) ~ "log10(razão)",
-                          grepl("logit",efeitos) ~ "logit"),
-         tipo = factor(tipo,levels=c("diferença","razão","log10(razão)","logit")),
+                          grepl("logit",efeitos) ~ "logOR"),
+         tipo = factor(tipo,levels=c("diferença","razão","log10(razão)","logOR")),
          color=ifelse(p>=0.93,"p>=0.93","p<0.93")) %>%
   ggplot(aes(x=k, y=valores,group=SiteCode,col=color)) +
   geom_line(alpha=0.7) +
@@ -356,23 +358,60 @@ l_p2 <- df_contrastes %>%
         strip.background = element_blank(),
         strip.text = element_text(face = "bold")) +
   facet_grid(tipo ~ classe, scales="free", switch = "y")
-l_plot <- list()
-l_plot$plot <- l_p2
-l_plot$caption <- cap
-save(l_plot,file="./secoes_texto/Resultados/figuras/l_plot_contrastes1.Rdata")
+# l_plot <- list()
+# l_plot$plot <- l_p2
+# l_plot$caption <- cap
+save(l_p2,file="./secoes_texto/Resultados/figuras/l_plot_contrastes1.Rdata")
 ```
 ```{r GE_contrastes,eval=TRUE,fig.height=figHeight,fig.width=figWidth,fig.cap=cap,fig.pos="H"}
 load("./secoes_texto/Resultados/figuras/l_plot_contrastes1.Rdata")
-l_plot$plot
+l_p2
 ```
-
-
-
 
 ## SAD observada e SAD predita entre paisagens hipotéticas
 
-### Paisagens com pouca perda de cobertura florestal
 
+### Paisagens com alta proporção de cobertura florestal
+
+```{r caption fig1 nCong GE}
+cap <- "Número de SADs simuladas congruentes com a SAD empírica (eixo y) por sítio de amostragem (título dos paineis) e grau de limitação de dispersão (eixo x). Os pontos estão coloridos pelo tipo de paisagem hipotética e a forma dos pontos se o U foi ajustado livremente ou se foi usado o U estimado na paisagem prístina."
+```
+```{r GE-nCong-p093oumaior,fig.cap=cap}
+#
+df_ad <- df_resultados %>% 
+  inner_join(df_p) %>% 
+  filter(p>=0.93)
+# 
+df_ad %>% 
+  ggplot(aes(x=k,y=nCongKS,color=land_type,shape=Uestimad)) +
+  geom_line((aes(linetype=Uestimad)),alpha=0.75) +
+  geom_point(size=1,alpha=0.75) +
+  scale_x_reverse() +
+  labs(x="k(aumenta a limitação de dispersão)",
+       y="número de SADs simuladas congruentes com a SAD empírica") +
+  facet_wrap(~SiteCode)
+```
+
+### Paisagens no gradiente de cobertura florestal
+
+```{r caption fig1 nCong GE}
+cap <- "Número de SADs simuladas congruentes com a SAD empírica (eixo y) por sítio de amostragem (título dos paineis) e grau de limitação de dispersão (eixo x). Os pontos estão coloridos pelo tipo de paisagem hipotética e a forma dos pontos se o U foi ajustado livremente ou se foi usado o U estimado na paisagem prístina."
+```
+```{r GE-nCong-p092oumenor,fig.cap=cap}
+#
+df_ad <- df_resultados %>% 
+  inner_join(df_p) %>% 
+  filter(p<0.93)
+# 
+df_ad %>% 
+  ggplot(aes(x=k,y=nCongKS,color=land_type,shape=Uestimad)) +
+  geom_line((aes(linetype=Uestimad)),alpha=0.75) +
+  geom_point(size=1,alpha=0.75) +
+  scale_x_reverse() +
+  labs(x="k(aumenta a limitação de dispersão)",
+       y="número de SADs simuladas congruentes com a SAD empírica") +
+  facet_wrap(~SiteCode)
+```
 
 
 
