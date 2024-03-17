@@ -128,7 +128,7 @@ No contexto de criação de modelos ecológicos para aproximar a diversidade loc
 
 Para responder a primeira pergunta é possível comparar a predição do simulada na paisagem hipotética contemporânea e aglomerada, com o U livre e prístino, em função da métrica de fragmentação per se. Dessa forma, avaliamos o efeito da fragmentação per se na conectividade.
 
-Para responder a segunda pergunta é possível comprar a paisagem prístina com a paisagem contemporânea e aglomerada em função da métrica de efeito de fragmentação total e da métrica de efeito de perda de cobertura per se, respectivamente.
+Para responder a segunda pergunta é possível comparar a paisagem prístina com a paisagem contemporânea e aglomerada em função da métrica de efeito de fragmentação total e da métrica de efeito de perda de cobertura per se, respectivamente. Dessa forma comparamos paisagens hipotéticas que utilizam da informação contemporânea com aquela que pressupõe ausência de perda de cobertura.
 
 Avaliamos a congruência entre a distribuição de abundância de espécies (SAD) observada na parcela e a SAD simulada pelo modelo neutro pressuposto as 3 paisagens hipotéticas (contemporânea, aglomerada e prístina). A congruência entre SAD empírica e SAD simulada foi obtida pelo teste de Kolmogorov-Smirnov bootstrap (@2samples), cuja hipotese nula asserta que as duas SADs comparadas são amostras de uma mesma distribuição de abundância de espécies. As SADs simuladas foram classificadas como congruentes se o p-valor do teste for maior ou igual a 5%. Contabilizamos o número de SADs congruêntes por bateria de simulação.
 
