@@ -18,13 +18,13 @@ text-align: justify}
 ```{r setup,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE)
 # pacotes
-library(dagitty)
-library(ggdag)
-library(gratia)
+# library(dagitty)
+# library(ggdag)
 library(sads)
+# library(gratia)
 library(doMC)
-library(metR)
-library(sjPlot)
+# library(metR)
+# library(sjPlot)
 library(gridExtra)
 # library(ggpubr)
 library(ggplot2)
@@ -68,94 +68,95 @@ df_ad <- df_resultados |>
   inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
   mutate(diffS = (Smed - S_obs)/S_obs)
 # df_contrastes: contrastes por sítio e grau de limitação de dispersão
-df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
-  inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
-             by="SiteCode") |> 
-  rename(N=Ntotal,S=S_obs) |> 
-  mutate(across(N:S,log,.names="log.{.col}"),
-         across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
-         SiteCode = factor(SiteCode)) |> 
-  select(-c(N:log.S)) %>% 
-  pivot_longer(cols = all_of(matches("dif|ratio|logratio")),
-               names_to = "efeitos",
-               values_to="valores") %>%
-  mutate(classe = case_when(grepl("area",efeitos) ~ "aglomerada, prístina",
-                            grepl("perse",efeitos) ~ "contemp, aglomerado",
-                            grepl("total",efeitos) ~ "contemp, prístina"),
-         tipo = case_when(grepl("dif",efeitos) ~ "diferença",
-                          grepl("_ratio",efeitos) ~ "razão",
-                          grepl("logratio",efeitos) ~ "log10(razão)"),
-         tipo = factor(tipo,levels=c("diferença","razão","log10(razão)")))
-# df_congContrastetsREP.cvs
-df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
-  mutate(SiteCode = factor(SiteCode),
-         contrasteSAD_z = ifelse(nCong==500,499.9,nCong),
-         contrasteSAD_z = log((contrasteSAD_z/500)/(1-(contrasteSAD_z/500))),
-         contrasteSAD_z = f_z(contrasteSAD_z)) |> 
-  inner_join(df_contrastes |> 
-               pivot_longer(cols=starts_with("efeito"),
-                            names_to="pair",
-                            values_to="contraste_z") |> 
-               mutate(pair = case_when(pair == "efeito_frag"~"cont.non_frag",
-                                       pair == "efeito_area"~"non_frag.ideal",
-                                       pair == "efeito_conf"~"cont.ideal")) ) |> 
-  relocate(contraste_z,.before = contrasteSAD_z)
-# df_md: dados para os GAMMs de congruência com o empírico  
-f_dfpmd <- \(df){
-  df <- df |> 
-    mutate(col_names = case_when(pair == "cont.non_frag"~"frag",
-                                 pair == "cont.ideal"~"contemp",
-                                 pair == "non_frag.ideal"~"area"))
-  df1 <- df |> select(SiteCode,k,col_names,contraste_z) |> 
-    pivot_wider(names_from = col_names,
-                values_from = contraste_z,
-                names_glue = "{col_names}U_z")
-  df2 <- df |> select(SiteCode,k,col_names,contrasteSAD_z) |> 
-    pivot_wider(names_from = col_names,
-                values_from = contrasteSAD_z,
-                names_glue = "{col_names}SAD_z")
-  inner_join(df1,df2)
-}
-df_md <- df_ad |> 
-  select(SiteCode,k,land_type,nCongKS,diffS) |> 
-  inner_join(df_congContrastes |> f_dfpmd()) |> 
-  mutate(SiteCode = factor(SiteCode),
-         land_hyp = factor(land_type)) |> 
-  select(-land_type) |> 
-  rename(nCong=nCongKS) |> 
-  inner_join(df_contrastes |> select(SiteCode,k,p_z:log.S_z)) |> 
-  relocate(land_hyp,.after = SiteCode)
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") 
+# |> 
+#   inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
+#              by="SiteCode") |> 
+#   rename(N=Ntotal,S=S_obs) |> 
+#   mutate(across(N:S,log,.names="log.{.col}"),
+#          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
+#          SiteCode = factor(SiteCode)) |> 
+#   select(-c(N:log.S)) %>% 
+#   pivot_longer(cols = all_of(matches("dif|ratio|logratio")),
+#                names_to = "efeitos",
+#                values_to="valores") %>%
+#   mutate(classe = case_when(grepl("area",efeitos) ~ "aglomerada, prístina",
+#                             grepl("perse",efeitos) ~ "contemp, aglomerado",
+#                             grepl("total",efeitos) ~ "contemp, prístina"),
+#          tipo = case_when(grepl("dif",efeitos) ~ "diferença",
+#                           grepl("_ratio",efeitos) ~ "razão",
+#                           grepl("logratio",efeitos) ~ "log10(razão)"),
+#          tipo = factor(tipo,levels=c("diferença","razão","log10(razão)")))
+# # df_congContrastetsREP.cvs
+# df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
+#   mutate(SiteCode = factor(SiteCode),
+#          contrasteSAD_z = ifelse(nCong==500,499.9,nCong),
+#          contrasteSAD_z = log((contrasteSAD_z/500)/(1-(contrasteSAD_z/500))),
+#          contrasteSAD_z = f_z(contrasteSAD_z)) |> 
+#   inner_join(df_contrastes |> 
+#                pivot_longer(cols=starts_with("efeito"),
+#                             names_to="pair",
+#                             values_to="contraste_z") |> 
+#                mutate(pair = case_when(pair == "efeito_frag"~"cont.non_frag",
+#                                        pair == "efeito_area"~"non_frag.ideal",
+#                                        pair == "efeito_conf"~"cont.ideal")) ) |> 
+#   relocate(contraste_z,.before = contrasteSAD_z)
+# # df_md: dados para os GAMMs de congruência com o empírico  
+# f_dfpmd <- \(df){
+#   df <- df |> 
+#     mutate(col_names = case_when(pair == "cont.non_frag"~"frag",
+#                                  pair == "cont.ideal"~"contemp",
+#                                  pair == "non_frag.ideal"~"area"))
+#   df1 <- df |> select(SiteCode,k,col_names,contraste_z) |> 
+#     pivot_wider(names_from = col_names,
+#                 values_from = contraste_z,
+#                 names_glue = "{col_names}U_z")
+#   df2 <- df |> select(SiteCode,k,col_names,contrasteSAD_z) |> 
+#     pivot_wider(names_from = col_names,
+#                 values_from = contrasteSAD_z,
+#                 names_glue = "{col_names}SAD_z")
+#   inner_join(df1,df2)
+# }
+# df_md <- df_ad |> 
+#   select(SiteCode,k,land_type,nCongKS,diffS) |> 
+#   inner_join(df_congContrastes |> f_dfpmd()) |> 
+#   mutate(SiteCode = factor(SiteCode),
+#          land_hyp = factor(land_type)) |> 
+#   select(-land_type) |> 
+#   rename(nCong=nCongKS) |> 
+#   inner_join(df_contrastes |> select(SiteCode,k,p_z:log.S_z)) |> 
+#   relocate(land_hyp,.after = SiteCode)
 # df_newdata
-df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
-  select(-starts_with("log_"))
-# df_intePred_contrastes.csv
-df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
-write_csv(df_md,"dados/csv/df_md.csv")
-# 
-df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
-  inner_join(df_p) |> 
-  inner_join(df_dados_disponiveis |> 
-               filter(forest_succession != "capoeira") %>% 
-               select(SiteCode, forest_succession)) %>% 
-  arrange(p) |> 
-  mutate(succession = case_when(forest_succession == "primary" ~ "1°",
-                                forest_succession == "secondary" ~ "2°",
-                                forest_succession == "primary/secondary" ~ "1.5°"),
-         label = paste0(SiteCode,", p=",round(p,2)," ,suc=",succession),
-         k_f=factor(round(k,2))) %>% 
-  select(-succession)
-df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
-write_csv(df_plot,"dados/csv/df_plot_geral.csv")
-# 
-registerDoMC(3)
-df_resultados_completos <- read.csv("./dados/csv/resultados_MN/MNEE/df_repMNEE2.csv") %>% 
-  ddply(.,c("SiteCode","k","land_type"),f_summarise_SAD_MNEE,.parallel = TRUE) %>% 
-  mutate(Uestimado="U prístino") %>% 
-  rbind.fill(df_resultados %>% 
-               mutate(Uestimado="U livre") %>% 
-               select(SiteCode,k:Smax,Uestimado)) %>% 
-  arrange(SiteCode,k) %>% 
-  relocate(Uestimado,.after="land_type")
+# df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
+#   select(-starts_with("log_"))
+# # df_intePred_contrastes.csv
+# df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
+# write_csv(df_md,"dados/csv/df_md.csv")
+# # 
+# df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
+#   inner_join(df_p) |> 
+#   inner_join(df_dados_disponiveis |> 
+#                filter(forest_succession != "capoeira") %>% 
+#                select(SiteCode, forest_succession)) %>% 
+#   arrange(p) |> 
+#   mutate(succession = case_when(forest_succession == "primary" ~ "1°",
+#                                 forest_succession == "secondary" ~ "2°",
+#                                 forest_succession == "primary/secondary" ~ "1.5°"),
+#          label = paste0(SiteCode,", p=",round(p,2)," ,suc=",succession),
+#          k_f=factor(round(k,2))) %>% 
+#   select(-succession)
+# df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+# write_csv(df_plot,"dados/csv/df_plot_geral.csv")
+# # 
+# registerDoMC(3)
+# df_resultados_completos <- read.csv("./dados/csv/resultados_MN/MNEE/df_repMNEE2.csv") %>% 
+#   ddply(.,c("SiteCode","k","land_type"),f_summarise_SAD_MNEE,.parallel = TRUE) %>% 
+#   mutate(Uestimado="U prístino") %>% 
+#   rbind.fill(df_resultados %>% 
+#                mutate(Uestimado="U livre") %>% 
+#                select(SiteCode,k:Smax,Uestimado)) %>% 
+#   arrange(SiteCode,k) %>% 
+#   relocate(Uestimado,.after="land_type")
 ```
 
 
@@ -200,7 +201,17 @@ plot(resDharma)
 
 
 ```{r frag per se?}
-# dados
+#### dados ####
+l_filter <- df_md %>% 
+  select(SiteCode,forest_succession,forest_type) %>% 
+  distinct() %>% 
+  pivot_longer(-SiteCode,names_to="preditora",values_to="categoria") %>% 
+  group_by(preditora) %>% 
+  count(categoria) %>% 
+  filter(n>=5) %>% 
+  as.data.frame %>%
+  dlply(.,"preditora",\(i) i$categoria)
+# df especifico
 v_cols <- str_detect(names(df_resultados), "^S(?!.*de$)")
 df_md <- df_resultados[,!v_cols] %>% 
   filter(land_type!="pristin") %>% 
@@ -208,11 +219,34 @@ df_md <- df_resultados[,!v_cols] %>%
   inner_join(df_p) %>% 
   inner_join(df_dados_disponiveis %>% 
                select(SiteCode,forest_type,forest_succession)) %>% 
-  inner_join(df_contrastes %>% select(SiteCode:k,starts_with("frag.perse")))
+  inner_join(df_contrastes %>% select(SiteCode:k,starts_with("frag.perse"))) %>% 
+  filter(forest_succession %in% l_filter[["forest_succession"]],
+         forest_type %in% l_filter[["forest_type"]])
 # formulas
-l_f <- list()
-l_f[[1]] <- "cbind(nCong,100-nCong) ~ land_type * Uestimad * metrica + (land_type * Uestimad * metrica|SiteCode)"
-names(l_f) <- "base"
+v_f <- "cbind(nCong,100-nCong) ~ land_type * Uestimad * metrica + control_var + (land_type * Uestimad * metrica|SiteCode)"
+v_cols <- names(select(df_md,starts_with("forest")))
+v_cols[length(v_cols)+1] <- paste(v_cols,collapse = " + ")
+l_f <-  lapply(v_cols,\(li){
+  v_f <- sub("control_var",li,v_f)
+  v_cols <- names(select(df_md,starts_with("frag.perse")))
+  lapply(v_cols,\(x){
+    gsub("metrica",x,v_f)
+  })
+}) %>% do.call(c,.)
+f_glmm <- \(vf,df_data=df_md){
+  glmer(as.formula(vf),
+        family='binomial',
+        data=df_data,
+        control=glmerControl(optimizer='bobyqa',optCtrl=list(maxfun=2e9)))
+}
+registerDoMC(3)
+l_md <- llply(l_f,f_glmm,.parallel = TRUE)
+save(l_md,file="./secoes_texto/Resultados/dados/l_md_ncong.Rdata")
+
+
+# l_f <- list()
+# l_f[[1]] <- 
+# names(l_f) <- "base"
 
 ```
 
@@ -222,9 +256,17 @@ Não é possível utilizar as variáveis categoricas tipo florestal e grau de pe
 df_md %>% 
   select(SiteCode,forest_succession,forest_type) %>% 
   distinct() %>% 
-  count(forest_type,forest_succession) %>%
-  ggplot(aes(x=forest_type,y=forest_succession,fill=n)) + 
-  geom_tile()
+  pivot_longer(-SiteCode,names_to="preditora",values_to="categoria") %>% 
+  group_by(preditora) %>% 
+  count(categoria) %>% 
+  ggplot(aes(x=categoria,y=n)) +
+  geom_bar(stat="identity") +
+  geom_hline(yintercept = 5) +
+  facet_wrap(~preditora,scales="free") +
+  theme(axis.text.x = element_text(angle = 90))
+  # count(forest_type,forest_succession) %>%
+  # ggplot(aes(x=forest_type,y=forest_succession,fill=n)) + 
+  # geom_tile()
 ```
 
 
