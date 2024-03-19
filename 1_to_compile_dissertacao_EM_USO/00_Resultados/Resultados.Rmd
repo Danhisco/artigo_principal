@@ -1,0 +1,376 @@
+
+
+```{r setup resultados,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
+                      fig.align='center',tab.align='center')
+# pacotes
+library(grid)
+library(gtable)
+library(ggpubr)
+# library(gt)
+# library(dagitty)
+# library(ggdag)
+# library(gratia)
+# library(sads)
+library(doMC)
+# library(metR)
+library(kableExtra)
+library(gridExtra)
+library(ggplot2)
+theme_set(theme_bw())
+library(readr)
+# library(purrr)
+library(stringr)
+library(tidyr)
+# library(MuMIn)
+# library(AICcmodavg)
+# library(insight)
+library(bbmle)
+library(DHARMa)
+# library(mgcv)
+library(lme4)
+library(data.table)
+library(plyr)
+library(dplyr)
+source("source/general_tools.R")
+source("source/GAMMtools.R")
+source("source/fig_tools.R")
+# tamanho da fonte dos títulos dos gráficos dos resultados por síio de amosttragem (Umed e nCong)
+v_titleS <- 1000
+v_ncol_fatetwrap <- 14
+figHeight=28
+figWidth=40
+textsize=1
+#
+f_z <- function(x) (x-mean(x))/sd(x)
+##
+# df p extensões
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+# df dados da proporção de cobertura vegetal
+df_p <- read_csv("dados/df_p.csv")
+# df dados para simulação
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  inner_join(x=df_p,by="SiteCode")
+# df_SoE
+df_Usoe.rep <- read_csv("dados/csv/df_Usoe.csv") |> 
+  pivot_longer(cols=`1`:`10`, names_to = "n", values_to = "U") |> 
+  inner_join(x=distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
+  arrange(S_obs,k)
+# df_Urep
+df_Urep <- list.files(path = "dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) %>%  
+  adply(.,1,data.table::fread,.id=NULL) %>% na.omit()
+# df_Unull
+df_Unull <- df_Usoe.rep |> filter(round(lado_km) == 16)
+## df_dados_disponiveis
+df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
+## df_resultados 
+df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
+## df_sim
+df_sim <- read_csv("dados/df_simulacao.csv")
+## df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
+df_ad <- df_resultados |>
+  arrange(p) |> 
+  inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
+  mutate(diffS = (Smed - S_obs)/S_obs)
+## df_contrastes: contrastes por sítio e grau de limitação de dispersão
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
+  inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
+             by="SiteCode") |> 
+  rename(N=Ntotal,S=S_obs) |> 
+  mutate(across(N:S,log,.names="log.{.col}"),
+         across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
+         SiteCode = factor(SiteCode)) |> 
+  select(-c(N:log.S))
+# df_intePred_contrastes.csv
+df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
+## df_md: dados necessários para os modelos
+df_md <- read_csv("dados/csv/df_md.csv")
+## df_newdata
+df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
+  select(-starts_with("log_"))
+## df_congContrastetsREP.cvs
+df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
+  mutate(SiteCode = factor(SiteCode),
+         contrasteSAD_z = ifelse(nCong==500,499.9,nCong),
+         contrasteSAD_z = log((contrasteSAD_z/500)/(1-(contrasteSAD_z/500))),
+         contrasteSAD_z = f_z(contrasteSAD_z)) |> 
+  inner_join(df_contrastes |> 
+               pivot_longer(cols=starts_with("efeito"),
+                            names_to="pair",
+                            values_to="contraste_z") |> 
+               mutate(pair = case_when(pair == "efeito_frag"~"cont.non_frag",
+                                       pair == "efeito_area"~"non_frag.ideal",
+                                       pair == "efeito_conf"~"cont.ideal")) ) |> 
+  relocate(contraste_z,.before = contrasteSAD_z)
+df_plot <- fread("dados/csv/df_plot_geral.csv")
+# themes
+basic_theme <- function(data, ...){
+  data %>% 
+    tab_options(
+      table.background.color = "white",
+      ...
+    )
+}
+```
+
+```{r trackdown chunk resultados, include=FALSE,eval=FALSE}
+# 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
+# pacotes
+library(trackdown)
+# both overwrite: 
+# overwrite the current google drive file with the current Rmd:
+# upload_file(file="secoes_texto/Resultados/Resultados.Rmd",
+#             gpath="mestrado/artigo_principal/secoes_texto/",
+#             hide_code=TRUE)
+update_file(file ="secoes_texto/Resultados/Resultados.Rmd",
+            gpath = "mestrado/artigo_principal/secoes_texto/",
+            hide_code = TRUE)
+# overwrite the current Rmd with the current google drive 
+download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
+              gpath = "mestrado/artigo_principal/secoes_texto/")
+```
+
+## Inventários Florestais Selecionados
+
+Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção. As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig. \@ref(fig:GE-sitios-amostrados) a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo. Apenas 2 sítios possuíam menos de 20 anos de recuperação desde o último grande distúrbio na área (fig. \@ref(fig:GE-sitios-amostrados) c) e foram removidos. A mediana da área amostrada foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. \@ref(fig:GE-sitios-amostrados) b). Portanto, todos os 107 sítios restantes dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Não foi possível estimar a taxa U em um sítio com baixa densidade de espécies por número de indivíduos e de baixa proporção de cobertura vegetal na paisagem ao redor. Em outro sítio não foi possível desenhar a parcela quadrado no centro da paisagem devido a configuração espacial da paisagem. Esses dois sítios foram removidos, totalizando 105 sítios simulados.
+
+
+## Efeito de Escalar
+
+A extensão espacial é um dos fatores que determina a quantidade de habitat remanescente na paisagem. No conjunto de áreas analisadas há uma forte relação entre a extensão espacial da paisagem ao redor e a proporção de cobertura vegetal (fig. \@ref(fig:EE-setup) a). O objetivo do estudo do efeito de escalar é determinar a extensão espacial adequada para simular os 20 graus de limitação de dispersão (fig. \@ref(fig:EE-setup) c). Escala adequada de um grau de limitação de dispersão foi definida como a extensão espacial que acumula a maior parte da variação na estimativa da taxa U associada ao aumentar a extensão espacial da paisagem ao redor, considerando a amplitude de extensões do lado da paisagem local entre 0.5 km e 16 km. Para detalhes sobre os métodos  do estudo de efeito de escalar veja o apêndice ‘Efeito de Escalar’. Nesse  estudo, 36 sítios foram sorteados e selecionados ao longo do gradiente de número de indivíduos e de espécies na parcela (fig. \@ref(fig:EE-setup) b). Para esse estudo, as estimativas da taxa U foram simuladas em paisagens totalmente preenchidas com habitat, para descontar o efeito do isolamento estrutural, e explorar apenas o efeito de variar a extensão da paisagem ao redor. 
+
+A taxa U estimada nos graus de limitação de dispersão simulados nas paisagens com maior extensão espacial (paisagem quadrada de lado 16 km) é qualitativamente similar ao estimado em paisagens infinitas (figura A1 2). Em paisagens infinitas e sem perda de habitat a taxa U necessária para manter uma determinada riqueza na parcela apresenta um máximo global quando o grau de limitação de dispersão é pouco severa (@may2012dispersal). Em graus de limitação à dispersão severa a taxa U estimada é baixa, pois a perda de espécies é pequena: a maior parte das substituições ocorre entre coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies aumenta com a redução da substituição de coespecíficos, aumentando a perda de espécies por deriva ecológica. Com o aumento da capacidade de dispersão para além de graus severos, há o aumento da contribuição de subpopulações da paisagem mais distante da parcela, reduzindo novamente a estimativa da taxa U. Portanto, concluímos que foi adequado utilizar a maior extensão espacial (de lado 16km) como referência de extensão espacial suficiente para simular todos os graus de limitação de dispersão.
+
+Analisamos os dados agrupados por sítio de amostragem (Fig Efeito de Escalar 2a e 2b). A estimativa da taxa U em função do grau de limitação de dispersão apresenta padrão não linear (Fig Efeito de Escalar 2a e 2b). Em graus de limitação de dispersão severos a média da taxa U se mantém baixa e com pouca variação entre graus de limitação de dispersão severos, formando um primeiro patamar de valores baixos (Fig Efeito de Escalar 2a e 2b). Com o relaxamento para graus pouco severos, há um salto na média da taxa U, que pode se manter por alguns graus de limitação de dispersão pouco severos (Fig Efeito de Escalar 2a e 2b). Com o maior relaxamento da limitação de dispersão para graus brandos, há a redução gradual da média da taxa U até valores médios similares ao observado em graus severos de limitação de dispersão (Fig Efeito de Escalar 2a e 2b). O tamanho dos patamares e a forma com que a redução na taxa U ocorre parece depender de uma relação não trivial entre número de indivíduos, número de espécies e grau de limitação de dispersão (figura Efeito de Escalar 2b).
+
+Para descrever a variação na taxa U associada à variação na extensão espacial para um determinado grau de limitação de dispersão, exploramos um modelo gaussiano em que a taxa U média pode ser descrita em função do número de espécies e indivíduos (na escala log) e do grau de limitação de dispersão e da extensão espacial (como variáveis categóricas) com um intercepto aleatório por sítio de amostragem (detalhes no apêndice ‘Efeito de Escalar’). Avaliamos, por grau de limitação de dispersão, como a média variou em função do aumento da extensão espacial da paisagem. A escala que acumulou a maior parte da variação total (de aumentar o lado da paisagem local de 0.5 km até 16 km) foi considerada como escala adequada para aquele grau de limitação de dispersão. Essa abordagem pressupõe que o efeito de escalar sempre ou aumenta ou reduz a taxa U média para um grau de limitação de dispersão. 
+
+Observamos que, exceto em graus de limitação de dispersão pouco severos onde há o máximo global na estimativa da taxa U em paisagens com maior extensão espacial (lado de 16 km) e sem perda de habitat (Fig Efeito de Escalar 2a e 2b), a extensão espacial adequada tende a aumentar com a redução da limitação de dispersão (Figura 3). Nos graus de limitação de dispersão em que isso não foi observado há pouca variação na média da taxa U entre escalas e sempre grande variação entre réplicas de uma mesma bateria de simulações (Fig Efeito de Escalar 2a, A1 2b e A1 4b). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90, a extensão espacial da paisagem adequada é de 1 km de lado (Figura 3). Para k entre 0.80 e 0.55, que corresponde ao campo de parâmetros com máximo global, não é possível determinar uma tendência de redução da média da estimativa de U (Figura 3); a variação entre escalas para um mesmo sítio é baixa (Figuras Efeito de Escalar 2 e A1 3). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura Efeito de Escalar 5 e 6). Pressuposto que a extensão espacial adequada para simular k entre 0.80 e 0.55 pode ser obtida interpolando as escalas adequadas, então nesses graus de limitação de dispersão a extensão suficiente é a de 1 km de lado da paisagem ao redor.
+
+## taxa U
+
+A partir dessa seção iremos analisar os dados das simulações feitas nos 3 tipos de paisagens hipotéticas: a paisagem contemporâneas, com a configuração espacial do habitat remanescente observada no mesmo ano que a melhor aproximação do ano da amostragem da parcela; a paisagem sem fragmentação per se, onde todo o habitat remanescente na paisagem contemporânea é aglomerado ao redor  da parcela em forma de quadrado; e a paisagem idealizada, sem perda de habitat. Quando há pouca perda de habitat a estimativa da taxa U não difere entre as 3 paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Para paisagens contemporâneas com proporção de cobertura vegetal abaixo de 0.95, observamos que a estimativa da taxa U pode ser distinta entre paisagens hipotéticas para alguns graus de limitação de dispersão (fig. \@ref(fig:GE-Urep-sitio-k-land)). A maior variação entre graus de limitação de dispersão ocorre nos graus de limitação de dispersão mais brandos simulados, seguido pelos graus mais severos; nos graus de limitação de dispersão pouco severos, onde há o máximo global nas paisagens infinitas e sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre tipos de paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em geral, a paisagem hipotética contemporânea apresenta estimativas superiores da taxa U em comparação com as outras duas paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em alguns casos, a estimativa em paisagem sem fragmentação per se pode ser superior ao estimado na paisagem contemporânea (fig. \@ref(fig:GE-Urep-sitio-k-land), na 2a coluna e 4a linha e na 10a coluna e 1a linha ). Sobre a estimativa da taxa U, em resumo: i) quanto maior a perda de habitat e mais branda a limitação de dispersão, maior a potencial diferença entre as 3 paisagens hipotéticas; ii) em geral a estimativa em paisagens contemporâneas é superior ao estimado nos outros 2 tipos de paisagens hipotéticas; iii) em geral o estimado nas paisagens sem fragmentação per se e sem perda de habitat são similares, porém, para alguns sítios com pouca proporção de cobertura vegetal, o estimado em paisagem sem fragmentação per se pode ser superior. 
+
+
+FUTURAMENTE:
+
+- Figura
+1a parte) 3 quadros cada uma agregada por tipo de paisagem e com todos os sítios com traço mais claro e a média geral em destaque
+2a parte) Efeitos da Paisagem: contraste entre as esimativas das taxas Us entre tipos de paisagens
+
+```{r fig-taxaU}
+
+```
+
+
+
+
+\newpage
+
+## SAD observada e SAD predita entre paisagens hipotéticas
+
+### Erro na Riqueza Simulada
+
+FUTURAMENTE:
+1 gráfico com 5 paineis, 3 na primeira linha: aqueles com taxa U livre; e 2 na segunda linha: aqueles com a taxa U estimada em paisagem diferente da onde foi simulado a riqueza
+
+### Congruência entre SAD simulada e a empírica
+
+TEMA MAIOR:
+1) Efeitos imediatos (paisagem idealizada) e de longo prazo (paisagem contemporânea em um extremo e a paisagem sem fragmentação como outro ) (três tipos de paisagens)
+2) Fragmentação per se pode ser aproximadamente desconsiderada para descrever a SAD? (contemporâneo X aglomerado)
+3) É melhor aproximar o sistema pela situação de efeitos imediatos ou de efeitos de longo prazo da fragmentação? (contemporâneo X idealizado)
+4) Devemos pressupor que existe relação entre as características da paisagem e a riqueza de espécies? (taxa U livre X fixa)
+
+
+
+
+
+### Descrição do padrão observado
+
+Buscamos diferentes estratégias para analisar os dados de congruência das SADs simuladas  com a SAD empírica, mas não concluímos nenhuma de maneira satisfatória. Então decidimos apresentar algumas figuras exploratórias, para avaliarmos se existem alguns padrões importantes. A primeira figura exploratória que avaliamos está na figura \@ref(fig:GE-nCong), onde cada painel apresenta os resultados de congruência agrupados por sítio de amostragem (no eixo x há os graus de limitação de dispersão, k, e no eixo y o número de SADs simuladas congruentes com a SAD observada), os pontos e linhas estão coloridos pelo tipo de paisagem hipotética, o fundo dos painéis está colorido pela proporção de cobertura vegetal contemporânea e os painéis estão agrupados pela classe de sucessão dos sítios amostrados usada na base de dados TreeCo. No canto inferior esquerdo, há um boxplot da proporção de cobertura vegetal (eixo y) em função da classe de sucessão (eixo x). Entendemos que podemos classificar os padrões de congruência por sítio de amostragem em função do grau de limitação de dispersão (k) em dois componentes: a congruência do modelo neutro em função de k, avaliando a nuvem de pontos considerando os 3 tipos de paisagem hipotética como um só (congruência do modelo neutro); e a diferença na congruência entre os 3 tipos de paisagem hipotética (congruência do tipo de paisagem hipotética). E após a classificação destes padrões de congruência podemos avaliar possíveis associações em função das possíveis preditoras empíricas (proporção de cobertura vegetal na paisagem local e classe de sucessão do sítio de amostragem). 
+
+Na figura \@ref(fig:GE-nCong) é possível observar, em alguns graus de limitação de dispersão, o aumento da diferença na congruência entre paisagens hipotéticas com a redução da cobertura vegetal na paisagem ao redor (principalmente, abaixo de 0.92). Existe muita diversidade nos padrões de congruência entre sítios (fig. \@ref(fig:GE-nCong)). Seguimos decompondo os padrões de congruência do modelo neutro (considerando os 3 tipos de paisagens hipotéticas juntos) e do tipo de paisagem hipotética (avaliando a diferença entre os 3 tipos de paisagens hipotéticas). Sobre a congruência do modelo neutro: i) em alguns sítios a congruência é boa ou ruim para todos os graus de limitação de dispersão (e.g. fig. \@ref(fig:GE-nCong) grupo ‘primary’, 1a coluna, 6a linha e grupo ‘primary/secondary’, 2a coluna, 2a linha, respectivamente); ii) em alguns sítios é ruim ou boa em graus de limitação de dispersão brandos (e.g. fig. \@ref(fig:GE-nCong) ambas no grupo ‘primary’, 1a coluna, 1a linha e 3a coluna, 1a linha, respectivamente) ; iii) em alguns sítios é ruim ou boa em graus de limitação de dispersão intermediários (e.g. fig. \@ref(fig:GE-nCong) ambas no grupo ‘primary’, 1a coluna, penúltima linha e 2a coluna, 7a linha, respectivamente). Ou seja, observamos variabilidade na congruência do modelo neutro em todo o gradiente de limitação de dispersão simulada, com maior variabilidade em graus brandos de limitação de dispersão, seguido de graus severos, e menor variabilidade em graus de limitação intermediários. 
+
+
+
+Sobre a congruência do tipo de paisagem hipotética, em geral a congruência de paisagens sem perda de habitat e sem fragmentação apresentam menor divergência entre si, e quando a congruência da paisagem contemporânea difere, a congruência pode ser melhor ou pior do que a congruência das outras 2 paisagens hipotéticas (fig. \@ref(fig:GE-nCong)). As paisagens sem perda de habitat apresentam melhor congruência em mais sítios, e a congruência de paisagens sem fragmentação per se apresentam melhor congruência em menos sítios em comparação aos outros 2 tipos de paisagens hipotéticas (fig. \@ref(fig:GE-nCong)). Em alguns sítios o padrão de congruência por tipo de paisagem hipotética parece diferir do padrão de congruência do modelo neutro, por exemplo, no sítio de amostragem que está no grupo ‘secondary’, 1a coluna e 3a linha, onde a congruência da paisagem contemporânea é baixa em graus de limitação de dispersão pouco severos, enquanto a congruência dos outros 2 tipos de paisagem hipotéticas é boa apenas em graus de limitação de dispersão brandas (fig. \@ref(fig:GE-nCong)). Na maior parte dos sítios em que há diferença no padrão de congruência por tipo de paisagem hipotética, o padrão por tipo de paisagem hipotética é qualitativamente similar ao padrão de congruência do modelo neutro, por exemplo, no sítio de amostragem no grupo ‘primary’, 1a coluna e 2a linha, a congruência da paisagem contemporânea é ruim em mais graus de limitação de dispersão brandos do que a congruência das outras 2 paisagens hipotéticas que também apresentam pior congruência em graus brandos de limitação de dispersão (fig. \@ref(fig:GE-nCong)). 
+
+
+\newpage
+
+### Discussão para o 2o Comitê de Acompanhamento
+
+Tentamos algumas abordagens para analisar os dados. Por conta da falta de tempo, não consegui organizar os documentos das análises passadas para mostrar. Segue um resumo das abordagens
+
+1) Buscamos descrever o ‘log odds ratio’ (lOR) de uma SAD simulada na paisagem contemporânea ser congruente com a SAD observada em relação à SAD simulada na paisagem sem fragmentação per se. Essa abordagem enfatiza o debate em ecologia de paisagens sobre se é necessário considerar a fragmentação per se (@watling2020support). Utilizamos um GAM hierárquico para descrever o lOR por um modelo normal com k (a proporção de propágulos que permanece até a vizinhança imediata), p (proporção de cobertura vegetal na paisagem ao redor), o log da riqueza de espécies e número de indivíduos, com um intercepto por sítio de amostragem e se possível um spline individual por sítio de amostragem.
+
+2) Especulei que um desenho de análise que se aproxima daquele usado na ecologia de paisagens (em que o objetivo é avaliar a associação entre a biodiversidade local e métricas da paisagem local) seria analisar apenas a congruência da SAD predita pela paisagem contemporânea em função de alguma métrica de paisagem derivada da comparação entre paisagens hipotéticas. Entendo que uma métrica candidata pode ser obtida da diferença na taxa U estimada entre as paisagens hipotéticas, pois um menos a taxa U representa a influência da paisagem ao redor na manutenção da riqueza local. Pensei em comparação entre pares: a) contraste de fragmentação per se, diferença entre o estimado em paisagens contemporâneas e sem fragmentação per se; b) contraste de perda de habitat per se, diferença entre o estimado em paisagens sem fragmentação per se e sem perda de habitat; c) contraste de contemporaneidade, diferença entre a paisagem contemporânea e sem perda de habitat. As duas primeiras métricas se aproximam do programa de pesquisa da Fahrig et al., em que os possíveis efeitos da configuração espacial do habitat remanescente na manutenção da diversidade local são decompostos em efeito de fragmentação per se e efeito de área per se. Já a terceira métrica está relacionado com o programa de pesquisa rival ao da Fahrig, em que não há essa decomposição ortogonal a priori dos efeitos de fragmentação per se e efeito de área per se, eles pressupõem que pode existir efeitos indiretos da perda de habitat via fragmentação per se. Além disso, essa terceira métrica está relacionada com o desenho de pesquisa que utiliza esse modelo neutro para estimar o débito de extinção local, o atraso na resposta ecológica do local de amostragem que se espera após a remoção de habitat na paisagem local (@thompson2019characterising). Eu entendo que a principal característica desse tipo de métrica é que considera a relação entre capacidade de dispersão dos indivíduos e a particular configuração espacial do habitat. A terceira métrica, em específico, é independente da extensão espacial da paisagem ao redor, pressuposto a validade do estudo ‘Efeito de Escalar’, o que entendo ser uma grande vantagem em comparação com as métricas tradicionais. Outra forma de obter essas métricas é utilizar a congruência par a par das SADs simuladas. Uma investigação dessas métricas baseadas na taxa U estão no ‘Support Information’. Abandonamos essa abordagem, pois ela foi considerada muito complicada para defender no tempo do mestrado.
+
+3) Uma abordagem mais simples foi a de considerar um modelo binomial com variável resposta como número de SADs simuladas congruentes, e como variável resposta o tipo de paisagem hipotética além de outras covariáveis (e.g. k, p e classe de sucessão) além de intercepto por sítio de amostragem e em alguns inclinação de k por sítio de amostragem. Esse modelo demorou muito para ajustar e não apresentou bom ajuste, com a maior parte da variação associada ao sítio de amostragem e menos de 1% associada apenas com os efeitos fixos. A partir dessa modelo, especulamos se parte da variação observada pode estar relacionada com a distribuição espacial dos sítios. As paisagens contemporâneas sugerem que algumas parcelas foram amostradas em paisagens locais com alto grau de sobreposição espaço-temporal (Fig. SI 1). Além disso, possíveis determinantes da biodiversidade local observada na Floresta Atlântica podem estar associados às variáveis preditoras empíricas (p e classe de sucessão) por conta da sua localidade (e.g. fig SI 2). 
+
+Para investigar a possibilidade de autocorrelação espacial, plotamos a classificação visual dos padrões de congruência do modelo neutro e dos tipos de paisagem hipotéticas em função das  coordenadas geográficas dos sítios de amostragem ( \@ref(fig:GE-coordenadas-preditoras)). Classifiquei os sítios segundo a congruência por tipo de paisagem hipotética (contemporânea diferente, contemporânea melhor, contemporânea pior, idealizada diferente, sem fragmentação diferente, e similares) e segundo a congruência do modelo neutro (boa, boa em graus de limitação de dispersão brandos, boa em graus de limitação de dispersão intermediários, boa exceto em graus de limitação de dispersão brandos, ruim e ruim em graus de limitação de dispersão intermediários). Não observei nenhum padrão visual claro da distribuição espacial das classificações dos padrões de congruência. Também plotamos as possíveis preditoras empíricas, proporção de cobertura vegetal (p) e classe de sucessão, em função das coordenadas ( \@ref(fig:GE-coordenadas-preditoras)).  As possíveis preditoras empíricas parecem apresentar distribuição espacial não negligenciável (figura \@ref(fig:GE-nCong) c:d), com agregação de paisagens com alta proporção de cobertura vegetal na região costeira. 
+\newpage
+
+```{r tabela com o nome das predioras,eval=FALSE,include=FALSE}
+df_glossario <- data.frame(
+  nome = c("k","p","forest succession","land hyp","SiteCode"),
+  `descrição` = c("grau de limitação de dispersão per capita",
+                  "proporção de cobertura vegetal na extensão de 4x4 km2",
+                  "classe de sucessão ecológica",
+                  "classe da paisagem simulada",
+                  "código do sítio de amostragem"))
+f_kableExtra(df_glossario,string_caption = "Descrição das variáveis preditoras",col_control=FALSE)
+```
+
+```{r caption-ts-re-ncong,eval=FALSE,include=FALSE}
+cap <- "Seleção da Estrutura Aleatória"
+snote <- "estrutura fixa do modelo cheio usada em ambos modelos"
+```
+
+```{r ts-re-ncong,eval=FALSE,include=FALSE}
+df_ts_re <- read.csv("./dados/csv/df_ts_re_nCong.csv")
+f_kableExtra(df_ts_re,string_caption = cap,footnote = snote,col_control = FALSE)
+```
+
+```{r c1,eval=FALSE,include=FALSE}
+cap <- "Seleção da Estrutura Fixa"
+snote <- "estrutura aleatória mais plausível usada em todos os modelos"
+```
+
+```{r ts-ncong,eval=FALSE,include=FALSE}
+df_ts <- read.csv("./dados/csv/df_ts_defesa_congruencias.csv")
+f_kableExtra(df_ts,string_caption = cap,footnote = snote,col_control = FALSE)
+```
+
+```{r c2,eval=FALSE,include=FALSE}
+cap <- "Predito pelo modelo mais plausível para descrever a congruência entre SAD empírica e simulada"
+```
+
+```{r nCong-md-predito,fig.height=8,fig.width=8,fig.cap=cap,fig.pos="H",eval=FALSE,include=FALSE}
+oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata")
+l_md_e_start <- get(oname)
+df_newdata <- l_md_e_start$modelo@frame[,-1]
+df_newdata <- with(df_newdata,{
+  expand.grid(SiteCode = "SPigua1",
+              forest_succession = unique(forest_succession),
+              k_z = seq(min(k_z),max(k_z),length.out=150),
+              land_hyp = unique(land_hyp),
+              p_z = seq(min(p_z),max(p_z),length.out=150))
+})
+# gráficos
+df_newdata$pred <- predict(l_md_e_start$modelo,newdata=df_newdata, re.form=~0)
+v_range <- range(df_newdata$pred)
+# v_breaks1 <- c(-0.2,0,0.2,0.5,1)
+df_newdata %>%
+  mutate(land_hyp = factor(land_hyp,
+                           levels=c("cont","non_frag","ideal"),
+                           labels=c("contemp.","sem frag.","ideal."))) %>% 
+  ggplot(aes(x=p_z,y=k_z,fill=pred,z=pred)) +
+  geom_raster() +
+  geomtextpath::geom_textcontour(aes(z=pred),color="blue",straight = TRUE) +
+  scale_fill_gradient2(low="green",
+                       mid="red",
+                       high="black",
+                       midpoint = 2,
+                       limits=v_range) +
+  scale_y_reverse() +
+  theme_classic() +
+  guides(fill = guide_colourbar(title = "logito")) +
+  coord_cartesian(expand = FALSE) +
+  labs(x="z(p)",y="z(k)") +
+  theme(legend.position = "top") +
+  facet_grid(land_hyp~forest_succession)
+```
+
+```{r exemplo tabela,eval=FALSE,include=FALSE}
+df_tab <- read_csv("./dados/csv/ts_congCont.csv")
+df_tab |> 
+  gt(groupname_col = "pair",
+     # rowname_col = "modelo",
+     rownames_to_stub = F) |> 
+  # tab_header(title = "GAMM usados para descrever a congruência na SAD entre contrastes") |> 
+  fmt_number(columns = dAICc:dev.expl,decimals = 2, suffixing = TRUE) |> 
+  cols_label(dev.expl = "dev. expl.") |> 
+  tab_row_group(label = md("<center><b>Sem Fragmentação <i>per se</i> : Idealizado<b/></center>"),
+                rows = 5:6) |> 
+  tab_row_group(label = md("<center><b>Contemporâneo : Sem Fragmentação <i>per se</i><b/></center>"),
+                rows = 3:4) |>
+  tab_row_group(label = md("<center><b>Contemporâneo : Idealizado</center></b>"),
+                rows = 1:2) |>
+  tab_style(style = cell_fill(color = "gray75"),
+            locations = cells_row_groups(groups = 1:3)) |> 
+  cols_align(align = "right") |> 
+  tab_style(style = cell_text(align = "left",
+                              weight = "bold"),
+            locations = cells_column_labels(columns = modelo:dev.expl)) |> 
+  text_case_when(x == "f(contraste_z)" ~ "~ f(contraste U)",
+                 x == "f(k_z,p_z)" ~ "~ f(k, p)",
+                 .default = "",.locations = cells_body(columns = "modelo")) |> 
+  cols_width(modelo ~ px(130),where(is.numeric) ~ px(100))
+```
+
+```{r ip contrastes ~ p k,fig.height=figHeight,fig.width=figWidth,eval=FALSE,include=FALSE}
+df_plot <- df_intPred |> 
+  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
+         k = k_z*sd(df_ad$k) + mean(df_ad$k),
+         name=factor(name,levels=paste0("efeito_",c("area","frag","conf")))) |> 
+  select(-contains("_z"),-predito) |> 
+  pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
+# gráficos
+v_range <- range(df_plot$pred)
+v_breaks1 <- c(-0.2,0,0.2,0.5,1)
+f_plot <- function(df){
+  f_ggplot <- function(df,facets=2){
+  ggplot(df,aes(x=p,y=k,z=pred,fill=pred)) +
+    geom_raster() +
+    geom_contour(aes(z=pred),
+                 size=0.5,color="darkblue",
+                 breaks=v_breaks1) +
+    geom_text_contour(aes(z=pred),
+                      breaks=v_breaks1,
+                      label.placer = label_placer_flattest()) +
+    scale_fill_gradient2(low="green",
+                         mid="red",
+                         high="black",
+                         midpoint = 0.5,
+                         limits=v_range,
+                         # round(seq(v_range[1],v_range[2],length.out = 5)[1:4],2)
+                         breaks=v_breaks1) +
+    scale_y_reverse() +
+    theme_classic() +
+    guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
+    coord_cartesian(expand = FALSE) +
+    labs(fill=df$name[1]) +
+    facet_wrap(~label,ncol = facets,scales="free")
+  }
+  l_p <- list()
+  l_p[[1]] <- df |> 
+    filter(label == "Q_0.5") |>
+    f_ggplot() + labs(x="")
+  l_p[[2]] <- df |> 
+    filter(label != "Q_0.5") |>
+    f_ggplot()
+  ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+}
+l_plot <- dlply(df_plot,"name",f_plot)
+p <- grid.arrange(grobs=l_plot,ncol=3)
+ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
+       width = 13,
+       height = 9)
+```
+
+
+
+<!-- ```{r estudo shapefile} -->
+<!-- library(sf) -->
+<!-- df_geomAF <- sf::st_read("./dados/shapefiles/FlorestaAtlantica_limites/biome_border.shx") -->
+<!-- df_geomAF %>%  -->
+<!--   ggplot() + -->
+<!--   geom_sf() -->
+<!-- ``` -->
+
+
+
+<!-- shapefile do terrabrasilis do INPE (http://terrabrasilis.dpi.inpe.br/en/download-2/) -->
