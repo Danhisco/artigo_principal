@@ -1,0 +1,279 @@
+---
+title: "taxaU"
+author: "Danilo Pereira Mori"
+date: "2022-12-04"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
+# pacotes
+library(doMC)
+library(patchwork)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(insight)
+library(bbmle)
+library(DHARMa)
+library(lme4)
+library(plyr)
+library(dplyr)
+# funções
+source("source/f_z.R")
+# dados
+# df_p
+df_p <- read_csv("dados/df_p.csv")
+# df_sim
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  select(-tif.path) |> 
+  inner_join(
+    mutate(
+      data.frame(txt.path = list.files(path="dados/simulacao",pattern=".txt")),
+      SiteCode = str_extract(txt.path,".*?(?=.txt)")),
+    by = "SiteCode") |>
+  left_join(x=df_p,by="SiteCode")
+# df_Urep
+# df_Urep <- list.files(path="dados/csv/taxaU",pattern=".csv",full.names = T) |> 
+#   map_df(~read_csv(.))
+# write_csv(df_Urep,"dados/csv/df_Urep.csv")
+# df_Urep <- read_csv("dados/csv/df_Urep.csv")
+# df_U <- df_Urep |>
+#   drop_na() |>
+#   pivot_longer(cols = `1`:`10`,names_to = "n",values_to = "U") |>
+#   group_by(SiteCode,k) |>
+#   summarise(Umed = mean(U),
+#             Usd = sd(U),
+#             Umin = min(U),
+#             Umax = max(U)) |>
+#   inner_join(x=select(df_sim,-txt.path,-d),by=c("SiteCode","k")) |>
+#   inner_join(x=select(df_resultMNEE,p,SiteCode,k),by=c("SiteCode","k"))
+# dados
+df_Urep <- list.files(path = "dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) |> 
+  purrr::map_df(~read_csv(.)) |> na.omit() #na.omit para remover o Sítio em que não foi possível rodar pela relação N / p
+# sumarização
+f_contraste_Umed(df_Urep) # em 2samples_testes.R
+# df_ad
+```
+
+## Gráficos Exploratórios da taxa U
+
+__Coeficiente de Variação da estimativa da taxa U__
+
+```{r gráficos para o artigo Figura SI 1 - Graf Exp dos contrastes,eval=T}
+l_p <- list()
+l_p[[1]] <- df_U |> 
+  ggplot(aes(x=Umed,y=Usd)) + 
+  geom_point(alpha=0.1) + 
+  geom_abline(slope = 1,intercept = 0) + 
+  geom_abline(slope=0.1,intercept = 0,color="darkgreen") +
+  geom_abline(slope=0.01,intercept = 0,color="darkred")
+l_p[[2]] <- df_contrastes |> 
+  pivot_longer(efeito_area:efeito_conf) |>
+  mutate(name = factor(name,labels = c("contraste area","contraste contemp","contraste frag"))) |> 
+  ggplot(aes(x=name,y=value)) +
+  geom_hline(data = df_contrastes |> 
+               mutate(referencia_efeito = ifelse(p>=0.93,"p>=0.93","p<0.93")) |> 
+               group_by(referencia_efeito) |> 
+               filter(p>=0.93) |> 
+               summarise(min = min(across(efeito_area:efeito_conf,min)),
+                         max = max(across(efeito_area:efeito_conf,max))) |> 
+               pivot_longer(min:max),
+             # |> 
+               # pivot_longer(),
+             aes(yintercept = value,
+                 color=referencia_efeito)) +
+  scale_x_discrete(limits=c("contraste area","contraste frag","contraste contemp")) +
+  # coord_flip() +
+  geom_boxplot() +
+  geom_jitter(alpha=0.4) + 
+  labs(x="",y="contraste na estimativa da taxa U",
+       subtitle = "contraste area = (sem isolamento - idealizado) / idealizado  \ncontraste frag = (contemp - sem isolamento) / idealizado  \ncontraste contemp = (contemp - idealizado) / idealizado",
+       color="valor extremos:",
+       title="Os contrastes da frag per se podem ser significativamente negativos, mas em sua maioria são \nnulos ou positivos") +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        legend.margin=margin(-14, 0, 0, 0))
+l_p[[3]] <- df_contrastes |> 
+  ggplot(aes(x=efeito_area,y=efeito_frag)) + # ,color=p>=0.93
+  geom_abline(slope = 1,intercept = 0,color="darkred") +
+  geom_hline(data = df_contrastes |>
+               filter(p>=0.93) |> 
+               summarise(min = min(efeito_frag),
+                         max = max(efeito_frag)) |> 
+               pivot_longer(min:max),
+             aes(yintercept = value),color="darkgreen") +
+  geom_vline(data = df_contrastes |>
+               filter(p>=0.93) |> 
+               summarise(min = min(efeito_area),
+                         max = max(efeito_area)) |> 
+               pivot_longer(min:max),
+             aes(xintercept = value),color="darkgreen") +
+  geom_point(alpha=0.3) +
+  # geom_density_2d(aes(color=..level..)) +
+  # geom_density_2d_filled(alpha = 0.4) +
+  # geom_density_2d(colour = "black")
+  geom_hex(bins=70,alpha=0.4) +
+  scale_x_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  scale_y_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  labs(x="Área per se",y="Fragmentação per se",level="2D density") +
+  guides(fill = guide_legend(title="contagem")) +
+  scale_fill_continuous(type = "viridis") +
+  # scale_color_manual(name="p >= 0.93", values = setNames(c('darkgreen','black'),c(T, F))) +
+  theme_bw()
+l_p[[4]] <- df_contrastes |> 
+  ggplot(aes(x=p,efeito_conf)) +
+  geom_point(aes(color=k)) +
+  geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
+  labs(x="proporção de cobertura vegetal",y="contraste contemporâneo")
+grid.arrange(grobs=l_p,ncol=2)
+```
+
+__Figura 1__ Coeficiente de variação da taxa U estimada por MNEE. Cada ponto representa uma bateria de simulação com 10 réplicas cada; no eixo x há a média da taxa U e no eixo y o correspondente desvio padrão. Todas as retas passam pela origem, em preto a reta com inclinação de 1, em verde a com inclinação de 0.1, e em vermelho com inclinaçãao de 0.01. A maior parte dos pontos tem coeficiente de inclinação entre 10% e 1%
+
+__Umed ~ f(MN, p, k, Site)__
+
+
+```{r}
+# preparação dos dados: incluir uma coluna de land type nos arquivos de 
+# f_list.files <- \(path_file){
+#   df <- read_csv(path_file) 
+#   df_write <- inner_join(x=data.frame(SiteCode = df$SiteCode[1],land_type="contemp"),y=df,by="SiteCode")
+#   write_csv(df_write,file = path_file)
+# }
+# a_ply(list.files(path="dados/csv/taxaU/MNEE/cont",pattern = ".csv",full.names = T),
+#       1,
+#       .fun = f_list.files)
+```
+
+```{r fig 1 Umed ~ d +(SiteCode ~ p),eval=TRUE,fig.height=18,fig.width=15}
+df_plot <- df_Urep |> select(-d) |> 
+  pivot_longer(-c(SiteCode:k),names_to = "rep",values_to = "U") |>
+  inner_join(x=unique(select(df_sim,SiteCode,p)),by="SiteCode") |> 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+# df_plot <- df_U |>
+#   inner_join(x=unique(select(df_sim,SiteCode,p)),by="SiteCode") |> 
+#   arrange(p) |> 
+#   mutate(label = paste0(SiteCode,", p=",round(p,2))) #, " ,S=",S_obs
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k,y=U,color=land_type)) +
+  geom_point(alpha=0.1) +
+  # geom_line() +
+  stat_summary(geom = "line",fun.data = mean_se,alpha=0.5) +
+  scale_x_reverse() +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  theme_bw() +
+  labs(color="landscape type") +
+  theme(legend.position = "top",
+        axis.text=element_text(size=4.5),
+        strip.text = element_text(size = 4.5, margin = margin())) +
+  scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                     labels=c("contemporâneo","idealizado","sem fragmentação")) +
+  facet_wrap(~label,ncol=5,scales="free")
+ggsave("apendices/taxaU/figuras/Umed_k_landType_Site.png",
+       width = 7,
+       height = 30)
+```
+
+
+__Figura 2__ Taxa U estimada em cada sítio nos 20 graus de limitação de dispersão simulados. Os sítios estão organizados pela pela proporção de cobertura vegetal 
+
+
+Média da taxa U estimada pelo desvio padrão da função de dispersão, média de 10 réplicas. p = proporção de cobertura vegetal, S = riqueza de espécies.
+
+
+
+## validação dos contrastes
+
+1o: sítios p==1
+2o: sítios em que avalio que não há mudança no gráfico acima de 
+
+Sítios para olhar:
+
+```{r auditoria dos sítios que apresentam padrão adiverso}
+v_sitios <- c("RSrioz1","PEbrejo","PRanto14","PRanto5","PRanto8","PRanto10","PRanto7","SPcana1")
+v_sitios_p1 <- df_contrastes |> filter(p == 1) |> pull(SiteCode) |> unique()
+v_sitios_vis.igual <- df_contrastes |> 
+  filter(p >= 0.92 & p<1 & !(SiteCode == "RSrioz1")) |> pull(SiteCode) |> unique()
+# v_sítios <- df_contrastes |> 
+#   filter(efeito_frag < min(efeito_area)) |> pull(SiteCode) |> unique()
+
+# v_missingSite <- v_sitios[!(v_sitios %in% df_plot$SiteCode)]
+df_plot <- df_sim |> filter(SiteCode %in% v_sitios & k == 0.99)
+f_landscape <- function(df){
+  m <- as.matrix(read.table(paste0("dados/simulacao/",df$txt.path)))
+  image(m,axes=F,main=paste0(df$SiteCode,", p=",round(df$p,3)),zlim=c(0,2)) #", S=",df$S_obs,
+}
+par(mar=c(0.2,0.2,2,0.2),mfrow=c(4,4))
+a_ply(df_plot,1,f_landscape)
+#
+```
+
+
+```{r figura contrastes por sítio e k}
+df_plot <- df_contrastes |> select(-starts_with("cubeR"),-efeito_conf) |>
+  pivot_longer(starts_with("efeito")) |> 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k,y=value,color=name)) +
+  geom_hline(yintercept = 0) +
+  geom_point(alpha=0.1) +
+  geom_line() +
+  scale_x_reverse() +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  theme_bw() +
+  labs(color="contraste") +
+  theme(legend.position = "top",
+        axis.text=element_text(size=4.5),
+        strip.text = element_text(size = 4.5, margin = margin())) +
+  # scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+  #                    labels=c("contemporâneo","idealizado","sem fragmentação")) +
+  facet_wrap(~label,ncol=4,scales="free")
+ggsave("apendices/taxaU/figuras/contraste_k_landType_Site.png",
+       width = 7,
+       height = 30)
+```
+
+
+Oq os contrastes informam?
+Os contrastes particionam (condicionado ao modelo neutro, configuração espacial da paisagem ao redor contemporânea à amostragem da SAD, e a escala espacial da dinâmica de dispersão de propágulos entre a parcela e paisagem - que é determinada pelo grau de limitação de dispersão) a magnitude da redução da taxa de colonização de propágulos vindos da paisagem ao redor devido: i) à redução do número de progenitores, efeito da perda de habitat per se, sem considerar o isolamento estrutural; e ii) ao isolamento estrutural dos progenitores remanescentes.
+Pressuposto que a riqueza observada está em equilíbrio com a heterogeneidade contemporânea, observamos con
+
+
+### Códigos para estimativa da taxa U ainda em desenvolvimento - avaliar necessidade
+
+```{r taxa U para SCarar - sitio com NAs quando Umin igual a 1.25e-06,include=F,eval=F}
+setwd("dados/simulacao")
+df <- filter(df_sim,SiteCode == "SCarar")
+X_i <- df[1,]
+f_taxaU2 <- function(df, n_replicas=10, Umin=1.25e-08, diminuir=5, parallel=TRUE, n_cores=3){
+  f_simCoalescente <- function(X){
+    v <- dinamica_coalescente(U = Umin, S=X$S_obs, disp_range = X$d, N_simul=1,landscape = X$txt.path, decay = diminuir)
+    if(any(is.na(v))){
+      return(NA)
+    } else{
+      return(v$U_est)
+      }
+  }
+  f_write <- function(X_i){
+    v_U <- replicate(n=n_replicas,f_simCoalescente(X = X_i))
+    df_write <- cbind(select(X_i,SiteCode,k,d),
+                        matrix(v_U,nrow=1))
+    write_csv(df_write,file = paste0("../csv/taxaU/",X_i$SiteCode,"_k",round(X_i$k,2),".csv"))
+  }
+  registerDoMC(n_cores)
+  a_ply(df,1,f_write,.parallel = TRUE)
+}
+f_taxaU2(filter(df_sim,SiteCode == "SCarar"))
+```
+
+

@@ -1,0 +1,1416 @@
+---
+title: "Análise Dados"
+author: "Mori, Danilo"
+date: "19/11/2022"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+editor_options: 
+  chunk_output_type: console
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE)
+# pacotes
+# library(dagitty)
+# library(ggdag)
+library(sads)
+# library(gratia)
+library(doMC)
+# library(metR)
+# library(sjPlot)
+library(gridExtra)
+# library(ggpubr)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(MuMIn)
+library(AICcmodavg)
+library(insight)
+library(bbmle)
+library(DHARMa)
+library(mgcv)
+library(lme4)
+# library(gamm4)
+library(plyr)
+library(dplyr)
+source("source/2samples_testes.R")
+source("source/general_tools.R")
+source("source/GAMMtools.R")
+# objetos
+# load("dados/Rdata/md_MNEE.Rdata")
+# load("dados/Rdata/l_md_GAMM.Rdata")
+# dados
+# load("dados/Rdata/l_md.contrastes.Rdata")
+# load("dados/Rdata/l_md.logOR.Rdata")
+# load("dados/Rdata/l_md.logOR_tp.Rdata")
+# load("dados/Rdata/l_md.logOR_tp_r3removido.Rdata")
+# df_dados_disponiveis
+df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
+# df_p
+df_p <- read_csv("dados/df_p.csv")
+# df_resultMNEE
+df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
+# df_sim
+df_sim <- read_csv("dados/df_simulacao.csv")
+# df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
+f_z <- function(x) (x-mean(x))/sd(x)
+df_ad <- df_resultados |>
+  arrange(p) |> 
+  inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
+  mutate(diffS = (Smed - S_obs)/S_obs)
+# df_contrastes: contrastes por sítio e grau de limitação de dispersão
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") 
+# |> 
+#   inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
+#              by="SiteCode") |> 
+#   rename(N=Ntotal,S=S_obs) |> 
+#   mutate(across(N:S,log,.names="log.{.col}"),
+#          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
+#          SiteCode = factor(SiteCode)) |> 
+#   select(-c(N:log.S)) %>% 
+#   pivot_longer(cols = all_of(matches("dif|ratio|logratio")),
+#                names_to = "efeitos",
+#                values_to="valores") %>%
+#   mutate(classe = case_when(grepl("area",efeitos) ~ "aglomerada, prístina",
+#                             grepl("perse",efeitos) ~ "contemp, aglomerado",
+#                             grepl("total",efeitos) ~ "contemp, prístina"),
+#          tipo = case_when(grepl("dif",efeitos) ~ "diferença",
+#                           grepl("_ratio",efeitos) ~ "razão",
+#                           grepl("logratio",efeitos) ~ "log10(razão)"),
+#          tipo = factor(tipo,levels=c("diferença","razão","log10(razão)")))
+# # df_congContrastetsREP.cvs
+# df_congContrastes <- read_csv("dados/csv/resultados_MN/df_congContrastes.csv") |> 
+#   mutate(SiteCode = factor(SiteCode),
+#          contrasteSAD_z = ifelse(nCong==500,499.9,nCong),
+#          contrasteSAD_z = log((contrasteSAD_z/500)/(1-(contrasteSAD_z/500))),
+#          contrasteSAD_z = f_z(contrasteSAD_z)) |> 
+#   inner_join(df_contrastes |> 
+#                pivot_longer(cols=starts_with("efeito"),
+#                             names_to="pair",
+#                             values_to="contraste_z") |> 
+#                mutate(pair = case_when(pair == "efeito_frag"~"cont.non_frag",
+#                                        pair == "efeito_area"~"non_frag.ideal",
+#                                        pair == "efeito_conf"~"cont.ideal")) ) |> 
+#   relocate(contraste_z,.before = contrasteSAD_z)
+# # df_md: dados para os GAMMs de congruência com o empírico  
+# f_dfpmd <- \(df){
+#   df <- df |> 
+#     mutate(col_names = case_when(pair == "cont.non_frag"~"frag",
+#                                  pair == "cont.ideal"~"contemp",
+#                                  pair == "non_frag.ideal"~"area"))
+#   df1 <- df |> select(SiteCode,k,col_names,contraste_z) |> 
+#     pivot_wider(names_from = col_names,
+#                 values_from = contraste_z,
+#                 names_glue = "{col_names}U_z")
+#   df2 <- df |> select(SiteCode,k,col_names,contrasteSAD_z) |> 
+#     pivot_wider(names_from = col_names,
+#                 values_from = contrasteSAD_z,
+#                 names_glue = "{col_names}SAD_z")
+#   inner_join(df1,df2)
+# }
+# df_md <- df_ad |> 
+#   select(SiteCode,k,land_type,nCongKS,diffS) |> 
+#   inner_join(df_congContrastes |> f_dfpmd()) |> 
+#   mutate(SiteCode = factor(SiteCode),
+#          land_hyp = factor(land_type)) |> 
+#   select(-land_type) |> 
+#   rename(nCong=nCongKS) |> 
+#   inner_join(df_contrastes |> select(SiteCode,k,p_z:log.S_z)) |> 
+#   relocate(land_hyp,.after = SiteCode)
+# df_newdata
+# df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
+#   select(-starts_with("log_"))
+# # df_intePred_contrastes.csv
+# df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
+# write_csv(df_md,"dados/csv/df_md.csv")
+# # 
+# df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
+#   inner_join(df_p) |> 
+#   inner_join(df_dados_disponiveis |> 
+#                filter(forest_succession != "capoeira") %>% 
+#                select(SiteCode, forest_succession)) %>% 
+#   arrange(p) |> 
+#   mutate(succession = case_when(forest_succession == "primary" ~ "1°",
+#                                 forest_succession == "secondary" ~ "2°",
+#                                 forest_succession == "primary/secondary" ~ "1.5°"),
+#          label = paste0(SiteCode,", p=",round(p,2)," ,suc=",succession),
+#          k_f=factor(round(k,2))) %>% 
+#   select(-succession)
+# df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+# write_csv(df_plot,"dados/csv/df_plot_geral.csv")
+# # 
+# registerDoMC(3)
+# df_resultados_completos <- read.csv("./dados/csv/resultados_MN/MNEE/df_repMNEE2.csv") %>% 
+#   ddply(.,c("SiteCode","k","land_type"),f_summarise_SAD_MNEE,.parallel = TRUE) %>% 
+#   mutate(Uestimado="U prístino") %>% 
+#   rbind.fill(df_resultados %>% 
+#                mutate(Uestimado="U livre") %>% 
+#                select(SiteCode,k:Smax,Uestimado)) %>% 
+#   arrange(SiteCode,k) %>% 
+#   relocate(Uestimado,.after="land_type")
+```
+
+
+# taxa U
+
+## média geral e por sítio a partir de U rep
+
+__modelos ajustados__
+```{r U media a partir da U rep}
+df_md <- df_Urep %>% 
+  pivot_longer(cols = -c(SiteCode:d),names_to = "rep",values_to = "U") %>% 
+  mutate(k = factor(round(k,digits = 2)))
+l_f <- list()
+l_f[[1]] <- "U ~ land_type * k + (k|SiteCode)"
+l_f[[2]] <- "U ~ k + (k|SiteCode)"
+names(l_f) <- c("U ~ land type * k", "U ~ k")
+registerDoMC(2)
+l_md <- llply(l_f, \(li) lmer(as.formula(li),data=df_md),.parallel = TRUE)
+AICctab(l_md,weights=TRUE)
+saveRDS(l_md,file="./apendices/analise_dados/Rdata/l_md_taxaUrep.rds")
+```
+
+__comparação de modelos e diagnosticos__
+```{r}
+# tabela de seleção
+l_md <- readRDS("./apendices/analise_dados/Rdata/l_md_taxaUrep.rds")
+df_tab <- l_md %>% f_tselR2()
+saveRDS(df_tab,file="./secoes_texto/Resultados/dados/df_tselR2_Urep.rds")
+# gráficos diagnósticos
+f_resDharma(md = l_md[[df_tab$formula[1]]],
+            png_fullpath = "./secoes_texto/Resultados/figuras/resDharma_Urep_maisplaus.png",
+            width = 800,height = 600,units = "px", res = 100)
+resDharma <- simulateResiduals(md,n=1000)
+plot(resDharma)
+```
+
+
+# SADs rep
+
+## frag per se?
+
+
+
+```{r frag per se?}
+#### dados ####
+l_filter <- df_md %>% 
+  select(SiteCode,forest_succession,forest_type) %>% 
+  distinct() %>% 
+  pivot_longer(-SiteCode,names_to="preditora",values_to="categoria") %>% 
+  group_by(preditora) %>% 
+  count(categoria) %>% 
+  filter(n>=5) %>% 
+  as.data.frame %>%
+  dlply(.,"preditora",\(i) i$categoria)
+# df especifico
+v_cols <- str_detect(names(df_resultados), "^S(?!.*de$)")
+df_md <- df_resultados[,!v_cols] %>% 
+  filter(land_type!="pristin") %>% 
+  rename(nCong = nCongKS) %>% 
+  inner_join(df_p) %>% 
+  inner_join(df_dados_disponiveis %>% 
+               select(SiteCode,forest_type,forest_succession)) %>% 
+  inner_join(df_contrastes %>% select(SiteCode:k,starts_with("frag.perse"))) %>% 
+  filter(forest_succession %in% l_filter[["forest_succession"]],
+         forest_type %in% l_filter[["forest_type"]])
+# formulas
+v_f <- "cbind(nCong,100-nCong) ~ land_type * Uestimad * metrica + control_var + (land_type * Uestimad * metrica|SiteCode)"
+v_cols <- names(select(df_md,starts_with("forest")))
+v_cols[length(v_cols)+1] <- paste(v_cols,collapse = " + ")
+l_f <-  lapply(v_cols,\(li){
+  v_f <- sub("control_var",li,v_f)
+  v_cols <- names(select(df_md,starts_with("frag.perse")))
+  lapply(v_cols,\(x){
+    gsub("metrica",x,v_f)
+  })
+}) %>% do.call(c,.)
+f_glmm <- \(vf,df_data=df_md){
+  glmer(as.formula(vf),
+        family='binomial',
+        data=df_data,
+        control=glmerControl(optimizer='bobyqa',optCtrl=list(maxfun=2e9)))
+}
+registerDoMC(3)
+l_md <- llply(l_f,f_glmm,.parallel = TRUE)
+save(l_md,file="./secoes_texto/Resultados/dados/l_md_ncong.Rdata")
+
+
+# l_f <- list()
+# l_f[[1]] <- 
+# names(l_f) <- "base"
+
+```
+
+Não é possível utilizar as variáveis categoricas tipo florestal e grau de perturbação florestal com interação, não há exemplares sucificentes. Para usar essas variáveis será necessário remover 2 observações que apresentam 1 classe única de tipo floresal e 2 observações que na classificação de perturbação são capoeiras.
+
+```{r}
+df_md %>% 
+  select(SiteCode,forest_succession,forest_type) %>% 
+  distinct() %>% 
+  pivot_longer(-SiteCode,names_to="preditora",values_to="categoria") %>% 
+  group_by(preditora) %>% 
+  count(categoria) %>% 
+  ggplot(aes(x=categoria,y=n)) +
+  geom_bar(stat="identity") +
+  geom_hline(yintercept = 5) +
+  facet_wrap(~preditora,scales="free") +
+  theme(axis.text.x = element_text(angle = 90))
+  # count(forest_type,forest_succession) %>%
+  # ggplot(aes(x=forest_type,y=forest_succession,fill=n)) + 
+  # geom_tile()
+```
+
+
+
+
+
+########## antigos:
+
+
+
+# GE Gerais
+
+```{r classificação dos sítios por tipo de congruência}
+df_class <- adply(df_plot$SiteCode %>% unique,1,\(Site){
+  df_return <- data.frame(SiteCode = Site,land_diff = "NA",Cong = "NA")
+  p <- df_plot %>% 
+    filter(SiteCode == Site) %>% 
+    ggplot(aes(x=k,y=nCong,color=land_hyp)) +
+      geom_point(alpha=0.5) +
+      geom_line(alpha=0.5) +
+      scale_x_reverse() +
+      scale_y_continuous(limits = c(0,100)) +
+      theme_bw() +
+      labs(color="landscape hyp.",title=Site) +
+      theme(legend.position = "bottom",
+            axis.text=element_text(size=4.5),
+            axis.title = element_text(size = 20),
+            strip.text = element_text(size = 4.5, margin = margin())) +
+      scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                         labels=c("contemporâneo","idealizado","sem fragmentação"))
+  x11()
+  print(p)
+  df_return <- edit(name = df_return)
+  dev.off()
+  return(df_return)
+},.id=NULL)
+Site <- df_class %>% filter(land_diff=="contemp") %>% pull(SiteCode)
+df_class[df_class$land_diff=="contemp","land_diff"] <- "contemp pior"
+df_class[df_class$land_diff=="contemp pio","land_diff"] <- "contemp pior"
+df_class$land_diff %>% table()
+
+df_class[df_class$Cong=="boa excetoe em graus brandos","Cong"] <- "boa exceto em graus brandos"
+df_class$Cong %>% table()
+df_class <- df_class[,-4]
+write_csv(df_class,file="./dados/csv/df_class.csv")
+```
+```{r união das classes}
+df_class <- read.csv(file="./dados/csv/df_class.csv")
+df_class$land_diff %>% table()
+v_landdiff <- df_class$land_diff %>% unique()
+df_class$Cong %>% table()
+v_cong <- df_class$Cong %>% unique()
+df_class <- df_class %>% mutate(
+  classi_land = case_when(land_diff %in% c("similar","igual") ~ "similares",
+                          land_diff %in% v_landdiff[str_which(v_landdiff,"contemp")] ~ "contemp. diferente", 
+                          land_diff %in% v_landdiff[str_which(v_landdiff,"ideal")] ~ "ideal. diferente",
+                          land_diff == "sem frag pior" ~ "sem frag. diferente"),
+  classi_cong = case_when(Cong %in% c("ruim exceto em graus brandos","melhor em graus brandos") ~ "boa em graus brandos",
+                          Cong == "ruim em intermediário e boa em graus brandos" ~ "ruim em graus intermediários",
+                          TRUE ~ Cong))
+df_class$classi_cong %>% table()
+```
+
+
+```{r GE nCong por site k em x e colorido por paisagem,eval=FALSE}
+df_plot <- df_md |> select(SiteCode:diffS,p_z:k_z) |> 
+  inner_join(df_p) |> 
+  inner_join(df_dados_disponiveis |> 
+               filter(forest_succession != "capoeira") %>% 
+               select(SiteCode, forest_succession)) %>% 
+  arrange(p) |> 
+  mutate(succession = case_when(forest_succession == "primary" ~ "1°",
+                                forest_succession == "secondary" ~ "2°",
+                                forest_succession == "primary/secondary" ~ "1.5°"),
+         label = paste0(SiteCode,", p=",round(p,2)," ,suc=",succession)) %>% 
+  select(-succession)
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+#
+f_plot <- \(nvresp,
+            png_repo = "apendices/analise_dados/figuras/",
+            end_name = "_k_land.hyp_site"){
+  p <- df_plot %>% 
+    ggplot(aes(x=k,y=.data[[nvresp]],color=land_hyp)) +
+    geom_point(alpha=0.5) +
+    geom_line(alpha=0.5) +
+    # geom_smooth(method = "gam",se=FALSE) +
+    scale_x_reverse() +
+    # scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+    theme_bw() +
+    labs(color="landscape hyp.") +
+    theme(legend.position = "top",
+          axis.text=element_text(size=4.5),
+          strip.text = element_text(size = 4.5, margin = margin())) +
+    scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                       labels=c("contemporâneo","idealizado","sem fragmentação")) +
+    facet_wrap(~label,ncol=5)
+  ggsave(paste0(png_repo,nvresp,end_name,".png"),
+         plot = p,
+         width = 7,height = 30)
+  save(p,file=paste0("./dados/Rdata/",nvresp,end_name,".Rdata"))
+}
+a_ply(c("diffS","nCong"),1,f_plot)
+```
+
+```{r gráicos exploraórios}
+df_plot <- df_plot %>% 
+  mutate(k_f=factor(round(k,2))) 
+v_cols <- c("k_f","k_z","p_z","forest_succession")
+f_plot <- \(namecol,nameresp){
+  p <- df_plot %>% 
+    ggplot(aes(x=.data[[namecol]],y=nCong,color=land_hyp)) +
+    scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                       labels=c("contemporâneo","idealizado","sem fragmentação")) +
+    theme(legend.position = "top") +
+    labs(color="landscape hyp.")
+  if(namecol%in%c("k_f","forest_succession")){
+    p +
+      geom_jitter(alpha=0.7) + 
+      geom_boxplot() 
+    }else{
+    p +
+      geom_point(alpha=0.7) +
+      geom_smooth(method = "loess",se=F) +
+      facet_wrap(~land_hyp,nrow=1)
+    } 
+}
+l_p <- alply(v_cols,1,f_plot)
+grid.arrange(grobs=l_p,ncol=2)
+df_plot %>% 
+  filter(land_hyp=="cont") %>% 
+  distinct() %>% 
+  ggplot(aes(x=forest_succession,y=p_z)) +
+  # geom_density()
+  geom_boxplot() +
+  geom_jitter(alpha=0.7)
+df_plot %>% 
+  ggplot(aes(x=land_hyp,y=nCong)) +
+  geom_jitter(alpha=0.7) +
+  geom_boxplot() 
+df_plot %>% 
+  ggplot(aes(x=p,y=nCong,color=land_hyp)) +
+  geom_point() +
+  geom_smooth(se=FALSE) + facet_wrap(~k_f+forest_succession,margins = TRUE)
+```
+
+
+```{r gráficos explorátios}
+df_sim |> 
+  pivot_longer(Ntotal:S_obs) |> 
+  ggplot(aes(x=effort_ha,y=value)) +
+  geom_point() +
+  scale_x_continuous(trans="log10") +
+  scale_y_continuous(trans="log10") +
+  facet_wrap(~name,scales="free",ncol=2)
+df_ad |> 
+  ggplot(aes(x=land_type,y=diffS,color=log(Ntotal))) +
+  geom_jitter(alpha=0.4) +
+  geom_boxplot(alpha=0.4) +
+  geom_hline(yintercept = 0,color="darkred",alpha=0.4)
+p <- df_ad |> 
+  ggplot(aes(x=p,y=diffS)) +
+  geom_point(alpha=0.4) +
+  geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkgreen") +
+  geom_smooth(method = "gam") +
+  geom_hline(yintercept = 0,color="darkred") +
+  facet_wrap(~land_type,ncol=3)
+ggsave(filename = "apendices/analise_dados/figuras/obs.diffS_k_p_landtype.png",p,
+       width = 4,
+       height = 18)
+df_ad |> 
+  ggplot(aes(x=land_type,y=diffS)) +
+  geom_jitter() +
+  geom_boxplot() +
+  geom_hline(yintercept = 0,color="darkred") 
+  # facet_wrap(~k,ncol=4,scales="free")
+```
+
+```{r dag estudo de melhor caracterizacao de logOR,include=F}
+# exp = frag
+dag_exp.frag <- dagify(logOR ~ frag + p + k,
+                     frag ~ area + p + k + GLV,
+                     area ~ p + k,
+                     # S ~ effort + GLV,
+                     # N ~ effort + GLV,
+                     p ~ GLV,
+                     # effort ~ GLV,
+                     outcome = "logOR",
+                     latent = "GLV",
+                     exposure = "frag")
+ggdag(dag_exp.frag)
+ggdag_adjustment_set(dag_exp.frag,shadow = TRUE) + ggtitle(label="exposure = frag")
+```
+
+
+<!-- # Contrastes -->
+
+<!-- ```{r GE contrastes possíveis preditoras e a relacao entre elas,fig.height=6,fig.width=18} -->
+<!-- l_p <- list() -->
+<!-- l_p[[1]] <- df_contrastes |>  -->
+<!--   pivot_longer(cols = k:p,names_to = "pred_class",values_to = "pred_values") |>  -->
+<!--   mutate(pred_class = factor(pred_class,levels=c("p","k"))) |>  -->
+<!--   pivot_longer(cols = starts_with("efeito_"),names_to = "resp_class",values_to = "resp_values") |>  -->
+<!--   mutate(resp_class = factor(resp_class,levels=names(df_contrastes)[4:6])) |>  -->
+<!--   ggplot(aes(x=pred_values,y=resp_values)) + -->
+<!--   geom_point(alpha=0.4) + -->
+<!--   geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") + -->
+<!--   labs(title="Contrastes ~ p e k") + -->
+<!--   facet_grid(pred_class~resp_class,scales="free") -->
+<!-- l_p[[2]] <- df_contrastes |>  -->
+<!--   ggplot(aes(x=efeito_area,y=efeito_frag)) + # ,color=p>=0.93 -->
+<!--   geom_abline(slope = 1,intercept = 0,color="darkred") + -->
+<!--   geom_hline(data = df_contrastes |> -->
+<!--                filter(p>=0.93) |>  -->
+<!--                summarise(min = min(efeito_frag), -->
+<!--                          max = max(efeito_frag)) |>  -->
+<!--                pivot_longer(min:max), -->
+<!--              aes(yintercept = value),color="darkgreen") + -->
+<!--   geom_vline(data = df_contrastes |> -->
+<!--                filter(p>=0.93) |>  -->
+<!--                summarise(min = min(efeito_area), -->
+<!--                          max = max(efeito_area)) |>  -->
+<!--                pivot_longer(min:max), -->
+<!--              aes(xintercept = value),color="darkgreen") + -->
+<!--   geom_point(alpha=0.3) + -->
+<!--   geom_hex(bins=70,alpha=0.4) + -->
+<!--   scale_x_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) + -->
+<!--   scale_y_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) + -->
+<!--   labs(x="Área per se",y="Fragmentação per se",title="Frag. per se ~ Área per se") + -->
+<!--   guides(fill = guide_legend(title="contagem")) + -->
+<!--   scale_fill_continuous(type = "viridis") + -->
+<!--   theme_bw() -->
+<!-- grid.arrange(grobs=l_p,ncol=2) -->
+<!-- ``` -->
+
+<!-- __figura 1__ Contrastes em função das preditoras -->
+
+<!-- ### Contrastes ~ p e k -->
+
+<!-- __Janela de código X__ GAMM usado para ajustar os contrastes  -->
+
+<!-- ```{r GAMM contrastes, echo=T,eval=F} -->
+<!-- f_gam <- function(df){ -->
+<!--   gam(value ~ -->
+<!--         s(k_z,bs = "cr") + s(p_z,bs = "cr") + -->
+<!--             ti(p_z,k_z) + -->
+<!--             s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +  -->
+<!--             s(SiteCode,bs="re"), -->
+<!--             data=df,method = "REML") -->
+<!-- } -->
+<!-- l_md.contrastes <- dlply(df_contrastes |> pivot_longer(starts_with("efeito_")), -->
+<!--                          "name",f_gam) -->
+<!-- save(l_md.contrastes,file="dados/Rdata/l_md.contrastes.Rdata") -->
+<!-- ``` -->
+
+#### Intervalo de Predição do Efeito Médio de p e k
+
+```{r intervalo de predição para os contrastes segundo estimado pelo GAMM,fig.height=8,fig.width=12,eval=FALSE}
+df_plot <- df_intPred |> # trocar df_intPred pelo novo ou remover o chunk
+  mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p),
+         k = k_z*sd(df_ad$k) + mean(df_ad$k),
+         name=factor(name,levels=paste0("efeito_",c("area","frag","conf")))) |> 
+  select(-contains("_z"),-predito) |> 
+  pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label")
+df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)])
+# gráficos
+v_range <- range(df_plot$pred)
+v_breaks1 <- c(-0.2,0,0.2,0.5,1)
+f_plot <- function(df){
+  f_ggplot <- function(df,facets=2){
+  ggplot(df,aes(x=p,y=k,z=pred,fill=pred)) +
+    geom_raster() +
+    geom_contour(aes(z=pred),
+                 size=0.5,color="darkblue",
+                 breaks=v_breaks1) +
+    geom_text_contour(aes(z=pred),
+                      breaks=v_breaks1,
+                      label.placer = label_placer_flattest()) +
+    scale_fill_gradient2(low="green",
+                         mid="red",
+                         high="black",
+                         midpoint = 0.5,
+                         limits=v_range,
+                         # round(seq(v_range[1],v_range[2],length.out = 5)[1:4],2)
+                         breaks=v_breaks1) +
+    scale_y_reverse() +
+    theme_classic() +
+    guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) +
+    coord_cartesian(expand = FALSE) +
+    labs(fill=df$name[1]) +
+    facet_wrap(~label,ncol = facets,scales="free")
+  }
+  l_p <- list()
+  l_p[[1]] <- df |> 
+    filter(label == "Q_0.5") |>
+    f_ggplot() + labs(x="")
+  l_p[[2]] <- df |> 
+    filter(label != "Q_0.5") |>
+    f_ggplot()
+  ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top")
+}
+l_plot <- dlply(df_plot,"name",f_plot)
+p <- grid.arrange(grobs=l_plot,ncol=3)
+ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p,
+       width = 13,
+       height = 9)
+```
+
+
+<!-- __figura 2__ Intervalo de predição do GAMM para os contrastes, desconsiderando os efeitos parciais associados com o sítio de amostragem. -->
+
+
+__Janela de Código 2__ Código usado para obter o Intervalo de Predição. Adaptado de https://fromthebottomoftheheap.net/2016/12/15/simultaneous-interval-revisited/
+
+
+```{r f_PredInt.GAM, echo=T, eval=FALSE}
+f_PredInt.GAMM <- \(gamm,
+                    data = df_newpred, 
+                    v_exclude = c("s(k_z,SiteCode)","s(SiteCode)"),
+                    quantiles = c(0.05,0.25,0.5,0.75,0.95),
+                    nsim=10000){
+  data$predito <- predict(gamm, type = "link",
+                          exclude = v_exclude,
+                          newdata=data,
+                          newdata.guaranteed=TRUE) |> as.vector()
+  beta <- coef(gamm)
+  V <- vcov.gam(gamm)
+  num_beta_vecs <- nsim
+  Cv <- chol(V)
+  set.seed(1)
+  nus <- rnorm(num_beta_vecs * length(beta))
+  beta_sims <- beta + t(Cv) %*% matrix(nus, nrow = length(beta), ncol = num_beta_vecs)
+  matrix_lprediction <- predict(gamm,type="lpmatrix",
+                                exclude = c("s(k_cont_z,SiteCode)","s(SiteCode)"),
+                                newdata=data,newdata.guaranteed=TRUE) 
+  predict_link <- matrix_lprediction %*% beta_sims
+  df_pred <- t(apply(predict_link,1,\(X) quantile(X,probs = quantiles))) %>% 
+    as.data.frame()
+  names(df_pred) <- paste0("Q_",quantiles)
+  cbind(data,df_pred)
+}
+```
+
+
+# Congruência com o observado
+
+2 variáveis respostas (diffS e nCong), mesmo conjunto de modelos candidatos
+
+## seleção da estrutura aleatória
+
+```{r}
+df_md <- inner_join(df_plot,
+                    df_dados_disponiveis %>% 
+                      mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+                             long = ifelse(is.na(long_correct),long,long_correct)) %>% 
+                      select(SiteCode,lat,long)) %>% 
+  mutate(across(.cols=c(SiteCode,forest_succession,land_hyp),factor))
+v_f <- "cbind(nCong,100-nCong) ~ p_z * forest_succession * k_z * land_hyp + s(lat,long) + s(land_hyp,SiteCode,bs='re')"
+f_gam <- \(stringf){
+  gam(formula = as.formula(stringf),data=df_md,family = binomial)
+}
+md_latlong <- gam(formula = as.formula(v_f),data=df_md,family = "binomial",method="REML")
+```
+
+
+```{r ncong estrutura aleatória}
+l_f <- list()
+l_f[[1]] <- "~ p_z * forest_succession * k_z * land_hyp + (land_hyp|SiteCode)"
+l_f[[2]] <- "~ p_z * forest_succession * k_z * land_hyp + (1|SiteCode)"
+names(l_f) <- laply(l_f,\(s) sub(" \\+ \\(","",trimws(str_extract(s, "\\((.*?)\\)"))))
+l_f %>% f_glmm(.,df_data=df_plot,Rdata_path="./dados/Rdata/glmm_re_")
+v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
+l_md <- list.files(path = "./dados/Rdata",pattern="glmm_re_",full.names = TRUE)[2] %>% 
+  f_loadll()
+l_md <- l_md[[1]]
+l_md <- llply(l_md,f_refit)
+df_ts_re <- l_md %>% f_ts_R2()
+write_csv(df_ts_re,file="./dados/csv/df_ts_re_nCong.csv")
+```
+
+## seleção da estrutura fixa
+
+```{r l_md_nCong}
+# formulas usadas para selecionar a estrutura aleatória
+l_f <- list()
+l_f[[1]] <- "~ p_z * forest_succession * k_z * land_hyp + (land_hyp|SiteCode)"
+l_f[[2]] <- "~ p_z * forest_succession * k_z * land_hyp + (1|SiteCode)"
+names(l_f) <- laply(l_f,\(s) sub(" \\+ \\(","",trimws(str_extract(s, "\\((.*?)\\)"))))
+# tabela de seleção da estrutura aleatória
+df_ts_re <- read_csv(file="./dados/csv/df_ts_re_nCong.csv")
+# formulas para comparação da estrutura fixa
+f0 <- l_f[[df_ts_re$modelo[1]]]
+l_f <- list()
+l_f[[1]] <- f0 %>% sub("p_z \\* ","",.)
+l_f[[2]] <- f0 %>% sub("forest_succession \\* ","",.)
+l_f[[3]] <- l_f[[2]] %>%  sub("p_z \\* ","",.)
+l_f <- c(f0,l_f)
+l_f <- c(l_f,
+         l_f %>% gsub("land_hyp","1",.) %>% gsub(" \\* 1","",.))
+names(l_f) <- laply(l_f,\(s) str_extract(s,"(?<=~ )(.*?)(?= \\+)"))
+# ajuste das formulas
+f_glmm(l_f,df_data=df_plot)
+# leitura e refit se necessário
+oname <- formals(f_glmm)$Rdata_path
+oname <- list.files(path = sub("\\/glmm_","",oname),pattern = "glmm_l_md_nCong",full.names = TRUE)
+oname <- load(file=oname)
+l_md <- get(oname)
+rm(list=oname)
+l_md <- llply(l_md,f_refit)
+oname <- formals(f_glmm)$Rdata_path
+oname <- list.files(path = sub("\\/glmm_","",oname),pattern = "glmm_l_md_nCong",full.names = TRUE)
+save(l_md,file=oname)
+# tabela de seleção
+df_ts <- l_md %>% f_ts_R2()
+write_csv(df_ts,file = "./dados/csv/df_ts_nCong.csv")
+# modelo mais plausível
+md <- l_md[[df_ts$modelo[1]]]$modelo
+save(md,file=paste0(formals(f_glmm)$Rdata_path,"md_nCong.Rdata"))
+```
+
+
+```{r}
+# 
+df_ts_re <- read_csv(file="./dados/csv/df_ts_re_nCong.csv")
+f0 <- "~ p_z * forest_succession * k_z * land_hyp + (land_hyp|SiteCode)"
+# f0 <- "~ p_z * forest_succession * k_z * land_hyp + (land_hyp|SiteCode)"
+l_f <- list()
+l_f[[1]] <- f0 %>% sub("p_z \\* ","",.)
+l_f[[2]] <- f0 %>% sub("forest_succession \\* ","",.)
+l_f[[3]] <- l_f[[2]] %>%  sub("p_z \\* ","",.)
+names(l_f) <- laply(l_f,\(s) str_extract(s,"(?<=~ )(.*?)(?= \\+)"))
+l_f2 <- c(f0,l_f)
+names(l_f2)[1] <- c("p_z * forest_succession * k_z * land_hyp")
+l_f2 <- l_f2 %>% gsub("land_hyp","1",.) %>% gsub(" \\* 1","",.)
+names(l_f2) <- laply(l_f2,\(s) str_extract(s,"(?<=~ )(.*?)(?= \\+)"))
+l_md2 <- l_f2 %>% f_glmm(.,df_data=df_plot,Rdata_path="./dados/Rdata/glmm_",only_nCong = TRUE,re=TRUE)
+l_md2 <- load("./dados/Rdata/glmm_l_md_sem_land_nCong.Rdata")
+l_md2 <- get(l_md2)
+l_md2 <- llply(l_md2,f_refit)
+##
+# l_f %>% f_glmm(.,df_data=df_plot,Rdata_path="./dados/Rdata/glmm_",only_nCong = TRUE,re=FALSE)
+# l <- c(md,l_md)
+# names(l)[1] <- "p_z * forest_succession * k_z * land_hyp"
+# save(l,file=paste0(Rdata_path,name_l,"com_forestsuc_.Rdata"))
+# 
+oname <- load("./dados/Rdata/glmm_nCongcom_forestsuc_.Rdata")
+l_md <- get(oname)
+l_md %>% names()
+l_md <- c(l_md,l_md2)
+# l_md[[length(l_md)+1]] <- update(l_md[[length(l_md)]],. ~ . - k_z - land_hyp - k_z:land_hyp - (land_hyp|SiteCode) + 1 + (1|SiteCode))
+# names(l_md)[length(l_md)] <- "1"
+df_data <- df_plot
+registerDoMC(2)
+l_md <- llply(l_md,f_refit,.parallel = TRUE)
+save(l_md,file="./dados/Rdata/glmm_nCongcom_forestsuc_.Rdata")
+df_ts <- l_md %>% f_ts_R2()
+write_csv(df_ts,file="./dados/csv/df_ts_defesa_congruencias.csv")
+df_ts <- read.csv(file="./dados/csv/df_ts_defesa_congruencias.csv")
+#
+# criação das predições
+l_md_e_start <- l_md[[df_ts$modelo[1]]]
+save(l_md_e_start,file="./dados/Rdata/glmm_nCong_selecionado.Rdata")
+```
+
+```{r figura do logito predito para nCong e os 3 tipos de }
+oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata",verbose = TRUE)
+l_md_e_start <- get(oname)
+df_newdata <- l_md_e_start$modelo@frame[,-1]
+df_newdata <- with(df_newdata,{
+  expand.grid(SiteCode = "SPigua1",
+              forest_succession = unique(forest_succession),
+              k_z = seq(min(k_z),max(k_z),length.out=150),
+              land_hyp = unique(land_hyp),
+              p_z = seq(min(p_z),max(p_z),length.out=150))
+})
+# f_pred <- \(md_e_starts,newdata){
+#   ss <- md_e_starts$starts
+#   md <- md_e_starts$modelo
+#   f_predicaoBootStrap(lme=md,df_newdat = newdata)
+# }  
+# df_newpred <- f_pred(l_md_e_start,df_newdata)
+df_newdata$pred <- predict(l_md_e_start$modelo,newdata=df_newdata, re.form=~0)
+v_range <- range(df_newdata$pred)
+# v_breaks1 <- c(-0.2,0,0.2,0.5,1)
+df_newdata %>%
+  mutate(land_hyp = factor(land_hyp,
+                           levels=c("cont","non_frag","ideal"),
+                           labels=c("contemp.","sem frag.","ideal."))) %>% 
+  ggplot(aes(x=p_z,y=k_z,fill=pred,z=pred)) +
+  geom_raster() +
+  geomtextpath::geom_textcontour(aes(z=pred),color="blue",straight = TRUE) +
+  scale_fill_gradient2(low="green",
+                       mid="red",
+                       high="black",
+                       midpoint = 2,
+                       limits=v_range) +
+  scale_y_reverse() +
+  theme_classic() +
+  guides(fill = guide_colourbar(title = "logito")) +
+  coord_cartesian(expand = FALSE) +
+  labs(x="z(p)",y="z(k)") +
+  theme(legend.position = "top") +
+  facet_grid(land_hyp~forest_succession)
+```
+
+```{r diagnosticos do modelo mais plausivel}
+oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata",verbose = TRUE)
+l_md_e_start <- get(oname)
+p_plot <- simulateResiduals(l_md_e_start$modelo,n = 250)
+plot(p_plot)
+o_testOut <- testOutliers(l_md_e_start$modelo,type="bootstrap")
+save(p_plot,o_testOut,file="./apendices/analise_dados/Rdata/diagDHarma_md_nCong.Rdata")
+```
+
+
+```{r}
+p <- df_plot %>% 
+  ggplot(aes(x=p,y=nCong,color=land_hyp)) +
+  geom_smooth(se=FALSE,alpha=0.2,method="glm") + 
+  geom_point() +
+  facet_wrap(~k_f+forest_succession) +
+  scale_color_manual(values=c("darkred","darkblue","darkgreen"),
+                     labels=c("contemporâneo","idealizado","sem fragmentação")) + 
+  labs(color="landscape hyp.") + 
+  theme(legend.position = "top")
+ggsave("./secoes_texto/Resultados/figuras/proposta_figura_final.png",
+       plot = p,
+       width = 15,height = 20)
+```
+
+
+
+
+
+
+```{r}
+# qual a estrutura aleatória mais adequada?
+## aqui removo os modelos em que não há convergêmcia; ma EF o modelo cheio
+l_f <- list()
+l_f[[1]] <- "~ k_z * land_hyp + (k_z * land_hyp|SiteCode)"
+l_f[[2]] <- "~ k_z * land_hyp + (land_hyp|SiteCode)"
+l_f[[3]] <- "~ k_z * land_hyp + (1|SiteCode)"
+names(l_f) <- laply(l_f,\(s) sub(" \\+ \\(","",trimws(str_extract(s, "\\((.*?)\\)"))))
+l_f %>% f_glmm(.,Rdata_path="./dados/Rdata/glmm_re_")
+v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
+l_md <- list.files(path = "./dados/Rdata",pattern="glmm_re_",full.names = TRUE) %>% 
+  f_loadll()
+df_ts <- ldply(l_md,f_ts_converg.md,.id="resp_var") %>% 
+  mutate(resp_var = sub("l_md_","",resp_var))
+write_csv(df_ts,"./dados/csv/df_ts_glmm_re.csv")
+# quais os modelos mais plausíveis, daod a estrutura aleatória mais plausível?
+## a estrutura fixa é comum entre os modelos
+df_ts <- read_csv("./dados/csv/df_ts_glmm_re.csv") %>% filter(dAICc==0) %>% as.data.frame()
+## versão para defesa
+l_f <- list()
+l_f[[1]] <- "~ k_z * land_hyp +_"
+l_f[[2]] <- "~ k_z + land_hyp +_"
+l_f[[3]] <- "~ land_hyp +_"
+l_f[[4]] <- "~ 1 + (1|SiteCode)"
+# adequando para a estrutura aleatória adequada:
+l_f <- dlply(df_ts,"resp_var",\(df) llply(l_f,\(x) sub("\\+_",paste0(" + ",df$md),x) ))
+# cria o Rdata que contem os objetos de interesse 
+l_f <- llply(l_f,\(l){
+  names(l) <- laply(l,\(string) sub(" \\+ \\(","",trimws(str_extract(string, "~(.*?)\\("))))
+  return(l)
+})
+l_f %>% f_glmm(.,re = FALSE)
+v_path <- formals(f_glmm)$Rdata_path
+l_md <- list.files(path = sub("\\/glmm_","",v_path),pattern="glmm_l_md_",full.names = TRUE) %>% 
+  f_loadll()
+df_ts <- ldply(l_md,f_ts_converg.md,.id="resp_var") %>% 
+  mutate(resp_var = sub("l_md_","",resp_var))
+write_csv(df_ts,file="./dados/csv/df_ts_defesa_congruencias.csv")
+## versão ad4
+# write_csv(df_formulas,file="./apendices/analise_dados/csv/df_formulas.csv")
+# df_formulas %>% 
+#   gt() %>%
+#   tab_header(title = "Modelos candidatos para investigar a congruência entre predito e observado")
+```
+
+```{r estudo dos parametros dos modelos mais plausíveis}
+v_path <- formals(f_glmm)$Rdata_path %>% sub("\\/glmm_","",.)
+l_md <- list.files(path = v_path,pattern="glmm_l_md_",full.names = TRUE) %>% 
+  f_loadll()
+df_ts <- read_csv(file="./dados/csv/df_ts_defesa_congruencias.csv")
+l_md <- alply(filter(df_ts,dAICc==0),1,
+              \(x) l_md[[paste0("l_md_",x$resp_var)]][[paste0(x$md," ")]] )
+names(l_md) <- filter(df_ts,dAICc==0) %>% pull(resp_var)
+f_coef_glmm <- \(md){
+  df_ret <- coef(summary(md)) %>% as.data.frame() %>% mutate(coef = row.names(.)) %>% relocate(coef)
+  row.names(df_ret) <- NULL
+  return(df_ret)
+}
+l_df <- llply(l_md,f_coef_glmm)
+v_title <- c("Erro na riqueza estimada",
+             "Número de SADs simuladas congruentes com a empírica")
+l_df %>% f_gt(.,v_title)
+```
+
+
+
+#############
+## diffS
+
+
+```{r Tabela de Seleção LMERs Diferença na Riqueza Estimada}
+df_formulas <- read_csv(file="./apendices/analise_dados/csv/df_formulas.csv") %>% 
+  mutate(formula = sub("~","diffS ~",formula))
+l_md <- dlply(df_formulas,"nome",\(f) gam(formula=as.formula(f$formula),data=df_md,method="REML"))
+save(l_md,file="./dados/Rdata/l_md_diffS.Rdata")
+#
+df_formulas <- df_formulas %>% 
+  mutate(formula = sub("diffS","cbind\\(nCong,100-nCong\\)",formula))
+l_md <- dlply(df_formulas,"nome",\(f) gam(formula=as.formula(f$formula),data=df_md,method="REML",family="binomial"))
+save(l_md,file="./dados/Rdata/l_md_PrCong_ad4k1.Rdata")
+```
+
+```{r}
+#
+df_formulas <- df_formulas %>% 
+  mutate(formula = sub("diffS","cbind\\(nCong,100-nCong\\)",formula))
+l_md <- dlply(df_formulas,"nome",\(f) gam(formula=as.formula(f$formula),data=df_md,method="REML",family="binomial"))
+save(l_md,file="./dados/Rdata/l_md_PrCong_ad4k1.Rdata")
+```
+
+
+## logOR
+
+```{r GE logOR contemp em relacao ao sem frag}
+geom_final <- \(){
+  list(
+    geom_point(alpha=0.4),
+    geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),
+                  lambda=0.1,color="darkgreen",linewidth=1.5,alpha=0.5),
+    geom_smooth(method="gam"),
+    geom_hline(yintercept = 0,color="darkred")
+  )
+}
+l_p <- list()
+l_p[[1]] <- df_md |> 
+  ggplot(aes(x=contU_z,y=logOR_value)) +
+  geom_final() +
+  facet_wrap(~pair,ncol=3)
+l_p[[2]] <- df_md |> 
+  pivot_longer(p:k) |> 
+  ggplot(aes(x=value,y=logOR_value)) +
+  geom_final() +
+  facet_grid(name~pair)
+grid.arrange(grobs=l_p,ncol=1)
+df_md |> 
+  filter(pair=="cont.non_frag") |> 
+  pivot_longer(contU_z:contSAD_z) |> 
+  ggplot(aes(x=value,y=logOR_value)) +
+  geom_final() +
+  facet_wrap(~name,ncol=2,scales="free")
+df_md |> 
+  filter(pair=="cont.non_frag") |> 
+  ggplot(aes(x=contU_z,y=contSAD_z)) +
+  geom_final()
+```
+
+### GAMM
+
+```{r logOR GAMM candidatas,echo=T,eval=F}
+l_f <- list()
+l_f[[1]] <- "logOR_value ~ s(k_z,bs='cr') + s(p_z,bs='cr') + ti(k_z,p_z) + s(k_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+l_f[[2]] <- "logOR_value ~ s(contU_z,bs='cr') + s(contSAD_z,bs='cr') + ti(contU_z,contSAD_z) + s(contU_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+l_f[[3]] <- "logOR_value ~ s(contU_z,bs='cr') + s(contSAD_z,bs='cr') + ti(contU_z,contSAD_z) + s(contSAD_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+l_f[[4]] <- gsub("\\+ s\\(contSAD_z,bs='cr'\\) \\+ ti\\(contU_z,contSAD_z\\)","",l_f[[2]])
+l_f[[5]] <- gsub("contU","contSAD",l_f[[4]])
+# 
+# l_f[[2]] <- "logOR_value ~ s(contU_z,bs='cr') + s(contU_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+# l_f[[3]] <- gsub("contU","contSAD",l_f[[2]])
+# l_f[[4]] <- "logOR_value ~ s(contU_z,bs='cr') + s(contSAD_z,bs='cr') + s(contU_z, SiteCode, bs='fs',xt=list(bs='cr')) + s(SiteCode,bs='re')"
+# l_f[[5]] <- gsub("s\\(contU_z, SiteCode","s\\(contSAD_z, SiteCode",l_f[[4]])
+# l_f[[6]] <- gsub(" \\+ s\\(contU_z, SiteCode, bs='fs',xt=list\\(bs='cr'\\)\\)","",l_f[[4]])
+# l_f[[7]] <- gsub("( \\+ s\\(contSAD_z,bs='cr'\\))","\\1 \\+ ti\\(contU_z,contSAD_z\\)",l_f[[4]])
+# l_f[[8]] <- gsub("( \\+ s\\(contSAD_z,bs='cr'\\))","\\1 \\+ ti\\(contU_z,contSAD_z\\)",l_f[[5]])
+f_gam <- \(f) gam(formula = f,data = filter(df_md,pair=="cont.non_frag"),method = "REML")
+# l_md <- llply(l_f,\(s) f_gam(as.formula(s)))
+# l_md_logOR <- list()
+for(i in 4:length(l_f)){
+  l_md_logOR[[i]] <- f_gam(as.formula(l_f[[i]]))
+}
+names(l_md_logOR) <- c("f(k,p,k|Site)","f(U,SAD,U|Site)","f(U,SAD,SAD|Site)","f(U,U|Site)","f(SAD,SAD|Site)")
+save(l_md_logOR,file="dados/Rdata/l_md_logOR.Rdata")
+```
+
+__Tabela X__ O peso de evidência (AICc) e a deviance explained dos GAMM usados para descrever o log OR da chance de congruência da SAD predita quando se pressupõe a paisagem contemporânea em relação à paisagem sem isolamento estrutural
+
+```{r tabela de selecao dos GAMM logOR}
+load("dados/Rdata/l_md_logOR.Rdata")
+f_correcaoNomes <- \(l_md){
+  names(l_md) <- str_remove(names(l_md),",ssbs.type") # corrigir na próxima versão de f_nameModel 
+  return(l_md)
+}
+l_md.logOR <- llply(l_md.logOR,f_correcaoNomes)
+df_tabelaSelecao <- ldply(l_md.logOR,f_TabSelGAMM,.id="pair")
+df_tabelaSelecao
+#
+f_SML.gamm <- \(df){md <- l_md.logOR[[df$pair[1]]][[df$modelo[[1]]]]}
+l_p <- dlply(df_tabelaSelecao,"pair",f_SML.gamm) |> 
+  f_l_mdGAMM_FiguraFinal_1dGAMM()
+grid.arrange(grobs=l_p,ncol=3)  
+```
+
+
+```{r}
+# validação
+for(pair in names(l_md_logOR)){
+  md <- l_md_logOR[[pair]]
+  print(pair)
+  print(k.check(md))
+  print(summary(md))
+  p <- gratia::appraise(md)
+  print(p)
+  askYesNo("próximo?")
+  p <- gratia::draw(md)
+  print(p)
+  askYesNo("próximo?")
+}
+# l_p <- l_md_congContrastes |> f_l_mdGAMM_FiguraFinal_1dGAMM()
+# grid.arrange(grobs=l_p,ncol=3)
+```
+
+## Pr(Cong)_predito:empirico
+
+```{r dados e GE Pr(Cong)_contemporaneo:observado}
+f_ggplot <- \(x_var){
+  df_md |> 
+    ggplot(aes(y=nCong,x=.data[[x_var]])) +
+    geom_point(alpha=0.3) +
+    geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkgreen") +
+    geom_smooth(method = "gam",se=F) +
+    facet_wrap(~land_hyp,ncol = 3,
+               labeller = as_labeller(c("cont" = "observada",
+                                        "ideal" = "idealizada",
+                                        "non_frag" = "habitat aglomerado")))
+    
+}
+l_p <- alply(names(select(df_md,ends_with("_z"))),1,f_ggplot)
+p <- grid.arrange(grobs=l_p,ncol=1)
+ggsave("./apendices/analise_dados/figuras/GE_Pr(Cong)_LandHyp.png",
+       plot = p,width = 18, height = 60, units = "cm")
+```
+
+__Reunião de 24 de Agosto 2023__
+
+Uma diretriz é desenvolver modelos que incluam a variável categórica land_hyp, como fiz nos modelos tipo glmer em que k foi fator (também apresentaram ajuste ruim). Penso em desenvolver um gamm com spline individual de k variando por land_hyp e o spline aleatório de k variando por land_hyp também.
+
+Análise 4 - proposta:
+
+__Contexto__
+
+
+```{r análise 4,echo=T,eval=F}
+f0 <- "cbind(nCong,100-nCong) ~ land_hyp + s(k_z,by=land_hyp,bs='cr',k=3) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=3) + s(land_hyp,SiteCode,bs='re')"
+l_f <- as.list(paste0("land_hyp + s(",names(select(df_md,contempU_z:p_z)),",by=land_hyp,bs='cr',k=3) + "))
+l_f[length(l_f)+1] <- "land_hyp + s(areaU_z,by=land_hyp,bs='cr',k=3) + s(fragU_z,by=land_hyp,bs='cr',k=3) + "
+l_f[length(l_f)+1] <- gsub("U_z","SAD_z",l_f[length(l_f)])
+l_f <- sapply(l_f, \(s) str_replace(f0,"land_hyp\\s\\+\\s",s))
+l_f[length(l_f)+1] <- f0
+names(l_f) <- c(paste0("f(",gsub("_z","",names(select(df_md,contempU_z:p_z))),",k|Site)"),
+                "f(areaU,fragU,k|Site)",
+                "f(areaSAD,fragSAD,k|Site)",
+                "f(k|Site)")
+f_gam <- \(f) gam(formula = as.formula(f),data=df_md,family="binomial",method="REML")
+l_md <- lapply(l_f, f_gam)
+names(l_md) <- names(l_f)
+save(l_md,file="./dados/Rdata/PrCong_analise4.Rdata")
+# validacao do modelo mais plausivel para descrever PrCong
+df_tab <- f_TabSelGAMM(l_md)
+write_csv(df_tab,file="./dados/csv/df_ts_prconganalise4.csv")
+md_prcong <- l_md[[df_tab[1,"modelo"]]]
+```
+
+```{r validacao modelo mais plausivel }
+if(!exists("l_md")) load("./dados/Rdata/PrCong_analise4.Rdata")  
+if(file.exists("./dados/csv/df_ts_prconganalise4.csv")){
+  df_tab <- read_csv(file="./dados/csv/df_ts_prconganalise4.csv")
+}else{
+  df_tab <- f_TabSelGAMM(l_md)
+}
+md_prcong <- l_md[[df_tab[1,"modelo"]]]
+save(md_prcong,file="./dados/Rdata/md_prcong.Rdata")
+
+f_validaGAMM(md_name="~f(U(area,frag),k|Site)",l_md = md_prcong,size=1)
+p_plot <- simulateResiduals(md_prcong,n = 1000)
+plot(p_plot)
+to_prcong <- testOutliers(md_prcong)
+to_prcong$estimate
+```
+
+```{r new data para análise 4, eval=FALSE, include=FALSE}
+# modelos para criar new data: 2 camadas
+l_f <- list()
+l_f[[1]] <- "areaU_z ~ s(k_z,bs='cr',k=3) + s(k_z,SiteCode,bs='fs',k=3) + s(SiteCode,bs='re')"
+l_f[[2]] <- sub("areaU_z","fragU_z",l_f[[1]])
+l_f[[3]] <- sub("~ ","~ s(areaU_z,bs='cr',k=3) + ",l_f[[2]])
+l_f[[4]] <- "fragU_z ~ s(areaU_z,bs='cr',k=3) + s(SiteCode,bs='re')"
+f_gam <- \(f) gam(as.formula(f),data = filter(df_md,land_hyp=="cont"),method = "REML")
+registerDoMC(2)
+l_md <- llply(l_f,f_gam,.parallel = T)
+names(l_md) <- c("areaU ~ f(k|Site)","fragU ~ f(k|Site)","fragU ~ f(areaU,k|Site)",
+                 "fragU ~ f(areaU,1|Site)")
+save(l_md,file="./dados/Rdata/l_md_p_newdatapred_analise4.Rdata")
+# criação de new data para analise 4
+load("./dados/Rdata/l_md_p_newdatapred_analise4.Rdata")
+summary(l_md[[1]])
+l_aictab <- l_md[-1]
+# load("./dados/Rdata/md_frag_area.Rdata")
+# l_aictab[[3]] <- 
+df_tab <- f_TabSelGAMM(l_aictab)
+write_csv(df_tab,file="./dados/csv/ts_ad4_camada2.csv")
+f_validaGAMM(md_name = "fragU ~ f(areaU,k|Site)",l_md = l_md[["fragU ~ f(areaU,k|Site)"]],size=1)
+p_plot <- simulateResiduals(l_md[["fragU ~ f(areaU,k|Site)"]],n = 1000)
+plot(p_plot)
+testOutliers(l_md[["fragU ~ f(areaU,k|Site)"]])
+# 
+f_validaGAMM(md_name = "areaU ~ f(k|Site)",l_md = l_md[["areaU ~ f(k|Site)"]],size=1)
+p_plot <- simulateResiduals(l_md[["areaU ~ f(k|Site)"]],n = 1000)
+plot(p_plot)
+testOutliers(l_md[["areaU ~ f(k|Site)"]])
+#
+l_md_newdata <- l_md[names(l_md)[c(1,3)]]
+l_md_quant_ad4 <- llply(l_md_newdata,\(md) mqgam(form=md$formula,data=md$model,qu=c(0.05,0.95)))
+save(l_md_quant_ad4,file = "./dados/Rdata/l_md_quant_ad4.Rdata")
+# criação do conjunto de dados para predição a posteriori
+library(qgam)
+#### rodar na primeira vez ###
+# load("./dados/Rdata/l_md_quant_ad4.Rdata")
+# df_newdata <- f_newdata_ad4(l_md_quant_ad4)
+# write_csv(df_newdata,file="./dados/csv/df_newdata_ad4.csv")
+# proposta de conjunto de dados adeuqado para criar a predição do modelo 3D
+df_nd <- read_csv("./dados/csv/df_newdata_ad4.csv")
+f_proxk <- \(df){
+  v_kobs <- df_md$k_z %>% unique()
+  f <- \(kobs) unique(df$k_z)[which.min(abs(unique(df$k_z) - kobs))]
+  df %>% filter(k_z%in%aaply(v_kobs,1,f))
+}
+df_nd_k <- df_nd %>% f_proxk()
+write_csv(df_nd_k,"./dados/csv/df_nd_k.csv")
+df_nd_k %>% ggplot(aes(x=areaU_z,y=fragU_z)) +
+  geom_point() +
+  facet_wrap(~k_z,ncol=5)
+```
+
+
+```{r predicao a posteiori modelo mais plausivel}
+if(!exists("l_md")) load("./dados/Rdata/PrCong_analise4.Rdata")  
+if(file.exists("./dados/csv/df_ts_prconganalise4.csv")){
+  df_tab <- read_csv("./dados/csv/df_ts_prconganalise4.csv") %>% as.data.frame()
+}else{
+  df_tab <- f_TabSelGAMM(l_md)
+  write_csv(df_tab,file="./dados/csv/df_ts_prconganalise4.csv")
+}
+md_prcong <- l_md[[df_tab[1,"modelo"]]]
+save(md_prcong,file = "./dados/Rdata/md_prcong.Rdata")
+l_df <- list()
+if(file.exists("./dados/csv/df_ts_prconganalise4.csv")){
+  l_df[[1]] <- read_csv(file="./dados/csv/df_ad4.csv")  
+}else{
+  l_df[[1]] <- f_calcPI(gamm=md_prcong,
+                      ad = "ad4",
+                      newdata_path="obs",
+                      link_scale = TRUE)
+  write_csv(l_df[[1]],file="./dados/csv/df_ad4.csv")
+}
+# plot 
+df_plot <- l_df[[1]] %>% 
+  arrange(k_z,areaU_z,fragU_z) %>% 
+  cbind(.,df_md %>% 
+          arrange(k_z,areaU_z,fragU_z) %>% 
+          select(SiteCode,nCong)) %>% 
+  relocate(SiteCode) %>% 
+  mutate(logitoObs=case_when(nCong==100 ~ 99.02,
+                             nCong==0 ~ 00.8,
+                             TRUE ~ nCong),
+         logitoObs = log(nCong/(100-nCong))) %>% 
+  relocate(logitoObs,.after=SiteCode)
+  
+  # pivot_longer(starts_with("Q_0."),names_to = "quantiles",values_to = "q") %>% 
+  # pivot_longer(ends_with("U_z"),names_to = "contrastes",values_to = "c") %>% 
+  # mutate(quantiles = factor(gsub("Q_","",quantiles)))
+df_md %>% 
+  select(SiteCode:nCong,k_z,fragU_z:areaU_z) %>% 
+  mutate(logitoObs=case_when(nCong==100 ~ 99.92,
+                             nCong==0 ~ 00.08,
+                             TRUE ~ nCong),
+         logitoObs = log(nCong/(100-nCong)) ) %>% 
+  ggplot(aes(x=k_z,y=))
+
+###
+# df_plot %>% 
+#   ggplot(aes(x=k_z,y=q,group=quantiles))  +
+#   geom_point() +
+#   geom_
+
+
+
+
+
+## versão antiga
+# if(file.exists("./dados/csv/df_ip_prcong_kz_landhyp.csv")){
+#   l_df[[1]] <- read_csv("./dados/csv/df_ip_prcong_kz_landhyp.csv") 
+# }else{
+#   l_df[[1]] <- f_calcPI(md_prcong,link_scale = T,analise4=T)
+# }
+# l_df[[2]] <- l_df[[1]] %>% mutate(across(starts_with("Q_"),\(x) f_invlink(x) * sum(md_prcong$model[1,1])))
+# names(l_df) <- c("link_scale","resp_scale")
+# #
+# l_md_klandhyp <- l_md
+# load("./dados/Rdata/l_md_Cong_landhyp.Rdata")
+# l_md <- c(l_md_klandhyp,l_md_Cong_landhyp)
+# # l_md %>% length()
+# names(l_md) <- gsub("\\~","",names(l_md))
+# AICctab(l_md,weights=T)
+```
+
+
+###
+
+```{r preditoras empiricas}
+# ajuste dos modelos
+df_md <- df_plot %>% select(SiteCode,forest_succession,p) %>% distinct() %>% 
+  mutate(logit_p = car::logit(p=p))
+l_md <- list()
+l_md[[1]] <- lm(formula = logit_p ~ forest_succession,data = df_md)
+l_md[[2]] <- lm(formula = logit_p ~ 1,data = df_md)
+names(l_md) <- c("~forest suscession","~1")
+# construção dos dados
+## tabela de seleção
+df_AICctab <- AICctab(l_md,weights=TRUE) %>% as.data.frame()
+df_AICctab$modelo <- row.names(df_AICctab)
+md_p_fsc <- l_md[[row.names(df_AICctab)[1]]]
+row.names(df_AICctab) <- NULL
+df_AICctab$R2 <- sapply(l_md,\(x) summary(x)$adj.r.squared)
+df_AICctab <- df_AICctab %>% relocate(modelo) %>% mutate(across(2:5,\(x) round(x,digits=3)),
+                                                         R2 = R2*100) %>% 
+  rename(`R2(%)`=R2)
+## tabela do modelo mais plausível
+df_plot1 <- broom::tidy(md_p_fsc) %>% 
+  mutate(`IC upp` = estimate + std.error,`IC low` = estimate - std.error) %>% 
+  select(-c(std.error:p.value)) %>% 
+  mutate(across(c(-term),\(x) exp(x)/(1+exp(x)))) %>% 
+  pivot_longer(-term) %>% 
+  rename(forest_succession = term) %>%
+  mutate(forest_succession = case_when(forest_succession == "(Intercept)" ~ "primary",
+                                       forest_succession == "forest_successionprimary/secondary" ~ "primary/secondary",
+                                       TRUE ~ "secondary"))
+df_table <- broom::tidy(md_p_fsc) %>% 
+  mutate(`IC upp` = estimate + std.error,`IC low` = estimate - std.error) %>% 
+  select(-c(std.error:statistic)) %>%
+  mutate(across(c(-term,-p.value),\(x) exp(x)/(1+exp(x)))) %>% 
+  rename(`forest succession` = term) %>%
+  relocate(p.value,.after = last_col()) %>% 
+  mutate(`forest succession` = case_when(`forest succession` == "(Intercept)" ~ "primary",
+                                         `forest succession` == "forest_successionprimary/secondary" ~ "primary/secondary",
+                                          TRUE ~ "secondary")) %>% 
+  mutate(across(2:4,\(x) round(x,3)))
+df_p2 <- data.frame(x = rep(1:3,1),
+                    y_0 = df_plot1 %>% filter(name=="IC low") %>% pull(value),
+                    y_1 = df_plot1 %>% filter(name=="IC upp") %>% pull(value))
+# obj para ggplot2
+v_colors <- c("black",rep("darkred",2))
+names(v_colors) <- df_plot1$name %>% unique()
+# gráficos
+library("ggpmisc")
+l_p <- list()
+l_p[[1]] <- ggplot() + theme_void() + annotate(geom="table",x=1,y=1,label = list(df_AICctab)) + 
+  labs(title="Seleção de Modelos",subtitle = "~N(logit(p),sd)") +
+  theme(plot.title = element_text(hjust = 0.5, vjust = -1),
+        plot.subtitle = element_text(hjust = 0.5, vjust = -1))
+l_p[[2]] <- df_plot %>% 
+  ggplot(aes(x=forest_succession,y=p)) +
+  geom_jitter(alpha=0.6) +
+  geom_point(data=df_plot1,aes(x=forest_succession,y=value,color=name),shape="_",size=15) +
+  geom_segment(data = df_p2,aes(x=x,xend=x,y=y_0,yend=y_1,group=x)) +
+  scale_color_manual(values=v_colors) +
+  geom_vline(xintercept = c(1.5,2.5)) + 
+  theme(legend.title = element_blank(),
+        legend.position = "top",
+        legend.margin = margin(0, 0, 0, 0),
+        legend.box.spacing = unit(0, "pt"),
+        plot.title = element_text(hjust = 0.5, vjust = -1),
+        axis.title.x = element_blank()) +
+  labs(x="classe de sucessão",title="Modelo mais plausível")
+l_p[[3]] <- ggplot() +
+  theme_void() +
+  annotate(geom = "table",
+           x = 1,
+           y = 1,
+           label = list(df_table)) + labs(title="Coef. modelo mais plausível") +
+  theme(plot.title = element_text(hjust = 0.5, vjust = -1))
+grid.arrange(grobs=l_p,layout_matrix=rbind(c(1,3,3),
+                                           c(2,2,2),
+                                           c(2,2,2),
+                                           c(2,2,2),
+                                           c(2,2,2)),
+             top="PREDITORAS EMPÍRICAS")
+```
+
+
+# Processo Gerador dos dados
+
+A probabilidade de uma SAD predita neutra apresentar boa congruência com a SAD observada depende da maior distância entre as curvas acumuladas. As SAD preditas apresentam o mesmo número de indivíduos da SAD observada (N) e aproximam o número de espécies observada (S, Apêndice Riqueza Estimada). Para uma mesma combinação de N e S existem diversas SAD que poderiam ser reconstruídas (REF), assim a comparação ocorre na forma com que a abundância se distribui nas espécies observadas. Nâo há consenso sobre um modelo ou hipótese geral para a forma da SAD observada (McGill et al. 2007). A forma da SAD predita depende de um conjunto conhecido de variáveis. Cada modelo neutro implementa uma hipótese sobre a dispersão dos indivíduos no habitat da parcela amostrada e no habitat da paisagem ao redor [1]. A relação de N e S pode informar sobre a exposição da árvore genealógica da comunidade na parcela ao pool de indivíduos da paisagem [2]. Por exemplo, quanto maior N e menor S, maior é o potencial de espalhamento das linhagens locais pelos indivíduos remanescentes na paisagem ao redor, pois há muitos indivíduos para coalescerem em poucas espécies. A variável k possui dois efeitos: i) regular a exposição da árvore genealógica da comunidade ao pool de indivíduos da paisagem ao redor, ou seja, o espalhamento das linhagens locais; e ii) determinar a demanda por propágulos da paisagem ao redor para manter a riqueza local, e portanto determina a potencial taxa U necessária para manter a riqueza local. 
+A relação de k, p e a taxa U está descrita no apêndice "Taxa U estimada nas paisagens contemporâneas" [3]. A variável p descreve o maior potencial de chuva de propágulos na paisagem. Além disso, ao longo do gradiente de p, p está relacionado com a configuração espacial da paisagem (Villard & Metzger 2014), assim a interação de p com outras variáveis permite explorar indiretamente condicionamento à configuração espacial.       
+
+Devido aos viéses de pesquisa relacionada com o esforço amostral, podemos esperar que N, S e p possam covariar. Algumas variáveis latentes que podem conter informação sobre esforço amostral são: proximidade com centros de pesquisa ou urbanos (Prox), diversidade local esperada (e.g. em termos de riqueza esperada - Sesp), e grau de perturbação esperado (PERTesp) (REFs). Todas essas são variáveis latentes que podem ser explicadas por outras variáveis latentes geográficas (e.g. qualidade do solo e perfil geográfico). As variáveis latentes devem conter informação sobre p, N e S via esforço amostral ou diretamente. O esforço amostral deve conter informação sobre N e S, e N sobre S. Sesp deve conter informação sobre S. PERTesp pode conter informação sobre p e Sesp. Pressupus que não há influência de Sesp em PERTesp (mas esse pressuposto pode ser relaxado sem mudanças nas conclusões do DAG).
+
+Na figura 4 há o grafo acíclico dirigigo (DAG, _directed acyclic graph_) do modelo conceitual proposto. Uma implicação do DAG é a associação entre S, N e p. No Support Information deste apêndice há evidências da associação entre essas 3 variáveis. Outra implicação do modelo conceitual é a concurvidade entre as variáveis N, S e p. 
+
+```{r dag estudo de melhor caracterizacao de PrCong em funcao de SADobs e SADneutra,include=F}
+dag_estudo <- dagify(PrCong ~ SADobs + SADneutra,
+                     SADobs ~ unknown,
+                     SADneutra ~ p + k + S + N,
+                     Sesp ~ Prox + PERTesp,
+                     PERTesp ~ Prox,
+                     effort ~ Prox + Sesp + PERTesp,
+                     S ~ Sesp + effort + N,
+                     N ~ effort,
+                     p ~ PERTesp,
+                     sucession ~ PERTesp,
+                     outcome = "PrCong",
+                     latent = c("Sesp","PERTesp","Prox"),
+                     exposure = c("p","k")
+                     )
+ggdag(dag_estudo)
+ggdag_adjustment_set(dag_estudo,shadow = TRUE)
+```
+
+
+```{r DAG MNEE contemp - PrCong N S k p prox Sesp Desp}
+l_coord <- list(
+  x = c(PrCong = 0, S = 0, N = 2, p = 3, k = 4, Sesp = 0, effort = 2, PERTesp = 3.5, Prox = 2),
+  y = c(PrCong = 0, S = 2, N = 2, p = 1.5, k=0.5, Sesp = 6, effort = 4, PERTesp = 6, Prox = 7)
+)
+dag_PrCong <- dagify(PrCong ~ p + k + S + N,
+                     Sesp ~ Prox + PERTesp,
+                     PERTesp ~ Prox,
+                     effort ~ Prox + Sesp + PERTesp,
+                     S ~ Sesp + effort + N,
+                     N ~ effort,
+                     p ~ PERTesp,
+                     labels = c(
+                       "PrCong" = "Pr(Cong)",
+                       "p" = "p",
+                       "k" = "k",
+                       "N" = "N",
+                       "S" = "S",
+                       "Sesp" = "S esp",
+                       "PERTesp" = "Pert. esp",
+                       "Prox" = "Prox. centros",
+                       "effort" = "effort"
+                     ),
+                     outcome = "PrCong",
+                     latent = c("Sesp","PERTesp","Prox"),
+                     exposure = c("p","k"),
+                     coords = l_coord) 
+# l_p <- list()
+# l_p[[1]] <- ggdag(dag_PrCong,text = FALSE, use_labels = "label") +
+#   theme_void()
+ggdag_adjustment_set(dag_PrCong,shadow = TRUE,text = FALSE, use_labels = "label") +
+  theme_dag_gray() +
+  scale_color_manual(values=c("red4","green4"))
+  # ggpmisc::geom_table_npc(data=df_text.table,aes(npcx = x, npcy = y, label = data)) +
+```
+
+__Figura 4__ DAG do modelo conceitual do processo gerador da variável de interesse probabilidade de uma SAD neutra apresentar boa congruência com a SAD observada.
+
+[1] Todos os modelos neutros utilizam simulações coalescentes, que retrocedem no tempo para obter uma amostra da SAD, pressuposto equilíbrio dinâmico, onde as espécies perdidas na paisagem por deriva são compensadas pela colonização de novas espécies descrito pela taxa U. A simulação termina quando a espécie de todos os indivíduos (linhagens) que iniciaram na parcela é determinada.   
+
+[2] exposição ao pool de indivíduos da paisagem ao redor é o conceito comum aos 3 modelos neutros. Para MNEE em específico seria exposição à configuração espacial dos indivíduos remanescenes na paisagem ao redor.
+
+[3] quando o grau de limitação é severo, há grande probabilidade de substituição de coespecífico e portanto baixa erosão de espécies por deriva ecológica resultando em baixa taxa U. Com um pouco de relaxamento da limitação de dispersão, há redução da substituição de coespécificos e baixa probabilidade de reposição de espécies por dispersão de longa distância de dentro da paisagem, aumento a taxa U. Nos graus mais brandos de limitação de dispersão, a baixa probabilidade de substituição de coespécies, que leva ao aumento da erosão de espécies, pode ser compensada pela alta probabilidade de reposição de espécies por dispersão de longa distância de dentro da paisagem, caso a proporção de habitat remanescente seja suficiente.
+
+# Support Information
+
+## Diagnóstico Contrastes
+
+```{r efeito de área SI avaliacao modelo}
+for(i in length(l_md.contrastes)){
+names(l_md.contrastes)[i]
+md <- l_md.contrastes[[i]]
+print("k.check:")
+k.check(md)
+print("summary:")
+summary(md)
+gratia::appraise(md)
+gratia::draw(md)
+# predito para dados originais
+df_plot <- cbind(md$model,
+                 predict(md,se.fit=TRUE)) |> 
+  inner_join(x=df_p,"SiteCode") |> 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k_z,y=value)) +
+  geom_line(aes(y=fit),color="darkred") +
+  geom_line(aes(y=fit+se.fit)) +
+  geom_line(aes(y=fit-se.fit)) +
+  geom_point(alpha=0.5) +
+  scale_x_reverse() +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  labs(title="Contraste Área",y="") +
+  facet_wrap(~label,ncol=4,scales="free") +
+  theme(strip.text=element_text(margin=margin()),
+        panel.spacing=unit(0, "lines"))
+ggsave(paste0("apendices/analise_dados/figuras/",names(l_md.contrastes[[i]]),"_site_kGAMM.png"),
+       width = 7,
+       height = 30)  
+}
+```
+
+__Figura X+1__ Tabela e Figuras  para avaliação de 
+
+
+### Avaliação DAG: associação estatística entre variáveis de exposição (N e S) e p
+
+__Qual a melhor forma de descrever as preditoras em função de si mesmas?__
+
+```{r melhor forma de descrever as preditoras}
+df_md0 <- df_md |> filter(k=="0.99") # remove valores repetidos pelos graus de limitação de dispersão simulados
+f_gamm <- function(formulaGAMM){
+  gam(formula = formulaGAMM,data = df_md0,method = "REML")
+}
+l_md1 <- list()
+l_md1[[1]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[2]] <- gam(log_S_obs_z ~ s(p_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[3]] <- gam(log_Ntotal_z ~ s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[4]] <- gam(log_S_obs_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[5]] <- gam(log_Ntotal_z ~ s(p_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[6]] <- gam(log_S_obs_z ~ s(p_z,bs="cr") + s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[7]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[8]] <- gam(p_z ~ s(log_Ntotal_z,bs="cr") + s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[9]] <- gam(p_z ~ s(log_S_obs_z,bs="cr"),data = df_md0,method = "REML")
+l_md1[[10]] <- gam(p_z ~ 1,data = df_md0,method = "REML")
+names(l_md1) <- c("N ~ p", "S ~ p", "N ~ S", "S ~ N","N ~ p,S", "S ~ p,N",
+                 "p ~ N", "p ~ S + N", "p ~ S")
+l <- l_md1[c(1,3,5)]
+AICctab(l,weights=T)
+l <- l_md1[c(2,4,6)]
+AICctab(l,weights=T)
+l <- l_md1[c(7:9)]
+AICctab(l,weights=T)
+```
+

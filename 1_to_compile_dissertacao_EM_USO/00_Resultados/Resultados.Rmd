@@ -1,3 +1,8 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 
 
 ```{r setup resultados,include=FALSE}
@@ -51,7 +56,7 @@ df_p <- read_csv("dados/df_p.csv")
 # df dados para simulação
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   inner_join(x=df_p,by="SiteCode")
-# df_SoE
+df_SoE
 df_Usoe.rep <- read_csv("dados/csv/df_Usoe.csv") |> 
   pivot_longer(cols=`1`:`10`, names_to = "n", values_to = "U") |> 
   inner_join(x=distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 

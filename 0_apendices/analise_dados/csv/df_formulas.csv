@@ -1,0 +1,8 @@
+nome,formula
+f(land. hyp.|Site),"~ land_hyp + s(land_hyp,SiteCode,bs='re')"
+f(k * land. hyp.|Site),"~ land_hyp + s(k_z,by=land_hyp,bs='cr',k=1) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=1) + s(land_hyp,SiteCode,bs='re')"
+"f(p, k * land. hyp.|Site)","~ land_hyp + s(p_z,by=land_hyp,bs='cr',k=1) + s(k_z,by=land_hyp,bs='cr',k=1) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=1) + s(land_hyp,SiteCode,bs='re')"
+"f(contemp, k * land. hyp.|Site)","~ land_hyp + s(contempU_z,by=land_hyp,bs='cr',k=1) + s(k_z,by=land_hyp,bs='cr',k=1) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=1) + s(land_hyp,SiteCode,bs='re')"
+"f(frag, k * land. hyp.|Site)","~ land_hyp + s(fragU_z,by=land_hyp,bs='cr',k=1) + s(k_z,by=land_hyp,bs='cr',k=1) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=1) + s(land_hyp,SiteCode,bs='re')"
+"f(area, k * land. hyp.|Site)","~ land_hyp + s(areaU_z,by=land_hyp,bs='cr',k=1) + s(k_z,by=land_hyp,bs='cr',k=1) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=1) + s(land_hyp,SiteCode,bs='re')"
+"f(area, frag, k * land. hyp.|Site)","~ land_hyp + s(areaU_z,by=land_hyp,bs='cr',k=1) + s(fragU_z,by=land_hyp,bs='cr',k=1) + s(k_z,by=land_hyp,bs='cr',k=1) + s(k_z,by=land_hyp,SiteCode,bs='fs',k=1) + s(land_hyp,SiteCode,bs='re')"
