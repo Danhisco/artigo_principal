@@ -33,6 +33,85 @@ download_file(file ="relatorio_final.Rmd",
 
 As inferências e intervenções baseadas em área correspondem a maior parte das práticas da conservação e restauração dos ecossistemas florestais (REF). Reconstruir a biodiversidade local de árvores a partir de dados de sensoriamento remoto, e.g. cobertura florestal, e dados de herbário e inventários florestais prévios pode possibilitar o mapeamento da biodiversidade florestal e servir de embasamento para projetos de conservação e restauração (REF). Um desafio para criar esses modelos de reconstrução dos padrões empíricos é a ausência de consenso sobre a relação entre a perda de cobertura florestal e a biodiversidade remanescente de árvores (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Os grupos de pesquisa possuem concepções distintas da relação entre cobertura florestal e a biodiversidade remanescente (@miller2019does,@valente2023toward). Existem aqueles que compreendem que o sistema sofre remoção de cobertura florestal, assim o processo da mudança de cobertura florestal altera a configuração espacial da cobertura remanescente (@didham2012rethinking). Essa conceitualização pode implicar em 2 tipos de DAG (direct aciclyc graph). Em um DAG a biodiversidade local é uma função da 'fragmentação total', ou seja o objetivo é estimar o efeito combinado da perda de cobertura florestal e mudança na configuração espacial (REF, FIGURA 1A). Em outro a biodiversidade local é uma função do efeito direto da perda de cobertura flroestal e indireto via fragmentção per se, o grau de complexidade espacial da cobertura florestal controlado pela proporção de cobertura remanescente (REF). Alternativamente, existem aqueles que compreendem que, apesar do processo de mudança na cobertura florestal variar tanto a quantidade de cobertura quanto a configuração espacial, quando várias paisagens são amostradas os processos de perda de cobertura florestal e de mudança na fragmentação per se são desacoplados (@fahrig2019habitatB). A partir dessa última perspectiva é possível construir 1 DAG, onde o objetivo é estimar o efeito direto e independente da cobertura florestal e da fragmentação per se, abordagem conhecida por ser orientado ao padrão da fragmentação per se (@fahrig2019habitatB)
 
+
+```{r DAGS}
+library(plyr)
+library(dagitty)
+library(ggdag)
+library(ggplot2)
+library(dplyr)
+f_plotDAG <- \(DAGobject,coordenadas){
+  dag <- DAGobject %>%
+    tidy_dagitty(layout = "nicely") 
+  for(i in 1:nrow(dag$data)){
+    label <- names(coordenadas)[i]
+    direction <- coordenadas[[i]]["to"]
+    dag <- dag %>% 
+      mutate(x=ifelse(label==label & direction==direction,
+                      coordenadas[[i]]["x"],x))
+  }  
+             #   ifelse(label==i,
+             #          coordenadas[[i]]["x"],x),
+             # xend=ifelse(label==i,coordenadas[[i]]["xend"],xend),
+             # y=ifelse(label==i,coordenadas[[i]]["y"],y),
+             # yend=ifelse(label==i,coordenadas[[i]]["yend"],yend))
+  
+  dag %>% 
+    ggplot(aes(x = x, y = y, xend = xend, yend = yend, color = label)) +
+    geom_dag_point() +
+    geom_dag_edges() +
+    geom_dag_text(col = "white",aes(label=label)) +
+    theme_dag() +
+    theme(legend.title = element_blank(),
+          legend.position = "none")
+}
+l_dag <- list()
+coords <- list(
+  "alpha" = c(y=0,x=1,xend=0,yend=0),
+  "frag.\ntotal" = c(y=0,x=0,xend=1,yend=)
+)
+coords <- list(
+  "alpha" = c(y=0,x=0,xend=NA,yend=NA,to=NA),
+  "frag.\nper se" = c(y=0,x=1,yend=0,xend=0,to="alpha"),
+  "perda de\ncobertura" = c(y=1,x=1,yend=0,xend=0,to="alpha"),
+  "perda de\ncobertura" = c(y=1,x=1,yend=0,xend=1,to="frag.\nper se")
+)
+l_dag$processista_DAG1 <- dagify(y ~ x,
+                                 exposure = "x",
+                                 outcome = "y",
+                                 labels = c(y="alpha",
+                                            x="frag.\ntotal")) %>% 
+  f_plotDAG(.,coordenadas=coords) +
+  scale_color_manual(breaks = c("frag.\ntotal", "alpha"),
+                     values = c("darkred","black"))
+l_dag$processista_DAG2 <- dagify(y ~ x + z,
+                                 x ~ z,
+                                 outcome = "y",
+                                 labels = c(y="alpha",
+                                            x="frag.\nper se",
+                                            z="perda de\ncobertura")) %>% 
+  f_plotDAG() +
+  scale_color_manual(breaks = c("frag.\nper se","perda de\ncobertura", "alpha"),
+                     values = c("darkred","darkblue","black")) 
+
+
+l_dag$padronista_DAGunico <- dagify(y ~ x + z,
+                                    outcome = "y",
+                                    labels = c(y="alpha",
+                                               x="frag.\nper se",
+                                               z="perda de\ncobertura")) %>% 
+  f_plotDAG() +
+  scale_color_manual(breaks = c("frag.\nper se","perda de\ncobertura", "alpha"),
+                     values = c("darkred","darkblue","black"))   
+  
+  # tidy_dagitty()
+  # node_parents("x") %>%
+  
+  
+        
+```
+
+
 # Diferenças e semelhanças nas abordagens baseadas em DAGs e análises de regressão
 
 Ambos grupos de pesquisa investigam o fenômeno a partir de métricas baseadas em área e distância da cobertura florestal remanescente (glossário, "métricas das características da cobertura floresal remanescente"). O objetivo das métricas é codificar a influência da área ao redor nos processos ecológicos que determinam os padrões de biodiversidade local (@frazier2017landscape). Não há consenso sobre qual a métrica de fragmentação per se adequada (e.g. número de fragmentos remanescentes ou proporção de área de borda, REFs) ou se métricas da escala do fragmento amostrado deveriam ser consideradas no lugar (REF). Então a partir dos DAGs propostos (figura 1) e de algum conjunto de métricas das características da cobertura florestal remanescente, cada respectivo grupo de pesquisa pode obter os efeitos causais médios a partir de uma abordagem baseada em regressão (REFs). Dentro dessas análises, uma importante fonte de dados empíricos são padrões estatícos de biodiversidade local (REF) e o mapa de cobertura floretal remanescente contemporâneo ao trabalhos de amostragem original (REFS: EFEITO DE ESCALA). Nessas análises é comum pressupor que as métricas das características da cobertura florestal contemporâneas apresentam efeitos relevantes na descrição da biodiversidade local observada (@frazier2017landscape, ESCALA DE EFEITO, PUTTKER EFEITOS INDIRETOS, WATLING 2020). Implícitamente há um pressuposto de que a escala temporal e espacial do fenômeno está sendo bem descrita por essas métricas das características contemporâneas (REF). Por exemplo, na análise da escala de efeito é possível pressupor que a escala espacial adequada para realizar a análise é aquela que maximiza a relação entre uma métrica de área de cobetura florestal na área ao redor e a riqueza de espécies na área amostral, dentro de um modelo de regressão (REF).
