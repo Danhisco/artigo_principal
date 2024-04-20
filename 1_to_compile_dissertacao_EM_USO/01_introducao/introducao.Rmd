@@ -40,74 +40,80 @@ library(dagitty)
 library(ggdag)
 library(ggplot2)
 library(dplyr)
-f_plotDAG <- \(DAGobject,coordenadas){
-  dag <- DAGobject %>%
-    tidy_dagitty(layout = "nicely") 
-  for(i in 1:nrow(dag$data)){
-    label <- names(coordenadas)[i]
-    direction <- coordenadas[[i]]["to"]
-    dag <- dag %>% 
-      mutate(x=ifelse(label==label & direction==direction,
-                      coordenadas[[i]]["x"],x))
-  }  
-             #   ifelse(label==i,
-             #          coordenadas[[i]]["x"],x),
-             # xend=ifelse(label==i,coordenadas[[i]]["xend"],xend),
-             # y=ifelse(label==i,coordenadas[[i]]["y"],y),
-             # yend=ifelse(label==i,coordenadas[[i]]["yend"],yend))
-  
+f_plotDAG <- \(DAGobject,label1,label2){
+  dag <- DAGobject %>% 
+    tidy_dagitty()
+  dag$data <- dag$data %>% 
+    mutate(label1 = label1, label2 = label2)
   dag %>% 
     ggplot(aes(x = x, y = y, xend = xend, yend = yend, color = label)) +
-    geom_dag_point() +
-    geom_dag_edges() +
-    geom_dag_text(col = "white",aes(label=label)) +
-    theme_dag() +
+    geom_dag_point(shape = 22, size=33, stroke = 8, alpha=1,aes(color=label)) +
+    geom_dag_edges(
+      edge_color = "darkgreen", edge_width = 2,
+      arrow_directed = grid::arrow(
+        length = grid::unit(10, "pt"),
+        type = "closed")) +
+    geom_dag_text(color = "black", size = 8,aes(label=label)) +
+    theme_dag()+
+    xlim(c(-0.1,1.1)) +
+    ylim(c(-0.1,1.1)) +
+    facet_grid(label1 ~ label2) +
     theme(legend.title = element_blank(),
-          legend.position = "none")
+          legend.position = "none",
+          panel.background = element_rect(fill="white",
+                                          color="black",
+                                          linewidth =2,linetype = "solid"),
+          axis.ticks = element_blank(),
+          axis.text = element_blank(),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          aspect.ratio = 1)
 }
 l_dag <- list()
-coords <- list(
-  "alpha" = c(y=0,x=1,xend=0,yend=0),
-  "frag.\ntotal" = c(y=0,x=0,xend=1,yend=)
-)
-coords <- list(
-  "alpha" = c(y=0,x=0,xend=NA,yend=NA,to=NA),
-  "frag.\nper se" = c(y=0,x=1,yend=0,xend=0,to="alpha"),
-  "perda de\ncobertura" = c(y=1,x=1,yend=0,xend=0,to="alpha"),
-  "perda de\ncobertura" = c(y=1,x=1,yend=0,xend=1,to="frag.\nper se")
-)
-l_dag$processista_DAG1 <- dagify(y ~ x,
-                                 exposure = "x",
-                                 outcome = "y",
-                                 labels = c(y="alpha",
-                                            x="frag.\ntotal")) %>% 
-  f_plotDAG(.,coordenadas=coords) +
+# Processistas: DAG1 - Fragmentação total
+l_dag$processista_DAG1 <- dagify(
+  y ~ x,
+  exposure = "x",
+  outcome = "y",
+  labels = c(y="alpha",
+             x="frag.\ntotal"),
+  coords = list(
+    x = c(x = 0.85, y = 0.15),
+    y = c(x = 0.85, y = 0.15)
+  )) %>% 
+  f_plotDAG(.,label1 = "Processista",label2 = "DAG 1") +
   scale_color_manual(breaks = c("frag.\ntotal", "alpha"),
                      values = c("darkred","black"))
-l_dag$processista_DAG2 <- dagify(y ~ x + z,
-                                 x ~ z,
-                                 outcome = "y",
-                                 labels = c(y="alpha",
-                                            x="frag.\nper se",
-                                            z="perda de\ncobertura")) %>% 
+# Processistas: DAG2 - Interdependência entre perda de cobertura florestal e  fragmentação per se
+l_dag$processista_DAG2 <- dagify(
+  y ~ x + z,
+  x ~ z,
+  outcome = "y",
+  labels = c(y="alpha",
+             x="frag.\nper se",
+             z="perda de\ncobertura"),
+  coords = list(
+    x = c(y=0,x=1,z=0.75),
+    y = c(y=0,x=0,z=1)
+  )) %>% 
   f_plotDAG() +
   scale_color_manual(breaks = c("frag.\nper se","perda de\ncobertura", "alpha"),
                      values = c("darkred","darkblue","black")) 
-
-
-l_dag$padronista_DAGunico <- dagify(y ~ x + z,
-                                    outcome = "y",
-                                    labels = c(y="alpha",
-                                               x="frag.\nper se",
-                                               z="perda de\ncobertura")) %>% 
+l_dag$padronista_DAGunico <- dagify(
+  y ~ x + z,
+  outcome = "y",
+  labels = c(y="alpha",
+             x="frag.\nper se",
+             z="perda de\ncobertura"),
+  coords = list(
+    x = c(y=0,x=1,z=0),
+    y = c(y=0,x=0,z=1)
+  )) %>% 
   f_plotDAG() +
   scale_color_manual(breaks = c("frag.\nper se","perda de\ncobertura", "alpha"),
                      values = c("darkred","darkblue","black"))   
-  
-  # tidy_dagitty()
-  # node_parents("x") %>%
-  
-  
         
 ```
 

@@ -52,6 +52,20 @@ download_file(file = "secoes_texto/MeM/MaterialeMetodo.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
+# Abordagem Contrafactual: modelo baseado em indivíduos como dispositivo de inferência causal
+
+## Revisão da inferência causal baseado em modelos de regressão e DAG
+
+- Dados observacionais podem ser interpretados como experimentos fracassados, onde é possível estruturar um diagrama das causas suficientes para descrever o processo gerados do padrão empírico observado (REF). 
+- Experimentos possuem intepretação contrafactual. O efeito causal médio estimado pela diferença entre controle e tratamento é interpretado como o efeito que um indivíduo no controle teria tido caso tivesse sido tratado (REF). A ideia que um estudo com dados observacionais é um experimento fracassado possibiliita o estudo de alguns sistemas onde existe um consenso sobre um conjunto adequado e suficiente de causas para descrever um processo gerador dos dados (REF). Modelos de regressão são excelentes ferramentes para modelar de forma fenomenologica esses processos geradores dos dados relacionando métricas de processos gerados com os padrões epmíricos mensurados (REF). 
+- Todos os modelos mecanisticos apresentam uma camada inferior de processos fenomelogicas (REF). No caso do modelo neutro espacialmente explícito os detalhes finos da dinâmica de morte, dispersão, e nascimento são muito simplificados por pressupostos de soma zero, espaços indivíduais iguais, sorteios aleatórios (REF). Além do pressuposto central de equivalência funcional entre espécies, onde todos as espécies apresentam as mesmas taxas demográficas e na simulação a mesma função de dispersão (REF). Porém este processo simulado é suficiente para descrever a distribuição de abundância de espécies (Etienne anad Rosindell 2011, Campos et al. 2012, 2013, REF CAMPOS 2015). De tal forma que a comparação de paisagens distintas pode informar o efeito do contrastes entre as caraterísticas das paisagens no mecanismo causal mimetizado (REF). 
+
+
+
+- Dos 3 DAGs é possível com GLMM recriar 2 deles: o DAG 1, que descreve a diversidade local como uma função da fragmentação total; e o DAG 3, que  descreve a diversidade local como uma função do efeito indepentende da fragmentação per se e da perda de cobertura florestal. 
+
+
+
 # Materiais
 
 Selecionamos na base de dados TreeCo inventários florestais que amostraram indivíduos arbóreos com DBH>=4.8 cm em parcela única de pelo menos 1ha de floresta, com alta confiabilidade taxonômica no nível de morfoespécie e da coordenada central da parcela. A base de dados TreeCo compilou amplamente trabalhos fitossociológicos realizados na Floresta Atlântica (@de2015much). Utilizamos mapas de cobertura vegetal da coleção 6 do mapbiomas com resolução de 30x30 m2, que agregam mapas de 1985 até 2020 (@mapbiomas).  Os mapas de cobertura vegetal distinguem as áreas de cobertura florestal nativa das áreas de outros tipos de cobertura (@mapbiomas). Classificamos as áreas de cobertura florestal como áreas de habitat e as restantes como áreas de não habitat. Os mapas de cobertura florestal foram recortados em quadrados centrados na coordenada central da parcela. A resolução dos mapas foi ajustada para que a densidade de pixels seja igual a densidade de indivíduos na parcela do respectivo inventário florestal. Aproximamos a área da parcela por um quadrado. Em uma paisagem não foi possível desenhar uma área quadrada devido à configuração espacial do habitat e foi descartada (Apêndice: Efeito de Escalar).
