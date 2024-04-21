@@ -39,8 +39,9 @@ library(plyr)
 library(dagitty)
 library(ggdag)
 library(ggplot2)
+library(gridExtra)
 library(dplyr)
-f_plotDAG <- \(DAGobject,label1,label2){
+f_plotDAG <- \(DAGobject,label1,label2,ajuste_arrow=0.9){
   dag <- DAGobject %>% 
     tidy_dagitty()
   dag$data <- dag$data %>% 
@@ -49,17 +50,22 @@ f_plotDAG <- \(DAGobject,label1,label2){
     ggplot(aes(x = x, y = y, xend = xend, yend = yend, color = label)) +
     geom_dag_point(shape = 22, size=33, stroke = 8, alpha=1,aes(color=label)) +
     geom_dag_edges(
+      aes(x = ajuste_arrow * x,
+          y = ajuste_arrow * y,
+          xend = ajuste_arrow * xend, 
+          yend = ajuste_arrow * yend),
       edge_color = "darkgreen", edge_width = 2,
       arrow_directed = grid::arrow(
         length = grid::unit(10, "pt"),
         type = "closed")) +
     geom_dag_text(color = "black", size = 8,aes(label=label)) +
-    theme_dag()+
+    theme_linedraw()+
     xlim(c(-0.1,1.1)) +
     ylim(c(-0.1,1.1)) +
-    facet_grid(label1 ~ label2) +
+    facet_wrap(~label1 + label2) +
     theme(legend.title = element_blank(),
           legend.position = "none",
+          strip.text = element_text(size = 15),
           panel.background = element_rect(fill="white",
                                           color="black",
                                           linewidth =2,linetype = "solid"),
@@ -77,44 +83,45 @@ l_dag$processista_DAG1 <- dagify(
   y ~ x,
   exposure = "x",
   outcome = "y",
-  labels = c(y="alpha",
+  labels = c(y="\u03b1",
              x="frag.\ntotal"),
   coords = list(
     x = c(x = 0.85, y = 0.15),
     y = c(x = 0.85, y = 0.15)
   )) %>% 
   f_plotDAG(.,label1 = "Processista",label2 = "DAG 1") +
-  scale_color_manual(breaks = c("frag.\ntotal", "alpha"),
+  scale_color_manual(breaks = c("frag.\ntotal", "\u03b1"),
                      values = c("darkred","black"))
 # Processistas: DAG2 - Interdependência entre perda de cobertura florestal e  fragmentação per se
 l_dag$processista_DAG2 <- dagify(
   y ~ x + z,
   x ~ z,
   outcome = "y",
-  labels = c(y="alpha",
-             x="frag.\nper se",
-             z="perda de\ncobertura"),
+  labels = c(y="\u03b1",
+             x="frag.\nperse",
+             z="perda \nCV"),
   coords = list(
-    x = c(y=0,x=1,z=0.75),
-    y = c(y=0,x=0,z=1)
+    x = c(y=0.15,x=0.85,z=0.55),
+    y = c(y=0.15,x=0.15,z=0.85)
   )) %>% 
-  f_plotDAG() +
-  scale_color_manual(breaks = c("frag.\nper se","perda de\ncobertura", "alpha"),
+  f_plotDAG(.,label1 = "Processista",label2 = "DAG 2") +
+  scale_color_manual(breaks = c("frag.\nperse","perda \nCV", "\u03b1"),
                      values = c("darkred","darkblue","black")) 
 l_dag$padronista_DAGunico <- dagify(
   y ~ x + z,
   outcome = "y",
-  labels = c(y="alpha",
-             x="frag.\nper se",
-             z="perda de\ncobertura"),
+  labels = c(y="\u03b1",
+             x="frag.\nperse",
+             z="perda \nCV"),
   coords = list(
-    x = c(y=0,x=1,z=0),
-    y = c(y=0,x=0,z=1)
+    x = c(y=0.15,x=0.85,z=0.15),
+    y = c(y=0.15,x=0.15,z=0.85)
   )) %>% 
-  f_plotDAG() +
-  scale_color_manual(breaks = c("frag.\nper se","perda de\ncobertura", "alpha"),
+  f_plotDAG(.,label1 = "Padronista",label2 = "DAG 3") +
+  scale_color_manual(breaks = c("frag.\nperse","perda \nCV", "\u03b1"),
                      values = c("darkred","darkblue","black"))   
-        
+p <- arrangeGrob(grobs=l_dag,nrow=1)      
+# ggsave()
 ```
 
 
