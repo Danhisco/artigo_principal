@@ -59,11 +59,43 @@ download_file(file = "secoes_texto/MeM/MaterialeMetodo.Rmd",
 
 Nós vamos pressupor que o processo de perda de habitat/cobertura florestal altera a conectividade do habitat/cobertura florestal remanescente, pois a transformação da cobertura originária em cobertura de uso humano não originário altera a configuração do espaço (REF). A divergência entre os programas de pesquisa pode ser compreendido em termos de independência e interdepência dos efeitos da transformação da cobertura espacial na biodiversidade remanescente (REF). Ao pressupor independência é possível considerar que esse processo geral de transformação de cobertura florestal em dois processo independentes: um processo que determina a quantidade remanescente de cobertura florestal e outro que determina a configuração espacial da cobertura remanescente (Fahrig et al.). Ao pressupor interdependência o processo que reduz a quantidade de cobertura florestal é o mesmo que altera a configuração espacial do haitata (REF). 
 A estimativa de efeitos causais médios a partir da simulação de contrafactuais pode se adequar às antologias de cada programa de pesquisa, caso seja possível detarminar contrastes adequados entre simulações (REF). 
-Ao pressupor independência dos efeitos do processo que determina a quantidade de habitat remanescente e do processo que determina a configuração espacial do habitat remanescente, é possível simular 5 contrafactuais: i) a paisagem contemporânea ao inventário florestal; ii) a paisagem com a cobertura remanescente toda aglomerada ao redor da parcela amostrada, buscando maximizar a conectivadade da cobertura remanescente; iii) a cobertura remanescente o mais distantes da parcela amostrada, a menor conectividade entre o habitat remanescente e a parcela amostrada; iv)  e o habitat remascente fora da mancha de cobertura florestal amostrada mais distante dessa mancha amostrada, a menor conectividade da mancha de cobertura florestal amostrada; e v) a situação de ausência de perda de cobertura florestal, uma idealização de situação prístina em que tanto a cobertura e a conectividade remanescente são máximas. As análises de dados observacionais que pressupõe independência concluem que o efeito do processo de redução da cobertura florestal é muito maior do que o efeito do processo que determina a configuração espacial da cobertura florestal remanescente (REF). Portanto, uma hipótese mínima a posteriori é que apenas a quantidade de habitat é relevante para descrever a biodiversidade local (REF). O contraste adequado para avaliar essa hipótese mínima é entre a simulação na paisagem contemporânea e a paisagem com a máxima conectividade do habitat remanescente, pois dessa forma comparamos o contemporâneo, que pode ter efeito da redução do número de progenitores na paisagem e da redução da conectividade do habitat remanescente, com a situação em que o único efeito é a redução dos progenitores.
+Ao pressupor independência dos efeitos do processo que determina a quantidade de habitat remanescente e do processo que determina a configuração espacial do habitat remanescente, é possível simular 5 contrafactuais: i) a paisagem contemporânea ao inventário florestal; ii) a paisagem com a cobertura remanescente toda aglomerada ao redor da parcela amostrada, buscando maximizar a conectivadade da cobertura remanescente; iii) a cobertura remanescente o mais distantes da parcela amostrada, a menor conectividade entre o habitat remanescente e a parcela amostrada; iv)  e o habitat remascente fora da mancha de cobertura florestal amostrada mais distante dessa mancha amostrada, a menor conectividade da mancha de cobertura florestal amostrada com a cobertura remanescente fora dela; e v) a situação de ausência de perda de cobertura florestal, uma idealização de situação prístina em que tanto a cobertura e a conectividade remanescente são máximas. As análises de dados observacionais que pressupõe independência concluem que o efeito do processo de redução da cobertura florestal é muito maior do que o efeito do processo que determina a configuração espacial da cobertura florestal remanescente (REF). Assim, uma hipótese mínima a posteriori é que apenas a quantidade de habitat é relevante para descrever a biodiversidade local (REF). O contraste adequado para avaliar essa hipótese mínima é entre a simulação na paisagem contemporânea e a paisagem com a máxima conectividade do habitat remanescente, pois dessa forma comparamos o contemporâneo, que pode ter efeito da redução do número de progenitores na paisagem e da redução da conectividade do habitat remanescente, com a situação em que o único efeito é a redução dos progenitores.
 
 
+```{r}
+tabela_contrafactuais <- data.frame(
+  paisagens_contrafactuais = c("Contemporânea",
+                               "Prístina",
+                               "Aglomerada",
+                               "Isolamento máximo\nparcela",
+                               "Isolamento máximo\nfragmento"),
+  interpretacao_MNEE = c(
+    # Contemporâneo
+    "paisagem* com a quantidade de progenitores remanescente e na conectividade contemporânea entre os indivíduos da parcela e a área ao redor",
+    # "Prístina"
+    "paisagem com o espaço todo preenchido por progenitores ao redor da parcela",
+    # Aglomerada
+    "paisagem com a quantidade de progenitores contemporâneeo e com a maior conectividade possível",
+    # Isollamento parcela
+    "paisaggem com a menor conectividade entre os indivíduos da parcela e da paisagem ao redor",
+    # "isoalmento fragmento amostrado"
+    "paisagem com a menor conectividade entre o fragmento remanescente amostrado e os progeniitores remanescentes de fora do framgneto amostrado"
+  ),
+  Interpretacao_Processista_adequadaaMNEE = c(
+    #  
+    "O processo de perda de cobertura florestal, do estado prístino para o estado contemporâneo, está finalizado e em equilíbrio, então é possível estimar os efeitos do processo de perda da cobertura na redução do número de progenitores e concomitante mudança na conectividade remanesceente entre parcela e paisagem oa redor",
+    # 
+    "O processo de perda de cobertura floreestal determinou o número de orogenitores remanesceentes e o precoesso de fragmentação per se determinou a conectividade remanescente, uma vez que o equilíbrio do estado prístino para o estado contemporâneo foi observado"
+    
+    
+  ),
+  Interpretacao_Padonista_adequadaaMNEE = c(
+    
+  )
+)
+```
 
-
+* equilíbrio na paisagem
 
 
 
@@ -72,7 +104,7 @@ Ao pressupor independência dos efeitos do processo que determina a quantidade d
 ## Revisão da inferência causal baseado em modelos de regressão e DAG
 
 - Dados observacionais podem ser interpretados como experimentos fracassados, onde é possível estruturar um diagrama das causas suficientes para descrever o processo gerados do padrão empírico observado (REF). 
-- Experimentos possuem intepretação contrafactual. O efeito causal médio estimado pela diferença entre controle e tratamento é interpretado como o efeito que um indivíduo no controle teria tido caso tivesse sido tratado (REF). A ideia que um estudo com dados observacionais é um experimento fracassado possibiliita o estudo de alguns sistemas onde existe um consenso sobre um conjunto adequado e suficiente de causas para descrever um processo gerador dos dados (REF). Modelos de regressão são excelentes ferramentes para modelar de forma fenomenologica esses processos geradores dos dados relacionando métricas de processos gerados com os padrões epmíricos mensurados (REF). 
+- Experimentos possuem intepretação contrafactual. O efeito causal médio estimado pela diferença entre controle e tratamento é interpretado como o efeito que um indivíduo no controle teria tido caso tivesse sido tratado (REF). A interpretação de que um estudo com dados observacionais é um experimento fracassado possibiliita o estudo de alguns sistemas onde existe um consenso sobre um conjunto adequado e suficiente de causas para descrever um processo gerador dos dados (REF). Modelos de regressão são excelentes ferramentes para modelar de forma fenomenologica esses processos geradores dos dados relacionando métricas de processos gerados com os padrões epmíricos mensurados (REF). 
 - Todos os modelos mecanisticos apresentam uma camada inferior de processos fenomelogicos (REF). No caso do modelo neutro espacialmente explícito os detalhes finos da dinâmica de morte, dispersão, e nascimento são muito simplificados por pressupostos de soma zero, espaços indivíduais iguais, sorteios aleatórios (REF). Além do pressuposto central de equivalência funcional entre espécies, onde todos as espécies apresentam as mesmas taxas demográficas e na simulação a mesma função de dispersão (REF). Porém este processo simplificado é suficiente para simular a distribuição de abundância de espécies empírica (Etienne anad Rosindell 2011, Campos et al. 2012, 2013, REF CAMPOS 2015). De tal forma que a comparação de paisagens distintas pode informar o efeito do contrastes entre as caraterísticas das paisagens no mecanismo causal mimetizado (REF). 
 
 
