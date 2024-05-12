@@ -1,0 +1,31 @@
+# Sistema de referência de diferentes ontologias
+
+Um modelo neutro espacialmente explícito (MNEE) pode ser um sistema de referência no qual é possível contrastar simulações de contrafactuais alinhados a cada ontologia proposta no debate dentro da ecologia de paisagens.
+Aqui definimos um sistema de referência em duas partes relacionadas: um dispositivo de mimize de um mecanismo causal suficiente para reconstruir com realismo teórico os dados, no qual é possível calibrar empiricamente os processos demográficos de baixo nível que resultaram no padrão empírico de alto nível que pdoe ser empiricamente validado; e observadores que propõe os contrastes entre contrafactuais que avaliam os efeitos no proposto processo gerador dos dados (REF).
+O contraste na calibração empírica também permite a avaliação o
+
+Não temos um métdo equivalente ao da taxa U no qual usamos um dado local para obter um valor da paisagem (a riqueza local e a taxa U) para a área ao redor que influencia a comunidade local, ou seja, não havia um método para obter a paisagem local. Aqui aproveitamos essa propriedade de U para estimar a paisagem local que estabiliza o efeito de escalar em termos da parcela amostrada e paisagem local (APENDICE). 
+
+
+# História recente do debate na ecologia de paisagens:
+
+1) Revisões conflitantes das evidências: Haddad et al. (2015) e Fahrig (2017)
+2) Revisões confitantes dos conceitos: Fletcher Jr et al. (2018) e Fahrig (2019)
+3) Hibridização de modelos:
+a) Watling et al. 2020: A existência do efeito de perda de habitat é consenso, então qual a métrica mais adequada para a representação desse efeito? A proporção de cobertura florestal remanescente, obtida uma vez que se define paisagem ao redor da área amostral? Ou o tamanho do fragmento amostrado e seu grau de isolamento, obtidas uma vez que se define o fragmento amostrado? Para múltiplas escalas da paisagem ao redor os autores encontraram que os modelos estatísticos que utilizam a proporção de cobertura remanescente como preditor da riqueza local apresentam menor AICc do que aqueles que utilizam as métricas definidas a partir do fragmento amostrado. Possível conclusão, "para compreender a escala local é melhor definir o problema na escala da paisagem - apesar de não saber uma boa forma de definir a paisagem ao redor de uma amostra de múltiplas espécies. Uma conclusão é de suporte para a hipótese da quantidade de habitat no qual 
+b) Pütkker et al. 2020: É possível usar as mesmas métricas exploradas por Fahrig 2017 dentro de um modelo de causas estruturadas e explorar a possibilidade de interdependência nos efeitos da perda de habitat e da métrica de fragmentação per se. Ao utilizar tais métricas é necessário definir uma paisagem ao redor. 
+
+
+Um momento chave do debate é o contraste das concluões entre as revisões dos experimentos de fragmentação tratados na escala do fragmento florestal de Haddad et al. (2015) e dos estudos que avaliaram fragmentação na escala da paisagem por Fahrig (2017) (Valente et al. 2023). A conclusão da revisão dos experimentos foi de que fragmentação de habitat possui efeito com grande magnitude e negativo na biodiversidade remanescente (Haddad et al. 2015), enquanto a conclusão da revisão dos estudos foi de que a fragmentação de habitat não apresenta efeito relevante e quando apresenta é em geral positivo (Fahrig 2017). Essas conclusões partem de concepções distintas do fenomeno em estudo (Didham et al. 2011; Fahrig 2018). Na revisão dos experimentos é pressuposto que existe um processo que remove o habitat natural, modificando concomitantemente a quantidade de habitat e a complexidade espacial do habitat remanescente (Didham et al. 2011, Valente 2023). Na revisão dos estudos no nível da paisagem é pressuposto que existe um processo de redução de perda de habitat que determina a quantidade de habitat remanescente e outro processo de fragmentação per se que aumenta a complexidade espacial do habitat remanescente (Fahrig 2019, Valente 2023). Não há uma avaliação dos dois processos geradores dos dados em uma única análise.
+
+Aqui 
+
+
+
+Esse momento de contraste é marcado pelas revisões de conceitos, análises e hipóteses de cada grupo se perguntando se a fragmentação de habitat é boa ou ruim (Fletcher Jr. et al. 2018; Fahrig et al. 2019). Em resumo, Fletcher Jr. et al. (2018) conclui que as revisões dos estudos na escala da paisagem deveriam usar modelos de causals estruturadas para estimar os possíveis efeitos diretos e indiretos da perda de habitat e fragmentação per ser para estimarem os efeitos médios causais e não os efeitos médios de associação. Em esumo, Fahrig et al. (2019) conclui que a extrapolação de conclusões da escala do fragmento amostrado para a escala da paisagem amostrada se configura como hipótese e deve ser testada
+
+
+
+
+
+Uma vez que os estudos diferem na conceitualização do processo gerador dos dados, o desenho de análise e as métricas escolhidas também diferem (Fletcher Jr. et al. 2018; Fahrig et al. 2019; Valente et al. 2023). 

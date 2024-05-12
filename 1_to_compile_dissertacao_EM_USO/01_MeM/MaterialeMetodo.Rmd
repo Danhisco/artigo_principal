@@ -71,26 +71,40 @@ tabela_contrafactuais <- data.frame(
                                "Isolamento máximo\nfragmento"),
   interpretacao_MNEE = c(
     # Contemporâneo
-    "paisagem* com a quantidade de progenitores remanescente e na conectividade contemporânea entre os indivíduos da parcela e a área ao redor",
+    "paisagem com a quantidade de progenitores remanescente e com a conectividade contemporânea entre os indivíduos da parcela e a área ao redor",
     # "Prístina"
-    "paisagem com o espaço todo preenchido por progenitores ao redor da parcela",
+    "paisagem com o espaço todo preenchido por progenitores",
     # Aglomerada
-    "paisagem com a quantidade de progenitores contemporâneeo e com a maior conectividade possível",
+    "paisagem com a quantidade de progenitores contemporâneeo e com a maior conectividade possível entre os indivíduos remanescentes na paisagem",
     # Isollamento parcela
-    "paisaggem com a menor conectividade entre os indivíduos da parcela e da paisagem ao redor",
+    "paisagem com a quantidade contemporânea de progenitores e menor conectividade entre os indivíduos da parcela e da paisagem ao redor",
     # "isoalmento fragmento amostrado"
-    "paisagem com a menor conectividade entre o fragmento remanescente amostrado e os progeniitores remanescentes de fora do framgneto amostrado"
+    "paisagem com a quantidade contemporânea de progenitores a menor conectividade entre o fragmento amostrado e os progenitores de fora do fragmento amostrado"
   ),
+  Contraste_de_contrafactuais = c(
+    # C1 x C2
+    
+  ),
+  
+  
   Interpretacao_Processista_adequadaaMNEE = c(
-    #  
-    "O processo de perda de cobertura florestal, do estado prístino para o estado contemporâneo, está finalizado e em equilíbrio, então é possível estimar os efeitos do processo de perda da cobertura na redução do número de progenitores e concomitante mudança na conectividade remanesceente entre parcela e paisagem oa redor",
-    # 
-    "O processo de perda de cobertura floreestal determinou o número de orogenitores remanesceentes e o precoesso de fragmentação per se determinou a conectividade remanescente, uma vez que o equilíbrio do estado prístino para o estado contemporâneo foi observado"
+    # Contemporâneo
+    "O processo de perda de cobertura florestal determinou concomitanemente o número de progenitores remanescentes na paisagem e a complexidade da forma espacial da cobertura remanescente, que por sua fez determina a conectividade remanescente entre a parcela amostrada e paisagem ao redor",
+    # Prístina
+    "O processo de perda de cobertura florestal não ocorreu.",
+    # Aglomerada
+    "Nesse caso particular, o processo de perda de cobertura resultou em uma configuração espacial remanescente que maxima a conectividade entre os indivíduos remanescentes da parcela e da paisagem ao redor"
+    
     
     
   ),
   Interpretacao_Padonista_adequadaaMNEE = c(
-    
+    # Contemporâneo
+    "O processo de perda de cobertura floreestal determinou o número de progenitores remanesceentes e o processo de fragmentação per se determinou a complexidade da forma espacial da cobertura remanescente a conectividade remanescente",
+    # Prístina
+    "O processo de perda de cobertura florestal e o processo de fragmentação per se não ocorreram.",
+    # Aglomerada
+    "O processo de perda de cobertura florestal determinou a quantidade de progenitores remanescente e o processo de fragmentação per determinou o menor isolamento possível"
   )
 )
 ```
