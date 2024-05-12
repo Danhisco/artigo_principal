@@ -2,9 +2,18 @@
 
 Um modelo neutro espacialmente explícito (MNEE) pode ser um sistema de referência no qual é possível contrastar simulações de contrafactuais alinhados a cada ontologia proposta no debate dentro da ecologia de paisagens.
 Aqui definimos um sistema de referência em duas partes relacionadas: um dispositivo de mimize de um mecanismo causal suficiente para reconstruir com realismo teórico os dados, no qual é possível calibrar empiricamente os processos demográficos de baixo nível que resultaram no padrão empírico de alto nível que pdoe ser empiricamente validado; e observadores que propõe os contrastes entre contrafactuais que avaliam os efeitos no proposto processo gerador dos dados (REF).
-O contraste na calibração empírica também permite a avaliação o
 
-Não temos um métdo equivalente ao da taxa U no qual usamos um dado local para obter um valor da paisagem (a riqueza local e a taxa U) para a área ao redor que influencia a comunidade local, ou seja, não havia um método para obter a paisagem local. Aqui aproveitamos essa propriedade de U para estimar a paisagem local que estabiliza o efeito de escalar em termos da parcela amostrada e paisagem local (APENDICE). 
+Encontramos um métdo equivalente ao da taxa U no qual usamos um dado local para obter um valor da paisagem (a riqueza local e a taxa U) para a área ao redor que influencia a comunidade local, ou seja, não havia um método para obter a paisagem local. Aqui aproveitamos essa propriedade de U para estimar a paisagem local que estabiliza o efeito de escalar em termos da parcela amostrada e paisagem local (APENDICE). 
+
+
+Talvez o único acordo pragmático possível entre os praticantes de cada ontologia seja sobre a descrição dos padrões, para além disso, inferência causal, proposta de política pública, etc, os programas de pesquisa devem não apresentar acordo pragmático.
+Sob a perspectiva dominantes na análise causal de dados observacionais e experimentais (PEARL 2018), o método adequado para avaliar a questão é o de modelo de causas estruturadas que é traduzível em modelo de equações diferenciais (REF). Dentro dessa perspectiva os independentes estão caminhando para a extinção enquanto programa de pesquisa. 
+Talvez uma abordagem causal para os independentes seja métodos de pareamento de casos (paisagens) ou o de experimentos na escala da paisagem (REF).
+
+Um caminho possível é do sincretismo ontológico, hibridização das ontologias. Em muitas situações o sincretimos é resultado de um prcesso de mudança do status do sujeito/programa de pesquisa, alguma ontologia pode ter seus elementos tomados por outra ontologia, enquanto a original deixa de ter status de científica (REF). Em outros casos é possível coexistir as ontologias. 
+
+
+
 
 
 # História recente do debate na ecologia de paisagens:
