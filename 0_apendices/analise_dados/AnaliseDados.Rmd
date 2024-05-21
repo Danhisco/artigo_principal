@@ -45,6 +45,7 @@ library(dplyr)
 source("source/2samples_testes.R")
 source("source/general_tools.R")
 source("source/GAMMtools.R")
+source("source/fig_tools.R")
 # objetos
 # load("dados/Rdata/md_MNEE.Rdata")
 # load("dados/Rdata/l_md_GAMM.Rdata")
@@ -461,47 +462,97 @@ ggdag_adjustment_set(dag_exp.frag,shadow = TRUE) + ggtitle(label="exposure = fra
 ```
 
 
-<!-- # Contrastes -->
+# Contrastes
 
-<!-- ```{r GE contrastes possíveis preditoras e a relacao entre elas,fig.height=6,fig.width=18} -->
-<!-- l_p <- list() -->
-<!-- l_p[[1]] <- df_contrastes |>  -->
-<!--   pivot_longer(cols = k:p,names_to = "pred_class",values_to = "pred_values") |>  -->
-<!--   mutate(pred_class = factor(pred_class,levels=c("p","k"))) |>  -->
-<!--   pivot_longer(cols = starts_with("efeito_"),names_to = "resp_class",values_to = "resp_values") |>  -->
-<!--   mutate(resp_class = factor(resp_class,levels=names(df_contrastes)[4:6])) |>  -->
-<!--   ggplot(aes(x=pred_values,y=resp_values)) + -->
-<!--   geom_point(alpha=0.4) + -->
-<!--   geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") + -->
-<!--   labs(title="Contrastes ~ p e k") + -->
-<!--   facet_grid(pred_class~resp_class,scales="free") -->
-<!-- l_p[[2]] <- df_contrastes |>  -->
-<!--   ggplot(aes(x=efeito_area,y=efeito_frag)) + # ,color=p>=0.93 -->
-<!--   geom_abline(slope = 1,intercept = 0,color="darkred") + -->
-<!--   geom_hline(data = df_contrastes |> -->
-<!--                filter(p>=0.93) |>  -->
-<!--                summarise(min = min(efeito_frag), -->
-<!--                          max = max(efeito_frag)) |>  -->
-<!--                pivot_longer(min:max), -->
-<!--              aes(yintercept = value),color="darkgreen") + -->
-<!--   geom_vline(data = df_contrastes |> -->
-<!--                filter(p>=0.93) |>  -->
-<!--                summarise(min = min(efeito_area), -->
-<!--                          max = max(efeito_area)) |>  -->
-<!--                pivot_longer(min:max), -->
-<!--              aes(xintercept = value),color="darkgreen") + -->
-<!--   geom_point(alpha=0.3) + -->
-<!--   geom_hex(bins=70,alpha=0.4) + -->
-<!--   scale_x_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) + -->
-<!--   scale_y_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) + -->
-<!--   labs(x="Área per se",y="Fragmentação per se",title="Frag. per se ~ Área per se") + -->
-<!--   guides(fill = guide_legend(title="contagem")) + -->
-<!--   scale_fill_continuous(type = "viridis") + -->
-<!--   theme_bw() -->
-<!-- grid.arrange(grobs=l_p,ncol=2) -->
-<!-- ``` -->
+```{r}
+df_plot <- df_contrastes %>% select(SiteCode, contains("_logratio")) %>% 
+  pivot_longer(-SiteCode)
+l_p <- list()
+l_p[[1]] <- df_plot%>% 
+  ggplot(aes(y=value,x=name)) +
+  geom_jitter() +
+  geom_boxplot() +
+  geom_hline(yintercept = 1,color="darkred",linewidth=1)
+# l_p[[2]] <- 
+df_plot %>% 
+  ggplot(aes(y=value,x=name,fill=name)) +
+  geom_boxplot() +
+  coord_flip()
 
-<!-- __figura 1__ Contrastes em função das preditoras -->
+
+df_plot %>% 
+  mutate(name=factor(name)) %>% 
+  ggplot(aes(x=value,fill=name)) +
+  theme_bw() + 
+  geom_boxplot(aes(fill=name,y=-50,color=name),size=10,alpha=0.1) +
+  # stat_boxplot(geom = "vline", aes(xintercept = ..xlower..)) +
+  # stat_boxplot(geom = "vline", aes(xintercept = ..xmiddle..)) +
+  # stat_boxplot(geom = "vline", aes(xintercept = ..xupper..)) +
+  geom_histogram(bins = 120,aes(x=value),inherit.aes = FALSE) +
+  scale_fill_manual(values = c("darkgreen","darkblue","darkred")) +
+  scale_color_manual(values = c("darkgreen","darkblue","darkred")) +
+  facet_grid(rows = "name") 
+  # facet_grid(cut ~ .) +
+  # geom_vline(xintercept = 1,col="darkred",linewidth=1)+
+  
+grid.arrange(grobs=l_p,ncol=1)
+```
+```{r}
+# experimente:
+ggplot(diamonds, aes(x = carat, y = -0.5)) +
+  # horizontal boxplots & density plots
+  geom_boxplot(aes(fill = cut)) +
+  geom_density(aes(x = carat), inherit.aes = FALSE) +
+  # vertical lines at Q1 / Q2 / Q3
+  stat_boxplot(geom = "vline", aes(xintercept = ..xlower..)) +
+  stat_boxplot(geom = "vline", aes(xintercept = ..xmiddle..)) +
+  stat_boxplot(geom = "vline", aes(xintercept = ..xupper..)) +
+  
+  facet_grid(cut ~ .) +
+  scale_fill_discrete()
+```
+
+
+
+```{r GE contrastes possíveis preditoras e a relacao entre elas,fig.height=6,fig.width=18}
+l_p <- list()
+l_p[[1]] <- df_contrastes |>
+  # pivot_longer(cols = k:p,names_to = "pred_class",values_to = "pred_values") |>
+  # mutate(pred_class = factor(pred_class,levels=c("p","k"))) |>
+  pivot_longer(cols = starts_with("efeito_"),names_to = "resp_class",values_to = "resp_values") |>
+  mutate(resp_class = factor(resp_class,levels=names(df_contrastes)[4:6])) |>
+  ggplot(aes(x=pred_values,y=resp_values)) +
+  geom_point(alpha=0.4) +
+  geom_quantile(method="rqss",quantiles = c(0.05,0.5,0.95),lambda=0.1,color="darkred") +
+  labs(title="Contrastes ~ p e k") +
+  facet_grid(pred_class~resp_class,scales="free")
+l_p[[2]] <- df_contrastes |>
+  ggplot(aes(x=efeito_area,y=efeito_frag)) + # ,color=p>=0.93
+  geom_abline(slope = 1,intercept = 0,color="darkred") +
+  geom_hline(data = df_contrastes |>
+               filter(p>=0.93) |>
+               summarise(min = min(efeito_frag),
+                         max = max(efeito_frag)) |>
+               pivot_longer(min:max),
+             aes(yintercept = value),color="darkgreen") +
+  geom_vline(data = df_contrastes |>
+               filter(p>=0.93) |>
+               summarise(min = min(efeito_area),
+                         max = max(efeito_area)) |>
+               pivot_longer(min:max),
+             aes(xintercept = value),color="darkgreen") +
+  geom_point(alpha=0.3) +
+  geom_hex(bins=70,alpha=0.4) +
+  scale_x_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  scale_y_continuous(limits = c(range(df_contrastes[,c("efeito_area","efeito_frag")]))) +
+  labs(x="Área per se",y="Fragmentação per se",title="Frag. per se ~ Área per se") +
+  guides(fill = guide_legend(title="contagem")) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw()
+grid.arrange(grobs=l_p,ncol=2)
+```
+
+__figura 1__ Contrastes em função das preditoras
 
 <!-- ### Contrastes ~ p e k -->
 

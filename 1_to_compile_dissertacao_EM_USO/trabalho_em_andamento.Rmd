@@ -1,7 +1,17 @@
+#### SCORES
+
+# 19 maio 2024
+
+Não há consenso com PI sobre se iremos realizar uma comparação de ontologias ou apenas dentro de ontologias. Portanto, o consenso é sobre o densenvolvimento epistemológico alinhado com uma mesma ontologia. Assim, vou começar a trabalhar com os dados da taxa U
+
+#### ensaios
+
 # Sistema de referência de diferentes ontologias
 
-Um modelo neutro espacialmente explícito (MNEE) pode ser um sistema de referência no qual é possível contrastar simulações de contrafactuais alinhados a cada ontologia proposta no debate dentro da ecologia de paisagens.
-Aqui definimos um sistema de referência em duas partes relacionadas: um dispositivo de mimize de um mecanismo causal suficiente para reconstruir com realismo teórico os dados, no qual é possível calibrar empiricamente os processos demográficos de baixo nível que resultaram no padrão empírico de alto nível que pdoe ser empiricamente validado; e observadores que propõe os contrastes entre contrafactuais que avaliam os efeitos no proposto processo gerador dos dados (REF).
+Um modelo neutro espacialmente explícito (MNEE) pode ser parte de um sistema de referência no qual é possível contrastar simulações de contrafactuais alinhados a cada ontologia proposta no debate dentro da ecologia de paisagens.
+Aqui definimos um sistema de referência em duas partes relacionadas: um dispositivo de mimize de um mecanismo causal suficiente para reconstruir com realismo teórico os dados, no qual é possível calibrar empiricamente os processos demográficos de baixo nível que resultaram no padrão empírico de alto nível que pdoe ser empiricamente validado; e aqueles que propõe os contrastes entre contrafactuais que avaliam os efeitos dentro do proposto processo gerador dos dados (REF).
+
+Nosso sistema de referência pressupõe equilíbrio da dinâmica ecológica na paisagem simulada e pressupomos
 
 Encontramos um métdo equivalente ao da taxa U no qual usamos um dado local para obter um valor da paisagem (a riqueza local e a taxa U) para a área ao redor que influencia a comunidade local, ou seja, não havia um método para obter a paisagem local. Aqui aproveitamos essa propriedade de U para estimar a paisagem local que estabiliza o efeito de escalar em termos da parcela amostrada e paisagem local (APENDICE). 
 
