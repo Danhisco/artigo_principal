@@ -1,0 +1,91 @@
+---
+title: "Contraste entre contrafactuais "
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE)
+# pacotes
+library(gratia)
+library(doMC)
+# library(metR)
+# library(sjPlot)
+library(gridExtra)
+# library(ggpubr)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+# library(MuMIn)
+# library(AICcmodavg)
+# library(insight)
+library(bbmle)
+library(DHARMa)
+library(mgcv)
+# library(lme4)
+# library(gamm4)
+library(plyr)
+library(dplyr)
+source("source/2samples_testes.R")
+source("source/general_tools.R")
+source("source/GAMMtools.R")
+source("source/fig_tools.R")
+### dados ###
+# modelos dos contrastes
+l_md <- readRDS("dados/Rdata/l_md.contrastes.Rdata")
+# 
+df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
+# df_p
+df_p <- read_csv("dados/df_p.csv")
+# df_resultMNEE
+df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
+# df_sim
+df_sim <- read_csv("dados/df_simulacao.csv")
+# df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
+f_z <- function(x) (x-mean(x))/sd(x)
+# df_contrastes: contrastes por sítio e grau de limitação de dispersão
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") 
+```
+
+
+
+
+```{r diagnóstico modelo }
+for(i in length(l_md)){
+names(l_md)[i]
+md <- l_md[[i]]
+print("k.check:")
+k.check(md)
+print("summary:")
+summary(md)
+gratia::appraise(md)
+gratia::draw(md)
+# predito para dados originais
+df_plot <- cbind(md$model,
+                 predict(md,se.fit=TRUE)) |> 
+  inner_join(x=df_p,"SiteCode") |> 
+  arrange(p) |> 
+  mutate(label = paste0(SiteCode,", p=",round(p,2)))
+df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+df_plot |> 
+  ggplot(aes(x=k_z,y=value)) +
+  geom_line(aes(y=fit),color="darkred") +
+  geom_line(aes(y=fit+se.fit)) +
+  geom_line(aes(y=fit-se.fit)) +
+  geom_point(alpha=0.5) +
+  scale_x_reverse() +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  labs(title="Contraste Área",y="") +
+  facet_wrap(~label,ncol=4,scales="free") +
+  theme(strip.text=element_text(margin=margin()),
+        panel.spacing=unit(0, "lines"))
+ggsave(paste0("apendices/analise_dados/figuras/",names(l_md.contrastes[[i]]),"_site_kGAMM.png"),
+       width = 7,
+       height = 30)  
+}
+```

@@ -516,13 +516,17 @@ df_plot %>%
                            grepl("perse",name) ~ "Contraste Frag. per se: log(U contemporâneo / U aglomerado)")) %>%
   left_join(.,df_text) %>%
   ggplot(aes(x=value)) +
-  geom_vline(xintercept = v_range_RefNulo,color="darkred") +
+  geom_vline(xintercept = 0,color="darkblue",linetype=3) +
+  geom_vline(xintercept = v_range_RefNulo,color="darkred") + 
+  # geom_vline(aes(linetype="amplitude contrastes paisagens com p>=0.975",
+  #                xintercept = v_range_RefNulo),color="darkred") +
+  # scale_linetype(guide=guide_legend(override.aes = list(color=c("darkred")))) +
   geom_histogram(bins = 120) +
   geom_boxplot(aes(y=-17.5),width=30,alpha=0.4) +
   labs(y="",x="") +
-  geom_text(aes(x=1.5,y=300,label=v_geomtext),alpha=0.01) + 
-  scale_x_continuous(limits = range_value) +
-  theme(plot.margin = unit(c(0.1,0.25,0.25,0), "cm")) +
+  geom_text(aes(x=1.5,y=300,label=v_geomtext),alpha=0.01,size=4) + 
+  theme(plot.margin = unit(c(0.1,0.25,0.25,0), "cm"),
+        strip.text = element_text(size=15)) +
   facet_wrap(~label,ncol=1)
 
 
@@ -614,23 +618,41 @@ grid.arrange(grobs=l_p,ncol=2)
 
 __figura 1__ Contrastes em função das preditoras
 
-<!-- ### Contrastes ~ p e k -->
+```{r GAM contraste taxa U logratio}
+df_md <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
+  pivot_longer(-c(SiteCode:p)) %>% 
+  mutate(name = gsub("_logratio","",name),
+         across(c(p,k),f_z,.names = "{.col}_z"),
+         SiteCode = factor(SiteCode))
+df_md %>% 
+  ggplot(aes(x=k,y=value,group=SiteCode,color=p)) +
+  geom_boxplot(inherit.aes = FALSE,
+               aes(x=k,y=value,group=k)) +
+  geom_line(alpha=0.5) +
+  geom_point(alpha=0.5) +
+  scale_colour_gradient2(midpoint=0.5,
+                         low="darkred",
+                         mid = "darkblue",
+                         high = "darkgreen") +
+  facet_wrap(~name,ncol=3)
+f_gam <- function(df){
+  gam(value ~
+        s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+            ti(p_z,k_z) +
+            s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+            s(SiteCode,bs="re"),
+            data=df,method = "REML")
+}
+l_md <- dlply(df_md,"name",f_gam)
+saveRDS(l_md,file="dados/Rdata/l_md.contrastes.Rdata")
+```
 
-<!-- __Janela de código X__ GAMM usado para ajustar os contrastes  -->
+diagnostico contraste
 
-<!-- ```{r GAMM contrastes, echo=T,eval=F} -->
-<!-- f_gam <- function(df){ -->
-<!--   gam(value ~ -->
-<!--         s(k_z,bs = "cr") + s(p_z,bs = "cr") + -->
-<!--             ti(p_z,k_z) + -->
-<!--             s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +  -->
-<!--             s(SiteCode,bs="re"), -->
-<!--             data=df,method = "REML") -->
-<!-- } -->
-<!-- l_md.contrastes <- dlply(df_contrastes |> pivot_longer(starts_with("efeito_")), -->
-<!--                          "name",f_gam) -->
-<!-- save(l_md.contrastes,file="dados/Rdata/l_md.contrastes.Rdata") -->
-<!-- ``` -->
+```{r}
+
+```
+
 
 #### Intervalo de Predição do Efeito Médio de p e k
 
