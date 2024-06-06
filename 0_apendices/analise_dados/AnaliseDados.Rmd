@@ -636,12 +636,19 @@ df_md %>%
                          high = "darkgreen") +
   facet_wrap(~name,ncol=3)
 f_gam <- function(df){
-  gam(value ~
+  l_md <- list()
+  l_md$ti <- gam(value ~
         s(k_z,bs = "cr") + s(p_z,bs = "cr") +
             ti(p_z,k_z) +
             s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
             s(SiteCode,bs="re"),
             data=df,method = "REML")
+  l_md$s_ti <- gam(value ~
+        s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+            s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+            s(SiteCode,bs="re"),
+            data=df,method = "REML")
+  return(l_mdf)
 }
 l_md <- dlply(df_md,"name",f_gam)
 saveRDS(l_md,file="dados/Rdata/l_md.contrastes.Rdata")
