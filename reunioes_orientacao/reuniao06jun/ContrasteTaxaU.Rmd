@@ -5,10 +5,8 @@ editor_options:
   chunk_output_type: console
 ---
 
-
-
 ```{r setup,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache = TRUE)
 # pacotes
 library(gratia)
 library(doMC)
@@ -37,7 +35,7 @@ source("source/GAMMtools.R")
 source("source/fig_tools.R")
 ### dados ###
 # modelos dos contrastes
-l_md <- readRDS("dados/Rdata/l_md.contrastes.Rdata")
+# l_md <- readRDS("dados/Rdata/l_md.contrastes.Rdata")
 # 
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
 # df_p
@@ -66,7 +64,7 @@ São três pares de contrastes entre paisagens contrafacturais, que representam 
 
 ## Gráficos exploratórios
 
-```{r}
+```{r graficos exploratorios, fig.height=10}
 l_p <- list()
 df_plot <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
   pivot_longer(-c(SiteCode:p)) %>% 
@@ -148,145 +146,221 @@ l_md <- df_md %>%
 saveRDS(l_md,file="dados/Rdata/l_md_contrastes.rds")
 ```
 
+## Seleção de Modelos
+
+```{r tabela de seleção}
+l_md <- readRDS("dados/Rdata/l_md_contrastes.rds")
+l_tabsel <- lapply(l_md,f_TabSelGAMM)
+l_tabsel
+l_md_maisplausivel <- lapply(names(l_md),\(li){
+  df_tabsel <- l_tabsel[[li]]
+  lmd <- l_md[[li]]
+  lmd[[df_tabsel$modelo[1]]]
+})
+names(l_md_maisplausivel) <- names(l_md)
+```
+
+
 ## Diagnóstico
 
 ```{r diagnóstico modelo }
-l_md <- readRDS("dados/Rdata/l_md_contrastes.rds")
-for(i in length(l_md)){
-names(l_md)[i]
-md <- l_md[[i]]
+i <- 1
+names(l_md_maisplausivel)[i]
+md <- l_md_maisplausivel[[i]]
 print("k.check:")
-k.check(md)
+print(k.check(md))
 print("summary:")
-summary(md)
-gratia::appraise(md)
-gratia::draw(md)
-}
+print(summary(md))
+print(gratia::appraise(md))
+print(gratia::draw(md))
 ```
+
+```{r}
+i <- 2
+names(l_md_maisplausivel)[i]
+md <- l_md_maisplausivel[[i]]
+print("k.check:")
+print(k.check(md))
+print("summary:")
+print(summary(md))
+print(gratia::appraise(md))
+print(gratia::draw(md))
+```
+
+```{r}
+i <- 3
+names(l_md_maisplausivel)[i]
+md <- l_md_maisplausivel[[i]]
+print("k.check:")
+print(k.check(md))
+print("summary:")
+print(summary(md))
+print(gratia::appraise(md))
+print(gratia::draw(md))
+```
+
 
 ## Predito para o observado por sítio de amostragem
 
-```{r}
-# predito para dados originais
-df_plot <- cbind(md$model,
-                 predict(md,se.fit=TRUE)) |> 
+```{r predito para o observado,eval=FALSE,echo=FALSE,include=FALSE}
+f_predic_bySite <- \(md){
+  df_plot <- cbind(md$model,
+                   predict(md,se.fit=TRUE)) |> 
   inner_join(x=df_p,"SiteCode") |> 
   arrange(p) |> 
   mutate(label = paste0(SiteCode,", p=",round(p,2)))
-df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
-df_plot |> 
-  ggplot(aes(x=k_z,y=value)) +
-  geom_line(aes(y=fit),color="darkred") +
-  geom_line(aes(y=fit+se.fit)) +
-  geom_line(aes(y=fit-se.fit)) +
-  geom_point(alpha=0.5) +
-  scale_x_reverse() +
-  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-  labs(title="Contraste Área",y="") +
-  facet_wrap(~label,ncol=4,scales="free") +
-  theme(strip.text=element_text(margin=margin()),
-        panel.spacing=unit(0, "lines"))
-ggsave(paste0("apendices/analise_dados/figuras/",names(l_md.contrastes[[i]]),"_site_kGAMM.png"),
-       width = 7,
-       height = 30)  
+  df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
+  return(df_plot)
+}
+l_pred <- lapply(names(l_md_maisplausivel),\(li){
+  f_predic_bySite(l_md_maisplausivel[[li]]) %>% 
+    mutate(tp_efeito = li)
+})
+names(l_pred) <- names(l_md_maisplausivel)
+#
+theme_set(theme_bw())
+f_plot_pred_bysite <- \(dfp,
+                        path_plot = "./figuras/contrastes/"){
+  v_title <- dfp$tp_efeito[1]
+  v_title <- case_when(v_title=="area" ~ "Contraste Área",
+                       v_title=="frag.perse" ~ "Contraste Frag. per se",
+                       v_title=="frag.total" ~ "Contraste Frag. total")
+  p <- dfp %>% 
+    ggplot(aes(x=k_z,y=value)) +
+    geom_hline(yintercept = 0,color="lightblue") +
+    geom_line(aes(y=fit),color="darkred") +
+    geom_line(aes(y=fit+se.fit)) +
+    geom_line(aes(y=fit-se.fit)) +
+    geom_point(alpha=0.5) +
+    scale_x_reverse() +
+    scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+    labs(title=v_title,y="") +
+    facet_wrap(~label,ncol=4) +
+    theme(strip.text=element_text(margin=margin()),
+          panel.spacing=unit(0, "lines"))
+  ggsave_path <- paste0(path_plot,gsub("\\.","_",dfp$tp_efeito[1]),".png")
+  ggsave(filename = ggsave_path, plot = p,width = 7,height = 30)
+}
+lapply(l_pred,f_plot_pred_bysite)
+#
+f_plot_alleffects_bysite <- \(l_pred,
+                              path_plot = "./figuras/contrastes/"){
+  df_pred <- rbind.fill(l_pred)
+  p <- df_pred %>% 
+    ggplot(aes(x=k_z,y=value,color=tp_efeito)) +
+    geom_hline(yintercept = 0,color="lightblue") +
+    geom_line(aes(y=fit)) +
+    geom_point(alpha=0.5) +
+    scale_color_manual("",values=c("darkgreen","darkblue","darkred")) +
+    scale_x_reverse() +
+    scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+    labs(title="Todos os Efeitos",y="") +
+    facet_wrap(~label,ncol=4) +
+    theme(strip.text=element_text(margin=margin()),
+          panel.spacing=unit(0, "lines"),
+          legend.position = "top")
+  ggsave_path <- paste0(path_plot,"todosEfeitos.png")
+  ggsave(filename = ggsave_path, plot = p,width = 7,height = 30)
+}
+f_plot_alleffects_bysite(l_pred)
 ```
 
 
 
-### Estruura fixa do modelo
+<!-- ### Estruura fixa do modelo -->
 
-__5.6 Tensor product smooth interactions__
+<!-- __5.6 Tensor product smooth interactions__ -->
 
-The isotropy of the smooths considered above is often considered to be desirable
-when modelling something as a smooth function of geographic coordinates,†† but it
-has some disadvantages. Chief among them is the difficulty of knowing how to scale
-predictors relative to one another, when both are arguments of the same smooth but
-they are measured in fundamentally different units. For example, consider a smooth
-function of a single spatial coordinate and time: the implied relative importance of
-smoothness in time versus smoothness in space is very different between a situation
-in which the units are metres and hours, compared to that in which the units are light-
-years and nanoseconds. One pragmatic approach is to scale all predictors into the unit
-square, as is often done in LOESS smoothing, but this is essentially arbitrary. A more
-satisfactory approach uses tensor product smooths. Whereas the thin plate spline
-generalizes from one dimension to multiple dimensions by exchanging a flexible
-strip for a flexible sheet, the tensor product smooth can be interpreted as exchanging
-a single flexible strip for a lattice work of strips (as is illustrated in figure 5.17), with
-the component strips having different stiffness in different directions.
+<!-- The isotropy of the smooths considered above is often considered to be desirable -->
+<!-- when modelling something as a smooth function of geographic coordinates,†† but it -->
+<!-- has some disadvantages. Chief among them is the difficulty of knowing how to scale -->
+<!-- predictors relative to one another, when both are arguments of the same smooth but -->
+<!-- they are measured in fundamentally different units. For example, consider a smooth -->
+<!-- function of a single spatial coordinate and time: the implied relative importance of -->
+<!-- smoothness in time versus smoothness in space is very different between a situation -->
+<!-- in which the units are metres and hours, compared to that in which the units are light- -->
+<!-- years and nanoseconds. One pragmatic approach is to scale all predictors into the unit -->
+<!-- square, as is often done in LOESS smoothing, but this is essentially arbitrary. A more -->
+<!-- satisfactory approach uses tensor product smooths. Whereas the thin plate spline -->
+<!-- generalizes from one dimension to multiple dimensions by exchanging a flexible -->
+<!-- strip for a flexible sheet, the tensor product smooth can be interpreted as exchanging -->
+<!-- a single flexible strip for a lattice work of strips (as is illustrated in figure 5.17), with -->
+<!-- the component strips having different stiffness in different directions. -->
 
-__5.6.1 Tensor product basis__
+<!-- __5.6.1 Tensor product basis__ -->
 
-The basic approach of this section is to start from smooths of single covariates, rep-
-resented using any basis with an associated quadratic penalty measuring ‘wiggliness’
-of the smooth. From these ‘marginal smooths’ a ‘tensor product’ construction is used
-to build up smooths of several variables. See de Boor (1978) for an important early
-reference on tensor product spline bases, and Wood (2006a) for this construction.
+<!-- The basic approach of this section is to start from smooths of single covariates, rep- -->
+<!-- resented using any basis with an associated quadratic penalty measuring ‘wiggliness’ -->
+<!-- of the smooth. From these ‘marginal smooths’ a ‘tensor product’ construction is used -->
+<!-- to build up smooths of several variables. See de Boor (1978) for an important early -->
+<!-- reference on tensor product spline bases, and Wood (2006a) for this construction. -->
 
-The methods developed here can be used to construct smooth functions of any
-number of covariates, but the simplest introduction is via the construction of a smooth
-function of 3 covariates, x, z and v, the generalization then being trivial. The process
-starts by assuming that we have low rank bases available for representing smooth
-functions fx , fz and fv of each of the covariates. That is, we can write:
+<!-- The methods developed here can be used to construct smooth functions of any -->
+<!-- number of covariates, but the simplest introduction is via the construction of a smooth -->
+<!-- function of 3 covariates, x, z and v, the generalization then being trivial. The process -->
+<!-- starts by assuming that we have low rank bases available for representing smooth -->
+<!-- functions fx , fz and fv of each of the covariates. That is, we can write: -->
 
-Continuing in the same way, we could now create a smooth function of x, z and v by allowing fxz to vary smoothly with v.
-Again, the obvious way to do this is to let the parameters of fxz vary smoothly with
-v, and following the same reasoning as before we get
+<!-- Continuing in the same way, we could now create a smooth function of x, z and v by allowing fxz to vary smoothly with v. -->
+<!-- Again, the obvious way to do this is to let the parameters of fxz vary smoothly with -->
+<!-- v, and following the same reasoning as before we get -->
 
-FIGURA
-
-
+<!-- FIGURA -->
 
 
-### Estrutura hierarquica do modelo: 
 
-"to model intergroup variability using smooth curves"
-I. Should each group have its own smoother, or will a common smoother suffice?
-II. Do all of the group-specific smoothers have the same wiggliness, or should each group
-have its own smoothing parameter?
-III. Will the smoothers for each group have a similar shape to one another—a shared global
-smoother?
-These three choices result in five possible models (Fig. 4):
-1. A single common smoother for all observations; We will refer to this as model G, as it
-only has a Global smoother.
-2. A global smoother plus group-level smoothers that have the same wiggliness. We will
-refer to this as model GS (for Global smoother with individual effects that have a Shared
-penalty).
-3. A global smoother plus group-level smoothers with differing wiggliness. We will refer to
-this as model GI (for Global smoother with individual effects that have Individual
-penalties).
-4. Group-specific smoothers without a global smoother, but with all smoothers having the
-same wiggliness. We will refer to this as model S.
-5. Group-specific smoothers with different wiggliness. We will refer to this as model I.
 
-__NOTA:__ O GAMM usado para ajustar os dados é do tipo 2: um smoother global mais um smoother no nível do grupo (sítio de amostragem) com mesmo grau de complexidade da forma do smoother. Assim, segue as notas desse tipo de modelo no resto da revisão
+<!-- ### Estrutura hierarquica do modelo:  -->
 
-Model GS is a close analogue to a GLMM with varying slopes: all groups have similar
-functional responses, but intergroup variation in responses is allowed. This approach
-works by allowing each grouping level to have its own functional response, but penalizing
-functions that are too far from the average.
+<!-- "to model intergroup variability using smooth curves" -->
+<!-- I. Should each group have its own smoother, or will a common smoother suffice? -->
+<!-- II. Do all of the group-specific smoothers have the same wiggliness, or should each group -->
+<!-- have its own smoothing parameter? -->
+<!-- III. Will the smoothers for each group have a similar shape to one another—a shared global -->
+<!-- smoother? -->
+<!-- These three choices result in five possible models (Fig. 4): -->
+<!-- 1. A single common smoother for all observations; We will refer to this as model G, as it -->
+<!-- only has a Global smoother. -->
+<!-- 2. A global smoother plus group-level smoothers that have the same wiggliness. We will -->
+<!-- refer to this as model GS (for Global smoother with individual effects that have a Shared -->
+<!-- penalty). -->
+<!-- 3. A global smoother plus group-level smoothers with differing wiggliness. We will refer to -->
+<!-- this as model GI (for Global smoother with individual effects that have Individual -->
+<!-- penalties). -->
+<!-- 4. Group-specific smoothers without a global smoother, but with all smoothers having the -->
+<!-- same wiggliness. We will refer to this as model S. -->
+<!-- 5. Group-specific smoothers with different wiggliness. We will refer to this as model I. -->
 
-This can be coded in mgcv by explicitly specifying one term for the global smoother (as in
-model G above) then adding a second smooth term specifying the group-level smooth terms,
-using a penalty term that tends to draw these group-level smoothers toward zero. mgcv
-provides an explicit basis type to do this, the factor-smoother interaction or "fs" basis (see
-?mgcv::factor.smooth.interaction for details). This smoother creates a copy of each
-set of basis functions for each level of the grouping variable, but only estimates one
-smoothing parameter for all groups. To ensure that all parts of the smoother can be shrunk
-toward zero effect, each component of the penalty null space is given its own penalty.
+<!-- __NOTA:__ O GAMM usado para ajustar os dados é do tipo 2: um smoother global mais um smoother no nível do grupo (sítio de amostragem) com mesmo grau de complexidade da forma do smoother. Assim, segue as notas desse tipo de modelo no resto da revisão -->
 
-We modify the previous CO2 model to incorporate group-level smoothers as follows:
-log eðuptakeiÞ ¼ f ðlog eðconciÞÞ þ fPlant uo i ðlogeðconciÞÞ þ ei
-where fPlant_uoi(loge(conci)) is the smoother for concentration for the given plant. In R we
-then have:
+<!-- Model GS is a close analogue to a GLMM with varying slopes: all groups have similar -->
+<!-- functional responses, but intergroup variation in responses is allowed. This approach -->
+<!-- works by allowing each grouping level to have its own functional response, but penalizing -->
+<!-- functions that are too far from the average. -->
 
-FIGURA 
+<!-- This can be coded in mgcv by explicitly specifying one term for the global smoother (as in -->
+<!-- model G above) then adding a second smooth term specifying the group-level smooth terms, -->
+<!-- using a penalty term that tends to draw these group-level smoothers toward zero. mgcv -->
+<!-- provides an explicit basis type to do this, the factor-smoother interaction or "fs" basis (see -->
+<!-- ?mgcv::factor.smooth.interaction for details). This smoother creates a copy of each -->
+<!-- set of basis functions for each level of the grouping variable, but only estimates one -->
+<!-- smoothing parameter for all groups. To ensure that all parts of the smoother can be shrunk -->
+<!-- toward zero effect, each component of the penalty null space is given its own penalty. -->
 
-Figure 10 shows the fitted smoothers for CO2_modGS. The plots of group-specific
-smoothers indicate that plants differ not only in average log-uptake (which would
-correspond to each plant having a straight line at different levels for the group-level
-smoother), but differ slightly in the shape of their functional responses. Figure 11 shows
-how the global and group-specific smoothers combine to predict uptake rates for
-individual plants. We see that, unlike in the single global smoother case above, none of the
-curves deviate from the data systematically.
+<!-- We modify the previous CO2 model to incorporate group-level smoothers as follows: -->
+<!-- log eðuptakeiÞ ¼ f ðlog eðconciÞÞ þ fPlant uo i ðlogeðconciÞÞ þ ei -->
+<!-- where fPlant_uoi(loge(conci)) is the smoother for concentration for the given plant. In R we -->
+<!-- then have: -->
+
+<!-- FIGURA  -->
+
+<!-- Figure 10 shows the fitted smoothers for CO2_modGS. The plots of group-specific -->
+<!-- smoothers indicate that plants differ not only in average log-uptake (which would -->
+<!-- correspond to each plant having a straight line at different levels for the group-level -->
+<!-- smoother), but differ slightly in the shape of their functional responses. Figure 11 shows -->
+<!-- how the global and group-specific smoothers combine to predict uptake rates for -->
+<!-- individual plants. We see that, unlike in the single global smoother case above, none of the -->
+<!-- curves deviate from the data systematically. -->
 
 
 
