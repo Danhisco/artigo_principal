@@ -59,6 +59,12 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
     SiteCode = str_extract(txt.path,".*?(?=.txt)")),
     by="SiteCode") |> 
   filter(SiteCode %in% v_site)
+
+####### df_SADrep: correspondente, prístino, numerador, denominador #######
+
+
+
+
 # df_SADrep
 df_SADrep <- mutate(data.frame(
   SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE",
@@ -75,6 +81,10 @@ df_SADrep2 <- mutate(data.frame(
   SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv"))
 l_SADreps <- list(df_SADrep,df_SADrep2)
 names(l_SADreps) <- c("Ulivre","Upristino")
+
+
+
+
 # # df_repMNEE
 df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
 # # df_resultMNEE
@@ -92,10 +102,63 @@ df_logOR <- df_resultados |>
 ### testes KS e a contagem de espécies
 
 ```{r testes KS e S - taxa U por tipo de paisagem}
-registerDoMC(3)
-df_repMNEE <- adply(df_SADrep,1,f_resultsMN,.parallel = TRUE)
-write_csv(select(df_repMNEE,SiteCode:S), file = "dados/csv/resultados_MN/MNEE/df_repMNEE")
+# preparação
+path_repo <- "dados/csv/SADs_neutras/"
+v_dirs <- list.dirs(path_repo,full.names = FALSE)
+v_dirs <- v_dirs[v_dirs!=""] #? 
+names(v_dirs) <- v_dirs
+f_leitura_SADs <- \(v_path){
+  v_path0="dados/csv/SADs_neutras/"
+  mutate(data.frame(
+  SADrep.path = list.files(path = paste0(v_path0,v_path),
+                           pattern = ".csv",full.names = T,recursive = T)),
+  SiteCode = str_extract(SADrep.path,"(?<=__).*?(?=\\.csv)"),
+  land_type = str_extract(SADrep.path,"(?<=(contemp|non_frag|ideal)\\/).*?(?=__)"),
+  SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv"))
+}
+# 
+l_paths <- lapply(v_dirs,f_leitura_SADs)
+lapply(names(l_paths),\(li){
+  # setup
+  df_SADrep <- l_paths[[li]]
+  # rotina
+  registerDoMC(3)
+  df_repMNEE <- adply(df_SADrep,1,f_resultsMN,.parallel = TRUE)
+  # salvamento
+  v_path <- paste0("dados/csv/SADs_neutras/df_",li,".csv")
+  write_csv(select(df_repMNEE,SiteCode:S), file = v_path)  
+})
 ```
+
+### Sumarização 
+
+```{r}
+l_df <- list.files(path="./dados/csv/SADs_neutras",
+                   pattern="df_",full.names = T)
+names(l_df) <- list.files(path="./dados/csv/SADs_neutras",pattern="df_") %>% 
+  gsub("\\.csv","",.)
+l_df <- lapply(l_df, read_csv) %>% 
+  llply(.,\(dfi){
+    registerDoMC(3)
+    ddply(dfi,
+          c("SiteCode","k","land_type"),
+          f_summarise_SAD_MNEE,
+          .parallel = TRUE)
+  })
+df_adSAD <- lapply(names(l_df),\(i){
+  l_df[[i]] %>% 
+    mutate(taxaU=str_extract(i,"(contemp|ideal|non_frag)")) %>% 
+    relocate(taxaU)
+}) %>% rbind.fill()
+saveRDS(df_adSAD,file="5_resultados/df_adSAD.rds")
+write_csv(df_adSAD,file="5_resultados/df_adSAD.csv")
+```
+
+
+
+#############################################
+################## antigo ###################
+#############################################
 
 ```{r testes KS e S - taxa U idealizado}
 registerDoMC(3)

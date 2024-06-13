@@ -1,3 +1,105 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+# 12/06/2024
+
+Arrumando o diretório de MNEE taxa U correspondente 
+
+```{r}
+path_repo <- "./dados/csv/SADs_neutras/MNEE_taxaU_correspondente"
+# 1) padronização do sistema de pasta e nomes
+df_move <- mutate(data.frame(
+  SADrep.path = list.files(path=path_repo,
+                           pattern=".csv",full.names = TRUE,recursive=T)),
+  SiteCode = str_extract(SADrep.path,"(?<=/(cont|ideal|non_frag)/)[^/]+(?=\\.csv)"),
+  land_type = str_extract(SADrep.path,"(cont|non_frag|ideal)") %>% gsub("cont","contemp",.),
+  SADrep_newpath = paste0(path_repo,"/",land_type,"__",SiteCode,".csv")
+  )
+a_ply(df_move,1,\(i){
+  file.rename(i$SADrep.path,i$SADrep_newpath)
+})
+# 2) mudança dos arquivos para as respectivas pastas
+path_repo <- "./dados/csv/SADs_neutras/MNEE_taxaU_correspondente"
+df_move <- mutate(data.frame(
+  SADrep.path = list.files(path=path_repo,
+                           pattern=".csv",full.names = TRUE,recursive=T)),
+  SiteCode = str_extract(SADrep.path,"(?<=__).*?(?=\\.csv)"),
+  land_type = str_extract(SADrep.path,"(contemp|non_frag|ideal)"),
+  SADrep_newpath = str_replace(SADrep.path,"correspondente",land_type)
+  )
+a_ply(df_move,1,\(i){
+  file.rename(i$SADrep.path,i$SADrep_newpath)
+})
+# 3) auditoria
+## 1) existem o mesmo número de SADs réplicas em cada subpasta?
+path_repo <- "dados/csv/SADs_neutras/"
+v_dirs <- list.dirs(path_repo,full.names = FALSE)
+v_dirs <- v_dirs[v_dirs!=""] #? 
+sapply(v_dirs,\(i){
+  v_files <- list.files(path=paste0(path_repo,i))
+  length(v_files)
+})
+## 2) os nomes são os mesmos?
+l_names <- lapply(v_dirs,\(i){
+  list.files(path=paste0(path_repo,i))
+})
+setdiff(l_names[[1]],l_names[[2]])
+setdiff(l_names[[2]],l_names[[1]])
+setdiff(l_names[[1]],l_names[[3]])
+setdiff(l_names[[3]],l_names[[1]])
+setdiff(l_names[[2]],l_names[[3]])
+setdiff(l_names[[3]],l_names[[2]]) #sim
+
+```
+
+Concluo que é possível realizar as comparações das SADs simuladas com a observada
+
+```{r}
+df_SADrep <- mutate(data.frame(
+  SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE",
+                           pattern = ".csv",full.names = T,recursive = T)),
+  SiteCode = str_extract(SADrep.path,"(?<=[cont|frag|ideal]\\/).*?(?=.csv)"),
+  land_type = str_extract(SADrep.path,"(?<=MNEE\\/).*?(?=\\/)"),
+  SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv"))
+f_leitura_SADs <- \(v_path="dados/csv/SADs_neutras/MNEE"){
+  mutate(data.frame(
+  SADrep.path = list.files(path = v_path,
+                           pattern = ".csv",full.names = T,recursive = T)),
+  SiteCode = str_extract(SADrep.path,"(?<=[cont|frag|ideal]\\/).*?(?=.csv)"),
+  land_type = str_extract(SADrep.path,"(?<=MNEE\\/).*?(?=\\/)"),
+  SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv"))
+}
+
+
+```
+
+
+
+
+# 9/jun/2024
+
+```{r}
+df_simSAD <- inner_join(
+  df_sim %>% filter(land_type=="ideal") %>% select(-land_type),
+  read_csv(U_path) %>% filter(land_type!="ideal")
+  ) %>% select(-Usd)
+```
+
+```{r}
+f_writeSADcsv <- function(df_bySite, land_matrix = FALSE,
+                          n_replicas=100, path_csv){
+  f_adply <- \(X) f_simSAD(df_1row = X, land_mat = land_matrix,n = n_replicas)
+  m_SADreplicas <- adply(df_bySite,1,f_adply)
+  write_csv(select(m_SADreplicas,-c(d:Umed)),
+            file = paste0(path_csv,df_bySite$SiteCode[1],".csv"))
+}
+
+```
+
+
+
 #### SCORES
 
 # 19 maio 2024

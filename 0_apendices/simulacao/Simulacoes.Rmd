@@ -38,7 +38,7 @@ v_site <- read_csv("dados/csv/resultados_MN/MNEE/cont/df_resultados.csv") |>
   pull(SiteCode) |> unique()
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
-  select(-tif.path) |> 
+  dplyr::select(-tif.path) |> 
   inner_join(y=mutate(
     data.frame(txt.path = list.files(path="dados/simulacao",pattern=".txt")),
     SiteCode = str_extract(txt.path,".*?(?=.txt)")),
@@ -46,17 +46,30 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
   filter(SiteCode %in% v_site) |>
   left_join(df_p,by="SiteCode")
 df_sim <- cbind(df_sim,land_type = rep(x=c("ideal","non_frag"),each=nrow(df_sim)))
+#
+df_simSAD <- inner_join(
+  df_sim %>% filter(land_type=="ideal") %>% select(-land_type),
+  read_csv(U_path) %>% filter(land_type!="ideal")
+  ) %>% select(-Usd)
 setwd("dados/simulacao")
 # setwd("../..")
 ```
 
 
+```{r}
+diff_1 <- sum(l_mland[[1]]!=0) - sum(l_mland[[2]]!=0)
+diff_1 / length(l_mland[[1]])
+```
+
+
 ```{r função para simular as SADs para MNEE em diferentes tipos de paisagens}
-# df <- df_sim |> filter(SiteCode == "SPigua1" & land_type == "non_frag")
+df <- df_simSAD %>% filter(SiteCode=="SPigua1")
 registerDoMC(3)
 v_gpath <- "/media/danilo/HD_externo/Documentos/mestrado_Ecologia/artigo_principal/dados"
+# formals(f_simMNEE2)$
 f_d_ply <- function(dataframe) f_simMNEE(df = dataframe,general_path = v_gpath)
-d_ply(df_sim,c("SiteCode","land_type"),f_d_ply,.parallel = TRUE)
+d_ply(filter(df_sim,land_type=="ideal") %>% select(-land_type),
+      c("SiteCode"),f_d_ply,.parallel = TRUE)
 ```
 
 

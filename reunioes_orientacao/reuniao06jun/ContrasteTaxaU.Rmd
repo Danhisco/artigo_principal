@@ -56,6 +56,15 @@ df_md <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>%
          SiteCode = factor(SiteCode))
 ```
 
+# Encaminhamentos
+
+Contrastes área:
+comparar o nível hierarquico necessário para modelar: incluir um sem spline por sítio
+Para além disso,
+prosseguir com as simulações, incluindo aquelas com o U trocado, na prática resta fazer:
+contemporâneo <-> aglomerado, pois U livre foi feito e U prístino foi feito.
+
+
 
 ## Introdução geral 
 
@@ -135,6 +144,10 @@ f_gam <- function(df){
                    data=df,method = "REML")
   l_md$k <- gam(value ~
                   s(k_z,bs = "cr") + 
+                  s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                  s(SiteCode,bs="re"),
+                data=df,method = "REML")
+  l_md$s_k <- gam(value ~
                   s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
                   s(SiteCode,bs="re"),
                 data=df,method = "REML")

@@ -141,8 +141,9 @@ f_simSAD <- function(df_1row,n=100,land_mat=FALSE){
 f_writeSADcsv <- function(df_bySite, land_matrix = FALSE,
                           n_replicas=100, path_csv){
   f_adply <- \(X) f_simSAD(df_1row = X, land_mat = land_matrix,n = n_replicas)
+  v_names <- names(df_bySite)[!names(df_bySite)%in%c("SiteCode","k")]
   m_SADreplicas <- adply(df_bySite,1,f_adply)
-  write_csv(select(m_SADreplicas,-c(d:Umed)),
+  write_csv(select(m_SADreplicas,-all_of(v_names)),
             file = paste0(path_csv,df_bySite$SiteCode[1],".csv"))
 }
 
@@ -175,7 +176,10 @@ f_simMNEE <- function(df,U_rep=10,SAD_rep=100,Umin = 1.25e-06,general_path){
   f_writeSADcsv(df_bySite = df_simSAD,land_matrix = m_land, path_csv = folder_path,n_replicas = SAD_rep)
 }
 
-f_simMNEE2 <- \(df, SAD_rep=100, repo_path="../csv/SADs_neutras/MNEE_taxaU_idealizado/", U_path="../csv/taxaU/df_U.csv"){
+f_simMNEE2 <- \(df, 
+                SAD_rep=100, 
+                repo_path="../csv/SADs_neutras/MNEE_taxaU_idealizado/", 
+                U_path="../csv/taxaU/df_U.csv"){
   df_U <- read_csv(U_path) %>% 
     filter(land_type=="ideal",SiteCode==df$SiteCode[1]) %>% select(-land_type)
   df_simSAD <- inner_join(df,df_U) %>% select(SiteCode,k:p,Umed)
@@ -191,3 +195,29 @@ f_simMNEE2 <- \(df, SAD_rep=100, repo_path="../csv/SADs_neutras/MNEE_taxaU_ideal
   })
   
 }
+
+f_simMNEE3 <- \(df_bySiteLand, 
+                SAD_rep=100, 
+                repo_path="../csv/SADs_neutras/MNEE_taxaU_"){
+  # preparação
+  ## caminho do respositorio
+  land_U <- df_bySiteLand$land_type[1]
+  repo_path <- paste0(repo_path,land_U,"/")
+  ## paisagens contrafactuais
+  l_mland <- list()
+  l_mland[[1]] <- read.table(df_bySiteLand$txt.path[1]) |> as.matrix()
+  l_mland[[2]] <- f_nonFragLand(l_mland[[1]])
+  l_mland[[3]] <- l_mland[[1]]
+  l_mland[[3]][l_mland[[3]]==0] <- 1
+  names(l_mland) <- c("contemp","non_frag","ideal")
+  ## vetor de indicação
+  vname <- names(l_mland)[names(l_mland)!=land_U]
+  # rotinas
+  lapply(vname,\(i){
+    f_writeSADcsv(df_bySite = df_bySiteLand,
+                  land_matrix = l_mland[[i]], 
+                  path_csv = paste0(repo_path,i,"__"),
+                  n_replicas = SAD_rep)
+  })
+}
+
