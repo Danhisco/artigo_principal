@@ -1,0 +1,50 @@
+---
+title: "Contraste entre contrafactuais: congruência com a SAD observada"
+author: "Mori, Danilo"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+editor_options: 
+  chunk_output_type: console
+---
+```{r setup}
+knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
+# pacotes
+library(twosamples)
+library(sads)
+library(doMC)
+library(ggpmisc)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(insight)
+library(bbmle)
+library(DHARMa)
+library(lme4)
+library(plyr)
+library(dplyr)
+# funções
+source("source/dinamica_coalescente.R")
+source("source/2samples_testes.R")
+source("source/f_plotSADacumulada.R")
+source("source/chi2_2samples_bootstrap.R")
+# dados
+
+
+```
+
+
+
+# Apêndice
+
+## Congruência com a SAD observada nos contrafactuais de paisagens e taxa U
+
+```{r}
+
+```
+
+
