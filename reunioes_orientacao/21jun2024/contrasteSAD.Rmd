@@ -30,21 +30,72 @@ library(dplyr)
 # funções
 source("source/dinamica_coalescente.R")
 source("source/2samples_testes.R")
-source("source/f_plotSADacumulada.R")
-source("source/chi2_2samples_bootstrap.R")
+f_z <- function(x) (x-mean(x))/sd(x)
 # dados
+df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
+# Resultados
+## congruência 
+df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
+## efeito U
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") %>%
+  select(SiteCode:p, contains("_logratio")) %>% 
+  # pivot_longer(-c(SiteCode:p)) %>% 
+  mutate(across(-SiteCode,f_z,.names = "{.col}_z"),
+         SiteCode = factor(SiteCode))
+# dados para modelos
+df_md0 <- df_adSAD %>% 
+  filter(taxaU=="contemp",land_type=="contemp") %>% 
+  select(SiteCode,k,nCongKS) %>% 
+  inner_join(df_contrastes %>% select(SiteCode:k,frag.total_logratio_z))
+v_pares <- c("contemp-ideal","non_frag-ideal","contemp-non_frag")
+names(v_pares) <- c("frag.total","area","frag.perse")
+df_logOR <- df_adSAD %>% 
+  mutate(nKS = case_when(nCongKS == 0 ~ 0.09, #min pred for a GLMM for a particular comb
+                         nCongKS == 100 ~ 99.73, #max pred for a GLMM for a particular comb
+                         TRUE ~ nCongKS),
+         logitoKS = log (nKS / (100-nKS))) %>% 
+  select(taxaU:land_type,logitoKS) %>% 
+  f_contrasteSAD(.,pares=v_pares) %>% 
+  inner_join(df_contrastes %>% 
+               select(SiteCode:k,contains("_z")) %>% 
+               rename_with(~str_remove(., '_logratio')))
+```
+
+# Contraste entre contrafactuais
+
+Para cada contraste existem até 4 pontos de referência da taxa U: i) o correspondente, quando a taxa U e a paisagem contrafactuais coincidem; ii) numerador, taxa U da paisagem contrafactual no numerador do contraste; iii) denominador, taxa U do contrafactual no denominador; e iv) prístino, a taxa U da respectiva paisagem contrafactual sem perda de habitat.
+
+```{r 1a parte - ajuste de um GLMM para avaliação do range de logito,eval=FALSE}
+md <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+              frag.total_logratio_z + (1|SiteCode),
+            data = df_md0, family = "binomial")
+df_md0$pred <- predict(md,df_md0,type="response")*100
+v_pred <- df_md0 %>% filter(pred %in% range(df_md0$pred)) %>% 
+  pull(pred) %>% round(.,digits = 2)
+boxplot(df_md0$nCongKS)
+```
+
+
+## Fragmentação total
+
+
+
+```{r}
 
 
 ```
 
 
+## Área per se
+
+## Fragmentação per se
 
 # Apêndice
 
 ## Congruência com a SAD observada nos contrafactuais de paisagens e taxa U
 
 ```{r}
-
+# df_adSAD
 ```
 
 

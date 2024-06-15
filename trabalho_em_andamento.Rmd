@@ -9,6 +9,25 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 15/06/2024
+
+```{r}
+v_num_itself <- dfi[dfi$taxaU==unname(cpair["numerador"]),
+    c("SiteCode","k",cpair["numerador"],"taxaU")] %>% pull(contemp)
+v_deno_itself <- dfi[dfi$taxaU==unname(cpair["denominador"]),
+    c("SiteCode","k",cpair["denominador"],"taxaU")] %>% pull(ideal)
+v_itself <- v_num_itself - v_deno_itself
+
+
+dfi %>% head
+dfi %>% filter(taxaU==uname(cpair["ideal"])) %>% pull(contemp)
+
+
+```
+
+
+
+
 # 4 mar 2024
 
 Revisão dos resultados para avaliação da adequação
