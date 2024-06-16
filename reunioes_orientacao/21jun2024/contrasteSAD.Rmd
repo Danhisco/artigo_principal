@@ -44,10 +44,16 @@ df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>%
 ## congruência 
 df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
 ## efeito U
-df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") %>%
-  select(SiteCode:k, contains("_logratio")) %>% 
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv")
+# dados para modelos
+df_md0 <- df_adSAD %>%
+  filter(taxaU=="contemp",land_type=="contemp") %>%
+  select(SiteCode,k,nCongKS) %>%
+  inner_join(df_contrastes %>% select(SiteCode:k,frag.total_logratio)) # versão do
+df_contrastes <- df_contrastes %>%
+  select(SiteCode:p, contains("_logratio")) %>% 
   mutate(across(-SiteCode,f_z,.names = "{.col}_z")) %>% 
-  select(SiteCode,k,k_z:frag.total_logratio_z) %>% 
+  select(SiteCode,k,p,k_z:frag.total_logratio_z) %>% 
   rename_with(~str_remove(.,"_logratio_z")) %>% 
   pivot_longer(cols = c("area","frag.perse","frag.total"),
                values_to = "Uefeito",
@@ -55,20 +61,16 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") %>%
   mutate(contraste = case_when(contraste=="area" ~ "non_frag-ideal",
                                contraste=="frag.total" ~ "contemp-ideal",
                                contraste=="frag.perse" ~ "contemp-non_frag"))
-# dados para modelos
-df_md0 <- df_adSAD %>% 
-  filter(taxaU=="contemp",land_type=="contemp") %>% 
-  select(SiteCode,k,nCongKS) %>% 
-  inner_join(df_contrastes %>% select(SiteCode:k,frag.total_logratio_z))
 df_logOR <- df_adSAD %>% 
-  mutate(nKS = case_when(nCongKS == 0 ~ 0.09, #min pred for a GLMM for a particular comb
-                         nCongKS == 100 ~ 99.73, #max pred for a GLMM for a particular comb
+  mutate(nKS = case_when(nCongKS == 0 ~ 0.09, #min pred for a GLMM for a sampled comb
+                         nCongKS == 100 ~ 99.73, #max pred for a GLMM for a sampled comb
                          TRUE ~ nCongKS),
          logitoKS = log (nKS / (100-nKS))) %>% 
   select(taxaU:land_type,logitoKS) %>% 
   f_contrasteSAD(.,pares=v_pares) %>% 
   inner_join(y=df_contrastes,by=c("contraste","SiteCode","k")) %>% 
-  inner_join(y=df_dados_disponiveis,by="SiteCode")
+  inner_join(y=df_dados_disponiveis,by="SiteCode") %>% 
+  relocate(p,.after=k)
 ```
 
 # Contraste entre contrafactuais
@@ -76,13 +78,49 @@ df_logOR <- df_adSAD %>%
 Para cada contraste existem até 4 pontos de referência da taxa U: i) o correspondente, quando a taxa U e a paisagem contrafactuais coincidem; ii) numerador, taxa U da paisagem contrafactual no numerador do contraste; iii) denominador, taxa U do contrafactual no denominador; e iv) prístino, a taxa U da respectiva paisagem contrafactual sem perda de habitat.
 
 ```{r 1a parte - ajuste de um GLMM para avaliação do range de logito,eval=FALSE}
+# 1a parte: ajuste de um GLMM para avaliaçã do range de logito necessário para descrição 
 md <- glmer(cbind(nCongKS,100-nCongKS) ~ 
-              frag.total_logratio_z + (1|SiteCode),
+              frag.total_logratio + (1|SiteCode),
             data = df_md0, family = "binomial")
 df_md0$pred <- predict(md,df_md0,type="response")*100
 v_pred <- df_md0 %>% filter(pred %in% range(df_md0$pred)) %>% 
   pull(pred) %>% round(.,digits = 2)
 boxplot(df_md0$nCongKS)
+```
+```{r 2a parte - ajuste de GAMM para descrever cada contraste}
+# 2a parte: ajuste de um GAMM para cada contraste de interesse
+f_ajuste <- \(dfi,responses=c("itself","pristine","numerator","denominator")){
+  df_md <- dfi %>% pivot_longer(cols=all_of(responses),names_to = "response_class",values_to = "response")
+  dlply(df_md,"response_class",f_gamm)
+}
+f_gamm <- \(dfmd){
+  if(all(is.na(dfmd$response))) return(NA)
+  gam(response ~ 
+        s(Ufeito,bs="cr"))
+}
+# s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+#                    ti(p_z,k_z) +
+#                    s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+#                    s(SiteCode,bs="re"),
+#                  data=df,method = "REML"
+
+
+```
+
+```{r}
+df_logOR %>% 
+  filter(contraste=="contemp-ideal")
+  ggplot(aes(x=Uefeito,y=response,color=p)) +
+  # geom_line(aes(group=SiteCode),alpha=0.5) +
+  geom_hline(yintercept = 0,color="darkred") +
+  geom_vline(xintercept = 0,color="darkred") +
+  geom_point(alpha=0.5) +
+  geom_smooth() +
+  scale_colour_gradient2(midpoint=0.5,
+                         low="darkred",
+                         mid = "darkblue",
+                         high = "darkgreen") +
+  facet_wrap(~k,ncol=5)
 ```
 
 

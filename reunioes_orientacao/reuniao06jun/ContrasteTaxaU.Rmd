@@ -142,15 +142,15 @@ f_gam <- function(df){
                      s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
                      s(SiteCode,bs="re"),
                    data=df,method = "REML")
-  l_md$k <- gam(value ~
-                  s(k_z,bs = "cr") + 
-                  s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                  s(SiteCode,bs="re"),
-                data=df,method = "REML")
-  l_md$s_k <- gam(value ~
-                  s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                  s(SiteCode,bs="re"),
-                data=df,method = "REML")
+  l_md$ti_sfs <- gam(value ~
+                   s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(p_z,k_z) +
+                   s(SiteCode,bs="re"),
+                 data=df,method = "REML")
+  l_md$s_ti_sfs <- gam(value ~
+                     s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                     s(SiteCode,bs="re"),
+                   data=df,method = "REML")
   return(l_md)
 }
 l_md <- df_md %>% 
