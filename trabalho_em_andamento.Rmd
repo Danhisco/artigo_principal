@@ -9,6 +9,14 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+# 17/jun/2024
+
+Os modelos para descrever os GAMMS pareciam precisar de maior grau de liberdade para descrever os padrões por sítios de amostragem. Interpretei que os dados sugerem que no caso 
+
+
+
+
 # 15/06/2024
 
 ```{r}

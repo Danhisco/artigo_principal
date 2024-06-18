@@ -33,6 +33,13 @@ source("source/2samples_testes.R")
 source("source/general_tools.R")
 source("source/GAMMtools.R")
 source("source/fig_tools.R")
+f_extract_smoothers_f_formula <- \(formula_obj){
+  formula_obj %>% 
+    as.character() %>% gsub(", bs = \"cr\"","",.) %>% 
+    gsub(" \\+ s\\(k_z, by \\= SiteCode\\) \\+ s\\(SiteCode, bs \\= \"re\"\\)","",.) %>% 
+    str_split_1(pattern = " \\+ ") %>% 
+    grep(pattern='s\\(k_z\\)|s\\(p_z\\)|ti\\(p_z, k_z\\)',value = TRUE,x=.)
+}
 ### dados ###
 # modelos dos contrastes
 # l_md <- readRDS("dados/Rdata/l_md.contrastes.Rdata")
@@ -131,6 +138,12 @@ __Figura 1__ Gráficos Exploratórios
 ```{r GAM usado, echo=TRUE,eval=FALSE}
 f_gam <- function(df){
   l_md <- list()
+  l_md$gi <- gam(value ~
+                   s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(p_z,k_z) +
+                   s(k_z, by=SiteCode, bs="cr") +
+                   s(SiteCode,bs="re"),
+                 data=df,method = "REML")
   l_md$ti <- gam(value ~
                    s(k_z,bs = "cr") + s(p_z,bs = "cr") +
                    ti(p_z,k_z) +
@@ -142,17 +155,23 @@ f_gam <- function(df){
                      s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
                      s(SiteCode,bs="re"),
                    data=df,method = "REML")
+  l_md$gi_s_ti <- gam(value ~
+                        s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                        s(k_z, by=SiteCode, bs="cr") +
+                        s(SiteCode,bs="re"),
+                      data=df,method = "REML")
   l_md$ti_sfs <- gam(value ~
-                   s(k_z,bs = "cr") + s(p_z,bs = "cr") +
-                   ti(p_z,k_z) +
-                   s(SiteCode,bs="re"),
-                 data=df,method = "REML")
+                       s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                       ti(p_z,k_z) +
+                       s(SiteCode,bs="re"),
+                     data=df,method = "REML")
   l_md$s_ti_sfs <- gam(value ~
-                     s(k_z,bs = "cr") + s(p_z,bs = "cr") +
-                     s(SiteCode,bs="re"),
-                   data=df,method = "REML")
+                         s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                         s(SiteCode,bs="re"),
+                       data=df,method = "REML")
   return(l_md)
 }
+# registerDoMC(3)
 l_md <- df_md %>% 
   split(.,df_md$name) %>% 
   lapply(.,f_gam)
@@ -176,18 +195,29 @@ names(l_md_maisplausivel) <- names(l_md)
 
 ## Diagnóstico
 
-```{r diagnóstico modelo }
+### Área per se
+
+```{r tabela de seleção dos modelos para área}
+l_tabsel[["area"]]
+```
+```{r diagnóstico modelo mais plausível área}
 i <- 1
 names(l_md_maisplausivel)[i]
 md <- l_md_maisplausivel[[i]]
+v_draw <- formula(md)[3] %>% f_extract_smoothers_f_formula
 print("k.check:")
 print(k.check(md))
 print("summary:")
 print(summary(md))
 print(gratia::appraise(md))
-print(gratia::draw(md))
+print(gratia::draw(md,select = v_draw))
 ```
 
+### Fragmentation per se
+
+```{r tabela de seleção dos modelos para frag.perse}
+l_tabsel[["frag.perse"]]
+```
 ```{r}
 i <- 2
 names(l_md_maisplausivel)[i]
@@ -200,6 +230,10 @@ print(gratia::appraise(md))
 print(gratia::draw(md))
 ```
 
+
+```{r tabela de seleção dos modelos para frag.total}
+l_tabsel[["frag.total"]]
+```
 ```{r}
 i <- 3
 names(l_md_maisplausivel)[i]
