@@ -38,8 +38,10 @@ names(v_pares) <- c("frag.total","area","frag.perse")
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
   select(SiteCode,year_bestProxy,matches("(lat|long)")) %>% 
   mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
-         long = ifelse(is.na(long_correct),long,long_correct)) %>% 
-  select(-contains("correct"))
+         long = ifelse(is.na(long_correct),long,long_correct),
+         data_year = as.numeric(year_bestProxy),
+         data_year = ifelse(is.na(data_year),2012.5,data_year)) %>% 
+  select(-contains("correct"),-year_bestProxy)
 # Resultados
 ## congruência 
 df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
@@ -77,6 +79,29 @@ df_logOR <- df_adSAD %>%
 
 Para cada contraste existem até 4 pontos de referência da taxa U: i) o correspondente, quando a taxa U e a paisagem contrafactuais coincidem; ii) numerador, taxa U da paisagem contrafactual no numerador do contraste; iii) denominador, taxa U do contrafactual no denominador; e iv) prístino, a taxa U da respectiva paisagem contrafactual sem perda de habitat.
 
+
+```{r fig 1 cap}
+cap = ""
+```
+```{r figura 1 - GE logOR em funcao da taxa}
+df_logOR %>% 
+  select(-matches("^k|^p(!pristine)")) %>% 
+  pivot_longer(cols = c("itself","pristine","numerator","denominator"),
+               values_to="logOR",
+               names_to="taxaU") %>% 
+  mutate(taxaU = factor(taxaU,
+                        levels=c("itself","pristine","numerator","denominator"))) %>% 
+  ggplot(aes(x=Uefeito,y=logOR,color=taxaU,group=SiteCode)) +
+  geom_hline(yintercept = 0,color="gray") +
+  geom_vline(xintercept = 0,color="gray") +
+  geom_line(alpha=0.2) +
+  geom_point(alpha=0.2) +
+  scale_color_manual(values=c("darkred","darkgreen","darkblue","darkorange")) +
+  facet_grid(taxaU~contraste)
+```
+
+
+
 ```{r 1a parte - ajuste de um GLMM para avaliação do range de logito,eval=FALSE}
 # 1a parte: ajuste de um GLMM para avaliaçã do range de logito necessário para descrição 
 md <- glmer(cbind(nCongKS,100-nCongKS) ~ 
@@ -96,7 +121,10 @@ f_ajuste <- \(dfi,responses=c("itself","pristine","numerator","denominator")){
 f_gamm <- \(dfmd){
   if(all(is.na(dfmd$response))) return(NA)
   gam(response ~ 
-        s(Ufeito,bs="cr"))
+        s(Ufeito,bs="cr") + 
+        s(Ufeito, SiteCode, bs="fs",xt=list(bs="cr")) + 
+        s(SiteCode,bs="re"),
+      data=dfmd,method = "REML")
 }
 # s(k_z,bs = "cr") + s(p_z,bs = "cr") +
 #                    ti(p_z,k_z) +

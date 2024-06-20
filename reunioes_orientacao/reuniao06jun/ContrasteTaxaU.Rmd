@@ -208,6 +208,9 @@ v_draw <- formula(md)[3] %>% f_extract_smoothers_f_formula
 print("k.check:")
 print(k.check(md))
 print("summary:")
+#
+md <- l_md[["area"]]$ti
+#
 print(summary(md))
 print(gratia::appraise(md))
 print(gratia::draw(md,select = v_draw))
@@ -247,7 +250,7 @@ print(gratia::draw(md))
 ```
 
 
-## Predito para o observado por sítio de amostragem
+<!-- ## Predito para o observado por sítio de amostragem -->
 
 ```{r predito para o observado,eval=FALSE,echo=FALSE,include=FALSE}
 f_predic_bySite <- \(md){

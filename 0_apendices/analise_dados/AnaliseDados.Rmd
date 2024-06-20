@@ -454,18 +454,53 @@ df_ad |>
 
 ```{r dag estudo de melhor caracterizacao de logOR,include=F}
 # exp = frag
-dag_exp.frag <- dagify(logOR ~ frag + p + k,
-                     frag ~ area + p + k + GLV,
-                     area ~ p + k,
-                     # S ~ effort + GLV,
-                     # N ~ effort + GLV,
-                     p ~ GLV,
-                     # effort ~ GLV,
-                     outcome = "logOR",
-                     latent = "GLV",
-                     exposure = "frag")
+l_coord <- list(
+  x = c(PrCong = 0, S = 0, N = 2, p = 3, k = 4, Sesp = 0, effort = 2, PERTesp = 3.5, Prox = 2),
+  y = c(PrCong = 0, S = 2, N = 2, p = 1.5, k=0.5, Sesp = 6, effort = 4, PERTesp = 6, Prox = 7)
+)
+ggdag_adjustment_set(dag_exp.frag,shadow = TRUE,text = FALSE, use_labels = "label") +
+  theme_dag_gray() +
+  scale_color_manual(values=c("red4","green4"))
+################
+dag_exp.frag <- dagify(logOR ~ Uefeito + spatial_conf + k + biogeoreg + year_data,
+                        Uefeito ~ k + spatial_conf,
+                        spatial_conf ~ coord + year_data,
+                        biogeoreg ~ coord + year_data,
+                        # p ~ obs_scale + spatial_conf,
+                        obs_scale ~ k,
+                        labels = c(
+                          "logOR" = "Cong. Relat.\nSADobs (logOR)",
+                          "Uefeito" = "Efeito em S",
+                          "spatial_conf" = "conf. espacial",
+                          "k"="k",
+                          "biogeoreg" = "reg. biogeo.",
+                          "year_data" = "ano do invent.",
+                          "coord" = "coord. geo",
+                          "obs_scale"="escala obs."
+                          ),
+                       outcome = "logOR",
+                       latent="spatial_conf",
+                       exposure = "Uefeito",
+                       coords = l_coord)
+
+
+
 ggdag(dag_exp.frag)
-ggdag_adjustment_set(dag_exp.frag,shadow = TRUE) + ggtitle(label="exposure = frag")
+
+ggdag_adjustment_set(dag_exp.frag, shadow = TRUE) + 
+  ggtitle(label = "Exposure = Uefeito") +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),  # Customize plot title
+    legend.title = element_text(size = 12),              # Customize legend title
+    legend.text = element_text(size = 10),               # Customize legend text
+    axis.text = element_text(size = 10),                 # Customize axis text
+    axis.title = element_text(size = 12)                 # Customize axis titles
+  ) +
+  theme_dag() +
+  # geom_dag_node(color = "blue", size = 10, alpha = 0.7) +  # Customize node color
+  # geom_dag_edges(color = "red", size = 1) +                # Customize edge color
+  geom_dag_text(color = "black", size = 5)
+
 ```
 
 
