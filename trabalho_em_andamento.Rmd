@@ -9,6 +9,48 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 13 jul 2024
+
+```{r}
+
+```
+
+
+
+
+# 21jun2024
+
+```{r}
+df_aud <- df_contrastes %>%
+  select(SiteCode:p, contains("_logratio")) %>% 
+  mutate(across(-SiteCode,f_z,.names = "{.col}_z"))
+l_p <- list()
+l_p$padrao <- 
+  df_aud %>% 
+  ggplot(aes(x=area_logratio_z,y=frag.total_logratio_z)) +
+  geom_point() +
+  labs(title="Escala Padrão") +
+  geom_abline(slope=1,intercept = 0,color="darkred") +
+  theme(aspect.ratio = 1)
+l_p$z <- 
+  df_aud %>% 
+  ggplot(aes(x=area_logratio_z,y=frag.total_logratio_z)) +
+  geom_point() +
+  labs(title="z transformada") +
+  geom_abline(slope=1,intercept = 0,color="darkred") +
+  theme(aspect.ratio = 1)
+grid.arrange(grobs=l_p,nrow=1)
+df_aud %>% 
+  select(area_logratio,frag.total_logratio) %>% 
+  pivot_longer(cols = everything()) %>% 
+  ggplot(aes(x=name,y=value)) +
+  geom_boxplot() +
+  geom_jitter()
+
+```
+
+
+
 # 20jun2024
 
 ```{r}

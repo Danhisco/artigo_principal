@@ -6,7 +6,7 @@ editor_options:
 ---
 
 ```{r setup,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache = TRUE)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache = FALSE)
 # pacotes
 library(gratia)
 library(doMC)
@@ -138,33 +138,39 @@ __Figura 1__ Gráficos Exploratórios
 ```{r GAM usado, echo=TRUE,eval=FALSE}
 f_gam <- function(df){
   l_md <- list()
+  # 1) maior flexibidade por sítio e com interação de p e k
   l_md$gi <- gam(value ~
                    s(k_z,bs = "cr") + s(p_z,bs = "cr") +
                    ti(p_z,k_z) +
                    s(k_z, by=SiteCode, bs="cr") +
                    s(SiteCode,bs="re"),
                  data=df,method = "REML")
+  # 2) menor flexibilidade por sítio e com interação de p e k
   l_md$ti <- gam(value ~
                    s(k_z,bs = "cr") + s(p_z,bs = "cr") +
                    ti(p_z,k_z) +
                    s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
                    s(SiteCode,bs="re"),
                  data=df,method = "REML")
-  l_md$s_ti <- gam(value ~
-                     s(k_z,bs = "cr") + s(p_z,bs = "cr") +
-                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-                     s(SiteCode,bs="re"),
-                   data=df,method = "REML")
+  # 3) maior flexibilidade por sítio e sem interação de p e k
   l_md$gi_s_ti <- gam(value ~
                         s(k_z,bs = "cr") + s(p_z,bs = "cr") +
                         s(k_z, by=SiteCode, bs="cr") +
                         s(SiteCode,bs="re"),
                       data=df,method = "REML")
+  # 4) menor flexibilidade por sítio e sem interação de p e k
+  l_md$s_ti <- gam(value ~
+                     s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
+                   data=df,method = "REML")
+  # 5) apenas intercepto por sítio e com interação de p e k
   l_md$ti_sfs <- gam(value ~
                        s(k_z,bs = "cr") + s(p_z,bs = "cr") +
                        ti(p_z,k_z) +
                        s(SiteCode,bs="re"),
                      data=df,method = "REML")
+  # 6) apenas intercepto por sítio e sem interação de p e k
   l_md$s_ti_sfs <- gam(value ~
                          s(k_z,bs = "cr") + s(p_z,bs = "cr") +
                          s(SiteCode,bs="re"),
@@ -193,14 +199,14 @@ names(l_md_maisplausivel) <- names(l_md)
 ```
 
 
-## Diagnóstico
+<!-- ## Diagnóstico -->
 
-### Área per se
+<!-- ### Área per se -->
 
-```{r tabela de seleção dos modelos para área}
+```{r tabela de seleção dos modelos para área,include=FALSE}
 l_tabsel[["area"]]
 ```
-```{r diagnóstico modelo mais plausível área}
+```{r diagnóstico modelo mais plausível área,eval=FALSE,include=FALSE}
 i <- 1
 names(l_md_maisplausivel)[i]
 md <- l_md_maisplausivel[[i]]
@@ -216,12 +222,12 @@ print(gratia::appraise(md))
 print(gratia::draw(md,select = v_draw))
 ```
 
-### Fragmentation per se
+<!-- ### Fragmentation per se -->
 
-```{r tabela de seleção dos modelos para frag.perse}
+```{r tabela de seleção dos modelos para frag.perse,include=FALSE}
 l_tabsel[["frag.perse"]]
 ```
-```{r}
+```{r frag per se,eval=FALSE,include=FALSE}
 i <- 2
 names(l_md_maisplausivel)[i]
 md <- l_md_maisplausivel[[i]]
@@ -233,11 +239,13 @@ print(gratia::appraise(md))
 print(gratia::draw(md))
 ```
 
+<!-- ### Fragmentation total -->
 
-```{r tabela de seleção dos modelos para frag.total}
+
+```{r tabela de seleção dos modelos para frag.total,include=FALSE}
 l_tabsel[["frag.total"]]
 ```
-```{r}
+```{r frag total,eval=FALSE,include=FALSE}
 i <- 3
 names(l_md_maisplausivel)[i]
 md <- l_md_maisplausivel[[i]]

@@ -25,6 +25,7 @@ library(insight)
 library(bbmle)
 library(DHARMa)
 library(lme4)
+library(mgcv)
 library(plyr)
 library(dplyr)
 # funções
@@ -84,6 +85,7 @@ Para cada contraste existem até 4 pontos de referência da taxa U: i) o corresp
 cap = ""
 ```
 ```{r figura 1 - GE logOR em funcao da taxa}
+theme_set(theme_bw())
 df_logOR %>% 
   select(-matches("^k|^p(!pristine)")) %>% 
   pivot_longer(cols = c("itself","pristine","numerator","denominator"),
@@ -96,7 +98,10 @@ df_logOR %>%
   geom_vline(xintercept = 0,color="gray") +
   geom_line(alpha=0.2) +
   geom_point(alpha=0.2) +
-  scale_color_manual(values=c("darkred","darkgreen","darkblue","darkorange")) +
+  labs(x="respectivo efeito em U (z transformado)",
+       y="log( Odds SAD / Odds SAD )",
+       title="Congruência relativa da SAD simulada em relação ao respectivo efeito na taxa U") +
+  scale_color_manual("Parâmetro usado:",values=c("darkred","darkgreen","darkblue","darkorange")) +
   facet_grid(taxaU~contraste)
 ```
 
@@ -115,25 +120,69 @@ boxplot(df_md0$nCongKS)
 ```{r 2a parte - ajuste de GAMM para descrever cada contraste}
 # 2a parte: ajuste de um GAMM para cada contraste de interesse
 f_ajuste <- \(dfi,responses=c("itself","pristine","numerator","denominator")){
-  df_md <- dfi %>% pivot_longer(cols=all_of(responses),names_to = "response_class",values_to = "response")
-  dlply(df_md,"response_class",f_gamm)
+  df_md <- dfi %>% pivot_longer(cols=all_of(responses),names_to = "taxaU",values_to = "logOR")
+  df_md %>% 
+    split(.,df_md$taxaU) %>% 
+    lapply(.,f_gamm)
 }
 f_gamm <- \(dfmd){
-  if(all(is.na(dfmd$response))) return(NA)
-  gam(response ~ 
-        s(Ufeito,bs="cr") + 
-        s(Ufeito, SiteCode, bs="fs",xt=list(bs="cr")) + 
-        s(SiteCode,bs="re"),
-      data=dfmd,method = "REML")
+  if(all(is.na(dfmd$logOR))) return(NA)
+  l_md <- list()
+  l_md$gs <- gam(logOR ~ 
+                   s(Uefeito,bs="cr") + 
+                   s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")) + 
+                   s(SiteCode,bs="re"),
+                 data=dfmd,method = "REML")
+  l_md$gi <- gam(logOR ~ 
+                   s(Uefeito,bs="cr") + 
+                   s(Uefeito, by=SiteCode, bs="cr") + 
+                   s(SiteCode,bs="re"),
+                 data=dfmd,method = "REML")
+  return(l_md)
 }
-# s(k_z,bs = "cr") + s(p_z,bs = "cr") +
-#                    ti(p_z,k_z) +
-#                    s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
-#                    s(SiteCode,bs="re"),
-#                  data=df,method = "REML"
+l_md_logOR <- df_logOR %>% 
+  mutate(SiteCode=factor(SiteCode)) %>% 
+  split(.,df_logOR$contraste) %>% 
+  lapply(.,f_ajuste)
+saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR.rds")
+```
+```{r}
+df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
+  rename(logOR = itself)
+f_gam <- \(dfi){
+  l_md <- list()
+  l_md$`com efeito por paisagem` <- gam(logOR ~
+        s(Uefeito,bs="cr") + 
+        s(data_year,bs="cr") +
+        s(lat,long,bs="tp") +
+        s(SiteCode,bs="re") + s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")),
+      data=dfi,method = "REML")
+  l_md$`com efeito de paisagem` <- gam(logOR ~
+        s(Uefeito,bs="cr") + 
+        s(data_year,bs="cr") +
+        s(lat,long,bs="tp") +
+        s(SiteCode,bs="re"),
+      data=dfi,method = "REML")
+  l_md$`sem efeito de paisagem` <- gam(logOR ~
+        s(data_year,bs="cr") +
+        s(lat,long,bs="tp") +
+        s(SiteCode,bs="re"),
+      data=dfi,method = "REML")
+  return(l_md)
+}
+l_md_logOR <- df_md %>% 
+  mutate(SiteCode=factor(SiteCode)) %>% 
+  split(.,df_md$contraste) %>% 
+  lapply(.,f_gam)
+saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR_itself.rds")
+```
 
+```{r}
 
 ```
+
+
+
 
 ```{r}
 df_logOR %>% 

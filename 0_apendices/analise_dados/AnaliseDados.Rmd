@@ -1139,7 +1139,7 @@ save(l_md_logOR,file="dados/Rdata/l_md_logOR.Rdata")
 __Tabela X__ O peso de evidência (AICc) e a deviance explained dos GAMM usados para descrever o log OR da chance de congruência da SAD predita quando se pressupõe a paisagem contemporânea em relação à paisagem sem isolamento estrutural
 
 ```{r tabela de selecao dos GAMM logOR}
-load("dados/Rdata/l_md_logOR.Rdata")
+l_md.logOR <- readRDS("dados/Rdata/l_md_logOR_itself.rds")
 f_correcaoNomes <- \(l_md){
   names(l_md) <- str_remove(names(l_md),",ssbs.type") # corrigir na próxima versão de f_nameModel 
   return(l_md)
