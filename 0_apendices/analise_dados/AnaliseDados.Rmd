@@ -1139,7 +1139,7 @@ save(l_md_logOR,file="dados/Rdata/l_md_logOR.Rdata")
 __Tabela X__ O peso de evidência (AICc) e a deviance explained dos GAMM usados para descrever o log OR da chance de congruência da SAD predita quando se pressupõe a paisagem contemporânea em relação à paisagem sem isolamento estrutural
 
 ```{r tabela de selecao dos GAMM logOR}
-l_md.logOR <- readRDS("dados/Rdata/l_md_logOR_itself.rds")
+l_md.logOR <- readRDS("dados/Rdata/l_md_logOR_aud.rds")
 f_correcaoNomes <- \(l_md){
   names(l_md) <- str_remove(names(l_md),",ssbs.type") # corrigir na próxima versão de f_nameModel 
   return(l_md)
@@ -1147,7 +1147,7 @@ f_correcaoNomes <- \(l_md){
 # l_md.logOR <- llply(l_md.logOR,f_correcaoNomes)
 df_tabelaSelecao <- ldply(l_md.logOR,f_TabSelGAMM,.id="pair")
 df_tabelaSelecao
-write_csv(df_tabelaSelecao,file="dados/csv/df_tabelaSelecao_logOR_itself.csv")
+write_csv(df_tabelaSelecao,file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
 #
 f_SML.gamm <- \(df){md <- l_md.logOR[[df$pair[1]]][[df$modelo[[1]]]]}
 l_md_1alike <- dlply(df_tabelaSelecao,"pair",f_SML.gamm)
@@ -1162,7 +1162,9 @@ for(i in names(l_md_1alike)){
   print(k.check(md))
   print(summary(md))
   print(f_MoranTest_GAMM(md))
-  
+  p <- gratia::appraise(md)
+  print(p)
+  concurvity(md)
 }
 ```
 

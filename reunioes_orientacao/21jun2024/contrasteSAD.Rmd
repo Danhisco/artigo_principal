@@ -178,7 +178,37 @@ saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR_itself.rds")
 ```
 
 ```{r}
-
+df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
+  rename(logOR = itself)
+f_gam <- \(dfi){
+  l_md <- list()
+  l_md$`com efeito por paisagem` <- gam(logOR ~
+        s(Uefeito,bs="cr") + 
+        s(data_year,bs="cr") +
+        s(lat,long,bs="tp") +
+        s(SiteCode,bs="re") + s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")),
+      data=dfi,method = "REML")
+  l_md$`sem ano` <- gam(logOR ~
+        s(Uefeito,bs="cr") + 
+        s(lat,long,bs="tp") +
+        s(SiteCode,bs="re") + s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")),
+      data=dfi,method = "REML")
+  l_md$`sem coord` <- gam(logOR ~
+        s(Uefeito,bs="cr") + 
+        s(data_year,bs="cr") +
+        s(SiteCode,bs="re") + s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")),
+      data=dfi,method = "REML")
+  l_md$`sem cov` <- gam(logOR ~
+        s(Uefeito,bs="cr") + 
+        s(SiteCode,bs="re") + s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")),
+      data=dfi,method = "REML")
+  return(l_md)
+}
+l_md_logOR_aud <- df_md %>% 
+  mutate(SiteCode=factor(SiteCode)) %>% 
+  split(.,df_md$contraste) %>% 
+  lapply(.,f_gam)
+saveRDS(l_md_logOR_aud,file="dados/Rdata/l_md_logOR_aud.rds")
 ```
 
 

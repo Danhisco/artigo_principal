@@ -204,6 +204,7 @@ f_MoranTest_GAMM <- \(md){
   listw <- nb2listw(nb)
   # Calculate Moran's I for residuals
   moran_output <- moran.test(dfmd_avgbySite$mean_res, listw)
+  # return
   data.frame(
     Statistic = c(
       "Moran I statistic", 
