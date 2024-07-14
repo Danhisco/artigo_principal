@@ -1144,14 +1144,26 @@ f_correcaoNomes <- \(l_md){
   names(l_md) <- str_remove(names(l_md),",ssbs.type") # corrigir na próxima versão de f_nameModel 
   return(l_md)
 }
-l_md.logOR <- llply(l_md.logOR,f_correcaoNomes)
+# l_md.logOR <- llply(l_md.logOR,f_correcaoNomes)
 df_tabelaSelecao <- ldply(l_md.logOR,f_TabSelGAMM,.id="pair")
 df_tabelaSelecao
+write_csv(df_tabelaSelecao,file="dados/csv/df_tabelaSelecao_logOR_itself.csv")
 #
 f_SML.gamm <- \(df){md <- l_md.logOR[[df$pair[1]]][[df$modelo[[1]]]]}
-l_p <- dlply(df_tabelaSelecao,"pair",f_SML.gamm) |> 
-  f_l_mdGAMM_FiguraFinal_1dGAMM()
-grid.arrange(grobs=l_p,ncol=3)  
+l_md_1alike <- dlply(df_tabelaSelecao,"pair",f_SML.gamm)
+# |> f_l_mdGAMM_FiguraFinal_1dGAMM()
+# grid.arrange(grobs=l_p,ncol=3)  
+```
+
+```{r}
+for(i in names(l_md_1alike)){
+  md <- l_md_1alike[[i]]
+  print(i)
+  print(k.check(md))
+  print(summary(md))
+  print(f_MoranTest_GAMM(md))
+  
+}
 ```
 
 

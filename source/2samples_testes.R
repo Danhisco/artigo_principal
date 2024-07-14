@@ -187,6 +187,41 @@ f_contraste_Umed <- \(dfUrep,
     sapply(nobj_export,\(i) assign(i,get(i),envir = .GlobalEnv))
   }
 }
+f_MoranTest_GAMM <- \(md){
+  library(spdep)
+  dfmd <- md$model
+  dfmd$residuals <- residuals(md)
+  dfmd_avgbySite <- dfmd %>% 
+    group_by(SiteCode) %>% 
+    summarise(mean_res = mean(residuals),
+              lat = first(lat),
+              long = first(long)) %>% 
+    ungroup()
+  # Prepare spatial data
+  coordinates <- dfmd_avgbySite[, c("lat","long")]
+  coordinates <- as.matrix(coordinates)
+  nb <- knn2nb(knearneigh(coordinates, k=4))  
+  listw <- nb2listw(nb)
+  # Calculate Moran's I for residuals
+  moran_output <- moran.test(dfmd_avgbySite$mean_res, listw)
+  data.frame(
+    Statistic = c(
+      "Moran I statistic", 
+      "Expectation", 
+      "Variance", 
+      "Standard Deviate", 
+      "p-value"
+    ),
+    Value = c(
+      moran_output$estimate[["Moran I statistic"]], 
+      moran_output$estimate[["Expectation"]], 
+      moran_output$estimate[["Variance"]], 
+      moran_output$statistic, 
+      moran_output$p.value
+    )
+  ) %>% pivot_wider(names_from=Statistic,values_from = Value) %>% 
+    as.data.frame()
+}
 
 
 # 
