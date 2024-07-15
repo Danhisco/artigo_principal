@@ -13,6 +13,45 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Moran test for spatial autocorrelation
 
+
+```{r}
+library(spdep)
+
+# Example data
+set.seed(123)
+data <- data.frame(
+  latitude = runif(100, -90, 90),
+  longitude = runif(100, -180, 180),
+  residuals = rnorm(100)
+)
+
+# Create coordinates matrix
+coordinates <- as.matrix(data[, c("latitude", "longitude")])
+
+# Define a range of k values (must be positive integers)
+k_values <- 1:50
+moran_results <- data.frame(k = k_values, Moran_I = NA, p_value = NA)
+
+# Loop through k values and compute Moran's I
+for (i in seq_along(k_values)) {
+  k <- k_values[i]
+  nb <- knn2nb(knearneigh(coordinates, k = k))
+  listw <- nb2listw(nb)
+  moran_test <- moran.test(data$residuals, listw)
+  moran_results$Moran_I[i] <- moran_test$estimate[["Moran I statistic"]]
+  moran_results$p_value[i] <- moran_test$p.value
+}
+
+# Plot the results
+library(ggplot2)
+ggplot(moran_results, aes(x = p_value, y = Moran_I,color=k)) +
+  geom_line() +
+  geom_point() +
+  # labs(title = "Moran's I vs. k", x = "Number of Nearest Neighbors (k)", y = "Moran's I") +
+  theme_minimal()
+
+```
+
 ```{r}
 library(spdep)
 dfmd <- md$model

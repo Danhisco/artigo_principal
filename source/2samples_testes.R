@@ -191,6 +191,17 @@ f_MoranTest_GAMM <- \(md){
   library(spdep)
   dfmd <- md$model
   dfmd$residuals <- residuals(md)
+  if(sum(names(dfmd)%in%c("lat","long"))<1){
+    df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+      mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+             long = ifelse(is.na(long_correct),long,long_correct),
+             Sitecode = factor(SiteCode)) %>% 
+      select(SiteCode,lat,long)
+    dfmd <- inner_join(
+      dfmd,
+      df_coord
+    )
+  }
   dfmd_avgbySite <- dfmd %>% 
     group_by(SiteCode) %>% 
     summarise(mean_res = mean(residuals),

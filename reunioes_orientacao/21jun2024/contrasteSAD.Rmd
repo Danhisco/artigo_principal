@@ -105,9 +105,30 @@ df_logOR %>%
   facet_grid(taxaU~contraste)
 ```
 
+## Conclusão 4 pontos de referência
+
+Concluímos que o principal ponto de referência é o correspondente, pois é o mais coerente com a prática ontológica, enquanto a referência do numerador e denominador tem um caráter mais de análise de sensibilidade. O ponto de referência prístino pode ter valor para TNB uma vez que é proposto como referência de ausência de débito de extinção. Nesse sentido, uma oportunidade é relacionar a referência de correspondência, alinhada com as práticas ontológicas das ecológia de paisagens e a TNB, com a prístina, alinhada com a ontologia independente e da TNB. Assim, iremos prosseguir na seção dos resultados com a análise dos dados da referência correspondente.
+
+# Análise
+
+Primeiro utilizo um glmer padrão para obter o range de valores de logito adequado para esse conjunto de dados. Antes de discutirmos os 4 pontos de referência a ideia era analisar os 4, o código beta dessa abordagem está oculto nesse documento. <!-- (no próximo segundo chunk)  -->
+Então segui ajustando para cada contraste de contrafactuais 3 GAMM:
+```{r tabelas dos modelos para }
+library(knitr)
+df <- data.frame(
+  modelo = c("com efeito por paisagem", "com efeito de paisagem", "sem efeito de paisagem","mgcv::s"),
+  `efeito em U` = c("1", "1", "0","s(bs='cr')"),
+  `ano dados` = c("1", "1", "1","s(bs='cr')"),
+  `coord. geo.` = c("1", "1", "1","s(bs='tp')"),
+  `intecep. por sítio` = c("1", "1", "1","s(bs='re')"),
+  `efeito em U por sítio` = c("1", "0", "0","s(bs='fs',xt=list(bs='cr'))")
+)
+knitr::kable(df, 
+             caption = "Características dos GAMM na 1a fase de comparações\n method='REML'")
+```
 
 
-```{r 1a parte - ajuste de um GLMM para avaliação do range de logito,eval=FALSE}
+```{r 1a parte - ajuste de um GLMM para avaliação do range de logito,eval=FALSE,echo=TRUE}
 # 1a parte: ajuste de um GLMM para avaliaçã do range de logito necessário para descrição 
 md <- glmer(cbind(nCongKS,100-nCongKS) ~ 
               frag.total_logratio + (1|SiteCode),
@@ -117,7 +138,7 @@ v_pred <- df_md0 %>% filter(pred %in% range(df_md0$pred)) %>%
   pull(pred) %>% round(.,digits = 2)
 boxplot(df_md0$nCongKS)
 ```
-```{r 2a parte - ajuste de GAMM para descrever cada contraste}
+```{r 2a parte - ajuste de GAMM para descrever cada contraste NÃO USADO,eval=FALSE}
 # 2a parte: ajuste de um GAMM para cada contraste de interesse
 f_ajuste <- \(dfi,responses=c("itself","pristine","numerator","denominator")){
   df_md <- dfi %>% pivot_longer(cols=all_of(responses),names_to = "taxaU",values_to = "logOR")
@@ -146,7 +167,7 @@ l_md_logOR <- df_logOR %>%
   lapply(.,f_ajuste)
 saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR.rds")
 ```
-```{r}
+```{r 2a parte usada: apenas a referência correspondente, echo=FALSE}
 df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
   rename(logOR = itself)
 f_gam <- \(dfi){
