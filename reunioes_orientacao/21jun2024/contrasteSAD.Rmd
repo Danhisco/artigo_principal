@@ -113,6 +113,7 @@ Concluímos que o principal ponto de referência é o correspondente, pois é o 
 
 Primeiro utilizo um glmer padrão para obter o range de valores de logito adequado para esse conjunto de dados. Antes de discutirmos os 4 pontos de referência a ideia era analisar os 4, o código beta dessa abordagem está oculto nesse documento. <!-- (no próximo segundo chunk)  -->
 Então segui ajustando para cada contraste de contrafactuais 3 GAMM:
+
 ```{r tabelas dos modelos para }
 library(knitr)
 df <- data.frame(
@@ -126,7 +127,6 @@ df <- data.frame(
 knitr::kable(df, 
              caption = "Características dos GAMM na 1a fase de comparações\n method='REML'")
 ```
-
 
 ```{r 1a parte - ajuste de um GLMM para avaliação do range de logito,eval=FALSE,echo=TRUE}
 # 1a parte: ajuste de um GLMM para avaliaçã do range de logito necessário para descrição 
@@ -197,6 +197,32 @@ l_md_logOR <- df_md %>%
   lapply(.,f_gam)
 saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR_itself.rds")
 ```
+
+## 1a fase de comparações: qual estrutura aleatória usar? e é necessário considerar a paisagem?
+
+Para todos os contrastes, o GAMM mais plausível era aquele 'com efeito por paisagem' (tabela anterior). Todos eles apresentam o p-valor no teste de Moran muito maior do que 0·05% e a estatística de Moran I não é maior do que 0.15 em módulo. A deviance explicada dos modelos mais plausíveis varia entre 0.41 e 0.69. A seguir o diagnóstico dos modelos mais plausíveis.
+
+```{r}
+l_md.logOR <- readRDS("dados/Rdata/l_md_logOR_itself.rds")
+df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_itself.csv")
+f_SML.gamm <- \(df){md <- l_md.logOR[[df$pair[1]]][[df$modelo[[1]]]]}
+l_md_1alike <- dlply(df_tabelaSelecao,"pair",f_SML.gamm)
+######
+knitr::kable(
+  df_tabelaSelecao,
+  caption="Tabela de seleção dos GAMMs da 1a fase de comparações"
+  )
+```
+
+### Diagnóstico dos modelos mais plausíveis
+
+```{r}
+
+```
+
+
+
+
 
 ```{r}
 df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
