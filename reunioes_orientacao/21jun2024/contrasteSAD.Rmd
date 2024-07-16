@@ -78,7 +78,7 @@ df_logOR <- df_adSAD %>%
 
 # Contraste entre contrafactuais
 
-Para cada contraste existem até 4 pontos de referência da taxa U: i) o correspondente, quando a taxa U e a paisagem contrafactuais coincidem; ii) numerador, taxa U da paisagem contrafactual no numerador do contraste; iii) denominador, taxa U do contrafactual no denominador; e iv) prístino, a taxa U da respectiva paisagem contrafactual sem perda de habitat.
+Para cada contraste existem até 4 pontos de referência da taxa U: i) o correspondente, quando a taxa U e a paisagem contrafactual coincidem; ii) numerador, taxa U da paisagem contrafactual no numerador do contraste; iii) denominador, taxa U do contrafactual no denominador; e iv) prístino, a taxa U da respectiva paisagem contrafactual sem perda de habitat.
 
 
 ```{r fig 1 cap}
@@ -114,7 +114,7 @@ Concluímos que o principal ponto de referência é o correspondente, pois é o 
 Primeiro utilizo um glmer padrão para obter o range de valores de logito adequado para esse conjunto de dados. Antes de discutirmos os 4 pontos de referência a ideia era analisar os 4, o código beta dessa abordagem está oculto nesse documento. <!-- (no próximo segundo chunk)  -->
 Então segui ajustando para cada contraste de contrafactuais 3 GAMM:
 
-```{r tabelas dos modelos para }
+```{r tabelas dos modelos da 1a fase }
 library(knitr)
 df <- data.frame(
   modelo = c("com efeito por paisagem", "com efeito de paisagem", "sem efeito de paisagem","mgcv::s"),
@@ -216,15 +216,59 @@ knitr::kable(
 
 ### Diagnóstico dos modelos mais plausíveis
 
-```{r}
+#### Contemp-ideal
 
+```{r diagnostico contemp-ideal}
+md <- l_md_1alike[["contemp-ideal"]]
+print(k.check(md))
+print(summary(md))
+p <- gratia::appraise(md)
+print(p)
+p <- gratia::draw(md)
+print(p)
 ```
 
+#### Contemp-Non frag.
 
+```{r diagnostico contemp-ideal}
+md <- l_md_1alike[["contemp-non_frag"]]
+print(k.check(md))
+print(summary(md))
+p <- gratia::appraise(md)
+print(p)
+p <- gratia::draw(md)
+print(p)
+```
 
+#### Non frag. - prístino
 
+```{r diagnostico contemp-ideal}
+md <- l_md_1alike[["non_frag-ideal"]]
+print(k.check(md))
+print(summary(md))
+p <- gratia::appraise(md)
+print(p)
+p <- gratia::draw(md)
+print(p)
+```
 
-```{r}
+## 2a fase de comparações: existe concurvidade entre o efeito fixo da paisagem e covariáveis? é necessário considerar todas as covariáveis?
+
+```{r tabelas dos modelos da 2a fase}
+library(knitr)
+df <- data.frame(
+  modelo = c("mais plausível 1a fase", "sem ano", "sem coord", "sem cov","mgcv::s"),
+  `efeito em U` = c("1", "1", "1","1","s(bs='cr')"),
+  `ano dados` = c("1","0", "1", "0","s(bs='cr')"),
+  `coord. geo.` = c("1", "1", "0","0","s(bs='tp')"),
+  `intecep. por sítio` = c("1", "1", "1","1","s(bs='re')"),
+  `efeito em U por sítio` = c("1", "1","1","1","s(bs='fs',xt=list(bs='cr'))")
+)
+knitr::kable(df, 
+             caption = "Características dos GAMM na 2a fase de comparações\n method='REML'")
+```
+
+```{r ajuste dos modelos da 2a fase de comparações}
 df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
   rename(logOR = itself)
 f_gam <- \(dfi){
@@ -261,36 +305,6 @@ saveRDS(l_md_logOR_aud,file="dados/Rdata/l_md_logOR_aud.rds")
 
 
 
-```{r}
-df_logOR %>% 
-  filter(contraste=="contemp-ideal")
-  ggplot(aes(x=Uefeito,y=response,color=p)) +
-  # geom_line(aes(group=SiteCode),alpha=0.5) +
-  geom_hline(yintercept = 0,color="darkred") +
-  geom_vline(xintercept = 0,color="darkred") +
-  geom_point(alpha=0.5) +
-  geom_smooth() +
-  scale_colour_gradient2(midpoint=0.5,
-                         low="darkred",
-                         mid = "darkblue",
-                         high = "darkgreen") +
-  facet_wrap(~k,ncol=5)
-```
-
-
-## Fragmentação total
-
-
-
-```{r}
-
-
-```
-
-
-## Área per se
-
-## Fragmentação per se
 
 # Apêndice
 
