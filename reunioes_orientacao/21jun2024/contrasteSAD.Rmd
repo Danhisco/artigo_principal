@@ -230,7 +230,7 @@ print(p)
 
 #### Contemp-Non frag.
 
-```{r diagnostico contemp-ideal}
+```{r diagnostico non-frag}
 md <- l_md_1alike[["contemp-non_frag"]]
 print(k.check(md))
 print(summary(md))
@@ -242,7 +242,7 @@ print(p)
 
 #### Non frag. - prístino
 
-```{r diagnostico contemp-ideal}
+```{r diagnostico non frag- prístino}
 md <- l_md_1alike[["non_frag-ideal"]]
 print(k.check(md))
 print(summary(md))
