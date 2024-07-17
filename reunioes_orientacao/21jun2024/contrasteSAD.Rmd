@@ -8,8 +8,8 @@ output:
 editor_options: 
   chunk_output_type: console
 ---
-```{r setup}
-knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE)
 # pacotes
 library(twosamples)
 library(sads)
@@ -128,7 +128,7 @@ knitr::kable(df,
              caption = "Características dos GAMM na 1a fase de comparações\n method='REML'")
 ```
 
-```{r 1a parte - ajuste de um GLMM para avaliação do range de logito,eval=FALSE,echo=TRUE}
+```{r 1a parte - ajuste de um GLMM para avaliação do range de logito,eval=FALSE,echo=FALSE}
 # 1a parte: ajuste de um GLMM para avaliaçã do range de logito necessário para descrição 
 md <- glmer(cbind(nCongKS,100-nCongKS) ~ 
               frag.total_logratio + (1|SiteCode),
@@ -167,7 +167,7 @@ l_md_logOR <- df_logOR %>%
   lapply(.,f_ajuste)
 saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR.rds")
 ```
-```{r 2a parte usada: apenas a referência correspondente, echo=FALSE}
+```{r 2a parte: apenas a referência correspondente, echo=FALSE,eval=FALSE}
 df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
   rename(logOR = itself)
 f_gam <- \(dfi){
@@ -202,7 +202,7 @@ saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR_itself.rds")
 
 Para todos os contrastes, o GAMM mais plausível era aquele 'com efeito por paisagem' (tabela anterior). Todos eles apresentam o p-valor no teste de Moran muito maior do que 0·05% e a estatística de Moran I não é maior do que 0.15 em módulo. A deviance explicada dos modelos mais plausíveis varia entre 0.41 e 0.69. A seguir o diagnóstico dos modelos mais plausíveis.
 
-```{r}
+```{r 1a tabela de selacao, eval=TRUE}
 l_md.logOR <- readRDS("dados/Rdata/l_md_logOR_itself.rds")
 df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_itself.csv")
 f_SML.gamm <- \(df){md <- l_md.logOR[[df$pair[1]]][[df$modelo[[1]]]]}
@@ -218,7 +218,7 @@ knitr::kable(
 
 #### Contemp-ideal
 
-```{r diagnostico contemp-ideal}
+```{r diagnostico contemp-ideal,eval=TRUE}
 md <- l_md_1alike[["contemp-ideal"]]
 print(k.check(md))
 print(summary(md))
@@ -230,7 +230,7 @@ print(p)
 
 #### Contemp-Non frag.
 
-```{r diagnostico non-frag}
+```{r diagnostico non-frag,eval=TRUE}
 md <- l_md_1alike[["contemp-non_frag"]]
 print(k.check(md))
 print(summary(md))
@@ -242,7 +242,7 @@ print(p)
 
 #### Non frag. - prístino
 
-```{r diagnostico non frag- prístino}
+```{r diagnostico non frag- prístino,eval=TRUE}
 md <- l_md_1alike[["non_frag-ideal"]]
 print(k.check(md))
 print(summary(md))
@@ -254,7 +254,7 @@ print(p)
 
 ## 2a fase de comparações: existe concurvidade entre o efeito fixo da paisagem e covariáveis? é necessário considerar todas as covariáveis?
 
-```{r tabelas dos modelos da 2a fase}
+```{r tabelas dos modelos da 2a fase,eval=TRUE}
 library(knitr)
 df <- data.frame(
   modelo = c("mais plausível 1a fase", "sem ano", "sem coord", "sem cov","mgcv::s"),
@@ -268,7 +268,7 @@ knitr::kable(df,
              caption = "Características dos GAMM na 2a fase de comparações\n method='REML'")
 ```
 
-```{r ajuste dos modelos da 2a fase de comparações}
+```{r ajuste dos modelos da 2a fase de comparações,eval=FALSE}
 df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
   rename(logOR = itself)
 f_gam <- \(dfi){
@@ -302,13 +302,19 @@ l_md_logOR_aud <- df_md %>%
 saveRDS(l_md_logOR_aud,file="dados/Rdata/l_md_logOR_aud.rds")
 ```
 
+```{r tabela de selecao 2a fase de comparacoes,eval=TRUE}
+df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
+knitr::kable(df_tabelaSelecao, 
+             caption = "Tabela de seleção da 2a fase de comparações")
+```
 
 
 
 
-# Apêndice
 
-## Congruência com a SAD observada nos contrafactuais de paisagens e taxa U
+<!-- # Apêndice -->
+
+<!-- ## Congruência com a SAD observada nos contrafactuais de paisagens e taxa U -->
 
 ```{r}
 # df_adSAD
