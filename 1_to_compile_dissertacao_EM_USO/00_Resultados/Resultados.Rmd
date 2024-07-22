@@ -121,13 +121,14 @@ basic_theme <- function(data, ...){
 ```{r trackdown chunk resultados, include=FALSE,eval=FALSE}
 # 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
 # pacotes
+# install.packages("trackdown")
 library(trackdown)
 # both overwrite: 
 # overwrite the current google drive file with the current Rmd:
 # upload_file(file="secoes_texto/Resultados/Resultados.Rmd",
 #             gpath="mestrado/artigo_principal/secoes_texto/",
 #             hide_code=TRUE)
-update_file(file ="secoes_texto/Resultados/Resultados.Rmd",
+update_file(file ="1_to_compile_dissertacao_EM_USO/00_Resultados/Resultados.Rmd",
             gpath = "mestrado/artigo_principal/secoes_texto/",
             hide_code = TRUE)
 # overwrite the current Rmd with the current google drive 
@@ -152,32 +153,81 @@ Para descrever a variação na taxa U associada à variação na extensão espac
 
 Observamos que a extensão espacial adequada tende a aumentar com a redução da limitação de dispersão (Figura 3), exceto em graus de limitação de dispersão pouco severos, nos valores intermediários simulados (Fig Efeito de Escalar 2a e 2b). Nesses graus de limitação de dispersão intermediários há pouca variação na média da taxa U entre escalas e sempre grande variação entre réplicas de uma mesma bateria de simulações (Fig Efeito de Escalar 2a, A1 2b e A1 4b). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90, a extensão espacial da paisagem adequada é de 1 km de lado (Figura 3). Para k entre 0.80 e 0.55, que corresponde ao campo de parâmetros com máximo global, não é possível determinar uma tendência de redução da média da estimativa de U (Figura 3); a variação entre escalas para um mesmo sítio é baixa (Figuras Efeito de Escalar 2 e A1 3). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura Efeito de Escalar 5 e 6). Pressuposto que a extensão espacial adequada para simular k entre 0.80 e 0.55 pode ser obtida interpolando as escalas adequadas, então nesses graus de limitação de dispersão a extensão suficiente é de 1 km de lado da paisagem ao redor. Uma vez que a paisagem com 4 km de lado foi suficiente para simular todos os graus de limitação de dispersão todas as simulações serão feitas nessa extensão e tambeḿ o calculo da proporção de cobertura florestal. Não simulamos paisagens com lado de 1 km e 2 km, que foram adequadas para os graus de limitação de dispersão de 0.99 até 0.35 e de 0.35 até 0.20, respectivamente.
 
-## Práticas ontológicas de programas de pesquisa em disputa em um sistema epistêmico contrafactual baseado em indivíduos
+## Práticas ontológicas dos programas de pesquisa em disputa em um sistema epistêmico contrafactual baseado em indivíduos
 
 Em ambas práticas ontológicas primeiro alguma característica da paisagem, que interpreta-se estar relacionada com a biodiversidade local, é mensurada e então é quantificado o efeito desta métrica da paisagem na biodiversidade local (REF). 
 
-Aqui interpretamos como métrica de influência da paisagem na biodiversidade local a razão entre a taxa U estimada para simular a riqueza local observada nas paisagens contrafactuais em comparação. A razão da taxa U é o risco relativo de colonização de uma nova espécie na paisagem por evento de nascimento. Quanto menor a taxa U necessário para simular a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U estimadas em cada paisagem contrafactual for igual a zero não há diferença entre contrafactuais. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. Descrevemos o log da razão da taxa U em função dos graus de limitação de dispersão simulados e da proporção de cobertura florestal na paisagem contemporânea.
+Aqui interpretamos como métrica de influência da paisagem na biodiversidade local a razão entre a taxa U estimada para simular a riqueza local observada nas paisagens contrafactuais em contraste. A razão da taxa U é o risco relativo de colonização de uma nova espécie na paisagem por evento de nascimento. Quanto menor a taxa U necessário para simular a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U estimadas em cada paisagem contrafactual for igual a zero não há diferença entre contrafactuais. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. Descrevemos o log da razão da taxa U em função dos graus de limitação de dispersão simulados e da proporção de cobertura florestal na paisagem contemporânea (seção 'Métrica funcional').
 
 Como métrica de biodiversidade local utilizamos a distribuição de abundância de espécies (SAD, da sigla em inglês _Species Abundance Distribution_). Avaliamos a congruência da SAD observada e da SAD simulada em cada contrafactual. Para simular a SAD, o contrafactual deve ser composto pela paisagem hipotética e por um valor de taxa U. Nós interpretados que o contrafactual composto pela paisagem hipotética e a respectiva estimativa da taxa U na paisagem está alinhado com as práticas ontológicas dos programas de pesquisa em disputa. Outras interpretações serão exploradas na discussão.
-Assim, a conclusão da prática ontológica é a de quantificar o efeito da métrica da paisagem na descrição da biodiversidade local. Nós quantificamos o efeito da métrica da paisagem na congruência relativa do contraste entre contrafactuais. A congruência relativa é obtida em duas partes. Primeiro, a SAD simulada é comparada com a SAD observada pelo teste de Kolmogorov-Smirnov bootstrap e é contabilizado o número de SADs simuladas com boa congruência com a SAD observada. Segundo, 
-é calculado o log da chance de uma SAD simulada ter boa congruência para cada contrafactual e então é calculado o log da razão da chance do contraste de contrafactuais. O log da razão da chance é usada como variável resposta de uma análise de regressão que tem a métrica funcional da paisagem como efeito fixo e aleatório, com cada paisagem livre para ter um particular efeito, e com as coordenadas espaciais do inventário e o ano do inventários como covariáveis fixas.
+Assim, a conclusão da prática ontológica é a de quantificar o efeito da métrica da paisagem na descrição da biodiversidade local. Nós quantificamos o efeito da métrica da paisagem na congruência relativa dos contrafactuais em contraste. A congruência relativa é obtida em duas partes. Primeiro, a SAD simulada é comparada com a SAD observada pelo teste de Kolmogorov-Smirnov bootstrap e é contabilizado o número de SADs simuladas com boa congruência com a SAD observada. Segundo, é calculado o log da chance de uma SAD simulada ter boa congruência para cada contrafactual e então é calculado o log da razão da chance dos contrafactuais em contraste. O log da razão da chance é usada como variável resposta de uma análise de regressão que tem a métrica funcional da paisagem como efeito fixo e aleatório, com cada paisagem livre para ter um particular efeito, e com as coordenadas espaciais do inventário e o ano do inventários como covariáveis fixas (seção 'Congruência relativa').
+
+### Métrica funcional: grau de dependência da paisagem ao redor para repor espécies extintas localmente
+
+#### Taxa U de cada paisagem contrafactual
+
+Quando há pouca perda de habitat a estimativa da taxa U não difere entre as 3 paisagens contrafactuais (fig. \@ref(fig:GE-Urep-sitio-k-land)). Para paisagens contemporâneas com proporção de cobertura vegetal abaixo de 0.95, observamos que a estimativa da taxa U pode ser distinta entre paisagens hipotéticas para alguns graus de limitação de dispersão (fig. \@ref(fig:GE-Urep-sitio-k-land)). A maior variação entre graus de limitação de dispersão ocorre nos graus de limitação de dispersão mais brandos simulados, seguido pelos graus mais severos; nos graus de limitação de dispersão pouco severos, onde há o máximo global nas paisagens infinitas e sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre tipos de paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Nas paisagens abaixo de 0.95, a paisagem hipotética contemporânea costuma apresentar estimativas superiores de taxa U em comparação com as outras duas paisagens contrafactuais (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em alguns casos, a estimativa em paisagem aglomerada per se pode ser superior ao estimado na paisagem contemporânea (fig. \@ref(fig:GE-Urep-sitio-k-land), na 2a coluna e 4a linha e na 10a coluna e 1a linha ). Sobre a estimativa da taxa U, em resumo: i) quanto maior a perda de habitat e mais branda a limitação de dispersão, maior a potencial diferença entre as 3 paisagens contrafactuais; ii) em geral a estimativa em paisagens contemporâneas é superior; iii) em geral o estimado na paisagem aglomerada e 
+prístina são similares, porém, para alguns sítios com pouca proporção de cobertura vegetal, o estimado em paisagem aglomerado pode ser superior. 
+
+GRÁFICOS EXPLORATÓRIOS DA TAXA U
+GRÁFICOS DESCRITIVOS DOS CONTRASTES EM FUNCAO DE P E K 
+
+```{r moodelos estatísticos usados para descrever as métricas funcionais baseadas na taxa U}
+df <- data.frame(
+  modelo = c("gi", "gs", 
+             "gi - p * k","gs - p * k",
+             "p * k + 1|Site", "p + k + 1|Site",
+             "mgcv::"),
+  `p + k` = c("0", "0", "1", "1","0","1","s(p,bs='cr') + s(k,bs='cr')"),
+  `p * k` = c("1", "1", "0", "0","1","0","`p + k` + ti(p,k)"),
+  `gi` = c("1", "0", "1", "0","0","0","s(k, by=Site, bs='cr')+ s(Site,bs='re')"),
+  `gs` = c("0", "1", "0", "1","0","0","s(k, Site, bs='fs',xt=list(bs='cr'))+ s(Site,bs='re')"),
+  `1|Site` = c("0", "0", "0", "0","1","1","s(Site,bs='re')")
+  )
+names(df) <- c("modelo","p + k","p * k","gi","gs","1|Site")
+knitr::kable(df, 
+             caption = "GAMMs usados para descrever o log(U/U) dos contrastes entre contrafactuais previstos em cada prática ontológica")
+```
 
 
+#### Prática ontológica interdependente
 
-ANTIGO
+```{r tabela de selecao taxa U pratica inter}
+df_tabsel_contrasteU <- read_csv(file="5_resultados/df_tabsel_contrasteU.csv")
+df <- df_tabsel_contrasteU %>% filter(pair=="frag.total") %>% 
+  rename("Moran I statistic (res.)"="Moran I statistic",
+         "Contraste"="pair") %>% 
+  mutate(Contraste = "Frag. total")
+knitr::kable(df, 
+             caption = "GAMMs usados para descrever o log(U/U) dos contrastes entre contrafactuais previstos em cada prática ontológica")
+```
 
+TEXTO PRATICA INTER
 
-A partir dessa seção iremos analisar os dados das simulações feitas nos 3 tipos de paisagens hipotéticas: a paisagem contemporâneas, com a configuração espacial do habitat remanescente observada no mesmo ano que a melhor aproximação do ano da amostragem da parcela; a paisagem sem fragmentação per se, onde todo o habitat remanescente na paisagem contemporânea é aglomerado ao redor  da parcela em forma de quadrado; e a paisagem idealizada, sem perda de habitat. Quando há pouca perda de habitat a estimativa da taxa U não difere entre as 3 paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Para paisagens contemporâneas com proporção de cobertura vegetal abaixo de 0.95, observamos que a estimativa da taxa U pode ser distinta entre paisagens hipotéticas para alguns graus de limitação de dispersão (fig. \@ref(fig:GE-Urep-sitio-k-land)). A maior variação entre graus de limitação de dispersão ocorre nos graus de limitação de dispersão mais brandos simulados, seguido pelos graus mais severos; nos graus de limitação de dispersão pouco severos, onde há o máximo global nas paisagens infinitas e sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre tipos de paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em geral, a paisagem hipotética contemporânea apresenta estimativas superiores da taxa U em comparação com as outras duas paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em alguns casos, a estimativa em paisagem sem fragmentação per se pode ser superior ao estimado na paisagem contemporânea (fig. \@ref(fig:GE-Urep-sitio-k-land), na 2a coluna e 4a linha e na 10a coluna e 1a linha ). Sobre a estimativa da taxa U, em resumo: i) quanto maior a perda de habitat e mais branda a limitação de dispersão, maior a potencial diferença entre as 3 paisagens hipotéticas; ii) em geral a estimativa em paisagens contemporâneas é superior ao estimado nos outros 2 tipos de paisagens hipotéticas; iii) em geral o estimado nas paisagens sem fragmentação per se e sem perda de habitat são similares, porém, para alguns sítios com pouca proporção de cobertura vegetal, o estimado em paisagem sem fragmentação per se pode ser superior. 
+#### Prática ontológica independente
 
+```{r tabela de selecao taxa U pratica ind 1}
+df_tabsel_contrasteU <- read_csv(file="5_resultados/df_tabsel_contrasteU.csv")
+df <- df_tabsel_contrasteU %>% filter(pair=="area") %>% 
+  rename("Moran I statistic (res.)"="Moran I statistic",
+         "Contraste"="pair") %>% 
+  mutate(Contraste = ifelse(
+    Contraste=="area","Área per se","Frag. per se"
+  ))
+knitr::kable(df, 
+             caption = "Tabela de seleção e avaliação dos modelos usados para descrever o efeito de área per se, previsto na prática ontológica independente")
+```
 
-FUTURAMENTE:
-
-- Figura
-1a parte) 3 quadros cada uma agregada por tipo de paisagem e com todos os sítios com traço mais claro e a média geral em destaque
-2a parte) Efeitos da Paisagem: contraste entre as esimativas das taxas Us entre tipos de paisagens
-
-```{r fig-taxaU}
-
+```{r tabela de selecao taxa U pratica ind 2}
+df_tabsel_contrasteU <- read_csv(file="5_resultados/df_tabsel_contrasteU.csv")
+df <- df_tabsel_contrasteU %>% filter(pair=="frag.perse") %>% 
+  rename("Moran I statistic (res.)"="Moran I statistic",
+         "Contraste"="pair") %>% 
+  mutate(Contraste = ifelse(
+    Contraste=="area","Área per se","Frag. per se"
+  ))
+knitr::kable(df, 
+             caption = "Tabela de seleção e avaliação dos modelos usados para descrever o efeito de área per se, previsto na prática ontológica independente")
 ```
 
 

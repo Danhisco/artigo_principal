@@ -3,6 +3,10 @@
 # input: uma lista com os modelos candidatos nomeados
 # output um data frame com o output de bbmle::AICctab + mgcv::summary$dev.exp
 
+modelo = c("gi", "gs", 
+           "gi sem p * k","gs sem p * k",
+           "p * k + 1|Site", "p + k + 1|Site",
+           "mgcv::s")
 
 f_TabSelGAMM <- function(l_md){
   l_names <- names(l_md)
