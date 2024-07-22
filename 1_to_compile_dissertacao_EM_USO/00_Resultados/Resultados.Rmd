@@ -230,12 +230,26 @@ knitr::kable(df,
              caption = "Tabela de seleção e avaliação dos modelos usados para descrever o efeito de área per se, previsto na prática ontológica independente")
 ```
 
+TEXTO PRATICA IND
 
 
+### Efeito da métrica funcional da paisagem na congruência relativa do contraste de contrafactuais
+
+
+
+
+#### Prática ontológica interdependente
+
+#### Prática ontológica independente
+
+ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO
 
 \newpage
 
+
 ## SAD observada e SAD predita entre paisagens hipotéticas
+
+
 
 ### Erro na Riqueza Simulada
 
