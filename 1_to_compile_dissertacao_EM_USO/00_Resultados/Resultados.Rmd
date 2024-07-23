@@ -140,6 +140,60 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção. As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig. \@ref(fig:GE-sitios-amostrados) a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo. Apenas 2 sítios possuíam menos de 20 anos de recuperação desde o último grande distúrbio na área e foram removidos (fig. \@ref(fig:GE-sitios-amostrados) c). A mediana da área amostrada foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. \@ref(fig:GE-sitios-amostrados) b). Portanto, todos os 107 sítios restantes dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Não foi possível estimar a taxa U em um sítio com baixa densidade de espécies por número de indivíduos e de baixa proporção de cobertura vegetal na paisagem ao redor. Em outro sítio não foi possível desenhar a parcela quadrado no centro da paisagem devido a configuração espacial da paisagem. Esses dois sítios foram removidos, totalizando 105 sítios simulados.
 
+```{r criacao GE dados disponiveis,eval=FALSE,echo=FALSE,include=FALSE}
+theme_set(theme_light())
+df_plot <- df_dados_disponiveis %>% 
+  inner_join(df_p) %>% 
+  select(SiteCode, p, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
+l_p <- list()
+l_p[[1]] <- df_plot |> 
+  ggplot(aes(y=lat,x=long,fill=p)) +
+  geom_point(alpha=0.85,shape = 21,size=3,color="black") +
+  scale_fill_gradientn("% CF",colours = terrain.colors(10)) +
+  theme_gray() +
+  guides(fill=guide_colourbar(position="inside")) +
+  theme(legend.position.inside = c(0.9,0.25)) +
+  labs(subtitle = "a)")
+v_labels <- c("effort_ha" = "plot area (ha)",
+              "Ntotal" = "# ind",
+              "S_obs" = "riqueza",
+              "year_bestProxy" = "approx. data year")
+df_plot[grep("\\_",df_plot$year_bestProxy),"year_bestProxy"] <- "2012.5"
+l_p[[2]] <- df_plot |>
+  mutate(year_bestProxy = as.numeric(year_bestProxy)) |> 
+  pivot_longer(effort_ha:year_bestProxy) |> 
+  mutate(name=case_when(
+    name == "effort_ha" ~ "plot\narea (ha)",
+    name == "Ntotal" ~ "# ind",
+    name == "S_obs" ~ "S obs",
+    name == "year_bestProxy" ~ "year"
+  )) %>% 
+  ggplot(aes(x=name,y=value)) +
+  theme_bw() +
+  geom_jitter(alpha=0.4) +
+  geom_boxplot() +
+  labs(x="",y="",subtitle="b)") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  facet_wrap(~name,nrow=1,scales="free")
+  # coord_flip()
+l_p[[3]] <- df_plot |> 
+  ggplot(aes(x=forest_succession)) +
+  geom_bar() +
+  geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
+  labs(x="classificação de grau de perturbação do TreeCo",
+       y="countagem",subtitle="c)")
+p <- arrangeGrob(grobs=l_p,nrow=1)
+ggsave(filename = "./figuras/GE_dados_disponiveis.png",plot = p,
+       width=12,height = 5)
+```
+```{r caption GE dados disponiveis}
+cap <- ""
+```
+```{r pring GE dados disponiveis}
+knitr::include_graphics(path="./figuras/GE_dados_disponiveis.png")
+```
+
 
 ## Definição da escala espacial adequada para simular os contrafactuais
 
@@ -152,6 +206,14 @@ Analisamos os dados agrupados por sítio de amostragem (Fig Efeito de Escalar 2a
 Para descrever a variação na taxa U associada à variação na extensão espacial para um determinado grau de limitação de dispersão, exploramos um modelo gaussiano em que a taxa U média pode ser descrita em função do número de espécies e indivíduos (na escala log) e do grau de limitação de dispersão e da extensão espacial (como variáveis categóricas) com um intercepto aleatório por sítio de amostragem (detalhes no apêndice ‘Efeito de Escalar’). Avaliamos, por grau de limitação de dispersão, como a média variou em função do aumento da extensão espacial da paisagem. A escala que acumulou a maior parte da variação total (de aumentar o lado da paisagem local de 0.5 km até 16 km) foi considerada como escala adequada para aquele grau de limitação de dispersão. Essa abordagem pressupõe que o efeito de escalar é monotônico. 
 
 Observamos que a extensão espacial adequada tende a aumentar com a redução da limitação de dispersão (Figura 3), exceto em graus de limitação de dispersão pouco severos, nos valores intermediários simulados (Fig Efeito de Escalar 2a e 2b). Nesses graus de limitação de dispersão intermediários há pouca variação na média da taxa U entre escalas e sempre grande variação entre réplicas de uma mesma bateria de simulações (Fig Efeito de Escalar 2a, A1 2b e A1 4b). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90, a extensão espacial da paisagem adequada é de 1 km de lado (Figura 3). Para k entre 0.80 e 0.55, que corresponde ao campo de parâmetros com máximo global, não é possível determinar uma tendência de redução da média da estimativa de U (Figura 3); a variação entre escalas para um mesmo sítio é baixa (Figuras Efeito de Escalar 2 e A1 3). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura Efeito de Escalar 5 e 6). Pressuposto que a extensão espacial adequada para simular k entre 0.80 e 0.55 pode ser obtida interpolando as escalas adequadas, então nesses graus de limitação de dispersão a extensão suficiente é de 1 km de lado da paisagem ao redor. Uma vez que a paisagem com 4 km de lado foi suficiente para simular todos os graus de limitação de dispersão todas as simulações serão feitas nessa extensão e tambeḿ o calculo da proporção de cobertura florestal. Não simulamos paisagens com lado de 1 km e 2 km, que foram adequadas para os graus de limitação de dispersão de 0.99 até 0.35 e de 0.35 até 0.20, respectivamente.
+
+```{r cap fig5_SoE}
+cap <- ""
+```
+```{r}
+knitr::include_graphics(path = "./figuras/fig5_SoE.png")
+```
+
 
 ## Práticas ontológicas dos programas de pesquisa em disputa em um sistema epistêmico contrafactual baseado em indivíduos
 
@@ -170,6 +232,16 @@ Quando há pouca perda de habitat a estimativa da taxa U não difere entre as 3 
 prístina são similares, porém, para alguns sítios com pouca proporção de cobertura vegetal, o estimado em paisagem aglomerado pode ser superior. 
 
 GRÁFICOS EXPLORATÓRIOS DA TAXA U
+
+```{r caption figura exploratoria da taxa U}
+cap <- ""
+```
+```{r}
+knitr::include_graphics(path="./figuras/GE_taxaU_contrastes.png")
+```
+
+
+
 GRÁFICOS DESCRITIVOS DOS CONTRASTES EM FUNCAO DE P E K 
 
 ```{r moodelos estatísticos usados para descrever as métricas funcionais baseadas na taxa U}
@@ -234,7 +306,6 @@ TEXTO PRATICA IND
 
 
 ### Efeito da métrica funcional da paisagem na congruência relativa do contraste de contrafactuais
-
 
 
 

@@ -49,10 +49,10 @@ df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
 ## efeito U
 df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv")
 # dados para modelos
-df_md0 <- df_adSAD %>%
-  filter(taxaU=="contemp",land_type=="contemp") %>%
-  select(SiteCode,k,nCongKS) %>%
-  inner_join(df_contrastes %>% select(SiteCode:k,frag.total_logratio)) # versão do
+# df_md0 <- df_adSAD %>%
+#   filter(taxaU=="contemp",land_type=="contemp") %>%
+#   select(SiteCode,k,nCongKS) %>%
+#   inner_join(df_contrastes %>% select(SiteCode:k,frag.total_logratio)) # versão do
 df_contrastes <- df_contrastes %>%
   select(SiteCode:p, contains("_logratio")) %>% 
   mutate(across(-SiteCode,f_z,.names = "{.col}_z")) %>% 
@@ -64,6 +64,19 @@ df_contrastes <- df_contrastes %>%
   mutate(contraste = case_when(contraste=="area" ~ "non_frag-ideal",
                                contraste=="frag.total" ~ "contemp-ideal",
                                contraste=="frag.perse" ~ "contemp-non_frag"))
+# df SADs congruentes
+df_adSADifself <- adply(c("contemp","ideal","non_frag"),1,\(i){
+  df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
+    select(-land_type,-c(Smed:Smax)) %>% 
+    rename("contrafactual"="taxaU",
+           "nCong"="nCongKS")
+  inner_join(df_return,
+             df_contrastes %>% 
+               filter(contraste=="non_frag-ideal") %>% 
+               select(SiteCode:p,ends_with("_z")),
+             by=c("SiteCode","k"))
+},.id=NULL)
+# df_logOR para modelar
 df_logOR <- df_adSAD %>% 
   mutate(nKS = case_when(nCongKS == 0 ~ 0.09, #min pred for a GLMM for a sampled comb
                          nCongKS == 100 ~ 99.73, #max pred for a GLMM for a sampled comb
@@ -75,6 +88,92 @@ df_logOR <- df_adSAD %>%
   inner_join(y=df_dados_disponiveis,by="SiteCode") %>% 
   relocate(p,.after=k)
 ```
+
+# Número de SADs congruentes 
+
+```{r ajuste do número de SADs congruentes,eval=FALSE,echo=FALSE}
+f_gam <- function(df){
+  l_md <- list()
+  # 1) gi
+  l_md$gi <- gam(cbind(nCong,100-nCong) ~
+                   s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(p_z,k_z) +
+                   s(k_z, by=SiteCode, bs="cr") +
+                   s(SiteCode,bs="re"),
+                 data=df,method = "REML",family="binomial")
+  # 2) gs
+  l_md$gs <- gam(cbind(nCong,100-nCong) ~
+                   s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(p_z,k_z) +
+                   s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                   s(SiteCode,bs="re"),
+                 data=df,method = "REML",family="binomial")
+  # 3) gi - p*k
+  l_md$gi_s_pk <- gam(cbind(nCong,100-nCong) ~
+                        s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                        s(k_z, by=SiteCode, bs="cr") +
+                        s(SiteCode,bs="re"),
+                      data=df,method = "REML",family="binomial")
+  # 4) gs - p * k 
+  l_md$gs_s_pk <- gam(cbind(nCong,100-nCong) ~
+                     s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
+                   data=df,method = "REML",family="binomial")
+  # 5) gi - p
+  l_md$gi_s_p <- gam(cbind(nCong,100-nCong) ~
+                        s(k_z,bs = "cr") +
+                        s(k_z, by=SiteCode, bs="cr") +
+                        s(SiteCode,bs="re"),
+                      data=df,method = "REML",family="binomial")
+  # 6) gs - p
+  l_md$gs_s_p <- gam(cbind(nCong,100-nCong) ~
+                     s(k_z,bs = "cr") + 
+                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
+                   data=df,method = "REML",family="binomial")
+  # 7) p*k + 1|Site
+  l_md$pk_1site <- gam(cbind(nCong,100-nCong) ~
+                       s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                       ti(p_z,k_z) +
+                       s(SiteCode,bs="re"),
+                     data=df,method = "REML",family="binomial")
+  # 8) p+k + 1|Site
+  l_md$p_k_1site <- gam(cbind(nCong,100-nCong) ~
+                         s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                         s(SiteCode,bs="re"),
+                       data=df,method = "REML",family="binomial")
+  # 9) k + 1|Site
+  l_md$k_1site <- gam(cbind(nCong,100-nCong) ~
+                         s(k_z,bs = "cr") +
+                         s(SiteCode,bs="re"),
+                       data=df,method = "REML",family="binomial")
+  return(l_md)
+}
+# registerDoMC(3)
+# df <- df_adSADifself %>% 
+#   mutate(SiteCode=factor(SiteCode)) %>% 
+#   filter(contrafactual=="contemp")
+l_md <- df_adSADifself %>% 
+  mutate(SiteCode=factor(SiteCode)) %>% 
+  split(.,df_md$contrafactual) %>% 
+  lapply(.,f_gam)
+saveRDS(l_md,file="dados/Rdata/l_md_nSAD_descricaos.rds")
+```
+```{r graficos exploratorios SAD congruentes}
+df_adSADifself %>% 
+  ggplot(aes(x=k,y=nCong,color=p,group=SiteCode)) +
+  geom_line(alpha=0.2) +
+  geom_point(alpha=0.2) +
+  scale_colour_gradient2("% CF",midpoint=0.5,
+                         low="darkred",
+                         mid = "blue",
+                         high = "darkgreen") +
+  facet_wrap(~contrafactual,ncol=3)
+  
+```
+
+
 
 # Contraste entre contrafactuais
 
