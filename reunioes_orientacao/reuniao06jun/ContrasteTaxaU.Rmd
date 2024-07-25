@@ -231,22 +231,43 @@ saveRDS(l_md,file="dados/Rdata/l_md_contrastes.rds")
 
 ```{r tabela de seleção}
 l_md <- readRDS("dados/Rdata/l_md_contrastes.rds")
-df_tabsel_contrasteU <- ldply(l_md,f_TabSelGAMM,.id="pair")
-df_tabsel_contrasteU <- df_tabsel_contrasteU %>% 
-  mutate(modelo = case_when(
-    grepl("^ti$",modelo)~"gs",
-    modelo=="gi_s_ti"~"gi - p * k",
-    modelo=="s_ti"~"gs - p*k",
-    modelo=="ti_sfs"~"p * k + 1|Site",
-    modelo=="s_ti_sfs"~"p + k + 1|Site",
-    TRUE~modelo))
-write_csv(df_tabsel_contrasteU,file="5_resultados/df_tabsel_contrasteU.csv")
+if(!file.exists("5_resultados/df_tabsel_contrasteU.csv")){
+  df_tabsel_contrasteU <- ldply(l_md,f_TabSelGAMM,.id="pair")
+  df_tabsel_contrasteU <- df_tabsel_contrasteU %>% 
+    mutate(modelo = case_when(
+      grepl("^ti$",modelo)~"gs",
+      modelo=="gi_s_ti"~"gi - p * k",
+      modelo=="s_ti"~"gs - p * k",
+      modelo=="ti_sfs"~"p * k + 1|Site",
+      modelo=="s_ti_sfs"~"p + k + 1|Site",
+      TRUE~modelo))
+  write_csv(df_tabsel_contrasteU,file="5_resultados/df_tabsel_contrasteU.csv")
+}else{
+  df_tabsel_contrasteU <-
+    read_csv("./5_resultados/df_tabsel_contrasteU.csv")
+}
+# arrumar os nomes
+f_names_lmd <- \(li){
+  names(li) <- case_when(
+      grepl("^ti$",names(li))~"gs",
+      names(li)=="gi_s_ti"~"gi - p * k",
+      names(li)=="s_ti"~"gs - p * k",
+      names(li)=="ti_sfs"~"p * k + 1|Site",
+      names(li)=="s_ti_sfs"~"p + k + 1|Site",
+      TRUE~names(li))
+  return(li)
+}
+l_md <- lapply(l_md,f_names_lmd)
+#
 l_md_maisplausivel <- lapply(names(l_md),\(li){
-  df_tabsel <- l_tabsel[[li]]
+  df_tabsel <- df_tabsel_contrasteU %>% filter(pair==li)
   lmd <- l_md[[li]]
   lmd[[df_tabsel$modelo[1]]]
 })
 names(l_md_maisplausivel) <- names(l_md)
+```
+```{r}
+
 ```
 
 
@@ -255,7 +276,7 @@ names(l_md_maisplausivel) <- names(l_md)
 <!-- ### Área per se -->
 
 ```{r tabela de seleção dos modelos para área,include=FALSE}
-l_tabsel[["area"]]
+df_tabsel_contrasteU %>% filter(pair=="area")
 ```
 ```{r diagnóstico modelo mais plausível área,eval=FALSE,include=FALSE}
 i <- 1
@@ -265,9 +286,6 @@ v_draw <- formula(md)[3] %>% f_extract_smoothers_f_formula
 print("k.check:")
 print(k.check(md))
 print("summary:")
-#
-md <- l_md[["area"]]$ti
-#
 print(summary(md))
 print(gratia::appraise(md))
 print(gratia::draw(md,select = v_draw))
@@ -276,18 +294,23 @@ print(gratia::draw(md,select = v_draw))
 <!-- ### Fragmentation per se -->
 
 ```{r tabela de seleção dos modelos para frag.perse,include=FALSE}
-l_tabsel[["frag.perse"]]
+df_tabsel_contrasteU %>% filter(pair=="frag.perse")
 ```
 ```{r frag per se,eval=FALSE,include=FALSE}
 i <- 2
 names(l_md_maisplausivel)[i]
 md <- l_md_maisplausivel[[i]]
+v_draw <- formula(md)[3] %>% f_extract_smoothers_f_formula
 print("k.check:")
 print(k.check(md))
 print("summary:")
 print(summary(md))
 print(gratia::appraise(md))
 print(gratia::draw(md))
+
+```
+```{r}
+
 ```
 
 <!-- ### Fragmentation total -->

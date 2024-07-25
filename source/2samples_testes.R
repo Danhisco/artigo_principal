@@ -218,7 +218,7 @@ f_MoranTest_GAMM <- \(md){
   # return
   data.frame(
     Statistic = c(
-      "Moran I statistic", 
+      "Moran I statistic (res)", 
       "Expectation", 
       "Variance", 
       "Standard Deviate", 

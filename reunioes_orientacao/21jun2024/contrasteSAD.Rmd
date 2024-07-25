@@ -174,7 +174,6 @@ df_adSADifself %>%
 ```
 
 
-
 # Contraste entre contrafactuais
 
 Para cada contraste existem até 4 pontos de referência da taxa U: i) o correspondente, quando a taxa U e a paisagem contrafactual coincidem; ii) numerador, taxa U da paisagem contrafactual no numerador do contraste; iii) denominador, taxa U do contrafactual no denominador; e iv) prístino, a taxa U da respectiva paisagem contrafactual sem perda de .
@@ -184,6 +183,7 @@ Para cada contraste existem até 4 pontos de referência da taxa U: i) o corresp
 cap = ""
 ```
 ```{r figura 1 - GE logOR em funcao da taxa}
+# vai para SI
 theme_set(theme_bw())
 df_logOR %>% 
   select(-matches("^k|^p(!pristine)")) %>% 
@@ -226,6 +226,8 @@ df <- data.frame(
 knitr::kable(df, 
              caption = "Características dos GAMM na 1a fase de comparações\n method='REML'")
 ```
+
+O gamm com efeito por paisagem pelo método GI não foi feito pois levava muito tempo em meu computador pessoal. *
 
 ```{r 1a parte - ajuste de um GLMM para avaliação do range de logito,eval=FALSE,echo=FALSE}
 # 1a parte: ajuste de um GLMM para avaliaçã do range de logito necessário para descrição 
@@ -296,16 +298,56 @@ l_md_logOR <- df_md %>%
   lapply(.,f_gam)
 saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR_itself.rds")
 ```
+```{r}
+df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
+  rename(logOR = itself)
+f_gam <- \(dfi){
+ gam(logOR ~
+       s(Uefeito,bs="cr") + 
+       s(data_year,bs="cr") +
+       s(lat,long,bs="tp") +
+       s(SiteCode,bs="re") + s(Uefeito, by=SiteCode, bs="cr"),
+     data=dfi,method = "REML")
+}
+l_md_logOR_gi <- df_md %>% 
+  mutate(SiteCode=factor(SiteCode)) %>% 
+  split(.,df_md$contraste) %>% 
+  lapply(.,f_gam)
+saveRDS(l_md_logOR_gi,file="dados/Rdata/l_md_logOR_itself_gi.rds")
+```
+```{r}
+l_md_logOR <- readRDS(file="dados/Rdata/l_md_logOR_itself.rds")
+l_md_logOR_gi <- readRDS(file="dados/Rdata/l_md_logOR_itself_gi.rds")
+l_md_logOR_cgi <- lapply(names(l_md_logOR),\(li){
+  l_md <- l_md_logOR[[li]]
+  l_md$`com efeito por paisagem 2` <- l_md_logOR_gi[[li]]
+  return(l_md)
+})
+names(l_md_logOR_cgi) <- names(l_md_logOR)
+saveRDS(l_md_logOR_cgi,file="dados/Rdata/l_md_logOR_cgi.rds")
+```
+
+
 
 ## 1a fase de comparações: qual estrutura aleatória usar? e é necessário considerar a paisagem?
 
 Para todos os contrastes, o GAMM mais plausível era aquele 'com efeito por paisagem' (tabela anterior). Todos eles apresentam o p-valor no teste de Moran muito maior do que 0·05% e a estatística de Moran I não é maior do que 0.15 em módulo. A deviance explicada dos modelos mais plausíveis varia entre 0.41 e 0.69. A seguir o diagnóstico dos modelos mais plausíveis.
 
 ```{r 1a tabela de selacao, eval=TRUE}
-l_md.logOR <- readRDS("dados/Rdata/l_md_logOR_itself.rds")
-df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_itself.csv")
-f_SML.gamm <- \(df){md <- l_md.logOR[[df$pair[1]]][[df$modelo[[1]]]]}
+# l_md.logOR <- readRDS("dados/Rdata/l_md_logOR_itself.rds")
+l_md_logOR <- readRDS(l_md_logOR_cgi,file="dados/Rdata/l_md_logOR_cgi.rds")
+#
+source("source/2samples_testes.R")
+source("source/general_tools.R")
+source("source/GAMMtools.R")
+source("source/fig_tools.R")
+df_tabsel_logOR <- ldply(l_md_logOR,f_TabSelGAMM,.id="pair")
+write_csv(df_tabsel_logOR,file="dados/csv/df_tabelaSelecao_logOR_cgi.csv")
+#
+df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_cgi.csv")
+f_SML.gamm <- \(df){md <- l_md_logOR[[df$pair[1]]][[df$modelo[[1]]]]}
 l_md_1alike <- dlply(df_tabelaSelecao,"pair",f_SML.gamm)
+saveRDS(l_md_1alike,file="dados/Rdata/l_md_logOR_itself_1alike.rds")
 ######
 knitr::kable(
   df_tabelaSelecao,

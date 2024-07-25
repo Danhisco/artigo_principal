@@ -1,7 +1,7 @@
 ---
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 
@@ -116,6 +116,19 @@ basic_theme <- function(data, ...){
       ...
     )
 }
+## congruência 
+df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
+df_adSADifself <- adply(c("contemp","ideal","non_frag"),1,\(i){
+  df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
+    select(-land_type,-c(Smed:Smax)) %>% 
+    rename("contrafactual"="taxaU",
+           "nCong"="nCongKS")
+  inner_join(df_return,
+             df_contrastes %>% 
+               filter(contraste=="non_frag-ideal") %>% 
+               select(SiteCode:p,ends_with("_z")),
+             by=c("SiteCode","k"))
+},.id=NULL)
 ```
 
 ```{r trackdown chunk resultados, include=FALSE,eval=FALSE}
@@ -274,25 +287,14 @@ knitr::kable(df,
              caption = "GAMMs usados para descrever o log(U/U) dos contrastes entre contrafactuais previstos em cada prática ontológica")
 ```
 
-TEXTO PRATICA INTER
+TEXTO TEXTO TEXTO TEXTO TEXTO 
 
 #### Prática ontológica independente
 
 ```{r tabela de selecao taxa U pratica ind 1}
 df_tabsel_contrasteU <- read_csv(file="5_resultados/df_tabsel_contrasteU.csv")
-df <- df_tabsel_contrasteU %>% filter(pair=="area") %>% 
-  rename("Moran I statistic (res.)"="Moran I statistic",
-         "Contraste"="pair") %>% 
-  mutate(Contraste = ifelse(
-    Contraste=="area","Área per se","Frag. per se"
-  ))
-knitr::kable(df, 
-             caption = "Tabela de seleção e avaliação dos modelos usados para descrever o efeito de área per se, previsto na prática ontológica independente")
-```
-
-```{r tabela de selecao taxa U pratica ind 2}
-df_tabsel_contrasteU <- read_csv(file="5_resultados/df_tabsel_contrasteU.csv")
-df <- df_tabsel_contrasteU %>% filter(pair=="frag.perse") %>% 
+df <- df_tabsel_contrasteU %>% 
+  # filter(pair=="area") %>% 
   rename("Moran I statistic (res.)"="Moran I statistic",
          "Contraste"="pair") %>% 
   mutate(Contraste = ifelse(
@@ -307,11 +309,66 @@ TEXTO PRATICA IND
 
 ### Efeito da métrica funcional da paisagem na congruência relativa do contraste de contrafactuais
 
+```{r GE SADs congruentes}
+df_adSADifself %>% 
+  mutate(contrafactual = case_when(
+    contrafactual == "contemp" ~ "paisagem e taxa U\n contemporânea",
+    contrafactual == "ideal" ~ "paisagem e taxa U\n prístina",
+    contrafactual == "non_frag" ~ "paisagem e taxa U\n aglomerada",
+  )) %>% 
+  ggplot(aes(x=k,y=nCong,color=p,group=SiteCode)) +
+  geom_line(alpha=0.2) +
+  geom_point(alpha=0.2) +
+  labs(y="número de SADs simuladas com boa congruência com o observado",
+       x="proporção de propágulos até a vizinhança imediata") +
+  scale_colour_gradient2("% CF",midpoint=0.5,
+                         low="darkred",
+                         mid = "blue",
+                         high = "darkgreen") +
+  facet_wrap(~contrafactual,ncol=3)
+```
+```{r}
+df <- data.frame(
+  modelo = c("com efeito por paisagem", "com efeito de paisagem", "sem efeito de paisagem","mgcv::s"),
+  `efeito em U` = c("1", "1", "0","s(bs='cr')"),
+  `ano dados` = c("1", "1", "1","s(bs='cr')"),
+  `coord. geo.` = c("1", "1", "1","s(bs='tp')"),
+  `intecep. por sítio` = c("1", "1", "1","s(bs='re')"),
+  `efeito em U por sítio` = c("1", "0", "0","s(bs='fs',xt=list(bs='cr'))")
+)
+names(df) <- c("GAMM","métrica funcional\nlog(U/U)","ano obs.","coord. geo. obs.","intercepto por Site","métrica funcional\npor Site")
+knitr::kable(df, 
+             caption = "GAMM usados para descrever os contraste de contrafactuais\n method='REML'")
+```
+
+```{r}
+df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_itself.csv")
+df_tabelaSelecao
+```
+Uma vez que 
+
+```{r}
+
+```
 
 
 #### Prática ontológica interdependente
 
+```{r}
+df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_itself.csv")
+df_tabelaSelecao %>% filter(pair=="contemp-ideal") %>% select(-pair)
+```
+
+
+
+
 #### Prática ontológica independente
+
+```{r}
+df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_itself.csv")
+df_tabelaSelecao %>% filter(pair!="contemp-ideal")
+```
+
 
 ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO
 
