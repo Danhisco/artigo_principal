@@ -335,7 +335,7 @@ Para todos os contrastes, o GAMM mais plausível era aquele 'com efeito por pais
 
 ```{r 1a tabela de selacao, eval=TRUE}
 # l_md.logOR <- readRDS("dados/Rdata/l_md_logOR_itself.rds")
-l_md_logOR <- readRDS(l_md_logOR_cgi,file="dados/Rdata/l_md_logOR_cgi.rds")
+l_md_logOR <- readRDS(file="./dados/Rdata/l_md_logOR_cgi.rds")
 #
 source("source/2samples_testes.R")
 source("source/general_tools.R")
@@ -360,15 +360,23 @@ knitr::kable(
 #### Contemp-ideal
 
 ```{r diagnostico contemp-ideal,eval=TRUE}
+l_md_1alike <- readRDS(file="dados/Rdata/l_md_logOR_itself_1alike.rds")
+v_pattern_gi <- " \\+ s\\(SiteCode, bs \\= \"re\"\\) \\+ s\\(Uefeito, by \\= SiteCode\\)"
 md <- l_md_1alike[["contemp-ideal"]]
 print(k.check(md))
 print(summary(md))
-p <- gratia::appraise(md)
-print(p)
-p <- gratia::draw(md)
-print(p)
+formals(f_extract_smoothers_f_formula)$pregex_rm <- v_pattern_gi
+v_draw <- formula(md)[3] %>% f_extract_smoothers_f_formula %>% 
+  gsub(", l",",l",.)
+print("k.check:")
+print(k.check(md))
+print("summary:")
+print(summary(md))
+print(gratia::appraise(md))
+print(gratia::draw(md,select = v_draw,residuals=TRUE))
 ```
 
+1] "s(Uefeito)"   "s(data_year)" "s(lat, long)"
 #### Contemp-Non frag.
 
 ```{r diagnostico non-frag,eval=TRUE}
@@ -393,6 +401,8 @@ p <- gratia::draw(md)
 print(p)
 ```
 
+
+
 ## 2a fase de comparações: existe concurvidade entre o efeito fixo da paisagem e covariáveis? é necessário considerar todas as covariáveis?
 
 ```{r tabelas dos modelos da 2a fase,eval=TRUE}
@@ -410,45 +420,62 @@ knitr::kable(df,
 ```
 
 ```{r ajuste dos modelos da 2a fase de comparações,eval=FALSE}
-df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
-  rename(logOR = itself)
-f_gam <- \(dfi){
+# df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
+#   rename(logOR = itself)
+l_md_1alike <- readRDS(file="dados/Rdata/l_md_logOR_itself_1alike.rds")
+l_md_1alike %>% names
+f_gam_update <- \(mdgam){
+  f_ref <- formula(mdgam)
+  original_data <- mdgam$model
+  f_gam <- \(fi){
+    gam(formula=fi,data=original_data,method = "REML")
+  }
   l_md <- list()
-  l_md$`com efeito por paisagem` <- gam(logOR ~
-        s(Uefeito,bs="cr") + 
-        s(data_year,bs="cr") +
-        s(lat,long,bs="tp") +
-        s(SiteCode,bs="re") + s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")),
-      data=dfi,method = "REML")
-  l_md$`sem ano` <- gam(logOR ~
-        s(Uefeito,bs="cr") + 
-        s(lat,long,bs="tp") +
-        s(SiteCode,bs="re") + s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")),
-      data=dfi,method = "REML")
-  l_md$`sem coord` <- gam(logOR ~
-        s(Uefeito,bs="cr") + 
-        s(data_year,bs="cr") +
-        s(SiteCode,bs="re") + s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")),
-      data=dfi,method = "REML")
-  l_md$`sem cov` <- gam(logOR ~
-        s(Uefeito,bs="cr") + 
-        s(SiteCode,bs="re") + s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")),
-      data=dfi,method = "REML")
+  l_md$`sem ano` <- update.formula(f_ref, . ~ . - s(data_year, bs = "cr"))
+  l_md$`sem coord` <- update.formula(f_ref, . ~ . - s(lat, long, bs = "tp"))
+  l_md$`sem cov` <- update.formula(l_md$`sem coord`, . ~ . - s(data_year, bs = "cr"))
+  l_md <- lapply(l_md,f_gam)
+  l_md$cheio <- mdgam
   return(l_md)
 }
-l_md_logOR_aud <- df_md %>% 
-  mutate(SiteCode=factor(SiteCode)) %>% 
-  split(.,df_md$contraste) %>% 
-  lapply(.,f_gam)
+l_md_logOR_aud <- lapply(l_md_1alike,f_gam_update)
 saveRDS(l_md_logOR_aud,file="dados/Rdata/l_md_logOR_aud.rds")
 ```
 
 ```{r tabela de selecao 2a fase de comparacoes,eval=TRUE}
-df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
+l_md_logOR_aud <- readRDS(file="dados/Rdata/l_md_logOR_aud.rds")
+df_tabsel_logOR_aud <- ldply(l_md_logOR_aud,f_TabSelGAMM,.id="pair")
+write_csv(df_tabsel_logOR_aud,
+          file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
+# df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
 knitr::kable(df_tabelaSelecao, 
              caption = "Tabela de seleção da 2a fase de comparações")
 ```
 
+# Model averaging da predição a posteriori 
+
+```{r}
+md <- l_md_logOR_aud[[1]][[1]]
+dfmd <- md$model
+f_newdata <- \(dfmd, with_random=TRUE,len_newdt = 150){
+  n_0cols <- names(dfmd) %>% gsub("logOR|Uefeito|SiteCode","",.)
+  n_cols <- names(dfmd) %>% grep("logOR|Uefeito|SiteCode",.,value=TRUE)
+  dfmd[,!names(dfmd)%in%n_cols] <- 0
+  if(with_random){
+    return(dfmd)
+  }else{
+    v_range <- dfmd$Uefeito %>% range
+    df_pred <- data.frame(
+      Uefeito = seq(v_range[1],v_range[2],length.out=len_newdt),
+      SiteCode = "SPigua1"
+      )
+    df_return <- 
+    cbind()
+  }
+    
+    
+}
+```
 
 
 

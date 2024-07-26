@@ -179,6 +179,95 @@ f_calcPI <- \(gamm,
     }
     return(df_newpred)
 }
+####
+# f_calcPI2
+f_calcPI <- \(gamm,
+              site.posteriori ="SPigua1",
+              length_pred = 150,
+              n.posteriori_samples = 10000,
+              with_random=TRUE,
+              # antigo
+              ad = c("prcong_glmer","land_kz","ad4","padrao","obs"),
+              newdata_path=NULL,
+              link_scale=FALSE){
+  # take the GAMM objects:
+  f_invlink <- gamm$family$linkinv
+  if(gamm$family$family=="binomial"){
+    dfmd <- gamm$model |> select(-1) |> 
+      mutate(y = gamm$model[,1][,1]) |> relocate(y)
+    names(dfmd)[1] <- colnames(gamm$model[,1])[1]  
+  }else{
+    dfmd <- gamm$model
+  }
+  # create the new data 
+  n_cols <- names(dfmd) %>% grep("logOR|Uefeito|SiteCode",.,value=TRUE)
+  dfmd[,!names(dfmd)%in%n_cols] <- 0
+  if(with_random){
+    return(df_obs)  
+  } else {
+    
+  }
+  
+  
+  ##### antigo
+    y_var <- names(df_obs)[1]
+    x1_var <- "p_z"
+    x2_var <- "k_factor"
+    x3_var <- "land_hyp"
+    df_newpred <- expand.grid(x1 = seq(min(df_obs[,x1_var]),max(df_obs[,x1_var]),length.out=length_pred),
+                              x2 = levels(df_obs[[x2_var]]),
+                              x3 = levels(df_obs[[x3_var]])) |> 
+      mutate(SiteCode = site.posteriori)
+    names(df_newpred)[1:3] <- c(x1_var,x2_var,x3_var)
+    x_var <- x1_var
+  }else if(ad=="land_kz"){
+    y_var <- names(df_obs)[1]
+    x1_var <- "land_hyp"
+    x2_var <- "k_z"
+    df_newpred <- expand.grid(x1 = levels(df_obs[[x1_var]]),
+                              x2 = seq(min(df_obs[,x2_var]),max(df_obs[,x2_var]),length.out=length_pred)) %>% 
+      mutate(SiteCode = site.posteriori)
+    names(df_newpred)[1:2] <- c(x1_var,x2_var)
+    x_var <- x2_var
+  }else{
+    y_var <- names(df_obs)[1]
+    x1_var <- names(df_obs)[2]
+    x2_var <- names(df_obs)[3]
+    df_newpred <- expand.grid(x1 = seq(min(df_obs[,x1_var]),max(df_obs[,x1_var]),length.out=length_pred),
+                              x2 = seq(min(df_obs[,x2_var]),max(df_obs[,x2_var]),length.out=length_pred)) |> 
+      mutate(SiteCode = site.posteriori)
+    names(df_newpred)[1:2] <- c(x1_var,x2_var)
+    x_var <- "k_z"
+  }
+  if(ad=="prcong_glmer"){
+    v_toexclude <- "s(SiteCode)"
+  }else if(ad=="ad4"){
+    v_toexclude <- c(paste0("s(k_z,SiteCode):land_hyp",c("cont","ideal","non_frag")),
+                     "s(land_hyp,SiteCode)")
+  }else{
+    v_toexclude <- c(paste0("s(",x_var,",SiteCode)"),"s(SiteCode)")
+  }
+  # obtain the predictions
+  ## new predictions without variability between sites
+  df_newpred <- f_PredInt.GAMM(data=df_newpred,gamm=gamm,
+                               nsim=n.posteriori_samples,
+                               v_exclude=v_toexclude)
+  ## predictions for the observed data (with variability between sites)
+  if(link_scale){
+    return(df_newpred)
+  }
+  ## apply the inverse link function
+  ### if the case is a binomial GAMM
+  if(gamm$family$family=="binomial"){
+    df_newpred <- df_newpred |> 
+      mutate(across(starts_with("Q_"),\(x) f_invlink(x) * sum(gamm$model[1,1])))
+  }else{
+    df_newpred <- df_newpred |> 
+      mutate(across(starts_with("Q_"),f_invlink))
+  }
+  return(df_newpred)
+}
+
 # f_ggplot_PI1d:
 # padroniza um scatterplot simples para f_plotCongCont
 f_ggplot_PI1d <- \(df_pred,df_obs,x_var,y_var,title_contraste){
@@ -514,4 +603,14 @@ f_newdata_ad4 <- \(l_md_newdata,quantiles=c(0.05,0.95)){
   md <- f_l(vname)
   f_ddply()
 }
+#
+f_extract_smoothers_f_formula <- \(formula_obj,
+                                   pregex_rm = " \\+ s\\(k_z, by \\= SiteCode\\) \\+ s\\(SiteCode, bs \\= \"re\"\\)"){
+  formula_obj %>% 
+    as.character() %>% gsub(", bs = \"cr\"","",.) %>% gsub(", bs = \"tp\"","",.) %>% 
+    gsub(pregex_rm,"",.) %>% 
+    str_split_1(pattern = " \\+ ")
+    # grep(pattern='s\\(k_z\\)|s\\(p_z\\)|ti\\(p_z, k_z\\)',value = TRUE,x=.)
+}
+
 

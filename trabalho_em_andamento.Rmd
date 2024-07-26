@@ -9,6 +9,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 25 jul 2024
+
+Como plotar os efeitos parciais aleatórios? Melhor forma acredito que é fazer a predição a posteriori. Dúvida,
+É possível fazer a predição a posterior dos efeitos aleatórios da paisagem? Acredito que se for pelo método gi certamente, agora se for pelo método gs eu já não sei dizer mesmo.
+
+Quais são as CPF?
+- fazer a tabela de seleção da 2a parte da análise de dados 
+
+
+
 # 14 jul 2024
 
 Moran test for spatial autocorrelation
