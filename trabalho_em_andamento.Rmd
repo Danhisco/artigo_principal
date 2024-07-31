@@ -3,11 +3,62 @@ title: "Trabalho em Andamento"
 author: "Danilo Pereira Mori"
 date: "2024-02-26"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+
+# 27 jul 2024
+
+```{r}
+coef_samples <- MASS::mvrnorm(n=nsim, mu=coef(gamm), Sigma=vcov(gamm))
+predictions <- matrix(NA, nrow=nsim, ncol=nrow(data))
+f_adply <- \(i){
+  coef_i <- coef_samples[i,]
+  predictions[i,] <- 
+    predict(gamm, newdata=data, type="link", se.fit=FALSE, new.coef=coef_i,exclude=v_exclude)
+  return(predictions)
+}
+predictions <- adply(1:nrow(predictions),1,f_adply,.parallel = TRUE)
+
+df_pred <- apply(predictions,2,\(X) quantile(X,probs = quantiles)) %>% 
+    as.data.frame()
+  names(df_pred) <- paste0("Q_",quantiles)
+  cbind(data,df_pred)
+# exemplo do chatgpt
+prediction_median <- apply(predictions, 2, median)
+prediction_lower <- apply(predictions, 2, function(x) quantile(x, 0.025))
+prediction_upper <- apply(predictions, 2, function(x) quantile(x, 0.975))
+
+to_exclude = c("s(lat,long)",
+               "s(data_year)")
+
+nsim <- 100
+for (i in 1:nsim) {
+    coef_i <- coef_samples[i,]
+    predictions[i,] <- predict(gamm, newdata=data, type="link", se.fit=FALSE, new.coef=coef_i)
+}
+
+
+dfmd <- gamm$model
+dfmd$lat <- 0
+dfmd$long <- 0
+
+# Predict using the modified data frame
+predictions <- predict.gam(gamm,
+                           newdata = dfmd,
+                           type = "link",
+                           se.fit = TRUE)
+
+# Check the predictions
+print(predictions)
+```
+
+
 
 # 25 jul 2024
 

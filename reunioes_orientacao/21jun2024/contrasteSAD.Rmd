@@ -298,7 +298,7 @@ l_md_logOR <- df_md %>%
   lapply(.,f_gam)
 saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR_itself.rds")
 ```
-```{r}
+```{r inclusão de GAMM GI sensu Peterson et al. 2019}
 df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
   rename(logOR = itself)
 f_gam <- \(dfi){
@@ -444,19 +444,54 @@ saveRDS(l_md_logOR_aud,file="dados/Rdata/l_md_logOR_aud.rds")
 
 ```{r tabela de selecao 2a fase de comparacoes,eval=TRUE}
 l_md_logOR_aud <- readRDS(file="dados/Rdata/l_md_logOR_aud.rds")
-df_tabsel_logOR_aud <- ldply(l_md_logOR_aud,f_TabSelGAMM,.id="pair")
-write_csv(df_tabsel_logOR_aud,
-          file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
+if(!file.exists("dados/csv/df_tabelaSelecao_logOR_aud.csv")){
+  df_tabsel_logOR_aud <- ldply(l_md_logOR_aud,f_TabSelGAMM,.id="pair")
+  write_csv(df_tabsel_logOR_aud,
+            file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
+}else{
+  df_tabsel_logOR_aud <- 
+    read_csv(file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
+}
 # df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
-knitr::kable(df_tabelaSelecao, 
+knitr::kable(df_tabsel_logOR_aud, 
              caption = "Tabela de seleção da 2a fase de comparações")
 ```
 
 # Model averaging da predição a posteriori 
 
+__1o predição para cada modelo__
+
 ```{r}
-md <- l_md_logOR_aud[[1]][[1]]
-dfmd <- md$model
+f_lapply <- \(ldf){
+  f_PI <- \(gamm){
+    lpi <- list(
+      with_random = list("apenas fixo" = FALSE,
+                         "aleatório e fixo" = TRUE),
+      to_exclude = list("apenas fixo"= c("s(Uefeito,SiteCode)",
+                                         "s(SiteCode)",
+                                         "s(lat,long)",
+                                         "s(data_year)"),
+                        "aleatório e fixo" = c("s(lat,long)",
+                                               "s(data_year)"))
+    )
+    adply(c("apenas fixo","aleatório e fixo"),1,\(i){
+      f_calcPI2(gamm=gamm,
+                with_random = lpi$with_random[[i]],
+                to_exclude = lpi$to_exclude[[i]])
+    },.id = NULL)
+  }
+  ldply(ldf,f_PI,.id="gamm")
+}
+l_df <- lapply(l_md_logOR_aud,f_lapply)
+saveRDS(l_df,file="./dados/Rdata/rds/l_df_pred_logORfinal.rds")
+```
+
+
+
+```{r}
+gamm <- l_md_logOR_aud[[1]][[1]]
+to_exclude <- 
+dfmd <- md$gamm
 f_newdata <- \(dfmd, with_random=TRUE,len_newdt = 150){
   n_0cols <- names(dfmd) %>% gsub("logOR|Uefeito|SiteCode","",.)
   n_cols <- names(dfmd) %>% grep("logOR|Uefeito|SiteCode",.,value=TRUE)
