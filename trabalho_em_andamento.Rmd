@@ -11,6 +11,10 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 31/07/2024
+
+Por algum motivo não foi possível utilizar o output de predict.gam informando novos coeficientes, vou tentar utilizar
+
 
 # 27 jul 2024
 

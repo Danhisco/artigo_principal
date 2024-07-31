@@ -228,10 +228,9 @@ f_calcPI2 <- \(gamm,
   coef_samples <- MASS::mvrnorm(n=nsim, mu=coef(gamm), Sigma=vcov(gamm))
   f_adply <- \(dfi){
     df_newpred$pred <- 
-      predict(gamm, 
+      predict.gam(gamm, 
               newdata=df_newpred, 
-              type="link", se.fit=FALSE, exclude=to_exclude,
-              new.coef=dfi)
+              type="link", se.fit=FALSE, exclude=to_exclude)
     select(df_newpred,Uefeito,SiteCode,pred)
   }
   registerDoMC(3)

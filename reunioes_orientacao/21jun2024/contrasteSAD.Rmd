@@ -461,7 +461,8 @@ knitr::kable(df_tabsel_logOR_aud,
 
 __1o predição para cada modelo__
 
-```{r}
+```{r predicao a posteriori para cada gamm candidato por contraste}
+l_md_logOR_aud <- readRDS(file="dados/Rdata/l_md_logOR_aud.rds")
 f_lapply <- \(ldf){
   f_PI <- \(gamm){
     lpi <- list(
@@ -474,7 +475,7 @@ f_lapply <- \(ldf){
                         "aleatório e fixo" = c("s(lat,long)",
                                                "s(data_year)"))
     )
-    adply(c("apenas fixo","aleatório e fixo"),1,\(i){
+    teste <- adply(c("apenas fixo","aleatório e fixo"),1,\(i){
       f_calcPI2(gamm=gamm,
                 with_random = lpi$with_random[[i]],
                 to_exclude = lpi$to_exclude[[i]])
@@ -485,32 +486,39 @@ f_lapply <- \(ldf){
 l_df <- lapply(l_md_logOR_aud,f_lapply)
 saveRDS(l_df,file="./dados/Rdata/rds/l_df_pred_logORfinal.rds")
 ```
-
-
-
-```{r}
-gamm <- l_md_logOR_aud[[1]][[1]]
-to_exclude <- 
-dfmd <- md$gamm
-f_newdata <- \(dfmd, with_random=TRUE,len_newdt = 150){
-  n_0cols <- names(dfmd) %>% gsub("logOR|Uefeito|SiteCode","",.)
-  n_cols <- names(dfmd) %>% grep("logOR|Uefeito|SiteCode",.,value=TRUE)
-  dfmd[,!names(dfmd)%in%n_cols] <- 0
-  if(with_random){
-    return(dfmd)
-  }else{
-    v_range <- dfmd$Uefeito %>% range
-    df_pred <- data.frame(
-      Uefeito = seq(v_range[1],v_range[2],length.out=len_newdt),
-      SiteCode = "SPigua1"
-      )
-    df_return <- 
-    cbind()
-  }
-    
-    
+```{r model averaging}
+# tabela de seleção: peso de evidência baseado em AICc 
+df_tabsel <- 
+    read_csv(file="dados/csv/df_tabelaSelecao_logOR_aud.csv") %>% 
+  select(pair,modelo,weight)
+# inner_join para cada contraste
+l_df <- readRDS(file="./dados/Rdata/rds/l_df_pred_logORfinal.rds")
+v_names <- names(l_df)
+# inner_join
+f_ldply <- \(vstring){
+  dfmd <- l_df[[vstring]]
+  dftabsel <- df_tabsel %>% filter(pair==vstring)
+  teste <- inner_join(
+    dftabsel,
+    dfmd,
+    by=c("modelo"="gamm")
+  ) %>% mutate(
+    across(contains("%"),~.x * weight)
+  )
 }
+df_pred <- adply(v_names,1,f_ldply,.id = NULL) %>%
+  group_by(pair,Uefeito,SiteCode,tipo) %>% 
+  summarise(median = sum(`50%`)) %>% 
+  arrange(tipo)
+df_pred %>% 
+  filter(pair=="contemp-ideal",
+         Uefeito==df_pred$Uefeito[1],
+         SiteCode=="SPigua1",
+         tipo=="apenas fixo") %>% 
+  summarise(across(contains("%"),~sum(.x)))
+
 ```
+
 
 
 
