@@ -61,6 +61,24 @@ predictions <- predict.gam(gamm,
 # Check the predictions
 print(predictions)
 ```
+```{r}
+df_newpred$pred <- 
+      predict.gam(gamm, 
+              newdata=df_newpred, 
+              type="link", se.fit=FALSE, exclude=to_exclude)
+
+
+matrix_lprediction <- predict(gamm,
+                              type="lpmatrix",
+                              exclude = to_exclude,
+                              newdata= df_newpred,
+                              newdata.guaranteed=TRUE)   
+predict_link <- matrix_lprediction %*% t(coef_samples)
+  df_pred <- t(apply(predict_link,1,\(X) quantile(X,probs = quantiles))) %>% 
+    as.data.frame()
+  names(df_pred) <- paste0("Q_",quantiles)
+  cbind(data,df_pred)
+```
 
 
 

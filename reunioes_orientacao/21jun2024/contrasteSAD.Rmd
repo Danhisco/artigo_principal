@@ -463,6 +463,7 @@ __1o predição para cada modelo__
 
 ```{r predicao a posteriori para cada gamm candidato por contraste}
 l_md_logOR_aud <- readRDS(file="dados/Rdata/l_md_logOR_aud.rds")
+# ldf <- l_md_logOR_aud[[1]]
 f_lapply <- \(ldf){
   f_PI <- \(gamm){
     lpi <- list(
@@ -481,7 +482,8 @@ f_lapply <- \(ldf){
                 to_exclude = lpi$to_exclude[[i]])
     },.id = NULL)
   }
-  ldply(ldf,f_PI,.id="gamm")
+  registerDoMC(3)
+  ldply(ldf,f_PI,.id="gamm",.parallel = TRUE)
 }
 l_df <- lapply(l_md_logOR_aud,f_lapply)
 saveRDS(l_df,file="./dados/Rdata/rds/l_df_pred_logORfinal.rds")
@@ -508,15 +510,9 @@ f_ldply <- \(vstring){
 }
 df_pred <- adply(v_names,1,f_ldply,.id = NULL) %>%
   group_by(pair,Uefeito,SiteCode,tipo) %>% 
-  summarise(median = sum(`50%`)) %>% 
-  arrange(tipo)
-df_pred %>% 
-  filter(pair=="contemp-ideal",
-         Uefeito==df_pred$Uefeito[1],
-         SiteCode=="SPigua1",
-         tipo=="apenas fixo") %>% 
-  summarise(across(contains("%"),~sum(.x)))
-
+  summarise(
+    across(starts_with("Q_"),sum)) %>% 
+  arrange(pair,tipo,SiteCode)
 ```
 
 

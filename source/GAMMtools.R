@@ -192,8 +192,7 @@ f_calcPI2 <- \(gamm,
                               "s(lat,long)",
                               "s(data_year)"),
                quants=c(0.05,0.5,0.95)){
-  # take the GAMM objects:
-  f_invlink <- gamm$family$linkinv
+  # GAMM data
   if(gamm$family$family=="binomial"){
     dfmd <- gamm$model |> select(-1) |> 
       mutate(y = gamm$model[,1][,1]) |> relocate(y)
@@ -202,11 +201,8 @@ f_calcPI2 <- \(gamm,
     dfmd <- gamm$model
   }
   # create the new data 
-  n_cols <- names(dfmd) %>% grep(regex_vartopred,.,value=TRUE)
-  # dfmd[,!names(dfmd)%in%n_cols] <- 0
   if(with_random){
     df_newpred <- dfmd
-    df_newpred[,!names(df_newpred)%in%n_cols] <- 0
   } else {
     v_range <- range(dfmd$Uefeito)
     df_newpred <- select(dfmd,-logOR,-Uefeito) %>% 
@@ -219,29 +215,51 @@ f_calcPI2 <- \(gamm,
       },
       silent = TRUE)
   }
+  # quais componentes serão zerados?
   to_exclude <- to_exclude[
     grep(pattern = paste(names(df_newpred),collapse = "|"),
          to_exclude)
   ]
   # obtain the predictions
-  ## new predictions without variability between sites
+  ## sorteio dos coeficientes a partir de uma normal multivariada
   coef_samples <- MASS::mvrnorm(n=nsim, mu=coef(gamm), Sigma=vcov(gamm))
-  f_adply <- \(dfi){
-    df_newpred$pred <- 
-      predict.gam(gamm, 
-              newdata=df_newpred, 
-              type="link", se.fit=FALSE, exclude=to_exclude)
-    select(df_newpred,Uefeito,SiteCode,pred)
-  }
-  registerDoMC(3)
-  predictions <- adply(coef_samples,1,f_adply,.parallel = TRUE)
-  predictions <- pivot_wider(predictions,
-                             names_from = "X1",
-                             values_from = "pred")
-  df_return <- t(apply(select(predictions,matches("[1-9]\\d*")),1,\(X) quantile(X,probs = quants))) %>% 
+  ## matrix de predição dos componentes de interesse e zero para os outros (to_exclude)
+  matrix_lprediction <- predict(gamm,
+                                type ="lpmatrix",
+                                exclude = to_exclude,
+                                newdata = df_newpred,
+                                newdata.guaranteed = TRUE)
+  ## obtenção das predições pela multiplicação dos coeficientes pela matrix de componentes de interesse
+  predict_link <- matrix_lprediction %*% t(coef_samples)
+  df_pred <- t(apply(predict_link,1,\(X) quantile(X,probs = quants))) %>% 
     as.data.frame()
-  cbind(select(predictions,-matches("^[1-9]\\d*$")),df_return) %>% 
-    mutate(tipo = ifelse(with_random,"aleatório e fixo","apenas fixo"))
+  names(df_pred) <- paste0("Q_",quants)
+  df_return <- cbind(df_newpred,df_pred) %>% 
+    mutate(tipo = ifelse(with_random,
+                         "aleatório e fixo",
+                         "apenas fixo"))
+  return(df_return)
+  # # antigo
+  # f_invlink <- gamm$family$linkinv
+  # n_cols <- names(dfmd) %>% grep(regex_vartopred,.,value=TRUE)
+  # dfmd[,!names(dfmd)%in%n_cols] <- 0
+  # df_newpred[,!names(df_newpred)%in%n_cols] <- 0
+  # f_adply <- \(dfi){
+  #   df_newpred$pred <- 
+  #     predict.gam(gamm, 
+  #             newdata=df_newpred, 
+  #             type="link", se.fit=FALSE, exclude=to_exclude)
+  #   select(df_newpred,Uefeito,SiteCode,pred)
+  # }
+  # registerDoMC(3)
+  # predictions <- adply(coef_samples,1,f_adply,.parallel = TRUE)
+  # predictions <- pivot_wider(predictions,
+  #                            names_from = "X1",
+  #                            values_from = "pred")
+  # df_return <- t(apply(select(predictions,matches("[1-9]\\d*")),1,\(X) quantile(X,probs = quants))) %>% 
+  #   as.data.frame()
+  # cbind(select(predictions,-matches("^[1-9]\\d*$")),df_return) %>% 
+  #   mutate(tipo = ifelse(with_random,"aleatório e fixo","apenas fixo"))
 }
 
 # f_ggplot_PI1d:
