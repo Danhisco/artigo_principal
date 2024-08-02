@@ -56,11 +56,12 @@ f_z <- function(x) (x-mean(x))/sd(x)
 # df_contrastes: contrastes por sítio e grau de limitação de dispersão
 df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") 
 # df_md
-df_md <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
+df_md_Uefeito <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
   pivot_longer(-c(SiteCode:p)) %>% 
   mutate(name = gsub("_logratio","",name),
          across(c(p,k),f_z,.names = "{.col}_z"),
-         SiteCode = factor(SiteCode))
+         SiteCode = factor(SiteCode)) %>% 
+  rename("tp_efeito"="name","v_efeito"=value)
 ```
 
 # Encaminhamentos

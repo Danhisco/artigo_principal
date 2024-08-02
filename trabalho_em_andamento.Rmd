@@ -11,6 +11,13 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 1ago2024
+
+Apresentação das tabelas:
+Esquema proposto
+
+
+
 # 31/07/2024
 
 Por algum motivo não foi possível utilizar o output de predict.gam informando novos coeficientes, vou tentar utilizar

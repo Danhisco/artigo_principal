@@ -510,8 +510,7 @@ f_ldply <- \(vstring){
 }
 df_pred <- adply(v_names,1,f_ldply,.id = NULL) %>%
   group_by(pair,Uefeito,SiteCode,tipo) %>% 
-  summarise(
-    across(starts_with("Q_"),sum)) %>% 
+  summarise(across(starts_with("Q_"),sum)) %>% 
   arrange(pair,tipo,SiteCode)
 ```
 
