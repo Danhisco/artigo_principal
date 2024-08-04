@@ -152,7 +152,7 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção. As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig. \@ref(fig:GE-sitios-amostrados) a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo. Apenas 2 sítios possuíam menos de 20 anos de recuperação desde o último grande distúrbio na área e foram removidos (fig. \@ref(fig:GE-sitios-amostrados) c). A mediana da área amostrada foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. \@ref(fig:GE-sitios-amostrados) b). Portanto, todos os 107 sítios restantes dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Não foi possível estimar a taxa U em um sítio com baixa densidade de espécies por número de indivíduos e de baixa proporção de cobertura vegetal na paisagem ao redor. Em outro sítio não foi possível desenhar a parcela quadrado no centro da paisagem devido a configuração espacial da paisagem. Esses dois sítios foram removidos, totalizando 105 sítios simulados.
 
-```{r criacao GE dados disponiveis,eval=TRUE,echo=FALSE,include=TRUE}
+```{r criacao GE dados disponiveis,eval=FALSE,echo=FALSE,include=TRUE}
 theme_set(theme_light())
 df_plot <- df_dados_disponiveis %>% 
   inner_join(df_p) %>% 
@@ -195,16 +195,16 @@ l_p[[3]] <- df_plot |>
   geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
   labs(x="classificação de grau de perturbação do TreeCo",
        y="countagem",subtitle="c)")
-grid.arrange(grobs=l_p,nrow=1)
-# p <- arrangeGrob(grobs=l_p,nrow=1)
-# ggsave(filename = "./figuras/GE_dados_disponiveis.png",plot = p,
-#        width=12,height = 5)
+# grid.arrange(grobs=l_p,nrow=1)
+p <- arrangeGrob(grobs=l_p,nrow=1)
+ggsave(filename = "./figuras/GE_dados_disponiveis.png",plot = p,
+       width=12,height = 5)
 ```
-```{r caption GE dados disponiveis}
-cap <- ""
+```{r caption GE dados disponiveis,eval=TRUE,include=TRUE}
+cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográficas e proporção de cobertura florestal nas paisagens contemporâneas aos eventos de amostragem com extensão espacial de 4 x 4 km2. b) Características gerais dos inventários, da esquerda para a direita: número de indivíduos amostrados, área da parcela amostrada, número de espécies observado, ano de amostragem. c) Contagem do número de sítios pelas classes de perturbação usadas no TreeCo, que consideram tanto o tempo desde a última grande perturbação quanto o grau de perturbação."
 ```
-```{r pring GE dados disponiveis,eval=FALSE,include=FALSE}
-knitr::include_graphics(path="/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/figuras/GE_dados_disponiveis.png")
+```{r pring GE dados disponiveis,eval=TRUE,include=TRUE,fig.cap=cap}
+knitr::include_graphics(path="./figuras/GE_dados_disponiveis.png")
 ```
 
 
@@ -229,7 +229,7 @@ Observamos que a extensão espacial adequada tende a aumentar com a redução da
 cap <- ""
 ```
 ```{r figura SoE, eval=FALSE,include=FALSE}
-knitr::include_graphics(path = "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/figuras/fig5_SoE.png")
+knitr::include_graphics(path = "./figuras/fig5_SoE.png")
 ```
 
 
