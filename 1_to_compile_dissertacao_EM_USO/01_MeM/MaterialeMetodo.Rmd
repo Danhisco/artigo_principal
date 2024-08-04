@@ -69,8 +69,11 @@ MUDAR MUDAR MUDAR MUDAR
 ```{r}
 tabela_praticas_ontologicas <- data.frame(
   `Prática Ontológica`=c("Interdependente","Independente"),
-  
+  `Paisagens Contrafactuais` = c("Contemporânea e Prístina","Contemporâneo, Aglomerada e Prístina"),
+  `Contrastes entre Contrafactuais`= c("Fragmentação Total: contemporâneo e prístino",
+                                       "Fragmentação per se: contemporâneo e aglomerado\nÁrea per se:aglomerado e prístino")
 )
+names(tabela_praticas_ontologicas) <- c("Prática Ontológica","Paisagens Contrafactuais","Contraste entre Contrafactuais")
 ```
 
 

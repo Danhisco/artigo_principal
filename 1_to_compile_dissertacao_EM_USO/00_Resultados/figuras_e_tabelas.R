@@ -140,17 +140,19 @@ df_plot <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>%
   mutate(name = gsub("_logratio","",name))
 v_sites_RefNulo <- df_plot %>% filter(p>=0.975) %>% pull(SiteCode) %>% unique
 v_range_RefNulo <- df_plot %>% filter(p>=0.975) %>% pull(value) %>% range
+v_hline <- filter(df_plot,p>=0.95) %>% 
+  pull(value) %>% quantile(.,probs)
 theme_set(theme_bw())
 df_text <- df_plot %>% 
-  mutate(maior_q = value > max(v_range_RefNulo),
-         menor_q = value < min(v_range_RefNulo)) %>% 
+  mutate(maior_q = value > max(v_hline),
+         menor_q = value < min(v_hline)) %>% 
   group_by(name) %>% 
   summarise(prop_maiorq = round(100 * sum(maior_q) / n(),2),
             prop_menorq = round(100 * sum(menor_q) / n(),2)) %>% 
   mutate(v_geomtext = case_when(grepl("area",name) ~ "Contraste Área:\n",
                                 grepl("frag.perse",name) ~ "Contraste Frag. per se:\n",
                                 grepl("frag.total",name) ~ "Contraste Frag. Total:\n"),
-         v_geomtext = paste0(v_geomtext,prop_maiorq,"% a direita ",prop_menorq,"% a esquerda"))
+         v_geomtext = paste0(v_geomtext,prop_maiorq,"% a direita, ",prop_menorq,"% a esquerda"))
 l_p$fig1 <- df_plot %>% 
   mutate(
     label = case_when(
@@ -160,17 +162,17 @@ l_p$fig1 <- df_plot %>%
   left_join(.,df_text) %>%
   ggplot(aes(x=value)) +
   geom_vline(xintercept = 0,color="darkblue",linetype=3) +
-  geom_vline(xintercept = v_range_RefNulo,color="darkred") + 
+  geom_vline(xintercept = v_hline,color="darkred") + 
   geom_histogram(bins = 120) +
   geom_boxplot(aes(y=-17.5),width=30,alpha=0.4) +
   labs(y="",x="",
        tag="a)",
-       caption="contraste em paisagens com %CF>=0.95") +
+       caption="quantils (0.05, 0.25, 0.75, 0.95) dos contraste em paisagens com %CF>=0.95") +
   geom_text(aes(x=1.5,y=300,label=v_geomtext),alpha=0.01,size=4) + 
-  theme(plot.margin = unit(c(0.1,0.25,0.25,0), "cm"),
-        strip.text = element_text(size=10),
+  theme(strip.text = element_text(size=10),
         plot.caption.position = "plot",
-        plot.caption = element_text(hjust = 0.2, face= "italic",vjust=10)) +
+        plot.caption = element_text(hjust = 0.2, face= "italic",vjust=10),
+        plot.margin=unit(c(0,0.2,-0.5,0), "cm")) +
   facet_wrap(~label,ncol=1)
 ##
 df_md <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
@@ -196,6 +198,7 @@ l_p$fig2 <- df_md %>%
   labs(x="k (prop. de propágulos até a vizinhança imediata)",
        y="log(U/U)",
        tag="b)") +
+  theme(plot.margin=unit(c(-0.2,0.2,0,0), "cm")) +
   facet_wrap(~label,ncol=3)
 # grid.arrange(grobs=l_p,ncol=1)
 p <- arrangeGrob(grobs=l_p,
@@ -209,3 +212,40 @@ ggsave(
   filename = paste0(v_path,"figuras/GE_taxaU_contrastes.png"),
   plot = p,
   width = 10,height=7)
+#
+#
+# TABELAS #
+#
+#
+# quantis observados dos contrastes da taxa U
+probs = c(0.05,0.25, 0.5, 0.75,0.95)
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") 
+df_md_Uefeito <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
+  pivot_longer(-c(SiteCode:p)) %>% 
+  mutate(name = gsub("_logratio","",name),
+         across(c(p,k),f_z,.names = "{.col}_z"),
+         SiteCode = factor(SiteCode)) %>% 
+  rename("tp_efeito"="name","v_efeito"=value)
+f_quant <- function(x, probs = probs) {
+  tibble(
+    val = quantile(x, probs, na.rm = TRUE),
+    quant = probs
+  )
+}
+df_quantisobs_Uefeito <- df_md_Uefeito %>% 
+  group_by(tp_efeito) %>% 
+  reframe(f_quant(v_efeito)) %>% 
+  pivot_wider(names_from = "quant",
+              values_from = "val",
+              names_prefix = "Q: ") %>% 
+  mutate(tp_efeito = tp_efeito %>% 
+           gsub("area","Área per se",.) %>% 
+           gsub("frag.perse","Frag. per se",.) %>% 
+           gsub("frag.total","Frag. total",.),
+         across(starts_with("Q:"),exp,.names = "exp({.col})")) %>% 
+  rename("Contraste log(U/U)"="tp_efeito")
+v_cols <- lapply(probs,\(i) grep(i,names(df_quantisobs_Uefeito),value = TRUE)) %>% 
+  do.call("c",.) %>% c(names(df_quantisobs_Uefeito)[1],.)
+df_quantisobs_Uefeito <- select(df_quantisobs_Uefeito,all_of(v_cols))
+write_csv(df_quantisobs_Uefeito,
+          file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))

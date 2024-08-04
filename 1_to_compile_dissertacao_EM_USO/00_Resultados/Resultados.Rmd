@@ -86,10 +86,14 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |>
          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
          SiteCode = factor(SiteCode)) |> 
   select(-c(N:log.S))
-# df_intePred_contrastes.csv
-df_intPred <- read_csv("dados/csv/df_intePred_contrastes.csv")
 ## df_md: dados necessários para os modelos
-df_md <- read_csv("dados/csv/df_md.csv")
+df_md_Uefeito <- df_contrastes %>% 
+  select(SiteCode:p, contains("_logratio")) %>% 
+  pivot_longer(-c(SiteCode:p)) %>% 
+  mutate(name = gsub("_logratio","",name),
+         across(c(p,k),f_z,.names = "{.col}_z"),
+         SiteCode = factor(SiteCode)) %>% 
+  rename("tp_efeito"="name","v_efeito"=value)
 ## df_newdata
 df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
   select(-starts_with("log_"))
@@ -154,7 +158,7 @@ Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios
  
 
 ```{r caption GE dados disponiveis,eval=TRUE,include=TRUE}
-cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográficas e proporção de cobertura florestal nas paisagens contemporâneas aos eventos de amostragem com extensão espacial de 4 x 4 km2. b) Características gerais dos inventários, da esquerda para a direita: número de indivíduos amostrados, área da parcela amostrada, número de espécies observado, ano de amostragem. c) Contagem do número de sítios pelas classes de perturbação usadas no TreeCo, que consideram tanto o tempo desde a última grande perturbação quanto o grau de perturbação."
+cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográficas e proporção de cobertura florestal nas paisagens contemporâneas aos eventos de amostragem com extensão espacial de 4 x 4 km2. b) Características gerais dos inventários, da esquerda para a direita: número de indivíduos amostrados, área da parcela amostrada, número de espécies observado, ano de amostragem. c) Proporção de cobertura florestal na paisagem ao redor da parcela amostrada em função do lado da paisagem ao redor. d) Contagem do número de sítios pelas classes de perturbação usadas no TreeCo, que consideram tanto o tempo desde a última grande perturbação quanto o grau de perturbação."
 ```
 ```{r pring GE dados disponiveis,eval=TRUE,include=TRUE,fig.cap=cap}
 knitr::include_graphics(path="./figuras/GE_dados_disponiveis.png")
@@ -193,19 +197,34 @@ Nós quantificamos o efeito da métrica da paisagem na congruência relativa dos
 
 ### Métrica funcional: grau de dependência da paisagem ao redor para repor espécies extintas localmente
 
-#### Taxa U de cada paisagem contrafactual
+<!-- #### Taxa U de cada paisagem contrafactual -->
 
 <!-- Para paisagens contemporâneas com proporção de cobertura vegetal abaixo de 0.95, observamos que a estimativa da taxa U pode ser distinta entre paisagens hipotéticas para alguns graus de limitação de dispersão (fig. \@ref(fig:GE-Urep-sitio-k-land)). -->
+#### Descrição do padrão da métrica funcional
 
-Quando há pouca perda de habitat a estimativa da taxa U não difere entre as 3 paisagens contrafactuais (fig. \@ref(fig:GE-Urep-sitio-k-land)). A maior variação entre graus de limitação de dispersão ocorre nos graus de limitação de dispersão mais brandos, seguido pelos graus mais severos; nos graus de limitação de dispersão pouco severos, onde há o máximo global nas paisagens infinitas e sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre tipos de paisagens hipotéticas (fig. \@ref(fig:GE-Urep-sitio-k-land)). Nas paisagens abaixo de 0.95, a paisagem hipotética contemporânea costuma apresentar estimativas superiores de taxa U em comparação com as outras duas paisagens contrafactuais (fig. \@ref(fig:GE-Urep-sitio-k-land)). Em alguns casos, a estimativa em paisagem aglomerada pode ser superior ao estimado na paisagem contemporânea (fig. \@ref(fig:GE-Urep-sitio-k-land), na 2a coluna e 4a linha e na 10a coluna e 1a linha ). Sobre a estimativa da taxa U, em resumo: i) quanto maior a perda de habitat e mais branda a limitação de dispersão, maior a potencial diferença entre as 3 paisagens contrafactuais; ii) em geral a estimativa em paisagens contemporâneas é superior; iii) em geral o estimado na paisagem aglomerada e prístina são similares, porém, para alguns sítios com pouca proporção de cobertura vegetal, o estimado em paisagem aglomerado pode ser superior. 
+Quando há pouca perda de habitat o log da razão da estimativa da taxa U é similar entre os 3 contraste de contrafactuais (fig. \@ref(fig:GE-contraste_taxaU)). A magnitude do log da razão da taxa U aumenta em graus de limitação de dispersão mais brandos, seguido pelos graus mais severos (REF). Nos graus de limitação de dispersão pouco severos, onde há o máximo global na estimativa da taxa U em paisagens sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre os contrafactuais (fig. \@ref(fig:GE-contraste_taxaU)). Nas paisagens abaixo de 0.95, o contraste de fragmentação total pode apresentar a maior magnitude por sítio e o de área per se apresenta a menor magnitude 
+
+
+a paisagem hipotética contemporânea costuma apresentar estimativas superiores de taxa U em comparação com as outras duas paisagens contrafactuais, resultando em contrastes com maior magnitude (fig. \@ref(fig:GE-contraste_taxaU)). Em alguns casos, a estimativa em paisagem aglomerada pode ser superior ao estimado na paisagem contemporânea, resultando no log da razão da estimativa da taxa U inferior ao observado em paisagens com pouca perda de cobertura florestal (fig. \@ref(fig:GE-contraste_taxaU). Em resumo: i) quanto maior a perda de habitat e mais branda a limitação de dispersão, maior a potencial diferença entre as 3 paisagens contrafactuais; ii) em geral a estimativa em paisagens contemporâneas é superior; iii) em geral o estimado na paisagem aglomerada e prístina são similares, porém, para alguns sítios com pouca proporção de cobertura vegetal, o estimado em paisagem aglomerado pode ser superior. 
 
 
 
 ```{r caption figura exploratoria da taxa U}
 cap <- ""
 ```
-```{r GE taxa U, include=FALSE,eval=FALSE}
-knitr::include_graphics(path="/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/figuras/GE_taxaU_contrastes.png")
+```{r GE-contraste_taxaU, include=TRUE,eval=TRUE,fig.cap=cap}
+knitr::include_graphics(path="./figuras/GE_taxaU_contrastes.png")
+```
+
+```{r tabela dos quantis observados dos contrastes}
+# df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
+df_quantisobs_Uefeito <- read_csv(file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
+df_quantisobs_Uefeito <- df_quantisobs_Uefeito %>% 
+  mutate(`Prática Ontológica` = ifelse(`Contraste log(U/U)`=="Frag. total",
+                                       "Interdependente","Independente")) %>% 
+  relocate(`Prática Ontológica`)
+knitr::kable(df_quantisobs_Uefeito,
+             caption = "Quantis observados dos contrastes na taxa U previstos em cada prática ontológica.")
 ```
 
 #### Contraste entre conttrafactuais
