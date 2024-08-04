@@ -151,55 +151,8 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 ## Inventários Florestais Selecionados
 
 Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção. As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig. \@ref(fig:GE-sitios-amostrados) a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo. Apenas 2 sítios possuíam menos de 20 anos de recuperação desde o último grande distúrbio na área e foram removidos (fig. \@ref(fig:GE-sitios-amostrados) c). A mediana da área amostrada foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. \@ref(fig:GE-sitios-amostrados) b). Portanto, todos os 107 sítios restantes dentro dos critérios de seleção possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Não foi possível estimar a taxa U em um sítio com baixa densidade de espécies por número de indivíduos e de baixa proporção de cobertura vegetal na paisagem ao redor. Em outro sítio não foi possível desenhar a parcela quadrado no centro da paisagem devido a configuração espacial da paisagem. Esses dois sítios foram removidos, totalizando 105 sítios simulados.
+ 
 
-```{r criacao GE dados disponiveis,eval=FALSE,echo=FALSE,include=TRUE}
-theme_set(theme_light())
-df_plot <- df_dados_disponiveis %>% 
-  inner_join(df_p) %>% 
-  select(SiteCode, p, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
-l_p <- list()
-l_p[[1]] <- df_plot |> 
-  ggplot(aes(y=lat,x=long,fill=p)) +
-  geom_point(alpha=0.85,shape = 21,size=3,color="black") +
-  scale_fill_gradientn("% CF",colours = terrain.colors(10)) +
-  theme_gray() +
-  guides(fill=guide_colourbar(position="inside")) +
-  theme(legend.position.inside = c(0.9,0.25)) +
-  labs(subtitle = "a)")
-v_labels <- c("effort_ha" = "plot area (ha)",
-              "Ntotal" = "# ind",
-              "S_obs" = "riqueza",
-              "year_bestProxy" = "approx. data year")
-df_plot[grep("\\_",df_plot$year_bestProxy),"year_bestProxy"] <- "2012.5"
-l_p[[2]] <- df_plot |>
-  mutate(year_bestProxy = as.numeric(year_bestProxy)) |> 
-  pivot_longer(effort_ha:year_bestProxy) |> 
-  mutate(name=case_when(
-    name == "effort_ha" ~ "plot\narea (ha)",
-    name == "Ntotal" ~ "# ind",
-    name == "S_obs" ~ "S obs",
-    name == "year_bestProxy" ~ "year"
-  )) %>% 
-  ggplot(aes(x=name,y=value)) +
-  theme_bw() +
-  geom_jitter(alpha=0.4) +
-  geom_boxplot() +
-  labs(x="",y="",subtitle="b)") +
-  theme(axis.text.x = element_blank(),
-        axis.ticks.x = element_blank()) +
-  facet_wrap(~name,nrow=1,scales="free")
-  # coord_flip()
-l_p[[3]] <- df_plot |> 
-  ggplot(aes(x=forest_succession)) +
-  geom_bar() +
-  geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
-  labs(x="classificação de grau de perturbação do TreeCo",
-       y="countagem",subtitle="c)")
-# grid.arrange(grobs=l_p,nrow=1)
-p <- arrangeGrob(grobs=l_p,nrow=1)
-ggsave(filename = "./figuras/GE_dados_disponiveis.png",plot = p,
-       width=12,height = 5)
-```
 ```{r caption GE dados disponiveis,eval=TRUE,include=TRUE}
 cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográficas e proporção de cobertura florestal nas paisagens contemporâneas aos eventos de amostragem com extensão espacial de 4 x 4 km2. b) Características gerais dos inventários, da esquerda para a direita: número de indivíduos amostrados, área da parcela amostrada, número de espécies observado, ano de amostragem. c) Contagem do número de sítios pelas classes de perturbação usadas no TreeCo, que consideram tanto o tempo desde a última grande perturbação quanto o grau de perturbação."
 ```
@@ -209,10 +162,6 @@ knitr::include_graphics(path="./figuras/GE_dados_disponiveis.png")
 
 
 ## Escala espacial adequada para simular os contrafactuais
-
-TEXTO PARA A LEGENDA:
-A extensão espacial é um dos fatores que determina as medidas tomadas das características da paisagem. No conjunto de áreas analisadas há uma forte relação entre a extensão espacial da paisagem ao redor e a proporção de cobertura vegetal (fig. \@ref(fig:EE-setup) a). O objetivo do estudo do efeito de escalar foi determinar a extensão espacial adequada para simular os 20 graus de limitação de dispersão (fig. \@ref(fig:EE-setup) c). Definimos a escala adequada para um grau de limitação de dispersão como a extensão espacial que acumula a maior parte da variação na estimativa da taxa U associada ao aumento da extensão espacial da paisagem ao redor, considerando a amplitude de extensões do lado da paisagem local entre 0.5 km e 16 km. Para detalhes sobre os métodos  do estudo de efeito de escalar veja o apêndice ‘Efeito de Escalar’. Nesse  estudo, 36 sítios foram sorteados e selecionados ao longo do gradiente de número de indivíduos e de espécies na parcela (fig. \@ref(fig:EE-setup) b). Para esse estudo, as estimativas da taxa U foram simuladas em paisagens totalmente preenchidas com habitat, para descontar o efeito do isolamento estrutural, e explorar apenas o efeito de variar a extensão da paisagem ao redor. 
-:TEXTO PARA A LEGENDA
 
 Para avaliar qual a escala espacial adequada, investigamos o comportamento da taxa U, o único parâmetro livre do dispositivo de mimese, em paisagens sem perda de cobertura florestal. A taxa U estimada nos graus de limitação de dispersão simulados nas paisagens com maior extensão espacial (paisagem quadrada de lado 16 km) é qualitativamente similar ao estimado em paisagens infinitas (figura A1 2). Em paisagens infinitas e sem perda de habitat a taxa U necessária para manter uma determinada riqueza na parcela apresenta um máximo global quando o grau de limitação de dispersão é pouco severa (@may2012dispersal). Em graus de limitação à dispersão severa a taxa U estimada é baixa, pois a perda de espécies é pequena: a maior parte das substituições ocorre entre coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies aumenta com a redução da substituição de coespecíficos, aumentando a perda de espécies por deriva ecológica. Com o aumento da capacidade de dispersão para além de graus severos, há o aumento da contribuição de subpopulações mais distante da parcela, reduzindo novamente a estimativa da taxa U à custa da homogenização na escala da paisagem (REF). 
 <!-- Portanto, concluímos que foi adequado utilizar a maior extensão espacial (de lado 16km) como referência de extensão espacial suficiente para simular todos os graus de limitação de dispersão. 
@@ -226,12 +175,11 @@ Para descrever a variação na taxa U associada à variação na extensão espac
 Observamos que a extensão espacial adequada tende a aumentar com a redução da limitação de dispersão (Figura 3), exceto em graus de limitação de dispersão pouco severos, nos valores intermediários simulados (Fig Efeito de Escalar 2a e 2b). Nesses graus de limitação de dispersão intermediários há pouca variação na média da taxa U entre escalas e sempre grande variação entre réplicas de uma mesma bateria de simulações (Fig Efeito de Escalar 2a, A1 2b e A1 4b). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90, a extensão espacial da paisagem adequada é de 1 km de lado (Figura 3). Para k entre 0.80 e 0.55, que corresponde ao campo de parâmetros com máximo global, não é possível determinar uma tendência de redução da média da estimativa de U (Figura 3); a variação entre escalas para um mesmo sítio é baixa (Figuras Efeito de Escalar 2 e A1 3). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura Efeito de Escalar 5 e 6). Pressuposto que a extensão espacial adequada para simular k entre 0.80 e 0.55 pode ser obtida interpolando as escalas adequadas, então nesses graus de limitação de dispersão a extensão suficiente é de 1 km de lado da paisagem ao redor. Uma vez que a paisagem com 4 km de lado foi suficiente para simular todos os graus de limitação de dispersão todas as simulações serão feitas nessa extensão e tambeḿ o calculo da proporção de cobertura florestal. Não simulamos paisagens com lado de 1 km e 2 km, que foram adequadas para os graus de limitação de dispersão de 0.99 até 0.35 e de 0.35 até 0.20, respectivamente.
 
 ```{r cap fig5_SoE}
-cap <- ""
+cap <- "A extensão espacial é um dos fatores que determina as medidas tomadas das características da paisagem. No conjunto de áreas analisadas há uma forte relação entre a extensão espacial da paisagem ao redor e a proporção de cobertura vegetal. a). O objetivo do estudo do efeito de escalar foi determinar a extensão espacial adequada para simular os 20 graus de limitação de dispersão. c). Definimos a escala adequada para um grau de limitação de dispersão como a extensão espacial que acumula a maior parte da variação na estimativa da taxa U associada ao aumento da extensão espacial da paisagem ao redor, considerando a amplitude de extensões do lado da paisagem local entre 0.5 km e 16 km. Para detalhes sobre os métodos  do estudo de efeito de escalar veja o apêndice ‘Efeito de Escalar’. Nesse  estudo, 36 sítios foram sorteados e selecionados ao longo do gradiente de número de indivíduos e de espécies na parcela. b). Para esse estudo, as estimativas da taxa U foram simuladas em paisagens totalmente preenchidas com habitat, para descontar o efeito do isolamento estrutural, e explorar apenas o efeito de variar a extensão da paisagem ao redor."
 ```
-```{r figura SoE, eval=FALSE,include=FALSE}
+```{r figura SoE, eval=TRUE,include=TRUE,fig.cap=cap}
 knitr::include_graphics(path = "./figuras/fig5_SoE.png")
 ```
-
 
 ## Práticas ontológicas em disputa coexistindo em um sistema epistêmico contrafactual baseado em indivíduos
 
