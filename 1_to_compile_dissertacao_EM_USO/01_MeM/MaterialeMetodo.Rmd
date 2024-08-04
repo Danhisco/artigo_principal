@@ -14,6 +14,7 @@ csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dis
 ---
 ```{r setup,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE,dev = 'jpeg')
+options(knitr.table.format = "simple")
 # pacotes adicionais´
 source("source/mapa_p_MNEE.R")
 library(doMC)
@@ -57,12 +58,26 @@ download_file(file = "secoes_texto/MeM/MaterialeMetodo.Rmd",
 
 ## Processo gerador comum dos dados
 
-Nós vamos pressupor que o processo de perda de habitat/cobertura florestal altera a conectividade do habitat/cobertura florestal remanescente, pois a transformação da cobertura originária em cobertura de uso humano não originário altera a configuração do espaço (REF). A divergência entre os programas de pesquisa pode ser compreendido em termos de independência e interdepência dos efeitos da transformação da cobertura espacial na biodiversidade remanescente (REF). Ao pressupor independência é possível considerar que esse processo geral de transformação de cobertura florestal em dois processo independentes: um processo que determina a quantidade remanescente de cobertura florestal e outro que determina a configuração espacial da cobertura remanescente (Fahrig et al.). Ao pressupor interdependência o processo que reduz a quantidade de cobertura florestal é o mesmo que altera a configuração espacial do haitata (REF). 
-A estimativa de efeitos causais médios a partir da simulação de contrafactuais pode se adequar às antologias de cada programa de pesquisa, caso seja possível detarminar contrastes adequados entre simulações (REF). 
-Ao pressupor independência dos efeitos do processo que determina a quantidade de habitat remanescente e do processo que determina a configuração espacial do habitat remanescente, é possível simular 5 contrafactuais: i) a paisagem contemporânea ao inventário florestal; ii) a paisagem com a cobertura remanescente toda aglomerada ao redor da parcela amostrada, buscando maximizar a conectivadade da cobertura remanescente; iii) a cobertura remanescente o mais distantes da parcela amostrada, a menor conectividade entre o habitat remanescente e a parcela amostrada; iv)  e o habitat remascente fora da mancha de cobertura florestal amostrada mais distante dessa mancha amostrada, a menor conectividade da mancha de cobertura florestal amostrada com a cobertura remanescente fora dela; e v) a situação de ausência de perda de cobertura florestal, uma idealização de situação prístina em que tanto a cobertura e a conectividade remanescente são máximas. As análises de dados observacionais que pressupõe independência concluem que o efeito do processo de redução da cobertura florestal é muito maior do que o efeito do processo que determina a configuração espacial da cobertura florestal remanescente (REF). Assim, uma hipótese mínima a posteriori é que apenas a quantidade de habitat é relevante para descrever a biodiversidade local (REF). O contraste adequado para avaliar essa hipótese mínima é entre a simulação na paisagem contemporânea e a paisagem com a máxima conectividade do habitat remanescente, pois dessa forma comparamos o contemporâneo, que pode ter efeito da redução do número de progenitores na paisagem e da redução da conectividade do habitat remanescente, com a situação em que o único efeito é a redução dos progenitores.
+A divergência entre os programas de pesquisa pode ser compreendido em termos de independência e interdepência dos efeitos da transformação da cobertura espacial na biodiversidade remanescente (REF). Ao pressupor independência, o processo geral de transformação de cobertura florestal é composto de dois processo independentes: um processo que determina a quantidade remanescente de cobertura florestal e outro que determina a configuração espacial da cobertura remanescente (Fahrig et al.). Ao pressupor interdependência o processo que reduz a quantidade de cobertura florestal é o mesmo que altera a configuração espacial do habitat (REF). Em ambas práticas ontológicas os efeitos da paisagem influenciam de forma unidirecional a biodiversidade local. 
+A estimativa de efeitos causais médios a partir da simulação de contrafactuais pode se adequar às práticas ontológicas, caso seja possível determinar contrastes adequados entre contrafactuais (REF). 
+
+Ao pressupor independência é possível simular 3 contrafactuais: i) a paisagem contemporânea ao inventário florestal; ii) a paisagem com a cobertura remanescente toda aglomerada ao redor da parcela amostrada, buscando maximizar a conectivadade da cobertura remanescente; e iii) a situação de ausência de perda de cobertura florestal, uma idealização de situação prístina em que tanto a cobertura e a conectividade remanescente são máximas. Ao pressupor interdependência é possível simular 2 contrafactuais: i) a paisagem contemporânea e ii) a paisagem prístina. 
+
+
+MUDAR MUDAR MUDAR MUDAR
+
+```{r}
+tabela_praticas_ontologicas <- data.frame(
+  `Prática Ontológica`=c("Interdependente","Independente"),
+  
+)
+```
+
 
 
 ```{r}
+
+
 tabela_contrafactuais <- data.frame(
   paisagens_contrafactuais = c("Contemporânea",
                                "Prístina",

@@ -29,105 +29,72 @@ download_file(file ="relatorio_final.Rmd",
               gpath = "mestrado/disciplinas/BIE5716/")
 ```
 
+
+
+# Sumário da Pesquisa (reunião 21jun2024)
+
+<-> LONGO DEBATE <->
+O debate sobre a relação entre a perda de cobertura florestal e a biodiversidade remanescente de árvores (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward) impõem um desafio para a criação de modelos que reconstroem padrões empíricos (REF uso de cenários em conservação). Um momento chave do debate é o contraste das conclusões entre as revisões dos experimentos de fragmentação tratados na escala do fragmento florestal de Haddad et al. (2015) e dos estudos que avaliaram fragmentação na escala da paisagem por Fahrig (2017) (Valente et al. 2023). A conclusão da revisão dos experimentos foi de que fragmentação de habitat possui efeito com grande magnitude e negativo na biodiversidade remanescente (Haddad et al. 2015), enquanto a conclusão da revisão dos estudos foi de que a fragmentação de habitat não apresenta efeito relevante e quando apresenta é em geral positivo (Fahrig 2017). Essas conclusões partem de concepções distintas do fenômeno em estudo (Didham et al. 2011; Fahrig 2018). Na revisão dos experimentos é pressuposto que existe um processo que remove o habitat natural, modificando ao mesmo tempo a quantidade de habitat e a complexidade espacial do habitat remanescente (Didham et al. 2011, Valente 2023). Na revisão dos estudos é pressuposto que existe um processo de redução de perda de habitat que determina a quantidade de habitat remanescente e outro processo de fragmentação per se que aumenta a complexidade espacial do habitat remanescente (Fahrig 2019, Valente 2023). Apesar da discordância nos aspectos específicos de como a mudança na cobertura do solo se relaciona com a biodiversidade remanescente, ambos programas de pesquisa se baseiam em mecanismos demográficos ecológicos para justificar seus conceitos, métodos e hipóteses (REF).
+
+
+
+
+<-> SISTEMA EPISTÊMICO COMUM PARA (SUB-)ONTOLOGIAS EM DISPUTA
+Aqui criamos um sistema epistêmico que permite a ambos os grupos de pesquisa a prática de investigação de suas respectivas visões do processo gerador (prática ontológica) de dados estáticos da diversidade local de árvores em paisagens com perda de cobertura florestal (REFS: con bio sistema de referência; livro sobre ABM e inf. causal; revisão sobre ABM em estudos do uso do solo; mas também aquelas de ambos grupos de pesquisa). O sistema epistêmico é composto de duas partes: o dispositivo de mimese do mecanismo causal suficiente para descrever os dados observados, um modelo neutro espacialmente explícito, que pode ser empiricamente calibrado e validado (REFS: teoria neutra e MNEE); e a prática ontológica que determina quais as paisagens contrafactuais oferecem comparações interpretáveis (REFS) e devem ser usadas como parâmetro do dispositivo de mimese (REFS). 
+O modelo neutro espacialmente explícito (MNEE) faz parte de uma família de modelos descritos pela teoria neutra da biodiversidade (TNB). A TNB provê modelos demográficos que reconstroem os padrões de biodiversidade a partir de simulações das dinâmicas de nascimento, dispersão, morte, e especiação de múltiplas espécies no espaço. A TNB se desenvolveu em relação às teorias que procuram compreender o componente adaptativo da biodiversidade e consideram as diferenças entre as espécies (REF). Essa característica é garantida pelo pressuposto de equivalência funcional, situação em que todas as espécies apresentam as mesmas taxas demográficas per capita, dessa forma, a pesquisa dentro da TNB opera em dois eixos: explorar os pressupostos auxiliares ao de equivalência funcional na construção de modelos demográficos; e explorar formas de relaxar o pressuposto de equivalência funcional (REF). Os modelos neutros podem reproduzir os padrões de biodiversidade local estáticos de forma equivalente a modelos que consideram a diferença entre espécies (REF). 
+Uma Importante característica que o MNEE reproduz é a geometria estocástica dos indivíduos, quando as regras de distribuição dos indivíduos no espaço é probabilística, com forte agregação espacial de coespecíficos e a influência da configuração espacial da cobertura florestal (REF). Nesse modelo a dispersão depende da capacidade de dispersão e da distância entre indivíduo e habitat vago (REF). 
+
+No modelo neutro espacialmente explícito, além da paisagem contrafactual, outros parâmetros são a capacidade de dispersão per capita e a taxa de colonização de novas espécies na paisagem (REF). A situação de equilíbrio neste modelo ocorre quando a taxa de perda de espécies por deriva ecológica (devido a flutuação aleatória das abundâncias das espécies) é igual a taxa de colonização de novas espécies (taxa U). Ao pressupor equilíbrio é possível estimar a escala espacial da paisagem suficiente para simular um determinado grau de limitação de dispersão per capita (REF: APENDICE). A calibração empírica pode ser obtida por grau de limitação de dispersão simulado e por paisagem contrafactual ajustando a taxa U para obter a riqueza local observada (REF).
+
+
+
+
+
+<-> CARACTERÍSTICAS COMUNS NA ANÁLISE DE DADOS OBS E SUA RELAÇÃO COM AS PAISAGENS CONTRAFACTUAIS 
+As  análises de dados estáticos de biodiversidade local de árvores alinhadas com ambas práticas ontológicas compartilham o objetivo de estimar o efeito das características da paisagem contemporânea ao evento de amostragem em alguma métrica de biodiversidade local. 
+Essas análises pressupõem que as características da paisagem apresentam efeito robusto na biodiversidade local observada (REF). Aqui asseguramos esse pressuposto ao pressupor equilíbrio no modelo neutro espacialmente explícito 
+, nessa situação pressupor equilíbrio é similar ao considerar que tempo suficiente se passou na paisagem contrafactual (REF), 
+
+
+
+
+Uma vez que ambas práticas ontológicas utilizam a paisagem contemporânea como referência para calcular métricas da cobertura florestal remanescente, a paisagem com a configuração espacial contemporânea da cobertura florestal remanescente é um contrafactual comum.
+Outra possível paisagem contrafactual comum é a paisagem sem perda de cobertura florestal, uma referência considerada sem efeito da perda de cobertura florestal, prístina; métricas como a proporção de cobertura florestal implicitamente a utilizam como referência. 
+Das duas práticas em disputa, a prática ontológica interdependente pode ser operada com essas duas paisagens contrafactuais, oferecendo uma estimativa de efeito de fragmentação total da cobertura florestal pelo contraste da paisagem contemporânea e prístina.
+A prática ontológica independente requer uma paisagem contrafactual que representa a mínima complexidade espacial possível da cobertura remanescente, ou seja, com a cobertura aglomerada ao redor da parcela. Com esse contrafactual é possível obter o efeito de área per se, pela comparação da paisagem aglomerada e paisagem prístina, e o efeito de fragmentação per se, pela comparação da paisagem contemporânea e aglomerada. 
+
+
+
+-OBJETIVO:
+
+Nosso objetivo é reformular o debate da ecologia de paisagens dentro de um sistema epistemico contrafactual baseado em um modelo neutro espacialmente explícito como dispositivo de mimeze do fenômeno em estudo, a relação entre a biodiversidade local de árvores e a cobertura florestal remanescente na paisagem ao redor. Essa abordagem compartilha os pressupostos comuns da análise de dados observacionais estáticos usados por ambos grupos de pesquisa em debate. Executamos a prática ontológica de cada grupo de pesquisa a partir de um mesmo conjunto de dados até a estimativa dos previstos efeitos causais médios da paisagem. Nós usamos o contraste entre a taxa U estimada entre paisagens contrafactuais como métrica funcional da influência da paisagem na biodiversidade local. Então interpretamos esses efeitos nos eixos de pesquisa da teoria neutra da biodiversidade.
+
+
+
+# Sumário da Pesquisa (reunião 21jun2024)
+
+
+
+####### anterior
+
+# Introdução
+
 # O debate dentro da ecologia de paisagens
 
-As inferências e intervenções baseadas em área correspondem a maior parte das práticas da conservação e restauração dos ecossistemas florestais (REF). Reconstruir a biodiversidade local de árvores a partir de dados de sensoriamento remoto, e.g. cobertura florestal, e dados de herbário e inventários florestais prévios pode possibilitar o mapeamento da biodiversidade florestal e servir de embasamento para projetos de conservação e restauração (REF). Um desafio para criar esses modelos de reconstrução dos padrões empíricos é a ausência de consenso sobre a relação entre a perda de cobertura florestal e a biodiversidade remanescente de árvores (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Os grupos de pesquisa possuem concepções distintas da relação entre cobertura florestal e a biodiversidade remanescente (@miller2019does,@valente2023toward). Existem aqueles que compreendem que o sistema sofre remoção de cobertura florestal, assim o processo da mudança de cobertura florestal altera a configuração espacial da cobertura remanescente (@didham2012rethinking). Essa conceitualização pode implicar em 2 tipos de DAG (direct aciclyc graph). Em um DAG a biodiversidade local é uma função da 'fragmentação total', ou seja o objetivo é estimar o efeito combinado da perda de cobertura florestal e mudança na configuração espacial (REF, FIGURA 1A). Em outro a biodiversidade local é uma função do efeito direto da perda de cobertura flroestal e indireto via fragmentção per se, o grau de complexidade espacial da cobertura florestal controlado pela proporção de cobertura remanescente (REF). Alternativamente, existem aqueles que compreendem que, apesar do processo de mudança na cobertura florestal variar tanto a quantidade de cobertura quanto a configuração espacial, quando várias paisagens são amostradas os processos de perda de cobertura florestal e de mudança na fragmentação per se são desacoplados (@fahrig2019habitatB). A partir dessa última perspectiva é possível construir 1 DAG, onde o objetivo é estimar o efeito direto e independente da cobertura florestal e da fragmentação per se, abordagem conhecida por ser orientado ao padrão da fragmentação per se (@fahrig2019habitatB)
+O debate sobre a relação entre a perda de cobertura florestal e a biodiversidade remanescente de árvores (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward) impõem um desafio para a criação de modelos que reconstroem padrões empíricos (REF uso de cenários em conservação). Um momento chave do debate é o contraste das conclusões entre as revisões dos experimentos de fragmentação tratados na escala do fragmento florestal de Haddad et al. (2015) e dos estudos que avaliaram fragmentação na escala da paisagem por Fahrig (2017) (Valente et al. 2023). A conclusão da revisão dos experimentos foi de que fragmentação de habitat possui efeito com grande magnitude e negativo na biodiversidade remanescente (Haddad et al. 2015), enquanto a conclusão da revisão dos estudos foi de que a fragmentação de habitat não apresenta efeito relevante e quando apresenta é em geral positivo (Fahrig 2017). Essas conclusões partem de concepções distintas do fenômeno em estudo (Didham et al. 2011; Fahrig 2018). Na revisão dos experimentos é pressuposto que existe um processo que remove o habitat natural, modificando concomitantemente a quantidade de habitat e a complexidade espacial do habitat remanescente (Didham et al. 2011, Valente 2023). Na revisão dos estudos é pressuposto que existe um processo de redução de perda de habitat que determina a quantidade de habitat remanescente e outro processo de fragmentação per se que aumenta a complexidade espacial do habitat remanescente (Fahrig 2019, Valente 2023). Portanto, o debate coloca tanto ontologias (um proposto processo gerador dos dados) e epistemologias (uma proposta forma de conhecer a ontologia) em disputa. 
 
 
-```{r DAGS}
-library(plyr)
-library(dagitty)
-library(ggdag)
-library(ggplot2)
-library(gridExtra)
-library(dplyr)
-f_plotDAG <- \(DAGobject,label1,label2,ajuste_arrow=0.9){
-  dag <- DAGobject %>% 
-    tidy_dagitty()
-  dag$data <- dag$data %>% 
-    mutate(label1 = label1, label2 = label2)
-  dag %>% 
-    ggplot(aes(x = x, y = y, xend = xend, yend = yend, color = label)) +
-    geom_dag_point(shape = 22, size=33, stroke = 8, alpha=1,aes(color=label)) +
-    geom_dag_edges(
-      aes(x = ajuste_arrow * x,
-          y = ajuste_arrow * y,
-          xend = ajuste_arrow * xend, 
-          yend = ajuste_arrow * yend),
-      edge_color = "darkgreen", edge_width = 2,
-      arrow_directed = grid::arrow(
-        length = grid::unit(10, "pt"),
-        type = "closed")) +
-    geom_dag_text(color = "black", size = 8,aes(label=label)) +
-    theme_linedraw()+
-    xlim(c(-0.1,1.1)) +
-    ylim(c(-0.1,1.1)) +
-    facet_wrap(~label1 + label2) +
-    theme(legend.title = element_blank(),
-          legend.position = "none",
-          strip.text = element_text(size = 15),
-          panel.background = element_rect(fill="white",
-                                          color="black",
-                                          linewidth =2,linetype = "solid"),
-          axis.ticks = element_blank(),
-          axis.text = element_blank(),
-          axis.title.x = element_blank(),
-          axis.title.y = element_blank(),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          aspect.ratio = 1)
-}
-l_dag <- list()
-# Processistas: DAG1 - Fragmentação total
-l_dag$processista_DAG1 <- dagify(
-  y ~ x,
-  exposure = "x",
-  outcome = "y",
-  labels = c(y="\u03b1",
-             x="frag.\ntotal"),
-  coords = list(
-    x = c(x = 0.85, y = 0.15),
-    y = c(x = 0.85, y = 0.15)
-  )) %>% 
-  f_plotDAG(.,label1 = "Processista",label2 = "DAG 1") +
-  scale_color_manual(breaks = c("frag.\ntotal", "\u03b1"),
-                     values = c("darkred","black"))
-# Processistas: DAG2 - Interdependência entre perda de cobertura florestal e  fragmentação per se
-l_dag$processista_DAG2 <- dagify(
-  y ~ x + z,
-  x ~ z,
-  outcome = "y",
-  labels = c(y="\u03b1",
-             x="frag.\nperse",
-             z="perda \nCV"),
-  coords = list(
-    x = c(y=0.15,x=0.85,z=0.55),
-    y = c(y=0.15,x=0.15,z=0.85)
-  )) %>% 
-  f_plotDAG(.,label1 = "Processista",label2 = "DAG 2") +
-  scale_color_manual(breaks = c("frag.\nperse","perda \nCV", "\u03b1"),
-                     values = c("darkred","darkblue","black")) 
-l_dag$padronista_DAGunico <- dagify(
-  y ~ x + z,
-  outcome = "y",
-  labels = c(y="\u03b1",
-             x="frag.\nperse",
-             z="perda \nCV"),
-  coords = list(
-    x = c(y=0.15,x=0.85,z=0.15),
-    y = c(y=0.15,x=0.15,z=0.85)
-  )) %>% 
-  f_plotDAG(.,label1 = "Padronista",label2 = "DAG 3") +
-  scale_color_manual(breaks = c("frag.\nperse","perda \nCV", "\u03b1"),
-                     values = c("darkred","darkblue","black"))   
-p <- arrangeGrob(grobs=l_dag,nrow=1)      
-# ggsave()
-```
+
+PRÓXIMO: sistema de referência
+
+Aqui definimos um sistema de referência em duas partes relacionadas: um dispositivo de mimese de um mecanismo causal suficiente para reconstruir com realismo teórico os dados, no qual é possível calibrar empiricamente os processos demográficos de baixo nível que resultaram no padrão empírico de alto nível que pode ser empiricamente validado; e aqueles que propõem os contrastes entre contrafactuais que avaliam os efeitos dentro do proposto processo gerador dos dados (REF).
 
 
-# Diferenças e semelhanças nas abordagens baseadas em DAGs e análises de regressão
 
-Ambos grupos de pesquisa investigam o fenômeno a partir de métricas baseadas em área e distância da cobertura florestal remanescente (glossário, "métricas das características da cobertura floresal remanescente"). O objetivo das métricas é codificar a influência da área ao redor nos processos ecológicos que determinam os padrões de biodiversidade local (@frazier2017landscape). Não há consenso sobre qual a métrica de fragmentação per se adequada (e.g. número de fragmentos remanescentes ou proporção de área de borda, REFs) ou se métricas da escala do fragmento amostrado deveriam ser consideradas no lugar (REF). Então a partir dos DAGs propostos (figura 1) e de algum conjunto de métricas das características da cobertura florestal remanescente, cada respectivo grupo de pesquisa pode obter os efeitos causais médios a partir de uma abordagem baseada em regressão (REFs). Dentro dessas análises, uma importante fonte de dados empíricos são padrões estatícos de biodiversidade local (REF) e o mapa de cobertura floretal remanescente contemporâneo ao trabalhos de amostragem original (REFS: EFEITO DE ESCALA). Nessas análises é comum pressupor que as métricas das características da cobertura florestal contemporâneas apresentam efeitos relevantes na descrição da biodiversidade local observada (@frazier2017landscape, ESCALA DE EFEITO, PUTTKER EFEITOS INDIRETOS, WATLING 2020). Implícitamente há um pressuposto de que a escala temporal e espacial do fenômeno está sendo bem descrita por essas métricas das características contemporâneas (REF). Por exemplo, na análise da escala de efeito é possível pressupor que a escala espacial adequada para realizar a análise é aquela que maximiza a relação entre uma métrica de área de cobetura florestal na área ao redor e a riqueza de espécies na área amostral, dentro de um modelo de regressão (REF).
+
+# Diferenças e semelhanças nas abordagens baseadas em DAGs e análises de regressão[a]
+
+Ambos grupos de pesquisa investigam o fenômeno a partir de métricas baseadas em área e distância da cobertura florestal remanescente (glossário, "métricas das características da cobertura florestal remanescente"). O objetivo das métricas é codificar a influência da área ao redor nos processos ecológicos que determinam os padrões de biodiversidade local [b](@frazier2017landscape). Não há consenso sobre qual a métrica de fragmentação per se adequada (e.g. número de fragmentos remanescentes ou proporção de área de borda, REFs) ou se métricas da escala do fragmento amostrado deveriam ser consideradas no lugar (REF). Então a partir dos DAGs propostos (figura 1) e de algum conjunto de métricas das características da cobertura florestal remanescente, cada respectivo grupo de pesquisa pode obter os efeitos causais médios a partir de uma abordagem baseada em regressão (REFs). [c]Dentro dessas análises, uma importante fonte de dados empíricos são padrões estatícos de biodiversidade local (REF) e o mapa de cobertura floretal remanescente contemporâneo ao trabalhos de amostragem original (REFS: EFEITO DE ESCALA). Nessas análises é comum pressupor que as métricas das características da cobertura florestal contemporâneas apresentam efeitos relevantes na descrição da biodiversidade local observada (@frazier2017landscape, ESCALA DE EFEITO, PUTTKER EFEITOS INDIRETOS, WATLING 2020). Implícitamente há um pressuposto de que a escala temporal e espacial do fenômeno está sendo bem descrita por essas métricas das características contemporâneas (REF). Por exemplo, na análise da escala de efeito é possível pressupor que a escala espacial adequada para realizar a análise é aquela que maximiza a relação entre uma métrica de área de cobetura florestal na área ao redor e a riqueza de espécies na área amostral, dentro de um modelo de regressão (REF).[d]
 
 ```{r para discussao}
 # No caso da escala temporal, estimativas do atraso da resposta ecológica da biodiversidade local em função das mudanças nas áreas ao redor indicam que o atraso na resposta ecológica pode durar de dezenas até centenas de anos para florestas (REF: débito de extinção).  
@@ -136,11 +103,11 @@ Ambos grupos de pesquisa investigam o fenômeno a partir de métricas baseadas e
 
 # Abordagem: estimativa dos efeitos causais médios a partir de modelo baseado em indivíduos
 
-Aqui nós utilizamos uma abordagem baseada em simulação de contrafactuais para calcular os efeitos causais médios das características da paisagem na manutenção da biodiversidade local. Para construir um modelo demográfico pressupomos a situação de equilíbrio (REF). Sob equilíbrio a taxa de perda de espécies na paisagem é constante (REF). Um modelo neutro espacialmente explícito reconstroi a dinâmica de morte, dispersão mediada pelas distâncias e posições dos indivíduos na paisagem, e nascimento de indivíduos de diferentes espécies na paisagem no qual a parcela foi amostrada (REF). Uma vez que esse modelo expressa de forma suficiente o mecanismo causal que pode gerar os dados (REF), a comparação entre situações distintas (contrafactuais) por sítio de amostragem pode estimar o efeito causal médio dessas mudanças no mecanismo mimetizado (REF). O contraste na simulação entre a paisagem com a configuração espacial contemporânea da cobertura florestal e de uma paisagem sem perda de cobertura florestal pode informar o efeito de fragmentação total. O contraste na simulação entre a paisagem com a cobertura florestal contemporânea aglomerada ao redor da área amostral e a paisagem sem perda de cobertura pode informar o efeito de perda de cobertura florestal. E o contraste na simulação entre a paisagem contemporânea e a paisagem aglomerada pode informar o efeito de fragmentação per se. Esses efeitos causais médios, que estão presentes nos DAG dos programas de pesquisa em ecologia de paisagens, descrevem o quanto a paisagem ao redor pode auxiliar na manutenção da riqueza local na dinâmica demográfica simulada (REF). 
+Aqui nós utilizamos uma abordagem baseada em simulação de contrafactuais para calcular os efeitos causais médios das características da paisagem na manutenção da biodiversidade local. Para construir um modelo demográfico pressupomos a situação de equilíbrio (REF). Sob equilíbrio a taxa de perda de espécies na paisagem é constante (REF). Um modelo neutro espacialmente explícito reconstroi a dinâmica de morte, dispersão mediada pelas distâncias e posições dos indivíduos na paisagem, e nascimento de indivíduos de diferentes espécies na paisagem no qual a parcela foi amostrada (REF). Uma vez que esse modelo expressa de forma suficiente o mecanismo causal que pode gerar os dados (REF), a comparação entre situações distintas (contrafactuais) por sítio de amostragem pode estimar o efeito causal médio dessas mudanças no mecanismo mimetizado (REF).[e] O contraste na simulação entre a paisagem com a configuração espacial contemporânea da cobertura florestal e de uma paisagem sem perda de cobertura florestal pode informar o efeito de fragmentação total. O contraste na simulação entre a paisagem com a cobertura florestal contemporânea aglomerada ao redor da área amostral e a paisagem sem perda de cobertura pode informar o efeito de perda de cobertura florestal. E o contraste na simulação entre a paisagem contemporânea e a paisagem aglomerada pode informar o efeito de fragmentação per se. Esses efeitos causais médios, que estão presentes nos DAG dos programas de pesquisa em ecologia de paisagens, descrevem o quanto a paisagem ao redor pode auxiliar na manutenção da riqueza local na dinâmica demográfica simulada (REF). [f]
 
 # Objetivo
 
-Nosso objetivo é estimar os efeitos causais médios das característica da cobertura florestal na paisagem ao redor na descrição da biodiversidade local de árvores a partir de um modelo baseado em indivíduos. Buscamos reinterpretar o debate dentro da ecologia de paisagens sob a visão da teoria neutra da biodiversidade e da teoria de contrafactuais. Pressupomos a situação de equilíbrio na paisagem simulada. Dessa forma, foi possível investigar a escala espacial da análise adequada para a dinâmica simulada e criar métricas de paisagem que se baseiam no efeito na dinâmica ecológica simulada.
+Nosso objetivo é estimar os efeitos causais médios das característica[g] da cobertura florestal na paisagem ao redor na descrição da biodiversidade local de árvores a partir de um modelo baseado em indivíduos. Buscamos reinterpretar o debate dentro da ecologia de paisagens sob a visão da teoria neutra da biodiversidade e da teoria de contrafactuais. Pressupomos a situação de equilíbrio na paisagem simulada.[h] Dessa forma, foi possível investigar a escala espacial da análise adequada para a dinâmica simulada e criar métricas de paisagem[i] que se baseiam no efeito na dinâmica ecológica simulada.
 
  
 ```{r onde deixar?,eval=FALSE,echo=FALSE,include=FALSE}
@@ -174,3 +141,13 @@ Nosso objetivo é estimar os efeitos causais médios das característica da cobe
 # 
 
 ```
+
+[a]Mais uma razão para apresentar DAGs depois é que elas descrevem relações causais entre variáveis teóricas, que por sua vez afetam métricas , que são o que é efetivamente medido.
+[b]Aqui vc só se refere a métricas de área? Pq o início da sentença parece se referir às métricas de área e fragmentação, apresentadas na sentença anterior
+[c]Aqui de novo acho que falta considerar a relação entre métricas e as grandezas teóricas que as afetam, que seriam variáveis latentes. A diferença de abordagens pode estar neste nível.
+[d]Acho que este detalhamento pode ir para os métodos, pq é uma maneira de identificar a escala espacial mais adequada. Aqui basta dizer que este pressuposto pode e deve ser avaliado
+[e]Queria discutir isso com você. Pra mim a escolha do modelo neutro é por ser um modelo mínimo suficiente, de dinâmica que gera alguns dos padrões de biodiversidade usados nestes estudos. É isso que vs quis dizer com “expressa de forma suficiente “? Se sim, acho que fica mais explícito como “modelo de dinâmica mínimo de mas suficiente para gerar …”
+[f]Concordo com a ideia e acho um jeito muito legal mesmo de contextualizar seu estudo. E aí acho que toda essa parte que marquei precisa ser explicada num argumento mais longo e detalhado. E tb consideraria que parte do argumento precisa estar na introdução, e que parte ficaria no métodos. Acho que na introdução deve estar a lógica geral apenas
+[g]Ou de métricas. Ou efeitos de características da paisagem por meio de suas métricas?
+[h]Somos nós ou estamos só mantendo este pressuposto de todas as abordagens? Acho que é o segundo, e que o que fizemos é explicitar este pressuposto examinando o equilíbrio de uma dinâmica de comunidade em espaço explícito (ou uma dinâmica neutra da biodiversidade em espaço explícito).
+[i]Qual métricas criamos? Se for o U, acho mais acurado que propomos que parâmetros da dinâmica podem ser usadas como métricas do efeito da paisagem sobre a diversidade
