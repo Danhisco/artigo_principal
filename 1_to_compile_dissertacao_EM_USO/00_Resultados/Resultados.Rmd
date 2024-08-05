@@ -262,42 +262,34 @@ knitr::kable(df,
 
 
 ### Efeito da métrica funcional da paisagem na congruência relativa do contraste de contrafactuais
-
-```{r GE SADs congruentes}
-df_adSADifself %>% 
-  mutate(contrafactual = case_when(
-    contrafactual == "contemp" ~ "paisagem e taxa U\n contemporânea",
-    contrafactual == "ideal" ~ "paisagem e taxa U\n prístina",
-    contrafactual == "non_frag" ~ "paisagem e taxa U\n aglomerada",
-  )) %>% 
-  ggplot(aes(x=k,y=nCong,color=p,group=SiteCode)) +
-  geom_line(alpha=0.2) +
-  geom_point(alpha=0.2) +
-  labs(y="número de SADs simuladas com boa congruência com o observado",
-       x="proporção de propágulos até a vizinhança imediata") +
-  scale_colour_gradient2("% CF",midpoint=0.5,
-                         low="darkred",
-                         mid = "blue",
-                         high = "darkgreen") +
-  facet_wrap(~contrafactual,ncol=3)
-```
 ```{r tabela de modelos GAMM logOR, include=TRUE,eval=TRUE}
 df <- data.frame(
-  modelo = c("com efeito por paisagem", "com efeito de paisagem", "sem efeito de paisagem","mgcv::s"),
-  `efeito em U` = c("1", "1", "0","s(bs='cr')"),
-  `ano dados` = c("1", "1", "1","s(bs='cr')"),
-  `coord. geo.` = c("1", "1", "1","s(bs='tp')"),
-  `intecep. por sítio` = c("1", "1", "1","s(bs='re')"),
-  `efeito em U por sítio` = c("1", "0", "0","s(bs='fs',xt=list(bs='cr'))")
+  modelo = c("com efeito por paisagem 1","com efeito por paisagem 2", "com efeito de paisagem", "sem efeito de paisagem","mgcv::s"),
+  `efeito em U` = c("1","1", "1", "0","s(bs='cr')"),
+  `ano dados` = c("1","1", "1", "1","s(bs='cr')"),
+  `coord. geo.` = c("1","1", "1", "1","s(bs='tp')"),
+  `intecep. por sítio` = c("1","1", "1", "1","s(bs='re')"),
+  `efeito em U por sítio 1` = c("0","1", "0", "0","s(bs='fs',xt=list(bs='cr'))"),
+  `efeito em U por sítio 2` = c("1","0", "0", "0","s(bs='cr',by=Site)")
 )
-names(df) <- c("GAMM","métrica funcional","ano obs.","coord. geo. obs.","intercepto por Site","métrica por Site")
+names(df) <- c("GAMM","métrica funcional","ano obs.","coord. geo. obs.","intercepto por Site","métrica por Site 1","métrica por Site 2")
 knitr::kable(df,
              caption = "GAMM usados para descrever os contraste de contrafactuais\n method='REML'")
 # df
 ```
 
 ```{r}
-df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_itself.csv")
+# df_tabelaSelecao <- read_csv(file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
+df_tabelaSelecao <- read_csv(file=paste0("./","tabelas/df_tabelaSelecaologOR_cgi.csv"))
+df_tabelaSelecao <- df_tabelaSelecao %>% 
+  mutate(`Prática Ontológica` = ifelse(grepl("contemp-ideal",pair),
+                                       "Interdependete","Independente"),
+         pair = pair %>% 
+           gsub("contemp-ideal","Frag. total",.) %>%
+           gsub("contemp-non_frag","Frag. per se",.) %>%
+           gsub("non_frag-ideal","Área per se",.)) %>% 
+  relocate(`Prática Ontológica`) %>% 
+  rename(Contraste = pair)
 # df_tabelaSelecao
 knitr::kable(df_tabelaSelecao, 
              caption = "Tabela de seleção e avaliação da estrutura aleatória; logOR(SAD/SAD)")

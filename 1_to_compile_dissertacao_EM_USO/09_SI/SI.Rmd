@@ -153,3 +153,25 @@ grid.arrange(grobs=l_p,ncol=10)
 a paisagem hipotética contemporânea costuma apresentar estimativas superiores de taxa U em comparação com as outras duas paisagens contrafactuais, resultando em contrastes com maior magnitude (fig. \@ref(fig:GE-contraste_taxaU)). Em alguns casos, a estimativa em paisagem aglomerada pode ser superior ao estimado na paisagem contemporânea, resultando no log da razão da estimativa da taxa U inferior ao observado em paisagens com pouca perda de cobertura florestal (fig. \@ref(fig:GE-contraste_taxaU). Em resumo: i) quanto maior a perda de habitat e mais branda a limitação de dispersão, maior a potencial diferença entre as 3 paisagens contrafactuais; ii) em geral a estimativa em paisagens contemporâneas é superior; iii) em geral o estimado na paisagem aglomerada e prístina são similares, porém, para alguns sítios com pouca proporção de cobertura vegetal, o estimado em paisagem aglomerado pode ser superior. 
 
 ADICIONAR FIGURA DA TAXA U POR SÍTIO
+
+# SADs simuladas com boa congruência com a SAD observada
+
+
+```{r GE SADs congruentes}
+df_adSADifself %>% 
+  mutate(contrafactual = case_when(
+    contrafactual == "contemp" ~ "paisagem e taxa U\n contemporânea",
+    contrafactual == "ideal" ~ "paisagem e taxa U\n prístina",
+    contrafactual == "non_frag" ~ "paisagem e taxa U\n aglomerada",
+  )) %>% 
+  ggplot(aes(x=k,y=nCong,color=p,group=SiteCode)) +
+  geom_line(alpha=0.2) +
+  geom_point(alpha=0.2) +
+  labs(y="número de SADs simuladas com boa congruência com o observado",
+       x="proporção de propágulos até a vizinhança imediata") +
+  scale_colour_gradient2("% CF",midpoint=0.5,
+                         low="darkred",
+                         mid = "blue",
+                         high = "darkgreen") +
+  facet_wrap(~contrafactual,ncol=3)
+```

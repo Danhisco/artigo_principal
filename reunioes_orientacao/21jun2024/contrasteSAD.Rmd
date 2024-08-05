@@ -345,6 +345,9 @@ df_tabsel_logOR <- ldply(l_md_logOR,f_TabSelGAMM,.id="pair")
 write_csv(df_tabsel_logOR,file="dados/csv/df_tabelaSelecao_logOR_cgi.csv")
 #
 df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_cgi.csv")
+# write_csv(df_tabelaSelecao,
+#           file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
+
 f_SML.gamm <- \(df){md <- l_md_logOR[[df$pair[1]]][[df$modelo[[1]]]]}
 l_md_1alike <- dlply(df_tabelaSelecao,"pair",f_SML.gamm)
 saveRDS(l_md_1alike,file="dados/Rdata/l_md_logOR_itself_1alike.rds")
@@ -451,6 +454,8 @@ if(!file.exists("dados/csv/df_tabelaSelecao_logOR_aud.csv")){
 }else{
   df_tabsel_logOR_aud <- 
     read_csv(file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
+  # write_csv(df_tabsel_logOR_aud,
+  #           file=paste0(v_path,"tabelas/df_tabsel_logOR_aud.csv"))
 }
 # df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
 knitr::kable(df_tabsel_logOR_aud, 
