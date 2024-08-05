@@ -215,8 +215,8 @@ Nós quantificamos o efeito da métrica da paisagem na congruência relativa dos
 #### A métrica funcional: log(U/U)
 
 ```{r tabela dos quantis observados dos contrastes}
-# df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
-df_quantisobs_Uefeito <- read_csv(file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
+df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
+# df_quantisobs_Uefeito <- read_csv(file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
 df_quantisobs_Uefeito <- df_quantisobs_Uefeito %>% 
   mutate(`Prática Ontológica` = ifelse(`Contraste log(U/U)`=="Frag. total",
                                        "Interdependente","Independente")) %>% 
@@ -242,41 +242,31 @@ knitr::include_graphics(path="./figuras/GE_taxaU_contrastes.png")
 
 #### Quantificação do efeito da métrica funcional na descrição do padrão de biodiversidade local
 
-```{r moodelos estatísticos usados para descrever as métricas funcionais baseadas na taxa U, echo=FALSE,include=TRUE}
-### VAI SAIR!!!! ###
-df <- data.frame(
-  modelo = c("gi", "gs", 
-             "gi - p * k","gs - p * k",
-             "p * k + 1|Site", "p + k + 1|Site",
-             "mgcv::"),
-  `p + k` = c("0", "0", "1", "1","0","1","s(p,bs='cr') + s(k,bs='cr')"),
-  `p * k` = c("1", "1", "0", "0","1","0","`p + k` + ti(p,k)"),
-  `gi` = c("1", "0", "1", "0","0","0","s(k, by=Site, bs='cr')+ s(Site,bs='re')"),
-  `gs` = c("0", "1", "0", "1","0","0","s(k, Site, bs='fs',xt=list(bs='cr'))+ s(Site,bs='re')"),
-  `1|Site` = c("0", "0", "0", "0","1","1","s(Site,bs='re')")
-  )
-names(df) <- c("modelo","p + k","p * k","gi","gs","1|Site")
-knitr::kable(df, 
-             caption = "GAMMs usados para descrever o log(U/U) dos contrastes entre contrafactuais previstos em cada prática ontológica")
-```
-
 
 ### Efeito da métrica funcional da paisagem na congruência relativa do contraste de contrafactuais
+
+A quantificação do efeito da métrica funcional de paisagem na congruência relativa com a SAD observada ocorre em duas etapas. Primeiro é avaliado modelos candidatos que diferem em como o efeito da paisagem é expresso, se fixo e aleatório, apenas fixo ou ausente. Nesses modelos candidatos há 2 covariáveis, o ano de amostragem da SAD e a coordenada central da área amostrada, em todos os modelos. Então, desses modelos, o mais plausível é usado como modelo cheio de uma segunda rodada de comparação de modelos candidatos. Nessa segunda etapa, os modelos candidatos diferem nas covariáveis, com 4 combinações: cheio, sem ano, sem coordenada, ou sem ano e coordenada.  
+
+
+
+
 ```{r tabela de modelos GAMM logOR, include=TRUE,eval=TRUE}
 df <- data.frame(
-  modelo = c("com efeito por paisagem 1","com efeito por paisagem 2", "com efeito de paisagem", "sem efeito de paisagem","mgcv::s"),
+  modelo = c("efeito por paisagem - gs","efeito por paisagem - gi", "efeito de paisagem", "sem efeito de paisagem","mgcv::s"),
   `efeito em U` = c("1","1", "1", "0","s(bs='cr')"),
   `ano dados` = c("1","1", "1", "1","s(bs='cr')"),
   `coord. geo.` = c("1","1", "1", "1","s(bs='tp')"),
   `intecep. por sítio` = c("1","1", "1", "1","s(bs='re')"),
-  `efeito em U por sítio 1` = c("0","1", "0", "0","s(bs='fs',xt=list(bs='cr'))"),
-  `efeito em U por sítio 2` = c("1","0", "0", "0","s(bs='cr',by=Site)")
+  `efeito em U por sítio gs` = c("0","1", "0", "0","s(bs='fs',xt=list(bs='cr'))"),
+  `efeito em U por sítio gi` = c("1","0", "0", "0","s(bs='cr',by=Site)")
 )
-names(df) <- c("GAMM","métrica funcional","ano obs.","coord. geo. obs.","intercepto por Site","métrica por Site 1","métrica por Site 2")
+names(df) <- c("GAMM","métrica funcional","ano obs.","coord. geo. obs.","intercepto por Site","métrica por Site gs","métrica por Site gi")
 knitr::kable(df,
-             caption = "GAMM usados para descrever os contraste de contrafactuais\n method='REML'")
+             caption = "GAMM usados para avaliar a melhor estrutura aleatória para descrever o log da razão da chance de uma SAD simulada ter boa congruência com a SAD observada do contraste de contrafactuais")
 # df
 ```
+
+
 
 ```{r}
 # df_tabelaSelecao <- read_csv(file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
@@ -287,14 +277,24 @@ df_tabelaSelecao <- df_tabelaSelecao %>%
          pair = pair %>% 
            gsub("contemp-ideal","Frag. total",.) %>%
            gsub("contemp-non_frag","Frag. per se",.) %>%
-           gsub("non_frag-ideal","Área per se",.)) %>% 
+           gsub("non_frag-ideal","Área per se",.),
+         modelo = modelo %>% 
+           gsub("por paisagem$","por paisagem 1",.) %>% 
+           gsub("1","- gs",.) %>% 
+           gsub("2","- gi",.) %>% 
+           gsub("com ","",.)) %>% 
   relocate(`Prática Ontológica`) %>% 
-  rename(Contraste = pair)
+  rename(Contraste = pair) %>% as.data.frame
 # df_tabelaSelecao
 knitr::kable(df_tabelaSelecao, 
              caption = "Tabela de seleção e avaliação da estrutura aleatória; logOR(SAD/SAD)")
 ```
-TEXTO TEXTO TEXTO TEXTO
+
+
+
+
+
+
 
 #### Prática ontológica interdependente
 
