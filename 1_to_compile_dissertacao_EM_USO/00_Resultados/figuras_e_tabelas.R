@@ -161,7 +161,7 @@ l_p$fig1 <- df_plot %>%
       grepl("perse",name) ~ "Contraste Frag. per se: log(U contemporâneo / U aglomerado)")) %>%
   left_join(.,df_text) %>%
   ggplot(aes(x=value)) +
-  geom_vline(xintercept = 0,color="darkblue",linetype=3) +
+  geom_vline(xintercept = 0,color="blue",linetype=3) +
   geom_vline(xintercept = v_hline,color="darkred") + 
   geom_histogram(bins = 120) +
   geom_boxplot(aes(y=-17.5),width=30,alpha=0.4) +

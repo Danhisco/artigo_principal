@@ -132,6 +132,18 @@ df_adSADifself <- adply(c("contemp","ideal","non_frag"),1,\(i){
                select(SiteCode:p,ends_with("_z")),
              by=c("SiteCode","k"))
 },.id=NULL)
+# tabelas para o texto
+# df_quantisobs_Uefeito <- read_csv(file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
+df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
+l_quants_contrasteU <- lapply(df_quantisobs_Uefeito$`Contraste log(U/U)`,\(i){
+  dfi <- df_quantisobs_Uefeito %>% 
+    filter(`Contraste log(U/U)`==i) %>% 
+    select(1,starts_with("exp"))
+  dfi <- dfi %>% select(all_of(grep("0.05|0.95",names(dfi),value = T))) %>% as.data.frame()
+  v_return <- dfi[,2] - dfi[,1]
+  round(v_return,2)
+})
+names(l_quants_contrasteU) <- df_quantisobs_Uefeito$`Contraste log(U/U)`
 ```
 
 ```{r trackdown chunk resultados, include=FALSE,eval=FALSE}
@@ -200,21 +212,7 @@ Nós quantificamos o efeito da métrica da paisagem na congruência relativa dos
 <!-- #### Taxa U de cada paisagem contrafactual -->
 
 <!-- Para paisagens contemporâneas com proporção de cobertura vegetal abaixo de 0.95, observamos que a estimativa da taxa U pode ser distinta entre paisagens hipotéticas para alguns graus de limitação de dispersão (fig. \@ref(fig:GE-Urep-sitio-k-land)). -->
-#### Descrição do padrão da métrica funcional
-
-Quando há pouca perda de habitat o log da razão da estimativa da taxa U é similar entre os 3 contraste de contrafactuais (fig. \@ref(fig:GE-contraste_taxaU)). A magnitude do log da razão da taxa U aumenta em graus de limitação de dispersão mais brandos, seguido pelos graus mais severos (REF). Nos graus de limitação de dispersão pouco severos, onde há o máximo global na estimativa da taxa U em paisagens sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre os contrafactuais (fig. \@ref(fig:GE-contraste_taxaU)). Nas paisagens abaixo de 0.95, o contraste de fragmentação total pode apresentar a maior magnitude por sítio e o de área per se apresenta a menor magnitude 
-
-
-a paisagem hipotética contemporânea costuma apresentar estimativas superiores de taxa U em comparação com as outras duas paisagens contrafactuais, resultando em contrastes com maior magnitude (fig. \@ref(fig:GE-contraste_taxaU)). Em alguns casos, a estimativa em paisagem aglomerada pode ser superior ao estimado na paisagem contemporânea, resultando no log da razão da estimativa da taxa U inferior ao observado em paisagens com pouca perda de cobertura florestal (fig. \@ref(fig:GE-contraste_taxaU). Em resumo: i) quanto maior a perda de habitat e mais branda a limitação de dispersão, maior a potencial diferença entre as 3 paisagens contrafactuais; ii) em geral a estimativa em paisagens contemporâneas é superior; iii) em geral o estimado na paisagem aglomerada e prístina são similares, porém, para alguns sítios com pouca proporção de cobertura vegetal, o estimado em paisagem aglomerado pode ser superior. 
-
-
-
-```{r caption figura exploratoria da taxa U}
-cap <- ""
-```
-```{r GE-contraste_taxaU, include=TRUE,eval=TRUE,fig.cap=cap}
-knitr::include_graphics(path="./figuras/GE_taxaU_contrastes.png")
-```
+#### A métrica funcional: log(U/U)
 
 ```{r tabela dos quantis observados dos contrastes}
 # df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
@@ -226,18 +224,26 @@ df_quantisobs_Uefeito <- df_quantisobs_Uefeito %>%
 knitr::kable(df_quantisobs_Uefeito,
              caption = "Quantis observados dos contrastes na taxa U previstos em cada prática ontológica.")
 ```
+  
+    
+Na escala padrão, a razão da estimativa da taxa U para o contraste de área per se apresenta o menor intervalo interquantil de 90%; enquanto o contraste de fragmentação total apresenta o maior intervalo (tab. REF). 
+A maior parte dos contrastes observados ocorre na mesma faixa de valores do contraste em paisagens com pouca perda de cobertura florestal (fig. \@ref(fig:GE-contraste_taxaU) a e b, %CF>=0.95).
+O contraste de área per se apresenta mais observações na faixa de quantils dos contrastes em paisagens com pouca cobertura florestal (fig. \@ref(fig:GE-contraste_taxaU) a), além de apresentar menor magnitude máxima (fig. \@ref(fig:GE-contraste_taxaU) b, %CF>=0.95). O contraste de fragmentação total apresenta maior magnigute máxima (fig. \@ref(fig:GE-contraste_taxaU) a e b). O Contraste de fragmentação per se pode apresentar valores negativos com maior magnitude do que o contraste de área, apesar da maior parte dos valores serem positivo (fig. \@ref(fig:GE-contraste_taxaU))
+A magnitude do contraste aumenta em graus de limitação de dispersão mais brandos, seguido pelos graus mais severos (REF). Nos graus de limitação de dispersão pouco severos, onde há o máximo global na estimativa da taxa U em paisagens sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre os contrafactuais (fig. \@ref(fig:GE-contraste_taxaU)).
 
-#### Contraste entre conttrafactuais
+
+```{r caption figura exploratoria da taxa U}
+cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, previstos em cada prática ontológica (tabela X). a) Distribuição dos valores de cada contraste; em vermelhos os quantis de todos os contrastes observados em paisagens com proporção de cobertura florestal igual ou superior 0.95. b) Contraste por sítio de amostragem, pontos ligados pelo sítio de amostragem e coloridos pela proporção de cobertura florestal remanescente."
+```
+```{r GE-contraste_taxaU, include=TRUE,eval=TRUE,fig.cap=cap}
+knitr::include_graphics(path="./figuras/GE_taxaU_contrastes.png")
+```
 
 
-
-
-Diagnóstico dos efeitos da taxa U
-
-GRÁFICOS DESCRITIVOS DOS CONTRASTES EM FUNCAO DE P E K 
+#### Quantificação do efeito da métrica funcional na descrição do padrão de biodiversidade local
 
 ```{r moodelos estatísticos usados para descrever as métricas funcionais baseadas na taxa U, echo=FALSE,include=TRUE}
-### VAI SAIR? ###
+### VAI SAIR!!!! ###
 df <- data.frame(
   modelo = c("gi", "gs", 
              "gi - p * k","gs - p * k",
@@ -253,39 +259,6 @@ names(df) <- c("modelo","p + k","p * k","gi","gs","1|Site")
 knitr::kable(df, 
              caption = "GAMMs usados para descrever o log(U/U) dos contrastes entre contrafactuais previstos em cada prática ontológica")
 ```
-
-
-#### Prática ontológica interdependente
-
-```{r tabela de selecao taxa U pratica inter}
-df_tabsel_contrasteU <- read_csv(file="5_resultados/df_tabsel_contrasteU.csv")
-df <- df_tabsel_contrasteU %>% filter(pair=="frag.total") %>% 
-  rename("Moran I statistic (res.)"="Moran I statistic",
-         "Contraste"="pair") %>% 
-  mutate(Contraste = "Frag. total")
-knitr::kable(df, 
-             caption = "GAMMs usados para descrever o log(U/U) dos contrastes entre contrafactuais previstos em cada prática ontológica")
-```
-
-TEXTO TEXTO TEXTO TEXTO TEXTO 
-
-#### Prática ontológica independente
-
-```{r tabela de selecao taxa U pratica ind 1}
-df_tabsel_contrasteU <- read_csv(file="5_resultados/df_tabsel_contrasteU.csv")
-df <- df_tabsel_contrasteU %>% 
-  filter(pair!="frag.total") %>%
-  rename("Moran I statistic (res.)"="Moran I statistic",
-         "Contraste"="pair") 
-# %>% 
-#   mutate(Contraste = ifelse(
-#     Contraste=="area","Área per se","Frag. per se"
-#   ))
-knitr::kable(df, 
-             caption = "Tabela de seleção e avaliação dos modelos usados para descrever o efeito de área per se, previsto na prática ontológica independente")
-```
-
-TEXTO PRATICA IND
 
 
 ### Efeito da métrica funcional da paisagem na congruência relativa do contraste de contrafactuais

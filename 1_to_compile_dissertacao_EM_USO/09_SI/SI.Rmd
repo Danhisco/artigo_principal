@@ -136,22 +136,8 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
+# Paisagens Contemporâneas
 
-<!-- # Texto e tabelas -->
-
-<!-- Todas as análises dos dados foram feitas em R (REF). -->
-
-<!-- ## GLMM binomial -->
-
-<!-- Utilizamos funções do pacote lme4 (REF) para ajustar os GLMM binomiais. O modelo com estrutura aleatória mais complexa, com 1 intercepto e 1 inclinação no grau de limitação de dispersão por sítio de amostragem e tipo de paisagem hipotética, teve alerta de não convergência e mesmo depois de ajustar com outros otimizadores o alerta permaneceu. Como era um modelo que demorava muito para ajustar não fiz mais explorações com ele. Outro modelo explorado e descartado foi o modelo cheio que interpretava o grau de limitação de dispersão como variável categórica. Esse modelo demorou muito para rodar e sua execução foi interrompida antes de terminar a estimativa dos coeficientes. -->
-<!-- A tabela de seleção, com o delta AICc e peso de evidência, foi obtida usando a função AICctab do pacote bbmle (REF) e os coeficientes de determinação foram obtidos usando a função r.squaredGLMM do pacote MuMIn (REF). -->
-<!-- Avaliamos a qualidade de ajuste do modelo explorando os resíduos quantílicos (FIGURA A2 REF) usados no pacote DHARMa (REF). Também plotamos o predito e o observado (FIGURA A2 REF). -->
-
-<!-- # Figuras  -->
-
-
-
-## Paisagens Contemporâneas
 ```{r caption 2}
 cap <- "Paisagens contemporâneas (4x4 km2) aos eventos de amostragem da SAD na área amostrada. Mapas de cobertura da coleção 6 do mapbiomas."
 ```
@@ -161,3 +147,9 @@ l_p <- v_pngfiles %>% ll_ggpng()
 grid.arrange(grobs=l_p,ncol=10)
 ```
 
+
+# Taxa U estimada nas paisagens contrafactuais
+
+a paisagem hipotética contemporânea costuma apresentar estimativas superiores de taxa U em comparação com as outras duas paisagens contrafactuais, resultando em contrastes com maior magnitude (fig. \@ref(fig:GE-contraste_taxaU)). Em alguns casos, a estimativa em paisagem aglomerada pode ser superior ao estimado na paisagem contemporânea, resultando no log da razão da estimativa da taxa U inferior ao observado em paisagens com pouca perda de cobertura florestal (fig. \@ref(fig:GE-contraste_taxaU). Em resumo: i) quanto maior a perda de habitat e mais branda a limitação de dispersão, maior a potencial diferença entre as 3 paisagens contrafactuais; ii) em geral a estimativa em paisagens contemporâneas é superior; iii) em geral o estimado na paisagem aglomerada e prístina são similares, porém, para alguns sítios com pouca proporção de cobertura vegetal, o estimado em paisagem aglomerado pode ser superior. 
+
+ADICIONAR FIGURA DA TAXA U POR SÍTIO
