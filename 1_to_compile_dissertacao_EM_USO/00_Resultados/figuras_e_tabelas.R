@@ -1,4 +1,5 @@
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
+probs = c(0.05,0.25, 0.5, 0.75,0.95)
 ################################
 # criacao GE dados disponiveis #
 ################################
@@ -226,7 +227,7 @@ df_md_Uefeito <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>%
          across(c(p,k),f_z,.names = "{.col}_z"),
          SiteCode = factor(SiteCode)) %>% 
   rename("tp_efeito"="name","v_efeito"=value)
-f_quant <- function(x, probs = probs) {
+f_quant <- function(x) {
   tibble(
     val = quantile(x, probs, na.rm = TRUE),
     quant = probs
@@ -249,3 +250,35 @@ v_cols <- lapply(probs,\(i) grep(i,names(df_quantisobs_Uefeito),value = TRUE)) %
 df_quantisobs_Uefeito <- select(df_quantisobs_Uefeito,all_of(v_cols))
 write_csv(df_quantisobs_Uefeito,
           file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
+# 
+# Distribuição da taxa U em função da perturbação dos sítios
+df_plot <- inner_join(
+  df_md_Uefeito,
+  df_dados_disponiveis %>% select(SiteCode,forest_succession)
+) %>% filter(forest_succession!="capoeira") %>% 
+  mutate(tp_efeito = gsub("area","Área per se",tp_efeito) %>% 
+           gsub("frag.perse","Frag. per se",.) %>% 
+           gsub("frag.total","Frag. total",.),
+         forest_succession = gsub("primary$","1a",forest_succession) %>% 
+           gsub("^primary/secondary$","1a-2a",.) %>% 
+           gsub("^secondary","2a",.))
+p <- df_plot %>% 
+  ggplot(aes(x=forest_succession,y=v_efeito)) +
+  geom_jitter() +
+  geom_boxplot(alpha=0.4) +
+  labs(x="classe de preservação\n(grau de perturbação e tempo de recuperação)",
+       y="log(U/U)") +
+  facet_wrap(~tp_efeito,nrow=1)
+ggsave(filename=paste0(v_path,"figuras/boxplot_Uefeito_pert.png"),
+       p,width = ,height = )
+# distribuição do logOR em função da taxa U por classe de perturbação
+df_plot <- df_logOR %>%
+  select(contraste,SiteCode,itself,Uefeito,forest_succession) %>% 
+  rename(logOR = itself)
+df_plot %>% 
+  filter(forest_succession!="capoeira") %>% 
+  ggplot(aes(x=Uefeito,y=logOR,color=forest_succession)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~contraste,ncol=1)
+  

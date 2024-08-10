@@ -37,7 +37,7 @@ v_pares <- c("contemp-ideal","non_frag-ideal","contemp-non_frag")
 names(v_pares) <- c("frag.total","area","frag.perse")
 # dados
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
-  select(SiteCode,year_bestProxy,matches("(lat|long)")) %>% 
+  select(SiteCode,year_bestProxy,forest_succession,matches("(lat|long)")) %>% 
   mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
          long = ifelse(is.na(long_correct),long,long_correct),
          data_year = as.numeric(year_bestProxy),
@@ -87,6 +87,7 @@ df_logOR <- df_adSAD %>%
   inner_join(y=df_contrastes,by=c("contraste","SiteCode","k")) %>% 
   inner_join(y=df_dados_disponiveis,by="SiteCode") %>% 
   relocate(p,.after=k)
+write_csv(df_logOR,file="dados/csv/df_logOR.csv")
 ```
 
 # Número de SADs congruentes 
@@ -270,22 +271,28 @@ saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR.rds")
 ```
 ```{r 2a parte: apenas a referência correspondente, echo=FALSE,eval=FALSE}
 df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
-  rename(logOR = itself)
+  rename(logOR = itself) %>% 
+  filter(forest_succession!="capoeira") %>% 
+  mutate(Sitecode = factor(SiteCode),
+         forest_succession = factor(forest_succession))
 f_gam <- \(dfi){
   l_md <- list()
   l_md$`com efeito por paisagem` <- gam(logOR ~
-        s(Uefeito,bs="cr") + 
+        forest_succession +
+        s(Uefeito,by=forest_succession,bs="cr") +
         s(data_year,bs="cr") +
         s(lat,long,bs="tp") +
         s(SiteCode,bs="re") + s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")),
       data=dfi,method = "REML")
   l_md$`com efeito de paisagem` <- gam(logOR ~
-        s(Uefeito,bs="cr") + 
+        forest_succession +
+        s(Uefeito,by=forest_succession,bs="cr") +
         s(data_year,bs="cr") +
         s(lat,long,bs="tp") +
         s(SiteCode,bs="re"),
       data=dfi,method = "REML")
   l_md$`sem efeito de paisagem` <- gam(logOR ~
+        forest_succession +
         s(data_year,bs="cr") +
         s(lat,long,bs="tp") +
         s(SiteCode,bs="re"),
@@ -296,35 +303,38 @@ l_md_logOR <- df_md %>%
   mutate(SiteCode=factor(SiteCode)) %>% 
   split(.,df_md$contraste) %>% 
   lapply(.,f_gam)
-saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR_itself.rds")
+saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR_itself_c_perturbacao.rds")
 ```
 ```{r inclusão de GAMM GI sensu Peterson et al. 2019}
 df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
-  rename(logOR = itself)
+  rename(logOR = itself) %>% 
+  filter(forest_succession!="capoeira")
 f_gam <- \(dfi){
  gam(logOR ~
-       s(Uefeito,bs="cr") + 
+       forest_succession +
+       s(Uefeito,by=forest_succession,bs="cr") +
        s(data_year,bs="cr") +
        s(lat,long,bs="tp") +
        s(SiteCode,bs="re") + s(Uefeito, by=SiteCode, bs="cr"),
      data=dfi,method = "REML")
 }
 l_md_logOR_gi <- df_md %>% 
-  mutate(SiteCode=factor(SiteCode)) %>% 
+  mutate(SiteCode = factor(SiteCode),
+         forest_succession = factor(forest_succession)) %>% 
   split(.,df_md$contraste) %>% 
   lapply(.,f_gam)
-saveRDS(l_md_logOR_gi,file="dados/Rdata/l_md_logOR_itself_gi.rds")
+saveRDS(l_md_logOR_gi,file="dados/Rdata/l_md_logOR_itself_gi_perturbacao.rds")
 ```
 ```{r}
-l_md_logOR <- readRDS(file="dados/Rdata/l_md_logOR_itself.rds")
-l_md_logOR_gi <- readRDS(file="dados/Rdata/l_md_logOR_itself_gi.rds")
+l_md_logOR <- readRDS(file="dados/Rdata/l_md_logOR_itself_c_perturbacao.rds")
+l_md_logOR_gi <- readRDS(file="dados/Rdata/l_md_logOR_itself_gi_perturbacao.rds")
 l_md_logOR_cgi <- lapply(names(l_md_logOR),\(li){
   l_md <- l_md_logOR[[li]]
   l_md$`com efeito por paisagem 2` <- l_md_logOR_gi[[li]]
   return(l_md)
 })
 names(l_md_logOR_cgi) <- names(l_md_logOR)
-saveRDS(l_md_logOR_cgi,file="dados/Rdata/l_md_logOR_cgi.rds")
+saveRDS(l_md_logOR_cgi,file="dados/Rdata/l_md_logOR_cgi_c_perturbacao.rds")
 ```
 
 
@@ -335,22 +345,23 @@ Para todos os contrastes, o GAMM mais plausível era aquele 'com efeito por pais
 
 ```{r 1a tabela de selacao, eval=TRUE}
 # l_md.logOR <- readRDS("dados/Rdata/l_md_logOR_itself.rds")
-l_md_logOR <- readRDS(file="./dados/Rdata/l_md_logOR_cgi.rds")
+# l_md_logOR <- readRDS(file="./dados/Rdata/l_md_logOR_cgi.rds")
+l_md_logOR <- readRDS(file="./dados/Rdata/l_md_logOR_cgi_c_perturbacao.rds")
 #
 source("source/2samples_testes.R")
 source("source/general_tools.R")
 source("source/GAMMtools.R")
 source("source/fig_tools.R")
 df_tabsel_logOR <- ldply(l_md_logOR,f_TabSelGAMM,.id="pair")
-write_csv(df_tabsel_logOR,file="dados/csv/df_tabelaSelecao_logOR_cgi.csv")
+write_csv(df_tabsel_logOR,file="dados/csv/df_tabelaSelecao_logOR_cgi_cperturbacao.csv")
 #
-df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_cgi.csv")
+df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_cgi_cperturbacao.csv")
 # write_csv(df_tabelaSelecao,
 #           file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
 
 f_SML.gamm <- \(df){md <- l_md_logOR[[df$pair[1]]][[df$modelo[[1]]]]}
 l_md_1alike <- dlply(df_tabelaSelecao,"pair",f_SML.gamm)
-saveRDS(l_md_1alike,file="dados/Rdata/l_md_logOR_itself_1alike.rds")
+saveRDS(l_md_1alike,file="dados/Rdata/l_md_logOR_itself_1alike_cperturbacao.rds")
 ######
 knitr::kable(
   df_tabelaSelecao,
@@ -406,7 +417,86 @@ print(p)
 
 
 
-## 2a fase de comparações: existe concurvidade entre o efeito fixo da paisagem e covariáveis? é necessário considerar todas as covariáveis?
+## 2a fase de comparações: 
+
+a) qual o modelo cheio adequado?
+
+```{r}
+df_md <- df_logOR %>% filter(forest_succession!="capoeira")
+l_md_1alike <- readRDS(file="dados/Rdata/l_md_logOR_itself_1alike_cperturbacao.rds")
+#
+f_gam_update <- \(gamm){
+  # setup
+  f_ref <- formula(gamm)
+  original_data <- gamm$model
+  f_gam <- \(fi){
+    gam(formula=fi,data=original_data,method = "REML")
+  }
+  # formula 
+  l_md <- list()
+  l_md$`-Uefeito*perturb` <- update.formula(
+    f_ref, . ~ . - s(Uefeito, by = forest_succession, bs = "cr") + s(Uefeito, bs = "cr"))
+    # ajuste das formulas
+  l_md <- lapply(l_md,f_gam)
+  # inclusão do modelo cheio
+  l_md$cheio <- gamm
+  return(l_md)
+}
+l_md_cheios <-lapply(l_md_1alike,f_gam_update) 
+saveRDS(l_md_cheios,"dados/Rdata/l_md_cheios_cperturbacao.rds")
+```
+```{r}
+l_md_logOR_aud <- readRDS(file="dados/Rdata/l_md_cheios_cperturbacao.rds")
+if(!file.exists("dados/csv/df_tabelaSelecao_logOR_cpert.csv")){
+  df_tabsel_logOR_aud <- ldply(l_md_logOR_aud,f_TabSelGAMM,.id="pair")
+  write_csv(df_tabsel_logOR_aud,
+            file="dados/csv/df_tabelaSelecao_logOR_cpert.csv")
+}else{
+  df_tabsel_logOR_aud <- 
+    read_csv(file="dados/csv/df_tabelaSelecao_logOR_cpert.csv")
+  # write_csv(df_tabsel_logOR_aud,
+  #           file=paste0(v_path,"tabelas/df_tabsel_logOR_aud.csv"))
+}
+```
+```{r}
+f_SML.gamm <- \(df){md <- l_md_logOR_aud[[df$pair[1]]][[df$modelo[[1]]]]}
+l_md_1alike <- dlply(df_tabsel_logOR_aud,"pair",f_SML.gamm)
+#
+f_gam_update <- \(mdname){
+  mdgam <- l_md_1alike[[mdname]]
+  f_ref <- formula(mdgam)
+  original_data <- mdgam$model
+  f_gam <- \(fi){
+    gam(formula=fi,data=original_data,method = "REML")
+  }
+  l_md <- list()
+  l_md$`- ano` <- update.formula(f_ref, . ~ . - s(data_year, bs = "cr"))
+  l_md$`- coord` <- update.formula(f_ref, . ~ . - s(lat, long, bs = "tp"))
+  if(!grepl("by = forest_succession",as.character(f_ref)[3])){
+    l_md$`- pert` <- update.formula(f_ref, . ~ . - forest_succession)
+    l_md$`- pert e ano` <- update.formula(l_md$`- ano`, . ~ . - forest_succession)
+    l_md$`- pert e coord` <- update.formula(l_md$`- coord`, . ~ . - forest_succession)
+    l_md$`- ano e coord` <- update.formula(l_md$`- coord`, . ~ . - s(data_year, bs = "cr"))
+    l_md$`- cov` <- update.formula(l_md$`- ano e coord`, . ~ . - forest_succession)
+  }else{
+    l_md$`- cov` <- update.formula(l_md$`- coord`, . ~ . - s(data_year, bs = "cr"))
+  }
+  l_md <- lapply(l_md,f_gam)
+  l_md$cheio <- mdgam
+  saveRDS(l_md,
+          file=paste0("dados/Rdata/l_md_logOR_2a_cpert_",mdname,".rds"))
+  rm(l_md);gc()
+  # return(l_md)
+}
+lapply(names(l_md_1alike),f_gam_update)
+# l_md_logOR_2a_cpert <- lapply(names(l_md_1alike),f_gam_update)
+# saveRDS(l_md_logOR_aud,file="dados/Rdata/l_md_logOR_2a_cpert.rds")
+```
+
+
+
+
+##### antigo:
 
 ```{r tabelas dos modelos da 2a fase,eval=TRUE}
 library(knitr)
@@ -425,8 +515,8 @@ knitr::kable(df,
 ```{r ajuste dos modelos da 2a fase de comparações,eval=FALSE}
 # df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
 #   rename(logOR = itself)
-l_md_1alike <- readRDS(file="dados/Rdata/l_md_logOR_itself_1alike.rds")
-l_md_1alike %>% names
+l_md_1alike <- readRDS(file="dados/Rdata/l_md_logOR_itself_1alike_cperturbacao.rds")
+# l_md_1alike %>% names
 f_gam_update <- \(mdgam){
   f_ref <- formula(mdgam)
   original_data <- mdgam$model

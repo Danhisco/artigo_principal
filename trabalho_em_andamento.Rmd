@@ -11,6 +11,27 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 9ago2024
+
+SCORE:
+-> BUROCRACIAS MESTRADO
+- agilização do 3o comitê: o que apresentar?
+Entendo que podemos dividir o argumento em duas partes: da introdução até os resultados e da discussão até a conclusão. Então gostaria de que o terceiro comitê fosse sobre esse ponto de contato entre essas duas partes.
+Me proponho a apresentar o suficiente da introdução para que os resultados sejam compreendidos e então gostaria de conversar sobre os caminhos que penso para a discussão. 
+
+
+
+-> TRABALHO DE VERDADE NA DISSERTAÇÃO
+- finalização dos resultados: 
+a) criação de figuras e tabelas
+1) Qual o status dos resultados?
+2) 
+
+b) texto explicando os resultados
+
+
+
+
 # 1ago2024
 
 Apresentação das tabelas:
