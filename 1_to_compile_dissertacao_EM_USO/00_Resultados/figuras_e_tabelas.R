@@ -154,27 +154,57 @@ df_text <- df_plot %>%
                                 grepl("frag.perse",name) ~ "Contraste Frag. per se:\n",
                                 grepl("frag.total",name) ~ "Contraste Frag. Total:\n"),
          v_geomtext = paste0(v_geomtext,prop_maiorq,"% a direita, ",prop_menorq,"% a esquerda"))
+# l_p$fig1 <- df_plot %>% 
+#   mutate(
+#     label = case_when(
+#       grepl("area",name) ~ "Contraste Área per se: log(U aglomerado / U prístino)",
+#       grepl("total",name) ~ "Contraste Frag. Total: log(U contemporâneo / U prístino)",
+#       grepl("perse",name) ~ "Contraste Frag. per se: log(U contemporâneo / U aglomerado)")) %>%
+#   left_join(.,df_text) %>%
+#   ggplot(aes(x=value)) +
+#   geom_vline(xintercept = 0,color="blue",linetype=3) +
+#   geom_vline(xintercept = v_hline,color="darkred") + 
+#   geom_histogram(bins = 120) +
+#   geom_boxplot(aes(y=-17.5),width=30,alpha=0.4) +
+#   labs(y="",x="",
+#        tag="a)",
+#        caption="quantils (0.05, 0.25, 0.75, 0.95) dos contraste em paisagens com %CF>=0.95") +
+#   geom_text(aes(x=1.5,y=300,label=v_geomtext),alpha=0.01,size=4) + 
+#   theme(strip.text = element_text(size=10),
+#         plot.caption.position = "plot",
+#         plot.caption = element_text(hjust = 0.2, face= "italic",vjust=10),
+#         plot.margin=unit(c(0,0.2,-0.5,0), "cm")) +
+#   facet_wrap(~label,ncol=1)
+# Distribuição da taxa U em função da perturbação dos sítios
+df_plot <- inner_join(
+  df_md_Uefeito,
+  df_dados_disponiveis %>% select(SiteCode,forest_succession)
+) %>% filter(forest_succession!="capoeira") %>% 
+  mutate(tp_efeito = gsub("area",
+                          "Área per se: aglomerado / prístino",tp_efeito) %>% 
+           gsub("frag.perse",
+                "Frag. per se: contemporâneo / aglomerado",.) %>% 
+           gsub("frag.total",
+                "Frag. total: contemporâneo / prístino",.),
+         forest_succession = gsub("primary$","1a",forest_succession) %>% 
+           gsub("^primary/secondary$","1a-2a",.) %>% 
+           gsub("^secondary","2a",.))
+df_plot <- rbind(
+  df_plot %>% mutate(forest_succession = "todos"),
+  df_plot
+)
 l_p$fig1 <- df_plot %>% 
-  mutate(
-    label = case_when(
-      grepl("area",name) ~ "Contraste Área per se: log(U aglomerado / U prístino)",
-      grepl("total",name) ~ "Contraste Frag. Total: log(U contemporâneo / U prístino)",
-      grepl("perse",name) ~ "Contraste Frag. per se: log(U contemporâneo / U aglomerado)")) %>%
-  left_join(.,df_text) %>%
-  ggplot(aes(x=value)) +
-  geom_vline(xintercept = 0,color="blue",linetype=3) +
-  geom_vline(xintercept = v_hline,color="darkred") + 
-  geom_histogram(bins = 120) +
-  geom_boxplot(aes(y=-17.5),width=30,alpha=0.4) +
-  labs(y="",x="",
-       tag="a)",
-       caption="quantils (0.05, 0.25, 0.75, 0.95) dos contraste em paisagens com %CF>=0.95") +
-  geom_text(aes(x=1.5,y=300,label=v_geomtext),alpha=0.01,size=4) + 
-  theme(strip.text = element_text(size=10),
-        plot.caption.position = "plot",
-        plot.caption = element_text(hjust = 0.2, face= "italic",vjust=10),
-        plot.margin=unit(c(0,0.2,-0.5,0), "cm")) +
-  facet_wrap(~label,ncol=1)
+  ggplot(aes(x=forest_succession,y=v_efeito)) +
+  labs(x="classe de preservação (grau de perturbação e tempo de recuperação)",
+       y="log(U/U)",
+       tag="a)") +
+  geom_hline(yintercept = 0,color="blue",linetype=3) +
+  geom_hline(yintercept = v_hline,color="darkred") + 
+  geom_jitter() +
+  geom_boxplot(alpha=0.4) +
+  # scale_x_discrete(position = "top") +
+  # coord_flip() +
+  facet_wrap(~tp_efeito,nrow=1)
 ##
 df_md <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
   pivot_longer(-c(SiteCode:p)) %>% 
@@ -183,36 +213,43 @@ df_md <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>%
          SiteCode = factor(SiteCode))
 l_p$fig2 <- df_md %>% 
   mutate(label=case_when(
-    grepl("area",name) ~ "Área per se",
-    grepl("total",name) ~ "Frag. Total",
-    grepl("perse",name) ~ "Frag. per se")
+    grepl("area",name) ~ "Área per se: aglomerado / prístino",
+    grepl("total",name) ~ "Frag. Total: contemporâneo / prístino",
+    grepl("perse",name) ~ "Frag. per se: contemporâneo / aglomerado")
   ) %>% 
   ggplot(aes(x=k,y=value,group=SiteCode,color=p)) +
   geom_boxplot(inherit.aes = FALSE,
                aes(x=k,y=value,group=k)) +
+  geom_hline(yintercept = 0,color="blue",linetype=3) +
+  geom_hline(yintercept = v_hline,color="darkred") + 
   geom_line(alpha=0.5) +
   geom_point(alpha=0.5) +
   scale_colour_gradient2("% CF",midpoint=0.5,
-                         low="darkred",
-                         mid = "blue",
-                         high = "darkgreen") +
+                         low="red",
+                         mid = "black",
+                         high = "#69874c") +
   labs(x="k (prop. de propágulos até a vizinhança imediata)",
        y="log(U/U)",
        tag="b)") +
-  theme(plot.margin=unit(c(-0.2,0.2,0,0), "cm")) +
+  theme(plot.margin=unit(c(-0.2,0.2,0,0), "cm"),
+        legend.position = "inside",
+        legend.position.inside = c(0.49,0.9),
+        legend.direction="horizontal") +
+  # guides(color=guide_legend(direction='horizontal')) +
   facet_wrap(~label,ncol=3)
 # grid.arrange(grobs=l_p,ncol=1)
 p <- arrangeGrob(grobs=l_p,
-                 # ncol=1,
-                 layout_matrix = rbind(c(1),
-                                       c(1),
-                                       c(1),
-                                       c(2),
-                                       c(2)))
+                 ncol=1,
+                 # layout_matrix = rbind(c(1),
+                 #                       c(1),
+                 #                       c(1),
+                 #                       c(2),
+                 #                       c(2))
+                 )
 ggsave(
   filename = paste0(v_path,"figuras/GE_taxaU_contrastes.png"),
   plot = p,
-  width = 10,height=7)
+  width = 11,height=7.7)
 #
 #
 # TABELAS #
@@ -251,26 +288,6 @@ df_quantisobs_Uefeito <- select(df_quantisobs_Uefeito,all_of(v_cols))
 write_csv(df_quantisobs_Uefeito,
           file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
 # 
-# Distribuição da taxa U em função da perturbação dos sítios
-df_plot <- inner_join(
-  df_md_Uefeito,
-  df_dados_disponiveis %>% select(SiteCode,forest_succession)
-) %>% filter(forest_succession!="capoeira") %>% 
-  mutate(tp_efeito = gsub("area","Área per se",tp_efeito) %>% 
-           gsub("frag.perse","Frag. per se",.) %>% 
-           gsub("frag.total","Frag. total",.),
-         forest_succession = gsub("primary$","1a",forest_succession) %>% 
-           gsub("^primary/secondary$","1a-2a",.) %>% 
-           gsub("^secondary","2a",.))
-p <- df_plot %>% 
-  ggplot(aes(x=forest_succession,y=v_efeito)) +
-  geom_jitter() +
-  geom_boxplot(alpha=0.4) +
-  labs(x="classe de preservação\n(grau de perturbação e tempo de recuperação)",
-       y="log(U/U)") +
-  facet_wrap(~tp_efeito,nrow=1)
-ggsave(filename=paste0(v_path,"figuras/boxplot_Uefeito_pert.png"),
-       p,width = ,height = )
 # distribuição do logOR em função da taxa U por classe de perturbação
 df_plot <- df_logOR %>%
   select(contraste,SiteCode,itself,Uefeito,forest_succession) %>% 
