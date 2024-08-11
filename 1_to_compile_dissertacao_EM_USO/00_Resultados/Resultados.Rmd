@@ -218,10 +218,10 @@ Nós quantificamos o efeito da métrica da paisagem na congruência relativa dos
 ```{r tabela dos quantis observados dos contrastes}
 df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
 # df_quantisobs_Uefeito <- read_csv(file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
-df_quantisobs_Uefeito <- df_quantisobs_Uefeito %>% 
-  mutate(`Prática Ontológica` = ifelse(`Contraste log(U/U)`=="Frag. total",
-                                       "Interdependente","Independente")) %>% 
-  relocate(`Prática Ontológica`)
+# df_quantisobs_Uefeito <- df_quantisobs_Uefeito %>% 
+#   mutate(`Prática Ontológica` = ifelse(grepl("Frag. total",`Contraste log(U/U)`),
+#                                        "Interdependente","Independente")) %>% 
+#   relocate(`Prática Ontológica`)
 knitr::kable(df_quantisobs_Uefeito,
              caption = "Quantis observados dos contrastes na taxa U previstos em cada prática ontológica.")
 ```
