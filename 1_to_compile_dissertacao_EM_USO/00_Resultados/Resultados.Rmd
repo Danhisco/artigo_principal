@@ -220,17 +220,16 @@ Em uma próposta de início de conciliação das práticas ontológicas (VALENTE
 
 Por outro lado, o sistema epistêmico usado para estimar esses efeitos impõem uma estrutura hierarquica aos dados, pois, simula diversos cenários de dispersão em diversos tipos de contrafactuais para cada área amostrada. Nesse tipo de situação, modelo hierarquicos podem ser usados para estimar efeitos causais que podem ser não enviesados, mesmo para covariáveis não mensuradas (Feller & Gelman 2015; Weinstein & Blei 2024). A lógica é que, uma vez que o sítio de amostragem é sempre o mesmo, todas as possíveis covariáveis estão fixas, assim, os contrastes entre os contrafactuais simulados oferecem medidas não enviesadas de efeito causal (REF). Portanto, pode não ser necessário incluir as variáveis que aproximam o contexto da amostragem para fazer a estimativa do efeito causal.
 
-A análise dos dados a partir de modelo hierarquicos foi feita em etapas. Primeiro 
+Para avaliar a maneira mais apropriada para estimar o efeito causal médio, nós comparamos modelos hierarquicos. Primeiro avaliamos formas de expressar o efeito causal médio da paisagem por sítio de amostragem. Para isso a estrutura fixa dos modelos se manteve o mais cheio possível: com 1 intercepto por classe de preservação; 1 spline para efeito de paisagem por classe de preservação; 1 spline para o efeito do ano de amostragem; e 1 spline para o efeito da coordenada geográfica. A partir dessa estrutura fixa foram explorada 3 formas de expressar o efeito da paisagem por sítio de amostragem (REF GAMM 2019) : com 1 spline por sítio de amostragem, em que cada sítio apresenta um parâmetro de penalidade, conferindo maior flexibilidade por sítio; com 1 spline por sítio de amostragem, mas com o mesmo parâmetro de penalidade que o efeito fixo da paisagem, com menor flexibilidade por sítio de amostragem; e 1 intercepto por paisagem. Um modelo sem efeito fixo da paisagem e 1 intercepto por sítio de amostragem foi incluido para representar a ausência de efeito da paisagem por sítio. Caso o modelo mais plausível seja algum dos 3 primeiros modelos, com efeito de paisagem, é possível avaliar qual o conjunto de variáveis mais adequado para descrever o efeito causal médio da paisagem, dado o efeito causal médio da paisagem por sítio. 
 
+Para avaliar os modelos usamos o AICc, uma medida que pondera o número de parâmetros do modelo e quanto esse modelo representa dos dados (REF). O peso de evidência, medido a partir do AICc, pode ser interpretado como a probabilidade do modelo ser o modelo correto entre os modelos candidatos (REF). Essas métricas podem ser usadas para comparação relativa dos modelos considerando a possibilidade de overfitting (REF).
+Outra métrica relevante na ĩnferência causal é alguma que quantifique qual a variabilidade dos dados expressa pelo modelo, pois permite avaliar a influência do efeito investigado na geração dos dados (REF LAND USE SISTEM CAUSAL INFERENCE REF). Aqui utilizamos a deviance explained, métrica usada no contexto de GAMM, que possui interpretação similar ao R2 (REF). 
+Por conta da natureza agregada dos inventários florestais e com possibilidade de agregação na modificação da paisagem ao redor (FIGURA 1 INVENTÁRIOS FLORESTAIS), avaliamos se os resíduos dos modelos apresentam algum tipo de autocorrelação espacial a partir da estatística 1 de Moram. O valor da estatística 1 de Moran varia entre -1 e 1, indicando autocorrelação negativa e positiva, respectivamente. Se o p-valor associado a estatística 1 de Moran for muito baixa, então a hipótese nula de que não existe autocorrelação espacial tem pouco suporte (REF).
+Como aproximamos a possível autocorrelação espacial por 1 spline, autocorrelação positiva pode ser bem expressa, uma vez que splines são desenhados para garantir a continuidade de valores próximos (REF). Se a autocorrelação espacial for negativa, o spline pode ser uma aproximação ruim, pois não é adequado para estimar mudanças desrupitavas entre valores próximos (REF).  
 
-
-
-O contexto biogeográfico deve influenciar a biodiversidade local, determinando parte do padrão de abundância relativa (REF). 
-
-Assim, o contexto biogeográfico é um pontencial confundidor (REF). 
-
-
-, com cada paisagem livre para ter um particular efeito, e com as coordenadas espaciais do inventário e o ano do inventários como possíveis covariáveis fixas (seção 'Congruência relativa').
+RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
+RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
+RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
 
 ### Métrica funcional: grau de dependência da paisagem ao redor para repor espécies extintas localmente
 
