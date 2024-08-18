@@ -11,6 +11,38 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+# 13ago2024
+
+```{r}
+library(ggdag)
+library(ggplot2)
+theme_set(theme_dag())
+#
+cov_dag <- dagify(
+  local ~ paisagem + biogeo + preservacao_local,
+  paisagem ~ biogeo + U,
+  preservacao_local ~ U,
+  labels = c(
+    "local" = "biodiv. local",
+    "paisagem" = "efeito paisagem",
+    "preservacao_local" = "preserv. local",
+    "biogeo" = "Reg.biogeo.",
+    "U" =  "unobs. cov."
+  ),
+  latent = "U",
+  exposure = "paisagem",
+  outcome = "local"
+)
+ggdag_adjustment_set(cov_dag, text = FALSE, use_labels = "label", shadow = TRUE)
+
+
+
+
+```
+
+
+
 # 9ago2024
 
 SCORE:

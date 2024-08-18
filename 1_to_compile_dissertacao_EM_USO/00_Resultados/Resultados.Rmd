@@ -165,7 +165,7 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
-## Inventários Florestais Selecionados
+## Inventários Florestais na Floresta Atlântica
 
 Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção. As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig. \@ref(fig:GE-sitios-amostrados) a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo. Apenas 2 sítios possuíam menos de 20 anos de recuperação desde o último grande distúrbio na área e foram removidos (fig. \@ref(fig:GE-sitios-amostrados) c). A mediana da área amostrada foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. \@ref(fig:GE-sitios-amostrados) b). Portanto, todos os 107 sítios restantes possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Não foi possível estimar a taxa U em um sítio com baixa densidade de espécies por número de indivíduos e de baixa proporção de cobertura vegetal na paisagem ao redor. Em outro sítio não foi possível desenhar a parcela quadrado no centro da paisagem devido a configuração espacial da paisagem. Esses dois sítios foram removidos, totalizando 105 sítios simulados.
  
@@ -202,11 +202,35 @@ knitr::include_graphics(path = "./figuras/fig5_SoE.png")
 
 Em ambas práticas ontológicas primeiro alguma característica da paisagem, que interpreta-se estar relacionada com a biodiversidade local, é mensurada e então é quantificado o efeito desta métrica da paisagem na biodiversidade local. 
 
-Aqui interpretamos como métrica de influência da paisagem na biodiversidade local a razão entre a taxa U estimada nas paisagens contrafactuais em contraste. A razão da taxa U é o risco relativo de colonização de uma nova espécie na paisagem por evento de nascimento. Quanto menor a taxa U necessária para simular a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U estimadas em cada paisagem contrafactual for igual a zero não há diferença entre contrafactuais com relação a reposição de espécies locais pela paisagem. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. 
+### Métrica funcional da influência da paisagem ao redor na biodiversidade local
+
+Aqui interpretamos como métrica de influência da paisagem na biodiversidade local a razão entre a taxa U estimada nas paisagens contrafactuais em contraste. A razão da taxa U é o risco relativo de colonização de uma nova espécie na paisagem por evento de nascimento necessaŕio para obter a riqueza observada em uma determinada paisagem contrafactual. Quanto menor a taxa U necessária para simular a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U estimadas nas paisagens contrafactuais em contraste for igual a zero não há diferença entre contrafactuais com relação a reposição de espécies locais pela paisagem. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. 
+
+INCLUIR RESULTADOS DA MÉTRICA INCLUIR RESULTADOS DA MÉTRICA INCLUIR RESULTADOS DA MÉTRICA 
+INCLUIR RESULTADOS DA MÉTRICA INCLUIR RESULTADOS DA MÉTRICA INCLUIR RESULTADOS DA MÉTRICA
+
+### Quantificação do efeito causal médio da paisagem na biodiversidade local
 
 Como métrica de biodiversidade local utilizamos a distribuição de abundância de espécies (SAD, da sigla em inglês _Species Abundance Distribution_). Avaliamos a congruência da SAD observada e da SAD simulada em cada contrafactual. Para simular a SAD, o contrafactual deve ser composto pela paisagem hipotética e por um valor de taxa U. Nós interpretados que o contrafactual composto pela paisagem hipotética e a respectiva estimativa da taxa U na paisagem está alinhado com as práticas ontológicas dos programas de pesquisa em disputa (outras interpretações serão exploradas na discussão).
 
-Nós quantificamos o efeito da métrica da paisagem na congruência relativa dos contrafactuais em contraste. A congruência relativa é obtida em duas partes. Primeiro, a SAD simulada é comparada com a SAD observada pelo teste de Kolmogorov-Smirnov bootstrap e é contabilizado o número de SADs simuladas com boa congruência com a SAD observada. Segundo, é calculado o log da chance de uma SAD simulada ter boa congruência para cada contrafactual e então é calculado o log da razão da chance dos contrafactuais em contraste. O log da razão da chance é usada como variável resposta de uma análise de regressão que tem a métrica funcional da paisagem como efeito fixo e aleatório, com cada paisagem livre para ter um particular efeito, e com as coordenadas espaciais do inventário e o ano do inventários como possíveis covariáveis fixas (seção 'Congruência relativa').
+Nós avaliamos em etapas a congruência relativa dos contrafactuais nos previstos contraste. Primeiro, a SAD simulada é comparada com a SAD observada pelo teste de Kolmogorov-Smirnov bootstrap e é contabilizado o número de SADs simuladas com boa congruência com a SAD observada. Então é calculado a chance de uma SAD simulada ter boa congruência para cada bateria de simulação, grau de limitação de dispersão e contrafactual. Por fim, calculamos o log da razão da chance da SAD simulada ter boa congruência para o par de contrafactuais no contraste previsto em cada prática ontológica. O log da razão da chance é usada como variável resposta de uma análise de regressão que tem a métrica funcional da paisagem como efeito fixo e aleatório.
+
+Para fazer a quantificação do efeito causal a partir de análises de regressão é necessário avaliar se existem covariáveis que precisam ser ajustadas para obter medidas não enviesadas deste efeito causal (REF). 
+Em uma próposta de início de conciliação das práticas ontológicas (VALENTE ET AL. 2023), existe um consenso de que a resposta do efeito da paisagem na manuntenção da biodiversidade local deve dependender do contexto da amostragem (REF). O contexto biogeográfico pode ser um desses fatores que pode modificar o efeito da paisagem (revisado EM VALENTE ET AL. 2023) e tambem é um fator que deve influenciar a biodiversidade local (REF), sendo, portanto, uma variável de confusão (pelo critério da porta dos fundos) (REF). Outra possível variável de confusão é a classe de preservação do sítio de amostragem, pois, além de ter sido usada como critério de inclusão dos inventários florestais, pode apresentar uma variável de confusão não mensurada com o grau de modificação da paisagem contemporânea, uma vez que locais com baixo grau de preservação também podem estar em paisagens com grande grau de mudança na cobertura florestal remanescente (REF). Assim, um possível DAG, que engloba qualquer um dos três efeitos previstos nas duas práticas ontológicas, está descrito na figura X, onde é possível concluir que é necessário inclui variáveis que descrevam o contexto biogeográfico da amostragem e também do grau de preservação da área amostrada. Utilizamos o ano do inventário florestal e a coordenada central do sítio de amostragem como possíveis aproximações do contexto biogeográfico.
+
+Por outro lado, o sistema epistêmico usado para estimar esses efeitos impõem uma estrutura hierarquica aos dados, pois, simula diversos cenários de dispersão em diversos tipos de contrafactuais para cada área amostrada. Nesse tipo de situação, modelo hierarquicos podem ser usados para estimar efeitos causais que podem ser não enviesados, mesmo para covariáveis não mensuradas (Feller & Gelman 2015; Weinstein & Blei 2024). A lógica é que, uma vez que o sítio de amostragem é sempre o mesmo, todas as possíveis covariáveis estão fixas, assim, os contrastes entre os contrafactuais simulados oferecem medidas não enviesadas de efeito causal (REF). Portanto, pode não ser necessário incluir as variáveis que aproximam o contexto da amostragem para fazer a estimativa do efeito causal.
+
+A análise dos dados a partir de modelo hierarquicos foi feita em etapas. Primeiro 
+
+
+
+
+O contexto biogeográfico deve influenciar a biodiversidade local, determinando parte do padrão de abundância relativa (REF). 
+
+Assim, o contexto biogeográfico é um pontencial confundidor (REF). 
+
+
+, com cada paisagem livre para ter um particular efeito, e com as coordenadas espaciais do inventário e o ano do inventários como possíveis covariáveis fixas (seção 'Congruência relativa').
 
 ### Métrica funcional: grau de dependência da paisagem ao redor para repor espécies extintas localmente
 
