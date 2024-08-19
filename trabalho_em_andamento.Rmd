@@ -11,17 +11,14 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-# 13ago2024
-
 ```{r}
 library(dagitty)
 library(ggdag)
 library(ggplot2)
 library(dplyr)
 
-# Create the DAG
-cov_dag_with_coords <- dagify(
+# Define the DAG
+cov_dag <- dagify(
   local ~ paisagem + biogeo + preservacao_local,
   paisagem ~ biogeo + U,
   preservacao_local ~ U,
@@ -36,92 +33,122 @@ cov_dag_with_coords <- dagify(
   exposure = "paisagem",
   outcome = "local",
   coords = list(
-    x = c(paisagem = 1, biogeo = 3, preservacao_local = 1.5, local = 2, U = 2.5),
-    y = c(paisagem = 2, biogeo = 2, preservacao_local = 3, local = 1, U = 3)
+    x = c(paisagem = 2.5, biogeo = 7.5, preservacao_local = 9, local = 5, U = 9),
+    y = c(paisagem = 5, biogeo = 3.5, preservacao_local = 2.5, local = 1, U = 5.5)
   )
 )
-tidy_cov_dag <- tidy_dagitty(cov_dag)
-p <- ggdag_adjustment_set(tidy_cov_dag, shadow = TRUE,text = FALSE,
-                     exposure = "paisagem", 
-                     outcome = "local",node = FALSE,
-                     use_labels = NULL) +
-  geom_dag_point(aes(fill = label, color=label), size = 10) + 
-  # geom_dag_edges() +
-  geom_dag_text(aes(label = label), color = "black", size = 5) +  # Display labels on the plot
-  scale_fill_manual(values = c(
-    "efeito paisagem" = "red", 
-    "biodiv. local" = "green", 
-    "unobs. cov." = "gray",
-    "Reg. biogeo." = "skyblue",
-    "preserv. local" = "skyblue")) +
-  scale_color_manual(values = c(
-    "efeito paisagem" = "red", 
-    "biodiv. local" = "green", 
-    "unobs. cov." = "gray",
-    "Reg.biogeo." = "skyblue",
-    "preserv. local" = "skyblue"))
 
+# Tidy the DAG and set the node class
+tidy_cov_dag <- tidy_dagitty(cov_dag) %>%
+  mutate(node_class = case_when(
+    name == "paisagem" ~ "exposure",
+    name == "local" ~ "outcome",
+    name == "U" ~ "latent",
+    TRUE ~ "adjusted"
+  ))
 
+# Split edge data based on parent node for custom coloring
+edges_closed_path <- filter(tidy_cov_dag$data, name %in% c("biogeo", "preservacao_local"))
+edges_open_path <- filter(tidy_cov_dag$data, !name %in% c("biogeo", "preservacao_local"))
 
+# Create dummy data for the legend
+legend_data <- data.frame(
+  x = c(0, 0),
+  y = c(1, 2),
+  xend = c(1, 1),
+  yend = c(1, 2),
+  edge_type = c("closed path", "open path")
+)
 
-ggdag(cov_dag_with_coords, text = FALSE, use_labels = "label") +
-  geom_dag_point(aes(fill = status), size = 10) +
-  geom_dag_edges() +  # Automatically use coordinates from the DAG
-  geom_dag_text(aes(label = label), color = "black", size = 5) +
-  scale_fill_manual(values = c("exposure" = "red", "outcome" = "green", "adjusted" = "skyblue", "unadjusted" = "lightgray", NA = "white")) +
-  scale_color_manual(values = c("exposure" = "darkred", "outcome" = "darkgreen", "adjusted" = "blue", "unadjusted" = "gray", NA = "white")) +
-  theme_dag()
-
-ggdag_adjustment_set(tidy_cov_dag,shadow = TRUE,
-                     exposure = "paisagem", outcome = "local",
-                     use_labels = c(
-                       "local" = "biodiv. local",
-                       "paisagem" = "efeito paisagem",
-                       "preservacao_local" = "preserv. local",
-                       "biogeo" = "Reg.biogeo.",
-                       "U" =  "unobs. cov."
-                     ))
-
-
-p <- ggdag_status(tidy_cov_dag, exposure = "paisagem", outcome = "local")
-p$data <- p$data %>% 
-  mutate(status = as.character(status),
-         status = ifelse(is.na(status), "adjusted", status),
-         status = factor(status, levels = c("exposure", "outcome", "latent", "adjusted")))
-p + 
-  geom_dag_point(aes(fill = status), size = 10) +  # Use 'status' in fill, not 'label'
-  geom_dag_edges() +
-  geom_dag_text(aes(label = label), color = "black", size = 5) +
-  scale_fill_manual(
-    values = c(
-      "exposure" = "red", 
-      "outcome" = "green", 
-      "latent" = "gray",
-      "adjusted" = "skyblue"
-    ),
-    breaks = c("exposure", "outcome", "latent", "adjusted")  # Ensure all levels appear
-  ) +
-  guides(fill = guide_legend(override.aes = list(shape = 21)))
-dag_data <- ggplot_build(p)$data
-dag_data <- p$data
-# head(dag_data)
-
-
-ggdag_status(tidy_cov_dag, exposure = "paisagem", outcome = "local")  +
-  geom_dag_point(aes(fill = label), size = 10) +
-  geom_dag_edges() +
-  geom_dag_text(aes(label = label), color = "black", size = 5) +  # Add labels for nodes
-  scale_fill_manual(values = c(
-    "exposure" = "red", 
-    "outcome" = "green", 
-    "adjusted" = "skyblue", 
-    "unadjusted" = "lightgray")) +
-  scale_color_manual(values = c(
-    "exposure" = "darkred", 
+# Plot the DAG with custom arrow colors and manually created legends
+ggplot() +
+  geom_dag_edges_arc(data = edges_closed_path, 
+                     aes(x = x, y = y, xend = xend, yend = yend), 
+                     curvature = 0, color = "gray", show.legend = FALSE) +
+  geom_dag_edges_arc(data = edges_open_path, 
+                     aes(x = x, y = y, xend = xend, yend = yend), 
+                     curvature = 0, color = "blue", show.legend = FALSE) +
+  geom_dag_point(data = tidy_cov_dag, 
+                 aes(x = x, y = y, fill = node_class, size = node_class), 
+                 shape = 21) +
+  geom_dag_label_repel(data = tidy_cov_dag, 
+                       aes(x = x, y = y, label = label), 
+                       colour = "black", show.legend = FALSE) +
+  # Add dummy geom_segment for the legend
+  geom_segment(data = legend_data,
+               aes(x = x, y = y, xend = xend, yend = yend, color = edge_type),
+               arrow = arrow(length = unit(0.2, "inches"), type = "closed"),
+               size = 1.2) +
+  scale_color_manual("Edge Type", values = c(
+    "closed path" = "gray", 
+    "open path" = "blue")) +
+  scale_fill_manual("", values = c(
+    "exposure" = "darkblue", 
     "outcome" = "darkgreen", 
-    "adjusted" = "blue", 
-    "unadjusted" = "gray")) +
-  theme_dag()
+    "latent" = "black", 
+    "adjusted" = "darkred")) +
+  scale_size_manual("", values = c(
+    "exposure" = 10, 
+    "outcome" = 10, 
+    "latent" = 7, 
+    "adjusted" = 7)) +
+  theme_dag() +
+  theme(legend.position = "right")
+
+```
+
+
+
+# 13ago2024
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Define the points
+point1 <- c(x = 2, y = 5.8)  # Midpoint of one shorter side
+point2 <- c(x = 0.2, y = 5.5)  # Midpoint of the other shorter side
+
+# Calculate the distance between the points
+distance <- sqrt((point2['x'] - point1['x'])^2 + (point2['y'] - point1['y'])^2)
+
+# Define rectangle dimensions
+short_side <- 3
+long_side <- 7
+
+# Calculate unit vector for the direction of the line
+direction <- c(point2['x'] - point1['x'], point2['y'] - point1['y'])
+direction <- direction / sqrt(sum(direction^2))  # Normalize
+
+# Calculate the perpendicular direction
+perpendicular <- c(-direction[2], direction[1])
+
+# Calculate the offset to determine the other corners
+half_short_side <- short_side / 2
+half_long_side <- long_side / 2
+
+# Coordinates of the corners
+corner1 <- point1 + half_short_side * perpendicular - (distance / 2) * direction
+corner2 <- point1 - half_short_side * perpendicular - (distance / 2) * direction
+corner3 <- point2 - half_short_side * perpendicular + (distance / 2) * direction
+corner4 <- point2 + half_short_side * perpendicular + (distance / 2) * direction
+
+# Create a data frame for the rectangle
+rect_df <- data.frame(
+  x = c(corner1[1], corner2[1], corner3[1], corner4[1], corner1[1]),
+  y = c(corner1[2], corner2[2], corner3[2], corner4[2], corner1[2])
+)
+
+# Example data
+data <- data.frame(
+  x = c(1, 2, 0.2, 3),
+  y = c(3, 5.8, 5.5, 4)
+)
+
+# Plot the data with the rectangle
+ggplot(data, aes(x = x, y = y)) +
+  geom_point() +
+  geom_polygon(data = rect_df, aes(x = x, y = y), fill = "blue", alpha = 0.2) +
+  theme_minimal()
 
 ```
 

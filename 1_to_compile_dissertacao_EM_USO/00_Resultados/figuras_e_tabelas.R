@@ -252,6 +252,112 @@ ggsave(
   plot = p,
   width = 11,height=7.7)
 #
+# DAG do conjunto de variáveis de controle:
+library(dagitty)
+library(ggdag)
+library(ggplot2)
+library(dplyr)
+cov_dag <- dagify(
+  local ~ paisagem + biogeo + preservacao_local,
+  paisagem ~ biogeo + U,
+  preservacao_local ~ U,
+  labels = c(
+    "local" = "biodiv. local",
+    "paisagem" = "efeito paisagem",
+    "preservacao_local" = "preserv. local",
+    "biogeo" = "contexto biogeo.",
+    "U" =  "unobs. cov."
+  ),
+  latent = "U",
+  exposure = "paisagem",
+  outcome = "local",
+  coords = list(
+    x = c(paisagem = 2.5, biogeo = 7.5, preservacao_local = 9, local = 5, U = 9),
+    y = c(paisagem = 5, biogeo = 3.5, preservacao_local = 2.5, local = 1, U = 5.5)
+  )
+)
+# cov_dag %>% 
+#   ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+#         geom_dag_point(color = "orange") +
+#         geom_dag_edges_arc(edge_color = "blue", curvature = 0) +
+#         geom_dag_label_repel(aes(label = label), colour = "black", show.legend = FALSE) +
+#         theme_dag()
+# Tidy the DAG and set the node class
+tidy_cov_dag <- tidy_dagitty(cov_dag) %>%
+  mutate(node_class = case_when(
+    name == "paisagem" ~ "exposure",
+    name == "local" ~ "outcome",
+    name == "U" ~ "latent",
+    TRUE ~ "adjusted"
+  ))
+# Create a new column to classify edge type
+tidy_cov_dag <- tidy_cov_dag %>%
+  mutate(edge_type = case_when(
+    name %in% c("biogeo", "preservacao_local") ~ "closed path",
+    TRUE ~ "open path"
+  ))
+# Split edge data based on parent node for custom coloring
+edges_gray <- filter(tidy_cov_dag$data, name %in% c("biogeo", "preservacao_local"))
+edges_blue <- filter(tidy_cov_dag$data, !name %in% c("biogeo", "preservacao_local"))
+# criação de objeto para inclusão da legenda
+legend_data <- data.frame(
+  x = c(2.5, 2.5),
+  y = c(2.5, 2.5),
+  xend = c(2.5, 2.5),
+  yend = c(2.5, 2.5),
+  edge_type = c("closed path", "open path")
+)
+# Plot the DAG with custom arrow colors
+p <- ggplot(data = tidy_cov_dag) +
+  geom_dag_edges_arc(data = edges_gray, 
+                     mapping = (aes(x=x,y=y,xend=xend,yend=yend)),
+                     curvature = 0, edge_color = "gray") +
+  geom_dag_edges_arc(data = edges_blue, 
+                     mapping = (aes(x=x,y=y,xend=xend,yend=yend)),
+                     curvature = 0, edge_color = "black") +
+  geom_dag_point(aes(x = x, y = y, fill = node_class, size = node_class), 
+                 shape = 21) +
+  geom_dag_label_repel(aes(x = x, 
+                           y = y, 
+                           label = label), 
+                       colour = "black", 
+                       show.legend = FALSE,
+                       nudge_x = 0.1,
+                       nudge_y = 0.5,
+                       box.padding = 0.5,
+                       point.padding = 0.5) +
+  geom_segment(data = legend_data,
+               aes(x = x, y = y, xend = xend, yend = yend, color = edge_type),
+               arrow = arrow(length = unit(0.000001, "inches"), type = "closed"),
+               size = 1) +
+  scale_color_manual("Edge Type", values = c(
+    "closed path" = "gray", 
+    "open path" = "black")) +
+  scale_fill_manual("",values = c(
+    "exposure" = "darkblue", 
+    "outcome" = "darkgreen", 
+    "latent" = "black", 
+    "adjusted" = "darkred")) +
+  scale_size_manual("",values = c(
+    "exposure" = 10, 
+    "outcome" = 10, 
+    "latent" = 7, 
+    "adjusted" = 7)) +
+  guides(color = guide_legend("")) +
+  theme_dag_blank()
+ggsave(
+  filename = paste0(v_path,"figuras/DAG_var_de_controle.png"),
+  plot = p,
+  width = 11,height=7.7,
+  bg = "white")
+library(magick)
+img <- image_read(paste0(v_path,
+                         "figuras/DAG_var_de_controle.png"))
+trimmed_img <- image_trim(img)
+print(trimmed_img)
+image_write(trimmed_img, path = paste0(v_path,"figuras/DAG_var_de_controle.png"))
+
+#
 #
 # TABELAS #
 #
@@ -312,3 +418,5 @@ write_csv(df_quantisobs_Uefeito,
 #   geom_smooth() +
 #   facet_wrap(~contraste,ncol=1)
 #   
+
+ 
