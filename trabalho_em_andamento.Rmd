@@ -15,11 +15,13 @@ knitr::opts_chunk$set(echo = TRUE)
 # 13ago2024
 
 ```{r}
+library(dagitty)
 library(ggdag)
 library(ggplot2)
-theme_set(theme_dag())
-#
-cov_dag <- dagify(
+library(dplyr)
+
+# Create the DAG
+cov_dag_with_coords <- dagify(
   local ~ paisagem + biogeo + preservacao_local,
   paisagem ~ biogeo + U,
   preservacao_local ~ U,
@@ -27,17 +29,99 @@ cov_dag <- dagify(
     "local" = "biodiv. local",
     "paisagem" = "efeito paisagem",
     "preservacao_local" = "preserv. local",
-    "biogeo" = "Reg.biogeo.",
+    "biogeo" = "Reg. biogeo.",
     "U" =  "unobs. cov."
   ),
   latent = "U",
   exposure = "paisagem",
-  outcome = "local"
+  outcome = "local",
+  coords = list(
+    x = c(paisagem = 1, biogeo = 3, preservacao_local = 1.5, local = 2, U = 2.5),
+    y = c(paisagem = 2, biogeo = 2, preservacao_local = 3, local = 1, U = 3)
+  )
 )
-ggdag_adjustment_set(cov_dag, text = FALSE, use_labels = "label", shadow = TRUE)
+tidy_cov_dag <- tidy_dagitty(cov_dag)
+p <- ggdag_adjustment_set(tidy_cov_dag, shadow = TRUE,text = FALSE,
+                     exposure = "paisagem", 
+                     outcome = "local",node = FALSE,
+                     use_labels = NULL) +
+  geom_dag_point(aes(fill = label, color=label), size = 10) + 
+  # geom_dag_edges() +
+  geom_dag_text(aes(label = label), color = "black", size = 5) +  # Display labels on the plot
+  scale_fill_manual(values = c(
+    "efeito paisagem" = "red", 
+    "biodiv. local" = "green", 
+    "unobs. cov." = "gray",
+    "Reg. biogeo." = "skyblue",
+    "preserv. local" = "skyblue")) +
+  scale_color_manual(values = c(
+    "efeito paisagem" = "red", 
+    "biodiv. local" = "green", 
+    "unobs. cov." = "gray",
+    "Reg.biogeo." = "skyblue",
+    "preserv. local" = "skyblue"))
 
 
 
+
+ggdag(cov_dag_with_coords, text = FALSE, use_labels = "label") +
+  geom_dag_point(aes(fill = status), size = 10) +
+  geom_dag_edges() +  # Automatically use coordinates from the DAG
+  geom_dag_text(aes(label = label), color = "black", size = 5) +
+  scale_fill_manual(values = c("exposure" = "red", "outcome" = "green", "adjusted" = "skyblue", "unadjusted" = "lightgray", NA = "white")) +
+  scale_color_manual(values = c("exposure" = "darkred", "outcome" = "darkgreen", "adjusted" = "blue", "unadjusted" = "gray", NA = "white")) +
+  theme_dag()
+
+ggdag_adjustment_set(tidy_cov_dag,shadow = TRUE,
+                     exposure = "paisagem", outcome = "local",
+                     use_labels = c(
+                       "local" = "biodiv. local",
+                       "paisagem" = "efeito paisagem",
+                       "preservacao_local" = "preserv. local",
+                       "biogeo" = "Reg.biogeo.",
+                       "U" =  "unobs. cov."
+                     ))
+
+
+p <- ggdag_status(tidy_cov_dag, exposure = "paisagem", outcome = "local")
+p$data <- p$data %>% 
+  mutate(status = as.character(status),
+         status = ifelse(is.na(status), "adjusted", status),
+         status = factor(status, levels = c("exposure", "outcome", "latent", "adjusted")))
+p + 
+  geom_dag_point(aes(fill = status), size = 10) +  # Use 'status' in fill, not 'label'
+  geom_dag_edges() +
+  geom_dag_text(aes(label = label), color = "black", size = 5) +
+  scale_fill_manual(
+    values = c(
+      "exposure" = "red", 
+      "outcome" = "green", 
+      "latent" = "gray",
+      "adjusted" = "skyblue"
+    ),
+    breaks = c("exposure", "outcome", "latent", "adjusted")  # Ensure all levels appear
+  ) +
+  guides(fill = guide_legend(override.aes = list(shape = 21)))
+dag_data <- ggplot_build(p)$data
+dag_data <- p$data
+# head(dag_data)
+
+
+ggdag_status(tidy_cov_dag, exposure = "paisagem", outcome = "local")  +
+  geom_dag_point(aes(fill = label), size = 10) +
+  geom_dag_edges() +
+  geom_dag_text(aes(label = label), color = "black", size = 5) +  # Add labels for nodes
+  scale_fill_manual(values = c(
+    "exposure" = "red", 
+    "outcome" = "green", 
+    "adjusted" = "skyblue", 
+    "unadjusted" = "lightgray")) +
+  scale_color_manual(values = c(
+    "exposure" = "darkred", 
+    "outcome" = "darkgreen", 
+    "adjusted" = "blue", 
+    "unadjusted" = "gray")) +
+  theme_dag()
 
 ```
 
