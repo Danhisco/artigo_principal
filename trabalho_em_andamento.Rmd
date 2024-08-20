@@ -11,6 +11,97 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# dia 20ago2024
+
+```{r}
+dfi <- df_tabelaSelecao %>% 
+  select(-1) %>% 
+  filter(Contraste == "Frag. total")
+v_title <- dfi$Contraste[1] %>% 
+  gsub("Frag. total","Frag. Total: contemporâneo / prístino",.) %>% 
+  gsub("Frag. per se","Frag. per se: contemporâneo / aglomerado",.) %>% 
+  gsub("Área per se","Área per se: aglomerado / prístino",.)
+v_names <- names(dfi)[-1]
+dfi <- dfi %>% select(-Contraste) %>%
+  mutate(rank = 1:n())
+table <- dfi %>%
+  relocate(rank) %>% 
+  gt() %>%
+  tab_header(title = md(v_title)) %>%
+  fmt_number(
+    columns = v_names[-grep("modelo",v_names)],decimals = 2
+  ) %>%
+  tab_options(
+    table.font.size = "small",
+    table.align = "left"
+  ) %>% 
+  cols_label(
+    rank = "Rank",
+    modelo = "GAHM",
+    df = "approx. parameters",
+    dAICc = "ΔAICc",
+    weight = "Weight (ΔAICc)",
+    `Dev. explained` = "Deviance Explained",
+    `Moran I statistic (res)` = "Moran's I",
+    `p-value` = "p-value"
+  )
+plot <- dfi %>% 
+  ggplot(aes(x = rank)) +
+  geom_bar(aes(y = weight), stat = "identity", fill = "gray") +
+  geom_point(aes(y = `p-value`, fill = `Moran I statistic (res)`), shape = 22, size = 5) +
+  geom_segment(
+    aes(x = rank - 0.4, xend = rank + 0.4, 
+        y = `Dev. explained`, yend = `Dev. explained`,
+        color="Deviance\nExplained"), 
+    size = 1.5) +
+  scale_y_continuous("p-value (filled square), weight (gray bar), deviance explained (line segment)",limits = c(0, 1)) + # , sec.axis = dup_axis()
+  scale_fill_gradientn(colours = c("cyan", "black", "red"),
+                       values = c(-1,0,1),
+                       name = "Moran's I\nStatistics") +
+  scale_color_manual(values = c("Deviance\nExplained" = "blue"), name = "") +
+  new_scale_fill() +
+  scale_fill_manual(values = c("Weight (AICc)" = "gray"), guide = "none") +
+  labs(y = "", fill = "Moran I statistic",) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right"
+  )
+
+# Horizontal line segment for Deviance Explained
+  geom_segment(aes(x = Rank - 0.4, xend = Rank + 0.4, y = Deviance_Explained / 100, yend = Deviance_Explained / 100, color = "Deviance Explained"), size = 1.5) +
+  # Scales
+  scale_y_continuous(limits = c(0, 1), sec.axis = dup_axis()) +
+  scale_x_continuous(breaks = 1:4, labels = 1:4) +
+  scale_fill_gradient(low = "blue", high = "red", limits = c(-1, 1), name = "Moran's I") +
+  scale_color_manual(values = c("Deviance Explained" = "blue"), name = "Legend") +
+  scale_fill_manual(values = c("Weight (AICc)" = "gray"), guide = "none") +
+  # Labels
+  labs(y = "Value", fill = "Moran's I", color = "Deviance Explained") +
+  # Custom Legend
+  guides(
+    fill = guide_legend(override.aes = list(shape = 22, size = 5)),  # Square for Moran's I
+    color = guide_legend(override.aes = list(linetype = 1, size = 1.5))  # Line for Deviance Explained
+  )
+
+
+# # Custom legend as a table-like structure
+# custom_legend <- ggplot(df, aes(x = Rank, y = 0)) +
+#   geom_text(aes(label = Model), vjust = 1) +
+#   scale_x_continuous(breaks = 1:4, labels = 1:4) +
+#   theme_void() +
+#   labs(x = "Rank", y = "Model Name")
+# 
+# # Combine plot and custom legend
+# combined_plot <- plot / custom_legend + plot_layout(ncol = 1, heights = c(3, 1))
+
+# Display the combined plot
+combined_plot
+```
+
+
+# antes do dia 20
+
 ```{r}
 library(dagitty)
 library(ggdag)

@@ -405,6 +405,33 @@ v_cols <- lapply(probs,\(i) grep(i,names(df_quantisobs_Uefeito),value = TRUE)) %
 df_quantisobs_Uefeito <- select(df_quantisobs_Uefeito,all_of(v_cols))
 write_csv(df_quantisobs_Uefeito,
           file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
+##
+# tabela de comparação de estruturas hierarquicas do modelo
+library(gt);library(webshot2); library(patchwork)
+df_tabelaSelecao <- read_csv(file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
+df_tabelaSelecao <- df_tabelaSelecao %>% 
+  mutate(`Prática Ontológica` = ifelse(grepl("contemp-ideal",pair),
+                                       "Interdependete","Independente"),
+         pair = pair %>% 
+           gsub("contemp-ideal","Frag. total",.) %>%
+           gsub("contemp-non_frag","Frag. per se",.) %>%
+           gsub("non_frag-ideal","Área per se",.),
+         modelo = modelo %>% 
+           gsub("por paisagem$","por paisagem 1",.) %>% 
+           gsub("1","- gs",.) %>% 
+           gsub("2","- gi",.) %>% 
+           gsub("com ","",.) %>% 
+           gsub("por paisagem","por sítio",.) %>% 
+           gsub("de paisagem","fixo",.)) %>% 
+  relocate(`Prática Ontológica`) %>% 
+  rename(Contraste = pair,
+         `Dev. explained` = "dev.expl") %>% 
+  as.data.frame
+## 
+f_gt_to_png <- \(dfi){
+  
+}
+
 # 
 # distribuição do logOR em função da taxa U por classe de perturbação
 

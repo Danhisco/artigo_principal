@@ -200,59 +200,11 @@ knitr::include_graphics(path = "./figuras/fig5_SoE.png")
 
 ## Práticas ontológicas em disputa coexistindo em um sistema epistêmico contrafactual baseado em indivíduos
 
-Em ambas práticas ontológicas primeiro alguma característica da paisagem, que interpreta-se estar relacionada com a biodiversidade local, é mensurada e então é quantificado o efeito desta métrica da paisagem na biodiversidade local. 
+Em ambas práticas ontológicas primeiro alguma característica da paisagem, que interpreta-se estar relacionada com a biodiversidade local, é mensurada e então é quantificado o efeito desta métrica da paisagem na biodiversidade local. Esse sequência epistemológica é comum em estudos de estimativa de efeito causal médio (REF).
 
-### Métrica funcional da influência da paisagem ao redor na biodiversidade local
+### Métrica funcional da influência da paisagem na biodiversidade local
 
 Aqui interpretamos como métrica de influência da paisagem na biodiversidade local a razão entre a taxa U estimada nas paisagens contrafactuais em contraste. A razão da taxa U é o risco relativo de colonização de uma nova espécie na paisagem por evento de nascimento necessaŕio para obter a riqueza observada em uma determinada paisagem contrafactual. Quanto menor a taxa U necessária para simular a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U estimadas nas paisagens contrafactuais em contraste for igual a zero não há diferença entre contrafactuais com relação a reposição de espécies locais pela paisagem. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. 
-
-INCLUIR RESULTADOS DA MÉTRICA INCLUIR RESULTADOS DA MÉTRICA INCLUIR RESULTADOS DA MÉTRICA 
-INCLUIR RESULTADOS DA MÉTRICA INCLUIR RESULTADOS DA MÉTRICA INCLUIR RESULTADOS DA MÉTRICA
-
-### Quantificação do efeito causal médio da paisagem na biodiversidade local
-
-Como métrica de biodiversidade local utilizamos a distribuição de abundância de espécies (SAD, da sigla em inglês _Species Abundance Distribution_). Avaliamos a congruência da SAD observada e da SAD simulada em cada contrafactual. Para simular a SAD, o contrafactual deve ser composto pela paisagem hipotética e por um valor de taxa U. Nós interpretados que o contrafactual composto pela paisagem hipotética e a respectiva estimativa da taxa U na paisagem está alinhado com as práticas ontológicas dos programas de pesquisa em disputa (outras interpretações serão exploradas na discussão).
-
-Nós avaliamos em etapas a congruência relativa dos contrafactuais nos previstos contraste. Primeiro, a SAD simulada é comparada com a SAD observada pelo teste de Kolmogorov-Smirnov bootstrap e é contabilizado o número de SADs simuladas com boa congruência com a SAD observada. Então é calculado a chance de uma SAD simulada ter boa congruência para cada bateria de simulação, grau de limitação de dispersão e contrafactual. Por fim, calculamos o log da razão da chance da SAD simulada ter boa congruência para o par de contrafactuais no contraste previsto em cada prática ontológica. O log da razão da chance é usada como variável resposta de uma análise de regressão que tem a métrica funcional da paisagem como efeito fixo e aleatório.
-
-Para fazer a quantificação do efeito causal a partir de análises de regressão é necessário avaliar se existem covariáveis que precisam ser ajustadas para obter medidas não enviesadas deste efeito causal (REF). 
-Em uma próposta de início de conciliação das práticas ontológicas (VALENTE ET AL. 2023), existe um consenso de que a resposta do efeito da paisagem na manuntenção da biodiversidade local deve dependender do contexto da amostragem (REF). O contexto biogeográfico pode ser um desses fatores que pode modificar o efeito da paisagem (revisado EM VALENTE ET AL. 2023) e tambem é um fator que deve influenciar a biodiversidade local (REF), sendo, portanto, uma variável de confusão (pelo critério da porta dos fundos) (REF). Outra possível variável de confusão é a classe de preservação do sítio de amostragem, pois, além de ter sido usada como critério de inclusão dos inventários florestais, pode apresentar uma variável de confusão não mensurada com o grau de modificação da paisagem contemporânea, uma vez que locais com baixo grau de preservação também podem estar em paisagens com grande grau de mudança na cobertura florestal remanescente (REF). Assim, um possível DAG, que engloba qualquer um dos três efeitos previstos nas duas práticas ontológicas, está descrito na figura X, onde é possível concluir que é necessário inclui variáveis que descrevam o contexto biogeográfico da amostragem e também do grau de preservação da área amostrada. Utilizamos o ano do inventário florestal e a coordenada central do sítio de amostragem como possíveis aproximações do contexto biogeográfico.
-
-```{r caption DAG covariaveis}
-cap <- "Grafo Acíclico Dirigido (da sigla em inglês DAG) a partir da interpretação de Valente et al. (2023), artigo de revisão e conciliação parcial das práticas ontológicas em disputa. Se as variáveis em vermelho forem incluídas no modelo de regressão, modelos sem estrutura hierarquica podem ser usados para estimar o efeito em investigação (REF) - a influência da paisagem na biodiversidade local. A biodiversidade local (biodiv. local) foi aproximada pela congruência relativa da SAD simulada em cada contrafactual em comparação com a SAD observada. O efeito da paisagem representa o efeito proposto a ser investigado, ele é obtido pelo log da razão da taxa U necessária para obter a riqueza observada em cada contrafactual em comparação. Cada prática ontológica possui contrastes de contrafactuais que oferecem resultados interpretaveis. O contexto biogeográfico foi aproximado pela data do inventário florestal e da coordenada central da área amostrada. A preservação local é uma variável categórica que depende do histórico e do grau de perturbação da área amostrada, pressupomos que deve existir uma covariável não observada que influencia tanto o grau de preservação local da área amostrada quando a modificação da paisagem ao redor. Pelo critério de porta dos funtos as variáveis contexto biogeográfico e preservação local devem ser incluídas no modelo para que o efeito causal em investigação possa ser estimado de forma adequada (REF)."
-```
-```{r dag ajuste de covariaveis}
-# knitr::include_graphics(path=paste0(v_path,"figuras/DAG_var_de_controle.png"))
-knitr::include_graphics(path="./figuras/DAG_var_de_controle.png")
-```
-
-
-
-Por outro lado, o sistema epistêmico usado para estimar esses efeitos impõem uma estrutura hierarquica aos dados, pois, simula diversos cenários de dispersão em diversos tipos de contrafactuais para cada área amostrada. Nesse tipo de situação, modelo hierarquicos podem ser usados para estimar efeitos causais que podem ser não enviesados, mesmo para covariáveis não mensuradas (Feller & Gelman 2015; Weinstein & Blei 2024). A lógica é que, uma vez que o sítio de amostragem é sempre o mesmo, todas as possíveis covariáveis estão fixas, assim, os contrastes entre os contrafactuais simulados oferecem medidas não enviesadas de efeito causal (REF). Portanto, pode não ser necessário incluir as variáveis que aproximam o contexto da amostragem para fazer a estimativa do efeito causal.
-
-Nós comparamos modelos hierarquicos para avaliar a maneira mais apropriada para estimar o efeito causal médio. Primeiro avaliamos formas de expressar o efeito causal médio da paisagem por sítio de amostragem. Para isso a estrutura fixa dos modelos se manteve o mais cheio possível: com 1 intercepto por classe de preservação; 1 spline para efeito de paisagem por classe de preservação; 1 spline para o efeito do ano de amostragem; e 1 spline para o efeito da coordenada geográfica. A partir dessa estrutura fixa foram explorada 3 formas de expressar o efeito da paisagem por sítio de amostragem (REF GAMM 2019) : com 1 spline por sítio de amostragem, em que cada sítio apresenta um parâmetro de penalidade, conferindo maior flexibilidade por sítio; com 1 spline por sítio de amostragem, mas com o mesmo parâmetro de penalidade que o efeito fixo da paisagem, com menor flexibilidade por sítio de amostragem; e 1 intercepto por paisagem. Um modelo sem efeito fixo da paisagem e 1 intercepto por sítio de amostragem foi incluido para representar a ausência de efeito da paisagem por sítio. Caso o modelo mais plausível seja algum dos 3 primeiros modelos, com efeito de paisagem, é possível avaliar qual o conjunto de variáveis mais adequado para descrever o efeito causal médio da paisagem, dado o efeito causal médio da paisagem por sítio. 
-
-Para avaliar os modelos usamos o AICc, uma medida que pondera o número de parâmetros do modelo e quanto esse modelo representa dos dados (REF). O peso de evidência, medido a partir do AICc, pode ser interpretado como a probabilidade do modelo ser o modelo correto entre os modelos candidatos (REF). Essas métricas podem ser usadas para comparação relativa dos modelos considerando a possibilidade de overfitting (REF).
-Outra métrica relevante na ĩnferência causal é alguma que quantifique qual a variabilidade dos dados expressa pelo modelo, pois permite avaliar a influência do efeito investigado na geração dos dados (REF LAND USE SISTEM CAUSAL INFERENCE REF). Aqui utilizamos a deviance explained, métrica usada no contexto de GAMM, que possui interpretação similar ao R2 (REF). 
-Por conta da natureza agregada dos inventários florestais e com possibilidade de agregação na modificação da paisagem ao redor (FIGURA 1 INVENTÁRIOS FLORESTAIS), avaliamos se os resíduos dos modelos apresentam algum tipo de autocorrelação espacial a partir da estatística 1 de Moram. O valor da estatística 1 de Moran varia entre -1 e 1, indicando autocorrelação negativa e positiva, respectivamente. Se o p-valor associado a estatística 1 de Moran for muito baixa, então a hipótese nula de que não existe autocorrelação espacial tem pouco suporte (REF).
-Como aproximamos a possível autocorrelação espacial por 1 spline para a coordenada central, autocorrelação positiva pode ser bem expressa, uma vez que splines são desenhados para garantir a continuidade entre valores próximos (REF). Se a autocorrelação espacial for negativa, o spline pode ser uma aproximação ruim, pois não é adequado para estimar mudanças desrupitavas entre valores próximos (REF).  
-
-Assim, é possível fazer algumas perguntas sobre os modelos explorados:
-a) Qual a melhor forma de expressar o efeito da paisagem por sítio? 
-b) Os efeitos da paisagem apresentam grande influência nos dados observados?
-c) O efeito médio da paisagem, dado os efeitos médios da paisagem por sítio de amostragem, apresentam alguma influência na congruência da SAD simulada com a SAD observada? Existe alguma tendência geral? O quanto é possível  
-d) Qual a melhor forma de estimar o efeito causal médio da paisagem a partir dos possíveis conjuntos de covariáveis de ajuste, dado a estrutura hierarquica do modelo de regressão?
-
-RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
-RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
-RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
-
-### Métrica funcional: grau de dependência da paisagem ao redor para repor espécies extintas localmente
-
-<!-- #### Taxa U de cada paisagem contrafactual -->
-
-<!-- Para paisagens contemporâneas com proporção de cobertura vegetal abaixo de 0.95, observamos que a estimativa da taxa U pode ser distinta entre paisagens hipotéticas para alguns graus de limitação de dispersão (fig. \@ref(fig:GE-Urep-sitio-k-land)). -->
-#### A métrica funcional: log(U/U)
 
 ```{r tabela dos quantis observados dos contrastes}
 df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
@@ -278,6 +230,51 @@ cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, prev
 ```{r GE-contraste_taxaU, include=TRUE,eval=TRUE,fig.cap=cap}
 knitr::include_graphics(path="./figuras/GE_taxaU_contrastes.png")
 ```
+
+
+### Quantificação do efeito causal médio da paisagem na biodiversidade local
+
+Como métrica de biodiversidade local utilizamos a distribuição de abundância de espécies (SAD, da sigla em inglês _Species Abundance Distribution_). Avaliamos a congruência da SAD observada e da SAD simulada em cada contrafactual. Para simular a SAD, o contrafactual deve ser composto pela paisagem hipotética e por um valor de taxa U. Nós interpretados que o contrafactual composto pela paisagem hipotética e a respectiva estimativa da taxa U na paisagem está alinhado com as práticas ontológicas dos programas de pesquisa em disputa (outras interpretações serão exploradas na discussão).
+
+Nós avaliamos em etapas a congruência relativa dos contrafactuais nos previstos contraste. Primeiro, a SAD simulada é comparada com a SAD observada pelo teste de Kolmogorov-Smirnov bootstrap e é contabilizado o número de SADs simuladas com boa congruência com a SAD observada. Então é calculado a chance de uma SAD simulada ter boa congruência para cada bateria de simulação, grau de limitação de dispersão e contrafactual. Por fim, calculamos o log da razão da chance da SAD simulada ter boa congruência para o par de contrafactuais no contraste previsto em cada prática ontológica. O log da razão da chance é usada como variável resposta de uma análise de regressão que tem a métrica funcional da paisagem como efeito fixo e aleatório.
+
+Para fazer a quantificação do efeito causal a partir de análises de regressão é necessário avaliar se existem covariáveis que precisam ser ajustadas para obter medidas não enviesadas deste efeito causal (REF). 
+Em uma próposta de início de conciliação das práticas ontológicas (VALENTE ET AL. 2023), existe um consenso de que a resposta do efeito da paisagem na manuntenção da biodiversidade local deve dependender do contexto da amostragem (REF). O contexto biogeográfico pode ser um desses fatores que pode modificar o efeito da paisagem (revisado EM VALENTE ET AL. 2023) e tambem é um fator que deve influenciar a biodiversidade local (REF), sendo, portanto, uma variável de confusão (pelo critério da porta dos fundos) (REF). Outra possível variável de confusão é a classe de preservação do sítio de amostragem, pois, além de ter sido usada como critério de inclusão dos inventários florestais, pode apresentar uma variável de confusão não mensurada com o grau de modificação da paisagem contemporânea, uma vez que locais com baixo grau de preservação também podem estar em paisagens com grande grau de mudança na cobertura florestal remanescente (REF). Assim, um possível DAG, que engloba qualquer um dos três efeitos previstos nas duas práticas ontológicas, está descrito na figura X, onde é possível concluir que é necessário inclui variáveis que descrevam o contexto biogeográfico da amostragem e também do grau de preservação da área amostrada. Utilizamos o ano do inventário florestal e a coordenada central do sítio de amostragem como possíveis aproximações do contexto biogeográfico.
+
+```{r caption DAG covariaveis}
+cap <- "Grafo Acíclico Dirigido (da sigla em inglês DAG) a partir da interpretação de Valente et al. (2023), artigo de revisão e conciliação parcial das práticas ontológicas em disputa. Se as variáveis em vermelho forem incluídas no modelo de regressão, modelos sem estrutura hierarquica podem ser usados para estimar o efeito em investigação (REF) - a influência da paisagem na biodiversidade local. A biodiversidade local (biodiv. local) foi aproximada pela congruência relativa da SAD simulada em cada contrafactual em comparação com a SAD observada. O efeito da paisagem representa o efeito proposto a ser investigado, ele é obtido pelo log da razão da taxa U necessária para obter a riqueza observada em cada contrafactual em comparação. Cada prática ontológica possui contrastes de contrafactuais que oferecem resultados interpretaveis. O contexto biogeográfico foi aproximado pela data do inventário florestal e da coordenada central da área amostrada. A preservação local é uma variável categórica que depende do histórico e do grau de perturbação da área amostrada, pressupomos que deve existir uma covariável não observada que influencia tanto o grau de preservação local da área amostrada quando a modificação da paisagem ao redor. Pelo critério de porta dos funtos as variáveis contexto biogeográfico e preservação local devem ser incluídas no modelo para que o efeito causal em investigação possa ser estimado de forma adequada (REF)."
+```
+```{r dag ajuste de covariaveis}
+# knitr::include_graphics(path=paste0(v_path,"figuras/DAG_var_de_controle.png"))
+knitr::include_graphics(path="./figuras/DAG_var_de_controle.png")
+```
+
+
+Por outro lado, o sistema epistêmico usado para estimar esses efeitos impõem uma estrutura hierarquica aos dados, pois, simula diversos cenários de dispersão em diversos tipos de paisagens contrafactuais para cada área amostrada. Nessa situação, modelos hierarquicos podem ser usados para estimar efeitos causais que podem ser não enviesados, mesmo com covariáveis não mensuradas (Feller & Gelman 2015; Weinstein & Blei 2024). A lógica é que, uma vez que o sítio de amostragem é sempre o mesmo, todas as possíveis covariáveis estão fixas, assim, os contrastes entre os contrafactuais simulados oferecem medidas não enviesadas de efeito causal (REF). Portanto, pode não ser necessário incluir as variáveis que aproximam o contexto da amostragem para fazer a estimativa do efeito causal.
+
+Nós comparamos modelos hierarquicos para avaliar a maneira mais apropriada para estimar o efeito causal médio. Primeiro avaliamos formas de expressar o efeito causal médio da paisagem por sítio de amostragem. Para isso a estrutura fixa dos modelos se manteve o mais cheio possível: com 1 intercepto por classe de preservação; 1 spline para efeito de paisagem por classe de preservação; 1 spline para o efeito do ano de amostragem; e 1 spline para o efeito da coordenada geográfica. A partir dessa estrutura fixa foram explorada 3 formas de expressar o efeito da paisagem por sítio de amostragem (REF GAMM 2019) : com 1 spline por sítio de amostragem, em que cada sítio apresenta um parâmetro de penalidade, conferindo maior flexibilidade por sítio; com 1 spline por sítio de amostragem, mas com o mesmo parâmetro de penalidade que o efeito fixo da paisagem, com menor flexibilidade por sítio de amostragem; e 1 intercepto por paisagem. Um modelo sem efeito fixo da paisagem e 1 intercepto por sítio de amostragem foi incluido para representar a ausência de efeito da paisagem por sítio. Caso o modelo mais plausível seja algum dos 3 primeiros modelos, com efeito de paisagem, é possível avaliar qual o conjunto de variáveis mais adequado para descrever o efeito causal médio da paisagem, dado o efeito causal médio da paisagem por sítio. 
+
+Para avaliar os modelos usamos o AICc, uma medida que pondera o número de parâmetros do modelo e quanto esse modelo representa dos dados (REF). O peso de evidência, medido a partir do AICc, pode ser interpretado como a probabilidade do modelo ser o modelo correto entre os modelos candidatos (REF). Essas métricas podem ser usadas para comparação relativa dos modelos considerando a possibilidade de overfitting (REF).
+Outra métrica relevante na ĩnferência causal é alguma que quantifique qual a variabilidade dos dados expressa pelo modelo, pois permite avaliar a influência do efeito investigado na geração dos dados (REF LAND USE SISTEM CAUSAL INFERENCE REF). Aqui utilizamos a deviance explained, métrica usada no contexto de GAMM, que possui interpretação similar ao R2 (REF). 
+Por conta da natureza agregada dos inventários florestais e com possibilidade de agregação na modificação da paisagem ao redor (FIGURA 1 INVENTÁRIOS FLORESTAIS), avaliamos se os resíduos dos modelos apresentam algum tipo de autocorrelação espacial a partir da estatística 1 de Moram. O valor da estatística 1 de Moran varia entre -1 e 1, indicando autocorrelação negativa e positiva, respectivamente. Se o p-valor associado a estatística 1 de Moran for muito baixa, então a hipótese nula de que não existe autocorrelação espacial tem pouco suporte (REF).
+Como aproximamos a possível autocorrelação espacial por 1 spline para a coordenada central, autocorrelação positiva pode ser bem expressa, uma vez que splines são desenhados para garantir a continuidade entre valores próximos (REF). Se a autocorrelação espacial for negativa, o spline pode ser uma aproximação ruim, pois não é adequado para estimar mudanças desrupitavas entre valores próximos (REF).  
+
+Assim, é possível fazer algumas perguntas sobre os modelos explorados:
+a) Qual a melhor forma de expressar o efeito da paisagem por sítio? 
+b) Os efeitos da paisagem apresentam grande influência nos dados observados?
+c) O efeito médio da paisagem, dado os efeitos médios da paisagem por sítio de amostragem, apresentam alguma influência na congruência da SAD simulada com a SAD observada? Existe alguma tendência geral? O quanto é possível  
+d) Qual a melhor forma de estimar o efeito causal médio da paisagem a partir dos possíveis conjuntos de covariáveis de ajuste, dado a estrutura hierarquica do modelo de regressão?
+
+RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
+RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
+RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
+
+### Métrica funcional: grau de dependência da paisagem ao redor para repor espécies extintas localmente
+
+<!-- #### Taxa U de cada paisagem contrafactual -->
+
+<!-- Para paisagens contemporâneas com proporção de cobertura vegetal abaixo de 0.95, observamos que a estimativa da taxa U pode ser distinta entre paisagens hipotéticas para alguns graus de limitação de dispersão (fig. \@ref(fig:GE-Urep-sitio-k-land)). -->
+#### A métrica funcional: log(U/U)
 
 
 #### Quantificação do efeito da métrica funcional na descrição do padrão de biodiversidade local
@@ -328,6 +325,7 @@ df_tabelaSelecao <- df_tabelaSelecao %>%
 # df_tabelaSelecao
 knitr::kable(df_tabelaSelecao, 
              caption = "Tabela de seleção e avaliação da estrutura aleatória; logOR(SAD/SAD)")
+# criação das tabelas como figuras
 ```
 
 
