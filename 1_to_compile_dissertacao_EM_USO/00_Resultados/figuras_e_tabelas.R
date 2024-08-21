@@ -408,6 +408,8 @@ write_csv(df_quantisobs_Uefeito,
 ##
 # tabela de comparação de estruturas hierarquicas do modelo
 library(gt);library(webshot2); library(patchwork)
+library(grid)
+library(png)
 df_tabelaSelecao <- read_csv(file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
 df_tabelaSelecao <- df_tabelaSelecao %>% 
   mutate(`Prática Ontológica` = ifelse(grepl("contemp-ideal",pair),
@@ -423,14 +425,112 @@ df_tabelaSelecao <- df_tabelaSelecao %>%
            gsub("com ","",.) %>% 
            gsub("por paisagem","por sítio",.) %>% 
            gsub("de paisagem","fixo",.)) %>% 
-  relocate(`Prática Ontológica`) %>% 
+  select(-`Prática Ontológica`) %>% 
   rename(Contraste = pair,
          `Dev. explained` = "dev.expl") %>% 
   as.data.frame
 ## 
-f_gt_to_png <- \(dfi){
-  
+f_tabelaselecao_com_plot0 <- \(dfi,
+                              folder_pattern="figuras/tabsel_c_plot_"){
+  v_title <- dfi$Contraste[1] %>% 
+    gsub("Frag. total","Frag. Total: contemporâneo / prístino",.) %>% 
+    gsub("Frag. per se","Frag. per se: contemporâneo / aglomerado",.) %>% 
+    gsub("Área per se","Área per se: aglomerado / prístino",.)
+  v_names <- names(dfi)[-1]
+  dfi <- dfi %>% select(-Contraste) %>%
+    mutate(rank = 1:n())
+  table <- dfi %>%
+    relocate(rank) %>% 
+    gt() %>%
+    tab_header(title = md(v_title)) %>%
+    fmt_number(
+      columns = v_names[-grep("modelo",v_names)],decimals = 2
+    ) %>%
+    tab_options(
+      table.font.size = "small",
+      table.align = "left"
+    ) %>% 
+    cols_label(
+      rank = "Rank",
+      modelo = "GAHM",
+      df = "approx. parameters",
+      dAICc = "ΔAICc",
+      weight = "Weight (ΔAICc)",
+      `Dev. explained` = "Deviance Explained",
+      `Moran I statistic (res)` = "Moran's I",
+      `p-value` = "p-value"
+    )
+  plot <- dfi %>% 
+    ggplot(aes(x = rank)) +
+    geom_bar(aes(y = weight), stat = "identity", fill = "gray") +
+    geom_point(aes(y = `p-value`, fill = `Moran I statistic (res)`), shape = 22, size = 5) +
+    geom_segment(
+      aes(x = rank - 0.4, xend = rank + 0.4, 
+          y = `Dev. explained`, yend = `Dev. explained`,
+          color="Deviance\nExplained"), 
+      size = 1.5) +
+    geom_hline(yintercept = 0.05,alpha=0.2,color="darkgreen") +
+    scale_y_continuous("p-value (square), Weight (bar)",
+                       limits = c(0, 1)) + # , sec.axis = dup_axis()
+    scale_fill_gradientn(colours = c("cyan", "black", "red"),
+                         values = c(-1,0,1),
+                         name = "Moran's I\nStatistics") +
+    scale_color_manual(values = c("Deviance\nExplained" = "blue"), name = "") +
+    ## deixar para uma próxima:
+    # new_scale_fill() +
+    # scale_fill_manual(values = c("Weight (AICc)" = "gray"), name = "") +
+    labs(x = "", fill = "Moran I statistic",) +
+    theme_minimal() +
+    theme(
+      # axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "right"
+    )
+  # saving the objects
+  gtsave(table, paste0(v_path,"tabelas/table_reciclagem.png"),
+         vwidth = 800, vheight = 200)
+  ggsave(paste0(v_path,"figuras/plot_reciclagem.png"),
+         plot = plot,bg = "white",
+         width = 3, height = 3, units = "in", dpi = 300)
+  img <- image_read(paste0(v_path,"figuras/plot_reciclagem.png"))
+  trimmed_img <- image_trim(img)
+  image_write(trimmed_img, path = paste0(v_path,"figuras/plot_reciclagem.png"))
+  # combinação dos dois:
+  # Load the images
+  table_img <- image_read(paste0(v_path,"tabelas/table_reciclagem.png"))
+  plot_img <- image_read(paste0(v_path,"figuras/plot_reciclagem.png"))
+  plot_img <- image_resize(plot_img, geometry = paste0(image_info(table_img)$height, "x"))
+  # Combine the images vertically
+  combined_img <- image_append(c(table_img,plot_img), stack = FALSE)
+  # Save the combined image
+  v_name <- case_when(
+    grepl("Total",v_title) ~ "fragtotal.png",
+    grepl("Frag. per",v_title) ~ "fragperse.png",
+    grepl("Área per",v_title) ~ "areaperse.png",
+  )
+  image_write(combined_img, path = paste0(v_path,folder_pattern,v_name), format = "png")
 }
+f_tabelaselecao_com_plot <- \(dff,
+                              group_by="Contraste",
+                              path_name = paste0(v_path,"figuras/tabsel_aleat.png")){
+  folder_pattern <- formals(f_tabelaselecao_com_plot0)[[2]] %>% 
+    gsub("figuras/","",.)
+  d_ply(dff,group_by,f_tabelaselecao_com_plot0)
+  paths <- list.files(path = paste0(v_path,"figuras"),
+                      pattern = folder_pattern,
+                      full.names = TRUE)
+  l_png <- lapply(paths,image_read)
+  names(l_png) <- str_extract(paths,"(?<=plot_)(.*?)(?=\\.png)")  
+  tabela_final <- image_append(
+    do.call("c",l_png),stack = TRUE
+  )
+  image_write(tabela_final, 
+              path = path_name, 
+              format = "png")
+  file.remove(paths)
+  file.remove(paste0(v_path,"figuras/plot_reciclagem.png"))
+  file.remove(paste0(v_path,"tabelas/table_reciclagem.png"))
+}
+f_tabelaselecao_com_plot(df_tabelaSelecao)
 
 # 
 # distribuição do logOR em função da taxa U por classe de perturbação
