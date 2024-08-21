@@ -523,6 +523,9 @@ f_tabelaselecao_com_plot <- \(dff,
   tabela_final <- image_append(
     do.call("c",l_png),stack = TRUE
   )
+  # 
+  
+  
   image_write(tabela_final, 
               path = path_name, 
               format = "png")

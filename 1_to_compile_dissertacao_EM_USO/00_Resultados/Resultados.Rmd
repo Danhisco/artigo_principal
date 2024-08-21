@@ -265,6 +265,15 @@ b) Os efeitos da paisagem apresentam grande influência nos dados observados?
 c) O efeito médio da paisagem, dado os efeitos médios da paisagem por sítio de amostragem, apresentam alguma influência na congruência da SAD simulada com a SAD observada? Existe alguma tendência geral? O quanto é possível  
 d) Qual a melhor forma de estimar o efeito causal médio da paisagem a partir dos possíveis conjuntos de covariáveis de ajuste, dado a estrutura hierarquica do modelo de regressão?
 
+#### Qual a melhor forma de expressar o efeito da paisagem por sítio? 
+
+##### Comparação dos modelos usados para descrever o efeito aleatório da paisagem na congruência relativa com a SAD observada
+```{r tabela de selecao com plot, eval=TRUE,include=TRUE}
+knitr::include_graphics(path="./figuras/DAG_var_de_controle.png")
+```
+
+
+
 RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
 RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
 RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD

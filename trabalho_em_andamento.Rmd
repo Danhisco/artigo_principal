@@ -11,6 +11,25 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+#21/08/2024
+
+```{r}
+p <- ggplot() +
+  # Add text for footnotes
+  annotate("text", x = 0.5, y = 1.05, label = "Footnote 1: AICc = Akaike Information Criterion corrected for small sample sizes.", size = 4, hjust = 0) +
+  annotate("text", x = 0.5, y = 0.95, label = "Footnote 2: ΔAICc values < 2 indicate models with substantial support.", size = 4, hjust = 0) +
+  # Set limits and theme to create space for the text
+  xlim(0, 1) +
+  ylim(0, 1) +
+  theme_void() +   # Remove axes and grid
+  theme(plot.margin = margin(1, 1, 2, 1, "cm"))  # Increase bottom margin for footnotes
+
+# Save the plot as a PNG
+ggsave("footnotes_plot.png", plot = p, width = 8, height = 4, dpi = 300)
+```
+
+
+
 # dia 20ago2024
 
 ```{r}
