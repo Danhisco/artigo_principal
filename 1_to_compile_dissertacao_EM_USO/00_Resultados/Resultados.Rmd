@@ -267,16 +267,24 @@ d) Qual a melhor forma de estimar o efeito causal médio da paisagem a partir do
 
 #### Qual a melhor forma de expressar o efeito da paisagem por sítio? 
 
-##### Comparação dos modelos usados para descrever o efeito aleatório da paisagem na congruência relativa com a SAD observada
+##### Comparação dos modelos usados para descrever o efeito da paisagem na congruência relativa com a SAD observada por sítio de amostragem
 ```{r tabela de selecao com plot, eval=TRUE,include=TRUE}
 knitr::include_graphics(path="./figuras/DAG_var_de_controle.png")
 ```
 
+Para todos os efeitos previsto nas práticas ontológicas (efeito de área per se, efeito de fragmentação per se, e efeito de fragmentação total) existe um GAHM que pode ser considerado o mais plausível para descrever o efeito da paisagem por sítio de amostragem, pois acumula a maior parte do peso de evidência. No caso do efeito de área per se o GAHM mais plausível apresenta menor flexibilidade por sítio de amostragem, enquanto para os outros dois efeitos (fragmentação per se e fragmentação total) o GAHM mais plausível apresenta maior flexibilidade por sítio de amostragem. 
+Para todos os GAHM explorados, o p-valor da estatística I de Moran apresenta valores altos (acima de 5%, linha verde horizontal nos gráficos), indicando que a hipótese nula de ausência de autocorrelação espacial nos resíduos dos GAHM tem bom suporte. 
+A deviance explicada é maior nos modelos que consideram algum efeito da paisagem por sítio de amostragem (com maior ou menor flexibilidade por sítio). A deviance explicada dos modelos mais plausíveis são: 0.78 para o efeito de fragmentação total, 0.58 para o efeito de fragmentação per se, e 0.41 para o efeito de área per se. Os modelos que consideram o efeito da paisagem com menor flexibilidade por sítio, apresentam deviance explicada um pouco menor.
 
 
 RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
 RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
 RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
+
+##############################################################################################
+# ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO #
+##############################################################################################
+
 
 ### Métrica funcional: grau de dependência da paisagem ao redor para repor espécies extintas localmente
 

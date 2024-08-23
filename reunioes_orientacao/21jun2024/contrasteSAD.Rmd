@@ -494,10 +494,6 @@ lapply(names(l_md_1alike),f_gam_update)
 ```
 
 
-
-
-##### antigo:
-
 ```{r tabelas dos modelos da 2a fase,eval=TRUE}
 library(knitr)
 df <- data.frame(

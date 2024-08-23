@@ -523,7 +523,7 @@ f_tabelaselecao_com_plot <- \(dff,
   tabela_final <- image_append(
     do.call("c",l_png),stack = TRUE
   )
-  # 
+  # creating the footnote
   
   
   image_write(tabela_final, 
@@ -534,6 +534,11 @@ f_tabelaselecao_com_plot <- \(dff,
   file.remove(paste0(v_path,"tabelas/table_reciclagem.png"))
 }
 f_tabelaselecao_com_plot(df_tabelaSelecao)
+# tabela de seleção da comparação de modelos cheios:
+df_tabsel_logOR_aud <- 
+
+
+
 
 # 
 # distribuição do logOR em função da taxa U por classe de perturbação
