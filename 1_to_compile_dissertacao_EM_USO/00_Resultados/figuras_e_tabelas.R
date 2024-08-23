@@ -524,8 +524,6 @@ f_tabelaselecao_com_plot <- \(dff,
     do.call("c",l_png),stack = TRUE
   )
   # creating the footnote
-  
-  
   image_write(tabela_final, 
               path = path_name, 
               format = "png")
@@ -535,10 +533,56 @@ f_tabelaselecao_com_plot <- \(dff,
 }
 f_tabelaselecao_com_plot(df_tabelaSelecao)
 # tabela de seleção da comparação de modelos cheios:
-df_tabsel_logOR_aud <- 
-
-
-
+library(magick)
+f_gt_table <- \(dfi){
+  v_title <- dfi$pair[1] %>% 
+    gsub("contemp-ideal","Frag. total",.) %>%
+    gsub("contemp-non_frag","Frag. per se",.) %>%
+    gsub("non_frag-ideal","Área per se",.)
+  dfi <- dfi %>% select(-pair) %>%
+    mutate(rank = 1:n()) %>% 
+    select(rank,modelo,df,dAICc)
+  v_names <- names(dfi)
+  table <- dfi %>%
+    relocate(rank) %>%
+    gt() %>%
+    tab_header(title = md(v_title)) %>%
+    fmt_number(
+      columns = v_names[-grep("modelo|rank",v_names)],decimals = 2
+    ) %>%
+    tab_options(
+      table.font.size = "small",
+      table.align = "left"
+    ) %>% 
+    cols_label(
+      rank = "Rank",
+      modelo = "GAHM",
+      df = "approx. parameters",
+      dAICc = "ΔAICc"#,
+      # weight = "Weight (ΔAICc)",
+      # dev.expl = "Deviance Explained",
+      # `Moran I statistic (res)` = "Moran's I",
+      # `p-value` = "p-value"
+    )
+  v_title <- gsub("Frag. total","fragtotal",v_title) %>% 
+    gsub("Frag. per se","frag_perse",.) %>% 
+    gsub("Área per se","area_perse",.)
+  gtsave(table, paste0(v_path,"tabelas/table_reciclagem_",v_title,".png"),
+         vwidth = 800, vheight = 200)
+}
+df_tabsel_logOR_aud <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_cpert.csv")
+d_ply(df_tabsel_logOR_aud,"pair",f_gt_table)
+paths <- list.files(path = paste0(v_path,"tabelas"),
+                    pattern = "table_reci",
+                    full.names = TRUE)
+l_png <- lapply(paths,image_read)
+tabela_final <- image_append(
+  do.call("c",l_png),stack = TRUE
+)
+image_write(tabela_final, 
+            path = paste0(v_path,"figuras/tabsel_modeloscheios.png"), 
+            format = "png")
+file.remove(paths)
 
 # 
 # distribuição do logOR em função da taxa U por classe de perturbação
