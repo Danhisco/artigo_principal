@@ -277,6 +277,12 @@ Para todos os GAHM explorados, o p-valor da estatística I de Moran apresenta va
 A deviance explicada é maior nos modelos que consideram algum efeito da paisagem por sítio de amostragem (com maior ou menor flexibilidade por sítio). A deviance explicada dos modelos mais plausíveis são: 0.78 para o efeito de fragmentação total, 0.58 para o efeito de fragmentação per se, e 0.41 para o efeito de área per se. Os modelos que consideram o efeito da paisagem com menor flexibilidade por sítio, apresentam deviance explicada um pouco menor.
 
 
+Um possível próximo passo é avaliar se é necessário estimar um efeito de paisagem por classe de preservação, dado que pode existir um intercepto por classe de preservação. Se não for necessário, os modelo candidatos terão na estrutura fixa, além do efeito da paisagem, 1 intercepto por classe de preservação, 1 spline por ano do inventário florestal, 1 spline por coordenada geográfica. Nesse caso os modelos derivados do modelo cheio serão obtidos pela remoção de efeitos fixos 1 a 1 ou 2 a 2 e de todos as covariáveis. Se for necessário estimar um efeito de paisagem por classe de preservação, então o mesmo será feito, porém o intercepto por classe de preservação será mantido em todos os modelos. Caso a maior parte do peso de evidência não se acumular em um único modelo, o conjunto de modelos candidatos será a soma das duas situações anteriores.
+
+DESCRIÇÃO TABELA:
+Para todos os modelos existe um único modelo mais plausível para descrever o efeito fixo da paisagem (REF), para o efeito de área per se o modelo mais plausível considera um efeito por classe de preservação, para os outros dois efeitos, de fragmentação per se e fragmentação total, é suficiente estimar um efeito comum de paisagem .
+
+
 RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
 RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
 RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
