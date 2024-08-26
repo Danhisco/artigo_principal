@@ -37,10 +37,10 @@ library(lme4)
 library(data.table)
 library(plyr)
 library(dplyr)
+source("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras_e_tabelas.R")
 source("source/general_tools.R")
 source("source/GAMMtools.R")
 source("source/fig_tools.R")
-source("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras_e_tabelas.R")
 # tamanho da fonte dos títulos dos gráficos dos resultados por síio de amosttragem (Umed e nCong)
 v_titleS <- 1000
 v_ncol_fatetwrap <- 14
@@ -260,27 +260,37 @@ Por conta da natureza agregada dos inventários florestais e com possibilidade d
 Como aproximamos a possível autocorrelação espacial por 1 spline para a coordenada central, autocorrelação positiva pode ser bem expressa, uma vez que splines são desenhados para garantir a continuidade entre valores próximos (REF). Se a autocorrelação espacial for negativa, o spline pode ser uma aproximação ruim, pois não é adequado para estimar mudanças desrupitavas entre valores próximos (REF).  
 
 Assim, é possível fazer algumas perguntas sobre os modelos explorados:
-a) Qual a melhor forma de expressar o efeito da paisagem por sítio? 
-b) Os efeitos da paisagem apresentam grande influência nos dados observados?
-c) O efeito médio da paisagem, dado os efeitos médios da paisagem por sítio de amostragem, apresentam alguma influência na congruência da SAD simulada com a SAD observada? Existe alguma tendência geral? O quanto é possível  
-d) Qual a melhor forma de estimar o efeito causal médio da paisagem a partir dos possíveis conjuntos de covariáveis de ajuste, dado a estrutura hierarquica do modelo de regressão?
+- Qual a melhor forma de expressar o efeito da paisagem por sítio? 
+- O efeito médio da paisagem, dado os efeitos médios da paisagem por sítio de amostragem, apresentam alguma influência na congruência da SAD simulada com a SAD observada? Existe alguma tendência geral? 
+- Os efeitos da paisagem apresentam grande influência nos dados observados?
+- Qual a melhor forma de estimar o efeito causal médio da paisagem a partir dos possíveis conjuntos de covariáveis de ajuste, dado a estrutura hierarquica do modelo de regressão?
 
 #### Qual a melhor forma de expressar o efeito da paisagem por sítio? 
 
 ##### Comparação dos modelos usados para descrever o efeito da paisagem na congruência relativa com a SAD observada por sítio de amostragem
 ```{r tabela de selecao com plot, eval=TRUE,include=TRUE}
-knitr::include_graphics(path="./figuras/DAG_var_de_controle.png")
+knitr::include_graphics(path="./figuras/tabsel_aleat.png")
 ```
 
 Para todos os efeitos previsto nas práticas ontológicas (efeito de área per se, efeito de fragmentação per se, e efeito de fragmentação total) existe um GAHM que pode ser considerado o mais plausível para descrever o efeito da paisagem por sítio de amostragem, pois acumula a maior parte do peso de evidência. No caso do efeito de área per se o GAHM mais plausível apresenta menor flexibilidade por sítio de amostragem, enquanto para os outros dois efeitos (fragmentação per se e fragmentação total) o GAHM mais plausível apresenta maior flexibilidade por sítio de amostragem. 
 Para todos os GAHM explorados, o p-valor da estatística I de Moran apresenta valores altos (acima de 5%, linha verde horizontal nos gráficos), indicando que a hipótese nula de ausência de autocorrelação espacial nos resíduos dos GAHM tem bom suporte. 
 A deviance explicada é maior nos modelos que consideram algum efeito da paisagem por sítio de amostragem (com maior ou menor flexibilidade por sítio). A deviance explicada dos modelos mais plausíveis são: 0.78 para o efeito de fragmentação total, 0.58 para o efeito de fragmentação per se, e 0.41 para o efeito de área per se. Os modelos que consideram o efeito da paisagem com menor flexibilidade por sítio, apresentam deviance explicada um pouco menor.
 
+#### Qual a melhor forma de estimar o efeito causal médio da paisagem a partir dos possíveis conjuntos de covariáveis de ajuste, dado a estrutura hierarquica do modelo de regressão?
 
-Um possível próximo passo é avaliar se é necessário estimar um efeito de paisagem por classe de preservação, dado que pode existir um intercepto por classe de preservação. Se não for necessário, os modelo candidatos terão na estrutura fixa, além do efeito da paisagem, 1 intercepto por classe de preservação, 1 spline por ano do inventário florestal, 1 spline por coordenada geográfica. Nesse caso os modelos derivados do modelo cheio serão obtidos pela remoção de efeitos fixos 1 a 1 ou 2 a 2 e de todos as covariáveis. Se for necessário estimar um efeito de paisagem por classe de preservação, então o mesmo será feito, porém o intercepto por classe de preservação será mantido em todos os modelos. Caso a maior parte do peso de evidência não se acumular em um único modelo, o conjunto de modelos candidatos será a soma das duas situações anteriores.
+Determinada a melhor forma de expressar o efeito da paisagem por sítio de amostragem, é possível avaliar qual o conjunto de covariáveis fixas é adequado para estimar o efeito causal médio da paisagem. Um possível próximo passo é avaliar se é necessário estimar um efeito de paisagem por classe de preservação, dado que pode existir um intercepto por classe de preservação. Se não for necessário, os modelo candidatos terão na estrutura fixa, além do efeito da paisagem, 1 intercepto por classe de preservação, 1 spline por ano do inventário florestal, 1 spline por coordenada geográfica. Nesse caso os modelos derivados do modelo cheio serão obtidos pela remoção de efeitos fixos 1 a 1, 2 a 2 ou de todos as covariáveis. Se for necessário estimar um efeito de paisagem por classe de preservação, então a mesma operação será feita para obter o conjunto de modelos candidatos, porém o intercepto por classe de preservação será mantido em todos os modelos. Caso a maior parte do peso de evidência não se acumule em um único modelo, o conjunto de modelos candidatos será a concatenação das duas situações anteriores. Na tablea X2 há a comparação desses dois modelos 
 
-DESCRIÇÃO TABELA:
-Para todos os modelos existe um único modelo mais plausível para descrever o efeito fixo da paisagem (REF), para o efeito de área per se o modelo mais plausível considera um efeito por classe de preservação, para os outros dois efeitos, de fragmentação per se e fragmentação total, é suficiente estimar um efeito comum de paisagem .
+##### Comparação dos possíveis modelos cheios para o conjunto adequado de covariáveis dos 
+modelos usados para descrever o efeito da paisagem na congruência relativa com a SAD observada por sítio de amostragem
+```{r tabela de selecao com plot, eval=TRUE,include=TRUE}
+knitr::include_graphics(path="./figuras/tabsel_modeloscheios.png")
+```
+
+
+Para todos os modelos existe um único modelo mais plausível para descrever o efeito fixo da paisagem (TABLE X1), para o efeito de área per se o modelo mais plausível considera um efeito por classe de preservação, para os outros dois efeitos, de fragmentação per se e fragmentação total, é suficiente estimar um efeito comum de paisagem. Uma vez escolhido o modelo cheio é possível determinar o conjunto de modelos candidatos para descrever 
+
+
+
 
 
 RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD

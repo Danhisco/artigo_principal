@@ -534,15 +534,15 @@ f_tabelaselecao_com_plot <- \(dff,
 f_tabelaselecao_com_plot(df_tabelaSelecao)
 # tabela de seleção da comparação de modelos cheios:
 library(magick)
-f_gt_table <- \(dfi){
-  v_title <- dfi$pair[1] %>% 
-    gsub("contemp-ideal","Frag. total",.) %>%
-    gsub("contemp-non_frag","Frag. per se",.) %>%
-    gsub("non_frag-ideal","Área per se",.)
-  dfi <- dfi %>% select(-pair) %>%
-    mutate(rank = 1:n()) %>% 
-    select(rank,modelo,df,dAICc)
+f_gt_table <- \(dfi,
+                v_title,
+                v_name,
+                f_cols_label_with,
+                vw = 800,
+                vh = 200,
+                v_folder="tabelas/table_reciclagem_"){
   v_names <- names(dfi)
+  f_cols_label_with <- get(f_cols_label_with)
   table <- dfi %>%
     relocate(rank) %>%
     gt() %>%
@@ -554,35 +554,28 @@ f_gt_table <- \(dfi){
       table.font.size = "small",
       table.align = "left"
     ) %>% 
-    cols_label(
-      rank = "Rank",
-      modelo = "GAHM",
-      df = "approx. parameters",
-      dAICc = "ΔAICc"#,
-      # weight = "Weight (ΔAICc)",
-      # dev.expl = "Deviance Explained",
-      # `Moran I statistic (res)` = "Moran's I",
-      # `p-value` = "p-value"
-    )
-  v_title <- gsub("Frag. total","fragtotal",v_title) %>% 
-    gsub("Frag. per se","frag_perse",.) %>% 
-    gsub("Área per se","area_perse",.)
-  gtsave(table, paste0(v_path,"tabelas/table_reciclagem_",v_title,".png"),
-         vwidth = 800, vheight = 200)
+    cols_label_with(fn=f_cols_label_with)
+  gtsave(table, 
+         paste0(v_path,"tabelas/table_reciclagem_",v_name,".png"),
+         vwidth = vw, vheight = vh)
 }
 df_tabsel_logOR_aud <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_cpert.csv")
-d_ply(df_tabsel_logOR_aud,"pair",f_gt_table)
-paths <- list.files(path = paste0(v_path,"tabelas"),
-                    pattern = "table_reci",
-                    full.names = TRUE)
-l_png <- lapply(paths,image_read)
-tabela_final <- image_append(
-  do.call("c",l_png),stack = TRUE
-)
-image_write(tabela_final, 
-            path = paste0(v_path,"figuras/tabsel_modeloscheios.png"), 
-            format = "png")
-file.remove(paths)
+f_modcheio_table <- \(dff){
+  d_ply(dff,"pair",f_gt_table)
+  paths <- list.files(path = paste0(v_path,"tabelas"),
+                      pattern = "table_reci",
+                      full.names = TRUE)
+  l_png <- lapply(paths,image_read)
+  tabela_final <- image_append(
+    do.call("c",l_png),stack = TRUE
+  )
+  image_write(tabela_final, 
+              path = paste0(v_path,"figuras/tabsel_modeloscheios.png"), 
+              format = "png")
+  file.remove(paths)  
+}
+f_modcheio_table(df_tabsel_logOR_aud)
+
 
 # 
 # distribuição do logOR em função da taxa U por classe de perturbação

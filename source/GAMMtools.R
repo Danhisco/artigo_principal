@@ -7,6 +7,53 @@ modelo = c("gi", "gs",
            "gi sem p * k","gs sem p * k",
            "p * k + 1|Site", "p + k + 1|Site",
            "mgcv::s")
+f_MoranTest_GAMM <- \(md){
+  library(spdep)
+  dfmd <- md$model
+  dfmd$residuals <- residuals(md)
+  if(sum(names(dfmd)%in%c("lat","long"))<1){
+    df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+      mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+             long = ifelse(is.na(long_correct),long,long_correct),
+             Sitecode = factor(SiteCode)) %>% 
+      select(SiteCode,lat,long)
+    dfmd <- inner_join(
+      dfmd,
+      df_coord
+    )
+  }
+  dfmd_avgbySite <- dfmd %>% 
+    group_by(SiteCode) %>% 
+    summarise(mean_res = mean(residuals),
+              lat = first(lat),
+              long = first(long)) %>% 
+    ungroup()
+  # Prepare spatial data
+  coordinates <- dfmd_avgbySite[, c("lat","long")]
+  coordinates <- as.matrix(coordinates)
+  nb <- knn2nb(knearneigh(coordinates, k=4))  
+  listw <- nb2listw(nb)
+  # Calculate Moran's I for residuals
+  moran_output <- moran.test(dfmd_avgbySite$mean_res, listw)
+  # return
+  data.frame(
+    Statistic = c(
+      "Moran I statistic (res)", 
+      "Expectation", 
+      "Variance", 
+      "Standard Deviate", 
+      "p-value"
+    ),
+    Value = c(
+      moran_output$estimate[["Moran I statistic"]], 
+      moran_output$estimate[["Expectation"]], 
+      moran_output$estimate[["Variance"]], 
+      moran_output$statistic, 
+      moran_output$p.value
+    )
+  ) %>% pivot_wider(names_from=Statistic,values_from = Value) %>% 
+    as.data.frame()
+}
 
 f_TabSelGAMM <- function(l_md){
   l_names <- names(l_md)

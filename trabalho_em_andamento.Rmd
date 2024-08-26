@@ -11,6 +11,75 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 25 agosto
+
+| Frag. total | Frag. per se | Área per se |
+| :---------- | :----------: | ----------: |
+|        "Qual o efeito aleatório?"        |
+| :---------- | :----------: | ----------: |
+| rank | dAIC |  rank | dAIC | rank | dAIC |
+|  1   | 0    |   1   | 0    |  1   | 0    |
+|  2   | 1    |   2   | 1    |  2   | 1    |
+| :---------- | :----------: | ----------: |
+|          "Qual o modelo cheio"           |
+| :---------- | :----------: | ----------: |
+| rank | dAIC |  rank | dAIC | rank | dAIC |
+|  1   | 0    |   1   | 0    |  1   | 0    |
+|  2   | 1    |   2   | 1    |  2   | 1    |
+| :---------- | :----------: | ----------: |
+|          "Qual o conj. de cov?"          |
+| :---------- | :----------: | ----------: |
+| rank | dAIC |  rank | dAIC | rank | dAIC |
+|  1   | 0    |   1   | 0    |  1   | 0    |
+|  2   | 1    |   2   | 1    |  2   | 1    |
+|  3   | 2    |   3   | 2    |      |      |
+
+| Python Hat        |   True   | 23.99 |
+| SQL Hat           |   True   | 23.99 |
+| Codecademy Tee    |  False   | 19.99 |
+| Codecademy Hoodie |  False   | 42.99 |
+
+
+
+
+```{r}
+df_exemplo <- lapply(c("Frag. total","Área per se"),\(vi){
+  data.frame(
+  pergunta = c(rep("Qual o efeito aleatório?",2),
+               rep("Qual o modelo cheio?",2),
+               rep("Qual o conj. de cov?",3)),
+  rank =  c(1:2,1:2,1:3),
+  dAICc = c(0:1,0:1,0:2)) %>% 
+    mutate(efeito = vi) %>% relocate(efeito)
+}) %>% do.call("rbind",.) %>%
+  filter(!(efeito == "Área per se" & pergunta == "Qual o conj. de cov?" & rank == 3) )
+install.packages("flextable")
+library(flextable)
+# Reshape the data frame to wide format
+df_wide <- df_exemplo %>%
+  pivot_wider(names_from = efeito, values_from = c(rank, dAICc)) %>%
+  arrange(pergunta)
+# Create the table using flextable
+ft <- flextable(df_wide) %>%
+  merge_v(j = "pergunta") %>%
+  theme_box() %>%
+  align(align = "center", part = "all")
+
+# Display the flextable
+ft
+
+ft <- as_flextable(
+  x = df_exemplo, separate_with = "VISIT",
+  label_rows = c(LBTEST = "Lab Test", VISIT = "Visit",
+                 BASELINE = "Reference Range Indicator")) |>
+  width(j = 3, width = 0.9)
+
+ft
+
+```
+
+
+
 #21/08/2024
 
 ```{r}

@@ -493,20 +493,88 @@ lapply(names(l_md_1alike),f_gam_update)
 # saveRDS(l_md_logOR_aud,file="dados/Rdata/l_md_logOR_2a_cpert.rds")
 ```
 
+```{r}
+paths_lmd <- list.files("dados/Rdata","l_md_logOR_2a_cpert_",full.names = T)
+names(paths_lmd) <- str_extract(paths_lmd,"(?<=cpert\\_)(.*?)(?=\\.rds)") %>% 
+  gsub("contemp-ideal","fragtotal",.) %>% 
+  gsub("contemp-non_frag","fragperse",.) %>% 
+  gsub("non_frag-ideal","areaperse",.)
+l_df <- lapply(paths_lmd,\(li){
+  li <- readRDS(li)
+  f_TabSelGAMM(li)
+})
+f_gsub <- \(vchar){
+  gsub("rank","Rank",vchar) %>% 
+    gsub("modelo","GAHM",.) %>% 
+    gsub("df","est. coef.",.) %>% 
+    gsub("dAICc","ΔAICc",.) %>% 
+    gsub("weight" , "Weight (ΔAICc)",.) %>% 
+    gsub("dev.expl" , "Deviance Explained",.) %>% 
+    gsub("Moran I statistic (res)", "Moran's I",.) %>% 
+    gsub("p-value" , "p-value",.)
+}
+v_title <- dfi$pair[1] %>% 
+  gsub("contemp-ideal","Frag. total",.) %>%
+  gsub("contemp-non_frag","Frag. per se",.) %>%
+  gsub("non_frag-ideal","Área per se",.)
+dfi <- dfi %>% select(-pair) %>%
+  mutate(rank = 1:n()) %>% 
+  select(rank,modelo,df,dAICc)
+v_name <- gsub("Frag. total","fragtotal",v_title) %>% 
+    gsub("Frag. per se","frag_perse",.) %>% 
+    gsub("Área per se","area_perse",.)
+#
+lapply(names(l_df),\(v_){
+  table <- f_gt_table(dfi = l_df[[v_]] %>% mutate(rank = 1:n()),
+                    v_title = gsub("fragtotal","Frag. total",v_) %>% 
+                      gsub("fragperse","Frag. per se",.) %>%
+                      gsub("areaperse","Área per se",.),
+                    v_name = v_,
+                    f_cols_label_with = "f_gsub")
+  
+})
 
-```{r tabelas dos modelos da 2a fase,eval=TRUE}
-library(knitr)
-df <- data.frame(
-  modelo = c("mais plausível 1a fase", "sem ano", "sem coord", "sem cov","mgcv::s"),
-  `efeito em U` = c("1", "1", "1","1","s(bs='cr')"),
-  `ano dados` = c("1","0", "1", "0","s(bs='cr')"),
-  `coord. geo.` = c("1", "1", "0","0","s(bs='tp')"),
-  `intecep. por sítio` = c("1", "1", "1","1","s(bs='re')"),
-  `efeito em U por sítio` = c("1", "1","1","1","s(bs='fs',xt=list(bs='cr'))")
-)
-knitr::kable(df, 
-             caption = "Características dos GAMM na 2a fase de comparações\n method='REML'")
+
+teste <- f_gt_table(dfi = l_df[[1]] %>% mutate(rank = 1:n()),
+                    v_title = names(l_df)[1] %>% 
+                      gsub("fragtotal","Frag. total",.) %>% 
+                      gsub("fragperse","Frag. per se",.) %>%
+                      gsub("areaperse","Área per se",.),
+                    v_name = names(l_df)[1],
+                    f_cols_label_with = "f_gsub")
+
+
+gtsave(table, paste0(v_path,"tabelas/table_reciclagem_",v_title,".png"),
+         vwidth = 800, vheight = 200)
 ```
+
+
+
+
+<!-- ```{r tabelas dos modelos da 2a fase,eval=TRUE} -->
+<!-- library(knitr) -->
+<!-- df <- data.frame( -->
+<!--   modelo = c("mais plausível 1a fase", "sem ano", "sem coord", "sem cov","mgcv::s"), -->
+<!--   `efeito em U` = c("1", "1", "1","1","s(bs='cr')"), -->
+<!--   `ano dados` = c("1","0", "1", "0","s(bs='cr')"), -->
+<!--   `coord. geo.` = c("1", "1", "0","0","s(bs='tp')"), -->
+<!--   `intecep. por sítio` = c("1", "1", "1","1","s(bs='re')"), -->
+<!--   `efeito em U por sítio` = c("1", "1","1","1","s(bs='fs',xt=list(bs='cr'))") -->
+<!-- ) -->
+<!-- knitr::kable(df,  -->
+<!--              caption = "Características dos GAMM na 2a fase de comparações\n method='REML'") -->
+<!-- ``` -->
+
+###################### 
+
+
+
+
+
+
+
+#######################
+
 
 ```{r ajuste dos modelos da 2a fase de comparações,eval=FALSE}
 # df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
