@@ -11,6 +11,119 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 26 agosto
+
+Como é calculado os edf? usando a função trace em cada spline....
+
+Como 
+
+Influencia do ID na inferência causal
+
+```{r}
+library(mgcv)
+library(ggplot2)
+
+# Data setup
+set.seed(123)
+n <- 100
+x <- seq(0, 1, length.out = n)
+z <- rnorm(n)
+y <- sin(2 * pi * x) + z + rnorm(n) * 0.1
+data <- data.frame(x = x, z = z, y = y)
+
+# Model without id
+gam_model_no_id <- gam(y ~ s(x,bs="cr") + 
+                         s(z,bs="cr") +
+                         ti(x,z), data = data,
+                       method="REML")
+gam_model_no_id <- gam(y ~ s(x,bs="cr",id="x") + 
+                         s(z,bs="cr",id="z") +
+                         ti(x,z,id="ti"), data = data,
+                       method="REML")
+# Predictions
+data$pred_no_id <- predict(gam_model_no_id)
+data$pred_with_id <- predict(gam_model_with_id)
+# Plot
+ggplot(data, aes(x = x, y = y)) +
+  geom_point(color = "black", alpha = 0.6, size = 2) +  # Observed data
+  geom_line(aes(y = pred_no_id), color = "blue", linetype = "dashed", size = 1.2) +  # Prediction from model without id
+  geom_line(aes(y = pred_with_id), color = "red", size = 1.2) +  # Prediction from model with id
+  labs(title = "Observed Data vs. Predictions from GAM Models",
+       x = "x",
+       y = "y",
+       caption = "Blue (dashed): Model without 'id' | Red: Model with 'id'") +
+  theme_minimal()
+plot(gam_model_no_id, main = "gam_model_no_id")
+plot(gam_model_with_id, main = "gam_model_with_id")
+
+```
+
+
+
+Exemplo de mudança do parâmetro sp na função s() 
+
+```{r}
+library(mgcv)
+# Set seed for reproducibility
+set.seed(123)
+# Generate toy data
+n <- 200
+x <- seq(0, 10, length.out = n)
+y <- sin(x) + rnorm(n, sd = 0.3)
+# Plot the data
+plot(x, y, main = "Toy Data: y = sin(x) + noise", xlab = "x", ylab = "y")
+# Fit a GAM model with a smooth term for x
+gam_model <- gam(y ~ s(x), method = "REML")
+# Summary of the model
+summary(gam_model)
+# Extract the edf from the model summary
+summary_gam <- summary(gam_model)
+edf_values <- summary_gam$s.table[, "edf"]
+edf_values
+# Fit models with different smoothing parameters
+gam_model_1 <- gam(y ~ s(x, sp = 0.1), method = "REML")  # Less smooth (higher edf)
+gam_model_2 <- gam(y ~ s(x, sp = 1), method = "REML")    # More smooth (lower edf)
+# Summary of models
+summary(gam_model_1)$s.table[, "edf"]
+mgcv::k.check(gam_model_1)
+summary(gam_model_2)$s.table[, "edf"]
+mgcv::k.check(gam_model_2)
+# Compare smooth functions
+plot(gam_model_1, main = "Less Smooth (sp = 0.1)")
+plot(gam_model_2, main = "More Smooth (sp = 1)")
+# Generate predictions from both models
+predictions_1 <- predict(gam_model_1, newdata = data.frame(x = x))
+predictions_2 <- predict(gam_model_2, newdata = data.frame(x = x))
+# Plot the observed data
+plot(x, y, main = "Observed Data and Model Predictions", xlab = "x", ylab = "y", pch = 16, col = "blue")
+# Add predictions from the first model (less smooth, higher edf)
+lines(x, predictions_1, col = "red", lwd = 2, lty = 2)  # Red dashed line
+# Add predictions from the second model (more smooth, lower edf)
+lines(x, predictions_2, col = "green", lwd = 2, lty = 1)  # Green solid line
+# Add a legend
+legend("topright", legend = c("Observed Data", "Model 1 (sp = 0.1)", "Model 2 (sp = 1)"),
+       col = c("blue", "red", "green"), lty = c(NA, 2, 1), lwd = c(NA, 2, 2), pch = c(16, NA, NA))
+
+
+```
+
+
+
+
+
+modelos usados para responder a última pergunta
+
+
+
+
+```{r}
+l_md <- readRDS(paths_lmd[1])
+summary(l_md[[1]])
+```
+
+
+
+
 # 25 agosto
 
 | Frag. total | Frag. per se | Área per se |
@@ -69,7 +182,7 @@ ft <- flextable(df_wide) %>%
 ft
 
 ft <- as_flextable(
-  x = df_exemplo, separate_with = "VISIT",
+  x = df_exemplo, separate_with = "",
   label_rows = c(LBTEST = "Lab Test", VISIT = "Visit",
                  BASELINE = "Reference Range Indicator")) |>
   width(j = 3, width = 0.9)

@@ -240,35 +240,6 @@ v_pred <- df_md0 %>% filter(pred %in% range(df_md0$pred)) %>%
   pull(pred) %>% round(.,digits = 2)
 boxplot(df_md0$nCongKS)
 ```
-```{r 2a parte - ajuste de GAMM para descrever cada contraste NÃO USADO,eval=FALSE}
-# 2a parte: ajuste de um GAMM para cada contraste de interesse
-f_ajuste <- \(dfi,responses=c("itself","pristine","numerator","denominator")){
-  df_md <- dfi %>% pivot_longer(cols=all_of(responses),names_to = "taxaU",values_to = "logOR")
-  df_md %>% 
-    split(.,df_md$taxaU) %>% 
-    lapply(.,f_gamm)
-}
-f_gamm <- \(dfmd){
-  if(all(is.na(dfmd$logOR))) return(NA)
-  l_md <- list()
-  l_md$gs <- gam(logOR ~ 
-                   s(Uefeito,bs="cr") + 
-                   s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")) + 
-                   s(SiteCode,bs="re"),
-                 data=dfmd,method = "REML")
-  l_md$gi <- gam(logOR ~ 
-                   s(Uefeito,bs="cr") + 
-                   s(Uefeito, by=SiteCode, bs="cr") + 
-                   s(SiteCode,bs="re"),
-                 data=dfmd,method = "REML")
-  return(l_md)
-}
-l_md_logOR <- df_logOR %>% 
-  mutate(SiteCode=factor(SiteCode)) %>% 
-  split(.,df_logOR$contraste) %>% 
-  lapply(.,f_ajuste)
-saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR.rds")
-```
 ```{r 2a parte: apenas a referência correspondente, echo=FALSE,eval=FALSE}
 df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
   rename(logOR = itself) %>% 
@@ -533,15 +504,10 @@ lapply(names(l_df),\(v_){
                     f_cols_label_with = "f_gsub")
   
 })
+f_gt_table_final <- \(lpath){
+  
+}
 
-
-teste <- f_gt_table(dfi = l_df[[1]] %>% mutate(rank = 1:n()),
-                    v_title = names(l_df)[1] %>% 
-                      gsub("fragtotal","Frag. total",.) %>% 
-                      gsub("fragperse","Frag. per se",.) %>%
-                      gsub("areaperse","Área per se",.),
-                    v_name = names(l_df)[1],
-                    f_cols_label_with = "f_gsub")
 
 
 gtsave(table, paste0(v_path,"tabelas/table_reciclagem_",v_title,".png"),

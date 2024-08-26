@@ -128,6 +128,9 @@ ggsave(
 ##################################
 # criação de GE_taxaU_contrastes #
 ##################################
+f_z <- function(x) (x-mean(x))/sd(x)
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  inner_join(x=df_p,by="SiteCode")
 df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
   inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
              by="SiteCode") |> 
@@ -547,6 +550,12 @@ f_gt_table <- \(dfi,
     relocate(rank) %>%
     gt() %>%
     tab_header(title = md(v_title)) %>%
+    # data_color(
+    #   columns = c(weight, `dev.expl`, `Moran I statistic (res)`),
+    #   colors = col_numeric(
+    #     palette = c("cyan", "black", "red"),
+    #     domain = c(-1, 1)
+    #   )) %>% 
     fmt_number(
       columns = v_names[-grep("modelo|rank",v_names)],decimals = 2
     ) %>%
@@ -575,6 +584,42 @@ f_modcheio_table <- \(dff){
   file.remove(paths)  
 }
 f_modcheio_table(df_tabsel_logOR_aud)
+#
+# Qual o melhor conjunto de covariáveis?
+paths_lmd <- list.files("dados/Rdata","l_md_logOR_2a_cpert_",full.names = T)
+names(paths_lmd) <- str_extract(paths_lmd,"(?<=cpert\\_)(.*?)(?=\\.rds)") %>% 
+  gsub("contemp-ideal","fragtotal",.) %>% 
+  gsub("contemp-non_frag","fragperse",.) %>% 
+  gsub("non_frag-ideal","areaperse",.)
+l_df <- lapply(paths_lmd,\(li){
+  li <- readRDS(li)
+  f_TabSelGAMM(li)
+})
+f_gsub <- \(vchar){
+  gsub("rank","Rank",vchar) %>% 
+    gsub("modelo","GAHM",.) %>% 
+    gsub("df","est. coef.",.) %>% 
+    gsub("dAICc","ΔAICc",.) %>% 
+    gsub("weight" , "Weight (ΔAICc)",.) %>% 
+    gsub("dev.expl" , "Deviance Explained",.) %>% 
+    gsub("Moran I statistic (res)", "Moran's I",.) %>% 
+    gsub("p-value" , "p-value",.)
+}
+f_gt_table_final <- \(lpaths,v_stack=TRUE){
+  l_image <- lapply(lpaths,image_read)
+  file.remove(do.call("c",lpaths))
+  image_append(do.call("c",l_image), stack = v_stack)
+}
+image_table <- lapply(names(l_df),\(v_){
+  f_gt_table(dfi = l_df[[v_]] %>% mutate(rank = 1:n()),
+             v_title = gsub("fragtotal","Frag. total",v_) %>% 
+               gsub("fragperse","Frag. per se",.) %>%
+               gsub("areaperse","Área per se",.),
+             v_name = v_,
+             f_cols_label_with = "f_gsub")
+  
+}) %>% f_gt_table_final
+image_write(image_table,path=paste0(v_path,"figuras/tab_sel_cov_quant_efeito.png"))
 
 
 # 
