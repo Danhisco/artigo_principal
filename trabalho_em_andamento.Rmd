@@ -59,6 +59,43 @@ plot(gam_model_with_id, main = "gam_model_with_id")
 ```
 
 
+influencia dos knots: 
+```{r}
+library(mgcv)
+
+# Example data
+set.seed(123)
+n <- 100
+x <- seq(0, 1, length.out = n)
+y <- sin(2 * pi * x) + rnorm(n) * 0.1
+data <- data.frame(x = x, y = y)
+
+# Fit the model using cubic regression spline
+gam_model <- gam(y ~ s(x, bs = "cr", k = 10), 
+                 data = data,
+                 method="REML")
+# Extract the design matrix for the spline
+X <- gam_model$model.matrix
+
+# Plot the design matrix to visualize the basis functions
+matplot(x, X[, 2:ncol(X)], type = "l", lty = 1, col = rainbow(ncol(X) - 1),
+        xlab = "x", ylab = "Basis functions")
+
+
+# Extract the knots
+knots <- gam_model$smooth[[1]]$knots
+
+# Print the knots
+print(knots)
+
+# Compare knots with quantiles
+quantiles <- quantile(data$x, probs = seq(0, 1, length.out = length(knots)))
+
+# Compare knots with quantiles
+data.frame(Knots = knots, Quantiles = quantiles)
+```
+
+
 
 Exemplo de mudança do parâmetro sp na função s() 
 

@@ -240,7 +240,7 @@ v_pred <- df_md0 %>% filter(pred %in% range(df_md0$pred)) %>%
   pull(pred) %>% round(.,digits = 2)
 boxplot(df_md0$nCongKS)
 ```
-```{r 2a parte: apenas a referência correspondente, echo=FALSE,eval=FALSE}
+```{r 1a parte: contrafactuais da paisagem e taxa U correspondentes, echo=FALSE,eval=FALSE}
 df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
   rename(logOR = itself) %>% 
   filter(forest_succession!="capoeira") %>% 

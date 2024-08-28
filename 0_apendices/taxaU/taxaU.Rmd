@@ -57,6 +57,8 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
 df_Urep <- list.files(path = "dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) |> 
   purrr::map_df(~read_csv(.)) |> na.omit() #na.omit para remover o Sítio em que não foi possível rodar pela relação N / p
 # sumarização
+source("source/2samples_testes.R")
+do.call("c",list(formals(f_contraste_Umed)))
 f_contraste_Umed(df_Urep) # em 2samples_testes.R
 # df_ad
 ```

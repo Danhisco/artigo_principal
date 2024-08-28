@@ -1,67 +1,166 @@
-
-
-
-
-## modelos com ?????
-l_md_logOR <- readRDS(file="./dados/Rdata/l_md_logOR_cgi_c_perturbacao.rds")
 ## funções de ajuste e de plot
 source("source/2samples_testes.R")
 source("source/general_tools.R")
 source("source/GAMMtools.R")
 source("source/fig_tools.R")
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
+###########################################################################
+###### Como expressar o efeito da paisagem por sítio de amostragem?  ######
+###########################################################################
+# objetos comuns
+df_logOR <- read_csv(file="dados/csv/df_logOR.csv")
+df_md <- df_logOR %>% select(-Uefeito,-(pristine:denominator),-matches("(k_z|^p)")) %>% 
+  rename(logOR = itself) %>% 
+  filter(forest_succession!="capoeira") %>% 
+  mutate(contraste =  gsub("non_frag.ideal","Área per se",contraste) %>% 
+           gsub("contemp-non_frag","Frag. per se",.) %>% 
+           gsub("contemp-ideal","Frag. total",.),
+         across(c(contraste:SiteCode,forest_succession,k),factor))
+df_contrastes <- read_csv("dados/csv/taxaU/df_contrastes.csv") %>% 
+  select(SiteCode,k,ends_with("logratio")) %>% 
+  pivot_longer(cols = ends_with("logratio"),
+               names_to = "contraste",
+               values_to = "Uefeito") %>% 
+  mutate(contraste = gsub("area_logratio","Área per se",contraste) %>% 
+           gsub("frag.perse_logratio","Frag. per se",.) %>% 
+           gsub("frag.total_logratio","Frag. total",.),
+         across(SiteCode:contraste,factor))
+df_md <- inner_join(df_md,df_contrastes,by=c("SiteCode","contraste","k")) %>% 
+  relocate(Uefeito,.after="logOR")
+## modelos usados
+f_gam <- \(dfi){
+  l_md <- list()
+  l_md$`s(Uefeito)|Site : gi` <- gam(
+    logOR ~
+        forest_succession +
+        s(Uefeito,by=forest_succession,bs="cr",id="effect_forest") +
+        s(data_year,bs="cr") +
+        s(lat,long,bs="tp") +
+        s(SiteCode,bs="re") + 
+        s(Uefeito, by=SiteCode, bs="cr",id="effet_site"),
+      data=dfi,method = "REML")
+  l_md$`s(Uefeito)|Site : gs` <- gam(
+    logOR ~
+      forest_succession +
+      s(Uefeito, by = forest_succession, bs = "cr", id = "effect_forest") +
+      s(data_year, bs = "cr") +
+      s(lat, long, bs = "tp") +
+      s(SiteCode, bs = "re") +
+      s(Uefeito, SiteCode, bs = "fs", xt = list(bs = "cr"), id = "effect_site"),
+    data = dfi, method = "REML")
+  l_md$`1|Site` <- gam(
+    logOR ~
+      forest_succession +
+      s(Uefeito, by = forest_succession, bs = "cr", id = "effect_forest") +
+      s(data_year,bs="cr") +
+      s(lat,long,bs="tp") +
+      s(SiteCode,bs="re"),
+    data=dfi,method = "REML")
+  l_md$`0|Site+1|Site` <- gam(
+    logOR ~
+      forest_succession +
+      s(data_year,bs="cr") +
+      s(lat,long,bs="tp") +
+      s(SiteCode,bs="re"),
+    data=dfi,method = "REML")
+  return(l_md)
+}
+l_md_logOR <- dlply(df_md,"contraste",f_gam)
+saveRDS(l_md_logOR,file=paste0(v_path,"rds/l_md_1aperg_efeito_paisagem_p_sitio.rds"))
+## tabela de seleção
+# l_md_logOR <- readRDS(file=paste0(v_path,"rds/l_md_1aperg_efeito_paisagem_p_sitio.rds"))
 ## tabela de selação dos modelos 
-df_tabsel_logOR <- ldply(l_md_logOR,f_TabSelGAMM,.id="pair")
-write_csv(df_tabsel_logOR,file="dados/csv/df_tabelaSelecao_logOR_cgi_cperturbacao.csv")
-df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_cgi_cperturbacao.csv")
-# write_csv(df_tabelaSelecao,
-#           file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
-
-f_SML.gamm <- \(df){md <- l_md_logOR[[df$pair[1]]][[df$modelo[[1]]]]}
-l_md_1alike <- dlply(df_tabelaSelecao,"pair",f_SML.gamm)
-saveRDS(l_md_1alike,file="dados/Rdata/l_md_logOR_itself_1alike_cperturbacao.rds")
-
-
+df_tabelaSelecao <- ldply(l_md_logOR,f_TabSelGAMM,.id="pair")
+write_csv(df_tabelaSelecao,
+          file=paste0(v_path,"rds/tabsel_1aperg_efeito_paisagem_p_sitio.csv"))
+rm(list="l_md_logOR");gc()
 ##########################################################
 ############# Qual o modelo cheio suficiente? ############
 ##########################################################
 # objectos comuns
-## dados
-df_md <- df_logOR %>% filter(forest_succession!="capoeira")
+# modelos mais plausíveis da seleção passada:
+# f_SML.gamm <- \(df){md <- l_md_logOR[[df$contraste[1]]][[df$modelo[[1]]]]}
+# l_md_1alike <- dlply(df_tabelaSelecao,"contraste",f_SML.gamm)
 ## modelos usados
-l_md_1alike <- readRDS(file="dados/Rdata/l_md_logOR_itself_1alike_cperturbacao.rds")
 ## função de atualização do modelo cheio mais plausível
-f_gam_update <- \(gamm){
-  # setup
-  f_ref <- formula(gamm)
-  original_data <- gamm$model
-  f_gam <- \(fi){
-    gam(formula=fi,data=original_data,method = "REML")
-  }
+f_gam_selmodcheio <- \(dfi){ # uma vez que todos faoram selecionados para ser
   # formula 
   l_md <- list()
-  l_md$`-Uefeito*perturb` <- update.formula(
-    f_ref, . ~ . - s(Uefeito, by = forest_succession, bs = "cr") + s(Uefeito, bs = "cr"))
-  # ajuste das formulas
-  l_md <- lapply(l_md,f_gam)
-  # inclusão do modelo cheio
-  l_md$cheio <- gamm
+  l_md$`efeito fixo por preserv` <- 
+    gam(
+      logOR ~
+        forest_succession +
+        s(Uefeito, by = forest_succession, bs = "cr", id = "effect_forest") +
+        s(data_year, bs = "cr") +
+        s(lat, long, bs = "tp") +
+        s(SiteCode, bs = "re") +
+        s(Uefeito, SiteCode, bs = "fs", xt = list(bs = "cr"), id = "effect_site"),
+      data = dfi, method = "REML")
+  l_md$`efeito fixo comum` <- 
+    gam(
+      logOR ~
+        forest_succession +
+        s(Uefeito, bs = "cr", id = "effect_forest") +
+        s(data_year, bs = "cr") +
+        s(lat, long, bs = "tp") +
+        s(SiteCode, bs = "re") +
+        s(Uefeito, SiteCode, bs = "fs", xt = list(bs = "cr"), id = "effect_site"),
+      data = dfi, method = "REML")
   return(l_md)
 }
-l_md_cheios <-lapply(l_md_1alike,f_gam_update) 
-saveRDS(l_md_cheios,"dados/Rdata/l_md_cheios_cperturbacao.rds")
+l_md_logOR <- dlply(df_md,"contraste",f_gam_selmodcheio)
+saveRDS(l_md_logOR,file=paste0(v_path,"rds/l_md_2aperg_qual_md_cheio.rds"))
 ##########################################################
 ######### Qual o melhor conjunto de covariáveis? #########
 ##########################################################
 # objetos necessários
-## modelos cheios com perturbação
-l_md_logOR_aud <- readRDS(file="dados/Rdata/l_md_cheios_cperturbacao.rds")
-## tabela de seleção
-if(!file.exists("dados/csv/df_tabelaSelecao_logOR_cpert.csv")){
-  df_tabsel_logOR_aud <- ldply(l_md_logOR_aud,f_TabSelGAMM,.id="pair")
-  write_csv(df_tabsel_logOR_aud,
-            file="dados/csv/df_tabelaSelecao_logOR_cpert.csv")
-}else{
-  df_tabsel_logOR_aud <- 
-    read_csv(file="dados/csv/df_tabelaSelecao_logOR_cpert.csv")
+df_tabelaSelecao <- ldply(l_md_logOR,f_TabSelGAMM,.id="pair")
+write_csv(df_tabelaSelecao,
+          file=paste0(v_path,"rds/tabsel_2aperg_qual_md_cheio.csv"))
+f_SML.gamm <- \(df){md <- l_md_logOR[[df$contraste[1]]][[df$modelo[[1]]]]}
+l_md_1alike <- dlply(df_tabelaSelecao,"contraste",f_SML.gamm)
+f_gam_update <- \(mdname,
+                  name_path = paste0(v_path,"rds/l_md_3aperg_quais_cov_")){
+  mdgam <- l_md_1alike[[mdname]]
+  f_ref <- formula(mdgam)
+  original_data <- mdgam$model
+  f_gam <- \(fi){
+    gam(formula=fi,data=original_data,method = "REML")
+  }
+  l_md <- list()
+  l_md$cheio <- f_ref
+  l_md$`- ano` <- update.formula(f_ref, . ~ . - s(data_year, bs = "cr"))
+  l_md$`- coord` <- update.formula(f_ref, . ~ . - s(lat, long, bs = "tp"))
+  if(!grepl("by = forest_succession",as.character(f_ref)[3])){
+    l_md$`- pert` <- update.formula(f_ref, . ~ . - forest_succession)
+    l_md$`- pert e ano` <- update.formula(l_md$`- ano`, . ~ . - forest_succession)
+    l_md$`- pert e coord` <- update.formula(l_md$`- coord`, . ~ . - forest_succession)
+    l_md$`- ano e coord` <- update.formula(l_md$`- coord`, . ~ . - s(data_year, bs = "cr"))
+    l_md$`- cov` <- update.formula(l_md$`- ano e coord`, . ~ . - forest_succession)
+  }else{
+    l_md$`- cov` <- update.formula(l_md$`- coord`, . ~ . - s(data_year, bs = "cr"))
+  }
+  l_md <- lapply(l_md,f_gam)
+  mdname <- gsub("Área per se","areaperse",mdname) %>% 
+    gsub("Frag. per se","fragperse",.) %>% 
+    gsub("Frag. total","fragtotal",.)
+  saveRDS(l_md,
+          file=paste0(name_path,mdname,".rds"))
+  rm(l_md);gc()
 }
-
+lapply(names(l_md_1alike),f_gam_update)
+## tabelas de seleção
+paths <- list.files(path=gsub("/l_md_3aperg_quais_cov_","",
+                              eval(formals(f_gam_update)$name_path)),
+                    pattern="3aperg",full.names = T)
+df_tabelaSelecao <- lapply(paths,\(li){
+  l_md <- readRDS(li)
+  df_return <- f_TabSelGAMM(l_md)
+  mutate(df_return,
+         contraste=str_extract(li,"(?<=cov\\_)(.*?)(?=\\.rds)") %>% 
+           gsub("areaperse","Área per se",.) %>% 
+           gsub("fragperse","Frag. per se",.) %>% 
+           gsub("fragtotal","Frag. total",.))
+}) %>% do.call("rbind",.)
+write_csv(df_tabelaSelecao,
+          file=paste0(v_path,"rds/tabsel_3aperg_quais_cov.csv"))
