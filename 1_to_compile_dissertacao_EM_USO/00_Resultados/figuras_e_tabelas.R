@@ -1,3 +1,36 @@
+library(gt);library(webshot2); library(patchwork)
+library(magick)
+library(grid)
+library(png)
+library(grid)
+library(gtable)
+library(ggpubr)
+library(gt)
+library(flextable)
+library(dagitty)
+library(ggdag)
+library(gratia)
+# library(sads)
+library(doMC)
+# library(metR)
+library(kableExtra)
+library(gridExtra)
+library(ggplot2)
+theme_set(theme_bw())
+library(readr)
+# library(purrr)
+library(stringr)
+library(tidyr)
+# library(MuMIn)
+# library(AICcmodavg)
+# library(insight)
+library(bbmle)
+library(DHARMa)
+# library(mgcv)
+library(lme4)
+library(data.table)
+library(plyr)
+library(dplyr)
 df_p <- read_csv("dados/df_p.csv")
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
 probs = c(0.05,0.25, 0.5, 0.75,0.95)
@@ -353,7 +386,7 @@ ggsave(
   plot = p,
   width = 11,height=7.7,
   bg = "white")
-library(magick)
+
 img <- image_read(paste0(v_path,
                          "figuras/DAG_var_de_controle.png"))
 trimmed_img <- image_trim(img)
@@ -410,9 +443,7 @@ write_csv(df_quantisobs_Uefeito,
           file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
 ##
 # tabela de comparação de estruturas hierarquicas do modelo
-library(gt);library(webshot2); library(patchwork)
-library(grid)
-library(png)
+
 df_tabelaSelecao <- read_csv(file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
 df_tabelaSelecao <- df_tabelaSelecao %>% 
   mutate(`Prática Ontológica` = ifelse(grepl("contemp-ideal",pair),
@@ -568,6 +599,47 @@ f_gt_table <- \(dfi,
          paste0(v_path,"tabelas/table_reciclagem_",v_name,".png"),
          vwidth = vw, vheight = vh)
 }
+# tabela de seleção das perguntas
+vpaths <- list.files(path=paste0(v_path,"rds/"),
+                     pattern=".csv",full.names = T)
+lapply(vpaths,\(li){
+  dfsel <- read_csv(li) %>% relocate(contraste)
+  d_ply(dfsel,"contraste",\(dfi){
+    f_gt_table(dfi=mutate(dfi,
+                          rank=1:n()),
+               v_title = dfi$contraste[1],
+               v_name = gsub("Frag. total","fragtotal",dfi$contraste[1]) %>% 
+                 gsub("Frag. per se","fragperse",.) %>% 
+                 gsub("Área per se","areaperse",.),
+               f_cols_label_with = "f_gsub",
+               vw = 900)
+  })
+  vpath <- list.files(path = paste0(v_path,"tabelas"),
+                      pattern = "table_reci",
+                      full.names = TRUE)
+  l_png <- lapply(vpath,image_read)
+  tabela_final <- image_append(
+    do.call("c",l_png),stack = TRUE
+  )
+  v_name <- str_extract(li,"(?<=tabsel\\_)(.*?)(?=\\_)")
+  image_write(tabela_final, 
+              path = paste0(v_path,"figuras/tabsel_",v_name,".png"), 
+              format = "png")
+  file.remove(vpath)  
+})
+
+
+
+
+
+
+
+
+
+#######################################
+############# antigo #############
+#######################################
+
 df_tabsel_logOR_aud <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_cpert.csv")
 f_modcheio_table <- \(dff){
   d_ply(dff,"pair",f_gt_table)
