@@ -603,16 +603,16 @@ f_gt_table <- \(dfi,
 vpaths <- list.files(path=paste0(v_path,"rds/"),
                      pattern=".csv",full.names = T)
 lapply(vpaths,\(li){
-  dfsel <- read_csv(li) %>% relocate(contraste)
+  dfsel <- read_csv(li)
   d_ply(dfsel,"contraste",\(dfi){
-    f_gt_table(dfi=mutate(dfi,
+    f_gt_table(dfi=mutate(dfi %>% select(-contraste),
                           rank=1:n()),
                v_title = dfi$contraste[1],
                v_name = gsub("Frag. total","fragtotal",dfi$contraste[1]) %>% 
                  gsub("Frag. per se","fragperse",.) %>% 
                  gsub("Área per se","areaperse",.),
                f_cols_label_with = "f_gsub",
-               vw = 900)
+               vw = 800)
   })
   vpath <- list.files(path = paste0(v_path,"tabelas"),
                       pattern = "table_reci",

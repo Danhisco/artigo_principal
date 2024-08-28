@@ -298,6 +298,41 @@ RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG
 RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
 RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
 
+Coisas novas:
+
+1a pergunta
+todos os modelos serão expressos por s(Uefeito)|Site: gs. O que é ótimo que facilita o display dos diagnósticos
+
+Perfil de deviance explained: os dois modelos com efeito de paisagem por sítio de amostragem apresentam os maiores deviances, com o Frag. total com a maior deviance (0.70), seguido pelo frag. per (0.56) se e por último a área per se (0.44).
+
+Parece não haver problemas de autocorrelação espacial dos resíduos do modelo.
+
+CPF:
+diagnóstico dos modelos:
+2 figuras: resíduos e efeitos parciais médios
+
+2a pergunta
+O único em que é necessário 1 spline por classe de preservação é o efeito de área per se, que apresenta o menor deviance explained. Acredito que deve ser com maior influência do viés de efeito de escalar. 
+
+O com menor peso acumulado no modelo mais plausível foi o Frag. total com deviance de 0.87.
+
+Em todos o deviance explained é igual entre os modelos
+
+CPF:
+figurabela das perguntas de quantificação do efeito médio causal da paisagem na biodiversidade local.
+
+3a pergunta
+Quais as covariáveis adequadas?
+Para os 3 efeitos investigados, não houve um modelo que acumulasse a maior parte do peso de evidência, a deviance explicada é similar entre modelos candidatos e todos os modelos apresentam resíduos sem aparente autocorrelação espacial.
+
+
+Os modelos mais plausíveis:
+área - cheio / sem coord (0.52 - 0.27)
+frag. per se - sem covariáveis / somente ano (0.37 - 0.21)
+frag. total - sem ano / somente coordenada (0.31 - 0.31)
+
+
+
 ##############################################################################################
 # ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO #
 ##############################################################################################
