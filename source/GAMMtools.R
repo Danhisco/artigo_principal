@@ -227,86 +227,87 @@ f_calcPI <- \(gamm,
     return(df_newpred)
 }
 ####
-# f_calcPI2
-f_calcPI2 <- \(gamm,
-               site.posteriori ="SPigua1",
-               length_pred = 150,
-               nsim = 1000,
-               with_random=FALSE,
-               regex_vartopred="Uefeito|SiteCode",
-               to_exclude = c("s(Uefeito,SiteCode)",
-                              "s(SiteCode)",
-                              "s(lat,long)",
-                              "s(data_year)"),
-               quants=c(0.05,0.5,0.95)){
-  # GAMM data
-  if(gamm$family$family=="binomial"){
-    dfmd <- gamm$model |> select(-1) |> 
-      mutate(y = gamm$model[,1][,1]) |> relocate(y)
-    names(dfmd)[1] <- colnames(gamm$model[,1])[1]  
-  }else{
-    dfmd <- gamm$model
-  }
-  # create the new data 
-  if(with_random){
-    df_newpred <- dfmd
-  } else {
-    v_range <- range(dfmd$Uefeito)
-    df_newpred <- select(dfmd,-logOR,-Uefeito) %>% 
+f_dfmd <- \(dff,byforest,length_pred = 150,site.posteriori ="SPigua1"){
+  fdfmd <- \(dff){
+    v_range <- range(dff$Uefeito)
+    df_newpred <- select(dff,-logOR,-Uefeito) %>% 
       mutate(SiteCode=site.posteriori) %>% head(n=1)
-    try(
-      {
-        df_newpred <- 
-          cbind(data.frame(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred)),
-                df_newpred)
-      },
-      silent = TRUE)
+    try({
+      df_newpred <- cbind(
+        data.frame(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred)),
+        df_newpred)
+    },silent = TRUE)
+    return(df_newpred)
   }
-  # quais componentes serão zerados?
-  to_exclude <- to_exclude[
-    grep(pattern = paste(names(df_newpred),collapse = "|"),
-         to_exclude)
-  ]
-  # obtain the predictions
-  ## sorteio dos coeficientes a partir de uma normal multivariada
+  if(byforest){
+    df_return <- ddply(dff,"forest_succession",fdfmd)
+  }else{
+    df_return <- fdfmd(dff)
+  }
+  return(df_return)
+}
+f_predictions <- \(gamm,nsim,to_exclude,df_newpred){
   coef_samples <- MASS::mvrnorm(n=nsim, mu=coef(gamm), Sigma=vcov(gamm))
-  ## matrix de predição dos componentes de interesse e zero para os outros (to_exclude)
   matrix_lprediction <- predict(gamm,
                                 type ="lpmatrix",
                                 exclude = to_exclude,
                                 newdata = df_newpred,
                                 newdata.guaranteed = TRUE)
-  ## obtenção das predições pela multiplicação dos coeficientes pela matrix de componentes de interesse
-  predict_link <- matrix_lprediction %*% t(coef_samples)
-  df_pred <- t(apply(predict_link,1,\(X) quantile(X,probs = quants))) %>% 
+  df_pred <- matrix_lprediction %*% t(coef_samples)
+  df_pred <- t(apply(df_pred,1,\(X) quantile(X,probs = quants))) %>% 
     as.data.frame()
   names(df_pred) <- paste0("Q_",quants)
-  df_return <- cbind(df_newpred,df_pred) %>% 
-    mutate(tipo = ifelse(with_random,
-                         "aleatório e fixo",
-                         "apenas fixo"))
-  return(df_return)
-  # # antigo
-  # f_invlink <- gamm$family$linkinv
-  # n_cols <- names(dfmd) %>% grep(regex_vartopred,.,value=TRUE)
-  # dfmd[,!names(dfmd)%in%n_cols] <- 0
-  # df_newpred[,!names(df_newpred)%in%n_cols] <- 0
-  # f_adply <- \(dfi){
-  #   df_newpred$pred <- 
-  #     predict.gam(gamm, 
-  #             newdata=df_newpred, 
-  #             type="link", se.fit=FALSE, exclude=to_exclude)
-  #   select(df_newpred,Uefeito,SiteCode,pred)
-  # }
-  # registerDoMC(3)
-  # predictions <- adply(coef_samples,1,f_adply,.parallel = TRUE)
-  # predictions <- pivot_wider(predictions,
-  #                            names_from = "X1",
-  #                            values_from = "pred")
-  # df_return <- t(apply(select(predictions,matches("[1-9]\\d*")),1,\(X) quantile(X,probs = quants))) %>% 
-  #   as.data.frame()
-  # cbind(select(predictions,-matches("^[1-9]\\d*$")),df_return) %>% 
-  #   mutate(tipo = ifelse(with_random,"aleatório e fixo","apenas fixo"))
+  return(df_pred)
+}
+f_dfmd_aleat <- \(dfmd,df_newpred){
+  vcovar <- c("forest_succession","data_year","lat","long")
+  ddply(dfmd,"SiteCode",\(dfi){
+    v_range <- range(dfi$Uefeito)
+    rbind.fill(
+      select(dfi,-logOR),
+      filter(df_newpred,
+             Uefeito >= v_range[1] & Uefeito <= v_range[2])
+    ) %>% arrange(Uefeito) %>% 
+      mutate(forest_succession = dfi$forest_succession[1],
+             data_year = dfi$data_year[1],
+             lat = dfi$lat[1],
+             long = dfi$long[1],
+             SiteCode = dfi$SiteCode[1])
+    
+  })
+}
+# f_calcPI2
+f_calcPI2 <- \(gamm,
+               nsim = 1000,
+               to_exclude,
+               quants=c(0.05,0.5,0.95)){
+  #### 1a parte: somente efeito fixo ####
+  # create the new data 
+  df_newpred <- f_dfmd(
+    gamm$model,
+    grepl("by = fore",as.character(formula(gamm)[[3]])[2]))
+  # quais componentes serão zerados?
+  to_exclude <- to_exclude[
+    grep(pattern = paste(names(df_newpred),collapse = "|"),
+         to_exclude)]
+  # obtain the predictions
+  df_pred <- f_predictions(gamm,nsim,to_exclude,df_newpred)
+  # save the data frame
+  l_df <- list()
+  l_df$`apenas fixo` <- cbind(df_newpred,df_pred) %>% 
+    mutate(tipo = "apenas fixo")
+  #### 2a parte: efeito fixo e aleatório ####
+  # create the new data
+  df_newpred <- f_dfmd_aleat(gamm$model,df_newpred)
+  # quais componentes serão zerados?
+  to_exclude <- to_exclude[-grep("Uefeito,SiteCode",to_exclude)]
+  # obtain the predictions
+  df_pred <- f_predictions(gamm,nsim,to_exclude,df_newpred)
+  # save the data frame
+  l_df$`fixo e aleat` <- cbind(df_newpred,df_pred) %>% 
+    mutate(tipo = "fixo e aleat")
+  # return
+  return(l_df)
 }
 
 # f_ggplot_PI1d:

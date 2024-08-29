@@ -11,6 +11,15 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 29 agosto 
+
+```{r}
+
+```
+
+
+
+
 # 26 agosto
 
 Como é calculado os edf? usando a função trace em cada spline....
