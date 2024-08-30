@@ -1,31 +1,16 @@
 # pacotes
-# library(grid)
-# library(gtable)
-# library(ggpubr)
-# library(gt)
-# library(flextable)
-# library(dagitty)
-# library(ggdag)
 library(gratia)
-# library(sads)
 library(doMC)
-# library(metR)
-# library(kableExtra)
 library(gridExtra)
 library(ggplot2)
 theme_set(theme_bw())
 library(readr)
-# library(purrr)
 library(stringr)
 library(tidyr)
-# library(MuMIn)
-# library(AICcmodavg)
-# library(insight)
 library(bbmle)
 library(DHARMa)
+# library(lme4)
 library(mgcv)
-library(lme4)
-# library(data.table)
 library(plyr)
 library(dplyr)
 ## funções de ajuste e de plot
@@ -38,7 +23,8 @@ v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compi
 paths <- list.files(path=paste0(v_path,"rds"),
                     pattern="l_md_3aperg",full.names = T)
 names(paths) <- str_extract(paths,"(?<=cov\\_)(.*?)(?=\\.rds)")
-# função para criar a predição a posteriori fixo e fixo + aleatória
+#################################################################
+# função para criar o new data fixo
 f_dfmd <- \(dff,byforest,length_pred = 150,site.posteriori ="SPigua1"){
   fdfmd <- \(dff){
     v_range <- range(dff$Uefeito)
@@ -58,6 +44,7 @@ f_dfmd <- \(dff,byforest,length_pred = 150,site.posteriori ="SPigua1"){
   }
   return(df_return)
 }
+# função que realiza a predição a posteriori dado o modelo, new data e o vetor de exclusão de componentes
 f_predictions <- \(gamm,nsim,to_exclude,df_newpred){
   coef_samples <- MASS::mvrnorm(n=nsim, mu=coef(gamm), Sigma=vcov(gamm))
   matrix_lprediction <- predict(gamm,
@@ -71,6 +58,7 @@ f_predictions <- \(gamm,nsim,to_exclude,df_newpred){
   names(df_pred) <- paste0("Q_",quants)
   return(df_pred)
 }
+# criação do new data para predição fixo e aleatório
 f_dfmd_aleat <- \(dfmd,df_newpred){
   vcovar <- c("forest_succession","data_year","lat","long")
   ddply(dfmd,"SiteCode",\(dfi){
@@ -87,6 +75,7 @@ f_dfmd_aleat <- \(dfmd,df_newpred){
              SiteCode = dfi$SiteCode[1])
   })
 }
+# função que simula a predição a posteriori
 f_calcPI <- \(gamm,
               nsim = 1000,
               to_exclude,
@@ -136,6 +125,7 @@ f_df_pred <- \(vpath){
 l_df_pred <- lapply(paths,f_df_pred)
 saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpredictions_fromfixedrandom_landeffect.rds"))
 # calculo do model averaging 
+l_df_pred <- readRDS(paste0(v_path,"rds/l_dfpredictions_fromfixedrandom_landeffect.rds"))
 ## tabela de seleção da pergunta: "Quais as covariáveis adequadas?"
 df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_3aperg_quais_cov.csv")) %>% 
   relocate(contraste) %>% select(contraste:modelo,weight) %>% 
@@ -143,9 +133,7 @@ df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_3aperg_quais_cov.csv")) %>%
            gsub("Frag. per se","fragperse",.) %>% 
            gsub("Frag. total","fragtotal",.))
 l_df_avgpred <- dlply(df_tabsel,"contraste",\(dff){
-  ##########################################
-  ## multiplicação pelo peso de evidência ##
-  ##########################################
+  ## multiplicação pelo peso de evidência 
   l_df <- alply(dff,1,\(dfi){
     with(dfi,{
       l_fixrand <- l_df_pred[[nome]][[modelo]]
@@ -157,29 +145,17 @@ l_df_avgpred <- dlply(df_tabsel,"contraste",\(dff){
     })
   names(l_df) <- names(l_df_pred[[dff$nome[1]]])
   ## soma para obter a média
-  lapply(sapply(l_df,names)[,1],\(li){
-    ldf <- lapply(l_df,\(i) i[[li]])
-    vquantil <- select(ldf[[1]],starts_with("Q_")) %>% names
+  l_df_return <- lapply(sapply(l_df,names)[,1],\(li){ # os datasets 'apenas fixo' e 'fixo e aleatório'
+    ldf <- lapply(l_df,\(i) i[[li]]) # os datasets de um único tipo (e.g. apenas fixo)
+    vquantil <- select(ldf[[1]],starts_with("Q_")) %>% names # colunas que serão somadas
+    names(vquantil) <- vquantil
+    # soma per se e retorno
     lapply(vquantil,\(x1){
-      vq <- lapply(ldf,\(x) x[[x1]])
-      f_reduce <- \(x,y){
-        x + y
-      }
-      teste <- Reduce("sum",vq)
-      
-    })
-    
+      Reduce("+",lapply(ldf,\(x) x[[x1]]))
+    }) %>% do.call("cbind",.) %>% 
+      cbind(select(ldf[[1]],-all_of(vquantil)),.)
   })
-  
-  return(l_df)
-}) %>% lapply(.,\(li){
-  ############################################
-  # soma do pred ponderado pelo peso de evid #
-  ############################################
-  ncols <- names(li[[1]][[1]])
-  
-  
-  data.frame(
-    Q_0.05 = 
-  )
+  names(l_df_return) <- sapply(l_df,names)[,1]
+  return(l_df_return)
 })
+saveRDS(l_df_avgpred,file=paste0(v_path,"rds/l_df_avgpred.rds"))
