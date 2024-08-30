@@ -156,6 +156,21 @@ l_df_avgpred <- dlply(df_tabsel,"contraste",\(dff){
       return(l_fixrand)})
     })
   names(l_df) <- names(l_df_pred[[dff$nome[1]]])
+  ## soma para obter a média
+  lapply(sapply(l_df,names)[,1],\(li){
+    ldf <- lapply(l_df,\(i) i[[li]])
+    vquantil <- select(ldf[[1]],starts_with("Q_")) %>% names
+    lapply(vquantil,\(x1){
+      vq <- lapply(ldf,\(x) x[[x1]])
+      f_reduce <- \(x,y){
+        x + y
+      }
+      teste <- Reduce("sum",vq)
+      
+    })
+    
+  })
+  
   return(l_df)
 }) %>% lapply(.,\(li){
   ############################################
