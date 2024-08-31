@@ -59,22 +59,21 @@ f_predictions <- \(gamm,nsim,to_exclude,df_newpred){
   return(df_pred)
 }
 # criação do new data para predição fixo e aleatório
-f_dfmd_aleat <- \(dfmd,df_newpred){
-  vcovar <- c("forest_succession","data_year","lat","long")
-  ddply(dfmd,"SiteCode",\(dfi){
-    v_range <- range(dfi$Uefeito)
-    rbind.fill(
-      select(dfi,-logOR),
-      filter(df_newpred,
-             Uefeito >= v_range[1] & Uefeito <= v_range[2])
-    ) %>% arrange(Uefeito) %>% 
-      mutate(forest_succession = dfi$forest_succession[1],
-             data_year = dfi$data_year[1],
-             lat = dfi$lat[1],
-             long = dfi$long[1],
-             SiteCode = dfi$SiteCode[1])
-  })
-}
+# f_dfmd_aleat <- \(dfmd,df_newpred){
+#   ddply(dfmd,"SiteCode",\(dfi){
+#     v_range <- range(dfi$Uefeito)
+#     teste <- rbind.fill(
+#       select(dfi,-logOR),
+#       filter(df_newpred,
+#              Uefeito >= v_range[1] & Uefeito <= v_range[2])
+#     ) %>% arrange(Uefeito) %>% 
+#       mutate(forest_succession = dfi$forest_succession[1],
+#              data_year = dfi$data_year[1],
+#              lat = dfi$lat[1],
+#              long = dfi$long[1],
+#              SiteCode = dfi$SiteCode[1])
+#   })
+# }
 # função que simula a predição a posteriori
 f_calcPI <- \(gamm,
               nsim = 1000,
@@ -87,24 +86,22 @@ f_calcPI <- \(gamm,
     grepl("by = fore",as.character(formula(gamm)[[3]])[2]))
   # quais componentes serão zerados?
   to_exclude <- to_exclude[
-    grep(pattern = paste(names(df_newpred),collapse = "|"),
+    grep(pattern = paste(c("(Intercept)",names(df_newpred)),collapse = "|"),
          to_exclude)]
   # obtain the predictions
   df_pred <- f_predictions(gamm,nsim,to_exclude,df_newpred)
   # save the data frame
   l_df <- list()
-  l_df$`apenas fixo` <- cbind(df_newpred,df_pred) %>% 
-    mutate(tipo = "apenas fixo")
+  l_df$`apenas fixo` <- cbind(df_newpred,df_pred)
   #### 2a parte: efeito fixo e aleatório ####
-  # create the new data
-  df_newpred <- f_dfmd_aleat(gamm$model,df_newpred)
+  # take the original data
+  df_newpred <- gamm$model
   # quais componentes serão zerados?
   to_exclude <- to_exclude[-grep("Uefeito,SiteCode",to_exclude)]
   # obtain the predictions
   df_pred <- f_predictions(gamm,nsim,to_exclude,df_newpred)
   # save the data frame
-  l_df$`fixo e aleat` <- cbind(df_newpred,df_pred) %>% 
-    mutate(tipo = "fixo e aleat")
+  l_df$`fixo e aleat` <- cbind(df_newpred,df_pred)
   # return
   return(l_df)
 }

@@ -627,9 +627,20 @@ lapply(vpaths,\(li){
               format = "png")
   file.remove(vpath)  
 })
-
-
-
+# 
+#
+# figura final dos efeitos
+l_df_avgpred <- readRDS(paste0(v_path,"rds/l_df_avgpred.rds"))
+df_avgpred <- lapply(l_df_avgpred,\(li){
+  lapply(li,\(i) select(i,Uefeito,starts_with("Q_"))) %>% 
+    do.call("rbind",.)
+}) %>% do.call("rbind",.) %>% 
+  tibble::rownames_to_column(.,"dataset") %>% 
+  mutate(dataset = gsub("Frag. total","fragtotal",dataset) %>% 
+           gsub("Frag. per se","fragperse",.)) %>% 
+  separate_wider_delim(dataset,delim = ".",
+                       # names_sep = " ",
+                       names=c("contraste","tipo","n"))
 
 
 
