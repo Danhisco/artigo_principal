@@ -143,12 +143,12 @@ l_df_avgpred <- dlply(df_tabsel,"contraste",\(dff){
   names(l_df) <- names(l_df_pred[[dff$nome[1]]])
   ## soma para obter a média
   l_df_return <- lapply(sapply(l_df,names)[,1],\(li){ # os datasets 'apenas fixo' e 'fixo e aleatório'
-    ldf <- lapply(l_df,\(i) i[[li]]) # os datasets de um único tipo (e.g. apenas fixo)
+    ldf <- lapply(l_df,\(i) i[[li]]) # os datasets de um único tipo (apenas fixo ou ambos)
     vquantil <- select(ldf[[1]],starts_with("Q_")) %>% names # colunas que serão somadas
     names(vquantil) <- vquantil
     # soma per se e retorno
-    lapply(vquantil,\(x1){
-      Reduce("+",lapply(ldf,\(x) x[[x1]]))
+    lapply(vquantil,\(vq){
+      Reduce("+",lapply(ldf,\(x) x[[vq]]))
     }) %>% do.call("cbind",.) %>% 
       cbind(select(ldf[[1]],-all_of(vquantil)),.)
   })

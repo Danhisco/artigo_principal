@@ -532,7 +532,7 @@ f_tabelaselecao_com_plot0 <- \(dfi,
   # Load the images
   table_img <- image_read(paste0(v_path,"tabelas/table_reciclagem.png"))
   plot_img <- image_read(paste0(v_path,"figuras/plot_reciclagem.png"))
-  plot_img <- image_resize(plot_img, geometry = paste0(image_info(table_img)$height, "x"))
+  plot_img <- image_resize(plot_img, geometry = paste0(image_info(l_png[["ft_md"]])$height, "x"))
   # Combine the images vertically
   combined_img <- image_append(c(table_img,plot_img), stack = FALSE)
   # Save the combined image
