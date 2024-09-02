@@ -281,5 +281,7 @@ df_avgpred <- lapply(l_df_avgpred,\(li){
            gsub("Frag. per se","fragperse",.)) %>% 
   separate_wider_delim(dataset,delim = ".",
                        # names_sep = " ",
-                       names=c("contraste","tipo","n"))
+                       names=c("contraste","tipo","n")) %>% 
+  select(-n)
+write_csv(df_avgpred,file=paste0(v_path,"rds/df_avgpred.csv"))
 ```
