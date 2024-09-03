@@ -14,10 +14,10 @@ library(mgcv)
 library(plyr)
 library(dplyr)
 ## funções de ajuste e de plot
-source("source/2samples_testes.R")
-source("source/general_tools.R")
-source("source/GAMMtools.R")
-source("source/fig_tools.R")
+# source("source/2samples_testes.R")
+# source("source/general_tools.R")
+# source("source/GAMMtools.R")
+# source("source/fig_tools.R")
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
 # caminhos para os modelos
 paths <- list.files(path=paste0(v_path,"rds"),
@@ -26,26 +26,26 @@ names(paths) <- str_extract(paths,"(?<=cov\\_)(.*?)(?=\\.rds)")
 #################################################################
 # função para criar o new data fixo
 f_dfmd <- \(dff,byforest,length_pred = 150,site.posteriori ="SPigua1"){
-  fdfmd <- \(dff){
-    v_range <- range(dff$Uefeito)
-    df_newpred <- select(dff,-logOR,-Uefeito) %>% 
-      mutate(SiteCode=site.posteriori) %>% head(n=1)
-    try({
-      df_newpred <- cbind(
-        data.frame(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred)),
-        df_newpred)
-    },silent = TRUE)
+  v_range <- range(dff$Uefeito)
+  df_newpred <- select(dff,-logOR,-Uefeito) %>% 
+    mutate(SiteCode=site.posteriori) %>% head(n=1)
+  try({
+    df_newpred <- cbind(
+      data.frame(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred)),
+      df_newpred)
+  },silent = TRUE)
+  if(byforest){
+    df_return <- adply(as.character(unique(dff$forest_succession)),1,\(vstr){
+      vrange <- filter(dff,forest_succession==vstr) %>% pull(Uefeito) %>% range
+      filter(df_newpred,Uefeito>=vrange[1] & Uefeito<=vrange[2])
+    }) %>% select(-X1)
+    return(df_return)
+  }else{
     return(df_newpred)
   }
-  if(byforest){
-    df_return <- ddply(dff,"forest_succession",fdfmd)
-  }else{
-    df_return <- fdfmd(dff)
-  }
-  return(df_return)
 }
 # função que realiza a predição a posteriori dado o modelo, new data e o vetor de exclusão de componentes
-f_predictions <- \(gamm,nsim,to_exclude,df_newpred){
+f_predictions <- \(gamm,nsim,to_exclude,df_newpred,quants=c(0.05,0.5,0.95)){
   coef_samples <- MASS::mvrnorm(n=nsim, mu=coef(gamm), Sigma=vcov(gamm))
   matrix_lprediction <- predict(gamm,
                                 type ="lpmatrix",
@@ -95,7 +95,7 @@ f_calcPI <- \(gamm,
   l_df$`apenas fixo` <- cbind(df_newpred,df_pred)
   #### 2a parte: efeito fixo e aleatório ####
   # take the original data
-  df_newpred <- gamm$model
+  df_newpred <- select(gamm$model,-logOR)
   # quais componentes serão zerados?
   to_exclude <- to_exclude[-grep("Uefeito,SiteCode",to_exclude)]
   # obtain the predictions
@@ -108,7 +108,7 @@ f_calcPI <- \(gamm,
 f_df_pred <- \(vpath){
   l_md <- readRDS(vpath)
   # esses serão os splines desconsiderados para construir o fixo, e depois com o aleat
-  formals(f_calcPI2)$to_exclude = c("s(Uefeito,SiteCode)",
+  formals(f_calcPI)$to_exclude = c("s(Uefeito,SiteCode)",
                                     "(Intercept)",
                                     "forest_successionprimary/secondary",
                                     "forest_successionsecondary",
@@ -116,7 +116,7 @@ f_df_pred <- \(vpath){
                                     "s(lat,long)",
                                     "s(data_year)")
   # rotina; detalhes em source/GAMMtools.R
-  lapply(l_md,f_calcPI2)
+  lapply(l_md,f_calcPI)
 }
 # a predição de todos os modelos candidatos
 l_df_pred <- lapply(paths,f_df_pred)
