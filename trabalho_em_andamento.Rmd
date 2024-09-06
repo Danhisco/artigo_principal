@@ -11,6 +11,11 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 6set2024  
+
+figura da tabela simples
+
+
 # 29 agosto 
 
 ```{r}

@@ -20,9 +20,16 @@ library(dplyr)
 # source("source/fig_tools.R")
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
 # caminhos para os modelos
-paths <- list.files(path=paste0(v_path,"rds"),
-                    pattern="l_md_3aperg",full.names = T)
-names(paths) <- str_extract(paths,"(?<=cov\\_)(.*?)(?=\\.rds)")
+# paths <- list.files(path=paste0(v_path,"rds"),
+#                     pattern="l_md_3aperg",full.names = T)
+# names(paths) <- str_extract(paths,"(?<=cov\\_)(.*?)(?=\\.rds)")
+#
+l_md <- readRDS(paste0(v_path,"rds/l_md_simples.rds"))
+df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples.csv")) %>% 
+  filter(dAICc==0)
+l_md <- dlply(df_tabsel,"contraste",\(dfi){
+  with(dfi,{l_md[[contraste]][[modelo]]})
+  })
 #################################################################
 # função para criar o new data fixo
 f_dfmd <- \(dff,byforest,length_pred = 150,site.posteriori ="SPigua1"){
@@ -116,8 +123,20 @@ f_df_pred <- \(vpath){
                                     "s(lat,long)",
                                     "s(data_year)")
   # rotina; detalhes em source/GAMMtools.R
-  lapply(l_md,f_calcPI)
+  l_df_pred <- lapply(l_md,f_calcPI)
+  saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples.rds"))
 }
+
+
+
+######################################################
+## Outro artigo: formas alternativas de comparação ##
+######################################################
+
+
+
+
+
 # a predição de todos os modelos candidatos
 l_df_pred <- lapply(paths,f_df_pred)
 saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpredictions_fromfixedrandom_landeffect.rds"))

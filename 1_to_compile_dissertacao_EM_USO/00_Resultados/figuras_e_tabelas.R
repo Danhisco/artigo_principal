@@ -33,6 +33,7 @@ library(plyr)
 library(dplyr)
 df_p <- read_csv("dados/df_p.csv")
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
+setwd(v_path)
 probs = c(0.05,0.25, 0.5, 0.75,0.95)
 ################################
 # criacao GE dados disponiveis #
@@ -569,7 +570,6 @@ f_tabelaselecao_com_plot(df_tabelaSelecao)
 # tabela de seleção da comparação de modelos cheios:
 library(magick)
 f_gt_table <- \(dfi,
-                v_title,
                 v_name,
                 f_cols_label_with,
                 vw = 800,
@@ -578,9 +578,8 @@ f_gt_table <- \(dfi,
   v_names <- names(dfi)
   f_cols_label_with <- get(f_cols_label_with)
   table <- dfi %>%
-    relocate(rank) %>%
     gt() %>%
-    tab_header(title = md(v_title)) %>%
+    tab_header(title = md(v_name)) %>%
     # data_color(
     #   columns = c(weight, `dev.expl`, `Moran I statistic (res)`),
     #   colors = col_numeric(
@@ -595,22 +594,40 @@ f_gt_table <- \(dfi,
       table.align = "left"
     ) %>% 
     cols_label_with(fn=f_cols_label_with)
+  v_name <- gsub("Frag. total","fragtotal",v_name) %>% 
+    gsub("Frag. per se","fragperse",.) %>% 
+    gsub("Área per se","areaperse",.)
   gtsave(table, 
          paste0(v_path,"tabelas/table_reciclagem_",v_name,".png"),
          vwidth = vw, vheight = vh)
 }
+# tabela de seleção dos modelos usados
+df_tabsel <- read_csv("rds/tabsel_simples.csv")
+d_ply(df_tabsel,"contraste",\(dfi){
+  vpath <- f_gt_table(dfi=select(dfi,-contraste),
+                      v_name = dfi$contraste[1],
+                      f_cols_label_with = "f_gsub",
+                      vw = 800)
+})
+
+
+# predição a posteriori: fixo e fixo + aleatório
+l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples.rds"))
+
+
+################################
+############ antigo ############
+################################
+
+
 # tabela de seleção das perguntas
 vpaths <- list.files(path=paste0(v_path,"rds/"),
                      pattern=".csv",full.names = T)
 lapply(vpaths,\(li){
   dfsel <- read_csv(li)
   d_ply(dfsel,"contraste",\(dfi){
-    f_gt_table(dfi=mutate(dfi %>% select(-contraste),
-                          rank=1:n()),
-               v_title = dfi$contraste[1],
-               v_name = gsub("Frag. total","fragtotal",dfi$contraste[1]) %>% 
-                 gsub("Frag. per se","fragperse",.) %>% 
-                 gsub("Área per se","areaperse",.),
+    f_gt_table(dfi=select(dfi,-contraste),
+               v_name = dfi$contraste[1],
                f_cols_label_with = "f_gsub",
                vw = 800)
   })
@@ -621,19 +638,16 @@ lapply(vpaths,\(li){
   tabela_final <- image_append(
     do.call("c",l_png),stack = TRUE
   )
-  v_name <- str_extract(li,"(?<=tabsel\\_)(.*?)(?=\\_)")
+  # v_name <- str_extract(li,"(?<=tabsel\\_)(.*?)(?=\\_)")
   image_write(tabela_final, 
-              path = paste0(v_path,"figuras/tabsel_",v_name,".png"), 
+              path = paste0(v_path,"figuras/tabsel_","simples",".png"), 
               format = "png")
   file.remove(vpath)  
 })
 # 
 #
 # figura final dos efeitos
-df_avgpred <- read_csv(paste0(v_path,"rds/df_avgpred.csv")) %>% 
-  mutate(contraste = gsub("fragtotal","Frag. total",contraste) %>% 
-           gsub("fragperse","Frag. per se",.))
-
+df_avgpred
 
 
 
@@ -641,6 +655,9 @@ df_avgpred <- read_csv(paste0(v_path,"rds/df_avgpred.csv")) %>%
 #######################################
 ############# antigo #############
 #######################################
+df_avgpred <- read_csv(paste0(v_path,"rds/df_avgpred.csv")) %>% 
+  mutate(contraste = gsub("fragtotal","Frag. total",contraste) %>% 
+           gsub("fragperse","Frag. per se",.))
 
 df_tabsel_logOR_aud <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_cpert.csv")
 f_modcheio_table <- \(dff){
