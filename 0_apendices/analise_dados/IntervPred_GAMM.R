@@ -102,7 +102,7 @@ f_calcPI <- \(gamm,
   l_df$`apenas fixo` <- cbind(df_newpred,df_pred)
   #### 2a parte: efeito fixo e aleatório ####
   # take the original data
-  df_newpred <- select(gamm$model,-logOR)
+  df_newpred <- gamm$model
   # quais componentes serão zerados?
   to_exclude <- to_exclude[-grep("Uefeito,SiteCode",to_exclude)]
   # obtain the predictions
@@ -112,8 +112,16 @@ f_calcPI <- \(gamm,
   # return
   return(l_df)
 }
+###
+formals(f_calcPI)$to_exclude = c("s(Uefeito,SiteCode)",
+                                 "(Intercept)",
+                                 "forest_successionprimary/secondary",
+                                 "forest_successionsecondary",
+                                 "s(SiteCode)",
+                                 "s(lat,long)",
+                                 "s(data_year)")
 f_df_pred <- \(vpath){
-  l_md <- readRDS(vpath)
+  vpath <- "rds/l_mf_simples.rds"
   # esses serão os splines desconsiderados para construir o fixo, e depois com o aleat
   formals(f_calcPI)$to_exclude = c("s(Uefeito,SiteCode)",
                                     "(Intercept)",
@@ -122,13 +130,12 @@ f_df_pred <- \(vpath){
                                     "s(SiteCode)",
                                     "s(lat,long)",
                                     "s(data_year)")
-  # rotina; detalhes em source/GAMMtools.R
   l_df_pred <- lapply(l_md,f_calcPI)
   saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples.rds"))
 }
-
-
-
+# cria e salva l_df_pred com a predição a posteriori dos modelos mais plausíveis
+l_df_pred <- lapply(l_md,f_calcPI)
+saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples.rds"))
 ######################################################
 ## Outro artigo: formas alternativas de comparação ##
 ######################################################

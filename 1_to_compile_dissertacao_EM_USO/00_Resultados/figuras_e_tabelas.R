@@ -623,11 +623,47 @@ f_tabsel_png <- \(dff){
 }
 v_log <- f_tabsel_png(dff = df_tabsel)
 if(all(v_log)) print("figura criada: figuras/tabsel_simples.png")
-
-
-
+#
 # predição a posteriori: fixo e fixo + aleatório
 l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples.rds"))
+f_plotPI <- \(nefeito){
+  # nefeito <- names(l_df)[[3]]
+  ldfi <- lapply(l_df[[nefeito]],mutate,
+           contraste = nefeito,
+           SiteCode = factor(SiteCode))
+  df_fxal <- ldfi[["fixo e aleat"]]
+  df_apfx <- ldfi[["apenas fixo"]]
+  #
+    # filter(quantil=="0.5") %>% 
+  df_fxal %>%
+    ggplot(aes(x = Uefeito, group = SiteCode)) +
+    geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
+              alpha = 0.8) +
+    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
+                    fill = "Quantile range",group = SiteCode), 
+                fill = "darkred", alpha = 0.2) +
+    scale_fill_manual("Quantis", values = c("Quantile range" = "darkred")) +
+    scale_color_manual("Quantis", values = c("Median" = "green")) +
+    guides(fill = guide_legend(override.aes = list(alpha = 0.2)))
+  
+  
+  df_fxal %>%
+    ggplot(aes(x = Uefeito, group = SiteCode)) +
+    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
+                    fill = "Quantile range", group = SiteCode), 
+                alpha = 0.2) +
+    geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
+              alpha = 0.5) +
+    scale_fill_manual(values = c("Quantile range" = "darkred")) +
+    scale_color_manual(values = c("Median" = "green")) +
+    guides(fill = guide_legend(title = "Quantis", override.aes = list(alpha = 0.2)),
+           color = guide_legend(title = "Quantis"))
+  
+  
+  
+}
+
+
 
 
 ################################
