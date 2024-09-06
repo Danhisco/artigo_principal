@@ -603,12 +603,27 @@ f_gt_table <- \(dfi,
 }
 # tabela de seleção dos modelos usados
 df_tabsel <- read_csv("rds/tabsel_simples.csv")
-d_ply(df_tabsel,"contraste",\(dfi){
-  vpath <- f_gt_table(dfi=select(dfi,-contraste),
-                      v_name = dfi$contraste[1],
-                      f_cols_label_with = "f_gsub",
-                      vw = 800)
-})
+f_tabsel_png <- \(dff){
+  d_ply(dff,"contraste",\(dfi){
+    vpath <- f_gt_table(dfi=select(dfi,-contraste),
+                        v_name = dfi$contraste[1],
+                        f_cols_label_with = "f_gsub",
+                        vw = 800)
+    return(vpath)
+  })
+  vpath <- list.files(path = "tabelas",pattern = "table_reciclagem_",full.names = TRUE)
+  l_png <- lapply(vpath,image_read)
+  tabela_final <- image_append(
+    do.call("c",l_png),stack = TRUE
+  )
+  image_write(tabela_final, 
+              path = paste0(v_path,"figuras/tabsel_","simples",".png"), 
+              format = "png")
+  file.remove(vpath)    
+}
+v_log <- f_tabsel_png(dff = df_tabsel)
+if(all(v_log)) print("figura criada: figuras/tabsel_simples.png")
+
 
 
 # predição a posteriori: fixo e fixo + aleatório
