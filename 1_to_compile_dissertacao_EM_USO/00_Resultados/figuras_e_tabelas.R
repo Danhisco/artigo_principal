@@ -628,25 +628,64 @@ if(all(v_log)) print("figura criada: figuras/tabsel_simples.png")
 l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples.rds"))
 f_plotPI <- \(nefeito){
   # nefeito <- names(l_df)[[3]]
-  ldfi <- lapply(l_df[[nefeito]],mutate,
+  l_df[[nefeito]][["apenas fixo"]]$SiteCode <- "apenas fixo"
+  dfpred <- lapply(l_df[[nefeito]],mutate,
            contraste = nefeito,
-           SiteCode = factor(SiteCode))
-  df_fxal <- ldfi[["fixo e aleat"]]
-  df_apfx <- ldfi[["apenas fixo"]]
+           SiteCode = factor(SiteCode)) %>% 
+    lapply(.,select,-any_of("logOR")) %>% 
+    do.call("rbind",.) %>%
+    tibble::rownames_to_column("dataset") %>%
+    mutate(dataset = gsub("\\.\\d+","",dataset))
+  dfpred %>% 
+    ggplot(aes(x = Uefeito, group = interaction(dataset,SiteCode))) +
+    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
+                    fill = "Quantile range", group = SiteCode), 
+                alpha = 0.2) +
+    geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
+              alpha = 0.5) +
+    labs(x="log(U / U)",y="logOR") +
+    geom_hline(yintercept = 0,color="black") +
+    scale_fill_manual(values = c("Quantile range" = "#EE4B2B")) +
+    scale_color_manual(values = c("Median" = "#880808")) +
+    guides(fill = guide_legend(title = "Quantis", override.aes = list(alpha = 0.2)),
+           color = guide_legend(title = "Quantis")) +
+    facet_wrap(~dataset,ncol=2)
+  
+  ldfi <- lapply(l_df[[nefeito]],mutate,
+                 contraste = nefeito,
+                 SiteCode = factor(SiteCode)) %>% 
+    lapply(.,select,-any_of("logOR"))
+  ldfi[["fixo e aleat"]] %>% 
+    ggplot(aes(x = Uefeito, group = SiteCode)) +
+    geom_hline(yintercept = 0,color="black") +
+    # fixo e aleat
+    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
+                    fill = "Quantile range", group = SiteCode), 
+                alpha = 0.2) +
+    geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
+              alpha = 0.5) +
+    scale_fill_manual(values = c("Quantile range" = "#EE4B2B")) +
+    scale_color_manual(values = c("Median" = "#880808")) +
+    ggnewscale::new_scale_color() +
+    ggnewscale::new_scale_fill() +
+    # apenas fixo
+    geom_ribbon(data=ldfi[["apenas fixo"]],
+                aes(ymin = Q_0.05, ymax = Q_0.95, 
+                    fill = "Quantile range", group = SiteCode), 
+                alpha = 0.2) +
+    geom_line(data=ldfi[["apenas fixo"]],
+              aes(y = Q_0.5, color = "Median", group = SiteCode), 
+              alpha = 0.5) +
+    scale_fill_manual(values = c("Quantile range" = "#7FFFD4")) +
+    scale_color_manual(values = c("Median" = "darkgreen")) +
+    #
+    labs(x="log(U / U)",y="logOR") +
+    guides(fill = guide_legend(title = "Quantis", override.aes = list(alpha = 0.2)),
+           color = guide_legend(title = "Quantis"))
+  
+  
   #
     # filter(quantil=="0.5") %>% 
-  df_fxal %>%
-    ggplot(aes(x = Uefeito, group = SiteCode)) +
-    geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
-              alpha = 0.8) +
-    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
-                    fill = "Quantile range",group = SiteCode), 
-                fill = "darkred", alpha = 0.2) +
-    scale_fill_manual("Quantis", values = c("Quantile range" = "darkred")) +
-    scale_color_manual("Quantis", values = c("Median" = "green")) +
-    guides(fill = guide_legend(override.aes = list(alpha = 0.2)))
-  
-  
   df_fxal %>%
     ggplot(aes(x = Uefeito, group = SiteCode)) +
     geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
@@ -654,11 +693,22 @@ f_plotPI <- \(nefeito){
                 alpha = 0.2) +
     geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
               alpha = 0.5) +
-    scale_fill_manual(values = c("Quantile range" = "darkred")) +
-    scale_color_manual(values = c("Median" = "green")) +
+    scale_fill_manual(values = c("Quantile range" = "#EE4B2B")) +
+    scale_color_manual(values = c("Median" = "#880808")) +
     guides(fill = guide_legend(title = "Quantis", override.aes = list(alpha = 0.2)),
            color = guide_legend(title = "Quantis"))
   
+  df_apfx %>% 
+    ggplot(aes(x = Uefeito, group = SiteCode)) +
+    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
+                    fill = "Quantile range", group = SiteCode), 
+                alpha = 0.2) +
+    geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
+              alpha = 0.5) +
+    scale_fill_manual(values = c("Quantile range" = "#EE4B2B")) +
+    scale_color_manual(values = c("Median" = "#880808")) +
+    guides(fill = guide_legend(title = "Quantis", override.aes = list(alpha = 0.2)),
+           color = guide_legend(title = "Quantis"))
   
   
 }
