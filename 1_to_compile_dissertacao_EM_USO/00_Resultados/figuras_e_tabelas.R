@@ -657,31 +657,42 @@ f_plotPI <- \(nefeito){
     lapply(.,select,-any_of("logOR"))
   ldfi[["fixo e aleat"]] %>% 
     ggplot(aes(x = Uefeito, group = SiteCode)) +
-    geom_hline(yintercept = 0,color="black") +
     # fixo e aleat
     geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
                     fill = "Quantile range", group = SiteCode), 
                 alpha = 0.2) +
     geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
               alpha = 0.5) +
-    scale_fill_manual(values = c("Quantile range" = "#EE4B2B")) +
-    scale_color_manual(values = c("Median" = "#880808")) +
+    scale_fill_manual(values = c("Quantile range" = "#986868")) +
+    scale_color_manual(values = c("Median" = "#C04000")) +
     ggnewscale::new_scale_color() +
     ggnewscale::new_scale_fill() +
     # apenas fixo
     geom_ribbon(data=ldfi[["apenas fixo"]],
                 aes(ymin = Q_0.05, ymax = Q_0.95, 
                     fill = "Quantile range", group = SiteCode), 
-                alpha = 0.2) +
+                alpha = 0.3) +
     geom_line(data=ldfi[["apenas fixo"]],
               aes(y = Q_0.5, color = "Median", group = SiteCode), 
-              alpha = 0.5) +
-    scale_fill_manual(values = c("Quantile range" = "#7FFFD4")) +
-    scale_color_manual(values = c("Median" = "darkgreen")) +
-    #
-    labs(x="log(U / U)",y="logOR") +
-    guides(fill = guide_legend(title = "Quantis", override.aes = list(alpha = 0.2)),
-           color = guide_legend(title = "Quantis"))
+              alpha = 0.7) +
+    scale_fill_manual(values = c("Quantile range" = "darkgreen")) +
+    scale_color_manual(values = c("Median" = "black")) +
+    # 0 x 0 
+    geom_hline(yintercept = 0,color="darkgray",alpha=0.5) +
+    geom_vline(xintercept = 0,color="darkgray",alpha=0.5) +
+    # ajustes
+    scale_x_continuous(expand = expansion(add = c(0,0))) +
+    scale_y_continuous(expand = expansion(add = c(0,0))) +
+    labs(x="log(U / U)",y="log Odds Ratio (SAD: goodness-of-fit)") +
+    theme_classic() +
+    theme(
+      axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -10)),
+      axis.title.y = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -30)),
+      legend.position = "none"
+    )
+  
+    # guides(fill = guide_legend(title = "Quantis", override.aes = list(alpha = 0.2)),
+    #        color = guide_legend(title = "Quantis"))
   
   
   #
