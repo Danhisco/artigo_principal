@@ -444,97 +444,94 @@ write_csv(df_quantisobs_Uefeito,
           file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
 ##
 # tabela de comparação de estruturas hierarquicas do modelo
-
-df_tabelaSelecao <- read_csv(file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
-df_tabelaSelecao <- df_tabelaSelecao %>% 
-  mutate(`Prática Ontológica` = ifelse(grepl("contemp-ideal",pair),
-                                       "Interdependete","Independente"),
-         pair = pair %>% 
-           gsub("contemp-ideal","Frag. total",.) %>%
-           gsub("contemp-non_frag","Frag. per se",.) %>%
-           gsub("non_frag-ideal","Área per se",.),
-         modelo = modelo %>% 
-           gsub("por paisagem$","por paisagem 1",.) %>% 
-           gsub("1","- gs",.) %>% 
-           gsub("2","- gi",.) %>% 
-           gsub("com ","",.) %>% 
-           gsub("por paisagem","por sítio",.) %>% 
-           gsub("de paisagem","fixo",.)) %>% 
-  select(-`Prática Ontológica`) %>% 
-  rename(Contraste = pair,
-         `Dev. explained` = "dev.expl") %>% 
-  as.data.frame
-## 
+df_tabsel <- read_csv("rds/tabsel_simples.csv")
+# df_tabelaSelecao <- read_csv(file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
+# df_tabelaSelecao <- df_tabelaSelecao %>% 
+#   mutate(`Prática Ontológica` = ifelse(grepl("contemp-ideal",pair),
+#                                        "Interdependete","Independente"),
+#          pair = pair %>% 
+#            gsub("contemp-ideal","Frag. total",.) %>%
+#            gsub("contemp-non_frag","Frag. per se",.) %>%
+#            gsub("non_frag-ideal","Área per se",.),
+#          modelo = modelo %>% 
+#            gsub("por paisagem$","por paisagem 1",.) %>% 
+#            gsub("1","- gs",.) %>% 
+#            gsub("2","- gi",.) %>% 
+#            gsub("com ","",.) %>% 
+#            gsub("por paisagem","por sítio",.) %>% 
+#            gsub("de paisagem","fixo",.)) %>% 
+#   select(-`Prática Ontológica`) %>% 
+#   rename(Contraste = pair,
+#          `Dev. explained` = "dev.expl") %>% 
+#   as.data.frame
 f_tabelaselecao_com_plot0 <- \(dfi,
                               folder_pattern="figuras/tabsel_c_plot_"){
-  v_title <- dfi$Contraste[1] %>% 
-    gsub("Frag. total","Frag. Total: contemporâneo / prístino",.) %>% 
-    gsub("Frag. per se","Frag. per se: contemporâneo / aglomerado",.) %>% 
-    gsub("Área per se","Área per se: aglomerado / prístino",.)
-  v_names <- names(dfi)[-1]
-  dfi <- dfi %>% select(-Contraste) %>%
-    mutate(rank = 1:n())
+  v_subtitle <- dfi$contraste[1] %>% 
+    gsub("Frag. total","contemp. / príst.",.) %>% 
+    gsub("Frag. per se","contemp. / aglomer.",.) %>% 
+    gsub("Área per se","aglomer. / príst.",.)
   table <- dfi %>%
-    relocate(rank) %>% 
+    select(modelo:dAICc) %>% 
     gt() %>%
-    tab_header(title = md(v_title)) %>%
+    # tab_header(title = md(dfi$contraste[1]),
+    #            subtitle = v_subtitle) %>%
     fmt_number(
-      columns = v_names[-grep("modelo",v_names)],decimals = 2
+      columns = "dAICc",decimals = 2
     ) %>%
     tab_options(
       table.font.size = "small",
       table.align = "left"
     ) %>% 
     cols_label(
-      rank = "Rank",
       modelo = "GAHM",
-      df = "approx. parameters",
-      dAICc = "ΔAICc",
-      weight = "Weight (ΔAICc)",
-      `Dev. explained` = "Deviance Explained",
-      `Moran I statistic (res)` = "Moran's I",
-      `p-value` = "p-value"
+      dAICc = "ΔAICc"
     )
   plot <- dfi %>% 
+    mutate(rank = 1:n()) %>% 
     ggplot(aes(x = rank)) +
     geom_bar(aes(y = weight), stat = "identity", fill = "gray") +
-    geom_point(aes(y = `p-value`, fill = `Moran I statistic (res)`), shape = 22, size = 5) +
+    geom_point(aes(y = `p-value`), shape = 15, size = 5) + #fill = `Moran I statistic (res)`), 
     geom_segment(
       aes(x = rank - 0.4, xend = rank + 0.4, 
-          y = `Dev. explained`, yend = `Dev. explained`,
+          y = dev.expl, yend = dev.expl,
           color="Deviance\nExplained"), 
       size = 1.5) +
     geom_hline(yintercept = 0.05,alpha=0.2,color="darkgreen") +
-    scale_y_continuous("p-value (square), Weight (bar)",
-                       limits = c(0, 1)) + # , sec.axis = dup_axis()
-    scale_fill_gradientn(colours = c("cyan", "black", "red"),
-                         values = c(-1,0,1),
-                         name = "Moran's I\nStatistics") +
+    scale_y_continuous("weight, deviance explained, p-value",
+                       limits = c(0, 1),
+                       expand=c(0,0),
+                       breaks = c(0.05,0.25,0.50,0.75,1.00)) +
+    # scale_fill_gradientn(colours = c("cyan", "black", "red"),
+    #                      values = c(-1,0,1),
+    #                      name = "Moran's I\nStatistics") +
     scale_color_manual(values = c("Deviance\nExplained" = "blue"), name = "") +
-    ## deixar para uma próxima:
-    # new_scale_fill() +
-    # scale_fill_manual(values = c("Weight (AICc)" = "gray"), name = "") +
     labs(x = "", fill = "Moran I statistic",) +
-    theme_minimal() +
+    scale_x_continuous(expand = c(0,0)) +
+    theme_classic() +
     theme(
-      # axis.text.x = element_text(angle = 45, hjust = 1),
-      legend.position = "right"
-    )
+      axis.text.x = element_blank(),
+      axis.text.y = element_text(angle = 90),
+      legend.position = "none"
+    ) #+ coord_flip()
   # saving the objects
   gtsave(table, paste0(v_path,"tabelas/table_reciclagem.png"),
          vwidth = 800, vheight = 200)
   ggsave(paste0(v_path,"figuras/plot_reciclagem.png"),
          plot = plot,bg = "white",
          width = 3, height = 3, units = "in", dpi = 300)
-  img <- image_read(paste0(v_path,"figuras/plot_reciclagem.png"))
-  trimmed_img <- image_trim(img)
+  img <- image_read(paste0(v_path,"figuras/plot_reciclagem.png")) %>% 
+    image_rotate(90)
+  # trimmed_img <- image_trim(img) %>% 
+    # image_rotate(90)
   image_write(trimmed_img, path = paste0(v_path,"figuras/plot_reciclagem.png"))
   # combinação dos dois:
   # Load the images
   table_img <- image_read(paste0(v_path,"tabelas/table_reciclagem.png"))
   plot_img <- image_read(paste0(v_path,"figuras/plot_reciclagem.png"))
-  plot_img <- image_resize(plot_img, geometry = paste0(image_info(l_png[["ft_md"]])$height, "x"))
-  # Combine the images vertically
+  plot_img <- image_resize(plot_img, geometry = paste0(round(image_info(table_img)$height*0.95,0), "x"))
+  height_diff <- image_info(table_img)$height - image_info(plot_img)$height
+  padding <- image_blank(width = image_info(plot_img)$width, height = height_diff, color = "none")
+  plot_img <- image_append(c(padding, plot_img), stack = TRUE)
   combined_img <- image_append(c(table_img,plot_img), stack = FALSE)
   # Save the combined image
   v_name <- case_when(
@@ -571,21 +568,26 @@ f_tabelaselecao_com_plot(df_tabelaSelecao)
 library(magick)
 f_gt_table <- \(dfi,
                 v_name,
-                f_cols_label_with,
                 vw = 800,
                 vh = 200,
                 v_folder="tabelas/table_reciclagem_"){
+  v_title <- gsub("Frag. total","Frag. total: contemp. / prist.",v_name) %>%
+    gsub("Frag. per se","Frag. per se: contemp. / aglomer.",.) %>%
+    gsub("Área per se","Área per se: aglomer. / prist.",.)
   v_names <- names(dfi)
-  f_cols_label_with <- get(f_cols_label_with)
+  f_gsub <- \(vchar){
+    gsub("rank","Rank",vchar) %>% 
+      gsub("modelo","GAHM",.) %>% 
+      gsub("df","est. coef.",.) %>% 
+      gsub("dAICc","ΔAICc",.) %>% 
+      gsub("weight" , "Weight (ΔAICc)",.) %>% 
+      gsub("dev.expl" , "Dev. Exp.",.) %>% 
+      gsub("Moran I statistic (res)", "Moran's I",.) %>% 
+      gsub("p-value" , "p-value",.)
+  }
   table <- dfi %>%
     gt() %>%
-    tab_header(title = md(v_name)) %>%
-    # data_color(
-    #   columns = c(weight, `dev.expl`, `Moran I statistic (res)`),
-    #   colors = col_numeric(
-    #     palette = c("cyan", "black", "red"),
-    #     domain = c(-1, 1)
-    #   )) %>% 
+    tab_header(title = md(v_title)) %>%
     fmt_number(
       columns = v_names[-grep("modelo|rank",v_names)],decimals = 2
     ) %>%
@@ -593,33 +595,32 @@ f_gt_table <- \(dfi,
       table.font.size = "small",
       table.align = "left"
     ) %>% 
-    cols_label_with(fn=f_cols_label_with)
-  v_name <- gsub("Frag. total","fragtotal",v_name) %>% 
-    gsub("Frag. per se","fragperse",.) %>% 
+    cols_label(
+      modelo = "GAHM",
+      dAICc = "ΔAICc",
+      df = "est. coef.",
+      weight = "weight",
+      dev.expl = "Dev. Exp.",
+      `Moran I statistic (res)` = "Moran's I",
+      `p-value` = "p-value"
+    )
+    # cols_label_with(fn=f_gsub)
+  v_name <- gsub("Frag. total","fragtotal",v_name) %>%
+    gsub("Frag. per se","fragperse",.) %>%
     gsub("Área per se","areaperse",.)
-  gtsave(table, 
-         paste0(v_path,"tabelas/table_reciclagem_",v_name,".png"),
+  gtsave(table,
+         paste0(v_folder,v_name,".png"),
          vwidth = vw, vheight = vh)
 }
 # tabela de seleção dos modelos usados
 df_tabsel <- read_csv("rds/tabsel_simples.csv")
 f_tabsel_png <- \(dff){
-  d_ply(dff,"contraste",\(dfi){
+  vpaths <- daply(dff,"contraste",\(dfi){
     vpath <- f_gt_table(dfi=select(dfi,-contraste),
                         v_name = dfi$contraste[1],
-                        f_cols_label_with = "f_gsub",
                         vw = 800)
     return(vpath)
   })
-  vpath <- list.files(path = "tabelas",pattern = "table_reciclagem_",full.names = TRUE)
-  l_png <- lapply(vpath,image_read)
-  tabela_final <- image_append(
-    do.call("c",l_png),stack = TRUE
-  )
-  image_write(tabela_final, 
-              path = paste0(v_path,"figuras/tabsel_","simples",".png"), 
-              format = "png")
-  file.remove(vpath)    
 }
 v_log <- f_tabsel_png(dff = df_tabsel)
 if(all(v_log)) print("figura criada: figuras/tabsel_simples.png")
@@ -629,28 +630,6 @@ l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples.rds"))
 f_plotPI <- \(nefeito){
   # nefeito <- names(l_df)[[3]]
   l_df[[nefeito]][["apenas fixo"]]$SiteCode <- "apenas fixo"
-  dfpred <- lapply(l_df[[nefeito]],mutate,
-           contraste = nefeito,
-           SiteCode = factor(SiteCode)) %>% 
-    lapply(.,select,-any_of("logOR")) %>% 
-    do.call("rbind",.) %>%
-    tibble::rownames_to_column("dataset") %>%
-    mutate(dataset = gsub("\\.\\d+","",dataset))
-  dfpred %>% 
-    ggplot(aes(x = Uefeito, group = interaction(dataset,SiteCode))) +
-    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
-                    fill = "Quantile range", group = SiteCode), 
-                alpha = 0.2) +
-    geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
-              alpha = 0.5) +
-    labs(x="log(U / U)",y="logOR") +
-    geom_hline(yintercept = 0,color="black") +
-    scale_fill_manual(values = c("Quantile range" = "#EE4B2B")) +
-    scale_color_manual(values = c("Median" = "#880808")) +
-    guides(fill = guide_legend(title = "Quantis", override.aes = list(alpha = 0.2)),
-           color = guide_legend(title = "Quantis")) +
-    facet_wrap(~dataset,ncol=2)
-  
   ldfi <- lapply(l_df[[nefeito]],mutate,
                  contraste = nefeito,
                  SiteCode = factor(SiteCode)) %>% 
@@ -678,8 +657,8 @@ f_plotPI <- \(nefeito){
     scale_fill_manual(values = c("Quantile range" = "darkgreen")) +
     scale_color_manual(values = c("Median" = "black")) +
     # 0 x 0 
-    geom_hline(yintercept = 0,color="darkgray",alpha=0.5) +
-    geom_vline(xintercept = 0,color="darkgray",alpha=0.5) +
+    geom_hline(yintercept = 0,color="darkgray",alpha=0.75) +
+    geom_vline(xintercept = 0,color="darkgray",alpha=0.75) +
     # ajustes
     scale_x_continuous(expand = expansion(add = c(0,0))) +
     scale_y_continuous(expand = expansion(add = c(0,0))) +
@@ -690,41 +669,9 @@ f_plotPI <- \(nefeito){
       axis.title.y = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -30)),
       legend.position = "none"
     )
-  
-    # guides(fill = guide_legend(title = "Quantis", override.aes = list(alpha = 0.2)),
-    #        color = guide_legend(title = "Quantis"))
-  
-  
-  #
-    # filter(quantil=="0.5") %>% 
-  df_fxal %>%
-    ggplot(aes(x = Uefeito, group = SiteCode)) +
-    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
-                    fill = "Quantile range", group = SiteCode), 
-                alpha = 0.2) +
-    geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
-              alpha = 0.5) +
-    scale_fill_manual(values = c("Quantile range" = "#EE4B2B")) +
-    scale_color_manual(values = c("Median" = "#880808")) +
-    guides(fill = guide_legend(title = "Quantis", override.aes = list(alpha = 0.2)),
-           color = guide_legend(title = "Quantis"))
-  
-  df_apfx %>% 
-    ggplot(aes(x = Uefeito, group = SiteCode)) +
-    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
-                    fill = "Quantile range", group = SiteCode), 
-                alpha = 0.2) +
-    geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
-              alpha = 0.5) +
-    scale_fill_manual(values = c("Quantile range" = "#EE4B2B")) +
-    scale_color_manual(values = c("Median" = "#880808")) +
-    guides(fill = guide_legend(title = "Quantis", override.aes = list(alpha = 0.2)),
-           color = guide_legend(title = "Quantis"))
-  
-  
 }
-
-
+l_p <- lapply(names(l_df),f_plotPI)
+names(l_p) <- names(l_df)
 
 
 ################################
@@ -804,7 +751,7 @@ f_gsub <- \(vchar){
     gsub("df","est. coef.",.) %>% 
     gsub("dAICc","ΔAICc",.) %>% 
     gsub("weight" , "Weight (ΔAICc)",.) %>% 
-    gsub("dev.expl" , "Deviance Explained",.) %>% 
+    gsub("dev.expl" , "Dev. Exp.",.) %>% 
     gsub("Moran I statistic (res)", "Moran's I",.) %>% 
     gsub("p-value" , "p-value",.)
 }
