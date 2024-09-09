@@ -613,7 +613,8 @@ f_gt_table <- \(dfi,
          vwidth = vw, vheight = vh)
 }
 # tabela de seleção dos modelos usados
-df_tabsel <- read_csv("rds/tabsel_simples.csv")
+df_tabsel <- read_csv("rds/tabsel_simples.csv") %>% 
+  mutate(modelo = gsub("s\\(land\\)","s(log(U/U))",modelo))
 f_tabsel_png <- \(dff){
   vpaths <- daply(dff,"contraste",\(dfi){
     vpath <- f_gt_table(dfi=select(dfi,-contraste),
