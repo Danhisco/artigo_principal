@@ -627,14 +627,48 @@ if(all(v_log)) print("figura criada: figuras/tabsel_simples.png")
 #
 # predição a posteriori: fixo e fixo + aleatório
 l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples.rds"))
+# nefeito <- names(l_df)[[1]]
 f_plotPI <- \(nefeito){
-  # nefeito <- names(l_df)[[3]]
+  # objeto para o gráfico
+  v_range_x <- sapply(l_df,\(li){
+    range(li[["apenas fixo"]]$Uefeito)
+  }) %>% range()
+  v_range_y <- sapply(l_df,\(li){
+    range(select(li[["apenas fixo"]],starts_with("Q_")))
+  }) %>% range()
+  f_geom_legend <- list(
+    # guide name
+    annotate("text", x = 0.01, y =-5.5, 
+             label = "Posterior Prediction Interval", hjust = 0) ,
+    # mediana
+    annotate("segment", x = 0.01, xend = 0.06, y = -6, yend = -6, 
+             color = "black", linewidth = 1),
+    annotate("text", x = 0.08, y =-6, 
+             label = "median", hjust = 0) ,
+    # quantile range
+    annotate("rect", xmin = 0.01, xmax = 0.06, ymin = -6.75, ymax = -6.25,
+             fill = "gray", alpha = 0.7),
+    annotate("text", x = 0.08, y = -6.5,
+             label = "90% quant. range", hjust = 0),
+    # Site
+    annotate("rect", xmin = 0.01, xmax = 0.06, ymin = -7.5, ymax = -7,
+             fill = "#986868", alpha = 0.7),
+    annotate("text", x = 0.08, y = -7.25,
+             label = "s(log(U/U)) + s(log(U/U))|Site", hjust = 0),
+    # overall
+    annotate("rect", xmin = 0.01, xmax = 0.06, ymin = -8.25, ymax = -7.75,
+             fill = "darkgreen", alpha = 0.7),
+    annotate("text", x = 0.08, y = -8,
+             label = "s(log(U/U)) + 0|Site", hjust = 0)
+  )
+  # padronização dos dados
   l_df[[nefeito]][["apenas fixo"]]$SiteCode <- "apenas fixo"
   ldfi <- lapply(l_df[[nefeito]],mutate,
                  contraste = nefeito,
                  SiteCode = factor(SiteCode)) %>% 
     lapply(.,select,-any_of("logOR"))
-  ldfi[["fixo e aleat"]] %>% 
+  # gráfico
+  p <- ldfi[["fixo e aleat"]] %>% 
     ggplot(aes(x = Uefeito, group = SiteCode)) +
     # fixo e aleat
     geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
@@ -644,9 +678,9 @@ f_plotPI <- \(nefeito){
               alpha = 0.5) +
     scale_fill_manual(values = c("Quantile range" = "#986868")) +
     scale_color_manual(values = c("Median" = "#C04000")) +
+    # apenas fixo
     ggnewscale::new_scale_color() +
     ggnewscale::new_scale_fill() +
-    # apenas fixo
     geom_ribbon(data=ldfi[["apenas fixo"]],
                 aes(ymin = Q_0.05, ymax = Q_0.95, 
                     fill = "Quantile range", group = SiteCode), 
@@ -662,18 +696,29 @@ f_plotPI <- \(nefeito){
     # ajustes
     scale_x_continuous(expand = expansion(add = c(0,0))) +
     scale_y_continuous(expand = expansion(add = c(0,0))) +
-    labs(x="log(U / U)",y="log Odds Ratio (SAD: goodness-of-fit)") +
+    labs(x="log(U / U)",y="log Odds Ratio (goodness-of-fit: SAD sim. - obs.)",
+         title=nefeito) +
     theme_classic() +
     theme(
-      axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -10)),
+      axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -2.5)),
       axis.title.y = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -30)),
-      legend.position = "none"
+      legend.position = "none",
+      aspect.ratio = 1
     )
+  if(nefeito=="Área per se"){
+    p <- p + f_geom_legend
+  }
+  return(p)
 }
 l_p <- lapply(names(l_df),f_plotPI)
 names(l_p) <- names(l_df)
-
-
+p <- arrangeGrob(grobs=l_p,nrow=1)
+ggsave("figuras/figura_final.png",p,
+       width = 16,height = 7,
+       units = "in", dpi = 300)
+image_trim <- image_read("figuras/figura_final.png") %>% 
+  image_trim()
+image_write(image_trim,"figuras/figura_final.png","png")
 ################################
 ############ antigo ############
 ################################
