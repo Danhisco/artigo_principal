@@ -615,21 +615,51 @@ f_gt_table <- \(dfi,
 # tabela de seleção dos modelos usados
 df_tabsel <- read_csv("rds/tabsel_simples.csv") %>% 
   mutate(modelo = gsub("s\\(land\\)","s(log(U/U))",modelo))
-f_tabsel_png <- \(dff){
+f_tabsel_PI <- \(dff){
+  # criação das tabelas
   vpaths <- daply(dff,"contraste",\(dfi){
     vpath <- f_gt_table(dfi=select(dfi,-contraste),
                         v_name = dfi$contraste[1],
                         vw = 800)
     return(vpath)
   })
+  # criação dos gráficos de PI
+  l_p <- lapply(names(l_df),f_plotPI)
+  names(l_p) <- names(l_df)
+  l_p <- lapply(names(l_p),\(li){
+    p <- l_p[[li]]
+    vname <- gsub("tabelas/table","figuras/figura",vpaths[[li]])
+    ggsave(vname,p,
+           width = 5.3,height = 7,
+           units = "in", dpi = 300)
+    image_read(vname) %>% image_trim()
+  })
+  names(l_p) <- names(l_df)
+  l_png <- lapply(vpaths,image_read)
+  l_png <- lapply(names(l_df),\(li){
+    fig <- l_p[[li]]
+    fig <- image_resize(
+      fig, 
+      geometry = paste0(round(image_info(l_png[[li]])$width*0.95,0), "x"))
+    image_append(c(l_png[[li]],fig),stack = TRUE)
+  })
+  names(l_png) <- names(l_df)
+  figfinal <- image_append(do.call("c",l_png),stack = FALSE)
+  image_write(figfinal,"figuras/figura_final_simples_composta_tabela_grafico.png")
 }
 v_log <- f_tabsel_png(dff = df_tabsel)
 if(all(v_log)) print("figura criada: figuras/tabsel_simples.png")
 #
 # predição a posteriori: fixo e fixo + aleatório
-l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples.rds"))
+# l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples.rds"))
 # nefeito <- names(l_df)[[1]]
-f_plotPI <- \(nefeito){
+f_plotPI <- \(nefeito,
+              path_ldf = "rds/l_dfpred_simples.rds"){
+  # objeto comum
+  if(!exists("l_df")){
+    l_df <- readRDS(path_ldf)
+    assign("l_df",value = l_df,envir = globalenv())
+  }
   # objeto para o gráfico
   v_range_x <- sapply(l_df,\(li){
     range(li[["apenas fixo"]]$Uefeito)
@@ -697,8 +727,7 @@ f_plotPI <- \(nefeito){
     # ajustes
     scale_x_continuous(expand = expansion(add = c(0,0))) +
     scale_y_continuous(expand = expansion(add = c(0,0))) +
-    labs(x="log(U / U)",y="log Odds Ratio (goodness-of-fit: SAD sim. - obs.)",
-         title=nefeito) +
+    labs(x="log(U / U)",y="log Odds Ratio (goodness-of-fit: SAD sim. - obs.)") +
     theme_classic() +
     theme(
       axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -2.5)),
