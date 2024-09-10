@@ -656,3 +656,44 @@ f_extract_smoothers_f_formula <- \(formula_obj,
 }
 
 
+f_diagplots <- \(lmd){
+  #@ dependencies: flextable, gratia, magick
+  lapply(names(lmd),\(li){
+    md <- lmd[[li]]
+    # lista de objetos 
+    ldiag <- list()
+    ldiag$ft_md <- as_flextable(md) %>% 
+      bg(., bg = "white", part = "all")
+    ldiag$appraise <- gratia::appraise(md)
+    ldiag$draw <- gratia::draw(md)
+    # escreve as figuras como png e salva os caminhos
+    lpaths <- lapply(names(ldiag),\(i){
+      vpath <- paste0(v_path,"figuras/",i,"_lapply.png")
+      if(i=="ft_md"){
+        save_as_image(ldiag[[i]],path=vpath)
+      }else{
+        ggsave(plot = ldiag[[i]],width = 8,height = 6,filename = vpath)
+      }})
+    names(lpaths) <- names(ldiag)
+    # le como image object
+    l_png <- lapply(lpaths,\(li) image_read(li) %>% image_trim)
+    # ajuste de tamanhos
+    base_image <- lapply(l_png[-1],\(li){
+      image_resize(li,
+                   geometry_size_pixels(width = image_info(l_png[["ft_md"]])$width/2,
+                                        height = image_info(l_png[["ft_md"]])$height))
+    })
+    base_image <- image_append(do.call("c",base_image),stack=FALSE)
+    base_image <- image_resize(
+      base_image, 
+      geometry_size_pixels(width = image_info(l_png[["ft_md"]])$width, 
+                           height = image_info(l_png[["ft_md"]])$height))
+    # figura final salvamento e limpeza
+    final_image <- image_append(c(l_png[[1]],base_image),stack = TRUE)
+    v_name <- gsub("Área per se","areaperse",li) %>% 
+      gsub("Frag. per se","fragperse",.) %>% 
+      gsub("Frag. total","fratotal",.)
+    image_write(final_image,paste0(v_path,"figuras/diag_",v_name,".png"), format = "png")
+    file.remove(do.call("c",lpaths))
+  })
+}

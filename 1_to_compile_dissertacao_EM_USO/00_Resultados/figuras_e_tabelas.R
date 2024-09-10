@@ -39,16 +39,16 @@ probs = c(0.05,0.25, 0.5, 0.75,0.95)
 # criacao GE dados disponiveis #
 ################################
 theme_set(theme_light())
-df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
+df_dados_disponiveis <- read_csv(file = "../../dados/df_dados_disponiveis.csv")
 df_plot <- df_dados_disponiveis %>% 
   inner_join(df_p) %>% 
   select(SiteCode, p, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
-df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+df_p_extensoes <- read_csv("../../dados/csv/df_p_extensoes.csv")
 l_p <- list()
 l_p[[1]] <- df_plot |> 
   ggplot(aes(y=lat,x=long,fill=p)) +
   geom_point(alpha=0.85,shape = 21,size=3,color="black") +
-  scale_fill_gradientn("% CF\n4 km",colours = terrain.colors(10)) +
+  scale_fill_gradientn("% CF\n4 km",colours = terrain.colors(10)[10:1]) +
   guides(fill=guide_colourbar(position="inside")) +
   theme(legend.position.inside = c(0.9,0.35)) +
   labs(subtitle = "a)")
