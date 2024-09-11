@@ -288,8 +288,9 @@ ggsave(
   filename = paste0(v_path,"figuras/GE_taxaU_contrastes.png"),
   plot = p,
   width = 11,height=7.7)
-#
-# DAG do conjunto de variáveis de controle:
+#############################################
+# DAG do conjunto de variáveis de controle: #
+#############################################
 library(dagitty)
 library(ggdag)
 library(ggplot2)
@@ -387,19 +388,18 @@ ggsave(
   plot = p,
   width = 11,height=7.7,
   bg = "white")
-
 img <- image_read(paste0(v_path,
                          "figuras/DAG_var_de_controle.png"))
 trimmed_img <- image_trim(img)
 print(trimmed_img)
 image_write(trimmed_img, path = paste0(v_path,"figuras/DAG_var_de_controle.png"))
-
 #
 #
 # TABELAS #
 #
-#
-# quantis observados dos contrastes da taxa U
+#########################################################
+# tabela de quantis observados dos contrastes da taxa U #
+#########################################################
 probs = c(0.05,0.25, 0.5, 0.75,0.95)
 df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") 
 df_md_Uefeito <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
@@ -442,8 +442,9 @@ v_cols <- lapply(probs,\(i) grep(i,names(df_quantisobs_Uefeito),value = TRUE)) %
 df_quantisobs_Uefeito <- select(df_quantisobs_Uefeito,all_of(v_cols))
 write_csv(df_quantisobs_Uefeito,
           file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
-##
-# tabela de comparação de estruturas hierarquicas do modelo
+##################################################################
+### tabela de comparação de estruturas hierarquicas do modelo ####
+##################################################################
 df_tabsel <- read_csv("rds/tabsel_simples.csv")
 # df_tabelaSelecao <- read_csv(file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
 # df_tabelaSelecao <- df_tabelaSelecao %>% 
@@ -464,6 +465,9 @@ df_tabsel <- read_csv("rds/tabsel_simples.csv")
 #   rename(Contraste = pair,
 #          `Dev. explained` = "dev.expl") %>% 
 #   as.data.frame
+#
+#
+# não usado nesse momento #
 f_tabelaselecao_com_plot0 <- \(dfi,
                               folder_pattern="figuras/tabsel_c_plot_"){
   v_subtitle <- dfi$contraste[1] %>% 
@@ -541,6 +545,7 @@ f_tabelaselecao_com_plot0 <- \(dfi,
   )
   image_write(combined_img, path = paste0(v_path,folder_pattern,v_name), format = "png")
 }
+# não usado nesse momento #
 f_tabelaselecao_com_plot <- \(dff,
                               group_by="Contraste",
                               path_name = paste0(v_path,"figuras/tabsel_aleat.png")){
@@ -564,8 +569,14 @@ f_tabelaselecao_com_plot <- \(dff,
   file.remove(paste0(v_path,"tabelas/table_reciclagem.png"))
 }
 f_tabelaselecao_com_plot(df_tabelaSelecao)
-# tabela de seleção da comparação de modelos cheios:
-library(magick)
+# não usado nesse momento #
+#
+#
+#######################################################
+#################### FIGURA FINAL #####################
+#######################################################
+# USADO!
+## f_gt_table: cria tabela de seleção dos modelos hierarquicos ajustados
 f_gt_table <- \(dfi,
                 v_name,
                 vw = 800,
@@ -604,7 +615,7 @@ f_gt_table <- \(dfi,
       `Moran I statistic (res)` = "Moran's I",
       `p-value` = "p-value"
     )
-    # cols_label_with(fn=f_gsub)
+    # cols_label_with(fn=f_gsub) # não funcionou
   v_name <- gsub("Frag. total","fragtotal",v_name) %>%
     gsub("Frag. per se","fragperse",.) %>%
     gsub("Área per se","areaperse",.)
@@ -612,54 +623,10 @@ f_gt_table <- \(dfi,
          paste0(v_folder,v_name,".png"),
          vwidth = vw, vheight = vh)
 }
-# tabela de seleção dos modelos usados
-df_tabsel <- read_csv("rds/tabsel_simples.csv") %>% 
-  mutate(modelo = gsub("s\\(land\\)","s(log(U/U))",modelo))
-f_tabsel_PI <- \(dff){
-  # criação das tabelas
-  vpaths <- daply(dff,"contraste",\(dfi){
-    vpath <- f_gt_table(dfi=select(dfi,-contraste),
-                        v_name = dfi$contraste[1],
-                        vw = 800)
-    return(vpath)
-  })
-  # criação dos gráficos de PI
-  l_p <- lapply(names(l_df),f_plotPI)
-  names(l_p) <- names(l_df)
-  l_p <- lapply(names(l_p),\(li){
-    p <- l_p[[li]]
-    vname <- gsub("tabelas/table","figuras/figura",vpaths[[li]])
-    ggsave(vname,p,
-           width = 5.3,height = 7,
-           units = "in", dpi = 300)
-    image_read(vname) %>% image_trim()
-  })
-  names(l_p) <- names(l_df)
-  l_png <- lapply(vpaths,image_read)
-  l_png <- lapply(names(l_df),\(li){
-    fig <- l_p[[li]]
-    fig <- image_resize(
-      fig, 
-      geometry = paste0(round(image_info(l_png[[li]])$width*0.95,0), "x"))
-    image_append(c(l_png[[li]],fig),stack = TRUE)
-  })
-  names(l_png) <- names(l_df)
-  figfinal <- image_append(do.call("c",l_png),stack = FALSE)
-  image_write(figfinal,"figuras/figura_final_simples_composta_tabela_grafico.png")
-}
-v_log <- f_tabsel_png(dff = df_tabsel)
-if(all(v_log)) print("figura criada: figuras/tabsel_simples.png")
-#
 # predição a posteriori: fixo e fixo + aleatório
 # l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples.rds"))
 # nefeito <- names(l_df)[[1]]
-f_plotPI <- \(nefeito,
-              path_ldf = "rds/l_dfpred_simples.rds"){
-  # objeto comum
-  if(!exists("l_df")){
-    l_df <- readRDS(path_ldf)
-    assign("l_df",value = l_df,envir = globalenv())
-  }
+f_plotPI <- \(nefeito){
   # objeto para o gráfico
   v_range_x <- sapply(l_df,\(li){
     range(li[["apenas fixo"]]$Uefeito)
@@ -740,6 +707,52 @@ f_plotPI <- \(nefeito,
   }
   return(p)
 }
+# função que pega a tabela de seleção e faz toda a figura:
+f_tabsel_PI <- \(dff,path_ldf = "rds/l_dfpred_simples.rds"){
+  l_df <- readRDS(path_ldf)
+  # criação das tabelas
+  vpaths <- daply(dff,"contraste",\(dfi){
+    vpath <- f_gt_table(dfi=select(dfi,-contraste),
+                        v_name = dfi$contraste[1],
+                        vw = 800)
+    return(vpath)
+  })
+  # criação dos gráficos de PI
+  l_p <- lapply(names(l_df),f_plotPI)
+  names(l_p) <- names(l_df)
+  l_p <- lapply(names(l_p),\(li){
+    p <- l_p[[li]]
+    vname <- gsub("tabelas/table","figuras/figura",vpaths[[li]])
+    ggsave(vname,p,
+           width = 5.3,height = 7,
+           units = "in", dpi = 300)
+    image_read(vname) %>% image_trim()
+  })
+  names(l_p) <- names(l_df)
+  l_png <- lapply(vpaths,image_read)
+  l_png <- lapply(names(l_df),\(li){
+    fig <- l_p[[li]]
+    fig <- image_resize(
+      fig, 
+      geometry = paste0(round(image_info(l_png[[li]])$width*0.95,0), "x"))
+    image_append(c(l_png[[li]],fig),stack = TRUE)
+  })
+  names(l_png) <- names(l_df)
+  figfinal <- image_append(do.call("c",l_png),stack = FALSE)
+  file.remove(vpaths)
+  file.remove(gsub("tabelas/table","figuras/figura",vpaths))
+  image_write(figfinal,"figuras/figura_final_simples_composta_tabela_grafico.png")
+}
+# rotina de criação
+df_tabsel <- read_csv("rds/tabsel_simples.csv") %>% 
+  mutate(modelo = gsub("s\\(land\\)","s(log(U/U))",modelo))
+# rm("l_df")
+v_log <- f_tabsel_PI(df_tabsel)
+print(v_log)
+# v_log <- f_tabsel_png(dff = df_tabsel)
+# if(all(v_log)) print("figura criada: figuras/tabsel_simples.png")
+#
+
 l_p <- lapply(names(l_df),f_plotPI)
 names(l_p) <- names(l_df)
 p <- arrangeGrob(grobs=l_p,nrow=1)
