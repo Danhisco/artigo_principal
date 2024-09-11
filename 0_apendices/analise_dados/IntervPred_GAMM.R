@@ -93,7 +93,7 @@ f_calcPI <- \(gamm,
     grepl("by = fore",as.character(formula(gamm)[[3]])[2]))
   # quais componentes serão zerados?
   to_exclude <- to_exclude[
-    grep(pattern = paste(c("(Intercept)",names(df_newpred)),collapse = "|"),
+    grep(pattern = paste(names(df_newpred),collapse = "|"),
          to_exclude)]
   # obtain the predictions
   df_pred <- f_predictions(gamm,nsim,to_exclude,df_newpred)
@@ -104,7 +104,7 @@ f_calcPI <- \(gamm,
   # take the original data
   df_newpred <- gamm$model
   # quais componentes serão zerados?
-  to_exclude <- to_exclude[-grep("Uefeito,SiteCode",to_exclude)]
+  to_exclude <- NULL
   # obtain the predictions
   df_pred <- f_predictions(gamm,nsim,to_exclude,df_newpred)
   # save the data frame
@@ -114,26 +114,12 @@ f_calcPI <- \(gamm,
 }
 ###
 formals(f_calcPI)$to_exclude = c("s(Uefeito,SiteCode)",
-                                 "(Intercept)",
+                                 # "(Intercept)",
                                  "forest_successionprimary/secondary",
                                  "forest_successionsecondary",
                                  "s(SiteCode)",
                                  "s(lat,long)",
                                  "s(data_year)")
-f_df_pred <- \(vpath){
-  vpath <- "rds/l_mf_simples.rds"
-  # esses serão os splines desconsiderados para construir o fixo, e depois com o aleat
-  formals(f_calcPI)$to_exclude = c("s(Uefeito,SiteCode)",
-                                    "(Intercept)",
-                                    "forest_successionprimary/secondary",
-                                    "forest_successionsecondary",
-                                    "s(SiteCode)",
-                                    "s(lat,long)",
-                                    "s(data_year)")
-  l_df_pred <- lapply(l_md,f_calcPI)
-  saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples.rds"))
-}
-# cria e salva l_df_pred com a predição a posteriori dos modelos mais plausíveis
 l_df_pred <- lapply(l_md,f_calcPI)
 saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples.rds"))
 ######################################################
