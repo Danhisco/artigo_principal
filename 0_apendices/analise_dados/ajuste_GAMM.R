@@ -54,16 +54,16 @@ f_gam <- \(dfi){
   return(l_md)
 }
 l_md_logOR <- dlply(df_md,"contraste",f_gam)
-saveRDS(l_md_logOR,file=paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
+saveRDS(l_md_logOR,file=paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))0
 # l_md_logOR <- readRDS(file=paste0(v_path,"rds/l_md_simples.rds"))
 df_tabelaSelecao <- ldply(l_md_logOR,f_TabSelGAMM,.id="pair")
 write_csv(df_tabelaSelecao,
           file=paste0(v_path,"rds/tabsel_simples.csv"))
 ###  tabelas e diagnósticos
-l_md <- readRDS(paste0(v_path,"rds/l_md_simples.rds"))
+l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
 df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples.csv")) %>%
   filter(dAICc==0)
 l_md <- lapply(split(df_tabsel,df_tabsel$contraste),\(dfi){
   with(dfi,{l_md[[contraste]][[modelo]]})
 })
-f_diagplots(l_md)
+vpaths <- f_diagplots(l_md)

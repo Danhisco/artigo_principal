@@ -24,12 +24,12 @@ v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compi
 #                     pattern="l_md_3aperg",full.names = T)
 # names(paths) <- str_extract(paths,"(?<=cov\\_)(.*?)(?=\\.rds)")
 #
-l_md <- readRDS(paste0(v_path,"rds/l_md_simples.rds"))
-df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples.csv")) %>% 
+l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
+df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples.csv")) %>%
   filter(dAICc==0)
-l_md <- dlply(df_tabsel,"contraste",\(dfi){
+l_md <- lapply(split(df_tabsel,df_tabsel$contraste),\(dfi){
   with(dfi,{l_md[[contraste]][[modelo]]})
-  })
+})
 #################################################################
 # função para criar o new data fixo
 f_dfmd <- \(dff,byforest,length_pred = 150,site.posteriori ="SPigua1"){
@@ -121,7 +121,7 @@ formals(f_calcPI)$to_exclude = c("s(Uefeito,SiteCode)",
                                  "s(lat,long)",
                                  "s(data_year)")
 l_df_pred <- lapply(l_md,f_calcPI)
-saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples.rds"))
+saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019.rds.rds"))
 ######################################################
 ## Outro artigo: formas alternativas de comparação ##
 ######################################################

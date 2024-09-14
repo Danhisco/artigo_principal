@@ -708,7 +708,7 @@ f_plotPI <- \(nefeito){
   return(p)
 }
 # função que pega a tabela de seleção e faz toda a figura:
-f_tabsel_PI <- \(dff,path_ldf = "rds/l_dfpred_simples.rds"){
+f_tabsel_PI <- \(dff,path_ldf = "rds/l_dfpred_simples_apudPedersen2019.rds"){
   l_df <- readRDS(path_ldf)
   # criação das tabelas
   vpaths <- daply(dff,"contraste",\(dfi){
