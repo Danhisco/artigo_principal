@@ -487,7 +487,7 @@ f_tabelaselecao_com_plot0 <- \(dfi,
       table.align = "left"
     ) %>% 
     cols_label(
-      modelo = "GAHM",
+      modelo = "HGAM",
       dAICc = "ΔAICc"
     )
   plot <- dfi %>% 
@@ -575,7 +575,7 @@ f_tabelaselecao_com_plot(df_tabelaSelecao)
 #######################################################
 #################### FIGURA FINAL #####################
 #######################################################
-# USADO!
+# USADO !
 ## f_gt_table: cria tabela de seleção dos modelos hierarquicos ajustados
 f_gt_table <- \(dfi,
                 v_name,
@@ -588,7 +588,7 @@ f_gt_table <- \(dfi,
   v_names <- names(dfi)
   f_gsub <- \(vchar){
     gsub("rank","Rank",vchar) %>% 
-      gsub("modelo","GAHM",.) %>% 
+      gsub("modelo","HGAM",.) %>% 
       gsub("df","est. coef.",.) %>% 
       gsub("dAICc","ΔAICc",.) %>% 
       gsub("weight" , "Weight (ΔAICc)",.) %>% 
@@ -607,7 +607,7 @@ f_gt_table <- \(dfi,
       table.align = "left"
     ) %>% 
     cols_label(
-      modelo = "GAHM",
+      modelo = "HGAM",
       dAICc = "ΔAICc",
       df = "est. coef.",
       weight = "weight",
@@ -835,7 +835,7 @@ l_df <- lapply(paths_lmd,\(li){
 })
 f_gsub <- \(vchar){
   gsub("rank","Rank",vchar) %>% 
-    gsub("modelo","GAHM",.) %>% 
+    gsub("modelo","HGAM",.) %>% 
     gsub("df","est. coef.",.) %>% 
     gsub("dAICc","ΔAICc",.) %>% 
     gsub("weight" , "Weight (ΔAICc)",.) %>% 

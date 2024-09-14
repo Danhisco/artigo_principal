@@ -28,23 +28,23 @@ df_contrastes <- read_csv("dados/csv/taxaU/df_contrastes.csv") %>%
 df_md <- inner_join(df_md,df_contrastes,by=c("SiteCode","contraste","k")) %>% 
   relocate(Uefeito,.after="logOR")
 ## modelos usados (versão exploração apenas da estrutura hierarquica)
+## Seguindo as especifícações de Pedersen et al. 2019 https://peerj.com/articles/6876/
 f_gam <- \(dfi){
   l_md <- list()
   l_md$`s(land)|Site : gi` <- gam(
     logOR ~ 
-      s(Uefeito,bs="cr",id="efeito_comum") +
+      s(Uefeito,bs="cr",m=2, id="efeito_comum") +
       s(SiteCode,bs="re") + 
-      s(Uefeito, by=SiteCode, bs="cr",id="efeito_sitio"),
+      s(Uefeito, by=SiteCode, bs="cr",m=1, id="efeito_sitio"),
     data=dfi,method = "REML")
   l_md$`s(land)|Site : gs` <- gam(
     logOR ~ 
-      s(Uefeito,bs="cr",id="efeito_comum") +
-      s(SiteCode,bs="re") + 
-      s(Uefeito, SiteCode, bs = "fs", xt = list(bs = "cr"), id = "efeito_sitio"),
+      s(Uefeito,bs="cr",m=2, id="efeito_comum") +
+      s(Uefeito, SiteCode, bs = "fs", xt=list(bs = "cr"), m=2, id="efeito_sitio"),
     data=dfi,method = "REML")
   l_md$`s(land) + 1|Site` <- gam(
     logOR ~ 
-      s(Uefeito,bs="cr",id="efeito_comum") +
+      s(Uefeito,bs="cr",m=2,id="efeito_comum") +
       s(SiteCode,bs="re"),
     data=dfi,method = "REML")
   l_md$`1 + 1|Site` <- gam(
@@ -52,46 +52,9 @@ f_gam <- \(dfi){
     data=dfi,method = "REML")
   return(l_md)
 }
-## modelos usados
-# f_gam <- \(dfi){
-#   l_md <- list()
-#   l_md$`s(Uefeito)|Site : gi` <- gam(
-#     logOR ~
-#         forest_succession +
-#         s(Uefeito,by=forest_succession,bs="cr",id="effect_forest") +
-#         s(data_year,bs="cr") +
-#         s(lat,long,bs="tp") +
-#         s(SiteCode,bs="re") + 
-#         s(Uefeito, by=SiteCode, bs="cr",id="effet_site"),
-#       data=dfi,method = "REML")
-#   l_md$`s(Uefeito)|Site : gs` <- gam(
-#     logOR ~
-#       forest_succession +
-#       s(Uefeito, by = forest_succession, bs = "cr", id = "effect_forest") +
-#       s(data_year, bs = "cr") +
-#       s(lat, long, bs = "tp") +
-#       s(SiteCode, bs = "re") +
-#       s(Uefeito, SiteCode, bs = "fs", xt = list(bs = "cr"), id = "effect_site"),
-#     data = dfi, method = "REML")
-#   l_md$`1|Site` <- gam(
-#     logOR ~
-#       forest_succession +
-#       s(Uefeito, by = forest_succession, bs = "cr", id = "effect_forest") +
-#       s(data_year,bs="cr") +
-#       s(lat,long,bs="tp") +
-#       s(SiteCode,bs="re"),
-#     data=dfi,method = "REML")
-#   l_md$`0|Site+1|Site` <- gam(
-#     logOR ~
-#       forest_succession +
-#       s(data_year,bs="cr") +
-#       s(lat,long,bs="tp") +
-#       s(SiteCode,bs="re"),
-#     data=dfi,method = "REML")
-#   return(l_md)
-# }
+
 l_md_logOR <- dlply(df_md,"contraste",f_gam)
-saveRDS(l_md_logOR,file=paste0(v_path,"rds/l_md_simples.rds"))
+saveRDS(l_md_logOR,file=paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
 # l_md_logOR <- readRDS(file=paste0(v_path,"rds/l_md_simples.rds"))
 df_tabelaSelecao <- ldply(l_md_logOR,f_TabSelGAMM,.id="pair")
 write_csv(df_tabelaSelecao,
