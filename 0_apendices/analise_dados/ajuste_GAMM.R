@@ -30,22 +30,22 @@ df_md <- inner_join(df_md,df_contrastes,by=c("SiteCode","contraste","k")) %>%
   relocate(Uefeito,.after="logOR")
 ## modelos usados (versão exploração apenas da estrutura hierarquica)
 ## Seguindo as especifícações de Pedersen et al. 2019 https://peerj.com/articles/6876/
-f_gam <- \(dfi){
+f_gam <- \(dfi,bs_type="cr"){
   l_md <- list()
   l_md$`s(land)|Site : gi` <- gam(
     logOR ~ 
-      s(Uefeito,bs="cr",m=2, id="efeito_comum") +
+      s(Uefeito,bs=bs_type,m=2, id="efeito_comum") +
       s(SiteCode,bs="re") + 
-      s(Uefeito, by=SiteCode, bs="cr",m=1, id="efeito_sitio"),
+      s(Uefeito, by=SiteCode, bs=bs_type,m=1, id="efeito_sitio"),
     data=dfi,method = "REML")
   l_md$`s(land)|Site : gs` <- gam(
     logOR ~ 
-      s(Uefeito,bs="cr",m=2, id="efeito_comum") +
-      s(Uefeito, SiteCode, bs = "fs", xt=list(bs = "cr"), m=2, id="efeito_sitio"),
+      s(Uefeito,bs=bs_type,m=2, id="efeito_comum") +
+      s(Uefeito, SiteCode, bs = "fs", xt=list(bs = bs_type), m=2, id="efeito_sitio"),
     data=dfi,method = "REML")
   l_md$`s(land) + 1|Site` <- gam(
     logOR ~ 
-      s(Uefeito,bs="cr",m=2,id="efeito_comum") +
+      s(Uefeito,bs=bs_type,m=2,id="efeito_comum") +
       s(SiteCode,bs="re"),
     data=dfi,method = "REML")
   l_md$`1 + 1|Site` <- gam(
@@ -66,4 +66,44 @@ df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples.csv")) %>%
 l_md <- lapply(split(df_tabsel,df_tabsel$contraste),\(dfi){
   with(dfi,{l_md[[contraste]][[modelo]]})
 })
+# vpaths <- f_diagplots(l_md)
+l_k.check <- lapply(l_md,k.check)
+
+###################
+#
+#
+###########################################################################
+############### se caso utilizarmos a base funcion tp igual ###############
+###########################################################################
+formals(f_gam)$bs_type <- "tp"
+l_md_logOR <- dlply(df_md,"contraste",f_gam)
+saveRDS(l_md_logOR,file=paste0(v_path,"rds/l_md_simples_apudPedersen2019_tp.rds"))
+l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
+l_md <- lapply(l_md, \(li){
+  names(li) <- paste0("cr::",names(li))
+  return(li)
+})
+l_md_logOR <- lapply(l_md_logOR,\(li){
+  names(li) <- paste0("tp::",names(li))
+  return(li)
+})
+l_md_geral <- lapply(names(l_md),\(li){
+  c(l_md[[li]],
+    l_md_logOR[[li]])
+})
+names(l_md_geral) <- names(l_md)
+df_tabelaSelecao_geral <- ldply(l_md_geral,f_TabSelGAMM,.id="pair")
+write_csv(df_tabelaSelecao_geral,
+          file=paste0(v_path,"rds/tabsel_simples_tp_e_cr.csv"))
+#
+df_tabsel <- df_tabelaSelecao_geral %>% filter(dAICc==0)
+l_md <- dlply(df_tabsel,"pair",\(dfi){
+  with(dfi,{l_md_geral[[pair]][[modelo]]})
+})
+# vpaths <- f_diagplots(l_md)
+l_k.check <- lapply(l_md,k.check)
 vpaths <- f_diagplots(l_md)
+
+
+
+

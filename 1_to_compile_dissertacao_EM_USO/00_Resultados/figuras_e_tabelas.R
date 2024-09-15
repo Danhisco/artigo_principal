@@ -762,3 +762,5 @@ ggsave("figuras/figura_final.png",p,
 image_trim <- image_read("figuras/figura_final.png") %>% 
   image_trim()
 image_write(image_trim,"figuras/figura_final.png","png")
+#
+# observado e predito
