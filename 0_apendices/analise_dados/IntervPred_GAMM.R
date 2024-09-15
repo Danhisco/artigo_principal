@@ -121,7 +121,7 @@ formals(f_calcPI)$to_exclude = c("s(Uefeito,SiteCode)",
                                  "s(lat,long)",
                                  "s(data_year)")
 l_df_pred <- lapply(l_md,f_calcPI)
-saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019.rds.rds"))
+saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019.rds"))
 ######################################################
 ## Outro artigo: formas alternativas de comparação ##
 ######################################################
