@@ -96,6 +96,9 @@ df_tabelaSelecao_geral <- ldply(l_md_geral,f_TabSelGAMM,.id="pair")
 write_csv(df_tabelaSelecao_geral,
           file=paste0(v_path,"rds/tabsel_simples_tp_e_cr.csv"))
 #
+
+
+
 df_tabsel <- df_tabelaSelecao_geral %>% filter(dAICc==0)
 l_md <- dlply(df_tabsel,"pair",\(dfi){
   with(dfi,{l_md_geral[[pair]][[modelo]]})

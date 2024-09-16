@@ -24,10 +24,12 @@ v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compi
 #                     pattern="l_md_3aperg",full.names = T)
 # names(paths) <- str_extract(paths,"(?<=cov\\_)(.*?)(?=\\.rds)")
 #
-l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
-df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples.csv")) %>%
-  filter(dAICc==0)
-l_md <- lapply(split(df_tabsel,df_tabsel$contraste),\(dfi){
+l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019_tp.rds"))
+df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples_tp_e_cr.csv")) %>%
+  filter(dAICc==0,grepl("tp::",modelo)) %>% 
+  mutate(modelo = gsub("tp::","",modelo)) %>% 
+  rename(contraste=pair)
+l_md <- dlply(df_tabsel,"contraste",\(dfi){
   with(dfi,{l_md[[contraste]][[modelo]]})
 })
 #################################################################
@@ -121,4 +123,4 @@ formals(f_calcPI)$to_exclude = c("s(Uefeito,SiteCode)",
                                  "s(lat,long)",
                                  "s(data_year)")
 l_df_pred <- lapply(l_md,f_calcPI)
-saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019.rds"))
+saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019_tp.rds"))

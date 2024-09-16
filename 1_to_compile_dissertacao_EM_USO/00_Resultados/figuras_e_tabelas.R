@@ -708,7 +708,7 @@ f_plotPI <- \(nefeito){
   return(p)
 }
 # função que pega a tabela de seleção e faz toda a figura:
-f_tabsel_PI <- \(dff,path_ldf = "rds/l_dfpred_simples_apudPedersen2019.rds"){
+f_tabsel_PI <- \(dff,path_ldf = "rds/l_dfpred_simples_apudPedersen2019_tp.rds"){
   l_df <- readRDS(path_ldf)
   # criação das tabelas
   vpaths <- daply(dff,"contraste",\(dfi){
@@ -744,23 +744,52 @@ f_tabsel_PI <- \(dff,path_ldf = "rds/l_dfpred_simples_apudPedersen2019.rds"){
   image_write(figfinal,"figuras/figura_final_simples_composta_tabela_grafico.png")
 }
 # rotina de criação
-df_tabsel <- read_csv("rds/tabsel_simples.csv") %>% 
-  mutate(modelo = gsub("s\\(land\\)","s(log(U/U))",modelo))
+df_tabsel <- read_csv("rds/tabsel_simples_tp_e_cr.csv") %>% 
+  filter(grepl("tp::",modelo)) %>% 
+  mutate(modelo = gsub("s\\(land\\)","s(log(U/U))",modelo) %>% 
+           gsub("tp::","",.)) %>% 
+  rename(contraste=pair)
 # rm("l_df")
 v_log <- f_tabsel_PI(df_tabsel)
 print(v_log)
-# v_log <- f_tabsel_png(dff = df_tabsel)
-# if(all(v_log)) print("figura criada: figuras/tabsel_simples.png")
-#
-
-l_p <- lapply(names(l_df),f_plotPI)
-names(l_p) <- names(l_df)
-p <- arrangeGrob(grobs=l_p,nrow=1)
-ggsave("figuras/figura_final.png",p,
-       width = 16,height = 7,
-       units = "in", dpi = 300)
-image_trim <- image_read("figuras/figura_final.png") %>% 
-  image_trim()
-image_write(image_trim,"figuras/figura_final.png","png")
 #
 # observado e predito
+l_df <- readRDS("rds/l_dfpred_simples_apudPedersen2019_tp.rds")
+l_df <- lapply(l_df,\(li) li[["fixo e aleat"]])
+l_dfpre <- list()
+l_dfpre$`tp` <- lapply(names(l_df), \(i){
+  mutate(l_df[[i]],contraste=i) %>% relocate(contraste)
+}) %>% do.call("rbind",.)
+l_df <- readRDS("rds/l_dfpred_simples_apudPedersen2019.rds")
+l_df <- lapply(l_df,\(li) li[["fixo e aleat"]])
+l_dfpre$`cr` <- lapply(names(l_df), \(i){
+  mutate(l_df[[i]],contraste=i) %>% relocate(contraste)
+}) %>% do.call("rbind",.)
+#
+df_p <- read_csv("../../dados/df_p.csv")
+f_plot_PIeOBS <- \(vsite){
+  dfp <- lapply(names(l_dfpre),\(i){
+    filter(l_dfpre[[i]],SiteCode==vsite) %>% 
+      mutate(bs = i)
+  }) %>% do.call("rbind",.)
+  vtitle <- filter(df_p,SiteCode==vsite) %>% 
+    pull(p) %>% round(.,2) %>% 
+    paste0(vsite,", p = ",.)
+  p <- dfp %>% 
+    ggplot(aes(x=Uefeito,y=logOR)) +
+    geom_point() +
+    # PI
+    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95),alpha = 0.2) +
+    geom_line(aes(y = Q_0.5),alpha = 0.5) +
+    # 0 x 0 
+    geom_hline(yintercept = 0,color="darkgray",alpha=0.75) +
+    geom_vline(xintercept = 0,color="darkgray",alpha=0.75) +
+    # title
+    labs(title=vtitle) +
+    # facet
+    facet_grid(contraste~bs)
+  ggsave(paste0("figuras/PIeOBS_sites/",vsite,".png"),plot = p)
+}
+vlog <- lapply(levels(l_dfpre$tp$SiteCode),f_plot_PIeOBS)
+
+
