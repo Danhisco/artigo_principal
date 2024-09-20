@@ -4,7 +4,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-
 ```{r setup resultados,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
                       fig.align='center',tab.align='center')
@@ -178,7 +177,6 @@ cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográfica
 knitr::include_graphics(path="./figuras/GE_dados_disponiveis.png")
 ```
 
-
 ## Escala espacial adequada para simular os contrafactuais
 
 Para avaliar qual a escala espacial adequada, investigamos o comportamento da taxa U,  parâmetro livre para aproximar a riqueza observada, em paisagens sem perda de cobertura florestal. A taxa U estimada nos graus de limitação de dispersão simulados nas paisagens com maior extensão espacial (paisagem quadrada de lado 16 km) é qualitativamente similar ao estimado em paisagens infinitas (figura A1 2). Em paisagens infinitas e sem perda de habitat a taxa U necessária para manter uma determinada riqueza na parcela apresenta um máximo global quando o grau de limitação de dispersão é pouco severa (@may2012dispersal). Em graus de limitação à dispersão severa a taxa U estimada é baixa, pois a perda de espécies é pequena: a maior parte das substituições ocorre entre coespecíficos. Com o relaxamento da limitação de dispersão a perda de espécies aumenta com a redução da substituição de coespecíficos, aumentando a perda de espécies por deriva ecológica. Com o aumento da capacidade de dispersão para além de graus pouco severos, há o aumento da contribuição de subpopulações mais distante da parcela, reduzindo novamente a estimativa da taxa U à custa da homogenização na escala da paisagem (REF). 
@@ -190,7 +188,7 @@ O padrão por sítio difere do padrão geral da médio, pois a mudança dos valo
 
 Para descrever a variação na taxa U associada à variação na extensão espacial para um determinado grau de limitação de dispersão, exploramos um modelo gaussiano em que a taxa U média pode ser descrita em função do número de espécies e indivíduos (na escala log) e do grau de limitação de dispersão e da extensão espacial (como variáveis categóricas) com um intercepto aleatório por sítio de amostragem (detalhes no apêndice ‘Efeito de Escalar’). Avaliamos, por grau de limitação de dispersão, como a média variou em função do aumento da extensão espacial da paisagem. A escala que acumulou a maior parte da variação total (de aumentar o lado da paisagem local de 0.5 km até 16 km) foi considerada como escala adequada para aquele grau de limitação de dispersão. Essa abordagem pressupõe que o efeito de escalar é monotônico. 
 
-Observamos que a extensão espacial adequada tende a aumentar com a redução da limitação de dispersão (Figura 3), exceto em graus de limitação de dispersão pouco severos, nos valores intermediários simulados (Fig Efeito de Escalar 2a e 2b). Nesses graus de limitação de dispersão intermediários há pouca variação na média da taxa U entre escalas e sempre grande variação entre réplicas de uma mesma bateria de simulações (Fig Efeito de Escalar 2a, A1 2b e A1 4b). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90, a extensão espacial da paisagem adequada é de 1 km de lado (Figura 3). Para k entre 0.80 e 0.55, que corresponde ao campo de parâmetros com máximo global, não é possível determinar uma tendência de redução da média da estimativa de U (Figura 3); a variação entre escalas para um mesmo sítio é baixa (Figuras Efeito de Escalar 2 e A1 3). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura Efeito de Escalar 5 e 6). Pressuposto que a extensão espacial adequada para simular k entre 0.80 e 0.55 pode ser obtida interpolando as escalas adequadas, então nesses graus de limitação de dispersão a extensão suficiente é de 1 km de lado da paisagem ao redor. Uma vez que a paisagem com 4 km de lado foi suficiente para simular todos os graus de limitação de dispersão todas as simulações serão feitas nessa extensão e tambeḿ o calculo da proporção de cobertura florestal. Não simulamos paisagens com lado de 1 km e 2 km, que foram adequadas para os graus de limitação de dispersão de 0.99 até 0.35 e de 0.35 até 0.20, respectivamente.
+Observamos que a extensão espacial mínima adequada tende a aumentar com a redução da limitação de dispersão (Figura 3), exceto em graus de limitação de dispersão pouco severos, nos valores intermediários simulados (Fig Efeito de Escalar 2a e 2b). Nesses graus de limitação de dispersão intermediários há pouca variação na média da taxa U entre escalas e sempre grande variação entre réplicas de uma mesma bateria de simulações (Fig Efeito de Escalar 2a, A1 2b e A1 4b). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90, a extensão espacial da paisagem adequada é de 1 km de lado (Figura 3). Para k entre 0.80 e 0.55, que corresponde ao campo de parâmetros com máximo global, não é possível determinar uma tendência de redução da média da estimativa de U (Figura 3); a variação entre escalas para um mesmo sítio é baixa (Figuras Efeito de Escalar 2 e A1 3). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura Efeito de Escalar 5 e 6). Pressuposto que a extensão espacial adequada para simular k entre 0.80 e 0.55 pode ser obtida interpolando as escalas adequadas, então nesses graus de limitação de dispersão a extensão suficiente é de 1 km de lado da paisagem ao redor. Uma vez que a paisagem com 4 km de lado foi suficiente para simular todos os graus de limitação de dispersão todas as simulações serão feitas nessa extensão e tambeḿ o calculo da proporção de cobertura florestal. Não simulamos paisagens com lado de 1 km e 2 km, que foram adequadas para os graus de limitação de dispersão de 0.99 até 0.35 e de 0.35 até 0.20, respectivamente.
 
 ```{r cap fig5_SoE}
 cap <- "A extensão espacial é um dos fatores que determina as medidas tomadas das características da paisagem. No conjunto de áreas analisadas há uma forte relação entre a extensão espacial da paisagem ao redor e a proporção de cobertura vegetal. a). O objetivo do estudo do efeito de escalar foi determinar a extensão espacial adequada para simular os 20 graus de limitação de dispersão. c). Definimos a escala adequada para um grau de limitação de dispersão como a extensão espacial que acumula a maior parte da variação na estimativa da taxa U associada ao aumento da extensão espacial da paisagem ao redor, considerando a amplitude de extensões do lado da paisagem local entre 0.5 km e 16 km. Para detalhes sobre os métodos  do estudo de efeito de escalar veja o apêndice ‘Efeito de Escalar’. Nesse  estudo, 36 sítios foram sorteados e selecionados ao longo do gradiente de número de indivíduos e de espécies na parcela. b). Para esse estudo, as estimativas da taxa U foram simuladas em paisagens totalmente preenchidas com habitat, para descontar o efeito do isolamento estrutural, e explorar apenas o efeito de variar a extensão da paisagem ao redor."
@@ -199,13 +197,32 @@ cap <- "A extensão espacial é um dos fatores que determina as medidas tomadas 
 knitr::include_graphics(path = "./figuras/fig5_SoE.png")
 ```
 
-## Práticas ontológicas em disputa coexistindo em um sistema epistêmico contrafactual baseado em indivíduos
+##[a] Práticas ontológicas em disputa coexistindo em um sistema epistêmico contrafactual baseado em indivíduos[b][c][d][e]
 
-Em ambas práticas ontológicas primeiro alguma característica da paisagem, que interpreta-se estar relacionada com a biodiversidade local, é mensurada e então é quantificado o efeito desta métrica da paisagem na biodiversidade local. Esse sequência epistemológica é comum em estudos de estimativa de efeito causal médio (REF).
+No dispositivo de mimese, à medida que propágulos entram e saem da parcela, a riqueza e a abundância relativa das espécies locais são influenciadas pela paisagem, que determina a quantidade, posição e distância dos progenitores remanescentes. O modelo é calibrado para capturar a influência da paisagem na riqueza de espécies, expressa na taxa U, levando em conta a limitação de dispersão per capita. Essa taxa corresponde à probabilidade de colonização por uma nova espécie na paisagem necessária para atingir a riqueza observada. A validação empírica ocorre pela avaliação da congruência da distribuição de abundância de espécies (SAD) observada e simulada em um particular contrafactual, e, portanto, considera simultaneamente a influência da paisagem na riqueza e abundância relativa da paisagem. Buscamos quantificar os efeitos da paisagem — área per se, fragmentação per se e fragmentação total — como previstos pelas práticas ontológicas em disputa, na congruência da SAD simulada. Para isso, contrastamos pares de contrafactuais, calculando os efeitos causais médios da paisagem na congruência da SAD simulada (REF ABM causal inference). Esses efeitos foram descritos por modelos hierárquicos aditivos generalizados (HGAMs): o log da razão da chance da SAD simulada ter boa congruência (logOR) em função do log da razão da taxa U (log(U/U)) e da proporção de propágulos que permanecem na vizinhança imediata (k). A seguir apresentamos o log(U/U) estimado em função de k, e então descrevemos a tendência central dos efeitos da paisagem na congruência da SAD simulada.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### Métrica funcional da influência da paisagem na biodiversidade local
 
-Aqui interpretamos como métrica de influência da paisagem na biodiversidade local a razão entre a taxa U estimada nas paisagens contrafactuais em contraste. A razão da taxa U é o risco relativo de colonização de uma nova espécie na paisagem por evento de nascimento necessaŕio para obter a riqueza observada em uma determinada paisagem contrafactual. Quanto menor a taxa U necessária para simular a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U estimadas nas paisagens contrafactuais em contraste for igual a zero não há diferença entre contrafactuais com relação a reposição de espécies locais pela paisagem. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. 
+Aqui interpretamos como métrica de influência da paisagem na biodiversidade local a razão entre a taxa U estimada nas paisagens contrafactuais em contraste.
+Para um mesmo grau de limitação de dispersão, quanto menor a taxa U necessária para obter a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U (logU/U) estimadas nas paisagens contrafactuais em contraste for igual a zero não há diferença entre contrafactuais com relação a reposição de espécies locais pela paisagem. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. 
 
 ```{r tabela dos quantis observados dos contrastes}
 df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
@@ -217,13 +234,15 @@ df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeit
 knitr::kable(df_quantisobs_Uefeito,
              caption = "Quantis observados dos contrastes na taxa U previstos em cada prática ontológica.")
 ```
-  
-    
-Na escala padrão, a razão da estimativa da taxa U para o contraste de área per se apresenta o menor intervalo interquantil de 90%; enquanto o contraste de fragmentação total apresenta o maior intervalo (tab. REF). 
-A maior parte dos contrastes observados ocorre na mesma faixa de valores do contraste em paisagens com pouca perda de cobertura florestal (fig. \@ref(fig:GE-contraste_taxaU) a e b, %CF>=0.95).
-O contraste de área per se apresenta mais observações na faixa de quantils dos contrastes em paisagens com pouca cobertura florestal (fig. \@ref(fig:GE-contraste_taxaU) a), além de apresentar menor magnitude máxima (fig. \@ref(fig:GE-contraste_taxaU) b, %CF>=0.95). O contraste de fragmentação total apresenta maior magnigute máxima (fig. \@ref(fig:GE-contraste_taxaU) a e b). O Contraste de fragmentação per se pode apresentar valores negativos com maior magnitude do que o contraste de área, apesar da maior parte dos valores serem positivo (fig. \@ref(fig:GE-contraste_taxaU))
-A magnitude do contraste aumenta em graus de limitação de dispersão mais brandos, seguido pelos graus mais severos (REF). Nos graus de limitação de dispersão pouco severos, onde há o máximo global na estimativa da taxa U em paisagens sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre os contrafactuais (fig. \@ref(fig:GE-contraste_taxaU)).
 
+
+
+Cada razão entre taxa Us representa um previsto efeito da paisagem: área per se, fragmentação per se e fragmentação total. 
+Nos 3 efeitos, a maior parte dos valores de logU/U ocorre na mesma faixa de valores de paisagens com pouca cobertura florestal, porém em paisagens com perda de cobertura florestal logU/U pode aumentar em magnitude se a limitação de dispersão for branda ou muito severa (fig. \@ref(fig:GE-contraste_taxaU)). Os valores em paisagens sem perda de cobertura florestal ocorrem ao redor do zero, com valores negativos e positivos (fig. \@ref(fig:GE-contraste_taxaU)).
+O efeito que apresenta menor amplitude de valores é o de área per se, enquanto o efeito de fragmentação total apresenta a maior amplitude (fig. \@ref(fig:GE-contraste_taxaU)). 
+Em alguns sítios, o logU/U do efeito de fragmentação per se pode ser menor do que o observado em paisagens sem perda de cobertura florestal (fig. \@ref(fig:GE-contraste_taxaU)).  
+A amplitude dos valores aumenta com a redução do grau de preservação da área amostrada para todos os 3 efeitos (fig. \@ref(fig:GE-contraste_taxaU)). 
+Nos graus de limitação de dispersão pouco severos, onde há o máximo global na estimativa da taxa U em paisagens sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre os contrafactuais (fig. \@ref(fig:GE-contraste_taxaU)).
 
 ```{r caption figura exploratoria da taxa U}
 cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, previstos em cada prática ontológica (tabela X). a) Distribuição dos valores de cada contraste; em vermelhos os quantis de todos os contrastes observados em paisagens com proporção de cobertura florestal igual ou superior 0.95. b) Contraste por sítio de amostragem, pontos ligados pelo sítio de amostragem e coloridos pela proporção de cobertura florestal remanescente."
@@ -232,15 +251,41 @@ cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, prev
 knitr::include_graphics(path="./figuras/GE_taxaU_contrastes.png")
 ```
 
+### Descrição dos efeitos causais médios da paisagem na congruência da simulação da biodiversidade local
 
-### Quantificação do efeito causal médio da paisagem na biodiversidade local
 
-Como métrica de biodiversidade local utilizamos a distribuição de abundância de espécies (SAD, da sigla em inglês _Species Abundance Distribution_). Avaliamos a congruência da SAD observada e da SAD simulada em cada contrafactual. Para simular a SAD, o contrafactual deve ser composto pela paisagem hipotética e por um valor de taxa U. Nós interpretados que o contrafactual composto pela paisagem hipotética e a respectiva estimativa da taxa U na paisagem está alinhado com as práticas ontológicas dos programas de pesquisa em disputa (outras interpretações serão exploradas na discussão).
 
-Nós avaliamos em etapas a congruência relativa dos contrafactuais nos previstos contraste. Primeiro, a SAD simulada é comparada com a SAD observada pelo teste de Kolmogorov-Smirnov bootstrap e é contabilizado o número de SADs simuladas com boa congruência com a SAD observada. Então é calculado a chance de uma SAD simulada ter boa congruência para cada bateria de simulação, grau de limitação de dispersão e contrafactual. Por fim, calculamos o log da razão da chance da SAD simulada ter boa congruência para o par de contrafactuais no contraste previsto em cada prática ontológica. O log da razão da chance é usada como variável resposta de uma análise de regressão que tem a métrica funcional da paisagem como efeito fixo e aleatório.
+Os efeitos causais médios da paisagem foram calculados empíricamente com o log odds ratio (logOR). Quando a congruência da SAD simulada em ambos contrafactuais em contraste é igual, o valor de logOR é zero. Se o contrafactual do numerador apresenta maior proporção de SADs com boa congruência. então o logOR será maior do que zero, vice-e-versa se o logOR for negativo. Nosso objetivo é descrever os efeitos totais da paisagem na congruência relativa da SAD simulada. O sistema epistêmico usado para estimar esses efeitos impõem uma estrutura hierárquica aos dados, pois, simula diversos cenários de dispersão em diferentes tipos de paisagens contrafactuais para cada área amostrada. Nessa situação, dados com estrutura hierarquicas podem ser usados para estimar efeitos causais não enviesados (Feller & Gelman 2015; Weinstein & Blei 2024). A lógica é que, uma vez que o sítio de amostragem é sempre o mesmo, todas as possíveis covariáveis estão fixas. A descrição do logOR em função de k (proporção de propágulos que permanece até a vizinhança imediadata do progenitor) e do logU/U (métrica que expressa o efeito da paisagem) pode descrever o efeito completo da paisagem. O efeito completo descreve tanto o efeito na riqueza quanto o efeito na abundância relativa de espécies locais. Para isso, utilizamos como preditoras a métrica funcional de influência da paisagem na riqueza, e a capacidade de dispersão simulada para representar qualquer efeito da paisagem na abundância relativa não contemplado pelo efeito da métrica funcional. 
+ 
+Para cada efeito causal médio da paisagem (área per se, fragmentação per se e fragmentação total), comparamos, via AICc (REF), 7 modelos hierarquicos aditivos generalizados (detalhes em Pedersen et al. 2019): i) com um tensor entre k e logU/U comum e com um tensor dessas duas variáveis por sítio de amostragem (com o tensor por sítio compartilhando o parâmetro de penalizado com o tensor comum); ii) com um tensor entre k e logU/U comum e apenas um intercepto por sítio; iii) 1 spline comum para logU/U e com um spline por sítio (compartilhando a penalização); iv) 1 spline para logU/U e com apenas 1 intercepto por sítio; v) 1 spline comum para k e por sítio (compartilhando a penalização); vi) 1 spline comum para k e apenas 1 intercepto por sítio; vii) 1 intercepto comum e por sítio. 
+
+
+
+
+
+
+
+
+
+Para os três efeitos causais da paisagem (área per se, fragmentação per se e fragmentação total), o modelos mais plausível é um modelo generalizado hierarquico aditivo que utiliza um parâmetro de penalização comum entre o spline fixo e os splines por sítio (Pedersen et al., 2019). E o segundo modelo mais plausível utiliza um parâmetro de penalização para cada spline por sítio (Pedersen et al., 2019). Em todos os modelos comparados existe boa evidência a favor da hipótese nula de ausência de autocorrelação espacial nos resíduos (o menor p-value from the Moran’s I statistics = 0.33, figura X tabelas).
+
+__Área per se__
+
+O modelo mais plausível, que explica cerca de 47% da deviance, supera o segundo modelo mais plausível por 91.62 AICc unidades. Esse modelo não apresenta boa performance em todo o gradiente da preditora (FIG. DIAG). Quando o log da razão da taxa U é próximo de zero pode existir grande variação no log odds ratio em alguns sítios, que não é possível ser descrito apenas em função do log da razão da taxa U (FIG. DIAG por sítio).[f] 
+
+O efeito causal médio fixo descrito pelo modelo mais plausível apresenta padrão não linear, variando entre log odds ratio negativo e positivo ao longo dos valores do log da razão da taxa U (figura X). O efeito causal médio por sítio também apresenta padrão não linear, mas pode apresentar grande variabilidade entre sítios e em relação ao efeito fixo (figura X). Em valores negativos de log razão U, o efeito fixo apresenta uma tendência sútil para log odds ratio negativos; no nível dos sítios, há grande diversidade - existem sítios em que a tendência é de log odds ratio positivo, enquanto em outros é similar ao efeito fixo (FIGURA X). Para log razão U entre 0 e cerca de 0.30, o efeito fixo ocorre em valores positivos de log odds ratio aumentando e depois diminuindo. Nos sítios, alguns seguem o padrão fixo, mas com pico mais elevado, enquanto outros sítios apresentam tendência de queda para valores negativos de log odds ratio (FIGURA X). Para log razão U entre 0.30 e 0.50, o efeito fixo e por sítio apresentam tendência de queda. Nessa faixa, o efeito fixo varia entre 0 e -2.5 log odds ratio; os sítios que apresentavam log odds ratio positivo podem cruzar para valores negativos ou permanecerem próximos de zero. Poucos sítios apresentam log da razão U acima de 0.50, o efeito fixo volta a subir, retornando a valores positivos de log odds ratio quando o log razão U é próximo de 1. Nessa faixa a maioria dos sítios ocorre em log odds ratio negativo e a maioria apresenta tendência de aumento, mas nunca chegam a ter valores positivos de log odds ratio (Figura X). 
+__Fragmentação per se__
+
+O modelo mais plausível, que explica cerca de 60% da deviance, supera o segundo modelo mais plausível por 93.69 AICc unidades. Esse modelo não apresenta boa performance em todo o gradiente da preditora (FIG. DIAG). Quando o log da razão da taxa U é próximo de zero pode existir grande variação no log odds ratio em alguns sítios, que não é possível ser descrito apenas em função do log da razão da taxa U (FIG. DIAG por sítio).[g] 
+
+
+
+
+
+######## PRÓXIMO ARTIGO: COVARIÁVEIS E MODEL AVERAGING ABM-REGRESSION CAUSAL EFFECT ESTIMATION ? ########[h]
 
 Para fazer a quantificação do efeito causal a partir de análises de regressão é necessário avaliar se existem covariáveis que precisam ser ajustadas para obter medidas não enviesadas deste efeito causal (REF). 
-Em uma próposta de início de conciliação das práticas ontológicas (VALENTE ET AL. 2023), existe um consenso de que a resposta do efeito da paisagem na manuntenção da biodiversidade local deve dependender do contexto da amostragem (REF). O contexto biogeográfico pode ser um desses fatores que pode modificar o efeito da paisagem (revisado EM VALENTE ET AL. 2023) e tambem é um fator que deve influenciar a biodiversidade local (REF), sendo, portanto, uma variável de confusão (pelo critério da porta dos fundos) (REF). Outra possível variável de confusão é a classe de preservação do sítio de amostragem, pois, além de ter sido usada como critério de inclusão dos inventários florestais, pode apresentar uma variável de confusão não mensurada com o grau de modificação da paisagem contemporânea, uma vez que locais com baixo grau de preservação também podem estar em paisagens com grande grau de mudança na cobertura florestal remanescente (REF). Assim, um possível DAG, que engloba qualquer um dos três efeitos previstos nas duas práticas ontológicas, está descrito na figura X, onde é possível concluir que é necessário inclui variáveis que descrevam o contexto biogeográfico da amostragem e também do grau de preservação da área amostrada. Utilizamos o ano do inventário florestal e a coordenada central do sítio de amostragem como possíveis aproximações do contexto biogeográfico.
+Em uma proposta de início de conciliação das práticas ontológicas (VALENTE ET AL. 2023), existe um consenso de que a resposta do efeito da paisagem na manutenção da biodiversidade local deve depender do contexto da amostragem (REF). O contexto biogeográfico pode ser um desses fatores que pode modificar o efeito da paisagem (revisado EM VALENTE ET AL. 2023) e também é um fator que deve influenciar a biodiversidade local (REF),[i] sendo, portanto, uma variável de confusão (pelo critério da porta dos fundos) (REF). Outra possível variável de confusão é a classe de preservação do sítio de amostragem, pois, além de ter sido usada como critério de inclusão dos inventários florestais, pode apresentar uma variável de confusão não mensurada com o grau de modificação da paisagem contemporânea, uma vez que locais com baixo grau de preservação também podem estar em paisagens com grande grau de mudança na cobertura florestal remanescente[j][k] (REF). Assim, um possível DAG, que engloba qualquer um dos três efeitos previstos nas duas práticas ontológicas, está descrito na figura X, onde é possível concluir [l]que é necessário incluir variáveis que descrevam o contexto biogeográfico da amostragem e também do grau de preservação da área amostrada. Utilizamos o ano do inventário florestal e a coordenada central do sítio de amostragem como possíveis aproximações do contexto biogeográfico[m].
 
 ```{r caption DAG covariaveis}
 cap <- "Grafo Acíclico Dirigido (da sigla em inglês DAG) a partir da interpretação de Valente et al. (2023), artigo de revisão e conciliação parcial das práticas ontológicas em disputa. Se as variáveis em vermelho forem incluídas no modelo de regressão, modelos sem estrutura hierarquica podem ser usados para estimar o efeito em investigação (REF) - a influência da paisagem na biodiversidade local. A biodiversidade local (biodiv. local) foi aproximada pela congruência relativa da SAD simulada em cada contrafactual em comparação com a SAD observada. O efeito da paisagem representa o efeito proposto a ser investigado, ele é obtido pelo log da razão da taxa U necessária para obter a riqueza observada em cada contrafactual em comparação. Cada prática ontológica possui contrastes de contrafactuais que oferecem resultados interpretaveis. O contexto biogeográfico foi aproximado pela data do inventário florestal e da coordenada central da área amostrada. A preservação local é uma variável categórica que depende do histórico e do grau de perturbação da área amostrada, pressupomos que deve existir uma covariável não observada que influencia tanto o grau de preservação local da área amostrada quando a modificação da paisagem ao redor. Pelo critério de porta dos funtos as variáveis contexto biogeográfico e preservação local devem ser incluídas no modelo para que o efeito causal em investigação possa ser estimado de forma adequada (REF)."
@@ -250,17 +295,16 @@ cap <- "Grafo Acíclico Dirigido (da sigla em inglês DAG) a partir da interpret
 knitr::include_graphics(path="./figuras/DAG_var_de_controle.png")
 ```
 
+Por outro lado, o sistema epistêmico usado para estimar esses efeitos impõem uma estrutura hierarquica aos dados, pois, simula diversos cenários de dispersão em diversos tipos de paisagens contrafactuais para cada área amostrada. Nessa situação, modelos hierarquicos podem ser usados para estimar efeitos causais que podem ser não enviesados, mesmo com covariáveis não mensuradas (Feller & Gelman 2015; Weinstein & Blei 2024). A lógica é que, uma vez que o sítio de amostragem é sempre o mesmo, todas as possíveis covariáveis estão fixas, assim, os contrastes entre os contrafactuais simulados oferecem medidas não enviesadas de efeito causal (REF). Portanto, pode não ser necessário incluir as variáveis que aproximam o contexto da amostragem para fazer a estimativa do efeito causal.[n]
 
-Por outro lado, o sistema epistêmico usado para estimar esses efeitos impõem uma estrutura hierarquica aos dados, pois, simula diversos cenários de dispersão em diversos tipos de paisagens contrafactuais para cada área amostrada. Nessa situação, modelos hierarquicos podem ser usados para estimar efeitos causais que podem ser não enviesados, mesmo com covariáveis não mensuradas (Feller & Gelman 2015; Weinstein & Blei 2024). A lógica é que, uma vez que o sítio de amostragem é sempre o mesmo, todas as possíveis covariáveis estão fixas, assim, os contrastes entre os contrafactuais simulados oferecem medidas não enviesadas de efeito causal (REF). Portanto, pode não ser necessário incluir as variáveis que aproximam o contexto da amostragem para fazer a estimativa do efeito causal.
-
-Nós comparamos modelos hierarquicos para avaliar a maneira mais apropriada para estimar o efeito causal médio. Primeiro avaliamos formas de expressar o efeito causal médio da paisagem por sítio de amostragem. Para isso a estrutura fixa dos modelos se manteve o mais cheio possível: com 1 intercepto por classe de preservação; 1 spline para efeito de paisagem por classe de preservação; 1 spline para o efeito do ano de amostragem; e 1 spline para o efeito da coordenada geográfica. A partir dessa estrutura fixa foram explorada 3 formas de expressar o efeito da paisagem por sítio de amostragem (REF GAMM 2019) : com 1 spline por sítio de amostragem, em que cada sítio apresenta um parâmetro de penalidade, conferindo maior flexibilidade por sítio; com 1 spline por sítio de amostragem, mas com o mesmo parâmetro de penalidade que o efeito fixo da paisagem, com menor flexibilidade por sítio de amostragem; e 1 intercepto por paisagem. Um modelo sem efeito fixo da paisagem e 1 intercepto por sítio de amostragem foi incluido para representar a ausência de efeito da paisagem por sítio. Caso o modelo mais plausível seja algum dos 3 primeiros modelos, com efeito de paisagem, é possível avaliar qual o conjunto de variáveis mais adequado para descrever o efeito causal médio da paisagem, dado o efeito causal médio da paisagem por sítio. 
+Nós comparamos modelos hierarquicos para avaliar a maneira mais apropriada para estimar o efeito causal médio[o]. Primeiro avaliamos formas de expressar o efeito causal médio da paisagem por sítio de amostragem. Para isso a estrutura fixa dos modelos se manteve o mais cheio possível: com 1 intercepto por classe de preservação; 1 spline para efeito de paisagem por classe de preservação; 1 spline para o efeito do ano de amostragem; e 1 spline para o efeito da coordenada geográfica.[p] A partir dessa estrutura fixa foram explorada 3 formas de expressar o efeito da paisagem por sítio de amostragem (REF GAMM 2019) : com 1 spline por sítio de amostragem, em que cada sítio apresenta um parâmetro de penalidade, conferindo maior flexibilidade por sítio; com 1 spline por sítio de amostragem, mas com o mesmo parâmetro de penalidade que o efeito fixo da paisagem, com menor flexibilidade por sítio de amostragem; e 1 intercepto por paisagem. [q]Um modelo sem efeito fixo da paisagem e 1 intercepto por sítio de amostragem foi incluido para representar a ausência de efeito da paisagem por sítio. Caso o modelo mais plausível seja algum dos 3 primeiros modelos, com efeito de paisagem, é possível avaliar qual o conjunto de variáveis mais adequado para descrever o efeito causal médio da paisagem, dado o efeito causal médio da paisagem por sítio. [r]
 
 Para avaliar os modelos usamos o AICc, uma medida que pondera o número de parâmetros do modelo e quanto esse modelo representa dos dados (REF). O peso de evidência, medido a partir do AICc, pode ser interpretado como a probabilidade do modelo ser o modelo correto entre os modelos candidatos (REF). Essas métricas podem ser usadas para comparação relativa dos modelos considerando a possibilidade de overfitting (REF).
 Outra métrica relevante na ĩnferência causal é alguma que quantifique qual a variabilidade dos dados expressa pelo modelo, pois permite avaliar a influência do efeito investigado na geração dos dados (REF LAND USE SISTEM CAUSAL INFERENCE REF). Aqui utilizamos a deviance explained, métrica usada no contexto de GAMM, que possui interpretação similar ao R2 (REF). 
-Por conta da natureza agregada dos inventários florestais e com possibilidade de agregação na modificação da paisagem ao redor (FIGURA 1 INVENTÁRIOS FLORESTAIS), avaliamos se os resíduos dos modelos apresentam algum tipo de autocorrelação espacial a partir da estatística 1 de Moram. O valor da estatística 1 de Moran varia entre -1 e 1, indicando autocorrelação negativa e positiva, respectivamente. Se o p-valor associado a estatística 1 de Moran for muito baixa, então a hipótese nula de que não existe autocorrelação espacial tem pouco suporte (REF).
+Por conta da natureza agregada dos inventários florestais[s] e com possibilidade de agregação na modificação da paisagem ao redor (FIGURA 1 INVENTÁRIOS FLORESTAIS), avaliamos se os resíduos dos modelos apresentam algum tipo de autocorrelação espacial a partir da estatística 1 de Moram. O valor da estatística 1 de Moran varia entre -1 e 1, indicando autocorrelação negativa e positiva, respectivamente. Se o p-valor associado a estatística 1 de Moran for muito baixa, então a hipótese nula de que não existe autocorrelação espacial tem pouco suporte (REF).
 Como aproximamos a possível autocorrelação espacial por 1 spline para a coordenada central, autocorrelação positiva pode ser bem expressa, uma vez que splines são desenhados para garantir a continuidade entre valores próximos (REF). Se a autocorrelação espacial for negativa, o spline pode ser uma aproximação ruim, pois não é adequado para estimar mudanças desrupitavas entre valores próximos (REF).  
 
-Assim, é possível fazer algumas perguntas sobre os modelos explorados:
+Assim, é possível fazer algumas perguntas sobre os modelos explorados:[t]
 - Qual a melhor forma de expressar o efeito da paisagem por sítio? 
 - O efeito médio da paisagem, dado os efeitos médios da paisagem por sítio de amostragem, apresentam alguma influência na congruência da SAD simulada com a SAD observada? Existe alguma tendência geral? 
 - Os efeitos da paisagem apresentam grande influência nos dados observados?
@@ -273,369 +317,43 @@ Assim, é possível fazer algumas perguntas sobre os modelos explorados:
 knitr::include_graphics(path="./figuras/tabsel_aleat.png")
 ```
 
-Para todos os efeitos previsto nas práticas ontológicas (efeito de área per se, efeito de fragmentação per se, e efeito de fragmentação total) existe um GAHM que pode ser considerado o mais plausível para descrever o efeito da paisagem por sítio de amostragem, pois acumula a maior parte do peso de evidência. No caso do efeito de área per se o GAHM mais plausível apresenta menor flexibilidade por sítio de amostragem, enquanto para os outros dois efeitos (fragmentação per se e fragmentação total) o GAHM mais plausível apresenta maior flexibilidade por sítio de amostragem. 
+Para todos os efeitos previsto nas práticas ontológicas (efeito de área per se, efeito de fragmentação per se, e efeito de fragmentação total) existe um GAHM que pode ser considerado o mais plausível para descrever o efeito da paisagem por sítio de amostragem, pois acumula a maior parte do peso de evidência. No caso do efeito de área per se o GAHM mais plausível apresenta menor flexibilidade[u] por sítio de amostragem, enquanto para os outros dois efeitos (fragmentação per se e fragmentação total) o GAHM mais plausível apresenta maior flexibilidade[v] por sítio de amostragem. 
 Para todos os GAHM explorados, o p-valor da estatística I de Moran apresenta valores altos (acima de 5%, linha verde horizontal nos gráficos), indicando que a hipótese nula de ausência de autocorrelação espacial nos resíduos dos GAHM tem bom suporte. 
 A deviance explicada é maior nos modelos que consideram algum efeito da paisagem por sítio de amostragem (com maior ou menor flexibilidade por sítio). A deviance explicada dos modelos mais plausíveis são: 0.78 para o efeito de fragmentação total, 0.58 para o efeito de fragmentação per se, e 0.41 para o efeito de área per se. Os modelos que consideram o efeito da paisagem com menor flexibilidade por sítio, apresentam deviance explicada um pouco menor.
 
 #### Qual a melhor forma de estimar o efeito causal médio da paisagem a partir dos possíveis conjuntos de covariáveis de ajuste, dado a estrutura hierarquica do modelo de regressão?
 
-Determinada a melhor forma de expressar o efeito da paisagem por sítio de amostragem, é possível avaliar qual o conjunto de covariáveis fixas é adequado para estimar o efeito causal médio da paisagem. Um possível próximo passo é avaliar se é necessário estimar um efeito de paisagem por classe de preservação, dado que pode existir um intercepto por classe de preservação. Se não for necessário, os modelo candidatos terão na estrutura fixa, além do efeito da paisagem, 1 intercepto por classe de preservação, 1 spline por ano do inventário florestal, 1 spline por coordenada geográfica. Nesse caso os modelos derivados do modelo cheio serão obtidos pela remoção de efeitos fixos 1 a 1, 2 a 2 ou de todos as covariáveis. Se for necessário estimar um efeito de paisagem por classe de preservação, então a mesma operação será feita para obter o conjunto de modelos candidatos, porém o intercepto por classe de preservação será mantido em todos os modelos. Caso a maior parte do peso de evidência não se acumule em um único modelo, o conjunto de modelos candidatos será a concatenação das duas situações anteriores. Na tablea X2 há a comparação desses dois modelos 
-
-##### Comparação dos possíveis modelos cheios para o conjunto adequado de covariáveis dos 
-modelos usados para descrever o efeito da paisagem na congruência relativa com a SAD observada por sítio de amostragem
-```{r tabela de selecao com plot, eval=TRUE,include=TRUE}
-knitr::include_graphics(path="./figuras/tabsel_modeloscheios.png")
-```
-
-
-Para todos os modelos existe um único modelo mais plausível para descrever o efeito fixo da paisagem (TABLE X1), para o efeito de área per se o modelo mais plausível considera um efeito por classe de preservação, para os outros dois efeitos, de fragmentação per se e fragmentação total, é suficiente estimar um efeito comum de paisagem. Uma vez escolhido o modelo cheio é possível determinar o conjunto de modelos candidatos para descrever 
-
-
-
-
-
-RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
-RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
-RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD RESULTADOS LOG OR SAD
-
-Coisas novas:
-
-1a pergunta
-todos os modelos serão expressos por s(Uefeito)|Site: gs. O que é ótimo que facilita o display dos diagnósticos
-
-Perfil de deviance explained: os dois modelos com efeito de paisagem por sítio de amostragem apresentam os maiores deviances, com o Frag. total com a maior deviance (0.70), seguido pelo frag. per (0.56) se e por último a área per se (0.44).
-
-Parece não haver problemas de autocorrelação espacial dos resíduos do modelo.
-
-CPF:
-diagnóstico dos modelos:
-2 figuras: resíduos e efeitos parciais médios
-
-2a pergunta
-O único em que é necessário 1 spline por classe de preservação é o efeito de área per se, que apresenta o menor deviance explained. Acredito que deve ser com maior influência do viés de efeito de escalar. 
-
-O com menor peso acumulado no modelo mais plausível foi o Frag. total com deviance de 0.87.
-
-Em todos o deviance explained é igual entre os modelos
-
-CPF:
-figurabela das perguntas de quantificação do efeito médio causal da paisagem na biodiversidade local.
-
-3a pergunta
-Quais as covariáveis adequadas?
-Para os 3 efeitos investigados, não houve um modelo que acumulasse a maior parte do peso de evidência, a deviance explicada é similar entre modelos candidatos e todos os modelos apresentam resíduos sem aparente autocorrelação espacial.
-
-
-Os modelos mais plausíveis:
-área - cheio / sem coord (0.52 - 0.27)
-frag. per se - sem covariáveis / somente ano (0.37 - 0.21)
-frag. total - sem ano / somente coordenada (0.31 - 0.31)
-
-
-
-##############################################################################################
-# ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO #
-##############################################################################################
-
-
-### Métrica funcional: grau de dependência da paisagem ao redor para repor espécies extintas localmente
-
-<!-- #### Taxa U de cada paisagem contrafactual -->
-
-<!-- Para paisagens contemporâneas com proporção de cobertura vegetal abaixo de 0.95, observamos que a estimativa da taxa U pode ser distinta entre paisagens hipotéticas para alguns graus de limitação de dispersão (fig. \@ref(fig:GE-Urep-sitio-k-land)). -->
-#### A métrica funcional: log(U/U)
-
-
-#### Quantificação do efeito da métrica funcional na descrição do padrão de biodiversidade local
-
-
-### Efeito da métrica funcional da paisagem na congruência relativa do contraste de contrafactuais
-
-A quantificação do efeito da métrica funcional de paisagem na congruência relativa com a SAD observada ocorre em duas etapas. Primeiro é avaliado modelos candidatos que diferem em como o efeito da paisagem é expresso, se fixo e aleatório, apenas fixo ou ausente. Nesses modelos candidatos há 2 covariáveis, o ano de amostragem da SAD e a coordenada central da área amostrada, em todos os modelos. Então, desses modelos, o mais plausível é usado como modelo cheio de uma segunda rodada de comparação de modelos candidatos. Nessa segunda etapa, os modelos candidatos diferem nas covariáveis, com 4 combinações: cheio, sem ano, sem coordenada, ou sem ano e coordenada.  
-
-
-
-
-```{r tabela de modelos GAMM logOR, include=TRUE,eval=TRUE}
-df <- data.frame(
-  modelo = c("efeito por paisagem - gs","efeito por paisagem - gi", "efeito de paisagem", "sem efeito de paisagem","mgcv::s"),
-  `efeito em U` = c("1","1", "1", "0","s(bs='cr')"),
-  `ano dados` = c("1","1", "1", "1","s(bs='cr')"),
-  `coord. geo.` = c("1","1", "1", "1","s(bs='tp')"),
-  `intecep. por sítio` = c("1","1", "1", "1","s(bs='re')"),
-  `efeito em U por sítio gs` = c("0","1", "0", "0","s(bs='fs',xt=list(bs='cr'))"),
-  `efeito em U por sítio gi` = c("1","0", "0", "0","s(bs='cr',by=Site)")
-)
-names(df) <- c("GAMM","métrica funcional","ano obs.","coord. geo. obs.","intercepto por Site","métrica por Site gs","métrica por Site gi")
-knitr::kable(df,
-             caption = "GAMM usados para avaliar a melhor estrutura aleatória para descrever o log da razão da chance de uma SAD simulada ter boa congruência com a SAD observada do contraste de contrafactuais")
-# df
-```
-
-
-
-```{r}
-# df_tabelaSelecao <- read_csv(file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
-df_tabelaSelecao <- read_csv(file=paste0("./","tabelas/df_tabelaSelecaologOR_cgi.csv"))
-df_tabelaSelecao <- df_tabelaSelecao %>% 
-  mutate(`Prática Ontológica` = ifelse(grepl("contemp-ideal",pair),
-                                       "Interdependete","Independente"),
-         pair = pair %>% 
-           gsub("contemp-ideal","Frag. total",.) %>%
-           gsub("contemp-non_frag","Frag. per se",.) %>%
-           gsub("non_frag-ideal","Área per se",.),
-         modelo = modelo %>% 
-           gsub("por paisagem$","por paisagem 1",.) %>% 
-           gsub("1","- gs",.) %>% 
-           gsub("2","- gi",.) %>% 
-           gsub("com ","",.)) %>% 
-  relocate(`Prática Ontológica`) %>% 
-  rename(Contraste = pair) %>% as.data.frame
-# df_tabelaSelecao
-knitr::kable(df_tabelaSelecao, 
-             caption = "Tabela de seleção e avaliação da estrutura aleatória; logOR(SAD/SAD)")
-# criação das tabelas como figuras
-```
-
-
-
-
-
-
-
-#### Prática ontológica interdependente
-
-```{r}
-df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_itself.csv")
-df <- df_tabelaSelecao %>% filter(pair=="contemp-ideal") %>% select(-pair)
-knitr::kable(df,
-             caption =  "Tabela de seleção do contraste Contemporâneo - Prístino")
-```
-
-
-
-
-#### Prática ontológica independente
-
-```{r}
-df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_itself.csv")
-df <- df_tabelaSelecao %>% filter(pair!="contemp-ideal")
-knitr::kable(df,
-             caption="Tabela de seleção constraste entre Contemporâneo-Aglomerado e Aglomerado-Prístino")
-```
-
-
-<!-- ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO ANTIGO -->
-
-<!-- \newpage -->
-
-
-<!-- ## SAD observada e SAD predita entre paisagens hipotéticas -->
-
-
-
-<!-- ### Erro na Riqueza Simulada -->
-
-<!-- FUTURAMENTE: -->
-<!-- 1 gráfico com 5 paineis, 3 na primeira linha: aqueles com taxa U livre; e 2 na segunda linha: aqueles com a taxa U estimada em paisagem diferente da onde foi simulado a riqueza -->
-
-<!-- ### Congruência entre SAD simulada e a empírica -->
-
-<!-- TEMA MAIOR: -->
-<!-- 1) Efeitos imediatos (paisagem idealizada) e de longo prazo (paisagem contemporânea em um extremo e a paisagem sem fragmentação como outro ) (três tipos de paisagens) -->
-<!-- 2) Fragmentação per se pode ser aproximadamente desconsiderada para descrever a SAD? (contemporâneo X aglomerado) -->
-<!-- 3) É melhor aproximar o sistema pela situação de efeitos imediatos ou de efeitos de longo prazo da fragmentação? (contemporâneo X idealizado) -->
-<!-- 4) Devemos pressupor que existe relação entre as características da paisagem e a riqueza de espécies? (taxa U livre X fixa) -->
-
-
-
-
-
-<!-- ### Descrição do padrão observado -->
-
-<!-- Buscamos diferentes estratégias para analisar os dados de congruência das SADs simuladas  com a SAD empírica, mas não concluímos nenhuma de maneira satisfatória. Então decidimos apresentar algumas figuras exploratórias, para avaliarmos se existem alguns padrões importantes. A primeira figura exploratória que avaliamos está na figura \@ref(fig:GE-nCong), onde cada painel apresenta os resultados de congruência agrupados por sítio de amostragem (no eixo x há os graus de limitação de dispersão, k, e no eixo y o número de SADs simuladas congruentes com a SAD observada), os pontos e linhas estão coloridos pelo tipo de paisagem hipotética, o fundo dos painéis está colorido pela proporção de cobertura vegetal contemporânea e os painéis estão agrupados pela classe de sucessão dos sítios amostrados usada na base de dados TreeCo. No canto inferior esquerdo, há um boxplot da proporção de cobertura vegetal (eixo y) em função da classe de sucessão (eixo x). Entendemos que podemos classificar os padrões de congruência por sítio de amostragem em função do grau de limitação de dispersão (k) em dois componentes: a congruência do modelo neutro em função de k, avaliando a nuvem de pontos considerando os 3 tipos de paisagem hipotética como um só (congruência do modelo neutro); e a diferença na congruência entre os 3 tipos de paisagem hipotética (congruência do tipo de paisagem hipotética). E após a classificação destes padrões de congruência podemos avaliar possíveis associações em função das possíveis preditoras empíricas (proporção de cobertura vegetal na paisagem local e classe de sucessão do sítio de amostragem).  -->
-
-<!-- Na figura \@ref(fig:GE-nCong) é possível observar, em alguns graus de limitação de dispersão, o aumento da diferença na congruência entre paisagens hipotéticas com a redução da cobertura vegetal na paisagem ao redor (principalmente, abaixo de 0.92). Existe muita diversidade nos padrões de congruência entre sítios (fig. \@ref(fig:GE-nCong)). Seguimos decompondo os padrões de congruência do modelo neutro (considerando os 3 tipos de paisagens hipotéticas juntos) e do tipo de paisagem hipotética (avaliando a diferença entre os 3 tipos de paisagens hipotéticas). Sobre a congruência do modelo neutro: i) em alguns sítios a congruência é boa ou ruim para todos os graus de limitação de dispersão (e.g. fig. \@ref(fig:GE-nCong) grupo ‘primary’, 1a coluna, 6a linha e grupo ‘primary/secondary’, 2a coluna, 2a linha, respectivamente); ii) em alguns sítios é ruim ou boa em graus de limitação de dispersão brandos (e.g. fig. \@ref(fig:GE-nCong) ambas no grupo ‘primary’, 1a coluna, 1a linha e 3a coluna, 1a linha, respectivamente) ; iii) em alguns sítios é ruim ou boa em graus de limitação de dispersão intermediários (e.g. fig. \@ref(fig:GE-nCong) ambas no grupo ‘primary’, 1a coluna, penúltima linha e 2a coluna, 7a linha, respectivamente). Ou seja, observamos variabilidade na congruência do modelo neutro em todo o gradiente de limitação de dispersão simulada, com maior variabilidade em graus brandos de limitação de dispersão, seguido de graus severos, e menor variabilidade em graus de limitação intermediários.  -->
-
-
-
-<!-- Sobre a congruência do tipo de paisagem hipotética, em geral a congruência de paisagens sem perda de habitat e sem fragmentação apresentam menor divergência entre si, e quando a congruência da paisagem contemporânea difere, a congruência pode ser melhor ou pior do que a congruência das outras 2 paisagens hipotéticas (fig. \@ref(fig:GE-nCong)). As paisagens sem perda de habitat apresentam melhor congruência em mais sítios, e a congruência de paisagens sem fragmentação per se apresentam melhor congruência em menos sítios em comparação aos outros 2 tipos de paisagens hipotéticas (fig. \@ref(fig:GE-nCong)). Em alguns sítios o padrão de congruência por tipo de paisagem hipotética parece diferir do padrão de congruência do modelo neutro, por exemplo, no sítio de amostragem que está no grupo ‘secondary’, 1a coluna e 3a linha, onde a congruência da paisagem contemporânea é baixa em graus de limitação de dispersão pouco severos, enquanto a congruência dos outros 2 tipos de paisagem hipotéticas é boa apenas em graus de limitação de dispersão brandas (fig. \@ref(fig:GE-nCong)). Na maior parte dos sítios em que há diferença no padrão de congruência por tipo de paisagem hipotética, o padrão por tipo de paisagem hipotética é qualitativamente similar ao padrão de congruência do modelo neutro, por exemplo, no sítio de amostragem no grupo ‘primary’, 1a coluna e 2a linha, a congruência da paisagem contemporânea é ruim em mais graus de limitação de dispersão brandos do que a congruência das outras 2 paisagens hipotéticas que também apresentam pior congruência em graus brandos de limitação de dispersão (fig. \@ref(fig:GE-nCong)).  -->
-
-
-<!-- \newpage -->
-
-<!-- ### Discussão para o 2o Comitê de Acompanhamento -->
-
-<!-- Tentamos algumas abordagens para analisar os dados. Por conta da falta de tempo, não consegui organizar os documentos das análises passadas para mostrar. Segue um resumo das abordagens -->
-
-<!-- 1) Buscamos descrever o ‘log odds ratio’ (lOR) de uma SAD simulada na paisagem contemporânea ser congruente com a SAD observada em relação à SAD simulada na paisagem sem fragmentação per se. Essa abordagem enfatiza o debate em ecologia de paisagens sobre se é necessário considerar a fragmentação per se (@watling2020support). Utilizamos um GAM hierárquico para descrever o lOR por um modelo normal com k (a proporção de propágulos que permanece até a vizinhança imediata), p (proporção de cobertura vegetal na paisagem ao redor), o log da riqueza de espécies e número de indivíduos, com um intercepto por sítio de amostragem e se possível um spline individual por sítio de amostragem. -->
-
-<!-- 2) Especulei que um desenho de análise que se aproxima daquele usado na ecologia de paisagens (em que o objetivo é avaliar a associação entre a biodiversidade local e métricas da paisagem local) seria analisar apenas a congruência da SAD predita pela paisagem contemporânea em função de alguma métrica de paisagem derivada da comparação entre paisagens hipotéticas. Entendo que uma métrica candidata pode ser obtida da diferença na taxa U estimada entre as paisagens hipotéticas, pois um menos a taxa U representa a influência da paisagem ao redor na manutenção da riqueza local. Pensei em comparação entre pares: a) contraste de fragmentação per se, diferença entre o estimado em paisagens contemporâneas e sem fragmentação per se; b) contraste de perda de habitat per se, diferença entre o estimado em paisagens sem fragmentação per se e sem perda de habitat; c) contraste de contemporaneidade, diferença entre a paisagem contemporânea e sem perda de habitat. As duas primeiras métricas se aproximam do programa de pesquisa da Fahrig et al., em que os possíveis efeitos da configuração espacial do habitat remanescente na manutenção da diversidade local são decompostos em efeito de fragmentação per se e efeito de área per se. Já a terceira métrica está relacionado com o programa de pesquisa rival ao da Fahrig, em que não há essa decomposição ortogonal a priori dos efeitos de fragmentação per se e efeito de área per se, eles pressupõem que pode existir efeitos indiretos da perda de habitat via fragmentação per se. Além disso, essa terceira métrica está relacionada com o desenho de pesquisa que utiliza esse modelo neutro para estimar o débito de extinção local, o atraso na resposta ecológica do local de amostragem que se espera após a remoção de habitat na paisagem local (@thompson2019characterising). Eu entendo que a principal característica desse tipo de métrica é que considera a relação entre capacidade de dispersão dos indivíduos e a particular configuração espacial do habitat. A terceira métrica, em específico, é independente da extensão espacial da paisagem ao redor, pressuposto a validade do estudo ‘Efeito de Escalar’, o que entendo ser uma grande vantagem em comparação com as métricas tradicionais. Outra forma de obter essas métricas é utilizar a congruência par a par das SADs simuladas. Uma investigação dessas métricas baseadas na taxa U estão no ‘Support Information’. Abandonamos essa abordagem, pois ela foi considerada muito complicada para defender no tempo do mestrado. -->
-
-<!-- 3) Uma abordagem mais simples foi a de considerar um modelo binomial com variável resposta como número de SADs simuladas congruentes, e como variável resposta o tipo de paisagem hipotética além de outras covariáveis (e.g. k, p e classe de sucessão) além de intercepto por sítio de amostragem e em alguns inclinação de k por sítio de amostragem. Esse modelo demorou muito para ajustar e não apresentou bom ajuste, com a maior parte da variação associada ao sítio de amostragem e menos de 1% associada apenas com os efeitos fixos. A partir dessa modelo, especulamos se parte da variação observada pode estar relacionada com a distribuição espacial dos sítios. As paisagens contemporâneas sugerem que algumas parcelas foram amostradas em paisagens locais com alto grau de sobreposição espaço-temporal (Fig. SI 1). Além disso, possíveis determinantes da biodiversidade local observada na Floresta Atlântica podem estar associados às variáveis preditoras empíricas (p e classe de sucessão) por conta da sua localidade (e.g. fig SI 2).  -->
-
-<!-- Para investigar a possibilidade de autocorrelação espacial, plotamos a classificação visual dos padrões de congruência do modelo neutro e dos tipos de paisagem hipotéticas em função das  coordenadas geográficas dos sítios de amostragem ( \@ref(fig:GE-coordenadas-preditoras)). Classifiquei os sítios segundo a congruência por tipo de paisagem hipotética (contemporânea diferente, contemporânea melhor, contemporânea pior, idealizada diferente, sem fragmentação diferente, e similares) e segundo a congruência do modelo neutro (boa, boa em graus de limitação de dispersão brandos, boa em graus de limitação de dispersão intermediários, boa exceto em graus de limitação de dispersão brandos, ruim e ruim em graus de limitação de dispersão intermediários). Não observei nenhum padrão visual claro da distribuição espacial das classificações dos padrões de congruência. Também plotamos as possíveis preditoras empíricas, proporção de cobertura vegetal (p) e classe de sucessão, em função das coordenadas ( \@ref(fig:GE-coordenadas-preditoras)).  As possíveis preditoras empíricas parecem apresentar distribuição espacial não negligenciável (figura \@ref(fig:GE-nCong) c:d), com agregação de paisagens com alta proporção de cobertura vegetal na região costeira.  -->
-<!-- \newpage -->
-
-<!-- ```{r tabela com o nome das predioras,eval=FALSE,include=FALSE} -->
-<!-- df_glossario <- data.frame( -->
-<!--   nome = c("k","p","forest succession","land hyp","SiteCode"), -->
-<!--   `descrição` = c("grau de limitação de dispersão per capita", -->
-<!--                   "proporção de cobertura vegetal na extensão de 4x4 km2", -->
-<!--                   "classe de sucessão ecológica", -->
-<!--                   "classe da paisagem simulada", -->
-<!--                   "código do sítio de amostragem")) -->
-<!-- f_kableExtra(df_glossario,string_caption = "Descrição das variáveis preditoras",col_control=FALSE) -->
-<!-- ``` -->
-
-<!-- ```{r caption-ts-re-ncong,eval=FALSE,include=FALSE} -->
-<!-- cap <- "Seleção da Estrutura Aleatória" -->
-<!-- snote <- "estrutura fixa do modelo cheio usada em ambos modelos" -->
-<!-- ``` -->
-
-<!-- ```{r ts-re-ncong,eval=FALSE,include=FALSE} -->
-<!-- df_ts_re <- read.csv("./dados/csv/df_ts_re_nCong.csv") -->
-<!-- f_kableExtra(df_ts_re,string_caption = cap,footnote = snote,col_control = FALSE) -->
-<!-- ``` -->
-
-<!-- ```{r c1,eval=FALSE,include=FALSE} -->
-<!-- cap <- "Seleção da Estrutura Fixa" -->
-<!-- snote <- "estrutura aleatória mais plausível usada em todos os modelos" -->
-<!-- ``` -->
-
-<!-- ```{r ts-ncong,eval=FALSE,include=FALSE} -->
-<!-- df_ts <- read.csv("./dados/csv/df_ts_defesa_congruencias.csv") -->
-<!-- f_kableExtra(df_ts,string_caption = cap,footnote = snote,col_control = FALSE) -->
-<!-- ``` -->
-
-<!-- ```{r c2,eval=FALSE,include=FALSE} -->
-<!-- cap <- "Predito pelo modelo mais plausível para descrever a congruência entre SAD empírica e simulada" -->
-<!-- ``` -->
-
-<!-- ```{r nCong-md-predito,fig.height=8,fig.width=8,fig.cap=cap,fig.pos="H",eval=FALSE,include=FALSE} -->
-<!-- oname <- load(file="./dados/Rdata/glmm_nCong_selecionado.Rdata") -->
-<!-- l_md_e_start <- get(oname) -->
-<!-- df_newdata <- l_md_e_start$modelo@frame[,-1] -->
-<!-- df_newdata <- with(df_newdata,{ -->
-<!--   expand.grid(SiteCode = "SPigua1", -->
-<!--               forest_succession = unique(forest_succession), -->
-<!--               k_z = seq(min(k_z),max(k_z),length.out=150), -->
-<!--               land_hyp = unique(land_hyp), -->
-<!--               p_z = seq(min(p_z),max(p_z),length.out=150)) -->
-<!-- }) -->
-<!-- # gráficos -->
-<!-- df_newdata$pred <- predict(l_md_e_start$modelo,newdata=df_newdata, re.form=~0) -->
-<!-- v_range <- range(df_newdata$pred) -->
-<!-- # v_breaks1 <- c(-0.2,0,0.2,0.5,1) -->
-<!-- df_newdata %>% -->
-<!--   mutate(land_hyp = factor(land_hyp, -->
-<!--                            levels=c("cont","non_frag","ideal"), -->
-<!--                            labels=c("contemp.","sem frag.","ideal."))) %>%  -->
-<!--   ggplot(aes(x=p_z,y=k_z,fill=pred,z=pred)) + -->
-<!--   geom_raster() + -->
-<!--   geomtextpath::geom_textcontour(aes(z=pred),color="blue",straight = TRUE) + -->
-<!--   scale_fill_gradient2(low="green", -->
-<!--                        mid="red", -->
-<!--                        high="black", -->
-<!--                        midpoint = 2, -->
-<!--                        limits=v_range) + -->
-<!--   scale_y_reverse() + -->
-<!--   theme_classic() + -->
-<!--   guides(fill = guide_colourbar(title = "logito")) + -->
-<!--   coord_cartesian(expand = FALSE) + -->
-<!--   labs(x="z(p)",y="z(k)") + -->
-<!--   theme(legend.position = "top") + -->
-<!--   facet_grid(land_hyp~forest_succession) -->
-<!-- ``` -->
-
-<!-- ```{r exemplo tabela,eval=FALSE,include=FALSE} -->
-<!-- df_tab <- read_csv("./dados/csv/ts_congCont.csv") -->
-<!-- df_tab |>  -->
-<!--   gt(groupname_col = "pair", -->
-<!--      # rowname_col = "modelo", -->
-<!--      rownames_to_stub = F) |>  -->
-<!--   # tab_header(title = "GAMM usados para descrever a congruência na SAD entre contrastes") |>  -->
-<!--   fmt_number(columns = dAICc:dev.expl,decimals = 2, suffixing = TRUE) |>  -->
-<!--   cols_label(dev.expl = "dev. expl.") |>  -->
-<!--   tab_row_group(label = md("<center><b>Sem Fragmentação <i>per se</i> : Idealizado<b/></center>"), -->
-<!--                 rows = 5:6) |>  -->
-<!--   tab_row_group(label = md("<center><b>Contemporâneo : Sem Fragmentação <i>per se</i><b/></center>"), -->
-<!--                 rows = 3:4) |> -->
-<!--   tab_row_group(label = md("<center><b>Contemporâneo : Idealizado</center></b>"), -->
-<!--                 rows = 1:2) |> -->
-<!--   tab_style(style = cell_fill(color = "gray75"), -->
-<!--             locations = cells_row_groups(groups = 1:3)) |>  -->
-<!--   cols_align(align = "right") |>  -->
-<!--   tab_style(style = cell_text(align = "left", -->
-<!--                               weight = "bold"), -->
-<!--             locations = cells_column_labels(columns = modelo:dev.expl)) |>  -->
-<!--   text_case_when(x == "f(contraste_z)" ~ "~ f(contraste U)", -->
-<!--                  x == "f(k_z,p_z)" ~ "~ f(k, p)", -->
-<!--                  .default = "",.locations = cells_body(columns = "modelo")) |>  -->
-<!--   cols_width(modelo ~ px(130),where(is.numeric) ~ px(100)) -->
-<!-- ``` -->
-
-<!-- ```{r ip contrastes ~ p k,fig.height=figHeight,fig.width=figWidth,eval=FALSE,include=FALSE} -->
-<!-- df_plot <- df_intPred |>  -->
-<!--   mutate(p = p_z*sd(df_ad$p) + mean(df_ad$p), -->
-<!--          k = k_z*sd(df_ad$k) + mean(df_ad$k), -->
-<!--          name=factor(name,levels=paste0("efeito_",c("area","frag","conf")))) |>  -->
-<!--   select(-contains("_z"),-predito) |>  -->
-<!--   pivot_longer(starts_with("Q_0."),values_to = "pred",names_to = "label") -->
-<!-- df_plot$label <- factor(df_plot$label,levels = unique(df_plot$label)[c(3,2,4,1,5)]) -->
-<!-- # gráficos -->
-<!-- v_range <- range(df_plot$pred) -->
-<!-- v_breaks1 <- c(-0.2,0,0.2,0.5,1) -->
-<!-- f_plot <- function(df){ -->
-<!--   f_ggplot <- function(df,facets=2){ -->
-<!--   ggplot(df,aes(x=p,y=k,z=pred,fill=pred)) + -->
-<!--     geom_raster() + -->
-<!--     geom_contour(aes(z=pred), -->
-<!--                  size=0.5,color="darkblue", -->
-<!--                  breaks=v_breaks1) + -->
-<!--     geom_text_contour(aes(z=pred), -->
-<!--                       breaks=v_breaks1, -->
-<!--                       label.placer = label_placer_flattest()) + -->
-<!--     scale_fill_gradient2(low="green", -->
-<!--                          mid="red", -->
-<!--                          high="black", -->
-<!--                          midpoint = 0.5, -->
-<!--                          limits=v_range, -->
-<!--                          # round(seq(v_range[1],v_range[2],length.out = 5)[1:4],2) -->
-<!--                          breaks=v_breaks1) + -->
-<!--     scale_y_reverse() + -->
-<!--     theme_classic() + -->
-<!--     guides(fill = guide_colourbar(title = gsub("efeito_","",df$name[1]))) + -->
-<!--     coord_cartesian(expand = FALSE) + -->
-<!--     labs(fill=df$name[1]) + -->
-<!--     facet_wrap(~label,ncol = facets,scales="free") -->
-<!--   } -->
-<!--   l_p <- list() -->
-<!--   l_p[[1]] <- df |>  -->
-<!--     filter(label == "Q_0.5") |> -->
-<!--     f_ggplot() + labs(x="") -->
-<!--   l_p[[2]] <- df |>  -->
-<!--     filter(label != "Q_0.5") |> -->
-<!--     f_ggplot() -->
-<!--   ggpubr::ggarrange(plotlist = l_p,nrow=2, common.legend = TRUE, legend="top") -->
-<!-- } -->
-<!-- l_plot <- dlply(df_plot,"name",f_plot) -->
-<!-- p <- grid.arrange(grobs=l_plot,ncol=3) -->
-<!-- ggsave("apendices/analise_dados/figuras/FigFinal_contrastes.png",p, -->
-<!--        width = 13, -->
-<!--        height = 9) -->
-<!-- ``` -->
-
-
-
-<!-- <!-- ```{r estudo shapefile} --> -->
-<!-- <!-- library(sf) --> -->
-<!-- <!-- df_geomAF <- sf::st_read("./dados/shapefiles/FlorestaAtlantica_limites/biome_border.shx") --> -->
-<!-- <!-- df_geomAF %>%  --> -->
-<!-- <!--   ggplot() + --> -->
-<!-- <!--   geom_sf() --> -->
-<!-- <!-- ``` --> -->
-
-
-
-<!-- <!-- shapefile do terrabrasilis do INPE (http://terrabrasilis.dpi.inpe.br/en/download-2/) --> -->
+Determinada a melhor forma de expressar o efeito da paisagem por sítio de amostragem, é possível avaliar qual o conjunto de covariáveis fixas é adequado para estimar o efeito causal médio da paisagem. Um possível próximo passo é avaliar se é necessário estimar um efeito de paisagem por classe de preservação, dado que pode existir um intercepto por classe de preservação[w]. Se não for necessário, os modelo candidatos terão na estrutura fixa, além do efeito da paisagem, 1 intercepto por classe de preservação[x], 1 spline por ano do inventário florestal, 1 spline por coordenada geográfica. Nesse caso os modelos derivados do modelo cheio serão obtidos pela remoção de efeitos fixos 1 a 1, 2 a 2 ou de todos as covariáveis.[y] Se for necessário estimar um efeito de paisagem por classe de preservação, então a mesma operação será feita para obter o conjunto de modelos candidatos, porém o intercepto por classe de preservação será mantido em todos os modelos. Caso a maior parte do peso de evidência não se acumule em um único modelo, o conjunto de modelos candidatos 
+[a]Para a discussão:
+Em ambas práticas ontológicas primeiro alguma característica da paisagem, que interpreta-se estar relacionada com a biodiversidade local, é mensurada e então é quantificado o efeito desta métrica da paisagem na biodiversidade local. Esse sequência epistemológica é comum em estudos de estimativa de efeito causal médio a partir de modelos de regressão (REF).
+[b]Para discutirmos: seriam ontologias coexistindo num sistema epistêmico, ou práticas epistemicas comuns a duas ontologias?
+[c]Estava lendo o "Anarquismo Ontológico e Verdade no Antropoceno" e entendo que estamos em uma situação que o Mauro de Almeida chamaria de pseudo ontologias ou pseudo mundos, umas vez que ambas práticas ontológicas se baseiam em um mesmo mundo ecológico, de processos demográficos. Entendo que a ideia de práticas epistêmicas comuns não se aplica aqui, pois eu entendo que elas diferem em como fazem atribuição de causa, por exemplo, na revisão de frag. per se ou de SLOSS da Fahrig 2017 e 2020 a Fahrig não utilizam nenhum arcabouço de quantificação de efeito causal médio explícito, como o Püttker et al. 2020 fazem por exemplo (modelos de equação estrutural tem uma estabelecida conexão com teoria contrafactual). No caso desses estudos da Fahrig, eu percebo algo mais parecido com a visão de padrão e lei ou de regularidades, onde causalidade pode ser atribuida quando há repetição: em uma mesma paisagem existem mais espécies nos fragmentos pequenos do que nos fragmentos grandes (o tipico teste SLOSS, por exemplo e um artigo de 2023 da Eco Let). Então, não há claramente uma convergência de epistemológias. Porém, a partir do artigo programático de estudo do debate SLOSS (Fahrig et al. 2022 Bio Rev) uma nova epistemologia, que pode ter uma interpretação contrafactual, se forma no programa de pesquisa da Fahrig. Então entendo que essa visão mais baseada em regularidades, que difere da baseada em contrafactuais, pode ser colocada em fases mais preliminares de elaboração de hipóteses e investigação de possíveis causas enquanto essa maior convergência contrafactual, que estamos promovendo, ficaria em uma fase mais adiantada onde a ideia é atribuir efeitos. 
+REFS:
+de Almeida, M. W. B. (2021). Anarquismo ontológico e verdade no Antropoceno. Ilha Revista de Antropologia, 23(1), 10-29.
+Fahrig, L. (2017). Ecological responses to habitat fragmentation per se. Annual review of ecology, evolution, and systematics, 48(1), 1-23.
+[d]Fahrig, L., Watling, J. I., Arnillas, C. A., Arroyo‐Rodríguez, V., Jörger‐Hickfang, T., Müller, J., ... & May, F. (2022). Resolving the SLOSS dilemma for biodiversity conservation: a research agenda. Biological Reviews, 97(1), 99-114.
+Fahrig, L. (2020). Why do several small patches hold more species than few large patches?. Global ecology and biogeography, 29(4), 615-628.
+Püttker, T., Crouzeilles, R., Almeida-Gomes, M., Schmoeller, M., Maurenza, D., Alves-Pinto, H., ... & Prevedello, J. A. (2020). Indirect effects of habitat loss via habitat fragmentation: A cross-taxa analysis of forest-dependent species. Biological Conservation, 241, 108368.
+[e]Riva, F., & Fahrig, L. (2023). Landscape‐scale habitat fragmentation is positively related to biodiversity, despite patch‐scale ecosystem decay. Ecology Letters, 26(2), 268-277.
+[f]The most plausible model for the causal effect of area per se describes the log odds ratio as a function of the log ratio of U rate using a fixed spline effect and a site-specific spline effect (Figure X area per se table). This generalized additive hierarchical model (GAHM) employs a shared penalized parameter between the fixed and site-specific splines (Pedersen et al., 2019).
+This model, which explains 47% of the deviance, outperforms the second-most plausible model by a substantial margin of 91.26 AICc units. There is strong evidence against spatial autocorrelation in the residuals (p-value from the Moran’s I statistics = 0.84).
+[g]The most plausible model for the causal effect of area per se describes the log odds ratio as a function of the log ratio of U rate using a fixed spline effect and a site-specific spline effect (Figure X area per se table). This generalized additive hierarchical model (GAHM) employs a shared penalized parameter between the fixed and site-specific splines (Pedersen et al., 2019).
+This model, which explains 47% of the deviance, outperforms the second-most plausible model by a substantial margin of 91.26 AICc units. There is strong evidence against spatial autocorrelation in the residuals (p-value from the Moran’s I statistics = 0.84).
+[h]vai sair agora
+[i]contexto da paisagem e contexto biogeográfico precisam ser definidos
+[j]Aqui vc se refere a uma mudança em grau, recente  ou frquente? Ou tudo isso? Quero dizer, o grau de perturbação indica que houve muita alteração ou que houve muita alteração recente, ou com frequência?
+[k]entendo que a ideia é que a classe primária houve um evento de pertubação muito antigo ou muito brando, a classe secondary seria um evento de perturbação mais recente (~50 anos) e pouco brando/pouco severo.
+[l]isso só será auto-evidente se a lógica de análise de causalidade e uso de DAGs para isso for conhecida do leitor.
+[m]não é muito óbvio pq ano do inventário teria a ver com contexto biogegráfico.
+[n]nesta altura do texto o leitor pode pensar pq então o parágrafo anterior se ocupou de propor o uso das variáveis de contexto da paisagem e biogeográfico, já que agora vc afirma que pode não ser necessário.
+[o]de que sobre o que, de maneira geral?
+[p]para entender isso, antes é preciso explicar que vai usar GAMMs, e quais seus componentes, como slines e efeitos aleatórios associados a estes splines.
+[q]esta parte só vai ficar clara para o lietor se houver uma explicação anterior destes componentes do modelo
+[r]Aqui também é uma proposição que só vai ficar clara se houver uma explicação anterior da estrutura geral do modelo e da lógica de seleção de modelos
+[s]acho que agregação não é necessária para criar autocorrelação. Basta que haja correlação maior da resposta entre pontos mais próximos no tempo e no espaço.
+[t]Acho que precisa ficar mais claro o propósito estas perguntas. Como elas ajudam a responder a pergunta principal da seção, que é o desempenho relativo de diferentes cenários (contrafactuais) na previsão da SAD observada?
+[u]definir isto, e mostrar qual resultado demonstra esta maior ou menos flexibilidade.
+[v]idem aqui. Não está claro o que seria um modelo com maior flexibilidade
+[w]por que?
+[x]ué, pelo inćio da sentença entendi que aqui vc descreve o caso em que não é necessário um intercepto por classe de preservação
+[y]não entendi
