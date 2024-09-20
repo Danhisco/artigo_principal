@@ -54,6 +54,8 @@ download_file(file = "secoes_texto/MeM/MaterialeMetodo.Rmd",
 ```
 
 
+################ INSERTO DE INTRODUÇÃO ################  
+
 # Estimativa de efeitos causais médios a partir da simulação de contrafactuais: o caso do debate dentro da ecologia de paisagens e da teoria neutra da biodiversidade
 
 ## Processo gerador comum dos dados
@@ -144,10 +146,43 @@ tabela_contrafactuais <- data.frame(
 - Dos 3 DAGs é possível com GLMM recriar 2 deles: o DAG 1, que descreve a diversidade local como uma função da fragmentação total; e o DAG 3, que  descreve a diversidade local como uma função do efeito indepentende da fragmentação per se e da perda de cobertura florestal. 
 
 
+FINAL DO INSERTO DE INTRODUÇÃO
+
+############################################
+
+
+#### dos resultados #####
+
+###### MÉTODOS #######
+
+Como métrica de biodiversidade local utilizamos a distribuição de abundância de espécies (SAD, da sigla em inglês _Species Abundance Distribution_). Avaliamos a congruência da SAD observada e da SAD simulada em cada contrafactual. Para simular a SAD, o contrafactual deve ser composto pela paisagem hipotética e por um valor de taxa U. Nós interpretados que o contrafactual composto pela paisagem hipotética e a respectiva estimativa da taxa U na paisagem está alinhado com as práticas ontológicas dos programas de pesquisa em disputa (outras interpretações serão exploradas na discussão).
+
+Para finalizar a sequência epistêmica das práticas ontológicas iremos avaliar os efeitos causais da paisagem na congruência da SAD simulada. A estimativa de efeito ocorre pelo contraste de contrafactuais: área per se, paisagem aglomerada e paisagem prístina; fragmentação per se, paisagem contemporânea e paisagem aglomerada; fragmentação total, paisagem contemporânae e paisagem prístina. O efeito da paisagem será avaliado pelo log odds ratio da probabilidade da SAD simulada ter boa congruência com a SAD observada, dado um grau de limitação de dispersão per capita. A SAD simulada é comparada com a SAD observada pelo teste de Kolmogorov-Smirnov bootstrap e é contabilizado o número de SADs simuladas em que não foi possível refutar a hipótese nula, de que ambas SADs são amostras de uma mesma distribuição. A proporção de SADs simuladas com boa congruência foi usada para calcular o log odds ratio de contrafactuais em contraste.
+
+
+Perguntas
+Para avaliar cada efeito causal da paisagem, nós primeiro usamos as tabelas da figura X para responder às seguintes perguntas: O modelo mais plausível acumular a maior parte do peso de evidência dos dados? Esse modelo explica a maior parte da variabilidade dos dados? Seguimos avaliando os gráficos do intervalo de predição a posteriori do modelo mais plausível (gráficos figura X) para responder: Qual é o efeito causal fixo da paisagem na congruência relativa da distribuição de abundância de espécies (SAD) simulada?  E qual o efeito causal da paisagem por sítio de amostragem, e existem características comuns entre o efeito fixo e por sítio?
+
+
+Questions
+To assess each causal effect of the landscape, we will first use the tables in Figure X to determine the following: Is the most plausible model accumulating most of the weight? Does this model explain a significant portion of the variability in the data? Next, we will examine the posterior interval distribution in Figure X to address: What is the fixed causal effect of the landscape on the relative goodness-of-fit of the simulated species abundance distribution (SAD)? Additionally, what is the site-level causal effect of the landscape, and are there common features between the site-level and fixed effects?
+
+
+######
+
+
+
+
+
+
+
 
 # Materiais
 
 Selecionamos na base de dados TreeCo inventários florestais que amostraram indivíduos arbóreos com DBH>=4.8 cm em parcela única de pelo menos 1ha de floresta, com alta confiabilidade taxonômica no nível de morfoespécie e da coordenada central da parcela. A base de dados TreeCo compilou amplamente trabalhos fitossociológicos realizados na Floresta Atlântica (@de2015much). Utilizamos mapas de cobertura vegetal da coleção 6 do mapbiomas com resolução de 30x30 m2, que agregam mapas de 1985 até 2020 (@mapbiomas).  Os mapas de cobertura vegetal distinguem as áreas de cobertura florestal nativa das áreas de outros tipos de cobertura (@mapbiomas). Classificamos as áreas de cobertura florestal como áreas de habitat e as restantes como áreas de não habitat. Os mapas de cobertura florestal foram recortados em quadrados centrados na coordenada central da parcela. A resolução dos mapas foi ajustada para que a densidade de pixels seja igual a densidade de indivíduos na parcela do respectivo inventário florestal. Aproximamos a área da parcela por um quadrado. Em uma paisagem não foi possível desenhar uma área quadrada devido à configuração espacial do habitat e foi descartada (Apêndice: Efeito de Escalar).
+
+
+################ ANTIGO ################
 
 # Método
 

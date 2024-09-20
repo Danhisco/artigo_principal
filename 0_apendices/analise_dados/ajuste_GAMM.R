@@ -27,9 +27,49 @@ df_contrastes <- read_csv("dados/csv/taxaU/df_contrastes.csv") %>%
            gsub("frag.total_logratio","Frag. total",.),
          across(SiteCode:contraste,factor))
 df_md <- inner_join(df_md,df_contrastes,by=c("SiteCode","contraste","k")) %>% 
-  relocate(Uefeito,.after="logOR")
+  relocate(Uefeito,.after="logOR") %>% 
+  mutate(k_cont = as.numeric(as.character(k)))
+saveRDS(select(df_md,contraste,SiteCode,k_cont,Uefeito,logOR),
+        file=paste0(v_path,"rds/df_md.rds"))
 ## modelos usados (versão exploração apenas da estrutura hierarquica)
 ## Seguindo as especifícações de Pedersen et al. 2019 https://peerj.com/articles/6876/
+f_gam2 <- \(dfi){
+  l_md <- list()
+  l_md$`te(land)|Site : gs` <- gam(
+    logOR ~ 
+      te(Uefeito,k_cont,
+         bs=c("cr","cr"),m=2,id = "efeito_comum") +
+      t2(Uefeito,k_cont,SiteCode,
+         bs=c("cr","cr","re"),m=2,full=TRUE,id = "efeito_sitio"),
+    data=dfi,method = "REML")
+  l_md$`te(land) + 1|Site` <- gam(
+    logOR ~ 
+      te(Uefeito,k_cont,
+         bs=c("cr","cr"),m=2,id = "efeito_comum") +
+      s(SiteCode,bs="re"),
+    data=dfi,method = "REML")
+  l_md$`1 + 1|Site` <- gam(
+    logOR ~ 1 + s(SiteCode,bs="re"),
+    data=dfi,method = "REML")
+  saveRDS(l_md,
+          file=paste0(v_path,"rds/l_md_",
+                      gsub("Frag. total","fragtotal",dfi$contraste[1]) %>% 
+                        gsub("Frag. per se","fragperse",.) %>% 
+                        gsub("Área per se","areaperse",.),
+                      ".rds"))
+  rm(l_md);gc()
+}
+lapply(split(filter(df_md,contraste!="Área per se"),
+             df_md$contraste),f_gam2)
+# dff <- filter(df_md,contraste=="Frag. total")
+# f_gam2(dff)
+#
+# diagnósticos
+
+
+
+
+########### apenas efeito da paisagem
 f_gam <- \(dfi,bs_type="cr"){
   l_md <- list()
   l_md$`s(land)|Site : gi` <- gam(
