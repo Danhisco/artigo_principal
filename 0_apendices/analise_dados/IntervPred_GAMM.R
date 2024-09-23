@@ -24,6 +24,19 @@ v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compi
 #                     pattern="l_md_3aperg",full.names = T)
 # names(paths) <- str_extract(paths,"(?<=cov\\_)(.*?)(?=\\.rds)")
 #
+l_path <- list()
+l_path$te <-  paste0("rds/l_md_",c("areaperse","fragperse","fragtotal"),".rds")
+l_path$U <- "rds/l_md_simples_apudPedersen2019.rds"
+df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv"))
+# rotina
+lapply(l_path$te,\(i){
+  hgam <- readRDS(paste0(v_path,i))
+  hgam <- hgam[[grep("gs",names(hgam))]]
+  
+})
+
+##############
+
 l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019_tp.rds"))
 df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples_tp_e_cr.csv")) %>%
   filter(dAICc==0,grepl("tp::",modelo)) %>% 
@@ -34,6 +47,10 @@ l_md <- dlply(df_tabsel,"contraste",\(dfi){
 })
 #################################################################
 # função para criar o new data fixo
+f_dfmd2 <- \(dff,length_pred = 150,site.posteriori ="SPigua1"){
+  
+}
+
 f_dfmd <- \(dff,byforest,length_pred = 150,site.posteriori ="SPigua1"){
   v_range <- range(dff$Uefeito)
   df_newpred <- select(dff,-logOR,-Uefeito) %>% 

@@ -197,27 +197,9 @@ cap <- "A extensão espacial é um dos fatores que determina as medidas tomadas 
 knitr::include_graphics(path = "./figuras/fig5_SoE.png")
 ```
 
-##[a] Práticas ontológicas em disputa coexistindo em um sistema epistêmico contrafactual baseado em indivíduos[b][c][d][e]
+## Práticas ontológicas em disputa coexistindo em um sistema epistêmico contrafactual baseado em indivíduos
 
 No dispositivo de mimese, à medida que propágulos entram e saem da parcela, a riqueza e a abundância relativa das espécies locais são influenciadas pela paisagem, que determina a quantidade, posição e distância dos progenitores remanescentes. O modelo é calibrado para capturar a influência da paisagem na riqueza de espécies, expressa na taxa U, levando em conta a limitação de dispersão per capita. Essa taxa corresponde à probabilidade de colonização por uma nova espécie na paisagem necessária para atingir a riqueza observada. A validação empírica ocorre pela avaliação da congruência da distribuição de abundância de espécies (SAD) observada e simulada em um particular contrafactual, e, portanto, considera simultaneamente a influência da paisagem na riqueza e abundância relativa da paisagem. Buscamos quantificar os efeitos da paisagem — área per se, fragmentação per se e fragmentação total — como previstos pelas práticas ontológicas em disputa, na congruência da SAD simulada. Para isso, contrastamos pares de contrafactuais, calculando os efeitos causais médios da paisagem na congruência da SAD simulada (REF ABM causal inference). Esses efeitos foram descritos por modelos hierárquicos aditivos generalizados (HGAMs): o log da razão da chance da SAD simulada ter boa congruência (logOR) em função do log da razão da taxa U (log(U/U)) e da proporção de propágulos que permanecem na vizinhança imediata (k). A seguir apresentamos o log(U/U) estimado em função de k, e então descrevemos a tendência central dos efeitos da paisagem na congruência da SAD simulada.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ### Métrica funcional da influência da paisagem na biodiversidade local
 
@@ -235,8 +217,6 @@ knitr::kable(df_quantisobs_Uefeito,
              caption = "Quantis observados dos contrastes na taxa U previstos em cada prática ontológica.")
 ```
 
-
-
 Cada razão entre taxa Us representa um previsto efeito da paisagem: área per se, fragmentação per se e fragmentação total. 
 Nos 3 efeitos, a maior parte dos valores de logU/U ocorre na mesma faixa de valores de paisagens com pouca cobertura florestal, porém em paisagens com perda de cobertura florestal logU/U pode aumentar em magnitude se a limitação de dispersão for branda ou muito severa (fig. \@ref(fig:GE-contraste_taxaU)). Os valores em paisagens sem perda de cobertura florestal ocorrem ao redor do zero, com valores negativos e positivos (fig. \@ref(fig:GE-contraste_taxaU)).
 O efeito que apresenta menor amplitude de valores é o de área per se, enquanto o efeito de fragmentação total apresenta a maior amplitude (fig. \@ref(fig:GE-contraste_taxaU)). 
@@ -253,17 +233,20 @@ knitr::include_graphics(path="./figuras/GE_taxaU_contrastes.png")
 
 ### Descrição dos efeitos causais médios da paisagem na congruência da simulação da biodiversidade local
 
-
-
 Os efeitos causais médios da paisagem foram calculados empíricamente com o log odds ratio (logOR). Quando a congruência da SAD simulada em ambos contrafactuais em contraste é igual, o valor de logOR é zero. Se o contrafactual do numerador apresenta maior proporção de SADs com boa congruência. então o logOR será maior do que zero, vice-e-versa se o logOR for negativo. Nosso objetivo é descrever os efeitos totais da paisagem na congruência relativa da SAD simulada. O sistema epistêmico usado para estimar esses efeitos impõem uma estrutura hierárquica aos dados, pois, simula diversos cenários de dispersão em diferentes tipos de paisagens contrafactuais para cada área amostrada. Nessa situação, dados com estrutura hierarquicas podem ser usados para estimar efeitos causais não enviesados (Feller & Gelman 2015; Weinstein & Blei 2024). A lógica é que, uma vez que o sítio de amostragem é sempre o mesmo, todas as possíveis covariáveis estão fixas. A descrição do logOR em função de k (proporção de propágulos que permanece até a vizinhança imediadata do progenitor) e do logU/U (métrica que expressa o efeito da paisagem) pode descrever o efeito completo da paisagem. O efeito completo descreve tanto o efeito na riqueza quanto o efeito na abundância relativa de espécies locais. Para isso, utilizamos como preditoras a métrica funcional de influência da paisagem na riqueza, e a capacidade de dispersão simulada para representar qualquer efeito da paisagem na abundância relativa não contemplado pelo efeito da métrica funcional. 
  
 Para cada efeito causal médio da paisagem (área per se, fragmentação per se e fragmentação total), comparamos, via AICc (REF), 7 modelos hierarquicos aditivos generalizados (detalhes em Pedersen et al. 2019): i) com um tensor entre k e logU/U comum e com um tensor dessas duas variáveis por sítio de amostragem (com o tensor por sítio compartilhando o parâmetro de penalizado com o tensor comum); ii) com um tensor entre k e logU/U comum e apenas um intercepto por sítio; iii) 1 spline comum para logU/U e com um spline por sítio (compartilhando a penalização); iv) 1 spline para logU/U e com apenas 1 intercepto por sítio; v) 1 spline comum para k e por sítio (compartilhando a penalização); vi) 1 spline comum para k e apenas 1 intercepto por sítio; vii) 1 intercepto comum e por sítio. 
 
+PRÓXIMO:
+- ajustar os modelos só com k
+- fazer a tabela de seleção
+- modelo diagnóstico do mais plausível
+- predição a posteriori
+- logOR por sítio e médio
 
-
-
-
-
+#####################################
+############## ANTIGO  ##############
+#####################################
 
 
 

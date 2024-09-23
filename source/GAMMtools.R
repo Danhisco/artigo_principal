@@ -654,7 +654,34 @@ f_extract_smoothers_f_formula <- \(formula_obj,
     str_split_1(pattern = " \\+ ")
     # grep(pattern='s\\(k_z\\)|s\\(p_z\\)|ti\\(p_z, k_z\\)',value = TRUE,x=.)
 }
-
+f_diag <- \(hgam,vname){
+  if(!any(grepl("flextable",search()))) library(flextable)
+  if(!any(grepl("gratia",search()))) library(gratia)
+  if(!any(grepl("magick",search()))) library(magick)
+  # gráficos diagnóstico
+  ldiag <- list()
+  ldiag$ft_md <- as_flextable(hgam) %>% 
+    bg(., bg = "white", part = "all")
+  ldiag$appraise <- appraise(hgam)
+  lpaths <- lapply(names(ldiag),\(i){
+    vpath <- paste0(v_path,"figuras/",i,"_lapply.png")
+    if(i=="ft_md"){
+      save_as_image(ldiag[[i]],path=vpath)
+    }else{
+      ggsave(plot = ldiag[[i]],width = 8,height = 6,filename = vpath)
+    }})
+  names(lpaths) <- names(ldiag)
+  # le como image object
+  l_png <- lapply(lpaths,\(li) image_read(li) %>% image_trim)
+  # figura final salvamento e limpeza
+  final_image <- image_append(do.call("c",l_png),stack = TRUE)
+  v_name <- gsub("Área per se","areaperse",vname) %>% 
+    gsub("Frag. per se","fragperse",.) %>%
+    gsub("Frag. total","fratotal",.)
+  file.remove(do.call("c",lpaths))
+  image_write(final_image,paste0(v_path,"figuras/diag_",v_name,".png"), 
+              format = "png")
+}
 
 f_diagplots <- \(lmd){
   #@ dependencies: flextable, gratia, magick

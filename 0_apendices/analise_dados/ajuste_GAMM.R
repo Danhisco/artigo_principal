@@ -1,3 +1,18 @@
+# pacotes
+library(gratia)
+library(doMC)
+library(gridExtra)
+library(ggplot2)
+theme_set(theme_bw())
+library(readr)
+library(stringr)
+library(tidyr)
+library(bbmle)
+library(DHARMa)
+# library(lme4)
+library(mgcv)
+library(plyr)
+library(dplyr)
 ## funções de ajuste e de plot
 source("source/2samples_testes.R")
 source("source/general_tools.R")
@@ -31,9 +46,12 @@ df_md <- inner_join(df_md,df_contrastes,by=c("SiteCode","contraste","k")) %>%
   mutate(k_cont = as.numeric(as.character(k)))
 saveRDS(select(df_md,contraste,SiteCode,k_cont,Uefeito,logOR),
         file=paste0(v_path,"rds/df_md.rds"))
-## modelos usados (versão exploração apenas da estrutura hierarquica)
+##########################################################################
+### Funções usadas para ajustar os 3 blocos de modelos: te, logU/U e k ###
+##########################################################################
 ## Seguindo as especifícações de Pedersen et al. 2019 https://peerj.com/articles/6876/
-f_gam2 <- \(dfi){
+# te: tensor entre o efeito na riqueza e a capacidade de dispersão per se
+f_gam_te <- \(dfi){
   l_md <- list()
   l_md$`te(land)|Site : gs` <- gam(
     logOR ~ 
@@ -59,25 +77,28 @@ f_gam2 <- \(dfi){
                       ".rds"))
   rm(l_md);gc()
 }
-lapply(split(filter(df_md,contraste!="Área per se"),
-             df_md$contraste),f_gam2)
-# dff <- filter(df_md,contraste=="Frag. total")
-# f_gam2(dff)
-#
-# diagnósticos
-
-
-
-
-########### apenas efeito da paisagem
+lapply(split(df_md,contraste,df_md$contraste),f_gam_te)
+# s(k)+s(k)|Site
+f_gam3 <- \(dfi){
+  l_md <- list()
+  l_md$`s(k)+s(k)|Site` <- gam(
+    logOR ~ 
+      s(k_cont,bs="cr",m=2,id = "efeito_comum") +
+      s(k_cont, SiteCode, bs = "fs", xt=list(bs = "cr"), m=2, id="efeito_sitio"),
+    data=dfi,method = "REML")
+  l_md$`s(k)+1|Site` <- gam(
+    logOR ~ 
+      s(k_cont,bs="cr",m=2,id = "efeito_comum") +
+      s(SiteCode,bs="re"),
+    data=dfi,method = "REML")
+  return(l_md)
+}
+l_md <- dlply(df_md,"contraste",f_gam3)
+saveRDS(l_md,paste0(v_path,"rds/l_md_onlyk.rds"))
+rm("l_md");gc()
+# s(logU/U)+s(logU/U)|Site
 f_gam <- \(dfi,bs_type="cr"){
   l_md <- list()
-  l_md$`s(land)|Site : gi` <- gam(
-    logOR ~ 
-      s(Uefeito,bs=bs_type,m=2, id="efeito_comum") +
-      s(SiteCode,bs="re") + 
-      s(Uefeito, by=SiteCode, bs=bs_type,m=1, id="efeito_sitio"),
-    data=dfi,method = "REML")
   l_md$`s(land)|Site : gs` <- gam(
     logOR ~ 
       s(Uefeito,bs=bs_type,m=2, id="efeito_comum") +
@@ -94,7 +115,68 @@ f_gam <- \(dfi,bs_type="cr"){
   return(l_md)
 }
 l_md_logOR <- dlply(df_md,"contraste",f_gam)
-saveRDS(l_md_logOR,file=paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))0
+saveRDS(l_md_logOR,file=paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
+###############################################
+############ tabela de seleção  ###############
+###############################################
+l_path <- list()
+l_path$te <-  paste0("rds/l_md_",c("areaperse","fragperse","fragtotal"),".rds")
+l_path$U <- "rds/l_md_simples_apudPedersen2019.rds"
+l_path$k <- "rds/l_md_onlyk.rds"
+# veffect <- l_path$te[[1]]
+f_single_lmd <- \(veffect){
+  # nome 
+  vname <- str_extract(veffect,"(?<=l_md_)(.*?)(?=\\.rds)") %>% 
+    gsub("areaperse","Área per se",.) %>% 
+    gsub("fragperse","Frag. per se",.) %>% 
+    gsub("fragtotal","Frag. total",.)
+  # te
+  lmd <- readRDS(paste0(v_path,veffect))
+  # s(U)
+  lmd_U <- readRDS(paste0(v_path,l_path$U))
+  lmd_U <- lmd_U[[vname]]
+  lmd$`s(logU/U)|Site : gs` <- lmd_U$`s(land)|Site : gs`
+  lmd$`s(logU/U) + 1|Site` <- lmd_U$`s(land) + 1|Site`
+  rm(lmd_U);gc()
+  # s(k)
+  lmd_k <- readRDS(paste0(v_path,l_path$k))
+  lmd_k <- lmd_k[[vname]]
+  lmd$`s(k)|Site : gs` <- lmd_k$`s(k)+s(k)|Site`
+  lmd$`s(k) + 1|Site` <- lmd_k$`s(k)+1|Site`
+  rm(lmd_k);gc()
+  #
+  df_tabsel <- f_TabSelGAMM(lmd)
+  rm(lmd);gc()
+  return(df_tabsel)
+}
+df_tabsel_geral <- alply(l_path$te,1,f_single_lmd)
+names(df_tabsel_geral) <- str_extract(l_path$te,"(?<=l_md_)(.*?)(?=\\.rds)") %>% 
+  gsub("areaperse","Área per se",.) %>% 
+  gsub("fragperse","Frag. per se",.) %>% 
+  gsub("fragtotal","Frag. total",.)
+df_write <- lapply(names(df_tabsel_geral),\(li){
+  mutate(df_tabsel_geral[[li]],contraste=li)
+}) %>% do.call("rbind",.)
+write_csv(df_write,paste0(v_path,"rds/df_tabsel_geral.csv"))
+########################################################
+##################### diagnósticos #####################
+########################################################
+df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
+  filter(dAICc==0)
+f_diag_e_plots <- \(veffect){
+  vname <- str_extract(veffect,"(?<=l_md_)(.*?)(?=\\.rds)") %>% 
+    gsub("areaperse","Área per se",.) %>% 
+    gsub("fragperse","Frag. per se",.) %>% 
+    gsub("fragtotal","Frag. total",.)
+  hgam <- readRDS(paste0(v_path,veffect))
+  hgam <- hgam[[grep("gs",names(hgam),value=T)]]
+  vpath <- f_diag(hgam,vname)
+}
+vlog <- lapply(l_path$te[2:3],f_diag_e_plots)
+f_diag_e_plots(l_path$te[3])
+
+
+
 # l_md_logOR <- readRDS(file=paste0(v_path,"rds/l_md_simples.rds"))
 df_tabelaSelecao <- ldply(l_md_logOR,f_TabSelGAMM,.id="pair")
 write_csv(df_tabelaSelecao,
@@ -112,12 +194,12 @@ l_k.check <- lapply(l_md,k.check)
 ###################
 #
 #
-###########################################################################
-############### se caso utilizarmos a base funcion tp igual ###############
-###########################################################################
-formals(f_gam)$bs_type <- "tp"
-l_md_logOR <- dlply(df_md,"contraste",f_gam)
-saveRDS(l_md_logOR,file=paste0(v_path,"rds/l_md_simples_apudPedersen2019_tp.rds"))
+
+
+
+
+
+#############################
 l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
 l_md <- lapply(l_md, \(li){
   names(li) <- paste0("cr::",names(li))
