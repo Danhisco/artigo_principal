@@ -11,6 +11,47 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 23set2024
+
+tabela de seleção com os hgam com tensor e spline (7 ao todo) por efeito da paisagem
+
+```{r}
+df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv"))
+library(flextable)
+library(officer)
+library(magick)
+l_fx <- dlply(df_tabsel,"contraste",\(dfi){
+  title_fp <- fp_text(font.size = 14, bold = TRUE, font.family = "Arial")
+  ft <- relocate(dfi,contraste) %>% 
+    mutate(across(where(is.numeric),~round(.x,2))) %>% 
+    flextable() %>%
+    bg(bg = "white",part = "all") %>%
+    theme_vanilla() %>% 
+    set_header_labels(
+      modelo = "HGAM",
+      dAICc = "ΔAICc",
+      df = "est. coef.",
+      weight = "weight",
+      dev.expl = "Dev. Exp.",
+      `Moran I statistic (res)` = "Moran's I",
+      `p-value` = "p-value") %>%
+    bold(part = "header") %>%
+    autofit() 
+  # %>% 
+  #   set_caption(captio=dfi$contraste[1],fp_p=title_fp)
+  vpath <- paste0(v_path,"figuras/tabsel_",
+                  gsub("Área per se","areaperse",dfi$contraste[1]) %>% 
+                    gsub("Frag. per se","fragperse",.) %>% 
+                    gsub("Frag. total","fragtotal",.),".png")
+  save_as_image(ft, path = vpath)
+  img_ft <- image_read(vpath) %>% 
+    image_trim()
+  image_write(img_ft,vpath)
+})
+
+```
+
+
 # 6set2024  
 
 figura da tabela simples
