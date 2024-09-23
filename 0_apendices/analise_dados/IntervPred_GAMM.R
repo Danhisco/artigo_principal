@@ -28,48 +28,48 @@ l_path <- list()
 l_path$te <-  paste0("rds/l_md_",c("areaperse","fragperse","fragtotal"),".rds")
 l_path$U <- "rds/l_md_simples_apudPedersen2019.rds"
 df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv"))
-# rotina
-lapply(l_path$te,\(i){
-  hgam <- readRDS(paste0(v_path,i))
-  hgam <- hgam[[grep("gs",names(hgam))]]
-  
-})
-
-##############
-
-l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019_tp.rds"))
-df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples_tp_e_cr.csv")) %>%
-  filter(dAICc==0,grepl("tp::",modelo)) %>% 
-  mutate(modelo = gsub("tp::","",modelo)) %>% 
-  rename(contraste=pair)
-l_md <- dlply(df_tabsel,"contraste",\(dfi){
-  with(dfi,{l_md[[contraste]][[modelo]]})
-})
+# l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019_tp.rds"))
+# df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples_tp_e_cr.csv")) %>%
+#   filter(dAICc==0,grepl("tp::",modelo)) %>% 
+#   mutate(modelo = gsub("tp::","",modelo)) %>% 
+#   rename(contraste=pair)
+# l_md <- dlply(df_tabsel,"contraste",\(dfi){
+#   with(dfi,{l_md[[contraste]][[modelo]]})
+# })
 #################################################################
 # função para criar o new data fixo
-f_dfmd2 <- \(dff,length_pred = 150,site.posteriori ="SPigua1"){
-  
-}
-
-f_dfmd <- \(dff,byforest,length_pred = 150,site.posteriori ="SPigua1"){
-  v_range <- range(dff$Uefeito)
-  df_newpred <- select(dff,-logOR,-Uefeito) %>% 
-    mutate(SiteCode=site.posteriori) %>% head(n=1)
-  try({
-    df_newpred <- cbind(
-      data.frame(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred)),
-      df_newpred)
-  },silent = TRUE)
-  if(byforest){
-    df_return <- adply(as.character(unique(dff$forest_succession)),1,\(vstr){
-      vrange <- filter(dff,forest_succession==vstr) %>% pull(Uefeito) %>% range
-      filter(df_newpred,Uefeito>=vrange[1] & Uefeito<=vrange[2])
-    }) %>% select(-X1)
-    return(df_return)
+f_dfmd2 <- \(dff,length_pred = 100,site.posteriori ="SPigua1",mdarea=FALSE){
+  if(mdarea){
+    v_range <- range(dff$Uefeito)
+    data.frame(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred),
+               SiteCode=site.posteriori)
   }else{
-    return(df_newpred)
+    v_range <- range(dff$Uefeito)
+    v_k <- range(dff$k_cont)
+    expand.grid(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred),
+                k_cont = seq(v_k[1],v_k[2],length.out=length_pred),
+                SiteCode=site.posteriori)  
   }
 }
+# f_dfmd <- \(dff,byforest,length_pred = 150,site.posteriori ="SPigua1"){
+#   v_range <- range(dff$Uefeito)
+#   df_newpred <- select(dff,-logOR,-Uefeito) %>% 
+#     mutate(SiteCode=site.posteriori) %>% head(n=1)
+#   try({
+#     df_newpred <- cbind(
+#       data.frame(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred)),
+#       df_newpred)
+#   },silent = TRUE)
+#   if(byforest){
+#     df_return <- adply(as.character(unique(dff$forest_succession)),1,\(vstr){
+#       vrange <- filter(dff,forest_succession==vstr) %>% pull(Uefeito) %>% range
+#       filter(df_newpred,Uefeito>=vrange[1] & Uefeito<=vrange[2])
+#     }) %>% select(-X1)
+#     return(df_return)
+#   }else{
+#     return(df_newpred)
+#   }
+# }
 # função que realiza a predição a posteriori dado o modelo, new data e o vetor de exclusão de componentes
 f_predictions <- \(gamm,nsim,to_exclude,df_newpred,quants=c(0.05,0.5,0.95)){
   coef_samples <- MASS::mvrnorm(n=nsim, mu=coef(gamm), Sigma=vcov(gamm))
@@ -104,16 +104,15 @@ f_predictions <- \(gamm,nsim,to_exclude,df_newpred,quants=c(0.05,0.5,0.95)){
 f_calcPI <- \(gamm,
               nsim = 1000,
               to_exclude,
+              simple_area=FALSE,
               quants=c(0.05,0.5,0.95)){
   #### 1a parte: somente efeito fixo ####
   # create the new data 
-  df_newpred <- f_dfmd(
-    gamm$model,
-    grepl("by = fore",as.character(formula(gamm)[[3]])[2]))
+  df_newpred <- f_dfmd2(gamm$model,mdarea = simple_area)
   # quais componentes serão zerados?
-  to_exclude <- to_exclude[
-    grep(pattern = paste(names(df_newpred),collapse = "|"),
-         to_exclude)]
+  # to_exclude <- to_exclude[
+  #   grep(pattern = paste(names(df_newpred),collapse = "|"),
+  #        to_exclude)]
   # obtain the predictions
   df_pred <- f_predictions(gamm,nsim,to_exclude,df_newpred)
   # save the data frame
@@ -131,13 +130,18 @@ f_calcPI <- \(gamm,
   # return
   return(l_df)
 }
-###
-formals(f_calcPI)$to_exclude = c("s(Uefeito,SiteCode)",
-                                 # "(Intercept)",
-                                 "forest_successionprimary/secondary",
-                                 "forest_successionsecondary",
-                                 "s(SiteCode)",
-                                 "s(lat,long)",
-                                 "s(data_year)")
-l_df_pred <- lapply(l_md,f_calcPI)
-saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019_tp.rds"))
+# rotina
+vlog <- lapply(l_path$te,\(i){
+  hgam <- readRDS(paste0(v_path,i))
+  hgam <- hgam[[grep("gs",names(hgam))]]
+  l_df <- f_calcPI(hgam,to_exclude = "t2(Uefeito,k_cont,SiteCode)")
+  saveRDS(l_df,paste0(v_path,gsub("l_md_","l_dfpred_",i)))
+  rm(hgam,l_df);gc()
+})
+md_area <- readRDS(paste0(v_path,l_path$U))
+md_area <- md_area$`Área per se`$`s(land)|Site : gs`
+l_df <- f_calcPI(md_area,to_exclude = "s(Uefeito,SiteCode)",simple_area = TRUE)
+saveRDS(l_df,paste0(v_path,"rds/l_dfpred_areaperse_Ugs.rds"))
+
+# l_df_pred <- lapply(l_md,f_calcPI)
+# saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019_tp.rds"))
