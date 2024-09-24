@@ -11,6 +11,58 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 24set2024
+
+```{r}
+l_path <- paste0(v_path,"rds/l_dfpred_",
+                 c("areaperse",
+                  "fragperse",
+                  "fragtotal"),
+                 ".rds")
+l_df <- lapply(l_path,readRDS)
+names(l_df) <- gsub("areaperse","Área per se",
+                    str_extract(l_path,"(?<=dfpred_)(.*?)(?=\\.rds)")) %>% 
+  gsub("fragperse","Frag. per se",.) %>% 
+  gsub("fragtotal","Frag. total",.)
+l_df_densityplot <- lapply(l_df,rbind.fill) %>% 
+  lapply(.,mutate,predicao=ifelse(is.na(logOR),"somente fixo","fixo e aleat."))
+f_ggplot <- \(dfi){
+  ggplot(dfi,aes(x=logOR_pred,fill=predicao)) +
+    geom_density(alpha = 0.5) +
+    geom_density(data=filter(dfi,predicao=="fixo e aleat."),alpha=0.5,
+                 mapping=aes(x=logOR,fill="observado")) +
+    scale_fill_manual("",values=c("fixo e aleat."="#C04000",
+                               "somente fixo"="darkgreen",
+                               "observado"="black"),
+                      breaks = c("fixo e aleat.", 
+                                 "somente fixo", 
+                                 "observado")) +
+    theme_minimal() +
+    labs(x="log odds ratio",
+         y="density",
+         subtitle="median")
+}
+f_plotdensityplot <- \(vstring){
+  dfi <- l_df_densityplot[[vstring]]
+  p <- dfi %>% 
+    pivot_longer(starts_with("Q_"),
+                 names_to="quantile",
+                 values_to="logOR_pred") %>% 
+    filter(quantile=="Q_0.5") %>% 
+    f_ggplot() +
+    labs(title=vstring)
+  vstring <- gsub("Área per se","areaperse",vstring) %>% 
+    gsub("Frag. per se","fragperse",.) %>% 
+    gsub("Frag. total","fragtotal",.)
+  ggsave(paste0(v_path,"figuras/density_",vstring,".png"),bg = "white")
+}
+lapply(names(l_df_densityplot),f_plotdensityplot)
+
+dfi %>% pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR")
+
+```
+
+
 
 # para 24set2024
 
