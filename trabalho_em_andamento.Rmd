@@ -57,6 +57,13 @@ f_plotdensityplot <- \(vstring){
   ggsave(paste0(v_path,"figuras/density_",vstring,".png"),bg = "white")
 }
 lapply(names(l_df_densityplot),f_plotdensityplot)
+rm(l_df_densityplot)
+# densitys plots FEITOS!
+#
+# e agora avaliação por sítio
+l_df_obspred_sitio <- lapply(l_df,\(li) li$`fixo e aleat`)
+
+
 
 dfi %>% pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR")
 
