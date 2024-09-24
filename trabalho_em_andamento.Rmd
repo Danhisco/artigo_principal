@@ -11,6 +11,15 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+# para 24set2024
+
+objetivo montar a figura final:
+para cada efeito iremos plotar
+aes(x=k,y=logU/U,fill=logOR) +
+geom_tile()
+
+
 # 23set2024
 
 tabela de seleção com os hgam com tensor e spline (7 ao todo) por efeito da paisagem
