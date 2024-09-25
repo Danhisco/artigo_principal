@@ -14,6 +14,27 @@ knitr::opts_chunk$set(echo = TRUE)
 # 24set2024
 
 ```{r}
+library(gratia)
+library(doMC)
+library(gridExtra)
+library(ggplot2)
+theme_set(theme_bw())
+library(readr)
+library(stringr)
+library(tidyr)
+library(bbmle)
+library(DHARMa)
+# library(lme4)
+library(mgcv)
+library(plyr)
+library(dplyr)
+## funções de ajuste e de plot
+source("source/2samples_testes.R")
+source("source/general_tools.R")
+source("source/GAMMtools.R")
+source("source/fig_tools.R")
+library(mgcv)
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
 l_path <- paste0(v_path,"rds/l_dfpred_",
                  c("areaperse",
                   "fragperse",
@@ -27,20 +48,34 @@ names(l_df) <- gsub("areaperse","Área per se",
 l_df_densityplot <- lapply(l_df,rbind.fill) %>% 
   lapply(.,mutate,predicao=ifelse(is.na(logOR),"somente fixo","fixo e aleat."))
 f_ggplot <- \(dfi){
-  ggplot(dfi,aes(x=logOR_pred,fill=predicao)) +
+  dflabel <- ddply(dfi,"predicao",\(dfw){
+    data.frame(
+      predicao = dfw$predicao[1],
+      v_acima0 = sum(dfw$logOR_pred>0)/nrow(dfw),
+      v_igual0 = sum(dfw$logOR_pred==0)/nrow(dfw),
+      v_abaixo0 = sum(dfw$logOR_pred<0)/nrow(dfw)) %>% 
+      mutate(across(starts_with("v_"),~round(.x,2)*100),
+             label = paste0("%logOR > 0 = ",v_acima0,
+                            "\n%logOR = 0 = ",v_igual0,
+                            "\n%logOR < 0 = ",v_abaixo0))
+  })
+  inner_join(dfi,dflabel) %>% 
+    ggplot(aes(x=logOR_pred,fill=predicao)) +
+    geom_vline(xintercept = 0,color="gray") +
     geom_density(alpha = 0.5) +
-    geom_density(data=filter(dfi,predicao=="fixo e aleat."),alpha=0.5,
-                 mapping=aes(x=logOR,fill="observado")) +
+    # geom_text(aes(label=label),x=1,y=2) +
     scale_fill_manual("",values=c("fixo e aleat."="#C04000",
                                "somente fixo"="darkgreen",
                                "observado"="black"),
-                      breaks = c("fixo e aleat.", 
-                                 "somente fixo", 
+                      breaks = c("somente fixo", 
+                                 "fixo e aleat.", 
                                  "observado")) +
     theme_minimal() +
     labs(x="log odds ratio",
          y="density",
-         subtitle="median")
+         subtitle="median") +
+    theme(legend.position = "none") +
+    facet_wrap(~predicao,ncol=1,scales="free")
 }
 f_plotdensityplot <- \(vstring){
   dfi <- l_df_densityplot[[vstring]]
@@ -48,6 +83,17 @@ f_plotdensityplot <- \(vstring){
     pivot_longer(starts_with("Q_"),
                  names_to="quantile",
                  values_to="logOR_pred") %>% 
+    select(-logOR) %>% 
+    rbind(.,
+          select(filter(dfi,!is.na(logOR)),
+                 Uefeito:SiteCode,logOR) %>% 
+            rename(logOR_pred=logOR) %>% 
+            mutate(quantile="Q_0.5",
+                   predicao="observado")) %>% 
+    mutate(predicao = factor(predicao,
+                             levels=c("somente fixo",
+                                      "fixo e aleat.",
+                                      "observado"))) %>% 
     filter(quantile=="Q_0.5") %>% 
     f_ggplot() +
     labs(title=vstring)
