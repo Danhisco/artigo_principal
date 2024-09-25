@@ -107,26 +107,28 @@ rm(l_df_densityplot)
 #
 # e agora avaliação por sítio
 l_df_obspred_sitio <- lapply(l_df,\(li) li$`fixo e aleat`)
-dfi <- l_df_obspred_sitio[[1]] %>% 
-  pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR_pred")
 f_ggplot <- \(dfi){
   dfi %>% 
     ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
     geom_abline(intercept = 0,slope=1) +
     geom_point() +
     geom_smooth(method="lm",se=FALSE) +
+    scale_color_manual("%",values=c("50"="darkgreen","5"="darkred","95"="darkred")) +
     labs(x="logOR observado",y="logOR predito") +
     theme(legend.position = "top",
           legend.margin = margin(t = 0, b = 0, l = 0, r = 0),
-          plot.margin = margin(t = 10, b = 0, l = 0, r = 0),
+          plot.margin = margin(t = 10, b = 0, l = 1, r = 0),
           legend.box.margin=margin(-10,-10,-10,-10),
           aspect.ratio = 1) +
     facet_wrap(~SiteCode) 
 }
 l_p <- lapply(l_df_obspred_sitio,\(li){
   li %>% 
-  pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR_pred") %>% 
-  dlply(.,"SiteCode",f_ggplot)  
+    pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR_pred") %>% 
+    mutate(quantile=gsub("Q_","",quantile) %>% 
+             as.numeric(),
+           quantile=as.character(quantile*100)) %>% 
+    dlply(.,"SiteCode",f_ggplot)  
 })
 lapply(levels(l_df_obspred_sitio$`Frag. per se`$SiteCode),\(i){
   lp <- lapply(l_p,"[[",i)
@@ -134,7 +136,7 @@ lapply(levels(l_df_obspred_sitio$`Frag. per se`$SiteCode),\(i){
     lp[[p]] + labs(title=p)
   })
   p <- arrangeGrob(grobs=lp,nrow=1)
-  ggsave()
+  ggsave(paste0(v_path,"figuras/PIeOBS_sites/",i,".png"),p)
 })
 
 
