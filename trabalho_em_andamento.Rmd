@@ -11,6 +11,132 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+
+```{r}
+data <- data.frame(
+Uefeito = rep(rnorm(2),each=3),
+SiteCode = "character",
+quantile = paste0(rep(1:3,2),"c"),
+logOR_te = rnorm(6),
+logOR_s = rnorm(6),
+logOR = rep(rnorm(2),each=3)
+)
+wider_data <- data %>%
+  pivot_wider(
+    names_from = c("quantile"),
+    values_from = c("logOR_te", "logOR_s"),
+    names_sep = "_"
+  )
+```
+
+# 26/09/2024
+
+Avaliação da comparação entre te e s
+
+```{r olhar dia anterior}
+f_dfplot <- \(dff,dataset){
+  vcols <- c("logOR","k_cont")
+  dff %>% 
+    select(-any_of(vcols)) %>% 
+    pivot_longer(starts_with("Q_"),names_to="quantile",
+                 values_to=paste0("logOR_",dataset)) %>% 
+      mutate(quantile=gsub("Q_","",quantile) %>% 
+               as.numeric(),
+             quantile=as.character(quantile*100))
+}
+df_te <- lapply(l_df,"[[","fixo e aleat")[["Área per se"]] %>% f_dfplot(dataset="te")
+df_s <- readRDS(paste0(v_path,"rds/l_dfpred_areaperse_Ugs.rds"))[["fixo e aleat"]] %>% 
+  f_dfplot(dataset="s")
+df_plot <- inner_join(df_te,df_s) %>% 
+  inner_join(lapply(l_df,"[[","fixo e aleat")[["Área per se"]] %>% 
+               select(logOR,Uefeito,SiteCode))
+f_ggplot <- \(dfi){
+  l_p <- list()
+  l_p$predpred <- dfi %>% 
+    ggplot(aes(x=logOR_te,y=logOR_s,color=quantile)) +
+    geom_abline(intercept = 0,slope=1) +
+    geom_point() +
+    geom_smooth(method="lm",se=FALSE) +
+    scale_color_manual("%",
+                       values=c("50"="darkgreen",
+                                "5"="darkred",
+                                "95"="darkred")) +
+    labs(title="predito X predito") +
+    theme(legend.position = "top",
+          legend.margin = margin(t = 0, b = 0, l = 0, r = 0),
+          plot.margin = margin(t = 10, b = 0, l = 1, r = 0),
+          legend.box.margin=margin(-10,-10,-10,-10),
+          plot.background = element_rect(fill = "#BFD5E3"),
+          aspect.ratio = 1) +
+    facet_wrap(~SiteCode) 
+  l_p$obs_uefeito_predicoes <- dfi %>% 
+    # preparação dos dados
+    pivot_longer(matches("_te|_s"),
+                 names_to = "hgam",
+                 values_to = "logOR_pred") %>% 
+    mutate(hgam=gsub("logOR_","",hgam)) %>% 
+    # gráfico 
+    ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
+    geom_point() +
+    # te
+    geom_ribbon(aes(ymin = logOR_te_5, ymax = logOR_te_5, 
+                    fill = "Quantile range"), 
+                alpha = 0.2) +
+    geom_line(aes(y = logOR_te_50, color = "Median", group = SiteCode), 
+              alpha = 0.5) +
+    scale_fill_manual(values = c("Quantile range" = "#986868")) +
+    scale_color_manual(values = c("Median" = "#C04000")) +
+    # s
+    ggnewscale::new_scale_color() +
+    ggnewscale::new_scale_fill() +
+    geom_ribbon(aes(ymin = logOR_s_5, ymax = logOR_s_5, 
+                    fill = "Quantile range"), 
+                alpha = 0.2) +
+    geom_line(aes(y = logOR_s_50, color = "Median", group = SiteCode), 
+              alpha = 0.5) +
+    scale_fill_manual(values = c("Quantile range" = "darkgreen")) +
+    scale_color_manual(values = c("Median" = "black")) +
+    # 0 x 0 
+    geom_hline(yintercept = 0,color="darkgray",alpha=0.75) +
+    geom_vline(xintercept = 0,color="darkgray",alpha=0.75) +
+    # ajustes
+    scale_x_continuous(expand = expansion(add = c(0,0))) +
+    scale_y_continuous(expand = expansion(add = c(0,0))) +
+    labs(x="log(U / U)",y="log Odds Ratio (goodness-of-fit: SAD sim. - obs.)") +
+    theme_classic() +
+    theme(
+      axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -2.5)),
+      axis.title.y = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -30)),
+      legend.position = "none",
+      aspect.ratio = 1
+    )
+    
+}
+lapply(levels(df_s$SiteCode),\(li){
+  vpath <- paste0(v_path,"figuras/PIeOBS_sites/",li,".png")
+  p <- filter(df_plot,SiteCode==li) %>% 
+    f_ggplot()
+  vpath <- tempfile(fileext = ".png") 
+  ggsave(vpath,p)
+  img <- image_trim( image_read(vpath) )
+})
+
+  # img <- image_trim( image_read(vpath) )
+
+l_p <- lapply(l_df_obspred_sitio,\(li){
+  li %>% 
+    pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR_pred") %>% 
+    mutate(quantile=gsub("Q_","",quantile) %>% 
+             as.numeric(),
+           quantile=as.character(quantile*100)) %>% 
+    dlply(.,"SiteCode",f_ggplot)  
+})
+
+```
+
+
+
 # 24set2024
 
 ```{r}
@@ -25,6 +151,7 @@ library(tidyr)
 library(bbmle)
 library(DHARMa)
 # library(lme4)
+library(magick)
 library(mgcv)
 library(plyr)
 library(dplyr)
@@ -106,7 +233,7 @@ rm(l_df_densityplot)
 # densitys plots FEITOS!
 #
 # e agora avaliação por sítio
-l_df_obspred_sitio <- lapply(l_df,\(li) li$`fixo e aleat`)
+l_df_obspred_sitio <- lapply(l_df,"[[","fixo e aleat")
 f_ggplot <- \(dfi){
   dfi %>% 
     ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
