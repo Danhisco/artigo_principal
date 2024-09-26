@@ -64,10 +64,6 @@ f_ggplot <- \(dfi){
                                 "95"="darkred")) +
     labs(title="predito X predito") +
     theme(legend.position = "top",
-          # legend.margin = margin(t = 0, b = 0, l = 0, r = 0),
-          # plot.margin = margin(t = 10, b = 0, l = 1, r = 0),
-          # legend.box.margin=margin(-10,-10,-10,-10),
-          # plot.background = element_rect(fill = "#BFD5E3"),
           aspect.ratio = 1) +
     facet_wrap(~SiteCode) 
   l_p$obs_uefeito_predicoes <- dfi %>% 
@@ -87,9 +83,6 @@ f_ggplot <- \(dfi){
     labs(x="logOR observado",y="logOR predito",
          title=dfi$SiteCode[1]) +
     theme(legend.position = "top",
-          # legend.margin = margin(t = 0, b = 0, l = 0, r = 0),
-          # plot.margin = margin(t = 10, b = 0, l = 1, r = 0),
-          # legend.box.margin=margin(-10,-10,-10,-10),
           aspect.ratio = 1) +
     facet_wrap(~hgam) 
   l_p <- lapply(l_p,\(li) ggsave(tempfile(fileext = ".png"),plot = li))
@@ -103,24 +96,8 @@ f_ggplot <- \(dfi){
                 ".png")
     )
 }
-lapply(levels(df_s$SiteCode),\(li){
-  vpath <- paste0(v_path,"figuras/PIeOBS_sites/",li,".png")
-  p <- filter(df_plot,SiteCode==li) %>% 
-    f_ggplot()
-  vpath <- tempfile(fileext = ".png") 
-  ggsave(vpath,p)
-  img <- image_trim( image_read(vpath) )
-})
-
-  # img <- image_trim( image_read(vpath) )
-
-l_p <- lapply(l_df_obspred_sitio,\(li){
-  li %>% 
-    pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR_pred") %>% 
-    mutate(quantile=gsub("Q_","",quantile) %>% 
-             as.numeric(),
-           quantile=as.character(quantile*100)) %>% 
-    dlply(.,"SiteCode",f_ggplot)  
+lapply(levels(df_s$SiteCode),\(i){
+  filter(df_plot,SiteCode==i) %>% f_ggplot()
 })
 
 ```
