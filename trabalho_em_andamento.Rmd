@@ -64,10 +64,10 @@ f_ggplot <- \(dfi){
                                 "95"="darkred")) +
     labs(title="predito X predito") +
     theme(legend.position = "top",
-          legend.margin = margin(t = 0, b = 0, l = 0, r = 0),
-          plot.margin = margin(t = 10, b = 0, l = 1, r = 0),
-          legend.box.margin=margin(-10,-10,-10,-10),
-          plot.background = element_rect(fill = "#BFD5E3"),
+          # legend.margin = margin(t = 0, b = 0, l = 0, r = 0),
+          # plot.margin = margin(t = 10, b = 0, l = 1, r = 0),
+          # legend.box.margin=margin(-10,-10,-10,-10),
+          # plot.background = element_rect(fill = "#BFD5E3"),
           aspect.ratio = 1) +
     facet_wrap(~SiteCode) 
   l_p$obs_uefeito_predicoes <- dfi %>% 
@@ -76,42 +76,32 @@ f_ggplot <- \(dfi){
                  names_to = "hgam",
                  values_to = "logOR_pred") %>% 
     mutate(hgam=gsub("logOR_","",hgam)) %>% 
-    # gráfico 
     ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
+    geom_abline(intercept = 0,slope=1) +
     geom_point() +
-    # te
-    geom_ribbon(aes(ymin = logOR_te_5, ymax = logOR_te_5, 
-                    fill = "Quantile range"), 
-                alpha = 0.2) +
-    geom_line(aes(y = logOR_te_50, color = "Median", group = SiteCode), 
-              alpha = 0.5) +
-    scale_fill_manual(values = c("Quantile range" = "#986868")) +
-    scale_color_manual(values = c("Median" = "#C04000")) +
-    # s
-    ggnewscale::new_scale_color() +
-    ggnewscale::new_scale_fill() +
-    geom_ribbon(aes(ymin = logOR_s_5, ymax = logOR_s_5, 
-                    fill = "Quantile range"), 
-                alpha = 0.2) +
-    geom_line(aes(y = logOR_s_50, color = "Median", group = SiteCode), 
-              alpha = 0.5) +
-    scale_fill_manual(values = c("Quantile range" = "darkgreen")) +
-    scale_color_manual(values = c("Median" = "black")) +
-    # 0 x 0 
-    geom_hline(yintercept = 0,color="darkgray",alpha=0.75) +
-    geom_vline(xintercept = 0,color="darkgray",alpha=0.75) +
-    # ajustes
-    scale_x_continuous(expand = expansion(add = c(0,0))) +
-    scale_y_continuous(expand = expansion(add = c(0,0))) +
-    labs(x="log(U / U)",y="log Odds Ratio (goodness-of-fit: SAD sim. - obs.)") +
-    theme_classic() +
-    theme(
-      axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -2.5)),
-      axis.title.y = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -30)),
-      legend.position = "none",
-      aspect.ratio = 1
+    geom_smooth(method="lm",se=FALSE) +
+    scale_color_manual("%",
+                       values=c("50"="darkgreen",
+                                "5"="darkred",
+                                "95"="darkred")) +
+    labs(x="logOR observado",y="logOR predito",
+         title=dfi$SiteCode[1]) +
+    theme(legend.position = "top",
+          # legend.margin = margin(t = 0, b = 0, l = 0, r = 0),
+          # plot.margin = margin(t = 10, b = 0, l = 1, r = 0),
+          # legend.box.margin=margin(-10,-10,-10,-10),
+          aspect.ratio = 1) +
+    facet_wrap(~hgam) 
+  l_p <- lapply(l_p,\(li) ggsave(tempfile(fileext = ".png"),plot = li))
+  l_p <- lapply(l_p,\(li) image_read(li) %>% image_trim)
+  img_final <- image_append(do.call("c",l_p),stack = FALSE)
+  image_write(
+    img_final,
+    path=paste0(v_path,
+                "figuras/PIeOBS_sites/compara_areaperse/",
+                dfi$SiteCode[1],
+                ".png")
     )
-    
 }
 lapply(levels(df_s$SiteCode),\(li){
   vpath <- paste0(v_path,"figuras/PIeOBS_sites/",li,".png")
