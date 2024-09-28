@@ -11,6 +11,24 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 28set2024
+
+
+```{r}
+l_dfplot <- lapply(l_df,"[[","apenas fixo")
+dfi <- l_dfplot[[sample(1:3,1)]]
+f_ggplot <- \(dfi){
+  dfi %>% 
+    pivot_longer(starts_with("Q_"),
+                 names_to = "quantiles",
+                 values_to = "logOR") %>% 
+    mutate(quantiles = 100*as.numeric(gsub("Q_0","",quantiles))) %>% 
+    ggplot(aes(x=k_cont,y=Uefeito,fill=logOR)) +
+      geom_tile() +
+      facet_wrap(~quantiles,ncol=3,scales="free")
+}
+```
+
 
 
 ```{r}
