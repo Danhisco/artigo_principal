@@ -13,20 +13,61 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 28set2024
 
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(viridis)
+
+# Example data generation
+set.seed(123)
+n <- 100
+x <- seq(0, 1, length.out = n)
+y <- seq(-3, 3, length.out = n)
+data <- expand.grid(x = x, y = y)
+data$z <- with(data, sin(2 * pi * x) * y)  # Example function for z
+
+# Create the plot
+p <- ggplot(data, aes(x = x, y = y, fill = z)) +
+  geom_tile() +  # Use geom_tile for filling
+  scale_fill_viridis_c(option = "magma", limits = c(min(data$z), max(data$z)), 
+                       breaks = c(-2, 0, 2), labels = c("Low", "Middle", "High")) +
+  labs(title = "Surface Plot of z values", x = "X variable", y = "Y variable", fill = "Z values") +
+  theme_minimal()
+
+# Add contours and labels
+contour_layer <- ggplot(data, aes(x = x, y = y, z = z)) +
+  geom_contour(color = "white", size = 0.5) +
+  geom_text(stat = "contour", aes(label = ..level..), color = "black", size = 3, vjust = -0.5)
+
+# Combine both plots
+p + contour_layer
+
+```
+
 
 ```{r}
 l_dfplot <- lapply(l_df,"[[","apenas fixo")
-dfi <- l_dfplot[[sample(1:3,1)]]
+dfi <- l_dfplot[["Frag. total"]]
+k_pred <- dfi$k_cont %>% unique
+k_sim <- sapply(c(seq(0.05,0.95,by=0.05),0.99),\(x){
+  k_pred[which.min(abs(k_pred - x))]
+})
 f_ggplot <- \(dfi){
   dfi %>% 
+    filter(k_cont%in%k_sim) %>% 
     pivot_longer(starts_with("Q_"),
                  names_to = "quantiles",
                  values_to = "logOR") %>% 
     mutate(quantiles = 100*as.numeric(gsub("Q_0","",quantiles))) %>% 
-    ggplot(aes(x=k_cont,y=Uefeito,fill=logOR)) +
-      geom_tile() +
+    ggplot(aes(x=Uefeito,y=logOR,color=k_cont,group=k_cont)) +
+      geom_line() +
       facet_wrap(~quantiles,ncol=3,scales="free")
 }
+l_p <- lapply(l_dfplot,f_ggplot)
+p <- arrangeGrob(grobs=lapply(names(l_p),\(li) l_p[[li]] + labs(title=li)),
+                 ncol=1)
+ggsave(paste0(v_path,"figuras/beta0_figura_final_logOR.png"),p,
+       width = 8,height = 7.75)
 ```
 
 
