@@ -11,6 +11,41 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 30set2024
+
+```{r}
+library(gratia)
+library(doMC)
+library(gridExtra)
+library(ggplot2)
+theme_set(theme_bw())
+library(readr)
+library(stringr)
+library(tidyr)
+library(bbmle)
+library(DHARMa)
+# library(lme4)
+library(mgcv)
+library(plyr)
+library(dplyr)
+## funções de ajuste e de plot
+# source("source/2samples_testes.R")
+# source("source/general_tools.R")
+# source("source/GAMMtools.R")
+# source("source/fig_tools.R")
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
+library(magick)
+l_path <- list.files(paste0(v_path,"figuras/PIeOBS_sites"),".png",full.names = T)
+names(l_path) <- l_path
+f_lapply <- \(li){
+  imgi <- image_trim( image_read(li) )
+  image_write(imgi,path=li)
+  rm(imgi,li);gc()
+}
+lapply(l_path,f_lapply)
+```
+
+
 # 28set2024
 
 ```{r}

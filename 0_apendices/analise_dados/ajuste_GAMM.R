@@ -20,9 +20,6 @@ source("source/GAMMtools.R")
 source("source/fig_tools.R")
 library(mgcv)
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
-###########################################################################
-###### Como expressar o efeito da paisagem por sítio de amostragem?  ######
-###########################################################################
 # objetos comuns
 df_logOR <- read_csv(file="dados/csv/df_logOR.csv")
 df_md <- df_logOR %>% select(-Uefeito,-(pristine:denominator),-matches("(k_z|^p)")) %>% 
@@ -172,8 +169,8 @@ f_diag_e_plots <- \(veffect){
   hgam <- hgam[[grep("gs",names(hgam),value=T)]]
   vpath <- f_diag(hgam,vname)
 }
-vlog <- lapply(l_path$te[2:3],f_diag_e_plots)
-f_diag_e_plots(l_path$te[3])
+vlog <- lapply(l_path$te,f_diag_e_plots)
+
 
 
 

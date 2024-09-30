@@ -626,7 +626,7 @@ f_gt_table <- \(dfi,
 # predição a posteriori: fixo e fixo + aleatório
 # l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples.rds"))
 # nefeito <- names(l_df)[[1]]
-f_plotPI <- \(nefeito){
+f_plotPI_shgam <- \(nefeito){
   # objeto para o gráfico
   v_range_x <- sapply(l_df,\(li){
     range(li[["apenas fixo"]]$Uefeito)
