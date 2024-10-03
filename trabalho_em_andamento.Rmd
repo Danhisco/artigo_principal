@@ -11,7 +11,79 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+# 3/10/2024
+
+```{r}
+rect_info <- image_info(l_png$ft_md)
+rect_width <- rect_info$width
+rect_height <- rect_info$height
+longest_side <- max(rect_width, rect_height)
+l_png$appraise <- image_resize(l_png$appraise, geometry_size_pixels(longest_side))
+
+# Step 5: Combine the images (side by side or one on top of the other)
+# You can align them side by side using image_append() for horizontal or vertically using image_append(..., stack = TRUE)
+combined_img <- image_append(c(rectangle_img, square_resized)) # Combine side by side
+
+```
+
+
+# 1out2024
+
+```{r flextable dos 7 modelos estatísticos hgam }
+# Load necessary libraries
+library(gt)
+library(webshot2)
+
+# Data for the table
+model_data <- data.frame(
+  Model = c("i", "ii", "iii", "iv", "v", "vi", "vii"),
+  Effect_Type = c("Tensor", "Tensor", "Spline", "Spline", "Spline", "Spline", "Intercept"),
+  Variables = c("k, logU/U", "k, logU/U", "logU/U", "logU/U", "k", "k", "None"),
+  Site_Specific_Effect = c("Tensor by site (same penalty)",
+                           "Intercept by site",
+                           "Spline by site (same penalty)",
+                           "Intercept by site",
+                           "Spline by site (same penalty)",
+                           "Intercept by site",
+                           "Intercept by site"),
+  Description = c("Shared tensor for k and logU/U across sites, with an additional tensor for each site (same penalization).",
+                  "Shared tensor for k and logU/U across sites, with an individual intercept per site.",
+                  "Shared spline for logU/U across sites, with an additional spline for each site (same penalization).",
+                  "Shared spline for logU/U across sites, with an individual intercept per site.",
+                  "Shared spline for k across sites, with an additional spline for each site (same penalization).",
+                  "Shared spline for k across sites, with an individual intercept per site.",
+                  "Simple intercept model with both a common and site-specific intercept.")
+)
+
+# Create the table using gt
+gt_table <- gt(model_data) %>%
+  tab_header(
+    title = "Summary of Models",
+    subtitle = "7 Generalized Additive Hierarchical Models"
+  ) %>%
+  cols_label(
+    Model = "Model",
+    Effect_Type = "Effect Type",
+    Variables = "Variables",
+    Site_Specific_Effect = "Site-Specific Effect",
+    Description = "Description"
+  ) %>%
+  tab_options(
+    table.width = px(800),
+    table.font.size = 12
+  )
+# Display the gt table
+gt_table
+# Save the table as a PNG file
+gtsave(gt_table, paste0(v_path,"figuras/tabela_descricao_modelos_hgam.png"))
+```
+
+
+
 # 30set2024
+
+hoje: descrição das tabelas, leitura dos diagnósticos e da figura beta0
 
 ```{r}
 library(gratia)

@@ -158,19 +158,38 @@ write_csv(df_write,paste0(v_path,"rds/df_tabsel_geral.csv"))
 ########################################################
 ##################### diagnósticos #####################
 ########################################################
+l_path <- list()
+l_path$te <-  paste0("rds/l_md_",c("areaperse","fragperse","fragtotal"),".rds")
+l_path$U <- "rds/l_md_simples_apudPedersen2019.rds"
+l_path$k <- "rds/l_md_onlyk.rds"
 df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
   filter(dAICc==0)
-f_diag_e_plots <- \(veffect){
-  vname <- str_extract(veffect,"(?<=l_md_)(.*?)(?=\\.rds)") %>% 
+# veffect <- l_path$te[1]
+f_diag_e_plots <- \(veffect,
+                    pattern_extract="(?<=l_md_)(.*?)(?=\\.rds)"){
+  vname <- str_extract(veffect,pattern_extract) %>% 
     gsub("areaperse","Área per se",.) %>% 
     gsub("fragperse","Frag. per se",.) %>% 
     gsub("fragtotal","Frag. total",.)
   hgam <- readRDS(paste0(v_path,veffect))
   hgam <- hgam[[grep("gs",names(hgam),value=T)]]
   vpath <- f_diag(hgam,vname)
+  rm(hgam);gc()
 }
-vlog <- lapply(l_path$te,f_diag_e_plots)
+vlog <- lapply(l_path$te[3],f_diag_e_plots)
 
+f_diag_e_plots2 <- \(vpath,
+                     efeitos_paisagem="Área per se",
+                     pattern_extract="(?<=l_md_)(.*?)(?=\\.rds)"){
+  hgam <- readRDS(vpath)[[efeitos_paisagem]]
+  hgam <- hgam[[grep("gs",names(hgam),value=T)]]
+  vpath <- f_diag(hgam,efeitos_paisagem)
+  rm(hgam);gc()
+}
+vpath <- list.files(path = paste0(v_path,"rds"),
+                    pattern = "Pedersen2019",
+                    full.names = TRUE)[4]
+  
 
 
 

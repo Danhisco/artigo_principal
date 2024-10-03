@@ -654,7 +654,7 @@ f_extract_smoothers_f_formula <- \(formula_obj,
     str_split_1(pattern = " \\+ ")
     # grep(pattern='s\\(k_z\\)|s\\(p_z\\)|ti\\(p_z, k_z\\)',value = TRUE,x=.)
 }
-f_diag <- \(hgam,vname){
+f_diag <- \(hgam,vname,patsave="slogUU"){
   if(!any(grepl("flextable",search()))) library(flextable)
   if(!any(grepl("gratia",search()))) library(gratia)
   if(!any(grepl("magick",search()))) library(magick)
@@ -673,15 +673,39 @@ f_diag <- \(hgam,vname){
   names(lpaths) <- names(ldiag)
   # le como image object
   l_png <- lapply(lpaths,\(li) image_read(li) %>% image_trim)
+  # ajuste do lado
+  rect_info <- image_info(l_png$ft_md)
+  rect_width <- rect_info$width
+  rect_height <- rect_info$height
+  longest_side <- max(rect_width, rect_height)
+  l_png$appraise <- image_resize(l_png$appraise, geometry_size_pixels(longest_side))
   # figura final salvamento e limpeza
   final_image <- image_append(do.call("c",l_png),stack = TRUE)
-  v_name <- gsub("Área per se","areaperse",vname) %>% 
+  # adição de título
+  image_info <- image_info(final_image)
+  image_width <- image_info$width
+  image_height <- image_info$height
+  white_canvas <- image_blank(width = image_width, height = 80, color = "white")
+  final_image <- image_append(c(white_canvas,final_image),stack = TRUE)
+  final_image <- image_annotate(
+    final_image,
+    text = paste(vname,"~ s(logU/U)"),   # The title text
+    size = 50,                  # Font size
+    gravity = "north",          # Positioning the title at the top of the image
+    color = "black",            # Font color
+    location = "+0+20"          # Adjust the position (move down by 20 pixels)
+  ) %>% image_trim
+  # salvamento e finalização
+  file.remove(do.call("c",lpaths))
+  v_name <- gsub("Área per se","areaperse",
+                 paste0(vname,patsave)) %>% 
     gsub("Frag. per se","fragperse",.) %>%
     gsub("Frag. total","fratotal",.)
-  file.remove(do.call("c",lpaths))
   image_write(final_image,paste0(v_path,"figuras/diag_",v_name,".png"), 
               format = "png")
 }
+
+
 
 f_diagplots <- \(lmd){
   #@ dependencies: flextable, gratia, magick
