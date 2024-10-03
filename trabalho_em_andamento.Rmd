@@ -143,8 +143,8 @@ p <- ggplot(data, aes(x = x, y = y, fill = z)) +
 
 # Add contours and labels
 contour_layer <- ggplot(data, aes(x = x, y = y, z = z)) +
-  geom_contour(color = "white", size = 0.5) +
-  geom_text(stat = "contour", aes(label = ..level..), color = "black", size = 3, vjust = -0.5)
+  geom_contour(color = "white", size = 0.5) #+
+  # geom_text(stat = "contour", aes(label = ..level..), color = "black", size = 3, vjust = -0.5)
 
 # Combine both plots
 p + contour_layer
