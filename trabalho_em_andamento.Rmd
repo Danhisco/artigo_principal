@@ -272,7 +272,7 @@ lapply(levels(df_s$SiteCode),\(i){
 
 # 24set2024
 
-```{r}
+```{r density plot}
 library(gratia)
 library(doMC)
 library(gridExtra)
@@ -307,13 +307,13 @@ names(l_df) <- gsub("areaperse","Área per se",
   gsub("fragtotal","Frag. total",.)
 l_df_densityplot <- lapply(l_df,rbind.fill) %>% 
   lapply(.,mutate,predicao=ifelse(is.na(logOR),"somente fixo","fixo e aleat."))
-f_ggplot <- \(dfi){
-  dflabel <- ddply(dfi,"predicao",\(dfw){
+f_ggplot <- \(dfi,vncol=3){
+  dflabel <- ddply(dfi,"predicao",\(dfr){
     data.frame(
-      predicao = dfw$predicao[1],
-      v_acima0 = sum(dfw$logOR_pred>0)/nrow(dfw),
-      v_igual0 = sum(dfw$logOR_pred==0)/nrow(dfw),
-      v_abaixo0 = sum(dfw$logOR_pred<0)/nrow(dfw)) %>% 
+      predicao = dfr$predicao[1],
+      v_acima0 = sum(dfr$logOR_pred>0)/nrow(dfr),
+      v_igual0 = sum(dfr$logOR_pred==0)/nrow(dfr),
+      v_abaixo0 = sum(dfr$logOR_pred<0)/nrow(dfr)) %>% 
       mutate(across(starts_with("v_"),~round(.x,2)*100),
              label = paste0("%logOR > 0 = ",v_acima0,
                             "\n%logOR = 0 = ",v_igual0,
@@ -333,10 +333,12 @@ f_ggplot <- \(dfi){
     theme_minimal() +
     labs(x="log odds ratio",
          y="density") +
-    theme(legend.position = "none") +
-    facet_wrap(~predicao,ncol=1,scales="free")
+    theme(legend.position = "none",
+          aspect.ratio=1) +
+    facet_wrap(~predicao,ncol=vncol,scales="free")
 }
-f_plotdensityplot <- \(vstring){
+
+f_plotdensityplot <- \(vstring,hgamtype="te"){
   dfi <- l_df_densityplot[[vstring]]
   p <- dfi %>% 
     pivot_longer(starts_with("Q_"),
@@ -355,14 +357,44 @@ f_plotdensityplot <- \(vstring){
                                       "observado"))) %>% 
     filter(quantile=="Q_0.5") %>% 
     f_ggplot() +
-    labs(title=vstring)
-  vstring <- gsub("Área per se","areaperse",vstring) %>% 
+    labs(title=paste(vstring,"-",hgamtype))
+  vstring <- gsub("Área per se","areaperse",
+                  paste0(vstring,"_",hgamtype)) %>% 
     gsub("Frag. per se","fragperse",.) %>% 
     gsub("Frag. total","fragtotal",.)
-  ggsave(paste0(v_path,"figuras/density_",vstring,".png"),bg = "white")
+  vpath <- ggsave(paste0(v_path,"figuras/density_",vstring,".png"),
+                  plot=p,bg = "white")
+  img <- image_trim( image_read(vpath))
+  image_write(img,vpath)
 }
 lapply(names(l_df_densityplot),f_plotdensityplot)
 rm(l_df_densityplot)
+# 
+l_df <- readRDS(paste0(v_path,"rds/l_dfpred_areaperse_Ugs.rds"))
+df_densityplot <- rbind.fill(l_df) %>% 
+  mutate(predicao=ifelse(is.na(logOR),"somente fixo","fixo e aleat."))
+p <- df_densityplot %>% 
+  pivot_longer(starts_with("Q_"),
+               names_to="quantile",
+               values_to="logOR_pred") %>% 
+  select(-logOR) %>% 
+  rbind(.,
+        select(filter(dfi,!is.na(logOR)),Uefeito:SiteCode,logOR) %>% 
+            rename(logOR_pred=logOR) %>% 
+            mutate(quantile="Q_0.5",
+                   predicao="observado")) %>% 
+    mutate(predicao = factor(predicao,
+                             levels=c("somente fixo",
+                                      "fixo e aleat.",
+                                      "observado"))) %>% 
+    filter(quantile=="Q_0.5") %>% 
+    f_ggplot() +
+    labs(title="Área per se - s(logU/U)")
+vstring <- "areaperse_s"
+vpath <- ggsave(paste0(v_path,"figuras/density_",vstring,".png"),
+                plot=p,bg = "white")
+img <- image_trim( image_read(vpath))
+image_write(img,vpath)
 # densitys plots FEITOS!
 #
 # e agora avaliação por sítio
