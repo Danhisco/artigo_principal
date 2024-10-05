@@ -14,20 +14,51 @@ library(DHARMa)
 library(mgcv)
 library(plyr)
 library(dplyr)
+library(magick)
+image_title <- \(imgobj,
+                 vtitle,
+                 vheight=150,
+                 bgcolor="white",
+                 vsize=80,
+                 vgrav="north",
+                 vcolor="black",
+                 vloc="+0+20"){
+  image_info <- image_info(imgobj)
+  image_width <- image_info$width
+  white_canvas <- image_blank(
+    width = image_width, 
+    height = vheight, 
+    color = bgcolor)
+  imgobj <- image_append(c(white_canvas, 
+                           imgobj), 
+                         stack = TRUE)
+  image_annotate(
+    imgobj,
+    text = vtitle,
+    size = vsize,
+    gravity = vgrav,
+    color = vcolor,
+    location = vloc
+  ) %>% image_trim
+}
+
 # objetos
 ## funções de ajuste e de plot
 source("source/2samples_testes.R")
 source("source/general_tools.R")
 source("source/GAMMtools.R")
 source("source/fig_tools.R")
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
+df_p <- read_csv("dados/df_p.csv")
+setwd(v_path)
+# source("figuras_e_tabelas.R")
 ## predição a posteriori 
 #
 ### te for every model
-v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
 l_path <- list()
 l_path$te <-  paste0("rds/l_dfpred_",c("areaperse","fragperse","fragtotal"),".rds")
 l_path$U <- "rds/l_dfpred_areaperse_Ugs.rds"
-df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
+df_tabsel <- read_csv("rds/df_tabsel_geral.csv") %>% 
   filter(dAICc==0)
 # veffect <- l_path$te[3]
 f_plot_te <- \(veffect,
@@ -75,18 +106,7 @@ f_plot_te <- \(veffect,
   img_final <- image_append(c(l_p[["50"]],img_final),stack = TRUE)
   rm(l_p);gc()
   # título
-  image_info <- image_info(img_final)
-  image_width <- image_info$width
-  white_canvas <- image_blank(width = image_width, height = 150, color = "white")
-  img_final <- image_append(c(white_canvas, img_final), stack = TRUE)
-  img_final <- image_annotate(
-    img_final,
-    text = vname,
-    size = 100,
-    gravity = "north",
-    color = "black",
-    location = "+0+20"
-  ) %>% image_trim
+  img_final <- image_title(img_final,vtitle=vname,vsize = 100)
   gc()
   # salvamento
   img_final <- image_resize(img_final, "50%")
@@ -111,3 +131,21 @@ ggsave("figuras/figfinal_areaperse_shgam.png",p,
 img_p <- image_trim(image_read("figuras/figfinal_areaperse_shgam.png"))
 img_p <- image_title(img_p,vtitle="Área per se, ~ logU/U",vsize = 60)
 image_write(img_p,path = "figuras/figfinal_areaperse_shgam.png")
+#
+path_ldfpred <- l_path$te[3]
+
+
+f_plotPI_logUU_by_k <- \(path_ldfpred){
+  # preparação
+  ## dados
+  l_dfpred <- readRDS(path_ldfpred)
+  ## valores de k de apenas fixo mais próximos dos simulados (obs)
+  k_sim <- l_dfpred$`fixo e aleat`$k_cont %>% unique
+  k_pred <- l_dfpred$`apenas fixo`$k_cont %>% unique
+  k_pred <- sapply(k_sim,\(x){
+    k_pred[which.min(abs(k_pred - x))]
+  })
+  df_k <- data.frame(k_sim,k_pred)
+  #
+  
+}

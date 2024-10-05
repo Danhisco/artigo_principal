@@ -7,6 +7,11 @@ editor_options:
   chunk_output_type: console
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
 # 5out2024
 
 SCORE
@@ -27,8 +32,28 @@ R:
 simples ou já feito,
 acredito que é possível criar as duas figuras ao mesmo tempo.
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
+f_plot_te2 <- \(l_df){
+  dfi <- lapply(l_df,mutate,SiteCode = factor(SiteCode)) %>% 
+    lapply(.,select,-any_of("logOR"))
+  dfi <- dfi$`fixo e aleat`
+
+  
+  
+    l_png <- lapply(k_sim,\(li){
+    ldfp <- lapply(ldfi,filter,k_cont==li)
+    
+    
+  })
+}
+```
+
+
+```{r}
+ldfi$`fixo e aleat` %>% 
+  ggplot(aes(x=k_cont,y=Uefeito,group=k_cont)) +
+  geom_jitter() +
+  geom_boxplot()
 ```
 
 

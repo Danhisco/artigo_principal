@@ -31,9 +31,6 @@ library(lme4)
 library(data.table)
 library(plyr)
 library(dplyr)
-df_p <- read_csv("dados/df_p.csv")
-v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
-setwd(v_path)
 probs = c(0.05,0.25, 0.5, 0.75,0.95)
 ################################
 # criacao GE dados disponiveis #
