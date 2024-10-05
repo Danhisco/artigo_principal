@@ -7,6 +7,26 @@ editor_options:
   chunk_output_type: console
 ---
 
+# 5out2024
+
+SCORE
+Coisas Feitas:
+1) densitys plots
+2) gráfico final de te: mapas de alturas do logOR para todos os efeitos
+3) predito a posteriori para área per se em função de logU/U (modelo mais plausível)
+
+PRÓXIMO:
+I) a figura 3 para os outros dois efeitos por nível de k: dessa forma podemos ver todos os efeitos de logU/U por sítio em contexto ao efeito comum. 
+R:
+pegar 'p <- f_plotPI_shgam("Área per se")' e aplicar em cada nível de k do predito.
+Para isso talvez seja necessário mudar especificar a origem do dado ao inves de informar apenas o nome do efeito. 
+
+
+II) (também para te dos efeitos de fragmentação epr se e total) uma figura apenas dos efeitos fixos em que há todos os níveis de k 
+R:
+simples ou já feito,
+acredito que é possível criar as duas figuras ao mesmo tempo.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```

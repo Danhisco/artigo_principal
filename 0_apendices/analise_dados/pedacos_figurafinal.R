@@ -99,4 +99,15 @@ f_plot_te <- \(veffect,
   image_destroy(img_final)
   rm(img_final);gc()
 }
-lapply(l_path$te,f_plot_te)
+# lapply(l_path$te,f_plot_te)
+#
+#### 
+path_ldf = "rds/l_dfpred_simples_apudPedersen2019.rds"
+l_df <- readRDS(path_ldf)
+# criação dos gráficos de PI
+p <- f_plotPI_shgam("Área per se")
+ggsave("figuras/figfinal_areaperse_shgam.png",p,
+       width = 6,height = 8)
+img_p <- image_trim(image_read("figuras/figfinal_areaperse_shgam.png"))
+img_p <- image_title(img_p,vtitle="Área per se, ~ logU/U",vsize = 60)
+image_write(img_p,path = "figuras/figfinal_areaperse_shgam.png")

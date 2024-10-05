@@ -626,6 +626,7 @@ f_gt_table <- \(dfi,
 # predição a posteriori: fixo e fixo + aleatório
 # l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples.rds"))
 # nefeito <- names(l_df)[[1]]
+
 f_plotPI_shgam <- \(nefeito){
   # objeto para o gráfico
   v_range_x <- sapply(l_df,\(li){
@@ -707,8 +708,9 @@ f_plotPI_shgam <- \(nefeito){
   }
   return(p)
 }
+
 # função que pega a tabela de seleção e faz toda a figura:
-f_tabsel_PI <- \(dff,path_ldf = "rds/l_dfpred_simples_apudPedersen2019_tp.rds"){
+f_tabsel_PI <- \(dff,path_ldf = "rds/l_dfpred_simples_apudPedersen2019.rds"){
   l_df <- readRDS(path_ldf)
   # criação das tabelas
   vpaths <- daply(dff,"contraste",\(dfi){
@@ -802,4 +804,30 @@ l_paths <- paste0(v_path,
 f_todosplots <- \(vpath){
   
 }
-
+image_title <- \(imgobj,
+                 vtitle,
+                 vheight=150,
+                 bgcolor="white",
+                 vsize=80,
+                 vgrav="north",
+                 vcolor="black",
+                 vloc="+0+20"){
+  library(magick)
+  image_info <- image_info(imgobj)
+  image_width <- image_info$width
+  white_canvas <- image_blank(
+    width = image_width, 
+    height = vheight, 
+    color = bgcolor)
+  imgobj <- image_append(c(white_canvas, 
+                           imgobj), 
+                         stack = TRUE)
+  image_annotate(
+    imgobj,
+    text = vtitle,
+    size = vsize,
+    gravity = vgrav,
+    color = vcolor,
+    location = vloc
+  ) %>% image_trim
+}
