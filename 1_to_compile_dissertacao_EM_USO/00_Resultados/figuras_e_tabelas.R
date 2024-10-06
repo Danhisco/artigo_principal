@@ -828,3 +828,77 @@ image_title <- \(imgobj,
     location = vloc
   ) %>% image_trim
 }
+f_plot_te2 <- \(veffect,
+                pattern_extract="(?<=l_dfpred_)(.*?)(?=\\.rds)"){
+  #
+  vname <- str_extract(veffect,pattern_extract) %>% 
+    gsub("areaperse","Área per se",.) %>% 
+    gsub("fragperse","Frag. per se",.) %>% 
+    gsub("fragtotal","Frag. total",.)
+  #
+  dfpred <- readRDS(paste0(v_path,veffect))$`fixo e aleat` %>% 
+    mutate(SiteCode=factor(SiteCode)) %>% select(-any_of("logOR"))
+  dfpred <- pivot_longer(dfpred,starts_with("Q_"),
+                         names_to="quantiles",
+                         values_to="logOR") %>% 
+    mutate(quantiles=factor(100 * as.numeric(gsub("Q_","",quantiles)),
+                            levels=c(5,50,95)) ) %>% 
+    rename(k = k_cont)
+  #
+  d_ply(dfpred,"SiteCode",\(dff){
+    l_p <- dlply(dff,"quantiles",\(dfi){
+      dfi %>% 
+        ggplot(aes(x=k,y=Uefeito,fill=logOR)) +
+        geom_point(shape=21,size=15) +
+        scale_fill_viridis_c(name = "logOR",
+                             option = "magma") +
+        labs(y="logU/U") +
+        facet_wrap(~quantiles) +
+        theme_classic() +
+        theme(legend.position="top",
+              aspect.ratio=1,
+              legend.text = element_text(angle=90,size = 15),
+              legend.title = element_text(size = 16,vjust = 0.75),
+              legend.key.size = unit(1.0, 'cm'),
+        )
+    })
+    l_p <- lapply(l_p,\(li) ggsave(tempfile(fileext = ".png"),plot = li,
+                                   width = 5, height = 7))
+    l_p <- lapply(l_p,\(li) image_read(li) %>% image_trim)
+    # base
+    img_final <- image_append(do.call("c",l_p[c("5","95")]))
+    # padronizacao da mediana
+    rect_info <- image_info(img_final)
+    rect_width <- rect_info$width
+    rect_height <- rect_info$height
+    longest_side <- max(rect_width, rect_height)
+    l_p[["50"]] <- image_resize(l_p[["50"]], geometry_size_pixels(longest_side))
+    img_final <- image_append(c(l_p[["50"]],img_final),stack = TRUE)
+    img_final <- image_annotate(
+      img_final,
+      text = dff$SiteCode[1],
+      location = "-1000+300",
+      gravity = "north",
+      size=180,
+      boxcolor="lightblue",
+      color = "black")
+    img_final <- image_resize(img_final,"50%")
+    img_final <- image_annotate(
+      img_final,
+      text = vname,
+      location = "-525+15",
+      gravity = "north",
+      size=80,
+      boxcolor="lightgreen",
+      color = "black")
+    image_write(
+      img_final,
+      path=paste0("figuras/predito_te_sites/",
+                  str_extract(veffect,pattern_extract),
+                  "_",
+                  dff$SiteCode[1],
+                  ".png")
+    )
+    rm(img_final);gc()
+  })
+}
