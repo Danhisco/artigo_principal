@@ -11,6 +11,22 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 6out2024
+redução do tamanho das figuras
+
+```{r}
+l_png <- paste0("figuras/figfinal_te_",
+                c("fragtotal","fragperse","areaperse"),
+                ".png")
+l_img <- lapply(l_png,image_read)
+l_img <- lapply(l_img,image_resize,geometry="50%")
+names(l_img) <- l_png
+lapply(names(l_img),\(li){
+  image_write(l_img[[li]],path=li)
+})
+
+```
+
 
 # 5out2024
 
@@ -198,7 +214,7 @@ gtsave(gt_table, paste0(v_path,"figuras/tabela_descricao_modelos_hgam.png"))
 
 hoje: descrição das tabelas, leitura dos diagnósticos e da figura beta0
 
-```{r}
+```{r diagnósticos por sítio}
 library(gratia)
 library(doMC)
 library(gridExtra)
@@ -313,7 +329,7 @@ wider_data <- data %>%
 
 Avaliação da comparação entre te e s
 
-```{r olhar dia anterior}
+```{r gráficos para diagnóstico por sítio}
 f_dfplot <- \(dff,dataset){
   vcols <- c("logOR","k_cont")
   dff %>% 

@@ -902,3 +902,7 @@ f_plot_te2 <- \(veffect,
     rm(img_final);gc()
   })
 }
+
+##### diagnósticos para artigo final
+
+
