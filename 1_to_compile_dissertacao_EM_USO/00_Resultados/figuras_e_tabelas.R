@@ -902,7 +902,25 @@ f_plot_te2 <- \(veffect,
     rm(img_final);gc()
   })
 }
-
+f_imagefunc <- \(ggobj){
+  tempfile_path <- tempfile(fileext = ".png")
+  ggsave(tempfile_path,ggobj,width = 7.17,height = 7.20)
+  img <- image_trim( image_read(tempfile_path))
+  image_write(img,tempfile_path)
+}
+f_resize_2rectangle <- \(ref_img,toresize_img,ref_side,tore_side){
+  tore_info <- image_info(toresize_img)
+  ref_info <- image_info(ref_img)
+  refside_info <- ref_info[[ref_side]]
+  v_command <- ifelse(tore_side=="height",
+                      paste0("x",refside_info),
+                      paste0(refside_info,"x"))
+  image_resize(toresize_img,v_command)
+}
 ##### diagnósticos para artigo final
+##### diagnóstico para reunião com o PI
+# i) aplica a sequência que cria PIeOBS_sites por sítio
+# ii) salva temporârio e edita para ficar igual
+# iii) junta, para cada sítio, as figuras do tensor e do spline e salva
 
 

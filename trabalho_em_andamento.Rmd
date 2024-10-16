@@ -11,6 +11,74 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 15out2024
+
+```{r predito e observado}
+library(magick)
+l_df_pred <- readRDS(paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019.rds"))
+l_df_pred <- lapply(l_df_pred,"[[","fixo e aleat")
+df_pred <- lapply(names(l_df_pred),\(li){
+  mutate(l_df_pred[[li]],efeito=li)
+}) %>% do.call("rbind",.)
+# df_p <- read_csv("../../dados/df_p.csv")
+f_plot_PIeOBS2 <- \(dff){
+  # dfp <- lapply(names(l_dfpre),\(i){
+  #   filter(l_dfpre[[i]],SiteCode==vsite) %>% 
+  #     mutate(bs = i)
+  # }) %>% do.call("rbind",.)
+  # vtitle <- filter(dfi,SiteCode==vsite) %>% 
+  #   pull(p) %>% round(.,2) %>% 
+  #   paste0(vsite,", p = ",.)
+  vsite <- dfi$SiteCode[1] %>% as.character()
+  f_ggplot <- \(dfi){
+   dfi %>% 
+    ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
+      geom_abline(intercept = 0,slope=1) +
+      geom_point() +
+      geom_smooth(method="lm",se=FALSE) +
+      scale_color_manual(
+        "%",values=c("50"="darkgreen","5"="darkred","95"="darkred")
+        ) +
+      labs(x="logOR observado",y="logOR predito",
+           title=dfi$efeito[1]) +
+      theme(legend.position = "top",
+            legend.margin = margin(t = 0, b = 0, l = 0, r = 0),
+            plot.margin = margin(t = 10, b = 0, l = 1, r = 0),
+            legend.box.margin=margin(-10,-10,-10,-10),
+            aspect.ratio = 1) +
+      facet_wrap(~SiteCode)   
+  }
+  l_p <- dff %>% 
+    pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR_pred") %>% 
+    mutate(quantile=gsub("Q_","",quantile) %>% as.numeric(),
+           quantile=as.character(quantile*100)) %>% 
+    dlply(.,"efeito",f_ggplot)
+  p <- arrangeGrob(grobs=l_p,ncol=3)
+  #
+  l_img <- list()
+  l_img$slogUU <- f_imagefunc(p) %>% image_read() %>% image_resize("50%")
+  l_img$tensor <- image_read(paste0(v_path,"figuras/PIeOBS_sites/",vsite,".png"))
+  l_img <- lapply(names(l_img),\(li){
+    l_img[[li]] %>% 
+      image_title(vtitle=li,
+                  vheight = 75,
+                  vsize = 35,
+                  bgcolor="darkgray",
+                  vcolor="darkblue")
+    })
+  l_img[[1]] <- f_resize_2rectangle(ref_img = l_img[[2]],
+                                    toresize_img = l_img[[1]],
+                                    ref_side = "width",
+                                    tore_side = "width")
+  img_final <- image_append(do.call("c",l_img),stack = TRUE)
+  # 
+  
+  
+}
+```
+
+
+
 # 6out2024
 redução do tamanho das figuras
 
@@ -566,6 +634,40 @@ lapply(levels(l_df_obspred_sitio$`Frag. per se`$SiteCode),\(i){
 
 ```
 
+```{r}
+l_df_obspred_sitio <- lapply(l_df,\(li) li$`fixo e aleat`)
+f_ggplot <- \(dfi){
+  dfi %>% 
+    ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
+    geom_abline(intercept = 0,slope=1) +
+    geom_point() +
+    geom_smooth(method="lm",se=FALSE) +
+    scale_color_manual("%",values=c("50"="darkgreen","5"="darkred","95"="darkred")) +
+    labs(x="logOR observado",y="logOR predito") +
+    theme(legend.position = "top",
+          legend.margin = margin(t = 0, b = 0, l = 0, r = 0),
+          plot.margin = margin(t = 10, b = 0, l = 1, r = 0),
+          legend.box.margin=margin(-10,-10,-10,-10),
+          aspect.ratio = 1) +
+    facet_wrap(~SiteCode) 
+}
+l_p <- lapply(l_df_obspred_sitio,\(li){
+  li %>% 
+    pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR_pred") %>% 
+    mutate(quantile=gsub("Q_","",quantile) %>% 
+             as.numeric(),
+           quantile=as.character(quantile*100)) %>% 
+    dlply(.,"SiteCode",f_ggplot)  
+})
+lapply(levels(l_df_obspred_sitio$`Frag. per se`$SiteCode),\(i){
+  lp <- lapply(l_p,"[[",i)
+  lp <- lapply(names(lp),\(p){
+    lp[[p]] + labs(title=p)
+  })
+  p <- arrangeGrob(grobs=lp,nrow=1)
+  ggsave(paste0(v_path,"figuras/PIeOBS_sites/",i,".png"),p)
+})
+```
 
 
 # para 24set2024

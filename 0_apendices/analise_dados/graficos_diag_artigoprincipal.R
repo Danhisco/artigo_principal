@@ -30,7 +30,49 @@ names(l_df) <- gsub("areaperse","Área per se",
                     str_extract(l_path,"(?<=dfpred_)(.*?)(?=\\.rds)")) %>% 
   gsub("fragperse","Frag. per se",.) %>% 
   gsub("fragtotal","Frag. total",.)
+l_df <- lapply(l_df,"[[","fixo e aleat")
 ######### gráficos diagnósticos para o artigo principal
+library(hexbin)
+f_plot <- \(dfp){
+  dfp <- dfp %>% 
+    pivot_longer(starts_with("Q_"),
+                 names_to="quantile",
+                 values_to = "preditor") %>% 
+    mutate(quantile=gsub("Q_","",quantile) %>% 
+             as.numeric(),
+           quantile=as.character(quantile*100))
+  fggplot <- \(dfi){
+    dfi %>% 
+      ggplot(aes(x=logOR,y=preditor)) +
+      geom_hex(bins = 50) + 
+      scale_fill_viridis_c(option = "plasma") +
+      geom_abline(slope=1,intercept=0,color="green") +
+      geom_smooth(aes(group=SiteCode),
+                  method="lm",
+                  se=FALSE,
+                  color="gray",
+                  alpha=0.2) +
+      labs(title=paste("quantile:",dfi$quantile[1])) +
+      theme(legend.position = c(0.90,0.25))
+ }
+  lp <- dlply(dfp,"quantile",fggplot)
+  lp <- lapply(lp,f_imagefunc)
+  limg <- lapply(lp,\(li) image_trim(image_read(li)))
+  base_img <- image_append(do.call("c",limg[c("5","95")]),stack=FALSE)
+  base_img <- f_resize_2rectangle(ref_img = limg[["50"]],
+                                  toresize_img = base_img,
+                                  ref_side = "width",
+                                  tore_side = "width")
+  img_final <- image_append(c(limg[["50"]],base_img),stack = TRUE) %>% 
+    image_resize("50%")
+  return(img_final)
+}
+l_img_diag <- lapply(l_df,f_plot)
+names(l_img_diag) <- gsub("rds/l_dfpred","figuras/diagfinal",l_path) %>% 
+  gsub("\\.rds","\\.png",.)
+lapply(names(l_img_diag),\(li) image_write(l_img_diag[[li]],path=li))
+
+
 f_dfplot <- \(dff,dataset){
   vcols <- c("logOR","k_cont")
   dff %>% 
