@@ -11,6 +11,77 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 19/10/2024
+
+Criação da região de buffer na figura final
+
+```{r}
+library(gridExtra)
+library(ggplot2)
+theme_set(theme_bw())
+library(readr)
+library(stringr)
+library(tidyr)
+library(tidyselect)
+library(bbmle)
+library(DHARMa)
+library(mgcv)
+library(plyr)
+library(dplyr)
+library(mgcv)
+## funções de ajuste e de plot
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
+# objetos comuns
+df_logOR <- read_csv(file="dados/csv/df_logOR.csv")
+df_md <- df_logOR %>% 
+  select(-Uefeito,-(pristine:denominator),-matches("(k_z|^p)")) %>% 
+  rename(logOR = itself) %>% 
+  filter(forest_succession!="capoeira") %>% 
+  mutate(contraste =  gsub("non_frag.ideal","Área per se",contraste) %>% 
+           gsub("contemp-non_frag","Frag. per se",.) %>% 
+           gsub("contemp-ideal","Frag. total",.),
+         across(c(contraste:SiteCode,forest_succession,k),factor))
+df_contrastes <- read_csv("dados/csv/taxaU/df_contrastes.csv") %>% 
+  select(SiteCode,k,ends_with("logratio")) %>% 
+  pivot_longer(cols = ends_with("logratio"),
+               names_to = "contraste",
+               values_to = "Uefeito") %>% 
+  mutate(contraste = gsub("area_logratio","Área per se",contraste) %>% 
+           gsub("frag.perse_logratio","Frag. per se",.) %>% 
+           gsub("frag.total_logratio","Frag. total",.),
+         across(SiteCode:contraste,factor))
+df_md <- inner_join(df_md,df_contrastes,by=c("SiteCode","contraste","k")) %>% 
+  relocate(Uefeito,.after="logOR") %>% 
+  mutate(k_cont = as.numeric(as.character(k)))
+#
+df_buf <- ddply(df_md,c("contraste","k"),\(dfi){
+  v_range <- range(dfi$Uefeito)
+  v_quant <- quantile(dfi$Uefeito,probs=c(0.01,0.99))
+  filter(dfi,Uefeito%in%v_range) %>% 
+    select(-logOR,-c(forest_succession:data_year),-SiteCode) %>% 
+    mutate(ext_class=ifelse(Uefeito==v_range[1],"min","max"),
+           Uefeito_quant=ifelse(ext_class=="min",v_quant[1],v_quant[2])) %>% 
+    relocate(ext_class,.after=contraste) %>% 
+    relocate(Uefeito_quant,.after=Uefeito)
+}) %>% select(-k)
+df_buf %>% 
+  pivot_longer(starts_with("Uefeito")) %>% 
+  ggplot(aes(x=k_cont,y=value,color=ext_class,shape=name)) +
+  geom_point() +
+  geom_line() +
+  geom_smooth(method="gam",se=FALSE) +
+  scale_color_manual(values=c("darkred","darkgreen")) +
+  facet_wrap(~contraste,ncol=3)
+#
+f_gam <- \(dfi){
+  gam(Uefeito~s(k_cont,bs="cr"),data=dfi)
+}
+l_md <- dlply(df_buf,c("contraste","ext_class"),f_gam)
+
+```
+
+
+
 # 15out2024
 
 ```{r predito e observado}
@@ -21,15 +92,9 @@ df_pred <- lapply(names(l_df_pred),\(li){
   mutate(l_df_pred[[li]],efeito=li)
 }) %>% do.call("rbind",.)
 # df_p <- read_csv("../../dados/df_p.csv")
+dff <- df_pred %>% filter(SiteCode=="BAjuss")
 f_plot_PIeOBS2 <- \(dff){
-  # dfp <- lapply(names(l_dfpre),\(i){
-  #   filter(l_dfpre[[i]],SiteCode==vsite) %>% 
-  #     mutate(bs = i)
-  # }) %>% do.call("rbind",.)
-  # vtitle <- filter(dfi,SiteCode==vsite) %>% 
-  #   pull(p) %>% round(.,2) %>% 
-  #   paste0(vsite,", p = ",.)
-  vsite <- dfi$SiteCode[1] %>% as.character()
+  #
   f_ggplot <- \(dfi){
    dfi %>% 
     ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
@@ -48,12 +113,14 @@ f_plot_PIeOBS2 <- \(dff){
             aspect.ratio = 1) +
       facet_wrap(~SiteCode)   
   }
+  #
   l_p <- dff %>% 
     pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR_pred") %>% 
     mutate(quantile=gsub("Q_","",quantile) %>% as.numeric(),
            quantile=as.character(quantile*100)) %>% 
     dlply(.,"efeito",f_ggplot)
   p <- arrangeGrob(grobs=l_p,ncol=3)
+  vsite <- dff$SiteCode[1] %>% as.character()
   #
   l_img <- list()
   l_img$slogUU <- f_imagefunc(p) %>% image_read() %>% image_resize("50%")
@@ -70,11 +137,17 @@ f_plot_PIeOBS2 <- \(dff){
                                     toresize_img = l_img[[1]],
                                     ref_side = "width",
                                     tore_side = "width")
-  img_final <- image_append(do.call("c",l_img),stack = TRUE)
-  # 
-  
-  
+  img_final <- image_append(do.call("c",l_img),stack = TRUE) %>% 
+    image_resize("40%")
+  #
+  image_write(img_final,
+              path=paste0(v_path,"figuras/PIeOBS_sites2/",
+                          vsite,".png"))
+  rm(img_final);gc()
 }
+vlog <- df_pred %>% 
+  split(.,df_pred$SiteCode) %>% 
+  lapply(.,f_plot_PIeOBS2)
 ```
 
 
