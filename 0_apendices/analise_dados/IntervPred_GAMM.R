@@ -145,3 +145,48 @@ saveRDS(l_df,paste0(v_path,"rds/l_dfpred_areaperse_Ugs.rds"))
 
 # l_df_pred <- lapply(l_md,f_calcPI)
 # saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019_tp.rds"))
+
+
+################# remoção da extrapolação
+
+# i) carregar os dados de l_df_pred
+l_paths <- paste0(v_path,"rds/l_dfpred_",c("fragtotal","fragperse","areaperse"),".rds")
+l_df_pred <- lapply(l_paths,readRDS) %>% 
+  lapply(.,"[[","apenas fixo")
+names(l_df_pred) <- c("Frag. total","Frag. per se","Área per se")
+# ii) filtrar os valores únicos de k em um novo data frame
+l_df_ref <- lapply(l_df_pred,select,k_cont,SiteCode) %>% lapply(.,distinct)
+# iii) fazer a predição média do modelo para cada ponto e guardar em um dataframe
+l_df_ref <- lapply(names(l_df_ref),\(li){
+  lmd <- l_md[grep(li,names(l_md))]
+  names(lmd) <- gsub(paste0(li,"."),"",names(lmd)) 
+  df_ref <- lapply(names(lmd),\(i){
+    md <- lmd[[i]]
+    dfr <- l_df_ref[[li]]  
+    dfr[[i]] <- predict.gam(md,dfr)
+    return(dfr)
+  }) %>% Reduce("inner_join",.)
+})
+names(l_df_ref) <- c("Frag. total","Frag. per se","Área per se")
+# iv) filtrar para cada k os valores entre as predições
+library(data.table)
+l_df_new <- lapply(names(l_df_ref),\(li){
+  df_pred <- l_df_pred[[li]]
+  df_ref <- l_df_ref[[li]]
+  setDT(df_pred)
+  alply(df_ref,1,\(dfi){
+    maxv <- dfi[["max"]]
+    minv <- dfi[["min"]]
+    kv <- dfi[["k_cont"]]
+    df_pred[k_cont==kv & between(Uefeito,minv,maxv),]
+  }) %>% rbindlist
+})
+names(l_df_new) <- names(l_df_ref)
+# salvamento
+l_paths <- gsub("dfpred","dfnew",l_paths)
+names(l_paths) <- names(l_df_ref)
+lapply(names(l_df_ref),\(i){
+  dfrds <- l_df_new[[i]]
+  vpath <- l_paths[i]
+  saveRDS(dfrds,file=vpath)
+})
