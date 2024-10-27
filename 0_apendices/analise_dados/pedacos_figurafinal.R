@@ -56,19 +56,26 @@ source("figuras_e_tabelas.R")
 #
 ### te for every model
 l_path <- list()
-l_path$te <-  paste0("rds/l_dfpred_",c("areaperse","fragperse","fragtotal"),".rds")
+# l_path$te <-  paste0("rds/l_dfpred_",c("areaperse","fragperse","fragtotal"),".rds")
+l_path$te <-  paste0("rds/l_dfnew_",c("areaperse","fragperse","fragtotal"),".rds")
 l_path$U <- "rds/l_dfpred_areaperse_Ugs.rds"
 df_tabsel <- read_csv("rds/df_tabsel_geral.csv") %>% 
   filter(dAICc==0)
+##############
+### 1a parte: figfinal_te_EFEITO PAISAGEM
+### @descrição: heatmap x=k, y=logU/U, z=
+
+
 # veffect <- l_path$te[3]
 f_plot_te <- \(veffect,
-               pattern_extract="(?<=l_dfpred_)(.*?)(?=\\.rds)"){
+               pattern_extract="(?<=l_dfnew_)(.*?)(?=\\.rds)"){
   library(metR)
   vname <- str_extract(veffect,pattern_extract) %>% 
     gsub("areaperse","Área per se",.) %>% 
     gsub("fragperse","Frag. per se",.) %>% 
     gsub("fragtotal","Frag. total",.)
-  dfpred <- readRDS(paste0(v_path,veffect))$`apenas fixo`
+  # dfpred <- readRDS(veffect)$`apenas fixo`
+  dfpred <- readRDS(veffect)
   dfpred <- pivot_longer(dfpred,starts_with("Q_"),
                          names_to="quantiles",
                          values_to="logOR") %>% 
@@ -78,7 +85,8 @@ f_plot_te <- \(veffect,
   #
   l_p <- dlply(dfpred,"quantiles",\(dfi){
     ggplot(dfi,aes(x=k,y=Uefeito,z=logOR)) +
-      geom_contour_fill() +
+      # geom_contour_fill() +
+      geom_raster(aes(fill=logOR)) +
       geom_contour(color = "black") +
       geom_text_contour() +
       scale_fill_viridis_c(name = "logOR",

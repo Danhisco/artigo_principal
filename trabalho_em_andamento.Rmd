@@ -89,7 +89,7 @@ for(i in names(l_md)){
 ```
 
 Esses modelos serão usados para:
-1) remover os pontos da figura final
+1) remover os pontos da figura final FALTA REFAZER A FIGURA FINAL
 2) sobrepor ao gráfico de logU/U ~ k (color=p)
 
 ```{r}

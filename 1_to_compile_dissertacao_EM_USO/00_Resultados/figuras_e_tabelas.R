@@ -36,11 +36,13 @@ probs = c(0.05,0.25, 0.5, 0.75,0.95)
 # criacao GE dados disponiveis #
 ################################
 theme_set(theme_light())
-df_dados_disponiveis <- read_csv(file = "../../dados/df_dados_disponiveis.csv")
+# df_dados_disponiveis <- read_csv(file = "../../dados/df_dados_disponiveis.csv")
+df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
 df_plot <- df_dados_disponiveis %>% 
   inner_join(df_p) %>% 
   select(SiteCode, p, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
-df_p_extensoes <- read_csv("../../dados/csv/df_p_extensoes.csv")
+# df_p_extensoes <- read_csv("../../dados/csv/df_p_extensoes.csv")
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
 l_p <- list()
 l_p[[1]] <- df_plot |> 
   ggplot(aes(y=lat,x=long,fill=p)) +
@@ -159,6 +161,9 @@ ggsave(
 ##################################
 # criação de GE_taxaU_contrastes #
 ##################################
+
+
+
 f_z <- function(x) (x-mean(x))/sd(x)
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   inner_join(x=df_p,by="SiteCode")
@@ -246,11 +251,22 @@ df_md <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>%
   mutate(name = gsub("_logratio","",name),
          across(c(p,k),f_z,.names = "{.col}_z"),
          SiteCode = factor(SiteCode))
+################ inclusão da estimativa de extremos
+
+# l_path$te <-  paste0("rds/l_dfpred_",c("areaperse","fragperse","fragtotal"),".rds")
+path_te <-  paste0("rds/l_dfnew_",c("areaperse","fragperse","fragtotal"),".rds")
+df_ref
+
+
+
+################ inclusão da estimativa de extremos
+
+
 l_p$fig2 <- df_md %>% 
   mutate(label=case_when(
-    grepl("area",name) ~ "Área per se: aglomerado / prístino",
-    grepl("total",name) ~ "Frag. Total: contemporâneo / prístino",
-    grepl("perse",name) ~ "Frag. per se: contemporâneo / aglomerado")
+    grepl("area",name) ~ "Área per se",
+    grepl("total",name) ~ "Frag. Total",
+    grepl("perse",name) ~ "Frag. per se")
   ) %>% 
   ggplot(aes(x=k,y=value,group=SiteCode,color=p)) +
   geom_boxplot(inherit.aes = FALSE,
