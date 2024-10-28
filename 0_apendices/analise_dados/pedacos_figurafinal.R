@@ -256,17 +256,61 @@ f_plot1 <- \(veffect,ldfref=l_dfnew){
   k_sim <- sapply(c(0.05,0.25,0.50,0.75,0.95),\(x){
     k_pred[which.min(abs(k_pred - x))]
   })
-  dff[k_cont%in%k_sim,] %>% 
-    ggplot(aes(x=Uefeito,y=Q_0.5,color=k_cont,group=k_cont)) +
-    geom_ribbon(aes(ymax=Q_0.95,ymin=Q_0.05,fill=k_cont),alpha=0.2) +
-    geom_line() +
-    theme(legend.position = c())
-    
-  
+  quantU <- quantile(dff$Uefeito,probs=c(0.05,0.25,0.50,0.75,0.95))
+  lp <- list()
+  fggplot <- \(dfp,vx,vcolor,vposition){
+    dfp %>% 
+      mutate(label=gsub("Uefeito","logU/U",vx) %>% gsub("k_cont","k",.)) %>% 
+      ggplot(aes(x=.data[[vx]],y=Q_0.5,
+                 color=.data[[vcolor]],group=.data[[vcolor]])) +
+      geom_ribbon(aes(ymax=Q_0.95,ymin=Q_0.05,
+                      fill=.data[[vcolor]],color=.data[[vcolor]]),alpha=0.2) +
+      geom_line() +
+      labs(y="logOR",
+           x=gsub("Uefeito","logU/U",vx) %>% 
+             gsub("k_cont","k",.), 
+           color = gsub("Uefeito","logU/U",vcolor) %>% 
+             gsub("k_cont","k",.)) +
+      guides(fill = "none") +
+      theme_classic() +
+      theme(legend.position = "inside",
+            legend.position.inside = vposition,
+            aspect.ratio = 1) +
+      facet_wrap(~label)
+      }
+  lp$Uefeito <- fggplot(dfp = dff, #dff[k_cont%in%k_sim,]
+                        vx = "Uefeito",
+                        vcolor = "k_cont",
+                        vposition=c(0.15,0.30))
+  lp$k_cont <- fggplot(dfp = dff,#dff[Uefeito%in%quantU,]
+                       vx = "k_cont",
+                       vcolor = "Uefeito",
+                       vposition=c(0.5,0.30))
+  return(lp)
 }
-
+l_apenasfixo <- lapply(names(l_dfnew),f_plot1)
+names(l_apenasfixo) <- names(l_dfnew)
+grid.arrange(grobs=l_apenasfixo,ncol=3)
 # f_plot2: logOR ~ Xi e ~ Xj (por sítio)
-
+f_plot2 <- \(veffect,ldfref=l_dfpred){
+  df_pred <- ldfref[[veffect]][["fixo e aleat"]]
+  fggplot <- \(dfi){
+    vx <- dfi$name[1]
+    ggplot(dfi,aes(x=k_cont,y=Q_0.5,group=SiteCode)) +
+      geom_hline(yintercept = 0,color="darkgray") +
+      geom_vline(xintercept = 0,color="darkgray") +
+      geom_ribbon(aes(ymax=Q_0.95,ymin=Q_0.05),alpha=0.2,color="#986868",fill="#986868") +
+      geom_line() +
+      scale_x_continuous(expand = c(0,0)) +
+      scale_y_continuous(expand = c(0,0)) +
+      labs(x=vx,y="logOR") 
+      
+  }
+  lp <- df_pred %>% 
+    pivot_longer(c(Uefeito,k_cont)) %>% 
+    dlply(.,"name",fggplot)
+    
+}
 
 
 
