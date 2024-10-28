@@ -52,6 +52,89 @@ df_p <- read_csv("dados/df_p.csv")
 setwd(v_path)
 source("figuras_e_tabelas.R")
 # source("figuras_e_tabelas.R")
+#
+####################### 1a linha
+l_figfinal <- list()
+#
+l_paths <- paste0(v_path,"rds/l_dfpred_",c("fragtotal","fragperse","areaperse"),".rds")
+l_df_pred <- lapply(l_paths,readRDS) %>% 
+  lapply(.,"[[","apenas fixo")
+names(l_df_pred) <- c("Frag. total","Frag. per se","Área per se")
+# ii) filtrar os valores únicos de k em um novo data frame
+df_ref <- lapply(l_df_pred,select,k_cont,SiteCode) %>% lapply(.,distinct)
+df_ref <- df_ref[[1]]
+l_md <- readRDS(file=paste0(v_path,"rds/l_md_refU.rds"))
+l_df_ref <- lapply(names(l_df_pred),\(li){
+  lmd <- l_md[grep(li,names(l_md))]
+  names(lmd) <- gsub(paste0(li,"."),"",names(lmd)) 
+  df_ref <- lapply(names(lmd),\(i){
+    md <- lmd[[i]]
+    dfr <- l_df_ref[[li]]  
+    dfr[[i]] <- predict.gam(md,dfr)
+    return(dfr)
+  }) %>% Reduce("inner_join",.)
+})
+names(l_df_ref) <- names(l_df_pred)
+df_ref <- lapply(names(l_df_ref),\(li){
+  mutate(l_df_ref[[li]],
+         name=gsub("Área per se","area",li) %>% 
+           gsub("Frag. total","frag.total",.) %>% 
+           gsub("Frag. per se","frag.perse",.))
+}) %>% rbindlist() %>% rename(k=k_cont) %>% 
+  mutate(label=case_when(
+    grepl("area",name) ~ "Área per se",
+    grepl("total",name) ~ "Frag. Total",
+    grepl("perse",name) ~ "Frag. per se"),
+    label=factor(label,levels=c("Frag. Total","Frag. per se","Área per se"))
+  )
+l_figfinal$`1alinha` <- df_md %>% 
+  mutate(label=case_when(
+    grepl("area",name) ~ "Área per se",
+    grepl("total",name) ~ "Frag. Total",
+    grepl("perse",name) ~ "Frag. per se"),
+    label=factor(label,levels=c("Frag. Total","Frag. per se","Área per se"))
+  ) %>% 
+  ggplot(aes(x=k,y=value,group=SiteCode,color=p)) +
+  geom_boxplot(inherit.aes = FALSE,
+               aes(x=k,y=value,group=k)) +
+  geom_hline(yintercept = 0,color="black",linetype=3) +
+  geom_hline(yintercept = v_hline,color="darkred") + 
+  geom_line(alpha=0.75) +
+  geom_point(alpha=0.75) +
+  geom_line(data=df_ref,aes(y=max,x=k),color="black") +
+  geom_line(data=df_ref,aes(y=min,x=k),color="black") +
+  scale_colour_gradient2("% CF",midpoint=0.5,
+                         low="red",
+                         mid = "yellow",
+                         high = "darkgreen") +
+  labs(x="k (prop. de propágulos até a vizinhança imediata)",
+       y="log(U/U)") +
+  scale_y_continuous(expand=c(0.01,0.01)) +
+  theme_classic() +
+  theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
+        legend.position = "inside",
+        legend.position.inside = c(0.49,0.9),
+        legend.direction="horizontal") +
+  # guides(color=guide_legend(direction='horizontal')) +
+  facet_wrap(~label,ncol=3)
+ggsave(paste0(v_path,"figuras/pedacofigfinal_1alinha.png"),
+       l_figfinal$`1alinha`,
+       width = 12,
+       height = 5)
+img_obj <- image_read(paste0(v_path,"figuras/pedacofigfinal_1alinha.png")) %>% 
+  image_trim() %>% 
+  image_resize("50%")
+image_write(img_obj,paste0(v_path,"figuras/pedacofigfinal_1alinha.png"))
+
+
+
+
+
+
+
+
+
+
 ## predição a posteriori 
 #
 ### te for every model
@@ -127,7 +210,7 @@ f_plot_te <- \(veffect,
   image_destroy(img_final)
   rm(img_final);gc()
 }
-# lapply(l_path$te,f_plot_te)
+lapply(l_path$te,f_plot_te)
 #
 #### 
 path_ldf = "rds/l_dfpred_simples_apudPedersen2019.rds"
@@ -155,6 +238,50 @@ f_juntapreditos <- \(vsite){
   file.remove(lpng)
   rm(img_return);gc()
 }
+#### criação da terceira linha: se o hgam +lik é te então fazer dois plots por efeito:
+## a) apenas fixo: filtrar k mais próximo dos 20 simulados
+## b) fixo + por sítio: plotar em função de k e logU/U para mostrar a variabilidade entre sítios
+#
+# objetos comuns
+l_paths <- paste0("rds/l_dfnew_",c("areaperse","fragperse","fragtotal"),".rds")
+l_dfnew <- lapply(l_paths,readRDS)
+names(l_dfnew) <- c("areaperse","fragperse","fragtotal")
+l_dfpred <- lapply(gsub("dfnew","dfpred",l_paths),readRDS)
+names(l_dfpred) <- c("areaperse","fragperse","fragtotal")
+# funções
+# f_plot1: logOR ~ Xi (~cut(Xj))
+f_plot1 <- \(veffect,ldfref=l_dfnew){
+  dff <- l_dfnew[[veffect]]
+  k_pred <- dff$k_cont %>% unique
+  k_sim <- sapply(c(0.05,0.25,0.50,0.75,0.95),\(x){
+    k_pred[which.min(abs(k_pred - x))]
+  })
+  dff[k_cont%in%k_sim,] %>% 
+    ggplot(aes(x=Uefeito,y=Q_0.5,color=k_cont,group=k_cont)) +
+    geom_ribbon(aes(ymax=Q_0.95,ymin=Q_0.05,fill=k_cont),alpha=0.2) +
+    geom_line() +
+    theme(legend.position = c())
+    
+  
+}
+
+# f_plot2: logOR ~ Xi e ~ Xj (por sítio)
+
+
+
+
+
+l_3alinha <- list()
+
+
+
+
+
+
+
+
+
+################ antigo ? ################
 #
 # lpng <- list.files(path="figuras/predito_te_sites",pattern=".png") %>% 
 #   str_extract(pattern="(?<=_)(.*?)(?=.png)")
