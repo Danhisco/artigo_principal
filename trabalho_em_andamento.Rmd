@@ -16,6 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Bora finalizar aquelas figuras de deviance e ficar livre disso
 
 ```{r deviance e diagnósticos 2}
+setwd(v_path)
 l_md <- readRDS("rds/l_md_fragtotal.rds")
 # 1) Pq usar a deviance?
 ## para avaliar o deviance em função das i) preditoras, ii) MORAN I se for te
@@ -26,13 +27,15 @@ l_dev <- lapply(l_md,\(md){
   return(df_return)
 })
 rm(l_md);gc()
-f_ggplot <- \(dff){
+f_ggplot <- \(veffect){
+  dff <- l_dev[[veffect]]
   l_p <- list()
+  # deviance em função das preditoras
   l_p$dev_preditoras <- dff %>% 
     ggplot(aes(x=k_cont,y=Uefeito,fill=deviance)) +
     geom_line(aes(group=SiteCode),alpha=0.2) +
     geom_point(shape=21,color="black",size=4,
-               position = position_jitter(width = 0.008, height = 0.008)) +
+               position = position_jitter(width = 0.009, height = 0.009)) +
     scale_fill_gradient2("Deviance",midpoint=0,
                          low="red",
                          mid = "yellow",
@@ -40,7 +43,8 @@ f_ggplot <- \(dff){
     labs(x="k",y="logU/U") +
     theme(legend.position="inside",
           legend.position.inside = c(0.85,0.85))
-  l_p$predito_obs <- ddply(dff,"SiteCode",\(dfi){
+  # distribuição das inclinações
+  l_p$dist_slope <- ddply(dff,"SiteCode",\(dfi){
     l_md <- list()
     l_md$lm <- summary(lm(pred ~ logOR,dfi))
     # l_md$gam <- try(summary(gam(pred ~ s(logOR,bs="cr",k=5),data=dfi,method="REML")))
@@ -55,10 +59,39 @@ f_ggplot <- \(dff){
     geom_density() +
     scale_x_continuous(expand=c(0.01,0.01)) +
     scale_y_continuous(expand=c(0,0)) +
-    labs(title="distribution of slopes lm(pred~obs,by=Site)")
+    labs(subtitle="slopes: lm(pred~obs,by=Site)",y="")
+  p_distslope <- ggplotGrob(l_p$dist_slope)
+  # gráfico do lm do predito e esperado
+  l_p$predito_obs_plot <- ggplot(dff,aes(x=logOR,y=pred,group = SiteCode)) +
+    geom_abline(intercept=0,slope=1)+
+    geom_smooth(method="lm",se=FALSE,color="red",size=1) +
+    geom_line(alpha=0.2) +
+    geom_point() +
+    labs(x="observado",y="predito") +
+    theme(aspect.ratio = 1,
+          plot.margin=unit(c(0,0.2,0,0), "cm"))
+  #
+  library(grid)
+  library(ragg)
+  # Save combined plot as PNG
+  output_file <- tempfile(fileext = ".png")
+  agg_png(filename = output_file, width = 1000, height = 800, res = 144)
+  grid.newpage()
+  grid.draw(ggplotGrob(l_p$predito_obs_plot))
+  vp <- viewport(x = 0.42, y = 0.875, width = 0.4, height = 0.25)
+  pushViewport(vp)
+  grid.draw(p_distslope)
+  # Close device
+  dev.off()
+  # Read and trim image
+  trimmed_image <- image_read(output_file) %>% image_trim()
+  image_write(trimmed_image,output_file)
+  l_p$path_fig_slopes <- output_file
+  #
+  return(l_p)
 }
-
-
+l_p_dev <- lapply(names(l_dev),f_ggplot)
+names(l_p_dev) <- names(l_dev)
 
 # 2) Pq usar o lm e gam( predito ~ observado, data=by SiteCode )?
 ```
