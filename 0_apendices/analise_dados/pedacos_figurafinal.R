@@ -249,6 +249,13 @@ names(l_dfnew) <- c("areaperse","fragperse","fragtotal")
 l_dfpred <- lapply(gsub("dfnew","dfpred",l_paths),readRDS)
 names(l_dfpred) <- c("areaperse","fragperse","fragtotal")
 # funções
+f_imgpng <- \(list_ggplot,
+              vw=5,
+              vh=8){
+  l_png <- lapply(list_ggplot,\(li) ggsave(tempfile(fileext = ".png"),plot = li,
+                                           width = vw,height=vh))
+  lapply(l_png,\(li) image_read(li) %>% image_trim %>% image_resize("50%"))  
+}
 # f_plot1: logOR ~ Xi (~cut(Xj))
 f_plot1 <- \(veffect,ldfref=l_dfnew){
   dff <- l_dfnew[[veffect]]
@@ -263,9 +270,13 @@ f_plot1 <- \(veffect,ldfref=l_dfnew){
       mutate(label=gsub("Uefeito","logU/U",vx) %>% gsub("k_cont","k",.)) %>% 
       ggplot(aes(x=.data[[vx]],y=Q_0.5,
                  color=.data[[vcolor]],group=.data[[vcolor]])) +
+      geom_hline(yintercept = 0,color="darkgray") +
+      geom_vline(xintercept = 0,color="darkgray") +
       geom_ribbon(aes(ymax=Q_0.95,ymin=Q_0.05,
                       fill=.data[[vcolor]],color=.data[[vcolor]]),alpha=0.2) +
       geom_line() +
+      scale_x_continuous(expand = c(0,0)) +
+      scale_y_continuous(expand = c(0,0)) +
       labs(y="logOR",
            x=gsub("Uefeito","logU/U",vx) %>% 
              gsub("k_cont","k",.), 
@@ -278,45 +289,75 @@ f_plot1 <- \(veffect,ldfref=l_dfnew){
             aspect.ratio = 1) +
       facet_wrap(~label)
       }
-  lp$Uefeito <- fggplot(dfp = dff, #dff[k_cont%in%k_sim,]
+  lp$Uefeito <- fggplot(dfp = dff[k_cont%in%k_sim,], #dff[k_cont%in%k_sim,]
                         vx = "Uefeito",
                         vcolor = "k_cont",
                         vposition=c(0.15,0.30))
-  lp$k_cont <- fggplot(dfp = dff,#dff[Uefeito%in%quantU,]
+  lp$k_cont <- fggplot(dfp = dff[Uefeito%in%quantU,],#dff[Uefeito%in%quantU,]
                        vx = "k_cont",
                        vcolor = "Uefeito",
                        vposition=c(0.5,0.30))
-  return(lp)
+  arrangeGrob(grobs=lp,ncol=1,
+              top="Apenas Fixo")
 }
 l_apenasfixo <- lapply(names(l_dfnew),f_plot1)
 names(l_apenasfixo) <- names(l_dfnew)
-grid.arrange(grobs=l_apenasfixo,ncol=3)
+# grid.arrange(grobs=l_apenasfixo,ncol=3,
+#              top=NULL,bottom = NULL, left = NULL, right = NULL)
+l_png_fixo <- f_imgpng(l_apenasfixo)
+names(l_png_fixo) <- names(l_apenasfixo)
+# img_final <- image_append(do.call("c",l_png),stack = FALSE)
 # f_plot2: logOR ~ Xi e ~ Xj (por sítio)
 f_plot2 <- \(veffect,ldfref=l_dfpred){
   df_pred <- ldfref[[veffect]][["fixo e aleat"]]
-  fggplot <- \(dfi){
-    vx <- dfi$name[1]
-    ggplot(dfi,aes(x=k_cont,y=Q_0.5,group=SiteCode)) +
+  fggplot <- \(xvar,dfi=df_pred){
+    mutate(dfi,
+           label=gsub("k_cont","k",xvar) %>% 
+             gsub("Uefeito","logU/U",.)) %>% 
+    ggplot(aes(x=.data[[xvar]],y=Q_0.5,group=SiteCode)) +
       geom_hline(yintercept = 0,color="darkgray") +
       geom_vline(xintercept = 0,color="darkgray") +
       geom_ribbon(aes(ymax=Q_0.95,ymin=Q_0.05),alpha=0.2,color="#986868",fill="#986868") +
       geom_line() +
       scale_x_continuous(expand = c(0,0)) +
       scale_y_continuous(expand = c(0,0)) +
-      labs(x=vx,y="logOR") 
-      
+      labs(x=gsub("k_cont","k",xvar) %>% 
+             gsub("Uefeito","logU/U",.),
+           y="logOR") +
+      theme_classic() +
+      facet_wrap(~label)
   }
-  lp <- df_pred %>% 
-    pivot_longer(c(Uefeito,k_cont)) %>% 
-    dlply(.,"name",fggplot)
-    
+  lp <- lapply(c("Uefeito","k_cont"),fggplot)
+  names(lp) <- c("Uefeito","k_cont")
+  arrangeGrob(grobs=lp,ncol=1,
+              top="fixo e por sítio")
 }
-
-
-
-
-l_3alinha <- list()
-
+l_fixoEsitio <- lapply(names(l_dfpred),f_plot2)
+names(l_fixoEsitio) <- names(l_dfpred)
+# grid.arrange(grobs=l_apenasfixo,ncol=3,
+#              top=NULL,bottom = NULL, left = NULL, right = NULL)
+l_png_fixoEsitio <- f_imgpng(l_fixoEsitio)
+names(l_png_fixoEsitio) <- names(l_fixoEsitio)
+# f_figura final
+l_png <- lapply(names(l_png_fixo),\(li){
+  lp <- list()
+  lp$fixo <- l_png_fixo[[li]]
+  lp$fixoEsitio <- l_png_fixoEsitio[[li]]
+  img_final <- image_append(do.call("c",lp),stack = FALSE)
+  img_final <- image_title(img_final,
+                           vtitle = gsub("areaperse","Área per se",li) %>% 
+                             gsub("fragperse","Frag. per se",.) %>% 
+                             gsub("fragtotal","Frag. total",.),
+                           vheight = 50,
+                           vsize = 40) %>% 
+    image_resize("50%")
+  return(img_final)
+})
+names(l_png) <- names(l_png_fixo)
+lapply(names(l_png),\(li){
+  image_write(l_png[[li]],
+              path=paste0("figuras/3alinha_",li,".png"))
+})
 
 
 
