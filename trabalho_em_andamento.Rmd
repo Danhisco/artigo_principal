@@ -12,9 +12,56 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # 28/10/2024
-gsub("areaperse","Área per se",veffect) %>% 
-                gsub("fragperse","Frag. per se",.) %>% 
-                gsub("fragtotal","Frag. total",.)
+
+Bora finalizar aquelas figuras de deviance e ficar livre disso
+
+```{r deviance e diagnósticos 2}
+l_md <- readRDS("rds/l_md_fragtotal.rds")
+# 1) Pq usar a deviance?
+## para avaliar o deviance em função das i) preditoras, ii) MORAN I se for te
+l_dev <- lapply(l_md,\(md){
+  df_return <- md$model
+  df_return$deviance <- residuals.gam(md)
+  df_return$pred <- predict.gam(md)
+  return(df_return)
+})
+rm(l_md);gc()
+f_ggplot <- \(dff){
+  l_p <- list()
+  l_p$dev_preditoras <- dff %>% 
+    ggplot(aes(x=k_cont,y=Uefeito,fill=deviance)) +
+    geom_line(aes(group=SiteCode),alpha=0.2) +
+    geom_point(shape=21,color="black",size=4,
+               position = position_jitter(width = 0.008, height = 0.008)) +
+    scale_fill_gradient2("Deviance",midpoint=0,
+                         low="red",
+                         mid = "yellow",
+                         high = "darkgreen") +
+    labs(x="k",y="logU/U") +
+    theme(legend.position="inside",
+          legend.position.inside = c(0.85,0.85))
+  l_p$predito_obs <- ddply(dff,"SiteCode",\(dfi){
+    l_md <- list()
+    l_md$lm <- summary(lm(pred ~ logOR,dfi))
+    # l_md$gam <- try(summary(gam(pred ~ s(logOR,bs="cr",k=5),data=dfi,method="REML")))
+    data.frame(SiteCode=dfi$SiteCode[1],
+               slope=l_md$lm$coefficients[,"Estimate"]["logOR"],
+               # edf=l_md$gam$edf,
+               r2adj=l_md$lm$adj.r.squared)
+  }) %>% ggplot(aes(x=slope)) + 
+    geom_vline(xintercept = 1,color="black",linetype="dashed") +
+    geom_histogram(aes(y = ..density..),
+                   colour = 1, fill = "darkgray") +
+    geom_density() +
+    scale_x_continuous(expand=c(0.01,0.01)) +
+    scale_y_continuous(expand=c(0,0)) +
+    labs(title="distribution of slopes lm(pred~obs,by=Site)")
+}
+
+
+
+# 2) Pq usar o lm e gam( predito ~ observado, data=by SiteCode )?
+```
 
 
 # 27/10/2024

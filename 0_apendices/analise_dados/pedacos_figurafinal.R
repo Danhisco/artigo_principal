@@ -249,9 +249,7 @@ names(l_dfnew) <- c("areaperse","fragperse","fragtotal")
 l_dfpred <- lapply(gsub("dfnew","dfpred",l_paths),readRDS)
 names(l_dfpred) <- c("areaperse","fragperse","fragtotal")
 # funções
-f_imgpng <- \(list_ggplot,
-              vw=5,
-              vh=8){
+f_imgpng <- \(list_ggplot,vw=5,vh=8){
   l_png <- lapply(list_ggplot,\(li) ggsave(tempfile(fileext = ".png"),plot = li,
                                            width = vw,height=vh))
   lapply(l_png,\(li) image_read(li) %>% image_trim %>% image_resize("50%"))  
