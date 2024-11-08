@@ -86,8 +86,129 @@ Dado que existe convergência na proposição da conectividade como mecanismo m�
 
 Nosso objetivo é representar o debate sobre estimar os propostos efeitos a partir do contraste de modelos baseados em indivíduos em simular dados observacionais estáticos. Usamos um modelo neutro espacialmente explícito validado teoricamente no estudo da perda e fragmentação de cobertura florestal que pressupõe equilíbrio (Campo et al. 2012, 2013, REF NATURE NEUTRAL THEORY, Thompson et al. 2022 package). A partir de uma base de dados de inventários florestais, usamos o número de espécies para calibrar e a distribuição de abundância de espécies (SAD) de árvores para validar empíricamente o modelo, mesmo tipo de evidência usada nos estudos observacionais de ambos grupos de pesquisa (Fahrig 2017, 2020, Pütker et al. 2020). Exploramos a escala espacial do fenômeno variando a capacidade de dispersão per capita (REF: Fahri Jackson 2014 e Fletcher Jr 2023). Simulamos 3 contrafactuais, para cada sítio de amostragem e grau de limitação de dispersão, a paisagem contemporânea ao evento de amostragem do inventário florestal, a paisagem com a cobertura florestal remanescente aglomerada ao redor da parcela, e a paisagem prístina sem perda de cobertura florestal. Com o contraste entre pares desses contrafactuais foi possível estimar os efeitos propostos em cada programa de pesquisa e atribuir interpretação baseada no efeito da conectividade simulada e da congruência com a SAD observada (tabela 2). 
 
-[a]descrição
-tabela 1: Debate na ecologia de paisagens
-Programa de Pesquisa | Ontologia | Contrastes de contrafactuais
-Independente | Perda de habitat e a mudança na complexidade espacial são resultado de processos independentes | Área per se: paisagem aglomerada em relação a paisagem prístina; Fragmentação per se: paisagem contemporânea em relação a paisagem aglomerada
-Interdependente | Perda de habitat e a mudança na complexidade espacial resultam de um processo comum de remoção de habitat | Fragmentação total: paisagem contemporânea em relação a paisagem prístina
+
+```{r tabela 1}
+# Load required packages
+library(flextable)
+library(dplyr)
+
+# Data for Table 1
+table_1_data <- data.frame(
+  `Nome do Programa` = c("Programa A", "Programa B"),
+  `DAG` = c("DAG_A.png", "DAG_B.png"), # Replace with paths to your actual images
+  `Interpretação` = c(
+    "Programa A enfatiza a importância da conectividade para a manutenção da biodiversidade.",
+    "Programa B foca nos efeitos da fragmentação per se, independente da conectividade."
+  ),
+  `Evidências Usadas ou Propostas` = c(
+    "Experimental, Observacional, Simulação (Fahrig 2017, Pütker et al. 2020)",
+    "Simulação, Observacional (Riva et al. 2023, Valente et al. 2023)"
+  )
+)
+
+# Create the flextable for Table 1
+table_1 <- flextable(table_1_data) %>%
+  set_header_labels(
+    `Nome do Programa` = "Nome do Programa de Pesquisa",
+    DAG = "DAG",
+    `Interpretação` = "Interpretação do DAG",
+    `Evidências Usadas ou Propostas` = "Evidências Usadas ou Propostas"
+  ) %>%
+  add_header_row(
+    values = c("Programas de pesquisa e suas visões ontológicas"),
+    colwidths = 4
+  ) %>%
+  autofit() %>%
+  theme_vanilla()
+
+# Print Table 1
+table_1
+
+```
+
+```{r tabela 2}
+# Data for Table 3
+table_3_data <- data.frame(
+  `Exemplo` = c("Mapa_Contrafactual.png"), # Replace with the path to your image
+  `Efeito da Paisagem` = c("Fragmentação Total", "Fragmentação per se", "Área per se"),
+  `Contraste` = c(
+    "Contemporânea vs. Prístina",
+    "Contemporânea vs. Aglomerada",
+    "Aglomerada vs. Prístina"
+  ),
+  `Explicação` = c(
+    "Efeito combinado da perda de habitat e mudança de configuração espacial.",
+    "Isolamento do efeito da configuração espacial, dado a quantidade de habitat constante.",
+    "Apenas a perda de área de habitat sem considerar mudanças na configuração espacial."
+  )
+)
+
+# Create the flextable for Table 3
+table_3 <- flextable(table_3_data) %>%
+  set_header_labels(
+    `Exemplo` = "Exemplo de Contrafactuais",
+    `Efeito da Paisagem` = "Efeito da Paisagem",
+    `Contraste` = "Contraste entre Paisagens",
+    `Explicação` = "Explicação"
+  ) %>%
+  add_header_row(
+    values = c("Contrafactuais e contrastes"),
+    colwidths = 4
+  ) %>%
+  autofit() %>%
+  theme_vanilla()
+
+# Print Table 3
+table_3
+
+```
+
+```{r glossário}
+# Define the glossary content
+glossary <- data.frame(
+  Term = c(
+    "Ontological Views", 
+    "Connectivity", 
+    "Counterfactual", 
+    "Generalized Additive Hierarchical Models (GAHM)", 
+    "Spatial Configuration",
+    "Species Abundance Distribution (SAD)",
+    "Fragmentação Total",
+    "Fragmentação per se", 
+    "Área per se", 
+    "Neutral Model", 
+    "Calibration", 
+    "Validation"
+  ),
+  Definition = c(
+    "The different philosophical perspectives on how landscape changes affect biodiversity, particularly in terms of habitat fragmentation and connectivity.",
+    "A mechanism that measures how spatial arrangement of habitat patches affects species movement and survival, considered a minimal requirement by both research groups.",
+    "A hypothetical scenario used to estimate causal effects by comparing observed data with what could have occurred under different landscape configurations.",
+    "Statistical models that account for non-linear relationships and hierarchical structures, commonly used to estimate ecological effects from observational data.",
+    "The arrangement of habitat patches in the landscape, which can influence species diversity beyond the amount of habitat available.",
+    "A pattern that describes the distribution of species abundances in a community, used for model validation against empirical data.",
+    "The combined effect of habitat loss and changes in spatial configuration, impacting both species richness and relative abundances.",
+    "The isolated effect of changes in spatial configuration, given a constant amount of habitat.",
+    "The effect solely related to habitat loss, disregarding changes in spatial configuration.",
+    "A spatially explicit mechanistic model that assumes equilibrium in species distribution, often used to simulate biodiversity under different landscape scenarios.",
+    "The process of adjusting model parameters to fit observed data, ensuring the model's predictions align with empirical evidence.",
+    "The assessment of a model's accuracy in predicting independent data, ensuring its applicability to real-world scenarios."
+  ),
+  Relation_to_Introduction = c(
+    "Explored through the two research programs (Valente et al. 2023, Riva et al. 2023).",
+    "Central to both ontological views and mechanistic modeling (Bull et al. 2021, Gianluca 2022).",
+    "Used to assess landscape effects through simulation contrasts (Bull et al. 2021).",
+    "Utilized for analyzing landscape effects on biodiversity in your study.",
+    "Differentiates between fragmentation per se and area effects.",
+    "Empirical evidence for calibration of the mechanistic model (Campos et al. 2012, 2013).",
+    "One of the landscape effects analyzed through model contrasts.",
+    "Assesses the impact of spatial pattern changes independent of habitat amount.",
+    "Evaluated to separate pure area effects from fragmentation impacts.",
+    "Basis for your simulation of counterfactual landscapes (Campos et al. 2012).",
+    "Calibrated using species richness from tree inventories.",
+    "Validated with Species Abundance Distribution (SAD) data."
+  ),
+  stringsAsFactors = FALSE
+)
+```
+
