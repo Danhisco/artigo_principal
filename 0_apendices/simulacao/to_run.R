@@ -1,4 +1,4 @@
-# funções (deixar sempre em cima pois alguns carregam suas próprias bibliotecas)
+# funções
 source("source/dinamica_coalescente.R")
 source("source/mapa_p_MNEE.R")
 # pacotes
