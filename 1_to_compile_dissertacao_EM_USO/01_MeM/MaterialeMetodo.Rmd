@@ -202,6 +202,9 @@ cap <- "Exemplo de paisagens hipotéticas usadas pelo modelo neutro espacialmene
 #   kableExtra::column_spec(2, width = "10cm")
 ```
 ```{r exemplo-paisagens-hipotetica,fig.cap=cap,fig.height=3,fig.width=8,fig.pos="H"}
+library(magick)
+library(tidyverse)
+source("./source/mapa_p_MNEE.R")
 f_image <- \(mat,title){
   image(mat,
         main=title,
@@ -209,19 +212,40 @@ f_image <- \(mat,title){
         axes=FALSE,
         col=terrain.colors(12,rev = TRUE))
 }
-#
-par(mfrow=c(1,3))
-#
-path_name <- "dados/simulacao/MGipia1.txt"
-m <- read_table(file = path_name) |> as.matrix()
-f_image(mat=m,title="Contemporânea")
-# sem frag
-m_sem_frag <- f_nonFragLand(m)
-f_image(mat=m_sem_frag,title="Aglomerada")
-# idealizado
-m_ideal <- m
+library(readr)
+f_image <- function(mat,vw,vh){
+  v_path <- tempfile(fileext = ".png")
+  png(file = v_path, width = vw, height = vh,res=300,bg = "black")
+  par(mar = c(0, 0, 0, 0) + 0.1,bg = "black")
+  image(mat,
+        zlim = c(0, 2),
+        axes = FALSE,
+        col = terrain.colors(12, rev = TRUE))
+  dev.off()
+  return(v_path)
+}
+l_mat <- list()
+l_mat$`Contemporânea` <- as.matrix(read_table(file = "dados/simulacao/MGipia1.txt"))
+l_mat$`Aglomerada` <- f_nonFragLand(l_mat$`Contemporânea`)
+m_ideal <- l_mat$`Contemporânea`
 m_ideal[m_ideal==0] <- 1
-f_image(mat=m_ideal,title="Prístina")
+l_mat$`Prístina` <- m_ideal;rm(m_ideal)
+#
+l_img <- lapply(l_mat,f_image,vw=436,vh=423) %>% 
+  lapply(.,image_read)
+l_img <- lapply(names(l_img),\(li) image_title(l_img[[li]],li,vheight = 50,vsize = 25))
+names(l_img) <- names(l_mat)
+#
+dfp <- data.frame(
+  v_efeitos = c("fragtotal","fragperse","areaperse"),
+  contraste = c("Contemporânea|Prístina","Contemporânea|Aglomerada","Aglomerada|Prístina")
+)
+f_plot <- \(drow){
+  vi <- grep(drow$contraste,names(l_img))
+  img <- image_append(do.call("c",l_img[vi]),stack = FALSE)
+  image_write(img,path=paste0("./figuras/exemplo_",drow$v_efeitos,".png"))
+}
+plyr::a_ply(dfp,1,f_plot)
 ```
 
 ## Paisagem local: relação entre extensão espacial e grau de limitação de dispersão

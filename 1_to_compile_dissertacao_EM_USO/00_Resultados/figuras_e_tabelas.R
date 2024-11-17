@@ -817,6 +817,25 @@ l_paths <- paste0(v_path,
 f_todosplots <- \(vpath){
   
 }
+save_flextable_as_png <- function(ft, 
+                                  file_name,
+                                  width, 
+                                  height, 
+                                  dpi){
+  html_file <- tempfile(fileext = ".html")
+  save_as_html(ft, path = html_file)
+  width_px <- width * dpi
+  height_px <- height * dpi
+  webshot(html_file, 
+          file = file_name, 
+          vwidth = width_px, 
+          vheight = height_px, 
+          delay = 0.5, 
+          zoom = dpi / 96)
+  unlink(html_file)
+}
+
+
 image_title <- \(imgobj,
                  vtitle,
                  vheight=150,
@@ -842,7 +861,7 @@ image_title <- \(imgobj,
     gravity = vgrav,
     color = vcolor,
     location = vloc
-  ) %>% image_trim
+  )# %>% image_trim
 }
 f_plot_te2 <- \(veffect,
                 pattern_extract="(?<=l_dfpred_)(.*?)(?=\\.rds)"){
