@@ -92,6 +92,110 @@ Nosso objetivo é estimar os efeitos da paisagem propostos pelos programas de pe
 
 # tabela 1
 
+```{r}
+# Load required packages
+library(flextable)
+library(dplyr)
+#
+# construção dos DAGs
+library(dagitty)
+library(ggdag)
+library(ggplot2)
+# Define the first DAG
+l_dag <- list()
+l_dag$inter <- dagify(
+  local ~ f + p,
+  f ~ U,
+  p ~ U,
+  labels = c(
+    "local" = "biodiv. local",
+    "f" = "conf. espacial",
+    "p" = "%CF",
+    "U" =  "unobs. cov."
+  ),
+  latent = "U",
+  exposure = c("p","f"),
+  outcome = "local",
+  coords = list(
+    x = c(f = 2.5, p = 7.5, local = 5, U = 9),
+    y = c(f = 5, p = 3.5, local = 1, U = 5.5)
+  )
+)
+l_dag$inden <- dagify(
+  local ~ f + p,
+  f ~ U1,
+  p ~ U2,
+  labels = c(
+    "local" = "biodiv. local",
+    "f" = "conf. espacial",
+    "p" = "%CF",
+    "U1" =  "unobs. cov.1",
+    "U2" =  "unobs. cov.2"
+  ),
+  latent = c("U1","U2"),
+  exposure = c("p","f"),
+  outcome = "local",
+  coords = list(
+    x = c(f = 2.5, p = 7.5, local = 5, U2 = 7.5, U1 = 3),
+    y = c(f = 5, p = 3.5, local = 1, U2 = 5.5, U1 = 6.5)
+  )
+)
+f_ggplot <- \(dago){
+  ggdag(dago) + 
+    geom_dag_label_repel(aes(label = label), 
+                         size = 5, color = "black") + 
+    theme_dag()
+}
+
+l_ggdag <- lapply(l_dag,f_ggplot)
+
+# Plot the first DAG
+plot_dag1 <- ggdag(dag1) +
+  theme_dag()
+
+# Plot the second DAG
+plot_dag2 <- ggdag(dag2) +
+  theme_dag()
+
+# Save the first DAG
+ggsave(filename = "dag1.png", plot = plot_dag1, width = 8, height = 6, dpi = 300)
+
+# Save the second DAG
+ggsave(filename = "dag2.png", plot = plot_dag2, width = 8, height = 6, dpi = 300)
+
+
+
+
+#
+# Data for Table 1
+table_1_data <- data.frame(
+  `pressuposto central` = c("interdependência", "independência"),
+  `DAG` = c("DAG_A.png", "DAG_B.png"), # Replace with paths to your actual images
+  `Interpretação` = c(
+    "A perda de cobertura florestal resulta tanto na perda de habitat quanto na mudança configuração espacial do habitat remanescente",
+    "Um processo determina a quantidade de habitat remanescente e outro a complexidade da configuração espacial, a fragmentação per se"
+  )
+)
+
+# Create the flextable for Table 1
+table_1 <- flextable(table_1_data) %>%
+  set_header_labels(
+    `Nome do Programa` = "Nome do Programa de Pesquisa",
+    DAG = "DAG",
+    `Interpretação` = "Interpretação do DAG"
+  ) %>%
+  add_header_row(
+    values = c("Programas de pesquisa e suas visões ontológicas"),
+    colwidths = 4
+  ) %>%
+  autofit() %>%
+  theme_vanilla()
+
+# Print Table 1
+table_1
+
+```
+
 
 
 # box 1: contraste entre paisagens contrafactuais como método de estimativa dos propostos efeitos da paisagem (tabela 1)
