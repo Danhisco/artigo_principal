@@ -92,15 +92,15 @@ Nosso objetivo é estimar os efeitos da paisagem propostos pelos programas de pe
 
 # tabela 1
 
-```{r}
+```{r criação da tabela 1}
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/figuras/"
 # Load required packages
 library(flextable)
 library(dplyr)
-#
-# construção dos DAGs
 library(dagitty)
 library(ggdag)
 library(ggplot2)
+library(magick)
 # Define the first DAG
 l_dag <- list()
 l_dag$inter <- dagify(
@@ -146,56 +146,70 @@ f_ggplot <- \(dago){
                          size = 5, color = "black") + 
     theme_dag()
 }
-
-l_ggdag <- lapply(l_dag,f_ggplot)
-
-# Plot the first DAG
-plot_dag1 <- ggdag(dag1) +
-  theme_dag()
-
-# Plot the second DAG
-plot_dag2 <- ggdag(dag2) +
-  theme_dag()
-
-# Save the first DAG
-ggsave(filename = "dag1.png", plot = plot_dag1, width = 8, height = 6, dpi = 300)
-
-# Save the second DAG
-ggsave(filename = "dag2.png", plot = plot_dag2, width = 8, height = 6, dpi = 300)
-
-
-
-
+######### CÓDIGO USADO PARA CRIAR OS DAGS
+# l_ggdag <- lapply(l_dag,f_ggplot)
+# l_png <- lapply(names(l_ggdag),\(li){
+#   ggsave(filename=paste0(v_path,"dag_",li,".png"),
+#          plot = l_ggdag[[li]],
+#          width = 8, height = 6,
+#          bg="white")
+# })
+# l_img <- lapply(l_png,image_read) %>% lapply(.,image_trim)
+# names(l_img) <- l_png
+# lapply(names(l_img),\(li){
+#   image_write(l_img[[li]],path = li)
+# })
 #
 # Data for Table 1
 table_1_data <- data.frame(
   `pressuposto central` = c("interdependência", "independência"),
-  `DAG` = c("DAG_A.png", "DAG_B.png"), # Replace with paths to your actual images
+  `DAG` = unlist(l_png), # Replace with paths to your actual images
   `Interpretação` = c(
     "A perda de cobertura florestal resulta tanto na perda de habitat quanto na mudança configuração espacial do habitat remanescente",
     "Um processo determina a quantidade de habitat remanescente e outro a complexidade da configuração espacial, a fragmentação per se"
   )
 )
-
+#[@didham_rethinking_2012] [@fahrig_habitat_2019]
 # Create the flextable for Table 1
 table_1 <- flextable(table_1_data) %>%
   set_header_labels(
-    `Nome do Programa` = "Nome do Programa de Pesquisa",
+    `pressuposto.central` = "Pressuposto central",
     DAG = "DAG",
     `Interpretação` = "Interpretação do DAG"
   ) %>%
   add_header_row(
     values = c("Programas de pesquisa e suas visões ontológicas"),
-    colwidths = 4
+    colwidths = 3
   ) %>%
   autofit() %>%
-  theme_vanilla()
-
-# Print Table 1
-table_1
-
+  theme_vanilla() %>% 
+  bg(part="all",bg="white") %>% 
+  align(align="center",part="all")
+#
+for(i in 1:nrow(table_1_data)){
+  table_1 <- flextable::compose(table_1,
+                           i=i,
+                           j="DAG",
+                           value=as_paragraph(
+                             as_image(
+                               table_1_data$DAG[i],width = 2,height=2.1)
+                             )
+                           )
+}
+#
+knit_print.flextable <- function(x, ...) {
+  ft <- flextable::flextable(x)
+  cat(flextable::knit_print(ft))
+}
+save_as_image(width(table_1,width = 2),
+              path = paste0(v_path,"tabela1_programasdepesquisa.png"))
 ```
-
+```{r caption tabela 1 programas de pesquisa}
+cap <- ""
+```
+```{r display tabela 1 progrmas de pesquisa}
+knitr::include_graphics("/figuras/tabela1_programasdepesquisa.png")
+```
 
 
 # box 1: contraste entre paisagens contrafactuais como método de estimativa dos propostos efeitos da paisagem (tabela 1)
