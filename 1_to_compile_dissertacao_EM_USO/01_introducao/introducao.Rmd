@@ -3,6 +3,8 @@ title: "Introdução"
 output:
   bookdown::pdf_document2:
     latex_engine: lualatex
+  word_document: default
+  bookdown::word_document2: default
   pdf_document:
     latex_engine: xelatex
   html_document:
@@ -14,6 +16,9 @@ csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dis
 ---
 
 ```{r setup, include=FALSE,eval=FALSE}
+knitr::opts_chunk$set(echo = FALSE,include=FALSE,eval = FALSE,message = FALSE,warning = FALSE,cache=TRUE,
+                      fig.align='center',tab.align='center')
+
 # pacotes
 library(trackdown)
 # both overwrite: 
@@ -148,18 +153,18 @@ f_ggplot <- \(dago){
     theme_dag()
 }
 ######### CÓDIGO USADO PARA CRIAR OS DAGS
-# l_ggdag <- lapply(l_dag,f_ggplot)
-# l_png <- lapply(names(l_ggdag),\(li){
-#   ggsave(filename=paste0(v_path,"dag_",li,".png"),
-#          plot = l_ggdag[[li]],
-#          width = 8, height = 6,
-#          bg="white")
-# })
-# l_img <- lapply(l_png,image_read) %>% lapply(.,image_trim)
-# names(l_img) <- l_png
-# lapply(names(l_img),\(li){
-#   image_write(l_img[[li]],path = li)
-# })
+l_ggdag <- lapply(l_dag,f_ggplot)
+l_png <- lapply(names(l_ggdag),\(li){
+  ggsave(filename=paste0(v_path,"dag_",li,".png"),
+         plot = l_ggdag[[li]],
+         width = 8, height = 6,
+         bg="white")
+})
+l_img <- lapply(l_png,image_read) %>% lapply(.,image_trim)
+names(l_img) <- l_png
+lapply(names(l_img),\(li){
+  image_write(l_img[[li]],path = li)
+})
 #
 # Data for Table 1
 table_1_data <- data.frame(
@@ -205,17 +210,19 @@ knit_print.flextable <- function(x, ...) {
 save_as_image(width(table_1,width = 2),
               path = paste0(v_path,"tabela1_programasdepesquisa.png"))
 ```
-```{r caption tabela 1 programas de pesquisa}
+```{r caption tabela 1 programas de pesquisa,eval=TRUE}
 cap <- ""
 ```
-```{r display tabela 1 progrmas de pesquisa}
-knitr::include_graphics("/figuras/tabela1_programasdepesquisa.png")
+```{r display tabela 1 progrmas de pesquisa,eval=TRUE,include=TRUE}
+# v_path
+knitr::include_graphics("1_to_compile_dissertacao_EM_USO/01_introducao/figuras/tabela1_programasdepesquisa.png")
 ```
 
 
-# box 1: contraste entre paisagens contrafactuais como método de estimativa dos propostos efeitos da paisagem (tabela 1)
+# box 1: contraste entre paisagens contrafactuais como método de estimativa dos propostos efeitos da paisagem
 
-TÓPICO: explicação do design de comparações
+## tabela box 1: Os contrastes entre paisagens contrafactuais e suas interpretações dentro dos programas de pesquisa (tabela 1)
+
 
 ```{r criacao das figuras exemplo,include=FALSE,eval=FALSE}
 ##### criação das imagens exemplo
@@ -305,10 +312,10 @@ v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compi
 save_as_image(ft,path=paste0(v_path,"figuras/tabela_box1.png"))
 ```
 ```{r caption tabela display da tabela do box 1,include=FALSE,eval=TRUE}
-cap <- ""
+cap <- "tabela box 1"
 ```
-```{r tabela box 1}
-knitr::include_graphics("/figuras/tabela_box1.png")
+```{r tabela box 1,eval=TRUE,include=TRUE}
+knitr::include_graphics("1_to_compile_dissertacao_EM_USO/01_introducao/figuras/tabela_box1.png")
 ```
 
 
