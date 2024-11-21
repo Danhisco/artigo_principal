@@ -49,251 +49,94 @@ update_file(file ="secoes_texto/MeM/MaterialeMetodo.Rmd",
             gpath = "mestrado/artigo_principal/secoes_texto/",
             hide_code = TRUE)
 # overwrite the current Rmd with the current google drive 
-download_file(file = "secoes_texto/MeM/MaterialeMetodo.Rmd",
+download_file(file = "1_to_compile_dissertacao_EM_USO/01_MeM/MaterialeMetodo.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
+#----Trackdown Instructions----#
+This is not a common Document. The Document includes properly formatted Markdown syntax and R code. Please be aware and responsible in making corrections as you could break the code. Limit changes to narrative text and avoid modifying R code.
+Please do not remove placeholders of type "[[chunk-<name>]]" or "[[document-header]]"
+Once the review is over accept all changes: Tools -> Review suggested edits -> Accept all.
+You must not modify or remove these lines, we will do it for you ;)
+FILE-NAME: MaterialeMetodo.Rmd
+HIDE-CODE: TRUE
+#----End Instructions----#
+[[document-header]]
 
-################ INSERTO DE INTRODUÇÃO ################  
+[[chunk-setup]]
 
-# Estimativa de efeitos causais médios a partir da simulação de contrafactuais: o caso do debate dentro da ecologia de paisagens e da teoria neutra da biodiversidade
+[[chunk-trackdown rotine]]
 
-## Processo gerador comum dos dados
 
-A divergência entre os programas de pesquisa pode ser compreendido em termos de independência e interdepência dos efeitos da transformação da cobertura espacial na biodiversidade remanescente (REF). Ao pressupor independência, o processo geral de transformação de cobertura florestal é composto de dois processo independentes: um processo que determina a quantidade remanescente de cobertura florestal e outro que determina a configuração espacial da cobertura remanescente (Fahrig et al.). Ao pressupor interdependência o processo que reduz a quantidade de cobertura florestal é o mesmo que altera a configuração espacial do habitat (REF). Em ambas práticas ontológicas os efeitos da paisagem influenciam de forma unidirecional a biodiversidade local. 
-A estimativa de efeitos causais médios a partir da simulação de contrafactuais pode se adequar às práticas ontológicas, caso seja possível determinar contrastes adequados entre contrafactuais (REF). 
 
-Ao pressupor independência é possível simular 3 contrafactuais: i) a paisagem contemporânea ao inventário florestal; ii) a paisagem com a cobertura remanescente toda aglomerada ao redor da parcela amostrada, buscando maximizar a conectivadade da cobertura remanescente; e iii) a situação de ausência de perda de cobertura florestal, uma idealização de situação prístina em que tanto a cobertura e a conectividade remanescente são máximas. Ao pressupor interdependência é possível simular 2 contrafactuais: i) a paisagem contemporânea e ii) a paisagem prístina. 
 
 
-MUDAR MUDAR MUDAR MUDAR
+#######
 
-```{r}
-tabela_praticas_ontologicas <- data.frame(
-  `Prática Ontológica`=c("Interdependente","Independente"),
-  `Paisagens Contrafactuais` = c("Contemporânea e Prístina","Contemporâneo, Aglomerada e Prístina"),
-  `Contrastes entre Contrafactuais`= c("Fragmentação Total: contemporâneo e prístino",
-                                       "Fragmentação per se: contemporâneo e aglomerado\nÁrea per se:aglomerado e prístino")
-)
-names(tabela_praticas_ontologicas) <- c("Prática Ontológica","Paisagens Contrafactuais","Contraste entre Contrafactuais")
-```
+# Metodologia
 
+## Overview
+	A estimativa dos efeitos causais propostos ocorre por meio da interação de duas partes principais. A primeira parte é o modelo neutro espacialmente explícito, que, após ser empiricamente calibrado, funciona como um dispositivo de aproximação do processo gerador dos dados observados (Gianlucca, 2020). A segunda parte envolve programas de pesquisa que escolhem contrafactuais, cujos contrastes em pares oferecem interpretações sobre como a perda de cobertura florestal influencia a biodiversidade remanescente (Bull et al., 2021; Valente et al., 2023).
+Cada contraste de pares de contrafactuais permite interpretar o específico efeito proposto da paisagem na conectividade e na congruência com a evidência empírica. O contraste entre a calibração empírica dos processos demográficos, ajustado para simular a riqueza observada, foi interpretado como uma métrica funcional de conectividade relacionada à manutenção da riqueza local (logU/U). Já o contraste na congruência da distribuição de abundâncias das espécies da parcela (SAD) simulado com a SAD observada foi interpretado como métrica do efeito da paisagem na descrição da evidência empírica. Este sistema foi aplicado aos sítios de amostragem da base TreeCo (Lima et al., 2015), conforme critérios de seleção pré-estabelecidos.
+Para cada sítio, exploramos o efeito escalar da dispersão em MNEE, simulando 20 graus de de dispersão, variando a proporção de propágulos que permanecem nas proximidades imediatas da árvore progenitora (parâmetro k). Em cada grau de limitação de dispersão, avaliamos a escala espacial mínima necessária para que a simulação não seja influenciada pela escala de observação da paisagem ao redor da parcela (Fletcher Jr. et al., 2023; Jackson & Fahrig, 2014). Dessa forma, cada grau de limitação de dispersão foi simulado em sua respectiva extensão espacial suficiente.
+Os resultados foram sumarizados utilizando modelos de regressão hierárquicos (Petersen et al., 2019). Esses modelos de regressão descrevem os efeitos propostos da paisagem por sítio de amostragem e e o efeito médio comum entre os sítios, em função das métricas de conectividade funcional (logU/U) e de dispersão (k).
+Nas próximas subseções da metodologia, apresentaremos: (i) a base de dados e os critérios de inclusão utilizados (evidência empírica); (ii) as justificativas para o uso do modelo neutro espacialmente explícito como dispositivo de mimese (validação teórica); (iii) a relação entre calibração e validação empírica; e (iv) a análise dos dados, incluindo a racionalidade do contraste entre contrafactuais.
 
+## Evidência empírica
 
-```{r}
+Selecionamos, na base de dados TreeCo, inventários florestais que amostraram indivíduos arbóreos com diâmetro à altura do peito (DBH) ≥ 4,8 cm, em parcelas únicas de pelo menos 1 ha de floresta. Selecionamos inventários com alta confiabilidade taxonômica tanto no nível de morfoespécie quanto na precisão da coordenada central da parcela. A base de dados TreeCo reuniu amplamente estudos fitossociológicos realizados na Floresta Atlântica (Lima et al., 2015). 
+Para caracterizar a cobertura vegetal, utilizamos os mapas da coleção 6 do MapBiomas com resolução de 30x30 m², que compilam dados anuais de 1985 a 2020 (@mapbiomas). Selecionamos o mapa de cobertura florestal mais próximo ao ano da amostragem de cada parcela para assegurar o pressuposto de contemporaneidade entre a amostragem da parcela e a cobertura florestal mapeada.
+Cada mapa de cobertura foi recortado em quadrados centrados na coordenada central da parcela, com uma extensão máxima de 16x16 km². Para garantir uma correspondência entre a densidade de pixels do mapa e a densidade de indivíduos amostrados, ajustamos a resolução dos mapas. Pixels foram classificados como unidades de habitat se o valor de cobertura fosse ≥ 0,7 (observamos que, após o ajuste de resolução, surgiram valores intermediários entre 0 e 1, originalmente ausentes nos mapas binários).
+As parcelas foram delineadas como quadrados centralizados no mapa, alocando um total de N unidades de habitat, correspondendo ao número total de indivíduos na parcela. Quando não foi possível centralizar a parcela, ela foi deslocada ligeiramente para uma área adjacente que permitisse a demarcação de um quadrado adequado.
 
 
-tabela_contrafactuais <- data.frame(
-  paisagens_contrafactuais = c("Contemporânea",
-                               "Prístina",
-                               "Aglomerada",
-                               "Isolamento máximo\nparcela",
-                               "Isolamento máximo\nfragmento"),
-  interpretacao_MNEE = c(
-    # Contemporâneo
-    "paisagem com a quantidade de progenitores remanescente e com a conectividade contemporânea entre os indivíduos da parcela e a área ao redor",
-    # "Prístina"
-    "paisagem com o espaço todo preenchido por progenitores",
-    # Aglomerada
-    "paisagem com a quantidade de progenitores contemporâneeo e com a maior conectividade possível entre os indivíduos remanescentes na paisagem",
-    # Isollamento parcela
-    "paisagem com a quantidade contemporânea de progenitores e menor conectividade entre os indivíduos da parcela e da paisagem ao redor",
-    # "isoalmento fragmento amostrado"
-    "paisagem com a quantidade contemporânea de progenitores a menor conectividade entre o fragmento amostrado e os progenitores de fora do fragmento amostrado"
-  ),
-  Contraste_de_contrafactuais = c(
-    # C1 x C2
-    
-  ),
-  
-  
-  Interpretacao_Processista_adequadaaMNEE = c(
-    # Contemporâneo
-    "O processo de perda de cobertura florestal determinou concomitanemente o número de progenitores remanescentes na paisagem e a complexidade da forma espacial da cobertura remanescente, que por sua fez determina a conectividade remanescente entre a parcela amostrada e paisagem ao redor",
-    # Prístina
-    "O processo de perda de cobertura florestal não ocorreu.",
-    # Aglomerada
-    "Nesse caso particular, o processo de perda de cobertura resultou em uma configuração espacial remanescente que maxima a conectividade entre os indivíduos remanescentes da parcela e da paisagem ao redor"
-    
-    
-    
-  ),
-  Interpretacao_Padonista_adequadaaMNEE = c(
-    # Contemporâneo
-    "O processo de perda de cobertura floreestal determinou o número de progenitores remanesceentes e o processo de fragmentação per se determinou a complexidade da forma espacial da cobertura remanescente a conectividade remanescente",
-    # Prístina
-    "O processo de perda de cobertura florestal e o processo de fragmentação per se não ocorreram.",
-    # Aglomerada
-    "O processo de perda de cobertura florestal determinou a quantidade de progenitores remanescente e o processo de fragmentação per determinou o menor isolamento possível"
-  )
-)
-```
+## Theoretical Validation
 
-* equilíbrio na paisagem
+### Teoria Neutra da Biodiversidade
 
+O modelo neutro espacialmente explícito (MNEE) é parte de uma família de modelos fundamentados pela Teoria Neutra da Biodiversidade (TNB, Hubbell 2001). Na TNB, modelos demográficos buscam reproduzir padrões de biodiversidade por meio de simulações que incorporam dinâmicas de morte, nascimento, dispersão e especiação de múltiplas espécies no espaço (Azaele et al., 2017). No MNEE, a única interação entre os indivíduos é da competição neutra por espaço, o que resulta em flutuações estocásticas nos tamanhos populacionais das espécies, um processo conhecido como deriva ecológica (Azaele et al., 2017).
+A TNB se desenvolveu em contraste com teorias que enfocam o componente adaptativo da biodiversidade, as quais consideram diferenças funcionais entre as espécies (Leroi et al., 2020). Na TNB, assume-se a equivalência funcional, onde todas as espécies compartilham taxas demográficas per capita idênticas (Azaele et al., 2017; Leroi et al., 2020). A pesquisa dentro deste arcabouço teórico opera em dois eixos principais: (1) explorar pressupostos auxiliares que sustentam a equivalência funcional; e (2) investigar formas de relaxar esse pressuposto para acomodar variações propostas nos sistemas naturais (Hubbell, 2004).
+Uma das vantagens dos modelos neutros é sua capacidade de reproduzir padrões estáticos de biodiversidade local de maneira equivalente a modelos que incorporam diferenças entre espécies, mas com um número menor de parâmetros demográficos (Chisholm & Pacala, 2010; Hammal et al., 2015). Isso torna o MNEE particularmente útil como uma primeira aproximação em contextos de escassez de dados detalhados (REF).
+### Modelo Neutro Espacialmente Explícito (MNEE)
 
+Uma característica central que o MNEE reproduz é a geometria estocástica dos indivíduos, na qual a distribuição espacial é probabilística e limitada, resultando em forte agregação de coespecíficos e influenciada pela configuração espacial (McGill, 2010; May et al., 2015, 2016). No MNEE, a dispersão é determinada tanto pela capacidade de dispersão dos propágulos quanto pela distância entre a fonte de propágulo e os habitats disponíveis (Rosindell et al., 2008). Ao replicar essa geometria estocástica de forma dinâmica, o MNEE assegura que a simulação expressa a conectividade entre a parcela amostrada e a paisagem circundante, refletindo a interação do espaço na competição entre indivíduos (Campos et al., 2012, 2013).
+O MNEE opera sob o pressuposto de equilíbrio dinâmico (Rosindell et al., 2008), alinhando-se ao pressuposto de contemporaneidade amplamente adotado na análise de dados observacionais pelos dois programas de pesquisa discutidos (ver Introdução). A situação de equilíbrio é atingida quando a taxa de extinção por deriva ecológica é compensada pela taxa de reposição de espécies (taxa U), que pode ocorrer via especiação, reposição do banco de propágulos, ou dispersão de longa distância de fora da paisagem (Condit et al., 2012; Azaele et al., 2016; Munoz et al., 2016).
+A validade do MNEE foi testada em estudos de simulação que investigaram paisagens fragmentadas com diferentes níveis de perda de habitat e autocorrelação espacial (Campos et al., 2012, 2013; Claudino et al., 2015). Esses estudos demonstraram que a configuração espacial da cobertura florestal remanescente exerce um papel significativo na conformação da distribuição de abundância de espécies locais (SAD) simulada pelo MNEE (Campos et al., 2012, 2013; Claudino et al., 2015). Isso indica que o MNEE é sensível à estrutura espacial da paisagem, tornando-o uma ferramenta robusta para explorar a conectividade funcional em ecossistemas fragmentados.
 
+### Descrição da simulação de MNEE
 
+O MNEE utiliza uma abordagem coalescente para modelar a dinâmica das comunidades ecológicas (Rosindell et al., 2008; Thompson, 2020). A simulação inicia sem informação prévia sobre a identidade das espécies presentes na parcela amostral. Durante a simulação, a cada passo temporal, um indivíduo da parcela é sorteado aleatoriamente para ser substituído. A substituição pode ocorrer de duas maneiras: (i) por um singleton, ou seja, um indivíduo de uma nova espécie que surge na paisagem com probabilidade U; ou (ii) pela prole de um adulto residente na paisagem, com probabilidade 1−U (Rosindell et al., 2008; Thompson, 2020). Nos casos em que a substituição ocorre por meio de um propágulo residente (1−U), o evento de dispersão é modelado através de um kernel de dispersão com distribuição exponencial espelhada, sendo i.i.d. (independentemente e identicamente distribuído) em duas dimensões (Bullock, 2017; Thompson, 2020). Para determinar a origem do propágulo, o modelo centraliza a função de dispersão no habitat vago e sorteia posições na paisagem até encontrar uma indivíduo adulto. O processo termina quando todos os indivíduos na parcela coalescem em um conjunto ancestral de indivíduos que são os primeiros de sua espécie na paisagem, criando uma árvore genealógica da comunidade local (Rosindell et al., 2008). Cada ramo dessa árvore é composto por indivíduos que compartilham um ancestral comum, representando a espécie que originalmente colonizou a paisagem. Isso permite a reconstrução da distribuição de abundância de espécies (SAD) a partir da árvore genealógica. A abordagem coalescente pressupõe que apenas um indivíduo pode ocupar uma unidade de habitat por vez, e que cada morte é imediatamente compensada pelo nascimento de um novo indivíduo adulto (pressuposto de soma zero, Rosindell et al. 2008). 
+A capacidade de dispersão é controlada variando-se a proporção de propágulos que permanecem próximos à planta progenitora (i.e., distância até o vizinho imediato). A taxa U, que representa a probabilidade de introdução de novas espécies por nascimento, é estimada usando um método analítico proposto por Rosindell et al. (2008, Apêndice A). Inicialmente, a simulação é executada com uma taxa U próxima de zero para simular uma árvore genealógica, e posteriormente utiliza-se uma equação para relacionar o número de espécies observadas com a taxa U média, permitindo uma calibração de MNEE com a riqueza de espécies observada (Rosindell et al., 2008, Apêndice A).
 
-## Revisão da inferência causal baseado em modelos de regressão e DAG
+## Empirical Calibration and Validation
 
-- Dados observacionais podem ser interpretados como experimentos fracassados, onde é possível estruturar um diagrama das causas suficientes para descrever o processo gerados do padrão empírico observado (REF). 
-- Experimentos possuem intepretação contrafactual. O efeito causal médio estimado pela diferença entre controle e tratamento é interpretado como o efeito que um indivíduo no controle teria tido caso tivesse sido tratado (REF). A interpretação de que um estudo com dados observacionais é um experimento fracassado possibiliita o estudo de alguns sistemas onde existe um consenso sobre um conjunto adequado e suficiente de causas para descrever um processo gerador dos dados (REF). Modelos de regressão são excelentes ferramentes para modelar de forma fenomenologica esses processos geradores dos dados relacionando métricas de processos gerados com os padrões epmíricos mensurados (REF). 
-- Todos os modelos mecanisticos apresentam uma camada inferior de processos fenomelogicos (REF). No caso do modelo neutro espacialmente explícito os detalhes finos da dinâmica de morte, dispersão, e nascimento são muito simplificados por pressupostos de soma zero, espaços indivíduais iguais, sorteios aleatórios (REF). Além do pressuposto central de equivalência funcional entre espécies, onde todos as espécies apresentam as mesmas taxas demográficas e na simulação a mesma função de dispersão (REF). Porém este processo simplificado é suficiente para simular a distribuição de abundância de espécies empírica (Etienne anad Rosindell 2011, Campos et al. 2012, 2013, REF CAMPOS 2015). De tal forma que a comparação de paisagens distintas pode informar o efeito do contrastes entre as caraterísticas das paisagens no mecanismo causal mimetizado (REF). 
+Nos estudos realizados pelos grupos de pesquisa que analisam dados observacionais, é comum utilizar a riqueza de espécies para ajustar e avaliar a congruência dos modelos estatísticos com os dados empíricos (e.g., Watling et al., 2020; Püttker et al., 2020). Neste trabalho, utilizamos a riqueza de espécies para calibrar a taxa U do mecanismo demográfico representado no MNEE (ver 'validação teórica') e a Distribuição de Abundância de Espécies (Species Abundance Distribution, SAD) para validar empiricamente o resultado dessa simulação.
+Uma vez estimada a taxa U necessária para simular a riqueza observada na paisagem contrafactual específica e grau de limitação de dispersão, a SAD é simulada sob o mesmo cenário contrafactual. A validação com a SAD observada é realizada por meio de um teste de hipótese, que classifica a forma da SAD simulada como congruente ou não congruente com a SAD empírica.
+A taxa U pode ser ajustada diretamente pelo MNEE para refletir a riqueza de espécies observada na paisagem (Rosindell et al., 2008). Ao calibrar corretamente a riqueza nas paisagens contrafactuais, a SAD simulada é projetada para ter o mesmo número de indivíduos e uma quantidade aproximada de espécies em relação à SAD observada. Assim, quaisquer divergências na forma da SAD simulada podem ser atribuídas principalmente à variação na distribuição da abundância relativa das espécies, e não ao número total de espécies ou indivíduos. Isso é relevante porque, para um dado número de espécies e indivíduos, existem múltiplas formas possíveis para a SAD (Locey et al., 2013). Portanto, é esperado algum grau de variação natural entre as SAD simuladas e observadas devido à diversidade intrínseca de formas que a SAD pode assumir.
+Esse design de simulação procura calibrar o mecanismo demográfico de baixo nível que interage diretamente com a configuração da paisagem, enquanto, a validação empírica é feita no nível do padrão emergente resultante desse mecanismo. Dessa forma, a informação usada na calibração e validação possuem graus de distinção, critério necessário para usar modelos baseados em indivíduos como representantes de mecanismos (Gianlucca, 2022).
+Para a validação empírica comparamos a congruência entre a SAD observada e simulada a partir do teste de hipótese Kolmogorov-Smirnov bootstrap (REF). Esse teste tem pressupõe hipótese nula de que os dois vetores em comparação (SAD observada e SAD simulada) são amostras de uma mesma distribuição teórica (ref). Contabilizamos o número de SAD simuladas que são congruentes com a SAD observada para cada sítio, paisagem contrafactual e nível de limitação de dispersão considerado.
 
 
+## Análise dos Dados: lógica contrafactual para estimar os propostos efeitos da paisagem a partir do contraste de simulações de dinâmicas demográficas no espaço
 
-- Dos 3 DAGs é possível com GLMM recriar 2 deles: o DAG 1, que descreve a diversidade local como uma função da fragmentação total; e o DAG 3, que  descreve a diversidade local como uma função do efeito indepentende da fragmentação per se e da perda de cobertura florestal. 
+O método proposto permite formular frases como: “A SAD simulada na paisagem contemporânea, em relação à SAD simulada na paisagem prístina, indica uma redução na conectividade local na ordem de __log⁡(U/U)__ e apresenta uma melhora/piora na congruência com a SAD observada na ordem de __log⁡(OR)__, __de acordo com o pressuposto do MNEE e o grau de limitação de dispersão simulado__.” Esses termos em negrito facilitam a interpretação, atribuição e generalização dos efeitos estimados, seja para cada sítio de amostragem individual ou para um efeito médio comum. Essa estrutura de frase pode ser utilizada para descrever o efeito de fragmentação total, conforme pressuposto de interdependência (tabela 1 e box 1, introdução). Para os efeitos da paisagem sob o pressuposto de independência, temos uma frase por efeito, cada uma comparando pares de SADs contrafactuais distintos: fragmentação per se, comparando as paisagens contemporânea e aglomerada; e área per se, comparando as paisagens aglomerada e prístina (ver tabela 1, introdução).
+Esses efeitos são estimados para cada sítio de amostragem da base TreeCo dentro do critério de inclusão. Por sítio de amostragem e paisagem contrafactual, foram simulados 20 graus de limitação de dispersão. A proporção de propágulos que permanecem na vizinhança imediata da planta progenitora (k) variou de 0,99 (limitação de dispersão severa) a 0,05 (limitação de dispersão branda). Para cada conjunto de simulações (combinando sítio de amostragem, paisagem contrafactual e k), estimamos 10 réplicas da taxa U necessária para manter a riqueza observada. A média dessas estimativas de U foi utilizada para parametrizar 100 simulações adicionais, as quais foram usadas para simular a Distribuição de Abundância de Espécies (SAD). 
+Nas próximas seções, detalhamos a interpretação do contraste na taxa U (log⁡(U/U)) como uma métrica funcional de conectividade local (seção X). Em seguida, descrevemos como atribuimos os efeitos propostos na congruência com a evidência empírica, ou seja, com a SAD observada (seção X+1). Por fim, argumentamos sobre a generalização dessa estimativa, ponderando o modelo mecanístico empregado e a escala do mecanismo, que é determinada pela capacidade de dispersão (seção X+2).
 
+### Interpretação
+Nós interpretamos log⁡(U/U) como uma métrica que reflete a proposta influência da paisagem na riqueza local de espécies. A influência da paisagem na abundância relativa das espécies locais está, em algum grau, associada à sua influência na riqueza local (REF de efeito de escala Fahrig e da revisão de escalas do Fletcher Jr), a qual é descrita pela taxa U. O contraste das taxas U estimadas entre diferentes pares de paisagens contrafactuais permite compreender como a diferença entre essas paisagens afeta a riqueza local. Para um dado sítio e grau de limitação de dispersão (k), quanto menor for a taxa U necessária para obter a riqueza observada, maior será a reposição simulada de espécies por meio da imigração de propágulos vindos da paisagem circundante para a parcela (May et al. 2011). Assim, o logaritmo da razão entre as taxas U ( log⁡(U/U) ) indica em qual paisagem contrafactual a dependência da imigração de espécies da paisagem circundante é maior.
+Quando log⁡(U/U) é igual a zero, enão não há diferença entre os contrafactuais em relação à reposição de espécies locais pela paisagem. Se o valor for positivo, significa que a paisagem contrafactual no numerador tem uma taxa U mais elevada, indicando uma maior demanda de reposição de espécies locais pela paisagem. Por outro lado, se o valor for negativo, a paisagem no numerador apresenta uma menor demanda de reposição de espécies locais, sugerindo uma maior autossuficiência em termos de riqueza local.
 
-FINAL DO INSERTO DE INTRODUÇÃO
 
-############################################
+### Atribuição
 
+A atribuição dos efeitos da paisagem é realizada comparativamente, analisando o contraste entre paisagens contrafactuais em termos de variação na congruência com a distribuição de abundância de espécies (SAD) observada. O processo de avaliação da congruência entre a SAD factual e as SADs simuladas contrafactuais foi realizado em etapas. Primeiro, foi calculada a proporção de SADs simuladas que apresentam boa congruência com a SAD observada para cada sítio de amostragem, grau de limitação de dispersão, e paisagem contrafactual. Em seguida, foi calculado o logaritmo da razão de chances (log odds ratio, log⁡OR) para os contrastes de paisagens contrafactuais propostos (ver Tabela 1 e box 1), agregados por sítio de amostragem e grau de limitação de dispersão. Quando a congruência da SAD simulada é igual para ambos os contrafactuais, o valor de log⁡OR é zero. Se a paisagem contrafactual no numerador apresenta maior proporção de SADs congruentes, então log⁡OR será maior que zero; caso contrário, será negativo.
+O design de simulação empregado para estimar esses efeitos de contraste entre paisagens na congruência com a SAD observada introduz uma estrutura hierárquica aos dados, pois simula múltiplos cenários de dispersão para cada combinação de contrafactual e sítio de amostragem. Em situações onde os dados possuem uma estrutura hierárquica, é possível estimar efeitos causais não enviesados (Feller & Gelman, 2015; Weinstein & Blei, 2024). A lógica subjacente é que, se o sítio de amostragem é mantido constante, então todas as possíveis covariáveis fixas são controladas implicitamente (REF ABM COUNTERFACTUAL, 2015; Weinstein & Blei, 2024). Nesse contexto, é possível modelar a variabilidade em log⁡OR usando um modelo hierárquico de regressão, interpretando a predição deste modelo como uma síntese do efeito causal empírico representado por log⁡OR (REF TASKS DATA SCIENCE; Feller & Gelman, 2015; Grace, 2024). O objetivo é compreender essa variabilidade em termos de princípios organizadores e métricas interpretáveis (REF).
+Esses efeitos foram descritos com modelos hierárquicos aditivos generalizados (HGAM; Petersen et al., 2019), com log⁡OR como variável resposta em função do logaritmo da razão das taxas U (log⁡(U/U) e da proporção de propágulos que permanecem na vizinhança imediata (k). Com até esse conjunto de preditores em interação, esperamos compreender a variabilidade dos efeitos causais estimados, separando a variabilidade associada ao sítio de amostragem daquela que é comum entre todos os sítios (Petersen et al., 2019). Os HGAMs foram ajustados usando funções do pacote mgcv (Wood, XXXX) com distribuição gaussiana (detalhes adicionais em Material Suplementar).
+### Generalização
+Um ponto de discordância entre os programas de pesquisa é a escala espacial adequada para analisar a relação entre a perda de cobertura florestal e a biodiversidade remanescente (ver Introdução). Em nossa metodologia, consideramos o efeito escalar da dispersão no  mecanismo demográfico simulado e então buscamos determinar a extensão espacial da análise de acordo. Na construção da paisagem contrafactual aglomerada, onde todo o habitat remanescente é aglomerado ao redor da parcela amostrada, a extensão espacial da paisagem determina a quantidade de habitat que será agregado (Valente et al., 2023). O processo gerador da SAD factual não é conhecido, e, portanto, não se sabe quais mecanismos estão envolvidos nem suas respectivas extensões espaciais (REF). Para incluir essa incerteza, simulamos diversos graus de limitação de dispersão como uma análise de sensibilidade da estimativa dos efeitos propostos da paisagem. E então ajustamos a extensão espacial da paisagem para a escala que é suficiente para estimar a taxa U sem que a extensão espacial da paisagem interfira, para todos os graus de limitação de dispersão simulados. Uma expectativa é que a redução da limitação de dispersão aumente a extensão espacial suficiente para simular a dinâmica coalescente.
+Para avaliar a escala espacial adequada investigamos em paisagens prístinas o comportamento da taxa U, parâmetro livre utilizado para aproximar a riqueza observada. Quando o Modelo Neutro Espacialmente Explícito (MNEE) simula a dinâmica coalescente em paisagens infinitas e sem perda de habitat, a taxa U necessária para manter a riqueza na parcela apresenta um máximo global quando o grau de limitação de dispersão é moderado (@May, 2012). Para graus severos de limitação à dispersão, a taxa U estimada em MNEE é baixa, pois a perda de espécies é pequena: a maior parte das substituições ocorre entre coespecíficos (@May, 2012). Com o relaxamento da limitação de dispersão, a perda de espécies aumenta, pois a substituição de coespecíficos diminui, e a perda de espécies por deriva ecológica se torna mais expressiva (@May, 2012). Com o aumento da capacidade de dispersão além de graus moderados, há maior contribuição de subpopulações mais distantes da parcela, o que reduz novamente a estimativa da taxa U, porém à custa de uma maior homogenização na escala da paisagem (May et al. 2012).
+Investigamos como a variação na escala espacial da paisagem interfere na estimativa da taxa U para cada grau de limitação de dispersão simulado. Para isso, sorteamos 30 sítios entre os selecionados e simulamos a taxa U na paisagem prístina, variando a extensão espacial da paisagem entre 0,5 km e 16 km de lado para os 20 graus de limitação de dispersão (k). Descrevemos a variação na estimativa de U em função de k e da extensão espacial da paisagem. Espera-se que o aumento da extensão espacial da paisagem reduza a estimativa da taxa U cada vez menos até que incrementos na extensão espacial não resultem em redução na taxa U. Assim, a extensão espacial considerada "suficiente" foi definida como aquela que acumulou 95% de toda a variação observada entre as extensões de 0.5 km e 16 km (detalhes no Apêndice 1: Efeito Escalar).
 
-#### dos resultados #####
-
-###### MÉTODOS #######
-
-Como métrica de biodiversidade local utilizamos a distribuição de abundância de espécies (SAD, da sigla em inglês _Species Abundance Distribution_). Avaliamos a congruência da SAD observada e da SAD simulada em cada contrafactual. Para simular a SAD, o contrafactual deve ser composto pela paisagem hipotética e por um valor de taxa U. Nós interpretados que o contrafactual composto pela paisagem hipotética e a respectiva estimativa da taxa U na paisagem está alinhado com as práticas ontológicas dos programas de pesquisa em disputa (outras interpretações serão exploradas na discussão).
-
-Para finalizar a sequência epistêmica das práticas ontológicas iremos avaliar os efeitos causais da paisagem na congruência da SAD simulada. A estimativa de efeito ocorre pelo contraste de contrafactuais: área per se, paisagem aglomerada e paisagem prístina; fragmentação per se, paisagem contemporânea e paisagem aglomerada; fragmentação total, paisagem contemporânae e paisagem prístina. O efeito da paisagem será avaliado pelo log odds ratio da probabilidade da SAD simulada ter boa congruência com a SAD observada, dado um grau de limitação de dispersão per capita. A SAD simulada é comparada com a SAD observada pelo teste de Kolmogorov-Smirnov bootstrap e é contabilizado o número de SADs simuladas em que não foi possível refutar a hipótese nula, de que ambas SADs são amostras de uma mesma distribuição. A proporção de SADs simuladas com boa congruência foi usada para calcular o log odds ratio de contrafactuais em contraste.
-
-
-Perguntas
-Para avaliar cada efeito causal da paisagem, nós primeiro usamos as tabelas da figura X para responder às seguintes perguntas: O modelo mais plausível acumular a maior parte do peso de evidência dos dados? Esse modelo explica a maior parte da variabilidade dos dados? Seguimos avaliando os gráficos do intervalo de predição a posteriori do modelo mais plausível (gráficos figura X) para responder: Qual é o efeito causal fixo da paisagem na congruência relativa da distribuição de abundância de espécies (SAD) simulada?  E qual o efeito causal da paisagem por sítio de amostragem, e existem características comuns entre o efeito fixo e por sítio?
-
-
-Questions
-To assess each causal effect of the landscape, we will first use the tables in Figure X to determine the following: Is the most plausible model accumulating most of the weight? Does this model explain a significant portion of the variability in the data? Next, we will examine the posterior interval distribution in Figure X to address: What is the fixed causal effect of the landscape on the relative goodness-of-fit of the simulated species abundance distribution (SAD)? Additionally, what is the site-level causal effect of the landscape, and are there common features between the site-level and fixed effects?
-
-
-######
-
-
-
-
-
-
-
-
-# Materiais
-
-Selecionamos na base de dados TreeCo inventários florestais que amostraram indivíduos arbóreos com DBH>=4.8 cm em parcela única de pelo menos 1ha de floresta, com alta confiabilidade taxonômica no nível de morfoespécie e da coordenada central da parcela. A base de dados TreeCo compilou amplamente trabalhos fitossociológicos realizados na Floresta Atlântica (@de2015much). Utilizamos mapas de cobertura vegetal da coleção 6 do mapbiomas com resolução de 30x30 m2, que agregam mapas de 1985 até 2020 (@mapbiomas).  Os mapas de cobertura vegetal distinguem as áreas de cobertura florestal nativa das áreas de outros tipos de cobertura (@mapbiomas). Classificamos as áreas de cobertura florestal como áreas de habitat e as restantes como áreas de não habitat. Os mapas de cobertura florestal foram recortados em quadrados centrados na coordenada central da parcela. A resolução dos mapas foi ajustada para que a densidade de pixels seja igual a densidade de indivíduos na parcela do respectivo inventário florestal. Aproximamos a área da parcela por um quadrado. Em uma paisagem não foi possível desenhar uma área quadrada devido à configuração espacial do habitat e foi descartada (Apêndice: Efeito de Escalar).
-
-
-################ ANTIGO ################
-
-# Método
-
-Para comparar os dois programas de pesquisa da ecologia de paisagens (@fahrig2019habitatB e @fletcher2018habitat) em um arcabouço teórico comum e independente desses dois programas de pesquisa utilizamos o programa de pesquisa da Teoria Neutra da Biodiversidade (@rosindell2012case, @bausman2019aims, @leroi2020neutral). O programa de pesquisa da Teoria Neutra se propõe a investigar os pressupostos auxiliares ao pressuposto de equivalência funcional na construção de modelos de dinâmica populacional das espécies no espaço (@rosindell2012case, @leroi2020neutral). Ao pressupor equivalência funcional se torna possível modelar a dinâmica ecológica, que resulta no padrão de diversidade local observado, utilizando um único parâmetro livre enquanto é explorado a relação de escala entre parcela e paisagem ao redor, variando a capacidade de dispersão dos indivíduos (@munoz2016neutral). O parâmetro livre controla a taxa de colonização de uma nova espécie no sistema por evento de nascimento (taxa U), o input de novas espécies pode ser interpretado como especiação ou reposição do banco de propágulos (@condit2012thirty; @azaele2016statistical; @munoz2016neutral). Utilizamos um modelo neutro espacialmente explícito onde todos os indivíduos na paisagem são modelados e as posições e distâncias no espaço em 2D são explicitamente considerados (@campos2012neutral, @campos2013effect). Nos modelos neutros a única interação entre indivíduos é de competição neutra por espaço, resultando em flutuações estocásticas nos tamanhos populacionais das espécies, chamado de deriva ecológica (@azaele2016statistical). Aqui usamos um modelo que pressupõe equilíbrio dinâmico, situação onde a perda de espécies por deriva é compensada pelo constante input de espećies (descrito pela taxa U). Comparamos 3 tipos de paisagens hipotéticas em que o modelo simula a situação de equilíbrio dinâmico: a paisagem contemporânea, com a configuração espacial do habitat remanescente observada no ano que melhor aproxima o ano de amostragem do inventário florestal; a paisagem sem isolamento estrutural, com o habitat remanescente contemporâneo aglomerado ao redor da parcela (em forma de quadrado); e a paisagem idealizada, sem perda de habitat - situação proposta como referência de efeito nulo da perda de habitat na paisagem ao redor na manutenção da diversidade local (@fahrig2022resolving).
-
-
-```{r ,cache=FALSE}
-cap <- "Exemplo de paisagens hipotéticas usadas pelo modelo neutro espacialmene explício na escala de 4x4km2. Paisagem contemporânea: paisagem com a configuração espacial espacial do habitat remanescente do mesmo ano que a amostragem da SAD empírica. Paisagem sem isolamento estrutural: paisagem com o habitat remanescente na paisagem contemporânea todo aglomerado ao redor do sítio de amostragem. Paisagem idealizada:paisagem sem perda de habitat."
-# df_glossario
-  # gt::gt(caption="Paisagens Hipotéticas") %>% 
-  # gt::as_latex()
-  # knitr::kable(x=.,caption = "Paisagens Hipotéticas")
-# kableExtra::kbl(df_glossario,format = "latex",
-#   caption = "Paisagens Hipotéticas",
-#   booktabs = TRUE, linesep = "", align = "c")  %>%
-#   kableExtra::kable_styling(latex_options = c("striped", "HOLD_position")) %>% 
-#   kableExtra::column_spec(2, width = "10cm")
-```
-```{r exemplo-paisagens-hipotetica,fig.cap=cap,fig.height=3,fig.width=8,fig.pos="H"}
-library(magick)
-library(tidyverse)
-source("./source/mapa_p_MNEE.R")
-f_image <- \(mat,title){
-  image(mat,
-        main=title,
-        zlim=c(0,2),
-        axes=FALSE,
-        col=terrain.colors(12,rev = TRUE))
-}
-library(readr)
-f_image <- function(mat,vw,vh){
-  v_path <- tempfile(fileext = ".png")
-  png(file = v_path, width = vw, height = vh,res=300,bg = "black")
-  par(mar = c(0, 0, 0, 0) + 0.1,bg = "black")
-  image(mat,
-        zlim = c(0, 2),
-        axes = FALSE,
-        col = terrain.colors(12, rev = TRUE))
-  dev.off()
-  return(v_path)
-}
-l_mat <- list()
-l_mat$`Contemporânea` <- as.matrix(read_table(file = "dados/simulacao/MGipia1.txt"))
-l_mat$`Aglomerada` <- f_nonFragLand(l_mat$`Contemporânea`)
-m_ideal <- l_mat$`Contemporânea`
-m_ideal[m_ideal==0] <- 1
-l_mat$`Prístina` <- m_ideal;rm(m_ideal)
-#
-l_img <- lapply(l_mat,f_image,vw=436,vh=423) %>% 
-  lapply(.,image_read)
-l_img <- lapply(names(l_img),\(li) image_title(l_img[[li]],li,vheight = 50,vsize = 25))
-names(l_img) <- names(l_mat)
-#
-dfp <- data.frame(
-  v_efeitos = c("fragtotal","fragperse","areaperse"),
-  contraste = c("Contemporânea|Prístina","Contemporânea|Aglomerada","Aglomerada|Prístina")
-)
-f_plot <- \(drow){
-  vi <- grep(drow$contraste,names(l_img))
-  img <- image_append(do.call("c",l_img[vi]),stack = FALSE)
-  image_write(img,path=paste0("./figuras/exemplo_",drow$v_efeitos,".png"))
-}
-plyr::a_ply(dfp,1,f_plot)
-```
-
-## Paisagem local: relação entre extensão espacial e grau de limitação de dispersão
-  
-    
-O conceito de paisagem local é aceito em ambos programas de pesquisa como a área ao redor que pode prover a maior parte da chuva de propágulos que chega na parcela amostrada (@watling2020support,@puttker2020indirect). Esse conceito coincide com o conceito de metacomunidade usado no contexto da Teoria Neutra (@munoz2016neutral; @chase2020biodiversity). Em ambos os programas de pesquisa de ecologia de paisagens a extensão espacial da paisagem ao redor pode ser obtida usando a chamada análise de escala de efeito (@jackson2015ecologists; @puttker2020indirect). A análise de escala de efeito (@jackson2015ecologists) propõe que a extensão espacial adequada é aquela que maximiza o peso de evidência da associação estatística entre o padrão de biodiversidade local estudado e a variável de interesse, por exemplo, a proporção de cobertura vegetal na paisagem. A extensão espacial da paisagem determina a quantidade máxima de habitat disponível ao redor dos sítios de estudo (figura 3). A análise de escala de efeito tem sido adotada em diversos trabalhos (@crouzeilles2016landscape, @stuber2020recent). Optamos por não utilizar a análise de escala de efeito, pois ela pressupõe que existe equilíbrio da resposta ecológica à heterogeneidade contemporânea da paisagem. Alternativamente, vamos investigar a extensão mínima da paisagem ao redor para que a simulação da diversidade local pelo modelo neutro espacialmene explícito não seja restringida pela extensão espacial da paisagem, mas sim pela limitação de dispersão e configuração espacial do habitat remanescente (Apêndice: Efeito de Escalar). 
-
-    
-## Modelo Neutro Espacialmente Explícito
-
-O modelo neutro espacialmente explícito utiliza uma abordagem coalescente (@rosindell2008coalescence; @thompson2020pycoalescence). A simulação termina quando todos os indivíduos da área amostral coalescem para o conjunto dos primeiros indivíduos ancestrais que originaram às populações na  paisagem local (@rosindell2008coalescence), criando uma árvore genealógica da comunidade local. Cada ramo da árvore genealógica da comunidade local é constituida por indivíduos que compartilham um único ancestral comum, o indivíduo que primeiro surgiu na paisagem, descrito pela taxa U, detalhes do algoritmo em @rosindell2008coalescence. A abordagem pressupõe que apenas um indivíduo pode colonizar uma unidade de habitat por vez e toda morte é reposta pelo nascimento de um indivíduo adulto (pressuposto de soma zero). Na simulação coalescente a cada momento simulado, um indivíduo é sorteado para ser substituído. Há duas possibilidades de substituição: por um singleton de uma nova espécie na paisagem (probabilidade U) ou pela prole de uma árvore residente na paisagem (1-U). Nos 1-U casos em que a substituição é por um propágulo vindo da paisagem local, a simulação centra a função de dispersão no habitat vago e sortea posições na paisagem até que uma unidade de habitat seja sorteada, determinando a origem do propágulo que coloniza o habitat disponível (@rosindell2008coalescence; @thompson2020pycoalescence). A função de dispersão é simulada com uma distribuição exponencial espelhada (@bullock2017synthesis), i.i.d. em duas dimensões (@thompson2020pycoalescence). Controlamos a capacidade de dispersão dos indivíduos variando a proporção de propágulos que permanecem até a vizinhança imediata da planta progenitora (distância até o vizinho imediato). A taxa U é estimada usando a abordagem analítica proposta por @rosindell2008coalescence no apêndice A, no qual, a partir da árvore genealógica da comunidade local pressuposto ausência de colonização por novas espécies (probabilidade U ~ 0), é calculado a probabilidade U média necessária para obter a riqueza observada (Apêndice: Informação de Suporte). 
-  
-    
-### Avaliação do Efeito de Escalar
-  
-    
-Uma forma de avaliar se a árvore genealógica da comunidade está sendo restringida pela extensão espacial da paisagem é investigar a taxa U. Para isso, consideramos paisagens sem perda de habitat, para desconsiderar a limitação da árvore genealógica pelo isolamento estrutural da parcela na paisagem (@thompson2019characterising). Exploramos uma amostra dos inventários florestais selecionados, incluindo os valores extremos de número de indivíduos e de riqueza de espécies. variando o lado da paisagem local em 6 escalas: 0.5, 1, 2, 4, 8  e 16 km. Buscamos a escala que estabiliza a estimativa da taxa U. Aquele subescala que acumula pelo menos 95% do efeito de aumentar a escala foi considerada adequada para a simulação daquele grau de limitação de dispersão (Apêndice 1: Efeito de Escalar). 
-  
-    
-#### Simulação do Modelo Neutro Espacialmente Explícito
-  
-    
-Para cada sítio de amostragem e tipo de paisagem hipotética foram simuladas 20 graus de limitação de dispersão. A proporção de propágulos que permanece até a vizinhança imediata da árvore progenitora variou entre 0.99 até 0.05. Para cada bateria de simulação (sítio de amostragem, paisagem hipotética e grau de limitação de dispersão) foram estimadas 10 réplicas da taxa U necessária para manter a riqueza observada. A taxa U média é usada para parametrizar as 100 simulações réplicas usadas para predizer a distribuição de abundância de espécies, SAD. Nas paisagens hipotéticas contemporânea e aglomerada foram feitas simulações com a taxa U livre para ajustar a riqueza observada e com a taxa U livre na respectiva paisagem prístina.
-  
-
-## Métricas de efeito da paisagem ao redor
-
-As métricas de efeito da paisagem foram obtidas pela comparação da estimativa da taxa U entre paisagens hipotéticas para um mesmo sítio de amostragem e grau de limitação de dispersão. Essas métricas podem ser interpretadas no nível da dinãmica ecológica simulada pelo modelo neutro. No modelo neutro espacialmente explícito quando consideramos a diversidade local na parcela amostrada, os eventos descritos pela probabilidade U sempre aumentam a riqueza local. Nos 1-U nascimentos, aqueles que resultam em aumento da diversidade local certamente ocorrem por propágulos que imigram de fora da parcela. Enquanto os nascimentos que aumentam a abundância relativa de alguma espécie local podem ser de propágulos locais também. Assim, a reposição de espécies perdidas localmente por deriva ecológica podem ser de duas origens, dos eventos descritos por U e por parte dos eventos descritos por 1-U. Como a única diferença entre estimativas é a paisagem hipotética, a comparação entre paisagens hipotéticas pode informar efeitos da paisagem ao redor na conectividade dos indivíduos na cobertura florestal remanescente relacionada com a manutenção da diversidade local. 
-
-Calculamos 3 tipos métricas de efeito da paisagem ao redor baseado na taxa U estimada nas paisagens hipotéticas. A métrica de efeito de fragmentação per se foi obtida pela comparação entre a taxa U estimada em paisagens contemporânea e aglomerada. O simulado nessas duas paisagens pressupõe a mesma quantidade de cobertura, mas difere na particular configuração espacial da cobertura remanescente.
-A métrica de efeito de fragmentação total foi obtida pela comparação entre a taxa U estimada em paisagens contemporânea e prístina. O simulada nessas duas paisagem difere na quantidade de cobertura florestal remanescente e na particular configuração espacial dessa cobertura remanescente no momento da amostragem. 
-A métrica de efeito de perda de cobertura florestal per se foi obtida pela comparação entre a taxa U estimada em paisagens aglomerada e prístina. O simulado nessas duas paisagens difere na quantidade de cobertura florestal remanescente, porém, em ambas todo o habitat remanesceente está sempre estruturalmente em contato. 
-
-
-
-    
-## Análise de Dados
-
-No contexto de criação de modelos ecológicos para aproximar a diversidade local de árvores a partir da cobertura florestal na área ao redor, o debate entre os programas de pesquisa em ecologia de paisagens pode resultar em duas perguntas: o efeito de fragmentação per se é relevante ou é suficiente considerar apenas a quantidade de habitat remanescente? dados estaticos de diversidade local são melhor aproximados pela premissa de efeito de longo prazo ou de curto prazo da paisagem ao redor? 
-
-Para responder a primeira pergunta é possível comparar a predição do simulada na paisagem hipotética contemporânea e aglomerada, com o U livre e prístino, em função da métrica de fragmentação per se. Dessa forma, avaliamos o efeito da fragmentação per se na conectividade.
-
-Para responder a segunda pergunta é possível comparar a paisagem prístina com a paisagem contemporânea e aglomerada em função da métrica de efeito de fragmentação total e da métrica de efeito de perda de cobertura per se, respectivamente. Dessa forma comparamos paisagens hipotéticas que utilizam da informação contemporânea com aquela que pressupõe ausência de perda de cobertura.
-
-Avaliamos a congruência entre a distribuição de abundância de espécies (SAD) observada na parcela e a SAD simulada pelo modelo neutro pressuposto as 3 paisagens hipotéticas (contemporânea, aglomerada e prístina). A congruência entre SAD empírica e SAD simulada foi obtida pelo teste de Kolmogorov-Smirnov bootstrap (@2samples), cuja hipotese nula asserta que as duas SADs comparadas são amostras de uma mesma distribuição de abundância de espécies. As SADs simuladas foram classificadas como congruentes se o p-valor do teste for maior ou igual a 5%. Contabilizamos o número de SADs congruêntes por bateria de simulação.
-
-Exploramos modelos hierarquicos de regressão que agregam os dados pelo sítio de amostragem para explorar a congruência relativa da SAD simulada usando uma distribuição binomial. Buscamos avaliar como a congruência relativa varia com o aumento da métrica de efeito   
-
-\newpage
 
 # Referências

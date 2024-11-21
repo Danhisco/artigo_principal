@@ -15,10 +15,12 @@ bibliography: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_co
 csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/plos.csl
 ---
 
-```{r setup, include=FALSE,eval=FALSE}
+```{r setup, eval=TRUE,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,include=FALSE,eval = FALSE,message = FALSE,warning = FALSE,cache=TRUE,
                       fig.align='center',tab.align='center')
-
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/"
+```
+```{r trackdown, include=FALSE,eval=FALSE}
 # pacotes
 library(trackdown)
 # both overwrite: 
@@ -98,7 +100,7 @@ Nosso objetivo é estimar os efeitos da paisagem propostos pelos programas de pe
 
 # tabela 1
 
-```{r criação da tabela 1}
+```{r tabela1_1.png}
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/figuras/"
 # Load required packages
 library(flextable)
@@ -203,20 +205,23 @@ for(i in 1:nrow(table_1_data)){
                            )
 }
 #
-knit_print.flextable <- function(x, ...) {
-  ft <- flextable::flextable(x)
-  cat(flextable::knit_print(ft))
-}
+# knit_print.flextable <- function(x, ...) {
+#   ft <- flextable::flextable(x)
+#   cat(flextable::knit_print(ft))
+# }
 save_as_image(width(table_1,width = 2),
-              path = paste0(v_path,"tabela1_programasdepesquisa.png"))
+              path = paste0(v_path,"tabela1.png"))
 ```
 ```{r caption tabela 1 programas de pesquisa,eval=TRUE}
-cap <- ""
+# cap <- ""
 ```
 ```{r display tabela 1 progrmas de pesquisa,eval=TRUE,include=TRUE}
 # v_path
-knitr::include_graphics("1_to_compile_dissertacao_EM_USO/01_introducao/figuras/tabela1_programasdepesquisa.png")
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/"
+knitr::include_graphics(paste0(v_path,"figuras/tabela1.png"))
 ```
+
+<!-- ![Tabela 1](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/figuras/tabela1.png) -->
 
 
 # box 1: contraste entre paisagens contrafactuais como método de estimativa dos propostos efeitos da paisagem
@@ -315,7 +320,8 @@ save_as_image(ft,path=paste0(v_path,"figuras/tabela_box1.png"))
 cap <- "tabela box 1"
 ```
 ```{r tabela box 1,eval=TRUE,include=TRUE}
-knitr::include_graphics("1_to_compile_dissertacao_EM_USO/01_introducao/figuras/tabela_box1.png")
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/"
+knitr::include_graphics(paste0(v_path,"figuras/tabela_box1.png"))
 ```
 
 
@@ -330,13 +336,13 @@ Este design oferece uma forma de avaliar como as mudanças na configuração esp
 
 # Glossário
 
-```{r}
+```{r glossario, include=TRUE,eval=TRUE}
 # Instalar pacotes necessários, se ainda não estiverem instalados
 if (!require(flextable)) install.packages("flextable")
 
 # Carregar o pacote
 library(flextable)
-
+library(tidyverse)
 # Criar um data frame com os termos e definições
 glossario <- data.frame(
   Termo = c(
@@ -393,3 +399,4 @@ glossario_table
 
 ```
 
+# Referências
