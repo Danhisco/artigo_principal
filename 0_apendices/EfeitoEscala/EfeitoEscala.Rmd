@@ -187,11 +187,27 @@ __Figura 1__ a) Mudança na extensão espacial da paisagem a proporção de cobe
 ## Taxa U estimada na maior extensão espacial da paisagem (16x16km2)
 
 ```{r figura 2a}
-df_Unull |> 
+my_summary_fun <- function(x) {
+  data.frame(
+    y = median(x),
+    ymin = quantile(x, 0.025),
+    ymax = quantile(x, 0.975)
+  )
+}
+df_median <- group_by(df_Unull,SiteCode,k) %>% 
+  summarise(y=median(U))
+p <- df_Unull |> 
   ggplot(aes(x=k,y=U)) +
-  geom_point() +
+  geom_line(data=df_median,aes(x=k,y=y,group=SiteCode),alpha=0.4,color="darkorange") +
+  stat_summary(aes(group=interaction(SiteCode,k)),fun.data = my_summary_fun, geom = "pointrange",alpha=0.5) +
   geom_smooth(se=F,method = "gam") +
-  scale_x_reverse()
+  scale_x_continuous(expand = c(0.01,0)) +
+  scale_y_continuous(expand = c(0.01,0)) +
+  theme_bw() +
+  ggtitle("Estimativa em paisagens prístinas com 16 km de lado") +
+  theme(plot.title = element_text(hjust = 0.5, size = 13))
+ggsave(filename = "0_apendices/EfeitoEscala/figuras/fig2a_tendencia_media.png",plot = p)
+p
 ```
 
 <font size="1"> 
@@ -203,23 +219,21 @@ df_p <- df_Unull |>
   arrange(S_obs) |> 
   mutate(label = paste(SiteCode,S_obs,Ntotal,effort_ha,sep = ", "))
 df_p$label <- factor(df_p$label,levels = unique(df_p$label))
-df_p |> 
+p <- df_p |> 
   ggplot(aes(x=k,y=U)) +
-  # geom_line() +
-  # geom_smooth(method = "loess",se=F) +
   geom_point(alpha=0.4) +
   stat_summary(geom = "line",fun.data = mean_se) +
   stat_summary(geom = "pointrange",fun.data = mean_se, color="red",size=0.1) +
   stat_summary(geom = "errorbar",fun.data = mean_se, color="red",linewidth=0.5) +
-  labs(title = "U estimado por cenário de dispersão em paisagens nulas de lado 16 km",
-       subtitle = "label = SiteCode, S, N, plot area(ha); free y axis; reverse x axis") +
-  # geom_vline(xintercept = c(0.25, 0.1,0.05),color="red",alpha=0.4) +
-  scale_x_reverse() +
-  facet_wrap(~label, ncol=6,scales="free_y") +
-  theme_classic()
-# ggsave("apendices/EfeitoEscala/fig2_U16_k.png",
-#        width = 17.2,
-#        height = 6.7)
+  labs(title = "Estimado em paisagens prístina de lado 16 km") + #,subtitle = "label = SiteCode, S, N, plot area(ha); free y axis"
+  facet_wrap(~SiteCode, ncol=6,scales="free_y") +
+  scale_y_continuous(labels = scales::scientific_format(digits = 2)) +
+  theme_classic() +
+  theme(strip.text = element_text(size = 10,margin = margin()),
+        panel.spacing = unit(3, "pt"))
+ggsave("0_apendices/EfeitoEscala/figuras/fig2_U16_k.png",plot = p,
+       width = 14,
+       height = 6.7)
 ```
 
 <font size="1"> 
@@ -252,29 +266,34 @@ df_p <- df_Usoe.rep |>
 df_p$label <- factor(df_p$label,levels = unique(df_p$label))
 p <- df_p |>
   ggplot(aes(x=lado_km,y=U,color=k,group=factor(k))) +
-  geom_point(alpha=0.4) +
+  geom_point(alpha=0.7) +
   stat_summary(geom = "line",fun.data = mean_se) +
   stat_summary(geom = "pointrange",fun.data = mean_se, color="black",size=0.1) +
   scale_x_continuous(trans='log2',breaks = c(0,round(16.02/2^(5:0),1))) +
-  # scale_color_gradient2(low="red",mid = "green",high = "blue", midpoint = 0.5) +
+  scale_y_continuous(labels = scales::scientific_format(digits = 2)) +
+  # scale_color_gradient2(low="#CC5500",mid = "blue",high = "green", midpoint = 0.5) +
   scale_color_distiller(palette = "Spectral") +
-  theme_gray() +
-  # theme(legend.position = "bottom") +
-  labs(title = "U estimado em diferentes subescalas da paisagem ao redor para os 20 cenários de limitação de dispersão (k)",
-       subtitle="facet label = Site code, riqueza, número de indivíduos ,densidade; free y axis",
+  labs(title = "Estimativa da taxa U com o aumento da extensão espacial da paisagem",
        x = "lado da paisagem (km)",
-       y = "taxa U estimada") +
-  # guides(color = guide_legend(title.position = "right")) + # gostaria de deixar o k para a direita e completar a descição dele, mas não tive tempo para fazer
-  theme(legend.position= c(0.75,1.10),
-        legend.direction = "horizontal",
-        legend.justification='left',
-        legend.background = element_rect(fill=alpha('white', 0.1))) +
-  facet_wrap(~label,ncol = 6,scales="free_y")
-# ggsave("apendices/EfeitoEscala/fig3_Uk_ladoKM.png",
-#        width = 17.2,
-#        height = 6.7)
+       y = "U") +
+  theme_classic() +
+  theme(legend.position= "right",
+        # legend.direction = "horizontal",
+        # legend.justification='left',
+        legend.background = element_rect(fill=alpha('white', 0.1)),
+        strip.text = element_text(size = 10,margin = margin()),
+        panel.spacing = unit(3, "pt")) +
+  facet_wrap(~SiteCode,ncol = 6,scales="free_y")
+ggsave("0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM.png",
+       width = 14,
+       height = 6.7)
+f_img_trim_resize <- \(vpath){
+  img <- image_trim(image_read(path = vpath)) %>% image_resize("50%")
+  image_write(img,path=vpath)
+}
+f_img_trim_resize("0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM.png")
 p
-save(p,file="./apendices/EfeitoEscala/Rdata/fig3_EfeitoEscalarObs.Rdata")
+
 ```
 
 <font size="1"> 
