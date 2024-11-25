@@ -271,8 +271,8 @@ p <- df_p |>
   stat_summary(geom = "pointrange",fun.data = mean_se, color="black",size=0.1) +
   scale_x_continuous(trans='log2',breaks = c(0,round(16.02/2^(5:0),1))) +
   scale_y_continuous(labels = scales::scientific_format(digits = 2)) +
-  # scale_color_gradient2(low="#CC5500",mid = "blue",high = "green", midpoint = 0.5) +
-  scale_color_distiller(palette = "Spectral") +
+  scale_color_gradient2(low="#f6511d",mid = "#ffb400",high = "#00a6ed", midpoint = 0.5) +
+  # scale_color_distiller(palette = "Spectral") +
   labs(title = "Estimativa da taxa U com o aumento da extensão espacial da paisagem",
        x = "lado da paisagem (km)",
        y = "U") +
@@ -372,9 +372,9 @@ v_threshold <- paste0("SoE >= ",
 cols <- c("blue","red") # "#f04546","3 quant"=
 names(cols) <- c("avg+-sd",v_threshold )
 a <- 0.5
-df_plot |> 
+p <- df_plot |> 
   ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
-  geom_point(alpha=0.40,aes(color=S.N)) +
+  geom_point(alpha=0.70,aes(color=S.N)) +
   geom_line(aes(group=SiteCode,color=S.N),alpha=0.25) +
   scale_color_distiller(palette = "Spectral",name="S / N") +
   new_scale_color() +
@@ -388,18 +388,34 @@ df_plot |>
   scale_color_manual(name="",values=cols) +
   scale_x_continuous(trans = log2_trans(),
                      breaks = trans_breaks("log2", function(x) 2^x)) +
-  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-  facet_wrap(~k_factor,ncol=5) +
+  # scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  scale_y_continuous(labels = scales::scientific_format(digits = 2)) +
+  facet_wrap(~k_factor,ncol=5,scales="free_y") +
   theme_classic() +
   labs(title = "Média da estimativa média da taxa U predito pelo LMM:",
        subtitle="logit(Umed) ~ log(S) * log(N) * k * scale + (1|Site)",
        x="scale (landscape side, km)",
        y="avg U rate (Umed)",
        color="") +
-  theme(legend.position = "top")
-ggsave("apendices/EfeitoEscala/figuras/fig5_SoE.png",
+  theme(legend.position = "top",
+        strip.text = element_text(size = 10,margin = margin()),
+        panel.spacing = unit(3, "pt"))
+vpath <- ggsave("0_apendices/EfeitoEscala/figuras/fig5_SoE.png",plot = p,
        width = 10.2,
        height = 6.7)
+library(magick)
+f_img_trim_resize(vpath)
+# p
+#
+df_aud <- df_plot %>% select(SiteCode,S_obs,Ntotal,S.N) %>% distinct() %>% inner_join(select(df_sim,SiteCode,effort_ha)) %>% mutate(DA=Ntotal/effort_ha)
+p <- df_aud %>% 
+  ggplot(aes(x=log(Ntotal),y=S_obs,size=DA,fill=S.N)) +
+  geom_point(shape=21) +
+  scale_fill_distiller("S/N",palette = "Spectral") +
+  labs(x="log(N)",y="S") +
+  theme_bw()
+v_path <- ggsave("0_apendices/EfeitoEscala/figuras/figSI_S_N_sizeDA_fillSN.png",p)
+f_img_trim_resize(v_path)
 ```
 
 <font size="1"> 

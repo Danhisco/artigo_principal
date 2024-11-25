@@ -11,6 +11,29 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+```{r}
+df_aud <- df_plot %>% select(SiteCode,S_obs,Ntotal,S.N) %>% distinct() %>% inner_join(select(df_sim,SiteCode,effort_ha)) %>% mutate(DA=Ntotal/effort_ha)
+p <- df_aud %>% 
+  ggplot(aes(x=log(Ntotal),y=S_obs,size=DA,fill=S.N)) +
+  geom_point(shape=21) +
+  scale_fill_distiller("S/N",palette = "Spectral") +
+  labs(x="log(N)",y="S") +
+  theme_bw()
+ggsave()
+```
+
+
+
+
+
+
+
+
+
+
+
+
 # 28/10/2024
 
 Bora finalizar aquelas figuras de deviance e ficar livre disso

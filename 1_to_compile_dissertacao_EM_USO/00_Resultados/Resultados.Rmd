@@ -183,7 +183,14 @@ knitr::include_graphics(path="./figuras/GE_dados_disponiveis.png")
 
 ## Efeito escalar da dispersão no mecanismo simulado
 
-O objetivo dessa análise foi avaliar qual a extensão espacial da paisagem é suficiente para simular cada um dos 20 graus de simulação explorados. Para isso as estimativas da taxa U em paisagens prístinas foram obtidas em diferentes extensões espaciais da paisagem, variando de 0.5 km até 16 km de lado da paisagem. Primeiro avaliamos se o padrão da estimativa da taxa U em paisagens com lado 16 km se assemelha ao estimado em paisagens infintas e portanto pode ser usado como uma referência de taxa U sem influência da extensão espacial da paisagem. Então usamos um modelo linear misto para descrever como a média da estimativa U entre sítios variou em função do grau de limitação de dispersão e da extensão espacial da paisagem. Usando esses modelo avaliamos a menor extensão espacial em que a taxa U é próxima da taxa U estimada na paisagem de 16km de lado.
+O objetivo dessa análise foi avaliar qual a extensão espacial da paisagem é suficiente para simular cada um dos 20 graus de simulação explorados. Foram sorteados 36 sítios entre os 109 sítios dentro dos critérios de seleção do TreeCo, na figura X há um resumo das características dos sítios usados na investigação do efeito escalar da dispersão. 
+Usando a paisagem prístina desses 36 sítios, foi estimado a taxa U variando de 0.5 km até 16 km de lado da paisagem. Primeiro avaliamos se o padrão da estimativa da taxa U em paisagens com lado 16 km se assemelha ao estimado em paisagens infintas e portanto pode ser usado como uma referência de taxa U sem influência da extensão espacial da paisagem. Então usamos um modelo linear misto para descrever como a média da estimativa U entre sítios variou em função do grau de limitação de dispersão e da extensão espacial da paisagem. Usando esses modelo avaliamos a menor extensão espacial em que a taxa U é próxima da taxa U estimada na paisagem de 16km de lado.
+
+```{r sitios-efeito-escalar,fig.cap="O log do número de indivíduos (eixo x) e o número de espécies (eixo y). Os pontos estão preenchidos pela razão do número de espécies e número de indivíduos (S/N) e o tamanho dos pontos é determinado pela densidade de indivíduos na amostra (número de indivíduos dividido pela área da parcela, DA)."}
+knitr::include_graphics("./0_apendices/EfeitoEscala/figuras/figSI_S_N_sizeDA_fillSN.png")
+```
+
+
 
 ### Estimativa da taxa U na maior extensão espacial da paisagem simulada
 
@@ -227,7 +234,7 @@ Observamos que a extensão espacial mínima adequada tende a aumentar com a redu
 cap <- "A extensão espacial é um dos fatores que determina as medidas tomadas das características da paisagem. No conjunto de áreas analisadas há uma forte relação entre a extensão espacial da paisagem ao redor e a proporção de cobertura vegetal. a). O objetivo do estudo do efeito de escalar foi determinar a extensão espacial adequada para simular os 20 graus de limitação de dispersão. c). Definimos a escala adequada para um grau de limitação de dispersão como a extensão espacial que acumula a maior parte da variação na estimativa da taxa U associada ao aumento da extensão espacial da paisagem ao redor, considerando a amplitude de extensões do lado da paisagem local entre 0.5 km e 16 km. Para detalhes sobre os métodos  do estudo de efeito de escalar veja o apêndice ‘Efeito de Escalar’. Nesse  estudo, 36 sítios foram sorteados e selecionados ao longo do gradiente de número de indivíduos e de espécies na parcela. b). Para esse estudo, as estimativas da taxa U foram simuladas em paisagens totalmente preenchidas com habitat, para descontar o efeito do isolamento estrutural, e explorar apenas o efeito de variar a extensão da paisagem ao redor."
 ```
 ```{r figura SoE, eval=TRUE,include=TRUE,fig.cap=cap}
-knitr::include_graphics(path = "./0_apendices/EfeitoEscala/figuras/fig2_U16_k.png")
+knitr::include_graphics(path = "./0_apendices/EfeitoEscala/figuras/fig5_SoE.png")
 ```
 
 ## Práticas ontológicas em disputa coexistindo em um sistema epistêmico contrafactual baseado em indivíduos
