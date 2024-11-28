@@ -277,28 +277,3 @@ Os efeitos causais médios da paisagem foram calculados empíricamente com o log
  
 Para cada efeito causal médio da paisagem (área per se, fragmentação per se e fragmentação total), comparamos, via AICc (REF), 7 modelos hierarquicos aditivos generalizados (detalhes em Pedersen et al. 2019): i) com um tensor entre k e logU/U comum e com um tensor dessas duas variáveis por sítio de amostragem (com o tensor por sítio compartilhando o parâmetro de penalizado com o tensor comum); ii) com um tensor entre k e logU/U comum e apenas um intercepto por sítio; iii) 1 spline comum para logU/U e com um spline por sítio (compartilhando a penalização); iv) 1 spline para logU/U e com apenas 1 intercepto por sítio; v) 1 spline comum para k e por sítio (compartilhando a penalização); vi) 1 spline comum para k e apenas 1 intercepto por sítio; vii) 1 intercepto comum e por sítio. 
 
-PRÓXIMO:
-- ajustar os modelos só com k
-- fazer a tabela de seleção
-- modelo diagnóstico do mais plausível
-- predição a posteriori
-- logOR por sítio e médio
-
-#####################################
-############## ANTIGO  ##############
-#####################################
-
-
-
-Para os três efeitos causais da paisagem (área per se, fragmentação per se e fragmentação total), o modelos mais plausível é um modelo generalizado hierarquico aditivo que utiliza um parâmetro de penalização comum entre o spline fixo e os splines por sítio (Pedersen et al., 2019). E o segundo modelo mais plausível utiliza um parâmetro de penalização para cada spline por sítio (Pedersen et al., 2019). Em todos os modelos comparados existe boa evidência a favor da hipótese nula de ausência de autocorrelação espacial nos resíduos (o menor p-value from the Moran’s I statistics = 0.33, figura X tabelas).
-
-__Área per se__
-
-O modelo mais plausível, que explica cerca de 47% da deviance, supera o segundo modelo mais plausível por 91.62 AICc unidades. Esse modelo não apresenta boa performance em todo o gradiente da preditora (FIG. DIAG). Quando o log da razão da taxa U é próximo de zero pode existir grande variação no log odds ratio em alguns sítios, que não é possível ser descrito apenas em função do log da razão da taxa U (FIG. DIAG por sítio).[f] 
-
-O efeito causal médio fixo descrito pelo modelo mais plausível apresenta padrão não linear, variando entre log odds ratio negativo e positivo ao longo dos valores do log da razão da taxa U (figura X). O efeito causal médio por sítio também apresenta padrão não linear, mas pode apresentar grande variabilidade entre sítios e em relação ao efeito fixo (figura X). Em valores negativos de log razão U, o efeito fixo apresenta uma tendência sútil para log odds ratio negativos; no nível dos sítios, há grande diversidade - existem sítios em que a tendência é de log odds ratio positivo, enquanto em outros é similar ao efeito fixo (FIGURA X). Para log razão U entre 0 e cerca de 0.30, o efeito fixo ocorre em valores positivos de log odds ratio aumentando e depois diminuindo. Nos sítios, alguns seguem o padrão fixo, mas com pico mais elevado, enquanto outros sítios apresentam tendência de queda para valores negativos de log odds ratio (FIGURA X). Para log razão U entre 0.30 e 0.50, o efeito fixo e por sítio apresentam tendência de queda. Nessa faixa, o efeito fixo varia entre 0 e -2.5 log odds ratio; os sítios que apresentavam log odds ratio positivo podem cruzar para valores negativos ou permanecerem próximos de zero. Poucos sítios apresentam log da razão U acima de 0.50, o efeito fixo volta a subir, retornando a valores positivos de log odds ratio quando o log razão U é próximo de 1. Nessa faixa a maioria dos sítios ocorre em log odds ratio negativo e a maioria apresenta tendência de aumento, mas nunca chegam a ter valores positivos de log odds ratio (Figura X). 
-__Fragmentação per se__
-
-O modelo mais plausível, que explica cerca de 60% da deviance, supera o segundo modelo mais plausível por 93.69 AICc unidades. Esse modelo não apresenta boa performance em todo o gradiente da preditora (FIG. DIAG). Quando o log da razão da taxa U é próximo de zero pode existir grande variação no log odds ratio em alguns sítios, que não é possível ser descrito apenas em função do log da razão da taxa U (FIG. DIAG por sítio).[g] 
-
-
