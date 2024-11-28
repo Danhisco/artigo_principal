@@ -1,16 +1,16 @@
 ---
 title: "Introdução"
 output:
+  bookdown::word_document2: default
+  word_document: default
   bookdown::pdf_document2:
     latex_engine: lualatex
-  word_document: default
-  bookdown::word_document2: default
   pdf_document:
     latex_engine: xelatex
   html_document:
     df_print: paged
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 bibliography: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/citations2.bib
 csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/plos.csl
 ---
@@ -100,7 +100,7 @@ Nosso objetivo é estimar os efeitos da paisagem propostos pelos programas de pe
 
 # tabela 1
 
-```{r tabela1_1.png}
+```{r tabela1}
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/figuras/"
 # Load required packages
 library(flextable)
@@ -211,18 +211,34 @@ for(i in 1:nrow(table_1_data)){
 # }
 save_as_image(width(table_1,width = 2),
               path = paste0(v_path,"tabela1.png"))
+img <- image_read(paste0(v_path,"tabela1.png")) %>% 
+  image_trim
+image_write(img,paste0(v_path,"tab_programas_pesquisa.jpeg"))
+# width(table_1,width = 2)
 ```
 ```{r caption tabela 1 programas de pesquisa,eval=TRUE}
 # cap <- ""
 ```
-```{r display tabela 1 progrmas de pesquisa,eval=TRUE,include=TRUE}
+
+```{r tab1,eval=TRUE,include=TRUE,fig.cap="TESTE TESTE TESTE"}
 # v_path
-v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/"
-knitr::include_graphics(paste0(v_path,"figuras/tabela1.png"))
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/figuras"
+lfiles <- list.files(path=v_path,pattern=".png",full.names = TRUE)
+vpath <- grep("box1",lfiles,value = TRUE)
+# vpath
+# vpath <- normalizePath("./1_to_compile_dissertacao_EM_USO/01_introducao/figuras/tabela1.png", mustWork = TRUE)
+# knitr::include_graphics(vpath)
+# vpath <- 
+# getwd()
+
 ```
 
-<!-- ![Tabela 1](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/figuras/tabela1.png) -->
-
+\begin{table}[ht]
+\centering
+\caption{"Programas de pesquisa e suas visões ontológicas"}
+\includegraphics[width=0.8\textwidth]{"/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/figuras/tabela1.jpeg"}
+\label{tab:png-table}
+\end{table}
 
 # box 1: contraste entre paisagens contrafactuais como método de estimativa dos propostos efeitos da paisagem
 
@@ -326,17 +342,16 @@ knitr::include_graphics(paste0(v_path,"figuras/tabela_box1.png"))
 
 
 As paisagens contrafactuais presentes na tabela deste quadro foram escolhidos porque representam variações chave nas características espaciais da paisagem, permitindo isolar e identificar diferentes efeitos potenciais na biodiversidade local. Cada paisagem contrafactual simula uma condição teórica (prístina) ou empírica (agregada ou contemporânea) que ajuda a entender como a perda de habitat e a alteração na configuração espacial influenciam a dinâmica ecológica.
-Considerando que ambas as práticas ontológicas utilizam a paisagem contemporânea como referência para calcular métricas da cobertura florestal remanescente, como a proporção de cobertura florestal (Püttker et al. 2020; Watling et al. 2020), a paisagem com a configuração espacial contemporânea da cobertura florestal remanescente torna-se um contrafactual comum. 
+Considerando que ambas as práticas ontológicas utilizam a paisagem contemporânea como referência para calcular métricas da cobertura florestal remanescente, como a proporção de cobertura florestal (@puttker2020indirect; @watling2020support), a paisagem com a configuração espacial contemporânea da cobertura florestal remanescente torna-se um contrafactual comum. 
 Outra paisagem contrafactual possível é a paisagem sem perda de cobertura florestal, referida como paisagem prístina, que é considerada uma referência sem o efeito da perda de cobertura florestal. Métricas como a proporção de cobertura florestal implicitamente utilizam essa paisagem como ponto de referência.
-Entre os efeitos propostos (tabela 1), aquele que pressupõe interdependência pode ser estimado pelo contraste entre a paisagem contemporânea e a paisagem prístina, pois o contraste entre os dois informa o efeito combinado da redução de cobertura florestal e mudança na configuração espacial mudando (Valente et al. 2023 REF DAG EPIDEMIOLOGY?). O efeito obtido do contraste entre paisagem contemporânea e prístina foi chamado de fragmentação total (tabela 2).
-Por outro lado, a prática ontológica independente, que assume que a perda de cobertura florestal ocorre de forma independente do processo que determina a complexidade espacial dessa cobertura, necessita de uma paisagem contrafactual que represente a situação em que não há mudança na configuração espacial da paisagem prístina, apenas a quantidade de habitat (Valente et al. 2023), situação de mínima complexidade espacial possível da cobertura remanescente. A paisagem com a cobertura remanescente aglomerada ao redor da parcela foi usada como essa referência. Com a paisagem aglomerada, é possível estimar o efeito de área per se, comparando-a com a paisagem prístina, e o efeito de fragmentação per se, comparando-a com a paisagem contemporânea (tabela 2).
+Entre os efeitos propostos (tabela 1), aquele que pressupõe interdependência pode ser estimado pelo contraste entre a paisagem contemporânea e a paisagem prístina, pois o contraste entre os dois informa o efeito combinado da redução de cobertura florestal e mudança na configuração espacial mudando (@valente_toward_2023, @DAGinf_epi_2019). O efeito obtido do contraste entre paisagem contemporânea e prístina foi chamado de fragmentação total (tabela 2).
+Por outro lado, a prática ontológica independente, que assume que a perda de cobertura florestal ocorre de forma independente do processo que determina a complexidade espacial dessa cobertura, necessita de uma paisagem contrafactual que represente a situação em que não há mudança na configuração espacial da paisagem prístina, apenas a quantidade de habitat (@valente_toward_2023), situação de mínima complexidade espacial possível da cobertura remanescente. A paisagem com a cobertura remanescente aglomerada ao redor da parcela foi usada como essa referência. Com a paisagem aglomerada, é possível estimar o efeito de área per se, comparando-a com a paisagem prístina, e o efeito de fragmentação per se, comparando-a com a paisagem contemporânea (tabela 2).
 Este design oferece uma forma de avaliar como as mudanças na configuração espacial e na quantidade de habitat interagem para determinar os efeitos da paisagem na biodiversidade local.
-
 
 
 # Glossário
 
-```{r glossario, include=TRUE,eval=TRUE}
+```{r glossario, include=TRUE,eval=TRUE,tab.cap="Glossário"}
 # Instalar pacotes necessários, se ainda não estiverem instalados
 if (!require(flextable)) install.packages("flextable")
 
@@ -365,7 +380,7 @@ glossario <- data.frame(
   ),
   Definição = c(
     "Refere-se às suposições subjacentes sobre a natureza da realidade em estudos ecológicos. Diferentes visões ontológicas em ecologia de paisagens podem influenciar a interpretação dos efeitos da perda e fragmentação de habitats.",
-    "Uma medida de quão facilmente os organismos podem se mover entre fragmentos de habitat em uma paisagem, melhorando a dispersão de espécies e o fluxo gênico.",
+    "Uma medida de quão facilmente os organismos podem se mover entre a cobertura florestal remanescente.",
     "Um cenário hipotético utilizado para avaliar o impacto das mudanças na paisagem sobre a biodiversidade, como comparar condições atuais com paisagens pristinas ou aglomeradas.",
     "Uma abordagem estatística flexível que permite relações não lineares entre preditores e variáveis de resposta, adequado para dados ecológicos com estruturas hierárquicas.",
     "O arranjo espacial dos fragmentos de habitat em uma paisagem, influenciando processos ecológicos como dispersão e colonização de espécies.",
@@ -382,21 +397,21 @@ glossario <- data.frame(
     "O conjunto de mecanismos que resultam nos padrões observados nos dados ecológicos, ligado às visões ontológicas."
   )
 )
-
+i = 16.5
+w = i*0.3937
+ 
 # Criar a tabela usando flextable
 glossario_table <- flextable(glossario) %>%
   set_header_labels(Termo = "Termo", Definição = "Definição") %>%
-  theme_vanilla() %>% # Aplicar um tema básico
-  fontsize(size = 10, part = "all") %>% # Ajustar o tamanho da fonte
-  bold(j = 1, part = "body") %>% # Deixar os termos em negrito
-  align(align = "left", part = "all") %>% # Alinhar o texto à esquerda
-  width(j = 1, width = 3) %>% # Ajustar a largura da coluna 'Termo'
-  width(j = 2, width = 6) %>% # Ajustar a largura da coluna 'Definição'
-  autofit() # Ajustar a tabela ao conteúdo
-
+  theme_box()%>%
+  fontsize(size = 10, part = "all") %>%
+  bold(j = 1, part = "body") %>%
+  align(align = "left", part = "all") %>%
+  width(., width = (w/(ncol(glossario))))
+  # width(j = 2, width = 6) %>%
+  # set_table_properties(layout = "autofit")
 # Exibir a tabela
 glossario_table
-
 ```
 
 # Referências

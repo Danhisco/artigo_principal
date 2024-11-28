@@ -1,7 +1,18 @@
 ---
-output: html_document
-editor_options: 
-  chunk_output_type: inline
+title: "Resultados"
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+  word_document: default
+  bookdown::word_document2: default
+  pdf_document:
+    latex_engine: xelatex
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+bibliography: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/citations2.bib
+csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/plos.csl
 ---
 
 ```{r setup resultados,include=FALSE}
@@ -271,9 +282,4 @@ cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, prev
 knitr::include_graphics(path="./figuras/GE_taxaU_contrastes.png")
 ```
 
-### Descrição dos efeitos da paisagem na congruência da simulação com o padrão empírico {#efeito-congruencia}
-
-Os efeitos causais médios da paisagem foram calculados empíricamente com o log odds ratio (logOR). Quando a congruência da SAD simulada em ambos contrafactuais em contraste é igual, o valor de logOR é zero. Se o contrafactual do numerador apresenta maior proporção de SADs com boa congruência. então o logOR será maior do que zero, vice-e-versa se o logOR for negativo. Nosso objetivo é descrever os efeitos totais da paisagem na congruência relativa da SAD simulada. O sistema epistêmico usado para estimar esses efeitos impõem uma estrutura hierárquica aos dados, pois, simula diversos cenários de dispersão em diferentes tipos de paisagens contrafactuais para cada área amostrada. Nessa situação, dados com estrutura hierarquicas podem ser usados para estimar efeitos causais não enviesados (Feller & Gelman 2015; Weinstein & Blei 2024). A lógica é que, uma vez que o sítio de amostragem é sempre o mesmo, todas as possíveis covariáveis estão fixas. A descrição do logOR em função de k (proporção de propágulos que permanece até a vizinhança imediadata do progenitor) e do logU/U (métrica que expressa o efeito da paisagem) pode descrever o efeito completo da paisagem. O efeito completo descreve tanto o efeito na riqueza quanto o efeito na abundância relativa de espécies locais. Para isso, utilizamos como preditoras a métrica funcional de influência da paisagem na riqueza, e a capacidade de dispersão simulada para representar qualquer efeito da paisagem na abundância relativa não contemplado pelo efeito da métrica funcional. 
- 
-Para cada efeito causal médio da paisagem (área per se, fragmentação per se e fragmentação total), comparamos, via AICc (REF), 7 modelos hierarquicos aditivos generalizados (detalhes em Pedersen et al. 2019): i) com um tensor entre k e logU/U comum e com um tensor dessas duas variáveis por sítio de amostragem (com o tensor por sítio compartilhando o parâmetro de penalizado com o tensor comum); ii) com um tensor entre k e logU/U comum e apenas um intercepto por sítio; iii) 1 spline comum para logU/U e com um spline por sítio (compartilhando a penalização); iv) 1 spline para logU/U e com apenas 1 intercepto por sítio; v) 1 spline comum para k e por sítio (compartilhando a penalização); vi) 1 spline comum para k e apenas 1 intercepto por sítio; vii) 1 intercepto comum e por sítio. 
 
