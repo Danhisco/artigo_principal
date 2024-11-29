@@ -238,7 +238,7 @@ tabela
 <p>Esse design de simulação procura calibrar o mecanismo demográfico de baixo nível que interage diretamente com a configuração da paisagem, enquanto, a validação empírica é feita no nível do padrão emergente resultante desse mecanismo. Dessa forma, a informação usada na calibração e validação possuem graus de distinção, critério necessário para usar modelos baseados em indivíduos como representantes de mecanismos (@gianluca_ch4_2022).</p>
   
     
-<p>Para a validação empírica comparamos a congruência entre a SAD observada e simulada a partir do teste de hipótese Kolmogorov-Smirnov bootstrap (@dowd_twosamples_2023). Esse teste tem pressupõe hipótese nula de que os dois vetores em comparação (SAD observada e SAD simulada) são amostras de uma mesma distribuição teórica (@dowd_twosamples_2023). Contabilizamos o número de SAD simuladas que são congruentes com a SAD observada para cada sítio, paisagem contrafactual e nível de limitação de dispersão considerado.</p>
+<p>Para a validação empírica comparamos a congruência entre a SAD observada e simulada a partir do teste de hipótese Kolmogorov-Smirnov bootstrap (@dowd_twosamples_2023). Esse teste tem pressupõe hipótese nula de que os dois vetores em comparação (SAD observada e SAD simulada) são amostras de uma mesma distribuição teórica; a estatística de interesse do teste é a maior diferença entre as curvas acumuladas das SAD (@dowd_twosamples_2023). Contabilizamos o número de SAD simuladas que são congruentes com a SAD observada para cada sítio, paisagem contrafactual e nível de limitação de dispersão considerado.</p>
 
 ## Análise dos Dados 
 

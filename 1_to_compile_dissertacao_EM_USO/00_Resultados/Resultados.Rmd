@@ -10,7 +10,7 @@ output:
   html_document:
     df_print: paged
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 bibliography: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/citations2.bib
 csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/plos.csl
 ---
@@ -248,9 +248,15 @@ cap <- "A extensão espacial é um dos fatores que determina as medidas tomadas 
 knitr::include_graphics(path = "./0_apendices/EfeitoEscala/figuras/fig5_SoE.png")
 ```
 
-## Práticas ontológicas em disputa coexistindo em um sistema epistêmico contrafactual baseado em indivíduos
+## Efeitos da paisagem propostos por programas de pesquisa em disputa
 
-Nessa seção interpretamos e atribuímos os efeitos da paisagem baseado no contraste de simulações em paisagens contrafactuais. Essas simulações são baseadas no mesmo modelo mecanístico, baseado em indivíduos. Nesse modelo mecanístico, à medida que propágulos entram e saem da parcela, a riqueza e a abundância relativa das espécies locais são influenciadas pela paisagem, que determina a quantidade, posição e distância dos progenitores remanescentes. O modelo é calibrado para capturar a influência da paisagem na riqueza de espécies, expressa na taxa U, levando em conta a limitação de dispersão per capita. Essa taxa corresponde à probabilidade de colonização por uma nova espécie na paisagem necessária para atingir a riqueza observada. A validação empírica ocorre pela avaliação da congruência da distribuição de abundância de espécies (SAD) observada e simulada em um particular contrafactual, e, portanto, considera simultaneamente a influência da paisagem na riqueza e abundância relativa da paisagem. Buscamos quantificar os efeitos da paisagem — área per se, fragmentação per se e fragmentação total — como previstos pelas práticas ontológicas em disputa, na congruência da SAD simulada. Para isso, contrastamos pares de contrafactuais, calculando os efeitos causais médios da paisagem na congruência da SAD simulada (REF ABM causal inference). Esses efeitos foram descritos por modelos hierárquicos aditivos generalizados (HGAMs): o log da razão da chance da SAD simulada ter boa congruência (logOR) em função do log da razão da taxa U (log(U/U)) e da proporção de propágulos que permanecem na vizinhança imediata (k). A seguir apresentamos o log(U/U) estimado em função de k, que interpretamos como métrica funcional de conectividade local (\@ref(metrica-funcional)); e então descrevemos a tendência central dos efeitos da paisagem na congruência da SAD simulada usando modelos hierarquicos (\@ref(efeito-congruencia).
+Nessa seção interpretamos e atribuímos os efeitos da paisagem baseado no contraste de simulações em paisagens contrafactuais. Essas simulações resultam de um mesmo modelo mecanístico demográfico. Nesse modelo mecanístico, à medida que propágulos entram e saem da parcela, a riqueza e a abundância relativa das espécies locais são influenciadas pela paisagem, que determina a quantidade, posição e distância dos progenitores remanescentes. Esse modelo mecanístico possui pressupostos auxiliares que são comuns aos 
+
+O modelo é calibrado para capturar a influência da paisagem na riqueza de espécies, expressa na taxa U, levando em conta a limitação de dispersão per capita. Essa taxa corresponde à probabilidade de colonização por uma nova espécie na paisagem necessária para atingir a riqueza observada. A comparação da taxa U entre contrafactuais, expresso no logaritmo da razão da taxa U média, pareado pelo grau de limitação de dispersão k, informa o efeito do contraste da paisagem na manutenção da riqueza local.
+Os efeitos observados da paisagem foram obtidos pelo contraste na congruência da SAD simulada com a SAD observada. Cada efeito corresponde a um contraste de pares de paisagens contrafactuais. Buscamos descrever os efeitos da paisagem — área per se, fragmentação per se e fragmentação total — como previstos pelas práticas ontológicas em disputa (tabela 1), na congruência da SAD simulada. O contraste na congruência da SAD simulada foi obtido pelo logaritmo da razão da chance (em inglês log odds ratio, logOR) da SAD simulado ter boa congruência com a SAD observada.
+A variação no logOR do efeito foi descrito por modelos hierárquicos aditivos generalizados (HGAM), que incluíram até 2 tipos de preditoras: o log da razão da taxa U (log(U/U)) e da proporção de propágulos que permanecem na vizinhança imediata (k). 
+
+A seguir apresentamos o log(U/U) estimado em função de k, que interpretamos como métrica funcional de conectividade local (\@ref(metrica-funcional)); e então descrevemos a tendência central dos efeitos da paisagem na congruência da SAD simulada usando modelos hierarquicos (\@ref(efeito-congruencia).
 
 ### Métrica funcional da influência da paisagem na biodiversidade local {#metrica-funcional}
 
@@ -279,7 +285,74 @@ Nos graus de limitação de dispersão pouco severos, onde há o máximo global 
 cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, previstos em cada prática ontológica (tabela X). a) Distribuição dos valores de cada contraste; em vermelhos os quantis de todos os contrastes observados em paisagens com proporção de cobertura florestal igual ou superior 0.95. b) Contraste por sítio de amostragem, pontos ligados pelo sítio de amostragem e coloridos pela proporção de cobertura florestal remanescente."
 ```
 ```{r GE-contraste_taxaU, include=TRUE,eval=TRUE,fig.cap=cap}
-knitr::include_graphics(path="./figuras/GE_taxaU_contrastes.png")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.png"))
+knitr::include_graphics(path="./figuras/pedacofigfinal_1alinha.png")
+
+```
+
+### Efeito da paisagem na congruência com a SAD observada
+
+#### Efeitos indivíduais
+
+##### Fragmentação total
+
+```{r tabsel-fragtotal,eval=TRUE,include=TRUE}
+
+```
+
+```{r diagfinal-fragtotal,eval=TRUE,include=TRUE}
+
+```
+
+```{r PIfixo-fragtotal,eval=TRUE,include=TRUE}
+
+```
+
+```{r PIfixoealeat-fragtotal,eval=TRUE,include=TRUE}
+
 ```
 
 
+##### Fragmentação per se
+
+```{r tabsel-fragerse,eval=TRUE,include=TRUE}
+
+```
+
+```{r diagfinal-fragperse,eval=TRUE,include=TRUE}
+
+```
+
+```{r PIfixo-fragperse,eval=TRUE,include=TRUE}
+
+```
+
+```{r PIfixoealeat-fragperse,eval=TRUE,include=TRUE}
+
+```
+
+
+##### Área per se
+
+```{r tabsel-areaperse,eval=TRUE,include=TRUE}
+
+```
+
+```{r diagfinal-areaperse,eval=TRUE,include=TRUE}
+
+```
+
+```{r PIfixo-areaperse,eval=TRUE,include=TRUE}
+
+```
+
+```{r PIfixoealeat-areaperse,eval=TRUE,include=TRUE}
+
+```
+
+
+#### Sumarização dos contrastes 
+
+##### Comparação dos efeitos
+
+##### Comparação das paisagens contrafactuais
