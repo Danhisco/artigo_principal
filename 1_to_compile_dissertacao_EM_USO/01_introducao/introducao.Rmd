@@ -1,10 +1,10 @@
 ---
 title: "Introdução"
 output:
-  bookdown::word_document2: default
-  word_document: default
   bookdown::pdf_document2:
     latex_engine: lualatex
+  word_document: default
+  bookdown::word_document2: default
   pdf_document:
     latex_engine: xelatex
   html_document:
@@ -100,8 +100,7 @@ Nosso objetivo é estimar os efeitos da paisagem propostos pelos programas de pe
 
 # tabela 1
 
-```{r tabela1}
-v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/figuras/"
+```{r tabela1,eval=TRUE,include=TRUE,tab.cap="Programas de pesquisa em disputa e suas visões ontológicas"}
 # Load required packages
 library(flextable)
 library(dplyr)
@@ -109,7 +108,7 @@ library(dagitty)
 library(ggdag)
 library(ggplot2)
 library(magick)
-# Define the first DAG
+# DAGs
 l_dag <- list()
 l_dag$inter <- dagify(
   local ~ f + p,
@@ -154,91 +153,56 @@ f_ggplot <- \(dago){
                          size = 5, color = "black") + 
     theme_dag()
 }
-######### CÓDIGO USADO PARA CRIAR OS DAGS
 l_ggdag <- lapply(l_dag,f_ggplot)
-l_png <- lapply(names(l_ggdag),\(li){
-  ggsave(filename=paste0(v_path,"dag_",li,".png"),
-         plot = l_ggdag[[li]],
-         width = 8, height = 6,
-         bg="white")
-})
-l_img <- lapply(l_png,image_read) %>% lapply(.,image_trim)
-names(l_img) <- l_png
-lapply(names(l_img),\(li){
-  image_write(l_img[[li]],path = li)
-})
+# l_ggdag <- lapply(1:2,\(li){
+#   ggplot(data = data.frame(x=1:10,y=1:10),aes(x=x,y=y)) + geom_point()
+# })
+# names(l_ggdag) <- c("inter","inden")
+  
 #
 # Data for Table 1
 table_1_data <- data.frame(
   `pressuposto central` = c("interdependência", "independência"),
-  `DAG` = unlist(l_png), # Replace with paths to your actual images
+  `DAG` = NA, 
   `Interpretação` = c(
     "A perda de cobertura florestal resulta tanto na perda de habitat quanto na mudança configuração espacial do habitat remanescente",
     "Um processo determina a quantidade de habitat remanescente e outro a complexidade da configuração espacial, a fragmentação per se"
   )
 )
 #[@didham_rethinking_2012] [@fahrig_habitat_2019]
-# Create the flextable for Table 1
+
+# criação da tabela
+i = 16.5
+w = i*0.3937
+vdim <- w/(ncol(table_1_data))
 table_1 <- flextable(table_1_data) %>%
   set_header_labels(
     `pressuposto.central` = "Pressuposto central",
     DAG = "DAG",
     `Interpretação` = "Interpretação do DAG"
   ) %>%
-  add_header_row(
-    values = c("Programas de pesquisa e suas visões ontológicas"),
-    colwidths = 3
-  ) %>%
+  # add_header_row(
+  #   values = c("Programas de pesquisa e suas visões ontológicas"),
+  #   colwidths = 3
+  # ) %>%
   autofit() %>%
   theme_vanilla() %>% 
   bg(part="all",bg="white") %>% 
-  align(align="center",part="all")
-#
-for(i in 1:nrow(table_1_data)){
-  table_1 <- flextable::compose(table_1,
-                           i=i,
-                           j="DAG",
-                           value=as_paragraph(
-                             as_image(
-                               table_1_data$DAG[i],width = 2,height=2.1)
-                             )
-                           )
-}
-#
-# knit_print.flextable <- function(x, ...) {
-#   ft <- flextable::flextable(x)
-#   cat(flextable::knit_print(ft))
-# }
-save_as_image(width(table_1,width = 2),
-              path = paste0(v_path,"tabela1.png"))
-img <- image_read(paste0(v_path,"tabela1.png")) %>% 
-  image_trim
-image_write(img,paste0(v_path,"tab_programas_pesquisa.jpeg"))
-# width(table_1,width = 2)
+  align(align="center",part="all") %>%
+  footnote(i=1,j="DAG",value=as_paragraph(
+    c("conf. espacial = configuração espacial; %CF = porcentagem de cobertura florestal")
+  )) %>% 
+  mk_par(
+    j = "DAG",
+    value = as_paragraph(
+      gg_chunk(value = l_ggdag, width = vdim*0.5, height = vdim*0.5)
+    )
+  ) %>% 
+  width(., width = vdim) %>% 
+  height(.,height = vdim*1.5)
+# table_1
+l_ggdag[[1]]
 ```
-```{r caption tabela 1 programas de pesquisa,eval=TRUE}
-# cap <- ""
-```
-
-```{r tab1,eval=TRUE,include=TRUE,fig.cap="TESTE TESTE TESTE"}
-# v_path
-v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/figuras"
-lfiles <- list.files(path=v_path,pattern=".png",full.names = TRUE)
-vpath <- grep("box1",lfiles,value = TRUE)
-# vpath
-# vpath <- normalizePath("./1_to_compile_dissertacao_EM_USO/01_introducao/figuras/tabela1.png", mustWork = TRUE)
-# knitr::include_graphics(vpath)
-# vpath <- 
-# getwd()
-
-```
-
-\begin{table}[ht]
-\centering
-\caption{"Programas de pesquisa e suas visões ontológicas"}
-\includegraphics[width=0.8\textwidth]{"/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/figuras/tabela1.jpeg"}
-\label{tab:png-table}
-\end{table}
 
 # box 1: contraste entre paisagens contrafactuais como método de estimativa dos propostos efeitos da paisagem
 

@@ -1,10 +1,10 @@
 ---
 title: "Resultados"
 output:
+  bookdown::word_document2: default
+  word_document: default
   bookdown::pdf_document2:
     latex_engine: lualatex
-  word_document: default
-  bookdown::word_document2: default
   pdf_document:
     latex_engine: xelatex
   html_document:
@@ -19,143 +19,143 @@ csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dis
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
                       fig.align='center',tab.align='center')
 # pacotes
-library(grid)
-library(gtable)
-library(ggpubr)
-library(gt)
-library(flextable)
-library(dagitty)
-library(ggdag)
-library(gratia)
-# library(sads)
-library(doMC)
-# library(metR)
-library(kableExtra)
-library(gridExtra)
-library(ggplot2)
-theme_set(theme_bw())
-library(readr)
-# library(purrr)
-library(stringr)
-library(tidyr)
-# library(MuMIn)
-# library(AICcmodavg)
-# library(insight)
-library(bbmle)
-library(DHARMa)
-# library(mgcv)
-library(lme4)
-library(data.table)
-library(plyr)
-library(dplyr)
-source("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras_e_tabelas.R")
-source("source/general_tools.R")
-source("source/GAMMtools.R")
-source("source/fig_tools.R")
-# tamanho da fonte dos títulos dos gráficos dos resultados por síio de amosttragem (Umed e nCong)
-v_titleS <- 1000
-v_ncol_fatetwrap <- 14
-figHeight=28
-figWidth=40
-textsize=1
-#
-f_z <- function(x) (x-mean(x))/sd(x)
-##
-# df p extensões
-df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
-# df dados da proporção de cobertura vegetal
-df_p <- read_csv("dados/df_p.csv")
-# df dados para simulação
-df_sim <- read_csv("dados/df_simulacao.csv") |> 
-  inner_join(x=df_p,by="SiteCode")
-# df_SoE
-df_Usoe.rep <- read_csv("./dados/csv/df_Usoe.csv") |> 
-  pivot_longer(cols=`1`:`10`, names_to = "n", values_to = "U") |> 
-  inner_join(x=distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
-  arrange(S_obs,k)
-# df_Urep
-df_Urep <- list.files(path = "./dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) %>%  
-  adply(.,1,data.table::fread,.id=NULL) %>% na.omit()
-# df_Unull
-df_Unull <- df_Usoe.rep |> filter(round(lado_km) == 16)
-## df_dados_disponiveis
-df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
-## df_resultados 
-df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
-## df_sim
-df_sim <- read_csv("dados/df_simulacao.csv")
-## df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
-# df_ad <- df_resultados |>
-#   arrange(p) |> 
-#   inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
-#   mutate(diffS = (Smed - S_obs)/S_obs)
-## df_contrastes: contrastes por sítio e grau de limitação de dispersão
-df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
-  inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
-             by="SiteCode") |> 
-  rename(N=Ntotal,S=S_obs) |> 
-  mutate(across(N:S,log,.names="log.{.col}"),
-         across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
-         SiteCode = factor(SiteCode)) |> 
-  select(-c(N:log.S))
-## df_md: dados necessários para os modelos
-df_md_Uefeito <- df_contrastes %>% 
-  select(SiteCode:p, contains("_logratio")) %>% 
-  pivot_longer(-c(SiteCode:p)) %>% 
-  mutate(name = gsub("_logratio","",name),
-         across(c(p,k),f_z,.names = "{.col}_z"),
-         SiteCode = factor(SiteCode)) %>% 
-  rename("tp_efeito"="name","v_efeito"=value)
-## df_newdata
-df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
-  select(-starts_with("log_"))
-## df_congContrastetsREP.cvs
-df_contrastes <- df_contrastes %>%
-  select(SiteCode:p, contains("_logratio")) %>% 
-  mutate(across(-SiteCode,f_z,.names = "{.col}_z")) %>% 
-  select(SiteCode,k,p,k_z:frag.total_logratio_z) %>% 
-  rename_with(~str_remove(.,"_logratio_z")) %>% 
-  pivot_longer(cols = c("area","frag.perse","frag.total"),
-               values_to = "Uefeito",
-               names_to = "contraste") %>% 
-  mutate(contraste = case_when(contraste=="area" ~ "non_frag-ideal",
-                               contraste=="frag.total" ~ "contemp-ideal",
-                               contraste=="frag.perse" ~ "contemp-non_frag"))
-# precisa ainda?
-df_plot <- fread("dados/csv/df_plot_geral.csv")
-# themes
-basic_theme <- function(data, ...){
-  data %>% 
-    tab_options(
-      table.background.color = "white",
-      ...
-    )
-}
-## congruência 
-df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
-df_adSADifself <- adply(c("contemp","ideal","non_frag"),1,\(i){
-  df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
-    select(-land_type,-c(Smed:Smax)) %>% 
-    rename("contrafactual"="taxaU",
-           "nCong"="nCongKS")
-  inner_join(df_return,
-             df_contrastes %>% 
-               filter(contraste=="non_frag-ideal") %>% 
-               select(SiteCode:p,ends_with("_z")),
-             by=c("SiteCode","k"))
-},.id=NULL)
-# tabelas para o texto
-# df_quantisobs_Uefeito <- read_csv(file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
-df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
-l_quants_contrasteU <- lapply(df_quantisobs_Uefeito$`Contraste log(U/U)`,\(i){
-  dfi <- df_quantisobs_Uefeito %>% 
-    filter(`Contraste log(U/U)`==i) %>% 
-    select(1,starts_with("exp"))
-  dfi <- dfi %>% select(all_of(grep("0.05|0.95",names(dfi),value = T))) %>% as.data.frame()
-  v_return <- dfi[,2] - dfi[,1]
-  round(v_return,2)
-})
-names(l_quants_contrasteU) <- df_quantisobs_Uefeito$`Contraste log(U/U)`
+# library(grid)
+# library(gtable)
+# library(ggpubr)
+# library(gt)
+# library(flextable)
+# library(dagitty)
+# library(ggdag)
+# library(gratia)
+# # library(sads)
+# library(doMC)
+# # library(metR)
+# library(kableExtra)
+# library(gridExtra)
+# library(ggplot2)
+# theme_set(theme_bw())
+# library(readr)
+# # library(purrr)
+# library(stringr)
+# library(tidyr)
+# # library(MuMIn)
+# # library(AICcmodavg)
+# # library(insight)
+# library(bbmle)
+# library(DHARMa)
+# # library(mgcv)
+# library(lme4)
+# library(data.table)
+# library(plyr)
+# library(dplyr)
+# source("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras_e_tabelas.R")
+# source("source/general_tools.R")
+# source("source/GAMMtools.R")
+# source("source/fig_tools.R")
+# # tamanho da fonte dos títulos dos gráficos dos resultados por síio de amosttragem (Umed e nCong)
+# v_titleS <- 1000
+# v_ncol_fatetwrap <- 14
+# figHeight=28
+# figWidth=40
+# textsize=1
+# #
+# f_z <- function(x) (x-mean(x))/sd(x)
+# ##
+# # df p extensões
+# df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+# # df dados da proporção de cobertura vegetal
+# df_p <- read_csv("dados/df_p.csv")
+# # df dados para simulação
+# df_sim <- read_csv("dados/df_simulacao.csv") |> 
+#   inner_join(x=df_p,by="SiteCode")
+# # df_SoE
+# df_Usoe.rep <- read_csv("./dados/csv/df_Usoe.csv") |> 
+#   pivot_longer(cols=`1`:`10`, names_to = "n", values_to = "U") |> 
+#   inner_join(x=distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
+#   arrange(S_obs,k)
+# # df_Urep
+# df_Urep <- list.files(path = "./dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) %>%  
+#   adply(.,1,data.table::fread,.id=NULL) %>% na.omit()
+# # df_Unull
+# df_Unull <- df_Usoe.rep |> filter(round(lado_km) == 16)
+# ## df_dados_disponiveis
+# df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
+# ## df_resultados 
+# df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
+# ## df_sim
+# df_sim <- read_csv("dados/df_simulacao.csv")
+# ## df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
+# # df_ad <- df_resultados |>
+# #   arrange(p) |> 
+# #   inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
+# #   mutate(diffS = (Smed - S_obs)/S_obs)
+# ## df_contrastes: contrastes por sítio e grau de limitação de dispersão
+# df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
+#   inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
+#              by="SiteCode") |> 
+#   rename(N=Ntotal,S=S_obs) |> 
+#   mutate(across(N:S,log,.names="log.{.col}"),
+#          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
+#          SiteCode = factor(SiteCode)) |> 
+#   select(-c(N:log.S))
+# ## df_md: dados necessários para os modelos
+# df_md_Uefeito <- df_contrastes %>% 
+#   select(SiteCode:p, contains("_logratio")) %>% 
+#   pivot_longer(-c(SiteCode:p)) %>% 
+#   mutate(name = gsub("_logratio","",name),
+#          across(c(p,k),f_z,.names = "{.col}_z"),
+#          SiteCode = factor(SiteCode)) %>% 
+#   rename("tp_efeito"="name","v_efeito"=value)
+# ## df_newdata
+# df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
+#   select(-starts_with("log_"))
+# ## df_congContrastetsREP.cvs
+# df_contrastes <- df_contrastes %>%
+#   select(SiteCode:p, contains("_logratio")) %>% 
+#   mutate(across(-SiteCode,f_z,.names = "{.col}_z")) %>% 
+#   select(SiteCode,k,p,k_z:frag.total_logratio_z) %>% 
+#   rename_with(~str_remove(.,"_logratio_z")) %>% 
+#   pivot_longer(cols = c("area","frag.perse","frag.total"),
+#                values_to = "Uefeito",
+#                names_to = "contraste") %>% 
+#   mutate(contraste = case_when(contraste=="area" ~ "non_frag-ideal",
+#                                contraste=="frag.total" ~ "contemp-ideal",
+#                                contraste=="frag.perse" ~ "contemp-non_frag"))
+# # precisa ainda?
+# df_plot <- fread("dados/csv/df_plot_geral.csv")
+# # themes
+# basic_theme <- function(data, ...){
+#   data %>% 
+#     tab_options(
+#       table.background.color = "white",
+#       ...
+#     )
+# }
+# ## congruência 
+# df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
+# df_adSADifself <- adply(c("contemp","ideal","non_frag"),1,\(i){
+#   df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
+#     select(-land_type,-c(Smed:Smax)) %>% 
+#     rename("contrafactual"="taxaU",
+#            "nCong"="nCongKS")
+#   inner_join(df_return,
+#              df_contrastes %>% 
+#                filter(contraste=="non_frag-ideal") %>% 
+#                select(SiteCode:p,ends_with("_z")),
+#              by=c("SiteCode","k"))
+# },.id=NULL)
+# # tabelas para o texto
+# # df_quantisobs_Uefeito <- read_csv(file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
+# df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
+# l_quants_contrasteU <- lapply(df_quantisobs_Uefeito$`Contraste log(U/U)`,\(i){
+#   dfi <- df_quantisobs_Uefeito %>% 
+#     filter(`Contraste log(U/U)`==i) %>% 
+#     select(1,starts_with("exp"))
+#   dfi <- dfi %>% select(all_of(grep("0.05|0.95",names(dfi),value = T))) %>% as.data.frame()
+#   v_return <- dfi[,2] - dfi[,1]
+#   round(v_return,2)
+# })
+# names(l_quants_contrasteU) <- df_quantisobs_Uefeito$`Contraste log(U/U)`
 ```
 
 ```{r trackdown chunk resultados, include=FALSE,eval=FALSE}
@@ -258,14 +258,14 @@ Aqui interpretamos como métrica de influência da paisagem na biodiversidade lo
 Para um mesmo grau de limitação de dispersão, quanto menor a taxa U necessária para obter a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U (logU/U) estimadas nas paisagens contrafactuais em contraste for igual a zero não há diferença entre contrafactuais com relação a reposição de espécies locais pela paisagem. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. 
 
 ```{r tabela dos quantis observados dos contrastes}
-df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
-# df_quantisobs_Uefeito <- read_csv(file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
-# df_quantisobs_Uefeito <- df_quantisobs_Uefeito %>% 
-#   mutate(`Prática Ontológica` = ifelse(grepl("Frag. total",`Contraste log(U/U)`),
-#                                        "Interdependente","Independente")) %>% 
-#   relocate(`Prática Ontológica`)
-knitr::kable(df_quantisobs_Uefeito,
-             caption = "Quantis observados dos contrastes na taxa U previstos em cada prática ontológica.")
+# df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
+# # df_quantisobs_Uefeito <- read_csv(file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
+# # df_quantisobs_Uefeito <- df_quantisobs_Uefeito %>% 
+# #   mutate(`Prática Ontológica` = ifelse(grepl("Frag. total",`Contraste log(U/U)`),
+# #                                        "Interdependente","Independente")) %>% 
+# #   relocate(`Prática Ontológica`)
+# knitr::kable(df_quantisobs_Uefeito,
+#              caption = "Quantis observados dos contrastes na taxa U previstos em cada prática ontológica.")
 ```
 
 Cada razão entre taxa Us representa um previsto efeito da paisagem: área per se, fragmentação per se e fragmentação total. 
