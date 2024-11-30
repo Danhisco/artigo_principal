@@ -50,7 +50,7 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográficas e proporção de cobertura florestal nas paisagens contemporâneas aos eventos de amostragem com extensão espacial de 4 x 4 km2. b) Características gerais dos inventários, da esquerda para a direita: número de indivíduos amostrados, área da parcela amostrada, número de espécies observado, ano de amostragem. c) Proporção de cobertura florestal na paisagem ao redor da parcela amostrada em função do lado da paisagem ao redor. d) Contagem do número de sítios pelas classes de perturbação usadas no TreeCo, que consideram tanto o tempo desde a última grande perturbação quanto o grau de perturbação ."
 ```
 ```{r GE-sitios-amostrados,eval=TRUE,include=TRUE,fig.cap=cap}
-knitr::include_graphics(path="./figuras/GE_dados_disponiveis.png")
+knitr::include_graphics(path="figuras/GE_dados_disponiveis.png")
 ```
 
 ## Efeito escalar da dispersão no mecanismo simulado
@@ -100,7 +100,7 @@ O padrão por sítio difere do padrão geral da médio, pois a mudança dos valo
 cap <- ""
 ```
 ```{r Uk-ladokm,fig.cap=cap}
-knitr::include_graphics("./figuras/fig3_Uk_ladoKM.png")
+knitr::include_graphics("figuras/fig3_Uk_ladoKM.png")
 # getwd()
 ```
 
@@ -165,7 +165,7 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 
 ```{r tabsel-fragtotal,eval=TRUE,include=TRUE}
 # knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragtotal.png"))
-knitr::include_graphics(path="./figuras/tabsel_fragtotal.png")
+knitr::include_graphics(path="figuras/tabsel_fragtotal.png")
 ```
 
 ```{r diagfinal-fragtotal,eval=TRUE,include=TRUE}
