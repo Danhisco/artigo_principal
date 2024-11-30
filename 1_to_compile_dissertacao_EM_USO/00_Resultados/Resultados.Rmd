@@ -1,10 +1,10 @@
 ---
 title: "Resultados"
 output:
-  bookdown::word_document2: default
-  word_document: default
   bookdown::pdf_document2:
     latex_engine: lualatex
+  word_document: default
+  bookdown::word_document2: default
   pdf_document:
     latex_engine: xelatex
   html_document:
@@ -16,146 +16,7 @@ csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dis
 ---
 
 ```{r setup resultados,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
-                      fig.align='center',tab.align='center')
-# pacotes
-# library(grid)
-# library(gtable)
-# library(ggpubr)
-# library(gt)
-# library(flextable)
-# library(dagitty)
-# library(ggdag)
-# library(gratia)
-# # library(sads)
-# library(doMC)
-# # library(metR)
-# library(kableExtra)
-# library(gridExtra)
-# library(ggplot2)
-# theme_set(theme_bw())
-# library(readr)
-# # library(purrr)
-# library(stringr)
-# library(tidyr)
-# # library(MuMIn)
-# # library(AICcmodavg)
-# # library(insight)
-# library(bbmle)
-# library(DHARMa)
-# # library(mgcv)
-# library(lme4)
-# library(data.table)
-# library(plyr)
-# library(dplyr)
-# source("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras_e_tabelas.R")
-# source("source/general_tools.R")
-# source("source/GAMMtools.R")
-# source("source/fig_tools.R")
-# # tamanho da fonte dos títulos dos gráficos dos resultados por síio de amosttragem (Umed e nCong)
-# v_titleS <- 1000
-# v_ncol_fatetwrap <- 14
-# figHeight=28
-# figWidth=40
-# textsize=1
-# #
-# f_z <- function(x) (x-mean(x))/sd(x)
-# ##
-# # df p extensões
-# df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
-# # df dados da proporção de cobertura vegetal
-# df_p <- read_csv("dados/df_p.csv")
-# # df dados para simulação
-# df_sim <- read_csv("dados/df_simulacao.csv") |> 
-#   inner_join(x=df_p,by="SiteCode")
-# # df_SoE
-# df_Usoe.rep <- read_csv("./dados/csv/df_Usoe.csv") |> 
-#   pivot_longer(cols=`1`:`10`, names_to = "n", values_to = "U") |> 
-#   inner_join(x=distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
-#   arrange(S_obs,k)
-# # df_Urep
-# df_Urep <- list.files(path = "./dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) %>%  
-#   adply(.,1,data.table::fread,.id=NULL) %>% na.omit()
-# # df_Unull
-# df_Unull <- df_Usoe.rep |> filter(round(lado_km) == 16)
-# ## df_dados_disponiveis
-# df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
-# ## df_resultados 
-# df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
-# ## df_sim
-# df_sim <- read_csv("dados/df_simulacao.csv")
-# ## df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
-# # df_ad <- df_resultados |>
-# #   arrange(p) |> 
-# #   inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
-# #   mutate(diffS = (Smed - S_obs)/S_obs)
-# ## df_contrastes: contrastes por sítio e grau de limitação de dispersão
-# df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
-#   inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
-#              by="SiteCode") |> 
-#   rename(N=Ntotal,S=S_obs) |> 
-#   mutate(across(N:S,log,.names="log.{.col}"),
-#          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
-#          SiteCode = factor(SiteCode)) |> 
-#   select(-c(N:log.S))
-# ## df_md: dados necessários para os modelos
-# df_md_Uefeito <- df_contrastes %>% 
-#   select(SiteCode:p, contains("_logratio")) %>% 
-#   pivot_longer(-c(SiteCode:p)) %>% 
-#   mutate(name = gsub("_logratio","",name),
-#          across(c(p,k),f_z,.names = "{.col}_z"),
-#          SiteCode = factor(SiteCode)) %>% 
-#   rename("tp_efeito"="name","v_efeito"=value)
-# ## df_newdata
-# df_newpred <- read_csv(file="dados/csv/df_newpred.csv") |> 
-#   select(-starts_with("log_"))
-# ## df_congContrastetsREP.cvs
-# df_contrastes <- df_contrastes %>%
-#   select(SiteCode:p, contains("_logratio")) %>% 
-#   mutate(across(-SiteCode,f_z,.names = "{.col}_z")) %>% 
-#   select(SiteCode,k,p,k_z:frag.total_logratio_z) %>% 
-#   rename_with(~str_remove(.,"_logratio_z")) %>% 
-#   pivot_longer(cols = c("area","frag.perse","frag.total"),
-#                values_to = "Uefeito",
-#                names_to = "contraste") %>% 
-#   mutate(contraste = case_when(contraste=="area" ~ "non_frag-ideal",
-#                                contraste=="frag.total" ~ "contemp-ideal",
-#                                contraste=="frag.perse" ~ "contemp-non_frag"))
-# # precisa ainda?
-# df_plot <- fread("dados/csv/df_plot_geral.csv")
-# # themes
-# basic_theme <- function(data, ...){
-#   data %>% 
-#     tab_options(
-#       table.background.color = "white",
-#       ...
-#     )
-# }
-# ## congruência 
-# df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
-# df_adSADifself <- adply(c("contemp","ideal","non_frag"),1,\(i){
-#   df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
-#     select(-land_type,-c(Smed:Smax)) %>% 
-#     rename("contrafactual"="taxaU",
-#            "nCong"="nCongKS")
-#   inner_join(df_return,
-#              df_contrastes %>% 
-#                filter(contraste=="non_frag-ideal") %>% 
-#                select(SiteCode:p,ends_with("_z")),
-#              by=c("SiteCode","k"))
-# },.id=NULL)
-# # tabelas para o texto
-# # df_quantisobs_Uefeito <- read_csv(file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
-# df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
-# l_quants_contrasteU <- lapply(df_quantisobs_Uefeito$`Contraste log(U/U)`,\(i){
-#   dfi <- df_quantisobs_Uefeito %>% 
-#     filter(`Contraste log(U/U)`==i) %>% 
-#     select(1,starts_with("exp"))
-#   dfi <- dfi %>% select(all_of(grep("0.05|0.95",names(dfi),value = T))) %>% as.data.frame()
-#   v_return <- dfi[,2] - dfi[,1]
-#   round(v_return,2)
-# })
-# names(l_quants_contrasteU) <- df_quantisobs_Uefeito$`Contraste log(U/U)`
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center')
 ```
 
 ```{r trackdown chunk resultados, include=FALSE,eval=FALSE}
@@ -182,60 +43,65 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 ## Inventários Florestais Simulados
 
-Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção (tabela SI 1). As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig. \@ref(fig:GE-sitios-amostrados) a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo. Apenas 2 sítios possuíam menos de 20 anos de recuperação desde o último grande distúrbio na área e foram removidos (fig. \@ref(fig:GE-sitios-amostrados) c), resultando em 107 sítios. A mediana da área amostrada foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. \@ref(fig:GE-sitios-amostrados) b). Portanto, todos os 107 sítios possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Não foi possível estimar a taxa U em um sítio com baixa densidade de espécies por número de indivíduos e de baixa proporção de cobertura vegetal na paisagem ao redor (SI). Em outro sítio não foi possível desenhar a parcela quadrado no centro da paisagem devido a configuração espacial da paisagem (SI). Esses dois sítios foram removidos, totalizando 105 sítios simulados.
+<p>Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção (tabela SI 1). As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig. \@ref(fig:GE-sitios-amostrados) a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo. Apenas 2 sítios possuíam menos de 20 anos de recuperação desde o último grande distúrbio na área e foram removidos (fig. \@ref(fig:GE-sitios-amostrados) c), resultando em 107 sítios. A mediana da área amostrada foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. \@ref(fig:GE-sitios-amostrados) b). Portanto, todos os 107 sítios possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Não foi possível estimar a taxa U em um sítio com baixa densidade de espécies por número de indivíduos e de baixa proporção de cobertura vegetal na paisagem ao redor (SI). Em outro sítio não foi possível desenhar a parcela quadrado no centro da paisagem devido a configuração espacial da paisagem (SI). Esses dois sítios foram removidos, totalizando 105 sítios simulados.</p>
  
 
 ```{r caption GE dados disponiveis,eval=TRUE,include=TRUE}
 cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográficas e proporção de cobertura florestal nas paisagens contemporâneas aos eventos de amostragem com extensão espacial de 4 x 4 km2. b) Características gerais dos inventários, da esquerda para a direita: número de indivíduos amostrados, área da parcela amostrada, número de espécies observado, ano de amostragem. c) Proporção de cobertura florestal na paisagem ao redor da parcela amostrada em função do lado da paisagem ao redor. d) Contagem do número de sítios pelas classes de perturbação usadas no TreeCo, que consideram tanto o tempo desde a última grande perturbação quanto o grau de perturbação ."
 ```
-```{r pring GE dados disponiveis,eval=TRUE,include=TRUE,fig.cap=cap}
+```{r GE-sitios-amostrados,eval=TRUE,include=TRUE,fig.cap=cap}
 knitr::include_graphics(path="./figuras/GE_dados_disponiveis.png")
 ```
 
 ## Efeito escalar da dispersão no mecanismo simulado
 
-O objetivo dessa análise foi avaliar qual a extensão espacial da paisagem é suficiente para simular cada um dos 20 graus de simulação explorados. Foram sorteados 36 sítios entre os 109 sítios dentro dos critérios de seleção do TreeCo, na figura X há um resumo das características dos sítios usados na investigação do efeito escalar da dispersão. 
-Usando a paisagem prístina desses 36 sítios, foi estimado a taxa U variando de 0.5 km até 16 km de lado da paisagem. Primeiro avaliamos se o padrão da estimativa da taxa U em paisagens com lado 16 km se assemelha ao estimado em paisagens infintas e portanto pode ser usado como uma referência de taxa U sem influência da extensão espacial da paisagem. Então usamos um modelo linear misto para descrever como a média da estimativa U entre sítios variou em função do grau de limitação de dispersão e da extensão espacial da paisagem. Usando esses modelo avaliamos a menor extensão espacial em que a taxa U é próxima da taxa U estimada na paisagem de 16km de lado.
+<p>O objetivo dessa análise foi avaliar qual a extensão espacial da paisagem é suficiente para simular cada um dos 20 graus de limitação de dispersão explorados. Foram sorteados 36 sítios entre os 109 sítios dentro dos critérios de seleção na base TreeCo. Na figura \@ref(sitios-efeito-escalar) há um resumo das características dos sítios usados na investigação do efeito escalar da dispersão.</p>
 
-```{r sitios-efeito-escalar,fig.cap="O log do número de indivíduos (eixo x) e o número de espécies (eixo y). Os pontos estão preenchidos pela razão do número de espécies e número de indivíduos (S/N) e o tamanho dos pontos é determinado pela densidade de indivíduos na amostra (número de indivíduos dividido pela área da parcela, DA)."}
-# knitr::include_graphics("./figuras/figSI_S_N_sizeDA_fillSN.png")
-getwd()
+```{r sitios-efeito-escalar,fig.cap="Sítio sorteados para estimar o efeito escalar da dispersão: log do número de indivíduos (eixo x) e número de espécies (eixo y). Os pontos estão preenchidos pela razão do número de espécies e número de indivíduos (S/N) e o tamanho dos pontos é determinado pela densidade de indivíduos na amostra (número de indivíduos dividido pela área da parcela, DA). O número de indivíduos e a área da parcela determinam a parcela central no mapa de cobertura florestal. A densidade de indivíduos determinará a distância média entre indivíduos na paisagem. O número de espécies determina a taxa U. O ano da amostragem determina o mapa de cobertura florestal."}
+knitr::include_graphics("figuras/figSI_S_N_sizeDA_fillSN.png")
+# getwd()
 ```
 
+<p>Usando a paisagem prístina desses 36 sítios, foi estimado a taxa U para obter a riqueza no equilíbrio variando o lado da paisagem de 0.5 km até 16 km. A seguir, avaliamos se o padrão da estimativa da taxa U em paisagens com lado 16 km se assemelha ao estimado em paisagens infinitas (\@ref(Unull)) e portanto pode ser usado como uma referência de taxa U sem influência da extensão espacial da paisagem. Então usamos um modelo linear misto para descrever como a média da estimativa U entre sítios variou em função do grau de limitação de dispersão e da extensão espacial da paisagem (\@ref(Uescala)). Avaliamos esse modelo linear misto para compreender a menor extensão espacial que acumula a maior parte da variação do aumento da extensão espacial da paisagem. Esperavamos que quanto mais branda a limitação de dispersão, maior a extensão espacial da paisagem prístina para que a taxa U pare de variar com o aumento da extensão espacial da paisagem.</p>
+  
 
-
-### Estimativa da taxa U na maior extensão espacial da paisagem simulada
+### Estimativa da taxa U na maior extensão espacial da paisagem simulada {#Unull}
 
 ```{r}
 cap <- "Taxa U estimada na paisagem prístina com 16 km de lado. Cada ponto representa a mediana de 10 réplicas da taxa U por sítio de amostragem e grau de limitação de dispersão (k). As linhas verticais pretas marcam a amplitude interquantil de 90%. As linhas em laranja ligam medianas em um mesmo sítio de amostragem."
 ```
-```{r Unull16km_rep,fig.cap=cap}
-knitr::include_graphics("./figuras/fig2a_tendencia_media.png")
+```{r Unull16km-rep,fig.cap=cap,out.width="50%"}
+knitr::include_graphics("figuras/fig2a_tendencia_media.png")
+# getwd()
 ```
 
-A média dos sítios de amostragem simulados na paisagem prístina com maior extensão espacial (16 km de lado) é similar ao esperado em paisagens infinitas ()
+Na figura \@ref(Unull16km-rep) há a taxa U estimada na paisagem prístina com 16 km de lado. A tendência média da taxa U (linha azul fig. \@ref(Unull16km-rep)) estimada nessas paisagens apresenta um máximo quando a limitação de dispersão é moderada (pico em k entre 50% e 75%). Esse padrão é qualitativamente semelhante ao esperado em paisaagens infinitas. Em paisagens infinitas se a taxa U for mantida constante, o número de espécies atinge um mínimo quando a limitação de dispersão per capita é moderada (@may_dispersal_2012). Assim, em nosso sistema em que a riqueza é mantida constante e a taxa U é livre, a taxa U apresenta um máximo quando a limitação de dispersão é moderada (. 
+Porém, existe muita diversidade entre sítios (fig. \@ref(Uprist16km-site))), na figura (\@ref(Uprist16km-site)) há o perfil da taxa U em função do grau de limitação de dispersão separado por sítio de amostragem.
 
 
 ```{r}
 cap <- "Taxa U estimada em paisagens prístina de lado 16 km, separado por sítio de amostragem. Em cada quadro o eixo y é livre para variar em escala. "
 ```
-```{r Uprist16km_site, fig.cap=cap}
+```{r Uprist16km-site, fig.cap=cap}
 # im <- image_trim(image_read("./0_apendices/EfeitoEscala/figuras/fig2_U16_k.png")) %>%
 #   image_resize("50%")
 # image_write(im,path = "./0_apendices/EfeitoEscala/figuras/fig2_U16_k.png")
-knitr::include_graphics("./figuras/fig2_U16_k.png")
+knitr::include_graphics("figuras/fig2_U16_k.png")
+# getwd()
 ```
 
 O padrão por sítio difere do padrão geral da médio, pois a mudança dos valores da taxa U não é sempre continua, pode ocorrer em patamares. Em graus de limitação de dispersão severos a média da taxa U se mantém baixa e com pouca variação entre graus de limitação de dispersão severos, formando um primeiro patamar de valores baixos (Fig Efeito de Escalar 2a e 2b). Com o relaxamento para graus pouco severos, há um salto na média da taxa U, que pode se manter por alguns graus de limitação de dispersão pouco severos (Fig Efeito de Escalar 2a e 2b). Com o maior relaxamento da limitação de dispersão para graus brandos, há a redução gradual da média da taxa U até valores similares ao observado em graus severos de limitação de dispersão (Fig Efeito de Escalar 2a e 2b). O tamanho dos patamares e a forma com que a redução na taxa U ocorre parece depender de uma relação não trivial entre número de indivíduos, número de espécies e grau de limitação de dispersão (figura Efeito de Escalar 2b).
 
 
-### Estimativa da taxa U sob diferentes escalas espaciais da paisagem prístina
+### Estimativa da taxa U sob diferentes escalas espaciais da paisagem prístina {#Uescala}
+  
 
 ```{r}
 cap <- ""
 ```
-```{r}
+```{r Uk-ladokm,fig.cap=cap}
 knitr::include_graphics("./figuras/fig3_Uk_ladoKM.png")
+# getwd()
 ```
 
 ### Descrição estatística da relação entre taxa U, grau de limitação de dispersão e extensão espacial da paisagem
@@ -245,8 +111,8 @@ Observamos que a extensão espacial mínima adequada tende a aumentar com a redu
 ```{r cap fig5_SoE}
 cap <- "A extensão espacial é um dos fatores que determina as medidas tomadas das características da paisagem. No conjunto de áreas analisadas há uma forte relação entre a extensão espacial da paisagem ao redor e a proporção de cobertura vegetal. a). O objetivo do estudo do efeito de escalar foi determinar a extensão espacial adequada para simular os 20 graus de limitação de dispersão. c). Definimos a escala adequada para um grau de limitação de dispersão como a extensão espacial que acumula a maior parte da variação na estimativa da taxa U associada ao aumento da extensão espacial da paisagem ao redor, considerando a amplitude de extensões do lado da paisagem local entre 0.5 km e 16 km. Para detalhes sobre os métodos  do estudo de efeito de escalar veja o apêndice ‘Efeito de Escalar’. Nesse  estudo, 36 sítios foram sorteados e selecionados ao longo do gradiente de número de indivíduos e de espécies na parcela. b). Para esse estudo, as estimativas da taxa U foram simuladas em paisagens totalmente preenchidas com habitat, para descontar o efeito do isolamento estrutural, e explorar apenas o efeito de variar a extensão da paisagem ao redor."
 ```
-```{r figura SoE, eval=TRUE,include=TRUE,fig.cap=cap}
-knitr::include_graphics(path = ".//figuras/fig5_SoE.png")
+```{r SoE, eval=TRUE,include=TRUE,fig.cap=cap}
+knitr::include_graphics(path = "figuras/fig5_SoE.png")
 ```
 
 ## Efeitos da paisagem propostos por programas de pesquisa em disputa
@@ -276,18 +142,18 @@ Para um mesmo grau de limitação de dispersão, quanto menor a taxa U necessár
 ```
 
 Cada razão entre taxa Us representa um previsto efeito da paisagem: área per se, fragmentação per se e fragmentação total. 
-Nos 3 efeitos, a maior parte dos valores de logU/U ocorre na mesma faixa de valores de paisagens com pouca cobertura florestal, porém em paisagens com perda de cobertura florestal logU/U pode aumentar em magnitude se a limitação de dispersão for branda ou muito severa (fig. \@ref(fig:GE-contraste_taxaU)). Os valores em paisagens sem perda de cobertura florestal ocorrem ao redor do zero, com valores negativos e positivos (fig. \@ref(fig:GE-contraste_taxaU)).
-O efeito que apresenta menor amplitude de valores é o de área per se, enquanto o efeito de fragmentação total apresenta a maior amplitude (fig. \@ref(fig:GE-contraste_taxaU)). 
-Em alguns sítios, o logU/U do efeito de fragmentação per se pode ser menor do que o observado em paisagens sem perda de cobertura florestal (fig. \@ref(fig:GE-contraste_taxaU)).  
-A amplitude dos valores aumenta com a redução do grau de preservação da área amostrada para todos os 3 efeitos (fig. \@ref(fig:GE-contraste_taxaU)). 
-Nos graus de limitação de dispersão pouco severos, onde há o máximo global na estimativa da taxa U em paisagens sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre os contrafactuais (fig. \@ref(fig:GE-contraste_taxaU)).
+Nos 3 efeitos, a maior parte dos valores de logU/U ocorre na mesma faixa de valores de paisagens com pouca cobertura florestal, porém em paisagens com perda de cobertura florestal logU/U pode aumentar em magnitude se a limitação de dispersão for branda ou muito severa (fig. \@ref(fig:GE-contraste-taxaU)). Os valores em paisagens sem perda de cobertura florestal ocorrem ao redor do zero, com valores negativos e positivos (fig. \@ref(fig:GE-contraste-taxaU)).
+O efeito que apresenta menor amplitude de valores é o de área per se, enquanto o efeito de fragmentação total apresenta a maior amplitude (fig. \@ref(fig:GE-contraste-taxaU)). 
+Em alguns sítios, o logU/U do efeito de fragmentação per se pode ser menor do que o observado em paisagens sem perda de cobertura florestal (fig. \@ref(fig:GE-contraste-taxaU)).  
+A amplitude dos valores aumenta com a redução do grau de preservação da área amostrada para todos os 3 efeitos (fig. \@ref(fig:GE-contraste-taxaU)). 
+Nos graus de limitação de dispersão pouco severos, onde há o máximo global na estimativa da taxa U em paisagens sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre os contrafactuais (fig. \@ref(fig:GE-contraste-taxaU)).
 
 ```{r caption figura exploratoria da taxa U}
 cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, previstos em cada prática ontológica (tabela X). a) Distribuição dos valores de cada contraste; em vermelhos os quantis de todos os contrastes observados em paisagens com proporção de cobertura florestal igual ou superior 0.95. b) Contraste por sítio de amostragem, pontos ligados pelo sítio de amostragem e coloridos pela proporção de cobertura florestal remanescente."
 ```
-```{r GE-contraste_taxaU, include=TRUE,eval=TRUE,fig.cap=cap}
+```{r GE-contraste-taxaU, include=TRUE,eval=TRUE,fig.cap=cap}
 # knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.png"))
-knitr::include_graphics(path="./figuras/pedacofigfinal_1alinha.png")
+knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 
 ```
 
