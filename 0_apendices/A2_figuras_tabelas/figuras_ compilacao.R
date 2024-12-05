@@ -35,3 +35,7 @@ lapply(l_png,\(li){
   file.rename(from=li,
               to=gsub("figuras","figuras_extras",li))
 })
+lapply(l_jpeg,\(li){
+  img <- image_read(li)
+  image_write(img,gsub("jpeg","jpg",li))
+})

@@ -161,6 +161,9 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv")
 ```
 
 
+
+####################################### antigo
+
 # taxa U
 
 ## média geral e por sítio a partir de U rep
