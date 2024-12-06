@@ -50,8 +50,8 @@ source("source/GAMMtools.R")
 source("source/fig_tools.R")
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
 df_p <- read_csv("dados/df_p.csv")
-setwd(v_path)
-source("figuras_e_tabelas.R")
+# setwd(v_path)
+source(paste0(v_path,"figuras_e_tabelas.R"))
 # source("figuras_e_tabelas.R")
 #
 ####################### 1a linha
@@ -70,7 +70,7 @@ l_df_ref <- lapply(names(l_df_pred),\(li){
   names(lmd) <- gsub(paste0(li,"."),"",names(lmd)) 
   df_ref <- lapply(names(lmd),\(i){
     md <- lmd[[i]]
-    dfr <- l_df_ref[[li]]  
+    dfr <- l_df_pred[[li]]  
     dfr[[i]] <- predict.gam(md,dfr)
     return(dfr)
   }) %>% Reduce("inner_join",.)
@@ -126,16 +126,6 @@ img_obj <- image_read(paste0(v_path,"figuras/pedacofigfinal_1alinha.png")) %>%
   image_trim() %>% 
   image_resize("50%")
 image_write(img_obj,paste0(v_path,"figuras/pedacofigfinal_1alinha.png"))
-
-
-
-
-
-
-
-
-
-
 ## predição a posteriori 
 #
 ### te for every model
@@ -162,10 +152,12 @@ f_plot_te <- \(veffect,
   f_ggplot_main <- \(dfiQ50,
                      ctext_size=10,
                      linew=1,
+                     stripspace=0.5,
                      textsize=15){
     dfref <- rename(l_df_ref[[vname]],k=k_cont)
+    names(dfi) <- gsub("_cont","",names(dfi))
     dfi %>% 
-      mutate(quantiles=paste("quantile =",quantiles)) %>% 
+      mutate(quantiles=paste0(vname,": median")) %>% 
       ggplot(aes(x=k,y=Uefeito,z=logOR)) +
       geom_raster(aes(fill=logOR)) +
       geom_contour(color = "black",linewidth=linew) +
@@ -186,12 +178,14 @@ f_plot_te <- \(veffect,
       scale_y_continuous(expand = c(0,0),
                          limits=vrange[2:1]) +
       theme(legend.position="none",
-            strip.text = element_text(size=textsize,margin=margin()),
+            strip.text = element_text(size=textsize,margin=margin(t=stripspace,
+                                                                  b=stripspace)),
             aspect.ratio=1,
             axis.text = element_text(size=textsize),
             axis.title = element_text(size=textsize))
   }
   f_ggplot_4quantiles <- \(dfpred,
+                           stripspace=0.5,
                            textsize=15){
     k_pred <- dfpred$k %>% unique
     k_sim <- sapply(c(0.25,0.50,0.75,0.99),\(x){
@@ -200,11 +194,12 @@ f_plot_te <- \(veffect,
     dfpred %>% 
       filter(k%in%k_sim) %>% 
       mutate(kf=factor(paste0("k = ",round(k,2)),
-                       levels=paste0("k = ",c(0.25,0.50,0.75,0.99))
-                       )
+                       levels=paste0("k = ",c(0.25,0.50,0.75,0.99)))
              ) %>% 
       pivot_wider(names_from=quantiles,values_from = logOR) %>% 
       ggplot(aes(x=Uefeito,y=`50`)) +
+      geom_hline(yintercept = 0,color="darkgray",alpha=0.3) +
+      geom_vline(xintercept = 0,color="darkgray",alpha=0.3) +
       geom_ribbon(aes(ymin=`5`,ymax=`95`),
                   fill="darkgreen",
                   alpha=0.3) +
@@ -213,12 +208,51 @@ f_plot_te <- \(veffect,
       xlab("logU/U") +
       facet_wrap(~kf,ncol=2) +
       theme(aspect.ratio = 1,
-            strip.text = element_text(size=textsize,margin=margin()),
+            strip.text = element_text(size=textsize,margin=margin(t=stripspace,
+                                                                  b=stripspace)),
             axis.title = element_text(size=textsize),
             axis.text = element_text(size=textsize),
             plot.margin = margin())
   }
+  f_fixo_e_aleatorio <- \(dfi,
+                          vspacestrip=1,
+                          vtextsize=15,
+                          striptextsize=15){
+    dfi %>% 
+      mutate(label="fixo e aleatório") %>% 
+      ggplot(aes(x = Uefeito, group = SiteCode)) +
+      # quantiile interval
+      geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
+                    fill = "Quantile range", group = SiteCode), 
+                alpha = 0.2) +
+      geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
+                alpha = 0.5) +
+      scale_fill_manual(values = c("Quantile range" = "#986868")) +
+      scale_color_manual(values = c("Median" = "#C04000")) +
+      # 0 x 0 
+      geom_hline(yintercept = 0,color="darkgray",alpha=0.75) +
+      geom_vline(xintercept = 0,color="darkgray",alpha=0.75) +
+      # ajustes
+      scale_x_continuous(expand = expansion(add = c(0,0))) +
+      scale_y_continuous(expand = expansion(add = c(0,0))) +
+      ylab("logOR") +
+      xlab("logU/U") +
+      facet_wrap(~label) +
+      theme_classic() +
+      theme(
+        axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -2.5)),
+        axis.title.y = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -30)),
+        legend.position = "none",
+        aspect.ratio = 1,
+        axis.text = element_text(size=vtextsize),
+        axis.title = element_text(size=vtextsize),
+        strip.text = element_text(size=striptextsize,
+                                  margin=margin(t=vspacestrip,
+                                                b=vspacestrip))
+      )
+  }
   library(metR)
+  theme_set(theme_classic())
   vname <- str_extract(veffect,pattern_extract) %>% 
     gsub("areaperse","Área per se",.) %>% 
     gsub("fragperse","Frag. per se",.) %>% 
@@ -231,16 +265,20 @@ f_plot_te <- \(veffect,
     mutate(quantiles=factor(100 * as.numeric(gsub("Q_","",quantiles)),
                             levels=c(5,50,95)) ) %>% 
     rename(k = k_cont)
-  #
+  # apenas fixo
   p50 <- f_ggplot_main(filter(dfpred,quantiles=="50"),ctext_size = 7)
   p4quan <- f_ggplot_4quantiles(dfpred = dfpred,textsize = 10)
   propred <- 0.7
-  p_final <- ggdraw() +
+  p_final0 <- ggdraw() +
     draw_plot(p50) +
     draw_plot(p4quan,
               height=0.4*propred,
               width=0.25*propred,
               x=0.447,y=0.68)
+  # incluir o fixo com aleatório
+  df_fa <- readRDS(gsub("dfnew","dfpred",veffect))
+  df_fa <- df_fa[["fixo e aleat"]]
+  p_fa <- f_fixo_e_aleatorio(df_fa)
   
   
   

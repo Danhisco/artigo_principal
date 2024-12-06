@@ -43,6 +43,15 @@ df_plot <- df_dados_disponiveis %>%
   select(SiteCode, p, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
 # df_p_extensoes <- read_csv("../../dados/csv/df_p_extensoes.csv")
 df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+probs = c(0.05,0.25, 0.5, 0.75,0.95)
+df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") 
+df_md_Uefeito <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
+  pivot_longer(-c(SiteCode:p)) %>% 
+  mutate(name = gsub("_logratio","",name),
+         across(c(p,k),f_z,.names = "{.col}_z"),
+         SiteCode = factor(SiteCode)) %>% 
+  rename("tp_efeito"="name","v_efeito"=value)
+##############
 l_p <- list()
 l_p[[1]] <- df_plot |> 
   ggplot(aes(y=lat,x=long,fill=p)) +
@@ -255,7 +264,7 @@ df_md <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>%
 
 # l_path$te <-  paste0("rds/l_dfpred_",c("areaperse","fragperse","fragtotal"),".rds")
 path_te <-  paste0("rds/l_dfnew_",c("areaperse","fragperse","fragtotal"),".rds")
-df_ref
+# df_ref
 
 
 
@@ -413,14 +422,7 @@ image_write(trimmed_img, path = paste0(v_path,"figuras/DAG_var_de_controle.png")
 #########################################################
 # tabela de quantis observados dos contrastes da taxa U #
 #########################################################
-probs = c(0.05,0.25, 0.5, 0.75,0.95)
-df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") 
-df_md_Uefeito <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
-  pivot_longer(-c(SiteCode:p)) %>% 
-  mutate(name = gsub("_logratio","",name),
-         across(c(p,k),f_z,.names = "{.col}_z"),
-         SiteCode = factor(SiteCode)) %>% 
-  rename("tp_efeito"="name","v_efeito"=value)
+
 f_quant <- function(x) {
   tibble(
     val = quantile(x, probs, na.rm = TRUE),
@@ -458,7 +460,7 @@ write_csv(df_quantisobs_Uefeito,
 ##################################################################
 ### tabela de comparação de estruturas hierarquicas do modelo ####
 ##################################################################
-df_tabsel <- read_csv("rds/tabsel_simples.csv")
+df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples.csv"))
 # df_tabelaSelecao <- read_csv(file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
 # df_tabelaSelecao <- df_tabelaSelecao %>% 
 #   mutate(`Prática Ontológica` = ifelse(grepl("contemp-ideal",pair),
@@ -581,7 +583,7 @@ f_tabelaselecao_com_plot <- \(dff,
   file.remove(paste0(v_path,"figuras/plot_reciclagem.png"))
   file.remove(paste0(v_path,"tabelas/table_reciclagem.png"))
 }
-f_tabelaselecao_com_plot(df_tabelaSelecao)
+# f_tabelaselecao_com_plot(df_tabelaSelecao)
 # não usado nesse momento #
 #
 #
@@ -637,7 +639,7 @@ f_gt_table <- \(dfi,
          vwidth = vw, vheight = vh)
 }
 # predição a posteriori: fixo e fixo + aleatório
-# l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples.rds"))
+l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples.rds"))
 # nefeito <- names(l_df)[[1]]
 
 f_plotPI_shgam <- \(nefeito){
@@ -759,29 +761,29 @@ f_tabsel_PI <- \(dff,path_ldf = "rds/l_dfpred_simples_apudPedersen2019.rds"){
   image_write(figfinal,"figuras/figura_final_simples_composta_tabela_grafico.png")
 }
 # rotina de criação
-df_tabsel <- read_csv("rds/tabsel_simples_tp_e_cr.csv") %>% 
-  filter(grepl("tp::",modelo)) %>% 
-  mutate(modelo = gsub("s\\(land\\)","s(log(U/U))",modelo) %>% 
-           gsub("tp::","",.)) %>% 
-  rename(contraste=pair)
-# rm("l_df")
-v_log <- f_tabsel_PI(df_tabsel)
-print(v_log)
+# df_tabsel <- read_csv("rds/tabsel_simples_tp_e_cr.csv") %>% 
+#   filter(grepl("tp::",modelo)) %>% 
+#   mutate(modelo = gsub("s\\(land\\)","s(log(U/U))",modelo) %>% 
+#            gsub("tp::","",.)) %>% 
+#   rename(contraste=pair)
+# # rm("l_df")
+# v_log <- f_tabsel_PI(df_tabsel)
+# print(v_log)
 #
 # observado e predito
-l_df <- readRDS("rds/l_dfpred_simples_apudPedersen2019_tp.rds")
+l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019_tp.rds"))
 l_df <- lapply(l_df,\(li) li[["fixo e aleat"]])
 l_dfpre <- list()
 l_dfpre$`tp` <- lapply(names(l_df), \(i){
   mutate(l_df[[i]],contraste=i) %>% relocate(contraste)
 }) %>% do.call("rbind",.)
-l_df <- readRDS("rds/l_dfpred_simples_apudPedersen2019.rds")
+l_df <- readRDS(paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019.rds"))
 l_df <- lapply(l_df,\(li) li[["fixo e aleat"]])
 l_dfpre$`cr` <- lapply(names(l_df), \(i){
   mutate(l_df[[i]],contraste=i) %>% relocate(contraste)
 }) %>% do.call("rbind",.)
 #
-df_p <- read_csv("../../dados/df_p.csv")
+df_p <- read_csv("dados/df_p.csv")
 f_plot_PIeOBS <- \(vsite){
   dfp <- lapply(names(l_dfpre),\(i){
     filter(l_dfpre[[i]],SiteCode==vsite) %>% 
@@ -805,7 +807,7 @@ f_plot_PIeOBS <- \(vsite){
     facet_grid(contraste~bs)
   ggsave(paste0("figuras/PIeOBS_sites/",vsite,".png"),plot = p)
 }
-vlog <- lapply(levels(l_dfpre$tp$SiteCode),f_plot_PIeOBS)
+# vlog <- lapply(levels(l_dfpre$tp$SiteCode),f_plot_PIeOBS)
 
 ##########################
 ########## novo ########## 
@@ -951,11 +953,9 @@ f_resize_2rectangle <- \(ref_img,toresize_img,ref_side,tore_side){
                       paste0("x",refside_info),
                       paste0(refside_info,"x"))
   image_resize(toresize_img,v_command)
-}
+  }
 ##### diagnósticos para artigo final
 ##### diagnóstico para reunião com o PI
 # i) aplica a sequência que cria PIeOBS_sites por sítio
 # ii) salva temporârio e edita para ficar igual
 # iii) junta, para cada sítio, as figuras do tensor e do spline e salva
-
-
