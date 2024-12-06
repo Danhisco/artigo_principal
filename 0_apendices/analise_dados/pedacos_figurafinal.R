@@ -150,22 +150,67 @@ df_tabsel <- read_csv("rds/df_tabsel_geral.csv") %>%
 #v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
 df_ref <- read_csv(paste0(v_path,
                            "rds/df_limites_predicao_aposteriori_logOR.csv"))
-v_range <-  df_ref %>% 
+vrange <-  df_ref %>% 
   summarise(max=max(max),min=min(min)) %>% 
   unlist
-
-
-
-
-#
-
-
-
-
-
+setwd(v_path)
 f_plot_te <- \(veffect,
+               vrange=v_range,
                pattern_extract="(?<=l_dfnew_)(.*?)(?=\\.rds)"){
   # veffect <- l_path$te[3]
+  f_ggplot_main <- \(dfiQ50){
+    dfref <- rename(l_df_ref[[vname]],k=k_cont)
+    ggplot(dfi,aes(x=k,y=Uefeito,z=logOR)) +
+      geom_raster(aes(fill=logOR)) +
+      geom_contour(color = "black") +
+      geom_text_contour() +
+      geom_line(data=dfref,
+                aes(y=max,x=k),color="black",
+                inherit.aes = FALSE,
+                linewidth=1) +
+      geom_line(data=dfref,
+                aes(y=min,x=k),color="black",
+                inherit.aes = FALSE,
+                linewidth=1) +
+      scale_fill_viridis_c(name = "logOR",
+                           option = "magma") +
+      labs(y="logU/U") +
+      facet_wrap(~quantiles) +
+      scale_x_continuous(expand = c(0,0)) +
+      scale_y_continuous(expand = c(0,0),
+                         limits=vrange[2:1]) +
+      theme(legend.position="none",
+            strip.text = element_text(size=15,margin=margin()),
+            aspect.ratio=1,
+            axis.text = element_text(size=15),
+            axis.title = element_text(size=15))
+  }
+  f_ggplot_4quantiles <- \(dfpred){
+    k_pred <- dfpred$k %>% unique
+    k_sim <- sapply(c(0.25,0.50,0.75,0.99),\(x){
+      k_pred[which.min(abs(k_pred - x))]
+    })
+    dfpred %>% 
+      filter(k%in%k_sim) %>% 
+      mutate(kf=factor(paste0("k = ",round(k,2)),
+                       levels=paste0("k = ",c(0.25,0.50,0.75,0.99))
+                       )
+             ) %>% 
+      pivot_wider(names_from=quantiles,values_from = logOR) %>% 
+      ggplot(aes(x=Uefeito,y=`50`)) +
+      geom_ribbon(aes(ymin=`5`,ymax=`95`),
+                  fill="darkgreen",
+                  alpha=0.3) +
+      geom_line(color="black",alpha=0.7) +
+      ylab("logOR") +
+      xlab("logU/U") +
+      facet_wrap(~kf,ncol=2) +
+      theme(strip.text = element_text(size=15,margin=margin()),
+            axis.title = element_text(size=15),
+            axis.text = element_text(size=15))
+  }
+  
+  
   library(metR)
   vname <- str_extract(veffect,pattern_extract) %>% 
     gsub("areaperse","Área per se",.) %>% 
@@ -180,21 +225,14 @@ f_plot_te <- \(veffect,
                             levels=c(5,50,95)) ) %>% 
     rename(k = k_cont)
   #
+  p50 <- f_ggplot_main(filter(dfpred,quantiles=="50"))
+  
+  
+  
+  
+  
   l_p <- dlply(dfpred,"quantiles",\(dfi){
-    ggplot(dfi,aes(x=k,y=Uefeito,z=logOR)) +
-      # geom_contour_fill() +
-      geom_raster(aes(fill=logOR)) +
-      geom_contour(color = "black") +
-      geom_text_contour() +
-      scale_fill_viridis_c(name = "logOR",
-                           option = "magma") +
-      labs(y="logU/U") +
-      facet_wrap(~quantiles) +
-      scale_x_continuous(expand = c(0,0)) +
-      scale_y_continuous(expand = c(0,0)) +
-      theme_classic() +
-      theme(legend.position="none",
-            aspect.ratio=1)
+    
   })
   l_p <- lapply(l_p,\(li) ggsave(tempfile(fileext = ".png"),plot = li))
   l_p <- lapply(l_p,\(li) image_read(li) %>% image_trim)
@@ -471,3 +509,7 @@ f_aud <- \(vsite){
               path=paste0("figuras/predito_te_sites/",vsite,".png"))
 }
 lapply(v_sitesaud,f_aud)
+
+
+
+##
