@@ -56,8 +56,8 @@ source("figuras_e_tabelas.R")
 ####################### 1a linha
 l_figfinal <- list()
 #
-l_paths <- paste0(v_path,"rds/l_dfpred_",c("fragtotal","fragperse","areaperse"),".rds")
-l_df_pred <- lapply(l_paths,readRDS) %>% 
+l_path <- paste0(v_path,"rds/l_dfpred_",c("fragtotal","fragperse","areaperse"),".rds")
+l_df_pred <- lapply(l_path,readRDS) %>% 
   lapply(.,"[[","apenas fixo")
 names(l_df_pred) <- c("Frag. total","Frag. per se","Área per se")
 # ii) filtrar os valores únicos de k em um novo data frame
@@ -147,11 +147,25 @@ df_tabsel <- read_csv("rds/df_tabsel_geral.csv") %>%
 ##############
 ### 1a parte: figfinal_te_EFEITO PAISAGEM
 ### @descrição: heatmap x=k, y=logU/U, z=
+#v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
+df_ref <- read_csv(paste0(v_path,
+                           "rds/df_limites_predicao_aposteriori_logOR.csv"))
+v_range <-  df_ref %>% 
+  summarise(max=max(max),min=min(min)) %>% 
+  unlist
 
 
-# veffect <- l_path$te[3]
+
+
+#
+
+
+
+
+
 f_plot_te <- \(veffect,
                pattern_extract="(?<=l_dfnew_)(.*?)(?=\\.rds)"){
+  # veffect <- l_path$te[3]
   library(metR)
   vname <- str_extract(veffect,pattern_extract) %>% 
     gsub("areaperse","Área per se",.) %>% 

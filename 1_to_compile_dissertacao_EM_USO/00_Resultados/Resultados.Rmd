@@ -50,7 +50,7 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográficas e proporção de cobertura florestal nas paisagens contemporâneas aos eventos de amostragem com extensão espacial de 4 x 4 km2. b) Características gerais dos inventários, da esquerda para a direita: número de indivíduos amostrados, área da parcela amostrada, número de espécies observado, ano de amostragem. c) Proporção de cobertura florestal na paisagem ao redor da parcela amostrada em função do lado da paisagem ao redor. d) Contagem do número de sítios pelas classes de perturbação usadas no TreeCo, que consideram tanto o tempo desde a última grande perturbação quanto o grau de perturbação ."
 ```
 ```{r GE-sitios-amostrados,eval=TRUE,include=TRUE,fig.cap=cap}
-knitr::include_graphics(path="./figuras/GE_dados_disponiveis.jpg")
+knitr::include_graphics(path="./figuras/GE_dados_disponiveis.jpeg")
 ```
 
 ## Efeito escalar da dispersão no mecanismo simulado
@@ -58,7 +58,7 @@ knitr::include_graphics(path="./figuras/GE_dados_disponiveis.jpg")
 <p>O objetivo dessa análise foi avaliar qual a extensão espacial da paisagem é suficiente para simular cada um dos 20 graus de limitação de dispersão explorados. Foram sorteados 36 sítios entre os 109 sítios dentro dos critérios de seleção na base TreeCo. Na figura \@ref(fig:sitios-efeito-escalar) há um resumo das características dos sítios usados na investigação do efeito escalar da dispersão.</p>
 
 ```{r sitios-efeito-escalar,fig.cap="Sítio sorteados para estimar o efeito escalar da dispersão: log do número de indivíduos (eixo x) e número de espécies (eixo y). Os pontos estão preenchidos pela razão do número de espécies e número de indivíduos (S/N) e o tamanho dos pontos é determinado pela densidade de indivíduos na amostra (número de indivíduos dividido pela área da parcela, DA). O número de indivíduos e a área da parcela determinam a parcela central no mapa de cobertura florestal. A densidade de indivíduos determinará a distância média entre indivíduos na paisagem. O número de espécies determina a taxa U. O ano da amostragem determina o mapa de cobertura florestal."}
-knitr::include_graphics("./figuras/figSI_S_N_sizeDA_fillSN.jpg")
+knitr::include_graphics("./figuras/figSI_S_N_sizeDA_fillSN.jpeg")
 # getwd()
 ```
 
@@ -71,7 +71,7 @@ knitr::include_graphics("./figuras/figSI_S_N_sizeDA_fillSN.jpg")
 cap <- "Taxa U estimada na paisagem prístina com 16 km de lado. Cada ponto representa a mediana de 10 réplicas da taxa U por sítio de amostragem e grau de limitação de dispersão (k). As linhas verticais pretas marcam a amplitude interquantil de 90%. As linhas em laranja ligam medianas em um mesmo sítio de amostragem."
 ```
 ```{r Unull16km-rep,fig.cap=cap,out.width="50%"}
-knitr::include_graphics("./figuras/fig2a_tendencia_media.jpg")
+knitr::include_graphics("./figuras/fig2a_tendencia_media.jpeg")
 # getwd()
 ```
 
@@ -83,10 +83,10 @@ Porém, existe muita diversidade entre sítios (fig. \@ref(fig:Uprist16km-site))
 cap <- "Taxa U estimada em paisagens prístina de lado 16 km, separado por sítio de amostragem. Em cada quadro o eixo y é livre para variar em escala. "
 ```
 ```{r Uprist16km-site, fig.cap=cap}
-# im <- image_trim(image_read("./0_apendices/EfeitoEscala/figuras/fig2_U16_k.jpg")) %>%
+# im <- image_trim(image_read("./0_apendices/EfeitoEscala/figuras/fig2_U16_k.jpeg")) %>%
 #   image_resize("50%")
-# image_write(im,path = "./0_apendices/EfeitoEscala/figuras/fig2_U16_k.jpg")
-knitr::include_graphics("./figuras/fig2_U16_k.jpg")
+# image_write(im,path = "./0_apendices/EfeitoEscala/figuras/fig2_U16_k.jpeg")
+knitr::include_graphics("./figuras/fig2_U16_k.jpeg")
 # getwd()
 ```
 
@@ -100,7 +100,7 @@ O padrão por sítio difere do padrão geral da médio, pois a mudança dos valo
 cap <- ""
 ```
 ```{r Uk-ladokm,fig.cap=cap}
-knitr::include_graphics("./figuras/fig3_Uk_ladoKM.jpg")
+knitr::include_graphics("./figuras/fig3_Uk_ladoKM.jpeg")
 # getwd()
 ```
 
@@ -112,7 +112,7 @@ Observamos que a extensão espacial mínima adequada tende a aumentar com a redu
 cap <- "A extensão espacial é um dos fatores que determina as medidas tomadas das características da paisagem. No conjunto de áreas analisadas há uma forte relação entre a extensão espacial da paisagem ao redor e a proporção de cobertura vegetal. a). O objetivo do estudo do efeito de escalar foi determinar a extensão espacial adequada para simular os 20 graus de limitação de dispersão. c). Definimos a escala adequada para um grau de limitação de dispersão como a extensão espacial que acumula a maior parte da variação na estimativa da taxa U associada ao aumento da extensão espacial da paisagem ao redor, considerando a amplitude de extensões do lado da paisagem local entre 0.5 km e 16 km. Para detalhes sobre os métodos  do estudo de efeito de escalar veja o apêndice ‘Efeito de Escalar’. Nesse  estudo, 36 sítios foram sorteados e selecionados ao longo do gradiente de número de indivíduos e de espécies na parcela. b). Para esse estudo, as estimativas da taxa U foram simuladas em paisagens totalmente preenchidas com habitat, para descontar o efeito do isolamento estrutural, e explorar apenas o efeito de variar a extensão da paisagem ao redor."
 ```
 ```{r SoE, eval=TRUE,include=TRUE,fig.cap=cap}
-knitr::include_graphics(path = "./figuras/fig5_SoE.jpg")
+knitr::include_graphics(path = "./figuras/fig5_SoE.jpeg")
 ```
 
 ## Efeitos da paisagem propostos por programas de pesquisa em disputa
@@ -152,8 +152,8 @@ Nos graus de limitação de dispersão pouco severos, onde há o máximo global 
 cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, previstos em cada prática ontológica (tabela X). a) Distribuição dos valores de cada contraste; em vermelhos os quantis de todos os contrastes observados em paisagens com proporção de cobertura florestal igual ou superior 0.95. b) Contraste por sítio de amostragem, pontos ligados pelo sítio de amostragem e coloridos pela proporção de cobertura florestal remanescente."
 ```
 ```{r GE-contraste-taxaU, include=TRUE,eval=TRUE,fig.cap=cap}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.jpg"))
-knitr::include_graphics(path="./figuras/pedacofigfinal_1alinha.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.jpeg"))
+knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.jpeg")
 
 ```
 
@@ -164,69 +164,69 @@ knitr::include_graphics(path="./figuras/pedacofigfinal_1alinha.jpg")
 ##### Fragmentação total
 
 ```{r tabsel-fragtotal,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragtotal.jpg"))
-knitr::include_graphics(path="./figuras/tabsel_fragtotal.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragtotal.jpeg"))
+knitr::include_graphics(path="./figuras/tabsel_fragtotal.jpeg")
 ```
 
 ```{r diagfinal-fragtotal,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/diagfinal_fragtotal.jpg"))
-knitr::include_graphics(path="./figuras/diagfinal_fragtotal.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/diagfinal_fragtotal.jpeg"))
+knitr::include_graphics(path="./figuras/diagfinal_fragtotal.jpeg")
 ```
 
 ```{r PIfixo-fragtotal,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/figfinal_te_fragtotal.jpg"))
-knitr::include_graphics(path="./figuras/figfinal_te_fragtotal.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/figfinal_te_fragtotal.jpeg"))
+knitr::include_graphics(path="./figuras/figfinal_te_fragtotal.jpeg")
 ```
 
 ```{r PIfixoealeat-fragtotal,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/3alinha_fragtotal.jpg"))
-knitr::include_graphics(path="./figuras/3alinha_fragtotal.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/3alinha_fragtotal.jpeg"))
+knitr::include_graphics(path="./figuras/3alinha_fragtotal.jpeg")
 ```
 
 
 ##### Fragmentação per se
 
 ```{r tabsel-fragerse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragperse.jpg"))
-knitr::include_graphics(path="./figuras/tabsel_fragperse.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragperse.jpeg"))
+knitr::include_graphics(path="./figuras/tabsel_fragperse.jpeg")
 ```
 
 ```{r diagfinal-fragperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/diagfinal_fragperse.jpg"))
-knitr::include_graphics(path="./figuras/diagfinal_fragperse.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/diagfinal_fragperse.jpeg"))
+knitr::include_graphics(path="./figuras/diagfinal_fragperse.jpeg")
 ```
 
 ```{r PIfixo-fragperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/figfinal_te_fragperse.jpg"))
-knitr::include_graphics(path="./figuras/figfinal_te_fragperse.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/figfinal_te_fragperse.jpeg"))
+knitr::include_graphics(path="./figuras/figfinal_te_fragperse.jpeg")
 ```
 
 ```{r PIfixoealeat-fragperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/3alinha_fragperse.jpg"))
-knitr::include_graphics(path="./figuras/3alinha_fragperse.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/3alinha_fragperse.jpeg"))
+knitr::include_graphics(path="./figuras/3alinha_fragperse.jpeg")
 ```
 
 
 ##### Área per se
 
 ```{r tabsel-areaperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_areaperse.jpg"))
-knitr::include_graphics(path="./figuras/tabsel_areaperse.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_areaperse.jpeg"))
+knitr::include_graphics(path="./figuras/tabsel_areaperse.jpeg")
 ```
 
 ```{r diagfinal-areaperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/diagfinal_areaperse.jpg"))
-knitr::include_graphics(path="./figuras/diagfinal_areaperse.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/diagfinal_areaperse.jpeg"))
+knitr::include_graphics(path="./figuras/diagfinal_areaperse.jpeg")
 ```
 
 ```{r PIfixo-areaperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/figfinal_te_areaperse.jpg"))
-knitr::include_graphics(path="./figuras/figfinal_te_areaperse.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/figfinal_te_areaperse.jpeg"))
+knitr::include_graphics(path="./figuras/figfinal_te_areaperse.jpeg")
 ```
 
 ```{r PIfixoealeat-areaperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/3alinha_areaperse.jpg"))
-knitr::include_graphics(path="./figuras/3alinha_areaperse.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/3alinha_areaperse.jpeg"))
+knitr::include_graphics(path="./figuras/3alinha_areaperse.jpeg")
 ```
 
 
@@ -235,8 +235,8 @@ knitr::include_graphics(path="./figuras/3alinha_areaperse.jpg")
 ##### Comparação dos efeitos
 
 ```{r PIfixo-todos,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/beta0_figura_final_logOR.jpg"))
-knitr::include_graphics(path="figuras/beta0_figura_final_logOR.jpg")
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/beta0_figura_final_logOR.jpeg"))
+knitr::include_graphics(path="figuras/beta0_figura_final_logOR.jpeg")
 getwd()
 ```
 

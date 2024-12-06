@@ -130,22 +130,22 @@ Descrição da ideia:
 1a linha: OBSERVADO logU/U ~ k, color=p, + marcação do smooth de extremos PRÓXIMO
 
 ```{r}
-l_figfinal <- list()
+v_path
 #
 l_paths <- paste0(v_path,"rds/l_dfpred_",c("fragtotal","fragperse","areaperse"),".rds")
 l_df_pred <- lapply(l_paths,readRDS) %>% 
   lapply(.,"[[","apenas fixo")
 names(l_df_pred) <- c("Frag. total","Frag. per se","Área per se")
 # ii) filtrar os valores únicos de k em um novo data frame
-df_ref <- lapply(l_df_pred,select,k_cont,SiteCode) %>% lapply(.,distinct)
-df_ref <- df_ref[[1]]
+# df_ref <- lapply(l_df_pred,select,k_cont,SiteCode) %>% lapply(.,distinct)
+# df_ref <- df_ref[[1]]
 l_md <- readRDS(file=paste0(v_path,"rds/l_md_refU.rds"))
 l_df_ref <- lapply(names(l_df_pred),\(li){
   lmd <- l_md[grep(li,names(l_md))]
   names(lmd) <- gsub(paste0(li,"."),"",names(lmd)) 
   df_ref <- lapply(names(lmd),\(i){
     md <- lmd[[i]]
-    dfr <- l_df_ref[[li]]  
+    dfr <- l_df_pred[[li]]  
     dfr[[i]] <- predict.gam(md,dfr)
     return(dfr)
   }) %>% Reduce("inner_join",.)
@@ -163,6 +163,10 @@ df_ref <- lapply(names(l_df_ref),\(li){
     grepl("perse",name) ~ "Frag. per se"),
     label=factor(label,levels=c("Frag. Total","Frag. per se","Área per se"))
   )
+write_csv(df_ref,paste0(v_path,"rds/df_limites_predicao_aposteriori_logOR.csv"))
+
+#####################################
+l_figfinal <- list()
 l_figfinal$`1alinha` <- df_md %>% 
   mutate(label=case_when(
     grepl("area",name) ~ "Área per se",

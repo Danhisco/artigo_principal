@@ -115,7 +115,7 @@ f_plot <- \(dfp){
                   alpha=0.5) +
       geom_hex(bins = 50,alpha=0.5) + 
       geom_abline(slope=1,intercept=0,color="black",linewidth=1.2,linetype=2) +
-      scale_fill_gradient(low = "yellow", high = "red", na.value = NA) +
+      scale_fill_gradient("contagem",low = "yellow", high = "red", na.value = NA) +
       scale_x_continuous(expand=c(0,0)) +
       scale_y_continuous(expand=c(0,0)) +
       labs(x="logOR observado",y="logOR predito") +
@@ -159,10 +159,28 @@ f_plot <- \(dfp){
   return(img)
 }
 l_img_diag <- lapply(l_df,f_plot)
-names(l_img_diag) <- gsub("rds/l_dfpred","figuras/diagfinal",l_path) %>% 
-  gsub("\\.rds","\\.png",.)
+l_img_diag <- lapply(names(l_img_diag),\(li){
+  img <- l_img_diag[[li]]
+  image_title(imgobj = img, 
+              vtitle = li,
+              vsize = 50,
+              vheight = 90) %>% 
+    image_trim
+})
+names(l_img_diag) <- paste0(
+  "figuras/diagfinal_",
+  case_when(
+    grepl("Área",names(l_df)) ~ "areaperse",
+    grepl("Frag. per se",names(l_df)) ~ "fragperse",
+    grepl("total",names(l_df)) ~ "fragtotal",
+  ),
+  ".jpeg"
+)
 lapply(names(l_img_diag),\(li) image_write(l_img_diag[[li]],path=li))
-
+#
+# ljpg <- list.files("figuras",pattern="jpg",full.names = TRUE)
+# file.remove(ljpg)
+#
 
 f_dfplot <- \(dff,dataset){
   vcols <- c("logOR","k_cont")
@@ -228,5 +246,4 @@ f_ggplot <- \(dfi){
 lapply(levels(df_s$SiteCode),\(i){
   filter(df_plot,SiteCode==i) %>% f_ggplot()
 })
-
 
