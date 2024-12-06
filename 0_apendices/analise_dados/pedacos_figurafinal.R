@@ -3,6 +3,7 @@ library(gratia)
 library(doMC)
 library(gridExtra)
 library(ggplot2)
+library(cowplot)
 library(magick)
 theme_set(theme_bw())
 library(readr)
@@ -158,20 +159,25 @@ f_plot_te <- \(veffect,
                vrange=v_range,
                pattern_extract="(?<=l_dfnew_)(.*?)(?=\\.rds)"){
   # veffect <- l_path$te[3]
-  f_ggplot_main <- \(dfiQ50){
+  f_ggplot_main <- \(dfiQ50,
+                     ctext_size=10,
+                     linew=1,
+                     textsize=15){
     dfref <- rename(l_df_ref[[vname]],k=k_cont)
-    ggplot(dfi,aes(x=k,y=Uefeito,z=logOR)) +
+    dfi %>% 
+      mutate(quantiles=paste("quantile =",quantiles)) %>% 
+      ggplot(aes(x=k,y=Uefeito,z=logOR)) +
       geom_raster(aes(fill=logOR)) +
-      geom_contour(color = "black") +
-      geom_text_contour() +
+      geom_contour(color = "black",linewidth=linew) +
+      geom_text_contour(size=ctext_size) +
       geom_line(data=dfref,
                 aes(y=max,x=k),color="black",
                 inherit.aes = FALSE,
-                linewidth=1) +
+                linewidth=linew) +
       geom_line(data=dfref,
                 aes(y=min,x=k),color="black",
                 inherit.aes = FALSE,
-                linewidth=1) +
+                linewidth=linew) +
       scale_fill_viridis_c(name = "logOR",
                            option = "magma") +
       labs(y="logU/U") +
@@ -180,12 +186,13 @@ f_plot_te <- \(veffect,
       scale_y_continuous(expand = c(0,0),
                          limits=vrange[2:1]) +
       theme(legend.position="none",
-            strip.text = element_text(size=15,margin=margin()),
+            strip.text = element_text(size=textsize,margin=margin()),
             aspect.ratio=1,
-            axis.text = element_text(size=15),
-            axis.title = element_text(size=15))
+            axis.text = element_text(size=textsize),
+            axis.title = element_text(size=textsize))
   }
-  f_ggplot_4quantiles <- \(dfpred){
+  f_ggplot_4quantiles <- \(dfpred,
+                           textsize=15){
     k_pred <- dfpred$k %>% unique
     k_sim <- sapply(c(0.25,0.50,0.75,0.99),\(x){
       k_pred[which.min(abs(k_pred - x))]
@@ -205,12 +212,12 @@ f_plot_te <- \(veffect,
       ylab("logOR") +
       xlab("logU/U") +
       facet_wrap(~kf,ncol=2) +
-      theme(strip.text = element_text(size=15,margin=margin()),
-            axis.title = element_text(size=15),
-            axis.text = element_text(size=15))
+      theme(aspect.ratio = 1,
+            strip.text = element_text(size=textsize,margin=margin()),
+            axis.title = element_text(size=textsize),
+            axis.text = element_text(size=textsize),
+            plot.margin = margin())
   }
-  
-  
   library(metR)
   vname <- str_extract(veffect,pattern_extract) %>% 
     gsub("areaperse","Área per se",.) %>% 
@@ -225,9 +232,15 @@ f_plot_te <- \(veffect,
                             levels=c(5,50,95)) ) %>% 
     rename(k = k_cont)
   #
-  p50 <- f_ggplot_main(filter(dfpred,quantiles=="50"))
-  
-  
+  p50 <- f_ggplot_main(filter(dfpred,quantiles=="50"),ctext_size = 7)
+  p4quan <- f_ggplot_4quantiles(dfpred = dfpred,textsize = 10)
+  propred <- 0.7
+  p_final <- ggdraw() +
+    draw_plot(p50) +
+    draw_plot(p4quan,
+              height=0.4*propred,
+              width=0.25*propred,
+              x=0.447,y=0.68)
   
   
   
