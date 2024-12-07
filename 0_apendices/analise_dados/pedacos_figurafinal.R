@@ -131,9 +131,13 @@ image_write(img_obj,paste0(v_path,"figuras/pedacofigfinal_1alinha.png"))
 ### te for every model
 l_path <- list()
 # l_path$te <-  paste0("rds/l_dfpred_",c("areaperse","fragperse","fragtotal"),".rds")
-l_path$te <-  paste0("rds/l_dfnew_",c("areaperse","fragperse","fragtotal"),".rds")
-l_path$U <- "rds/l_dfpred_areaperse_Ugs.rds"
-df_tabsel <- read_csv("rds/df_tabsel_geral.csv") %>% 
+l_path$te <-  paste0(v_path,
+                     "rds/l_dfnew_",
+                     c("areaperse","fragperse","fragtotal"),
+                     ".rds")
+l_path$U <- paste0(v_path,
+                   "rds/l_dfpred_areaperse_Ugs.rds")
+df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
   filter(dAICc==0)
 ##############
 ### 1a parte: figfinal_te_EFEITO PAISAGEM
@@ -155,9 +159,8 @@ f_plot_te <- \(veffect,
                      stripspace=0.5,
                      textsize=15){
     dfref <- rename(l_df_ref[[vname]],k=k_cont)
-    names(dfi) <- gsub("_cont","",names(dfi))
-    dfi %>% 
-      mutate(quantiles=paste0(vname,": median")) %>% 
+    dfiQ50 %>% 
+      mutate(quantiles=paste0(vname,": mediana")) %>% 
       ggplot(aes(x=k,y=Uefeito,z=logOR)) +
       geom_raster(aes(fill=logOR)) +
       geom_contour(color = "black",linewidth=linew) +
@@ -266,9 +269,10 @@ f_plot_te <- \(veffect,
                             levels=c(5,50,95)) ) %>% 
     rename(k = k_cont)
   # apenas fixo
-  p50 <- f_ggplot_main(filter(dfpred,quantiles=="50"),ctext_size = 7)
+  p50 <- f_ggplot_main(dfiQ50 = filter(dfpred,quantiles=="50"),
+                       ctext_size = 7)
   p4quan <- f_ggplot_4quantiles(dfpred = dfpred,textsize = 10)
-  propred <- 0.7
+  propred <- 0.9
   p_final0 <- ggdraw() +
     draw_plot(p50) +
     draw_plot(p4quan,
@@ -278,17 +282,19 @@ f_plot_te <- \(veffect,
   # incluir o fixo com aleatório
   df_fa <- readRDS(gsub("dfnew","dfpred",veffect))
   df_fa <- df_fa[["fixo e aleat"]]
-  p_fa <- f_fixo_e_aleatorio(df_fa)
-  
-  
-  
-  l_p <- dlply(dfpred,"quantiles",\(dfi){
-    
-  })
-  l_p <- lapply(l_p,\(li) ggsave(tempfile(fileext = ".png"),plot = li))
-  l_p <- lapply(l_p,\(li) image_read(li) %>% image_trim)
+  p_fa <- f_fixo_e_aleatorio(df_fa,vtextsize = 10,striptextsize = 10)
+  propred <- 0.7
+  p_final <- ggdraw() +
+    draw_plot(p_final0) +
+    draw_plot(p_fa,
+              height=0.4*propred,
+              width=0.25*propred,
+              x=0.589,y=0.68)
+  vpath <- ggsave(plot=p_final0,
+                  filename=tempfile(fileext=".png"),
+                  width = 7,height = 7)
   # base
-  img_final <- image_append(do.call("c",l_p[c("5","95")]))
+  img_final <- image_read(vpath)
   # padronizacao da mediana
   rect_info <- image_info(img_final)
   rect_width <- rect_info$width
