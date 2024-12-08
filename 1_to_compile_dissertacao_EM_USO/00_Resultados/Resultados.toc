@@ -1,0 +1,17 @@
+\babel@toc {brazil}{}\relax 
+\contentsline {subsection}{\numberline {0.1}Overview}{1}{subsection.0.1}%
+\contentsline {subsection}{\numberline {0.2}Inventários Florestais Simulados}{1}{subsection.0.2}%
+\contentsline {subsection}{\numberline {0.3}Efeito escalar da dispersão no mecanismo simulado}{1}{subsection.0.3}%
+\contentsline {subsubsection}{\numberline {0.3.1}Estimativa da taxa U na maior extensão espacial da paisagem simulada}{1}{subsubsection.0.3.1}%
+\contentsline {subsubsection}{\numberline {0.3.2}Estimativa da taxa U sob diferentes escalas espaciais da paisagem prístina}{4}{subsubsection.0.3.2}%
+\contentsline {subsubsection}{\numberline {0.3.3}Descrição estatística da relação entre taxa U, grau de limitação de dispersão e extensão espacial da paisagem}{4}{subsubsection.0.3.3}%
+\contentsline {subsection}{\numberline {0.4}Efeitos da paisagem propostos por programas de pesquisa em disputa}{5}{subsection.0.4}%
+\contentsline {subsubsection}{\numberline {0.4.1}Métrica funcional da influência da paisagem na biodiversidade local}{5}{subsubsection.0.4.1}%
+\contentsline {subsubsection}{\numberline {0.4.2}Efeito da paisagem na congruência com a SAD observada}{7}{subsubsection.0.4.2}%
+\contentsline {paragraph}{\numberline {0.4.2.1}Efeitos indivíduais}{7}{paragraph.0.4.2.1}%
+\contentsline {subparagraph}{\numberline {0.4.2.1.1}Fragmentação total}{7}{subparagraph.0.4.2.1.1}%
+\contentsline {subparagraph}{\numberline {0.4.2.1.2}Fragmentação per se}{8}{subparagraph.0.4.2.1.2}%
+\contentsline {subparagraph}{\numberline {0.4.2.1.3}Área per se}{8}{subparagraph.0.4.2.1.3}%
+\contentsline {paragraph}{\numberline {0.4.2.2}Sumarização dos contrastes}{8}{paragraph.0.4.2.2}%
+\contentsline {subparagraph}{\numberline {0.4.2.2.1}Comparação dos efeitos}{8}{subparagraph.0.4.2.2.1}%
+\contentsline {subparagraph}{\numberline {0.4.2.2.2}Comparação das paisagens contrafactuais}{12}{subparagraph.0.4.2.2.2}%

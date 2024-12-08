@@ -1,9 +1,9 @@
 ---
 title: "Resultados"
 output:
-  bookdown::word_document2: default
   bookdown::pdf_document2:
     latex_engine: lualatex
+  bookdown::word_document2: default
   html_document:
     df_print: paged
 bibliography: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/citations2.bib
@@ -17,6 +17,8 @@ header-includes:
 
 ```{r setup resultados,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center')
+library(readr)
+library(dplyr)
 library(flextable)
 library(officer)
 library(magick)
@@ -42,6 +44,7 @@ f_tabsel_display <- \(dfi,
     bold(part = "header") %>%
     autofit() 
 }
+v_path <- "1_to_compile_dissertacao_EM_USO/00_Resultados/"
 df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv"))
 ```
 
@@ -172,7 +175,7 @@ cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, prev
 knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.jpeg")
 ```
 
-### Efeito da paisagem na congruência com a SAD observada
+### Efeito da paisagem na congruência com a SAD observada {#efeito-congruencia}
 
 #### Efeitos indivíduais
 
@@ -184,8 +187,7 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.jpeg")
 f_tabsel_display(filter(df_tabsel,contraste=="Frag. total") %>% select(-contraste))
 ```
 
-```{r diagfinal-fragtotal,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/diagfinal_fragtotal.jpeg"))
+```{r diagfinal-fragtotal,eval=TRUE,include=TRUE,cache=FALSE,fig.cap="Diagnóstico do modelo mais plausível para o efeito de fragmentação total, considerando a mediana da predição."}
 knitr::include_graphics(path="./figuras/diagfinal_fragtotal.jpeg")
 ```
 
@@ -197,21 +199,17 @@ knitr::include_graphics(path="./figuras/diagfinal_fragtotal.jpeg")
 f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se") %>% select(-contraste))
 ```
 
-```{r diagfinal-fragperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/diagfinal_fragperse.jpeg"))
+```{r diagfinal-fragperse,eval=TRUE,include=TRUE,fig.cap="Diagnóstico do modelo mais plausível para o efeito de fragmentação per se, considerando a mediana da predição."}
 knitr::include_graphics(path="./figuras/diagfinal_fragperse.jpeg")
 ```
 
 ##### Área per se
 
 ```{r tabsel-areaperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_areaperse.jpeg"))
-# knitr::include_graphics(path="./figuras/tabsel_areaperse.jpeg")
 f_tabsel_display(filter(df_tabsel,contraste=="Área per se") %>% select(-contraste))
 ```
 
-```{r diagfinal-areaperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/diagfinal_areaperse.jpeg"))
+```{r diagfinal-areaperse,eval=TRUE,include=TRUE,fig.cap="Diagnóstico do modelo mais plausível para o efeito de área per se, considerando a mediana da predição."}
 knitr::include_graphics(path="./figuras/diagfinal_areaperse.jpeg")
 ```
 
@@ -220,20 +218,20 @@ knitr::include_graphics(path="./figuras/diagfinal_areaperse.jpeg")
 
 ##### Comparação dos efeitos
 
-```{r PIfixo-todos,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/beta0_figura_final_logOR.jpeg"))
-knitr::include_graphics(path="figuras/comparacao_de_efeitos.jpeg")
-# getwd()
+```{r PIfixo-todos,eval=TRUE,include=TRUE,echo=TRUE}
+# knitr::include_graphics(path="./figuras/comparacao_de_efeitos.jpeg")
+list.files(path="./figuras/",pattern="comparacao")
 ```
 
 ##### Comparação das paisagens contrafactuais
 
-```{r tabsel-sumario-paisagens,tab.cap="Proporção de SADs simuladas em função da classe de limitação de dispersão (k), da paisagem hipotética (land) e do sítio de amostragem (Site). O ajuste foi feito com HGAM.}
+```{r tabsel-sumario-paisagens,tab.cap="Proporção de SADs simuladas em função da classe de limitação de dispersão (k), da paisagem hipotética (land) e do sítio de amostragem (Site). O ajuste foi feito com HGAM."}
 df_tabsel <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
 f_tabsel_display(df_tabsel)
 ```
 
-```{r sumario-paisagens,fig.cap="sumário do logito da proporção de SADs simuladas com boa congruência com a SAD observada. No quadro da esquerda há o logito da proporção observada e no logito da esquerda há o logito predito pelo modelo mais plausível, sem o efeito do sítio de amostragem."}
-knitr::include_graphics("figuras/sumario_paisagens.jpeg")
+```{r sumario-paisagens,fig.cap="sumário do logito da proporção de SADs simuladas com boa congruência com a SAD observada. No quadro da esquerda há o logito da proporção observada e no logito da esquerda há o logito predito pelo modelo mais plausível, sem o efeito do sítio de amostragem.",echo=TRUE}
+# knitr::include_graphics("figuras/sumario_paisagens.jpeg")
+list.files(path="./figuras/",pattern="sumario",full.names = TRUE)
 ```
 
