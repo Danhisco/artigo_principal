@@ -82,7 +82,7 @@ f_geom_final <- \(vs){
     labs(
       x = "k", 
       y = "logito(Proporção de SADs simuladas com boa congruência)", 
-      color = "Paisagem hipotética"
+      color = "Paisagem\nhipotética"
     ),
     theme_classic(),
     theme(text=element_text(size=vs))
@@ -137,11 +137,15 @@ df_nSAD <- df_nSAD %>%
   mutate(p = (nSAD+ve)/(100+2*ve),
          p = log(p/(1-p)))
 l_p <- list()
-l_p$obs <- f_obssumario(df_nSAD,vsize = 17)
+l_p$obs <- f_obssumario(df_nSAD,vsize = 15)
 l_p$efeito <- f_efeitosumario(new_data,
-                              vsize = 17,
+                              vsize = 15,
                               vposleg = c(0.5,0.1),
                               vrange = range(df_nSAD$p))
 p <- arrangeGrob(grobs=l_p,ncol=2)
 ggsave(filename = "figuras/sumario_paisagens.png",plot = p,
-       width = 15.5,height = 8)
+       width = 16,height = 8)
+img <- image_read("figuras/sumario_paisagens.png") %>% 
+  image_trim() %>% 
+  image_resize("50%")
+image_write(img,"figuras/sumario_paisagens.jpeg")
