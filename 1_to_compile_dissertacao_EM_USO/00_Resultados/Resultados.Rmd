@@ -173,17 +173,6 @@ knitr::include_graphics(path="./figuras/tabsel_fragtotal.jpeg")
 knitr::include_graphics(path="./figuras/diagfinal_fragtotal.jpeg")
 ```
 
-```{r PIfixo-fragtotal,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/figfinal_te_fragtotal.jpeg"))
-knitr::include_graphics(path="./figuras/figfinal_te_fragtotal.jpeg")
-```
-
-```{r PIfixoealeat-fragtotal,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/3alinha_fragtotal.jpeg"))
-knitr::include_graphics(path="./figuras/3alinha_fragtotal.jpeg")
-```
-
-
 ##### Fragmentação per se
 
 ```{r tabsel-fragerse,eval=TRUE,include=TRUE}
@@ -195,17 +184,6 @@ knitr::include_graphics(path="./figuras/tabsel_fragperse.jpeg")
 # knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/diagfinal_fragperse.jpeg"))
 knitr::include_graphics(path="./figuras/diagfinal_fragperse.jpeg")
 ```
-
-```{r PIfixo-fragperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/figfinal_te_fragperse.jpeg"))
-knitr::include_graphics(path="./figuras/figfinal_te_fragperse.jpeg")
-```
-
-```{r PIfixoealeat-fragperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/3alinha_fragperse.jpeg"))
-knitr::include_graphics(path="./figuras/3alinha_fragperse.jpeg")
-```
-
 
 ##### Área per se
 
@@ -219,16 +197,6 @@ knitr::include_graphics(path="./figuras/tabsel_areaperse.jpeg")
 knitr::include_graphics(path="./figuras/diagfinal_areaperse.jpeg")
 ```
 
-```{r PIfixo-areaperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/figfinal_te_areaperse.jpeg"))
-knitr::include_graphics(path="./figuras/figfinal_te_areaperse.jpeg")
-```
-
-```{r PIfixoealeat-areaperse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/3alinha_areaperse.jpeg"))
-knitr::include_graphics(path="./figuras/3alinha_areaperse.jpeg")
-```
-
 
 #### Sumarização dos contrastes 
 
@@ -236,8 +204,8 @@ knitr::include_graphics(path="./figuras/3alinha_areaperse.jpeg")
 
 ```{r PIfixo-todos,eval=TRUE,include=TRUE}
 # knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/beta0_figura_final_logOR.jpeg"))
-knitr::include_graphics(path="figuras/beta0_figura_final_logOR.jpeg")
-getwd()
+knitr::include_graphics(path="figuras/comparacao_de_efeitos.jpeg")
+# getwd()
 ```
 
 

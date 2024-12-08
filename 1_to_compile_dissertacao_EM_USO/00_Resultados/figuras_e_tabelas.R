@@ -184,6 +184,11 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |>
          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
          SiteCode = factor(SiteCode)) |> 
   select(-c(N:log.S))
+df_md <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
+  pivot_longer(-c(SiteCode:p)) %>% 
+  mutate(name = gsub("_logratio","",name),
+         across(c(p,k),f_z,.names = "{.col}_z"),
+         SiteCode = factor(SiteCode))
 l_p <- list()
 df_plot <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
   pivot_longer(-c(SiteCode:p)) %>% 
