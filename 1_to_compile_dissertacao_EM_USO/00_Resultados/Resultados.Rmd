@@ -208,7 +208,6 @@ knitr::include_graphics(path="figuras/comparacao_de_efeitos.jpeg")
 # getwd()
 ```
 
-
 ##### Comparação das paisagens contrafactuais
 
 EM CONSTRUÇÃO
