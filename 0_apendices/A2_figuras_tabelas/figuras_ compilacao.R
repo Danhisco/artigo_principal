@@ -49,3 +49,16 @@ lapply(lf,\(li){
   img <- image_read(li)
   image_write(img, li, format = "jpeg")
 })
+
+vpaths <- c("GE_dados_disponiveis",
+            "figSI_S_N_sizeDA_fillSN",
+            "fig2a_tendencia_media",
+            "fig2_U16_k",
+            "fig3_Uk_ladoKM",
+            "fig5_SoE",
+            "pedacofigfinal_1alinha")
+vpaths <- paste0("figuras/",vpaths,".jpeg")
+lapply(vpaths, \(li){
+  img <- image_read(li)
+  image_write(img,path=gsub("jpeg","png",li),format="png")
+})
