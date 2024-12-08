@@ -4,19 +4,21 @@ output:
   bookdown::pdf_document2:
     latex_engine: lualatex
   bookdown::word_document2: default
+  pdf_document: default
   html_document:
     df_print: paged
 bibliography: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/citations2.bib
-csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/ecological-monographs.csl
+csl: "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/ecological-monographs.csl"
 header-includes:
-  - \usepackage[brazil]{babel}  # Language support
-  - \usepackage{lmodern}        # Modern LaTeX font
-  - \usepackage{fontspec}       # Font handling with XeLaTeX or LuaLaTeX
-  - \setmainfont{Times New Roman}  # Set the main font for the PDF
+- \usepackage[brazil]{babel}
+- \usepackage{lmodern}
+- \usepackage{fontspec}
+- \setmainfont{Times New Roman}
 ---
 
 ```{r setup resultados,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center')
+options(tinytex.verbose = TRUE)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center',root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal')
 library(readr)
 library(dplyr)
 library(flextable)
@@ -218,9 +220,12 @@ knitr::include_graphics(path="./figuras/diagfinal_areaperse.jpeg")
 
 ##### Comparação dos efeitos
 
-```{r PIfixo-todos,eval=TRUE,include=TRUE,echo=TRUE}
-# knitr::include_graphics(path="./figuras/comparacao_de_efeitos.jpeg")
-list.files(path="./figuras/",pattern="comparacao")
+```{r PIfixo-todos,eval=TRUE,include=TRUE,echo=FALSE,fig.cap="Comparação dos efeitos propostos da paisagem. Da esquerda para a direita há a predição do modelo mais plausível para os efeitos de fragmentação total, fragmentação per se e área per se."}
+knitr::include_graphics(path="./figuras/comparacao_de_efeitos.jpeg")
+# list.files(path="./figuras",pattern="comparacao",full.names = TRUE)
+# knitr::include_graphics(here::here("figuras","comparacao_de_efeitos.jpeg"))
+# knitr::include_graphics(normalizePath("/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/figuras/comparacao_de_efeitos.jpeg"))
+
 ```
 
 ##### Comparação das paisagens contrafactuais
@@ -230,8 +235,10 @@ df_tabsel <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tab
 f_tabsel_display(df_tabsel)
 ```
 
-```{r sumario-paisagens,fig.cap="sumário do logito da proporção de SADs simuladas com boa congruência com a SAD observada. No quadro da esquerda há o logito da proporção observada e no logito da esquerda há o logito predito pelo modelo mais plausível, sem o efeito do sítio de amostragem.",echo=TRUE}
-# knitr::include_graphics("figuras/sumario_paisagens.jpeg")
-list.files(path="./figuras/",pattern="sumario",full.names = TRUE)
+
+
+```{r sumario-paisagens,fig.cap="sumário do logito da proporção de SADs simuladas com boa congruência com a SAD observada. No quadro da esquerda há o logito da proporção observada e no logito da esquerda há o logito predito pelo modelo mais plausível, sem o efeito do sítio de amostragem.",echo=FALSE}
+knitr::include_graphics("figuras/sumario_paisagens.jpeg")
+# list.files(path="./figuras",pattern="sumario",full.names = TRUE)
 ```
 

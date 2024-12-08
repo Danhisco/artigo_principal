@@ -39,3 +39,13 @@ lapply(l_jpeg,\(li){
   img <- image_read(li)
   image_write(img,gsub("jpeg","jpg",li))
 })
+#
+#
+#
+###############################
+lf <- list.files(path="./figuras",pattern="jpeg",full.names = TRUE)
+library(magick)
+lapply(lf,\(li){
+  img <- image_read(li)
+  image_write(img, li, format = "jpeg")
+})
