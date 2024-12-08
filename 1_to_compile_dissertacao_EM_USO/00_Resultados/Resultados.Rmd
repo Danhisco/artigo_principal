@@ -17,6 +17,32 @@ header-includes:
 
 ```{r setup resultados,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center')
+library(flextable)
+library(officer)
+library(magick)
+f_tabsel_display <- \(dfi,
+                      vfsize=14,
+                      vbold=TRUE,
+                      vffamily="Arial"){
+  title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
+  dfi %>% 
+  # relocate(,contraste) %>%  # mudar caso precise fazer tabela única?
+    mutate(across(where(is.numeric),~round(.x,2))) %>% 
+    flextable() %>%
+    bg(bg = "white",part = "all") %>%
+    theme_vanilla() %>% 
+    set_header_labels(
+      modelo = "HGAM",
+      dAICc = "ΔAICc",
+      df = "est. coef.",
+      weight = "weight",
+      dev.expl = "Dev. Exp.",
+      `Moran I statistic (res)` = "Moran's I",
+      `p-value` = "p-value") %>%
+    bold(part = "header") %>%
+    autofit() 
+}
+df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv"))
 ```
 
 ```{r trackdown chunk resultados, include=FALSE,eval=FALSE}
@@ -130,16 +156,6 @@ A seguir apresentamos o log(U/U) estimado em função de k, que interpretamos co
 Aqui interpretamos como métrica de influência da paisagem na biodiversidade local a razão entre a taxa U estimada nas paisagens contrafactuais em contraste.
 Para um mesmo grau de limitação de dispersão, quanto menor a taxa U necessária para obter a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U (logU/U) estimadas nas paisagens contrafactuais em contraste for igual a zero não há diferença entre contrafactuais com relação a reposição de espécies locais pela paisagem. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. 
 
-```{r tabela dos quantis observados dos contrastes}
-# df_quantisobs_Uefeito <- read_csv(file=paste0("./","tabelas/df_quantisobs_Uefeito.csv"))
-# # df_quantisobs_Uefeito <- read_csv(file=paste0(v_path,"tabelas/df_quantisobs_Uefeito.csv"))
-# # df_quantisobs_Uefeito <- df_quantisobs_Uefeito %>% 
-# #   mutate(`Prática Ontológica` = ifelse(grepl("Frag. total",`Contraste log(U/U)`),
-# #                                        "Interdependente","Independente")) %>% 
-# #   relocate(`Prática Ontológica`)
-# knitr::kable(df_quantisobs_Uefeito,
-#              caption = "Quantis observados dos contrastes na taxa U previstos em cada prática ontológica.")
-```
 
 Cada razão entre taxa Us representa um previsto efeito da paisagem: área per se, fragmentação per se e fragmentação total. 
 Nos 3 efeitos, a maior parte dos valores de logU/U ocorre na mesma faixa de valores de paisagens com pouca cobertura florestal, porém em paisagens com perda de cobertura florestal logU/U pode aumentar em magnitude se a limitação de dispersão for branda ou muito severa (fig. \@ref(fig:GE-contraste-taxaU)). Os valores em paisagens sem perda de cobertura florestal ocorrem ao redor do zero, com valores negativos e positivos (fig. \@ref(fig:GE-contraste-taxaU)).
@@ -154,7 +170,6 @@ cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, prev
 ```{r GE-contraste-taxaU, include=TRUE,eval=TRUE,fig.cap=cap}
 # knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.jpeg"))
 knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.jpeg")
-
 ```
 
 ### Efeito da paisagem na congruência com a SAD observada
@@ -163,9 +178,10 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.jpeg")
 
 ##### Fragmentação total
 
-```{r tabsel-fragtotal,eval=TRUE,include=TRUE}
+```{r tabsel-fragtotal,eval=TRUE,include=TRUE,fig.cap="Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
 # knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragtotal.jpeg"))
-knitr::include_graphics(path="./figuras/tabsel_fragtotal.jpeg")
+# knitr::include_graphics(path="./figuras/tabsel_fragtotal.jpeg")
+f_tabsel_display(filter(df_tabsel,contraste=="Frag. total") %>% select(-contraste))
 ```
 
 ```{r diagfinal-fragtotal,eval=TRUE,include=TRUE}
@@ -177,7 +193,8 @@ knitr::include_graphics(path="./figuras/diagfinal_fragtotal.jpeg")
 
 ```{r tabsel-fragerse,eval=TRUE,include=TRUE}
 # knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragperse.jpeg"))
-knitr::include_graphics(path="./figuras/tabsel_fragperse.jpeg")
+# knitr::include_graphics(path="./figuras/tabsel_fragperse.jpeg")
+f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se") %>% select(-contraste))
 ```
 
 ```{r diagfinal-fragperse,eval=TRUE,include=TRUE}
@@ -189,7 +206,8 @@ knitr::include_graphics(path="./figuras/diagfinal_fragperse.jpeg")
 
 ```{r tabsel-areaperse,eval=TRUE,include=TRUE}
 # knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_areaperse.jpeg"))
-knitr::include_graphics(path="./figuras/tabsel_areaperse.jpeg")
+# knitr::include_graphics(path="./figuras/tabsel_areaperse.jpeg")
+f_tabsel_display(filter(df_tabsel,contraste=="Área per se") %>% select(-contraste))
 ```
 
 ```{r diagfinal-areaperse,eval=TRUE,include=TRUE}
@@ -210,4 +228,12 @@ knitr::include_graphics(path="figuras/comparacao_de_efeitos.jpeg")
 
 ##### Comparação das paisagens contrafactuais
 
-EM CONSTRUÇÃO
+```{r tabsel-sumario-paisagens,tab.cap="Proporção de SADs simuladas em função da classe de limitação de dispersão (k), da paisagem hipotética (land) e do sítio de amostragem (Site). O ajuste foi feito com HGAM.}
+df_tabsel <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
+f_tabsel_display(df_tabsel)
+```
+
+```{r sumario-paisagens,fig.cap="sumário do logito da proporção de SADs simuladas com boa congruência com a SAD observada. No quadro da esquerda há o logito da proporção observada e no logito da esquerda há o logito predito pelo modelo mais plausível, sem o efeito do sítio de amostragem."}
+knitr::include_graphics("figuras/sumario_paisagens.jpeg")
+```
+
