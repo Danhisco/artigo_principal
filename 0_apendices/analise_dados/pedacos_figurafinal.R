@@ -145,26 +145,34 @@ df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>%
 #v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
 df_ref <- read_csv(paste0(v_path,
                            "rds/df_limites_predicao_aposteriori_logOR.csv"))
-vrange <-  df_ref %>% 
+v_range <-  df_ref %>% 
   summarise(max=max(max),min=min(min)) %>% 
   unlist
 setwd(v_path)
 f_plot_te <- \(veffect,
                vrange=v_range,
-               pattern_extract="(?<=l_dfnew_)(.*?)(?=\\.rds)"){
+               pattern_extract="(?<=l_dfnew_)(.*?)(?=\\.rds)",
+               legendfillposition=c(0.5,0.1),
+               stripspace=0.5,
+               stripspace_fa=1,
+               textsize=15,
+               textsize_4q=10,
+               ctextsize=10,
+               facetspace_4q=0.5,
+               propred_fixo = 0.9,xfixo=0.447, yfixo=0.68,
+               propred_fa = 0.7, xfa=0.589, yfa=0.68,
+               vw=7,vh=7){
   # veffect <- l_path$te[3]
   f_ggplot_main <- \(dfiQ50,
-                     ctext_size=10,
-                     linew=1,
-                     stripspace=0.5,
-                     textsize=15){
+                     linew=1
+                     ){
     dfref <- rename(l_df_ref[[vname]],k=k_cont)
     dfiQ50 %>% 
       mutate(quantiles=paste0(vname,": mediana")) %>% 
       ggplot(aes(x=k,y=Uefeito,z=logOR)) +
       geom_raster(aes(fill=logOR)) +
       geom_contour(color = "black",linewidth=linew) +
-      geom_text_contour(size=ctext_size) +
+      geom_text_contour(size=ctextsize,color="black") +
       geom_line(data=dfref,
                 aes(y=max,x=k),color="black",
                 inherit.aes = FALSE,
@@ -180,16 +188,30 @@ f_plot_te <- \(veffect,
       scale_x_continuous(expand = c(0,0)) +
       scale_y_continuous(expand = c(0,0),
                          limits=vrange[2:1]) +
-      theme(legend.position="none",
-            strip.text = element_text(size=textsize,margin=margin(t=stripspace,
-                                                                  b=stripspace)),
+      theme(legend.position=legendfillposition,
+            legend.direction = "horizontal",
+            legend.background = element_rect(
+              fill = "transparent",          
+              color = NA                     
+            ),
+            legend.key = element_rect(       
+              fill = "transparent",          
+              color = NA                     
+            ),
+            legend.text = element_text(size = 8),
+            legend.title = element_text(size = 10),
+            legend.key.size = unit(0.5, "cm"),     
+            legend.spacing = unit(0.2, "cm"),      
+            legend.margin = margin(2, 2, 2, 2),
+            strip.text = element_text(size=textsize,
+                                      margin=margin(t=stripspace,
+                                                    b=stripspace)),
             aspect.ratio=1,
             axis.text = element_text(size=textsize),
             axis.title = element_text(size=textsize))
   }
   f_ggplot_4quantiles <- \(dfpred,
-                           stripspace=0.5,
-                           textsize=15){
+                           tsize=textsize_4q){
     k_pred <- dfpred$k %>% unique
     k_sim <- sapply(c(0.25,0.50,0.75,0.99),\(x){
       k_pred[which.min(abs(k_pred - x))]
@@ -211,15 +233,19 @@ f_plot_te <- \(veffect,
       xlab("logU/U") +
       facet_wrap(~kf,ncol=2) +
       theme(aspect.ratio = 1,
-            strip.text = element_text(size=textsize,margin=margin(t=stripspace,
-                                                                  b=stripspace)),
-            axis.title = element_text(size=textsize),
-            axis.text = element_text(size=textsize),
-            plot.margin = margin())
+            strip.text = element_text(size=tsize,
+                                      margin=margin(t=stripspace,
+                                                    b=stripspace)),
+            axis.title = element_text(size=tsize),
+            axis.text = element_text(size=tsize),
+            panel.background = element_rect(fill='transparent'),
+            plot.background = element_rect(fill='transparent', color=NA),
+            plot.margin = margin(),
+            panel.spacing = unit(facetspace_4q, "cm", data = NULL))
   }
   f_fixo_e_aleatorio <- \(dfi,
-                          vspacestrip=1,
-                          vtextsize=15,
+                          vspacestrip=stripspace_fa,
+                          vtextsize=textsize,
                           striptextsize=15){
     dfi %>% 
       mutate(label="fixo e aleatório") %>% 
@@ -251,7 +277,9 @@ f_plot_te <- \(veffect,
         axis.title = element_text(size=vtextsize),
         strip.text = element_text(size=striptextsize,
                                   margin=margin(t=vspacestrip,
-                                                b=vspacestrip))
+                                                b=vspacestrip)),
+        panel.background = element_rect(fill='transparent'),
+        plot.background = element_rect(fill='transparent', color=NA)
       )
   }
   library(metR)
@@ -269,68 +297,233 @@ f_plot_te <- \(veffect,
                             levels=c(5,50,95)) ) %>% 
     rename(k = k_cont)
   # apenas fixo
-  p50 <- f_ggplot_main(dfiQ50 = filter(dfpred,quantiles=="50"),
-                       ctext_size = 7)
-  p4quan <- f_ggplot_4quantiles(dfpred = dfpred,textsize = 10)
-  propred <- 0.9
+  p50 <- f_ggplot_main(dfiQ50 = filter(dfpred,quantiles=="50"))
+  p4quan <- f_ggplot_4quantiles(dfpred = dfpred)
   p_final0 <- ggdraw() +
     draw_plot(p50) +
     draw_plot(p4quan,
-              height=0.4*propred,
-              width=0.25*propred,
-              x=0.447,y=0.68)
+              height=0.4*propred_fixo,
+              width=0.25*propred_fixo,
+              x=xfixo,y=yfixo) 
   # incluir o fixo com aleatório
   df_fa <- readRDS(gsub("dfnew","dfpred",veffect))
   df_fa <- df_fa[["fixo e aleat"]]
   p_fa <- f_fixo_e_aleatorio(df_fa,vtextsize = 10,striptextsize = 10)
-  propred <- 0.7
   p_final <- ggdraw() +
     draw_plot(p_final0) +
     draw_plot(p_fa,
-              height=0.4*propred,
-              width=0.25*propred,
-              x=0.589,y=0.68)
-  vpath <- ggsave(plot=p_final0,
+              height=0.4*propred_fa,
+              width=0.25*propred_fa,
+              x=xfa,y=yfa)
+  vpath <- ggsave(plot=p_final,
                   filename=tempfile(fileext=".png"),
-                  width = 7,height = 7)
-  # base
-  img_final <- image_read(vpath)
-  # padronizacao da mediana
-  rect_info <- image_info(img_final)
-  rect_width <- rect_info$width
-  rect_height <- rect_info$height
-  longest_side <- max(rect_width, rect_height)
-  l_p[["50"]] <- image_resize(l_p[["50"]], geometry_size_pixels(longest_side))
-  gc()
-  # 3 quadros: mediana e os quantis extremos
-  img_final <- image_append(c(l_p[["50"]],img_final),stack = TRUE)
-  rm(l_p);gc()
-  # título
-  img_final <- image_title(img_final,vtitle=vname,vsize = 100)
-  gc()
-  # salvamento
-  img_final <- image_resize(img_final, "50%")
-  image_write(img_final,
-              path=paste0(v_path,"figuras/figfinal_te_",
-                          str_extract(veffect,pattern_extract),
-                          ".png")
-                )
-  # 
-  image_destroy(img_final)
-  rm(img_final);gc()
+                  width = vw,height = vh)
+  return(vpath)
 }
-lapply(l_path$te,f_plot_te)
+####### salvamento da amostra
+l_img <- lapply(l_path$te,\(li){
+  f_plot_te(veffect = li,
+            textsize_4q = 10,
+            ctextsize=5,
+            legendfillposition=c(0.5,0.05),
+            xfixo = 0.45, yfixo = 0.610, propred_fixo = 1,
+            facetspace_4q = 0.1,
+            propred_fa = 1.175, xfa = 0.70, yfa=0.58)
+  }
+)
+names(l_img) <- gsub("/rds/","/figuras/",l_path$te) %>% 
+  gsub("l_dfnew_","figfinal_",.) %>% 
+  gsub("rds$","jpeg",.)
+lapply(names(l_img),\(li){
+  img <- image_read(l_img[[li]]) %>% 
+    image_trim() %>% 
+    image_resize("20%")
+  image_write(img,path = li)
+})
 #
+#
+############## plot do modelo mais plausível para área per se:
+f_plotPI_shgam <- \(nefeito,
+                    stripspace=0.5,
+                    striptextsize=10,
+                    textsize=15){
+  # objeto para o gráfico
+  v_range_x <- sapply(l_df,\(li){
+    range(li[["apenas fixo"]]$Uefeito)
+  }) %>% range()
+  v_range_y <- sapply(l_df,\(li){
+    range(select(li[["apenas fixo"]],starts_with("Q_")))
+  }) %>% range()
+  f_geom_legend <- list(
+    # guide name
+    annotate("text", x = 0.01, y =-5.5, 
+             label = "Posterior Prediction Interval", hjust = 0) ,
+    # mediana
+    annotate("segment", x = 0.01, xend = 0.06, y = -6, yend = -6, 
+             color = "black", linewidth = 1),
+    annotate("text", x = 0.08, y =-6, 
+             label = "median", hjust = 0) ,
+    # quantile range
+    annotate("rect", xmin = 0.01, xmax = 0.06, ymin = -6.75, ymax = -6.25,
+             fill = "gray", alpha = 0.7),
+    annotate("text", x = 0.08, y = -6.5,
+             label = "90% quant. range", hjust = 0),
+    # Site
+    annotate("rect", xmin = 0.01, xmax = 0.06, ymin = -7.5, ymax = -7,
+             fill = "#986868", alpha = 0.7),
+    annotate("text", x = 0.08, y = -7.25,
+             label = "s(log(U/U)) + s(log(U/U))|Site", hjust = 0),
+    # overall
+    annotate("rect", xmin = 0.01, xmax = 0.06, ymin = -8.25, ymax = -7.75,
+             fill = "darkgreen", alpha = 0.7),
+    annotate("text", x = 0.08, y = -8,
+             label = "s(log(U/U)) + 0|Site", hjust = 0)
+  )
+  # padronização dos dados
+  l_df[[nefeito]][["apenas fixo"]]$SiteCode <- "apenas fixo"
+  ldfi <- lapply(l_df[[nefeito]],mutate,
+                 contraste = nefeito,
+                 SiteCode = factor(SiteCode)) %>% 
+    lapply(.,select,-any_of("logOR"))
+  # gráfico
+  p <- ldfi[["fixo e aleat"]] %>% 
+    mutate(label=nefeito) %>% 
+    ggplot(aes(x = Uefeito, group = SiteCode)) +
+    # fixo e aleat
+    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
+                    fill = "Quantile range", group = SiteCode), 
+                alpha = 0.2) +
+    geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
+              alpha = 0.5) +
+    scale_fill_manual(values = c("Quantile range" = "#986868")) +
+    scale_color_manual(values = c("Median" = "#C04000")) +
+    # apenas fixo
+    ggnewscale::new_scale_color() +
+    ggnewscale::new_scale_fill() +
+    geom_ribbon(data=ldfi[["apenas fixo"]],
+                aes(ymin = Q_0.05, ymax = Q_0.95, 
+                    fill = "Quantile range", group = SiteCode), 
+                alpha = 0.3) +
+    geom_line(data=ldfi[["apenas fixo"]],
+              aes(y = Q_0.5, color = "Median", group = SiteCode), 
+              alpha = 0.7) +
+    scale_fill_manual(values = c("Quantile range" = "darkgreen")) +
+    scale_color_manual(values = c("Median" = "black")) +
+    # 0 x 0 
+    geom_hline(yintercept = 0,color="darkgray",alpha=0.75) +
+    geom_vline(xintercept = 0,color="darkgray",alpha=0.75) +
+    # ajustes
+    scale_x_continuous(expand = expansion(add = c(0,0))) +
+    scale_y_continuous(expand = expansion(add = c(0,0))) +
+    labs(x="logU/U",y="log OR") +
+    facet_wrap(~label) +
+    theme_classic() +
+    theme(
+      axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -2.5)),
+      axis.title.y = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -30)),
+      legend.position = "none",
+      aspect.ratio = 1,
+      axis.text = element_text(size=textsize),
+      axis.title = element_text(size=textsize),
+      strip.text = element_text(size=striptextsize,
+                                margin=margin(t=stripspace,
+                                              b=stripspace))
+    )
+  if(nefeito=="Área per se"){
+    p <- p + f_geom_legend
+  }
+  return(p)
+}
+f_plot_shgam <- \(efeito="Área per se",
+                  vpath="figuras/figfinal_areaperse_shgam.png",
+                  vw=6,vh=8,
+                  vstripspace=0.5,
+                  vstriptextsize=10,
+                  vtextsize=15){
+  # bases com a predição a posteriori para os modelos com spline simples
+  path_ldf = "rds/l_dfpred_simples_apudPedersen2019.rds"
+  l_df <- readRDS(path_ldf)
+  # criação dos gráficos de PI
+  p <- f_plotPI_shgam("Área per se",
+                      stripspace = vstripspace,
+                      striptextsize=vstriptextsize,
+                      textsize=vtextsize)
+  ggsave(vpath, p, width = vw, height = vh)
+  # padronização
+  img_p <- image_trim(image_read(vpath))
+  image_write(img_p,path = vpath)
+  return(vpath)
+}
+########## leitura e salvamento da amostra
+image_read(f_plot_shgam(vtextsize = 13))
+#
+#
+#
+###### combinação das 3 figuras
+f_figfinal <- \(df_ajuste,
+                vimgrs="17.5%"){
+  # frag. per se e frag total
+  l_img <- dlply(filter(df_ajuste,grepl("Frag." ,efeito)),"efeito",\(dfi){
+    with(dfi,{
+      v_effect <- ifelse(dfi$efeito=="Frag. total","fragtotal","fragperse")
+      f_plot_te(veffect = grep(v_effect,l_path$te,value=TRUE),
+                textsize_4q = tsize4q,
+                ctextsize=ctextsize,
+                xfixo = xfixo, yfixo = yfixo, propred_fixo = propred_fixo,
+                facetspace_4q = facetspace_4q,
+                propred_fa = propred_fa, xfa = xfa, yfa = yfa)  
+    })
+  }) %>% lapply(.,image_read)
+  # área em branco
+  l_img$blank <- 
+  # área per se
+  l_img$`Área per se` <- with(filter(df_ajuste,efeito=="Área per se"),{
+      image_read(f_plot_shgam(vtextsize = vtextsize,
+                              vw = vw, vh = vh,
+                              vstripspace = vstripspace,
+                              vstriptextsize = vstriptextsize))
+    })
+  ## padronização
+  l_img <- lapply(l_img,image_trim) %>% 
+    lapply(.,image_resize,vimgrs)
+  l_img$`Área per se` <- f_resize_2rectangle(ref_img = l_img$`Frag. per se`,
+                                             toresize_img = l_img$`Área per se`,
+                                             ref_side = "height",
+                                             tore_side = "height")
+  l_img$`Área per se` <- f_resize_2rectangle(ref_img = l_img$`Frag. per se`,
+                                             toresize_img = l_img$`Área per se`,
+                                             ref_side = "width",
+                                             tore_side = "width")
+  # imagem combinada
+  image_append(do.call("c",l_img),stack = FALSE)
+}
+dfajuste <- data.frame(
+  efeito = factor(c("Área per se","Frag. per se", "Frag. total"),
+                  levels=c("Frag. total","Frag. per se","Área per se")),
+  tsize4q = c(NA,10,10),
+  ctextsize = c(NA,5,5),
+  xfixo = c(NA,0.45,0.45),
+  yfixo = c(NA,0.610,0.610), 
+  propred_fixo = c(NA,1,1),
+  facetspace_4q = c(NA,0.1,0.1),
+  propred_fa = c(NA,1.175,1.175), 
+  xfa = c(NA,0.70,0.70), 
+  yfa=c(NA,0.58,0.58),
+  vw=c(7,NA,NA),
+  vh=c(9,NA,NA),
+  vstripspace=c(0.5,NA,NA),
+  vstriptextsize=c(10,NA,NA),
+  vtextsize=c(15,NA,NA),
+  qrange_fixo="NA",
+  median_fixo="NA",
+  qrange_aleat="NA",
+  median_aleat="NA"
+)
+f_figfinal(dfajuste)
+
+
+
 #### 
-path_ldf = "rds/l_dfpred_simples_apudPedersen2019.rds"
-l_df <- readRDS(path_ldf)
-# criação dos gráficos de PI
-p <- f_plotPI_shgam("Área per se")
-ggsave("figuras/figfinal_areaperse_shgam.png",p,
-       width = 6,height = 8)
-img_p <- image_trim(image_read("figuras/figfinal_areaperse_shgam.png"))
-img_p <- image_title(img_p,vtitle="Área per se, ~ logU/U",vsize = 60)
-image_write(img_p,path = "figuras/figfinal_areaperse_shgam.png")
 #
 lapply(l_path$te,f_plot_te2)
 f_juntapreditos <- \(vsite){

@@ -255,6 +255,7 @@ l_p$fig1 <- df_plot %>%
   # coord_flip() +
   facet_wrap(~tp_efeito,nrow=1)
 ##
+
 df_md <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
   pivot_longer(-c(SiteCode:p)) %>% 
   mutate(name = gsub("_logratio","",name),
@@ -683,6 +684,7 @@ f_plotPI_shgam <- \(nefeito){
     lapply(.,select,-any_of("logOR"))
   # gráfico
   p <- ldfi[["fixo e aleat"]] %>% 
+    mutate(label=nefeito) %>% 
     ggplot(aes(x = Uefeito, group = SiteCode)) +
     # fixo e aleat
     geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
@@ -710,7 +712,8 @@ f_plotPI_shgam <- \(nefeito){
     # ajustes
     scale_x_continuous(expand = expansion(add = c(0,0))) +
     scale_y_continuous(expand = expansion(add = c(0,0))) +
-    labs(x="log(U / U)",y="log Odds Ratio (goodness-of-fit: SAD sim. - obs.)") +
+    labs(x="logU/U",y="log OR") +
+    facet_wrap(~label) +
     theme_classic() +
     theme(
       axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -2.5)),
