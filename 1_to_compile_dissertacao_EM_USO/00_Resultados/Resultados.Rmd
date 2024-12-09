@@ -48,6 +48,8 @@ f_tabsel_display <- \(dfi,
     colformat_num(digits = 2) %>% 
     width(j="Moran I statistic (res)",width = 1.25) %>% 
     width(j="modelo",width = 1.75) %>% 
+    add_header_row(values=dfi$contraste[1],colwidths = ncol(dfi)-1) %>%
+    align(align = "center", part = "all") %>% 
     set_table_properties(layout = "autofit")  
 }
 v_path <- "1_to_compile_dissertacao_EM_USO/00_Resultados/"
@@ -61,11 +63,11 @@ vfw=8
 vfh=4
 #
 # f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se") %>% select(-contraste))
-# l_ft <- dlply(df_tabsel,"contraste",f_tabsel_display)
+l_ft <- dlply(df_tabsel,"contraste",f_tabsel_display)
 # l_path <- lapply(names(l_ft),\(li){
 #   fx <- l_ft[[li]] %>% 
-#     add_header_row(values=li,colwidths = ncol(df_tabsel)-1) %>% 
-#     align(align = "center", part = "all")
+    # add_header_row(values=li,colwidths = ncol(df_tabsel)-1) %>%
+    # align(align = "center", part = "all")
 #   save_as_image(fx,path = tempfile(fileext = ".png"))
 # })
 # names(l_path) <- names(l_ft)
@@ -204,24 +206,18 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 
 #### Modelos estatísticos para descrever a variabilidade dos efeitos propostos
  
-```{r tabsel-fragtotal,eval=TRUE,include=TRUE,fig.cap="Frag. total: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragtotal.jpeg"))
-# knitr::include_graphics(path="./figuras/tabsel_fragtotal.jpeg")
-f_tabsel_display(filter(df_tabsel,contraste=="Frag. total"))
+```{r tabsel-fragtotal,eval=TRUE,include=TRUE,tab.cap="Frag. total: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
+l_ft[["Frag. total"]]
 ```
 
 
-```{r tabsel-fragperse,eval=TRUE,include=TRUE,fig.cap="Frag. per se: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragtotal.jpeg"))
-# knitr::include_graphics(path="./figuras/tabsel_fragtotal.jpeg")
-f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se"))
+```{r tabsel-fragperse,eval=TRUE,include=TRUE,tab.cap="Frag. per se: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
+l_ft[["Frag. per se"]]
 ```
 
 
-```{r tabsel-areaperse,eval=TRUE,include=TRUE,fig.cap="Área per se: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragtotal.jpeg"))
-# knitr::include_graphics(path="./figuras/tabsel_fragtotal.jpeg")
-f_tabsel_display(filter(df_tabsel,contraste=="Área per se"))
+```{r tabsel-areaperse,eval=TRUE,include=TRUE,tab.cap="Área per se: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
+l_ft[["Área per se"]]
 ```
 
 
