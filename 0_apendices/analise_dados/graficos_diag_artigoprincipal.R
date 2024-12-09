@@ -182,68 +182,75 @@ lapply(names(l_img_diag),\(li) image_write(l_img_diag[[li]],path=li))
 # file.remove(ljpg)
 #
 
-f_dfplot <- \(dff,dataset){
-  vcols <- c("logOR","k_cont")
-  dff %>% 
-    select(-any_of(vcols)) %>% 
-    pivot_longer(starts_with("Q_"),names_to="quantile",
-                 values_to=paste0("logOR_",dataset)) %>% 
-    mutate(quantile=gsub("Q_","",quantile) %>% 
-             as.numeric(),
-           quantile=as.character(quantile*100))
-}
-df_te <- lapply(l_df,"[[","fixo e aleat")[["Área per se"]] %>% f_dfplot(dataset="te")
-df_s <- readRDS(paste0(v_path,"rds/l_dfpred_areaperse_Ugs.rds"))[["fixo e aleat"]] %>% 
-  f_dfplot(dataset="s")
-df_plot <- inner_join(df_te,df_s) %>% 
-  inner_join(lapply(l_df,"[[","fixo e aleat")[["Área per se"]] %>% 
-               select(logOR,Uefeito,SiteCode))
-f_ggplot <- \(dfi){
-  l_p <- list()
-  l_p$predpred <- dfi %>% 
-    ggplot(aes(x=logOR_te,y=logOR_s,color=quantile)) +
-    geom_abline(intercept = 0,slope=1) +
-    geom_point() +
-    geom_smooth(method="lm",se=FALSE) +
-    scale_color_manual("%",
-                       values=c("50"="darkgreen",
-                                "5"="darkred",
-                                "95"="darkred")) +
-    labs(title="predito X predito") +
-    theme(legend.position = "top",
-          aspect.ratio = 1) +
-    facet_wrap(~SiteCode) 
-  l_p$obs_uefeito_predicoes <- dfi %>% 
-    # preparação dos dados
-    pivot_longer(matches("_te|_s"),
-                 names_to = "hgam",
-                 values_to = "logOR_pred") %>% 
-    mutate(hgam=gsub("logOR_","",hgam)) %>% 
-    ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
-    geom_abline(intercept = 0,slope=1) +
-    geom_point() +
-    geom_smooth(method="lm",se=FALSE) +
-    scale_color_manual("%",
-                       values=c("50"="darkgreen",
-                                "5"="darkred",
-                                "95"="darkred")) +
-    labs(x="logOR observado",y="logOR predito",
-         title=dfi$SiteCode[1]) +
-    theme(legend.position = "top",
-          aspect.ratio = 1) +
-    facet_wrap(~hgam) 
-  l_p <- lapply(l_p,\(li) ggsave(tempfile(fileext = ".png"),plot = li))
-  l_p <- lapply(l_p,\(li) image_read(li) %>% image_trim)
-  img_final <- image_append(do.call("c",l_p),stack = FALSE)
-  image_write(
-    img_final,
-    path=paste0(v_path,
-                "figuras/PIeOBS_sites/compara_areaperse/",
-                dfi$SiteCode[1],
-                ".png")
-  )
-}
-lapply(levels(df_s$SiteCode),\(i){
-  filter(df_plot,SiteCode==i) %>% f_ggplot()
-})
+# f_dfplot <- \(dff,dataset){
+#   vcols <- c("logOR","k_cont")
+#   dff %>% 
+#     select(-any_of(vcols)) %>% 
+#     pivot_longer(starts_with("Q_"),names_to="quantile",
+#                  values_to=paste0("logOR_",dataset)) %>% 
+#     mutate(quantile=gsub("Q_","",quantile) %>% 
+#              as.numeric(),
+#            quantile=as.character(quantile*100))
+# }
+# df_te <- lapply(l_df,"[[","fixo e aleat")[["Área per se"]] %>% f_dfplot(dataset="te")
+# df_s <- readRDS(paste0(v_path,"rds/l_dfpred_areaperse_Ugs.rds"))[["fixo e aleat"]] %>% 
+#   f_dfplot(dataset="s")
+# df_plot <- inner_join(df_te,df_s) %>% 
+#   inner_join(lapply(l_df,"[[","fixo e aleat")[["Área per se"]] %>% 
+#                select(logOR,Uefeito,SiteCode))
+# f_ggplot <- \(dfi){
+#   l_p <- list()
+#   l_p$predpred <- dfi %>% 
+#     ggplot(aes(x=logOR_te,y=logOR_s,color=quantile)) +
+#     geom_abline(intercept = 0,slope=1) +
+#     geom_point() +
+#     geom_smooth(method="lm",se=FALSE) +
+#     scale_color_manual("%",
+#                        values=c("50"="darkgreen",
+#                                 "5"="darkred",
+#                                 "95"="darkred")) +
+#     labs(title="predito X predito") +
+#     theme(legend.position = "top",
+#           aspect.ratio = 1) +
+#     facet_wrap(~SiteCode) 
+#   l_p$obs_uefeito_predicoes <- dfi %>% 
+#     # preparação dos dados
+#     pivot_longer(matches("_te|_s"),
+#                  names_to = "hgam",
+#                  values_to = "logOR_pred") %>% 
+#     mutate(hgam=gsub("logOR_","",hgam)) %>% 
+#     ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
+#     geom_abline(intercept = 0,slope=1) +
+#     geom_point() +
+#     geom_smooth(method="lm",se=FALSE) +
+#     scale_color_manual("%",
+#                        values=c("50"="darkgreen",
+#                                 "5"="darkred",
+#                                 "95"="darkred")) +
+#     labs(x="logOR observado",y="logOR predito",
+#          title=dfi$SiteCode[1]) +
+#     theme(legend.position = "top",
+#           aspect.ratio = 1) +
+#     facet_wrap(~hgam) 
+#   l_p <- lapply(l_p,\(li) ggsave(tempfile(fileext = ".png"),plot = li))
+#   l_p <- lapply(l_p,\(li) image_read(li) %>% image_trim)
+#   img_final <- image_append(do.call("c",l_p),stack = FALSE)
+#   image_write(
+#     img_final,
+#     path=paste0(v_path,
+#                 "figuras/PIeOBS_sites/compara_areaperse/",
+#                 dfi$SiteCode[1],
+#                 ".png")
+#   )
+# }
+# lapply(levels(df_s$SiteCode),\(i){
+#   filter(df_plot,SiteCode==i) %>% f_ggplot()
+# })
 
+##### combinação das figuras de diagnóstico
+l_img <- list.files("figuras",pattern = "diagfinal",full.names = TRUE)
+l_img <- lapply(l_img,image_read)
+names(l_img) <- list.files("figuras",pattern = "diagfinal",full.names = TRUE)
+img_final <- image_append(do.call("c",l_img[3:1]),stack = FALSE) %>% 
+  image_resize("50%")
+image_write(img_final,"figuras/diagfinal_3efeitos.jpeg",format="jpeg")
