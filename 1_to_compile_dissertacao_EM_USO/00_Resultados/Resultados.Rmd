@@ -1,9 +1,9 @@
 ---
 title: "Resultados"
 output:
+  bookdown::word_document2: default
   bookdown::pdf_document2:
     latex_engine: lualatex
-  bookdown::word_document2: default
   pdf_document: default
   html_document:
     df_print: paged
@@ -21,6 +21,7 @@ options(tinytex.verbose = TRUE)
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center',root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal')
 library(readr)
 library(dplyr)
+library(plyr)
 library(flextable)
 library(officer)
 library(magick)
@@ -31,8 +32,7 @@ f_tabsel_display <- \(dfi,
                       vffamily="Arial"){
   title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
   dfi %>% 
-  # relocate(,contraste) %>%  # mudar caso precise fazer tabela única?
-    mutate(across(where(is.numeric),~round(.x,2))) %>% 
+    select(-contraste) %>% 
     flextable() %>%
     bg(bg = "white",part = "all") %>%
     theme_vanilla() %>% 
@@ -45,14 +45,32 @@ f_tabsel_display <- \(dfi,
       `Moran I statistic (res)` = "Moran's I",
       `p-value` = "p-value") %>%
     bold(part = "header") %>%
-    set_table_properties(width = vw, layout = "autofit")  
+    colformat_num(digits = 2) %>% 
+    width(j="Moran I statistic (res)",width = 1.25) %>% 
+    width(j="modelo",width = 1.75) %>% 
+    set_table_properties(layout = "autofit")  
 }
 v_path <- "1_to_compile_dissertacao_EM_USO/00_Resultados/"
-df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv"))
+df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
+  as.data.frame() %>% 
+  mutate(across(where(is.numeric),~round(x = .x,digits = 2)))
+for(i in names(df_tabsel)[sapply(df_tabsel,is.numeric)]){
+  df_tabsel[,i] <- round(df_tabsel[,i],2)
+}
 vfw=8
 vfh=4
-
-
+#
+# f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se") %>% select(-contraste))
+# l_ft <- dlply(df_tabsel,"contraste",f_tabsel_display)
+# l_path <- lapply(names(l_ft),\(li){
+#   fx <- l_ft[[li]] %>% 
+#     add_header_row(values=li,colwidths = ncol(df_tabsel)-1) %>% 
+#     align(align = "center", part = "all")
+#   save_as_image(fx,path = tempfile(fileext = ".png"))
+# })
+# names(l_path) <- names(l_ft)
+# l_ft <- lapply(l_path,image_read)
+# img_final <- image_append(do.call("c",l_ft[c("Frag. total", "Frag. per se" ,"Área per se" )]))
 ```
 
 ```{r trackdown chunk resultados, include=FALSE,eval=FALSE}
@@ -85,7 +103,7 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 ```{r caption GE dados disponiveis,eval=TRUE,include=TRUE}
 cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográficas e proporção de cobertura florestal nas paisagens contemporâneas aos eventos de amostragem com extensão espacial de 4 x 4 km2. b) Características gerais dos inventários, da esquerda para a direita: número de indivíduos amostrados, área da parcela amostrada, número de espécies observado, ano de amostragem. c) Proporção de cobertura florestal na paisagem ao redor da parcela amostrada em função do lado da paisagem ao redor. d) Contagem do número de sítios pelas classes de perturbação usadas no TreeCo, que consideram tanto o tempo desde a última grande perturbação quanto o grau de perturbação ."
 ```
-```{r GE-sitios-amostrados,eval=TRUE,include=TRUE,fig.cap=cap,out.width="30%}
+```{r GE-sitios-amostrados,eval=TRUE,include=TRUE,fig.cap=cap,out.width="30%"}
 knitr::include_graphics(path="./figuras/GE_dados_disponiveis.png")
 ```
 
@@ -133,7 +151,7 @@ O padrão por sítio difere do padrão geral da médio, pois a mudança dos valo
   
 
 ```{r}
-cap <- ""
+cap <- "Taxa U estimada em paisagens prístina com extensão espacial de 16x16km"
 ```
 ```{r Uk-ladokm,fig.cap=cap}
 knitr::include_graphics("./figuras/fig3_Uk_ladoKM.png")
@@ -185,69 +203,46 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 ### Efeito da paisagem na congruência com a SAD observada {#efeito-congruencia}
 
 #### Modelos estatísticos para descrever a variabilidade dos efeitos propostos
-
-
-
-#### Efeitos indivíduais
-
-##### Fragmentação total
-
-```{r tabsel-fragtotal,eval=TRUE,include=TRUE,fig.cap="Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
+ 
+```{r tabsel-fragtotal,eval=TRUE,include=TRUE,fig.cap="Frag. total: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
 # knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragtotal.jpeg"))
 # knitr::include_graphics(path="./figuras/tabsel_fragtotal.jpeg")
-f_tabsel_display(filter(df_tabsel,contraste=="Frag. total") %>% select(-contraste))
-```
-
-```{r diagfinal-fragtotal,eval=TRUE,include=TRUE,cache=FALSE,fig.cap="Diagnóstico do modelo mais plausível para o efeito de fragmentação total, considerando a mediana da predição."}
-knitr::include_graphics(path="./figuras/diagfinal_fragtotal.jpeg")
-```
-
-##### Fragmentação per se
-
-```{r tabsel-fragerse,eval=TRUE,include=TRUE}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragperse.jpeg"))
-# knitr::include_graphics(path="./figuras/tabsel_fragperse.jpeg")
-f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se") %>% select(-contraste))
-```
-
-```{r diagfinal-fragperse,eval=TRUE,include=TRUE,fig.cap="Diagnóstico do modelo mais plausível para o efeito de fragmentação per se, considerando a mediana da predição."}
-knitr::include_graphics(path="./figuras/diagfinal_fragperse.jpeg")
-```
-
-##### Área per se
-
-```{r tabsel-areaperse,eval=TRUE,include=TRUE}
-f_tabsel_display(filter(df_tabsel,contraste=="Área per se") %>% select(-contraste))
-```
-
-```{r diagfinal-areaperse,eval=TRUE,include=TRUE,fig.cap="Diagnóstico do modelo mais plausível para o efeito de área per se, considerando a mediana da predição."}
-knitr::include_graphics(path="./figuras/diagfinal_areaperse.jpeg")
+f_tabsel_display(filter(df_tabsel,contraste=="Frag. total"))
 ```
 
 
-#### Sumarização dos contrastes 
+```{r tabsel-fragperse,eval=TRUE,include=TRUE,fig.cap="Frag. per se: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragtotal.jpeg"))
+# knitr::include_graphics(path="./figuras/tabsel_fragtotal.jpeg")
+f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se"))
+```
 
-##### Comparação dos efeitos
+
+```{r tabsel-areaperse,eval=TRUE,include=TRUE,fig.cap="Área per se: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
+# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/tabsel_fragtotal.jpeg"))
+# knitr::include_graphics(path="./figuras/tabsel_fragtotal.jpeg")
+f_tabsel_display(filter(df_tabsel,contraste=="Área per se"))
+```
+
+
+#### Diagnóstico do modelo mais plausível de cada efeito
+
+```{r}
+cap <- "Predição dos modelos mais plausíveis em relação ao observado."
+```
+```{r diagfinal, fig.cap=cap}
+knitr::include_graphics(path="./figuras/diagfinal_3efeitos.jpeg")
+```
+
+#### Os propostos efeitos da paisagem
 
 ```{r PIfixo-todos,eval=TRUE,include=TRUE,echo=FALSE,fig.cap="Comparação dos efeitos propostos da paisagem. Da esquerda para a direita há a predição do modelo mais plausível para os efeitos de fragmentação total, fragmentação per se e área per se."}
 knitr::include_graphics(path="./figuras/comparacao_de_efeitos.jpeg")
-# list.files(path="./figuras",pattern="comparacao",full.names = TRUE)
-# knitr::include_graphics(here::here("figuras","comparacao_de_efeitos.jpeg"))
-# knitr::include_graphics(normalizePath("/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/figuras/comparacao_de_efeitos.jpeg"))
-
 ```
 
-##### Comparação das paisagens contrafactuais
-
-```{r tabsel-sumario-paisagens,tab.cap="Proporção de SADs simuladas em função da classe de limitação de dispersão (k), da paisagem hipotética (land) e do sítio de amostragem (Site). O ajuste foi feito com HGAM."}
-df_tabsel <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
-f_tabsel_display(df_tabsel)
-```
-
-
+#### Comparação das paisagens contrafactuais
 
 ```{r sumario-paisagens,fig.cap="sumário do logito da proporção de SADs simuladas com boa congruência com a SAD observada. No quadro da esquerda há o logito da proporção observada e no logito da esquerda há o logito predito pelo modelo mais plausível, sem o efeito do sítio de amostragem.",echo=FALSE}
 knitr::include_graphics("figuras/sumario_paisagens.jpeg")
-# list.files(path="./figuras",pattern="sumario",full.names = TRUE)
 ```
 
