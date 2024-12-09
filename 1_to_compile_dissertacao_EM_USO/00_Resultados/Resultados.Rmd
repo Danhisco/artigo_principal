@@ -1,9 +1,9 @@
 ---
 title: "Resultados"
 output:
-  bookdown::word_document2: default
   bookdown::pdf_document2:
     latex_engine: lualatex
+  bookdown::word_document2: default
   pdf_document: default
   html_document:
     df_print: paged
@@ -27,6 +27,7 @@ library(magick)
 f_tabsel_display <- \(dfi,
                       vfsize=14,
                       vbold=TRUE,
+                      vw=1,
                       vffamily="Arial"){
   title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
   dfi %>% 
@@ -44,10 +45,14 @@ f_tabsel_display <- \(dfi,
       `Moran I statistic (res)` = "Moran's I",
       `p-value` = "p-value") %>%
     bold(part = "header") %>%
-    autofit() 
+    set_table_properties(width = vw, layout = "autofit")  
 }
 v_path <- "1_to_compile_dissertacao_EM_USO/00_Resultados/"
 df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv"))
+vfw=8
+vfh=4
+
+
 ```
 
 ```{r trackdown chunk resultados, include=FALSE,eval=FALSE}
@@ -80,7 +85,7 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 ```{r caption GE dados disponiveis,eval=TRUE,include=TRUE}
 cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográficas e proporção de cobertura florestal nas paisagens contemporâneas aos eventos de amostragem com extensão espacial de 4 x 4 km2. b) Características gerais dos inventários, da esquerda para a direita: número de indivíduos amostrados, área da parcela amostrada, número de espécies observado, ano de amostragem. c) Proporção de cobertura florestal na paisagem ao redor da parcela amostrada em função do lado da paisagem ao redor. d) Contagem do número de sítios pelas classes de perturbação usadas no TreeCo, que consideram tanto o tempo desde a última grande perturbação quanto o grau de perturbação ."
 ```
-```{r GE-sitios-amostrados,eval=TRUE,include=TRUE,fig.cap=cap}
+```{r GE-sitios-amostrados,eval=TRUE,include=TRUE,fig.cap=cap,out.width="30%}
 knitr::include_graphics(path="./figuras/GE_dados_disponiveis.png")
 ```
 
@@ -142,7 +147,7 @@ Observamos que a extensão espacial mínima adequada tende a aumentar com a redu
 ```{r cap fig5_SoE}
 cap <- "A extensão espacial é um dos fatores que determina as medidas tomadas das características da paisagem. No conjunto de áreas analisadas há uma forte relação entre a extensão espacial da paisagem ao redor e a proporção de cobertura vegetal. a). O objetivo do estudo do efeito de escalar foi determinar a extensão espacial adequada para simular os 20 graus de limitação de dispersão. c). Definimos a escala adequada para um grau de limitação de dispersão como a extensão espacial que acumula a maior parte da variação na estimativa da taxa U associada ao aumento da extensão espacial da paisagem ao redor, considerando a amplitude de extensões do lado da paisagem local entre 0.5 km e 16 km. Para detalhes sobre os métodos  do estudo de efeito de escalar veja o apêndice ‘Efeito de Escalar’. Nesse  estudo, 36 sítios foram sorteados e selecionados ao longo do gradiente de número de indivíduos e de espécies na parcela. b). Para esse estudo, as estimativas da taxa U foram simuladas em paisagens totalmente preenchidas com habitat, para descontar o efeito do isolamento estrutural, e explorar apenas o efeito de variar a extensão da paisagem ao redor."
 ```
-```{r SoE, eval=TRUE,include=TRUE,fig.cap=cap}
+```{r SoE, eval=TRUE,include=TRUE,fig.cap=cap,out.width="50%"}
 knitr::include_graphics(path = "./figuras/fig5_SoE.png")
 ```
 
@@ -178,6 +183,10 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 ```
 
 ### Efeito da paisagem na congruência com a SAD observada {#efeito-congruencia}
+
+#### Modelos estatísticos para descrever a variabilidade dos efeitos propostos
+
+
 
 #### Efeitos indivíduais
 
