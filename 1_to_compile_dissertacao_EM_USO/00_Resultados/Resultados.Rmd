@@ -1,9 +1,9 @@
 ---
 title: "Resultados"
 output:
+  bookdown::word_document2: default
   bookdown::pdf_document2:
     latex_engine: lualatex
-  bookdown::word_document2: default
   pdf_document: default
   html_document:
     df_print: paged
@@ -29,11 +29,10 @@ f_tabsel_display_PDF <- \(dfi,
                       vfsize=14,
                       vbold=TRUE,
                       vw=1,
-                      logcontraste=TRUE,
                       vffamily="Arial"){
   title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
   dfi %>% 
-    {if (logcontraste) select(., -contraste) else .} %>% 
+    select(-contraste) %>% 
     flextable() %>%
     bg(bg = "white",part = "all") %>%
     theme_vanilla() %>% 
@@ -49,7 +48,7 @@ f_tabsel_display_PDF <- \(dfi,
     colformat_num(digits = 2) %>% 
     width(j="Moran I statistic (res)",width = 1.25) %>% 
     width(j="modelo",width = 1.75) %>% 
-    {if (logcontraste) add_header_row(.,values=dfi$contraste[1],colwidths = ncol(dfi)-1) else .} %>% 
+    add_header_row(values=dfi$contraste[1],colwidths = ncol(dfi)-1) %>%
     align(align = "center", part = "all") %>% 
     set_table_properties(layout = "autofit")  
 }
@@ -57,11 +56,10 @@ f_tabsel_display_word <- \(dfi,
                       vfsize=14,
                       vbold=TRUE,
                       vw=1,
-                      logcontraste=TRUE,
                       vffamily="Arial"){
   title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
   dfi %>% 
-    {if (logcontraste) select(., -contraste) else .} %>% 
+    select(-contraste) %>% 
     flextable() %>%
     bg(bg = "white",part = "all") %>%
     theme_vanilla() %>% 
@@ -77,7 +75,7 @@ f_tabsel_display_word <- \(dfi,
     colformat_num(digits = 2) %>% 
     # width(j="Moran I statistic (res)",width = 1.25) %>% 
     # width(j="modelo",width = 1.75) %>% 
-    {if (logcontraste) add_header_row(.,values=dfi$contraste[1],colwidths = ncol(dfi)-1) else .} %>% 
+    add_header_row(values=dfi$contraste[1],colwidths = ncol(dfi)-1) %>%
     align(align = "center", part = "all") %>% 
     # set_table_properties(layout = "autofit")  
     autofit()
@@ -91,10 +89,6 @@ for(i in names(df_tabsel)[sapply(df_tabsel,is.numeric)]){
 }
 vfw=8
 vfh=4
-df_tabsel_sumario <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
-for(i in names(df_tabsel_sumario)[sapply(df_tabsel_sumario,is.numeric)]){
-  df_tabsel_sumario[,i] <- round(df_tabsel_sumario[,i],2)
-}
 #
 # f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se") %>% select(-contraste))
 l_ft_PDF <- dlply(df_tabsel,"contraste",f_tabsel_display_PDF)
@@ -214,7 +208,7 @@ knitr::include_graphics(path = "./figuras/fig5_SoE.png")
 
 ## Os efeitos da paisagem propostos no debate sobre fragmentação de habitat
 
-<p>__Os resultados presentes aqui foram obtidos em paisagens hipotéticas de lado 4 km para todas os graus de limitação de dispersão. Acredito que posso incluir esses resultados em 1 mês de trabalho. __</p>
+<p>__Os resultados presentes aqui foram obtidos em paisagens hipotéticas de lado 4 km para todas os graus de limitação de dispersão. Acredito que posso incluir esses resultados das simulações nas respectivas extensões suficientes em 1 mês de trabalho junto com o CVE. __</p>
 <p> Existem pelo menos 3 efeitos da paisagem — área per se, fragmentação per se e fragmentação total — como previstos pelas práticas ontológicas em disputa (tabela 1). Nesta seção, interpretamos e atribuímos os efeitos da paisagem a partir do contraste de simulações em paisagens hipotéticas. Essas simulações derivam de um modelo mecanístico demográfico que captura a dinâmica de entrada e saída de propágulos na parcela amostrada. Nesse modelo, a riqueza de espécies e a abundância relativa são influenciadas pela configuração da paisagem, que determina a quantidade, posição e distância dos progenitores remanescentes.</p>
 <p> O modelo é calibrado para capturar a influência da paisagem na riqueza de espécies ao ajustar a taxa U para que a riqueza observada seja aproximada. Essa taxa corresponde à probabilidade de colonização por uma nova espécie por evento de nascimento. A comparação da taxa U entre paisagens informa o efeito do contraste da configuração espacial da paisagem na manutenção da riqueza local. Interpretamos o contraste na taxa U usando o log da razão da taxa U (logU/U). Pareado para um mesmo sítio e grau de limitação de dispersão, o logU/U informa se existe diferença na reposição de espécies pela imigração de propágulos vindos da paisagem ao redor (conectividade local).</p>
 <p> Os efeitos da paisagem foram obtidos investigando o efeito do contraste de paisagem na congruência entre SAD simulada e observada. A simulação da SAD foi feita na mesma paisagem em que a taxa U foi estimada. Esperavamos que quanto maior logU/U maior deveria ser o efeito do contraste de paisagens na congruência com a SAD observada, melhorando ou piorando a aproximação com o padrão empírico. Além do logU/U outro parâmetro necessário para compreender o efeito da paisagem na congruência deve ser o grua de limitação de dispersão, pois deve mostrar a interação entre a probabilidade de substituir coespecífico e a configuração espacial da paisagem (@campos2012, @campos2013).</p>
@@ -222,14 +216,10 @@ knitr::include_graphics(path = "./figuras/fig5_SoE.png")
 
 ### Métrica funcional da influência da paisagem na biodiversidade local {#metrica-funcional}
 
-<p>Aqui interpretamos como métrica de influência da paisagem na biodiversidade local a razão entre a taxa U estimada nas paisagens contrafactuais em contraste. Para um mesmo grau de limitação de dispersão e sítio, quanto menor a taxa U necessária para obter a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U (logU/U) estimadas nas paisagens contrafactuais em contraste for igual a zero não há diferença entre contrafactuais com relação a reposição de espécies locais pela paisagem. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. </p>
-
-Cada razão entre taxa Us representa um ‘previsto efeito da paisagem: área per se, fragmentação per se e fragmentação total. 
-Nos 3 efeitos, a maior parte dos valores de logU/U ocorre na mesma faixa de valores de paisagens com pouca cobertura florestal, porém em paisagens com perda de cobertura florestal logU/U pode aumentar em magnitude se a limitação de dispersão for branda ou muito severa (fig. \@ref(fig:GE-contraste-taxaU)). Os valores em paisagens sem perda de cobertura florestal ocorrem ao redor do zero, com valores negativos e positivos (fig. \@ref(fig:GE-contraste-taxaU)).
-O efeito que apresenta menor amplitude de valores é o de área per se, enquanto o efeito de fragmentação total apresenta a maior amplitude (fig. \@ref(fig:GE-contraste-taxaU)). 
-Em alguns sítios, o logU/U do efeito de fragmentação per se pode ser menor do que o observado em paisagens sem perda de cobertura florestal (fig. \@ref(fig:GE-contraste-taxaU)).  
-A amplitude dos valores aumenta com a redução do grau de preservação da área amostrada para todos os 3 efeitos (fig. \@ref(fig:GE-contraste-taxaU)). 
-Nos graus de limitação de dispersão pouco severos, onde há o máximo global na estimativa da taxa U em paisagens sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre os contrafactuais (fig. \@ref(fig:GE-contraste-taxaU)).
+<p>Aqui interpretamos como métrica de influência da paisagem na biodiversidade local a razão entre a taxa U estimada nas paisagens hipotéticas em contraste. Para um mesmo grau de limitação de dispersão e sítio, quanto menor a taxa U necessária para obter a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U (logU/U) estimadas nas paisagens hipotéticas em contraste for igual a zero não há diferença entre contrafactuais com relação a reposição de espécies locais pela paisagem. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. </p>
+<p> Cada razão entre taxa Us (logU/U) representa um proposto efeito da paisagem: área per se, fragmentação per se e fragmentação total (tabela 1). Na figura \@ref(fig:GE-contraste-taxaU)) há o logU/U dos três efeitos propostos, as linhas ligam pontos de um mesmo sítio de amostragem, e os pontos e linhas estão coloridos pela proporção de cobertura florestal na paisagem contemporânea. Nos 3 efeitos, pelo menos 25% dos pontos ocorre na mesma faixa de valores de paisagens com pouca perda de cobertura florestal: as linhas horizontais vermelhas com logU/U próximo de zero indicam os quantis das paisagens com pelo menos 95% de cobertura florestal e os boxplots atrás dos pontos agrupam todos os pontos para um mesmo grau de limitação de dispersão na figura \@ref(fig:GE-contraste-taxaU). Os quantis do logU/U de paisagens com pouca perda de habitat ocorre ao redor de zero, essa faixa de valores foi usada como referência de ausência de diferença entre paisagens hipotéticas.</p>
+<p> Com o aumento da perda de cobertura florestal é possível observar o aumento no valor absoluto de logU/U (fig. \@ref(fig:GE-contraste-taxaU)). O efeito que apresenta menor amplitude de valores é o de área per se, enquanto o efeito de fragmentação total apresenta a maior amplitude (fig. \@ref(fig:GE-contraste-taxaU)). Em alguns sítios, o logU/U do efeito de fragmentação per se pode ser menor do que o observado em paisagens sem perda de cobertura florestal, contudo a maior magnitude é observada com valores positivos de logU/U (fig. \@ref(fig:GE-contraste-taxaU)). </p>
+<p>Para um mesmo efeito, a amplitude dos valores é maior nos graus de limitação de dispersão brandos, seguido pelos graus de limitação de dispersão severos (fig. \@ref(fig:GE-contraste-taxaU). Nos graus de limitação de dispersão pouco severos, onde há o máximo global na estimativa da taxa U em paisagens sem perda de habitat (olhar seção ‘Efeito de Escalar’), ocorre a menor variabilidade entre as paisagens hipotéticas (fig. \@ref(fig:GE-contraste-taxaU)). As linhas em preto na figura \@ref(fig:GE-contraste-taxaU) são a predição de um modelo de suavização que modelou os valores extremos em função do grau de limitação de dispersão</p>.
 
 ```{r caption figura exploratoria da taxa U}
 cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, previstos em cada prática ontológica (tabela X). a) Distribuição dos valores de cada contraste; em vermelhos os quantis de todos os contrastes observados em paisagens com proporção de cobertura florestal igual ou superior 0.95. b) Contraste por sítio de amostragem, pontos ligados pelo sítio de amostragem e coloridos pela proporção de cobertura florestal remanescente."
@@ -241,22 +231,44 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 
 ### Efeito da paisagem na congruência com a SAD observada {#efeito-congruencia}
 
+<p>Nessa seção iremos investigar o efeito do contraste das paisagens na congruência entre SAD simulada e observada. Nós descrevemos o log da razão da chance da SAD simulada em uma paisagem hipotética ter boa congruência com a SAD observada (logOR) usando modelos hierarquicos aditivos mistos (HGAM da sigla em inglês hierarchical generalized additive model Pedersen et al. 2019). Nós ajustamos 7 HGAM variando em complexidade, o HGAM mais complexo possui um tensor entre o logU/U e k por sítio de amostragem e comum a todos os sítios (ver metodologia). Os outros HGAM são simplificações desse HGAM mais complexo. Assim, é possível que os HGAM descrevam o logOR em função da combinação de valores de logU/U e k por sítio ou até apenas em função de 1 intercepto por sítio. Esses HGAM foram comparados segundo 3 classes de métricas: AICc; proporção da deviance explicada; e pela estatística I de Moran aplicada à média dos resíduos por sítio. Nas tabelas \@ref(tab:tabsel-fragtotal), \@ref(tab:tabsel-fragperse), \@ref(tab:tabsel-areaperse) estão a comparação dos 7 HGAM para cada um dos três efeitos, respectivamente, fragmentação total, fragmentação per se, e área per se. Na figura \@ref(fig:diagfinal) há o diagnóstico dos HGAM mais plausíveis para cada efeito e na figura \@ref(fig:diagfinal) há a predição desses modelos. Essa seção termina com um sumário quantitativo da proporção de SADs simuladas congruentes em função do tipo de paisagem hipotética e grau de limitação de dispersão.</p> 
+
 #### Modelos estatísticos para descrever a variabilidade dos efeitos propostos
+
+Em cada efeito, nós perguntamos: Qual é o modelo mais plausível? Esse modelo acumula a maior parte do peso de evidência? Qual a proporção de deviance que esse modelo explica? Existe evidência de autocorrelação espacial segundo a estatística I de Moran no modelo mais plausível?
  
+__Fragmentação total__
+
 ```{r tabsel-fragtotal,eval=TRUE,include=TRUE,tab.cap="Frag. total: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
 # l_ft_PDF[["Frag. total"]]
 l_ft_word[["Frag. total"]]
 ```
+
+<p>O modelo mais plausível para descrever o logOR do efeito de fragmentação total foi o HGAM mais complexo com um tensor entre logU/U e k por sítio de amostragem e comum aos sítios (\@ref(tab:tabsel-fragtotal)). Esse modelo acumula todo o peso de evidência do conjunto de HGAM candidatos e explica cerca de 77% da deviance (\@ref(tab:tabsel-fragtotal)). Não existe evidência de autocorrelação espacial em nenhum dos HGAM comparados (\@ref(tab:tabsel-fragtotal)). O HGAM que descreve o logOR em função de um spline para logU/U por sítio e comum aos sítio foi o segundo mais plausível, explicando cerca de 70% da deviance (\@ref(tab:tabsel-fragtotal)). </p>
+
+
+
+__Fragmentação per se__
 
 ```{r tabsel-fragperse,eval=TRUE,include=TRUE,tab.cap="Frag. per se: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
 # l_ft_PDF[["Frag. per se"]]
 l_ft_word[["Frag. per se"]]
 ```
 
+<p>O modelo mais plausível para descrever o logOR do efeito de fragmentação per se foi o HGAM mais complexo com um tensor entre logU/U e k por sítio de amostragem e comum aos sítios (\@ref(tab:tabsel-fragperse)). Esse modelo acumula todo o peso de evidência do conjunto de HGAM candidatos e explica cerca de 71% da deviance (\@ref(tab:tabsel-fragperse)). Não existe evidência de autocorrelação espacial em nenhum dos HGAM comparados (\@ref(tab:tabsel-fragperse)). O HGAM que descreve o logOR em função de um spline para k por sítio e comum aos sítio foi o segundo mais plausível, explicando aproximadamente a mesma proporção de deviance que o modelo mais plausível (\@ref(tab:tabsel-fragperse)).</p> 
+
+
+
+__Área per se__
+
 ```{r tabsel-areaperse,eval=TRUE,include=TRUE,tab.cap="Área per se: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
 # l_ft_PDF[["Área per se"]]
 l_ft_word[["Área per se"]]
 ```
+
+<p>O modelo mais plausível para descrever o logOR do efeito de área per se foi o HGAM com um spline para o logU/U por sítio de amostragem e comum aos sítios (\@ref(tab:tabsel-areaperse)). Esse modelo acumula todo o peso de evidência do conjunto de HGAM candidatos e explica cerca de 42% da deviance (\@ref(tab:tabsel-areaperse)). Não existe evidência de autocorrelação espacial em nenhum dos HGAM comparados (\@ref(tab:tabsel-areaperse)). O HGAM que descreve o logOR em função de um tensor por sítio e comum aos sítios foi o segundo mais plausível, explicando cerca de 47% da deviance (\@ref(tab:tabsel-areaperse)).</p> 
+
+
 
 #### Diagnóstico do modelo mais plausível de cada efeito
 
@@ -275,15 +287,6 @@ knitr::include_graphics(path="./figuras/comparacao_de_efeitos.jpeg")
 
 #### Comparação das paisagens contrafactuais
 
-```{r tabsel-sumario,tab.cap="Modelos estatísticos para descrever a proporção de SADs simuladas com boa congruência com a SAD observada em função do grau de limitação de dispersão e paisagem hipotética"}
-f_tabsel_display_PDF(df_tabsel_sumario,logcontraste=FALSE)
-# f_tabsel_display_word(df_tabsel_sumario,logcontraste=FALSE)
-```
-
-
-
-
 ```{r sumario-paisagens,fig.cap="sumário do logito da proporção de SADs simuladas com boa congruência com a SAD observada. No quadro da esquerda há o logito da proporção observada e no logito da esquerda há o logito predito pelo modelo mais plausível, sem o efeito do sítio de amostragem.",echo=FALSE}
 knitr::include_graphics("figuras/sumario_paisagens.jpeg")
 ```
-

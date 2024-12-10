@@ -4,7 +4,14 @@ editor_options:
   chunk_output_type: console
 ---
 
-# 9dez2024
+# 10dez2024
+
+CPF: escrever:
+1) métrica funcional
+2) tabelas comparação modelos estatísticos
+3) diagnóstico dos modelos
+4) predição a posteriori
+5) sumário
 
 
 
