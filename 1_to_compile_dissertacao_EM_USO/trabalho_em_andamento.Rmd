@@ -9,7 +9,7 @@ editor_options:
 CPF: escrever:
 1) métrica funcional
 2) tabelas comparação modelos estatísticos
-3) diagnóstico dos modelos
+3) diagnóstico dos modelos -TO AQUI 
 4) predição a posteriori
 5) sumário
 

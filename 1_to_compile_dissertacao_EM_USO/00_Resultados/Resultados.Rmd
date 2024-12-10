@@ -118,7 +118,7 @@ update_file(file ="1_to_compile_dissertacao_EM_USO/00_Resultados/Resultados.Rmd"
             gpath = "mestrado/artigo_principal/secoes_texto/",
             hide_code = TRUE)
 # overwrite the current Rmd with the current google drive 
-download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
+download_file(file ="1_to_compile_dissertacao_EM_USO/00_Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
@@ -272,6 +272,8 @@ l_ft_word[["Área per se"]]
 
 #### Diagnóstico do modelo mais plausível de cada efeito
 
+<p>Os gráficos diagnóstico padrão dos HGAM (pacote gratia) estão no informação de suporte, nessa seção exploramos a relação entre o logOR observada e predito para cada um dos efeitos da paisagem. O histograma 2D hexagonal mostra a densidade de pontos, com cores indicando o número de observações em cada unidade de área. As retas ajustadas para cada sítio representam modelos lineares específicos, enquanto os histogramas superiores apresentam as distribuições dos coeficientes de intercepto e inclinação desses modelos. Nos histogramas, as linhas tracejadas em vermelho indicam valores esperados para um modelo bem ajustado (intercepto = 0; inclinação = 1).</p>
+
 ```{r}
 cap <- "Predição dos modelos mais plausíveis em relação ao observado."
 ```
@@ -279,7 +281,24 @@ cap <- "Predição dos modelos mais plausíveis em relação ao observado."
 knitr::include_graphics(path="./figuras/diagfinal_3efeitos.jpeg")
 ```
 
+__Fragmentação total__
+
+<p>A maior concentração de pontos está próxima à região onde o logOR observado é igual a zero (fig. \@ref(fig:diagfinal), Frag. total), indicando que tanto os valores observados quanto os preditos do modelo estão bem ajustados nessa faixa. Nessa região, nota-se que existem sítios cujos modelos lineares ajustados possuem inclinação inferior a 1, representando baixa amplitude de variação no logOR observado (fig. \@ref(fig:diagfinal), Frag. total). Por outro lado, o histograma de inclinações evidencia que a maioria dos sítios apresenta inclinações entre 1 e 2 (fig. \@ref(fig:diagfinal), Frag. total), sugerindo que o modelo possui um desempenho relativamente consistente, mas com viés em alguns sítios, particularmente onde há menor variabilidade no logOR observado. Adicionalmente, a distribuição dos coeficientes de intercepto mostra valores próximos de zero para a maior parte dos sítios (fig. \@ref(fig:diagfinal), Frag. total), alinhados com a expectativa de um modelo bem ajustado na média.</p>
+
+__Fragmentação per se__
+
+<p> O perfil da figura diagnóstico do efeito de fragmentação per se é similar ao de fragmentação total (fig. \@ref(fig:diagfinal), Frag. total e Frag. per se). A principal diferença entre esses dois efeitos é que na distribuição de inclinações existem menores valores extremos positivos no efeito de fragmentação per se ((fig. \@ref(fig:diagfinal), Frag. total e Frag. per se). Assim, a conclusão geral é similar: o modelo possui um desempenho relativamente consistente, mas com viés em alguns sítios, particularmente onde há menor variabilidade no logOR observado.</p>
+
+__Área per se__
+
+<p> O perfil da figura diagnóstico do efeito de área per se é similar ao de fragmentação total e fragmentação per se (fig. \@ref(fig:diagfinal)). A principal diferença entre o efeito de área per se e os outros dois efeitos é que a amplitude de valores de logOR é a menor dos 3 (ver diferença nas escalas dos 3 efeitos fig. \@ref(fig:diagfinal)) e a proporção de deviance explicada é a menor dos 3 efeitos, cerca de 42% ((\@ref(tab:tabsel-areaperse)). Assim, a conclusão geral é similar: o modelo possui um desempenho relativamente consistente, mas com viés nos sítio onde há menor variabilidade no logOR observado.</p>
+ 
 #### Os propostos efeitos da paisagem
+
+<p> A figura apresentada ilustra as predições a posteriori dos modelos mais plausíveis para os efeitos analisados. Para cada efeito, são mostradas duas predições: a predição combinada por sítio e comum aos sítios, representada como “fixo + aleatório” (em laranja escuro), e a predição apenas do efeito comum aos sítios (“efeito fixo”), cuja mediana é destacada em preto e o intervalo interquartil em verde. Para os efeitos de fragmentação total e fragmentação per se, os HGAM mais plausíveis incluem um tensor de log(U/U) e k por sítio, além de um tensor comum aos sítios, enquanto, para o efeito de área per se, o modelo mais plausível utiliza um spline para log(U/U) tanto por sítio quanto comum aos sítios. As predições foram geradas a partir de coeficientes amostrados de uma distribuição normal multivariada, resultando em distribuições de predições resumidas em três quantis: 5%, 50% (mediana) e 95%. No quadro principal dos efeitos de fragmentação total e fragmentação per se, é apresentada a superfície de predição do quantil de 50% (mediana), correspondente ao modelo com o tensor comum aos sítios (efeito fixo). Dentro de cada quadro principal, há dois quadros menores: à esquerda, quatro subdivisões mostram predições do efeito fixo para valores específicos de k (0.25, 0.50, 0.75 e 0.99), enquanto, à direita, é mostrada a predição combinada (fixo + aleatório). É importante destacar que, enquanto as predições do efeito fixo permitem extrapolações para todas as combinações de preditoras (log(U/U) e k para fragmentação, e apenas log(U/U) para área per se), as predições combinadas estão restritas às combinações observadas para cada sítio.</p>
+
+
+
 
 ```{r PIfixo-todos,eval=TRUE,include=TRUE,echo=FALSE,fig.cap="Comparação dos efeitos propostos da paisagem. Da esquerda para a direita há a predição do modelo mais plausível para os efeitos de fragmentação total, fragmentação per se e área per se."}
 knitr::include_graphics(path="./figuras/comparacao_de_efeitos.jpeg")
