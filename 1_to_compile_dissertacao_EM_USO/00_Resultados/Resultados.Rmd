@@ -1,9 +1,9 @@
 ---
 title: "Resultados"
 output:
+  bookdown::word_document2: default
   bookdown::pdf_document2:
     latex_engine: lualatex
-  bookdown::word_document2: default
   pdf_document: default
   html_document:
     df_print: paged
@@ -29,11 +29,10 @@ f_tabsel_display_PDF <- \(dfi,
                       vfsize=14,
                       vbold=TRUE,
                       vw=1,
-                      logcontraste=TRUE,
                       vffamily="Arial"){
   title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
   dfi %>% 
-    {if (logcontraste) select(., -contraste) else .} %>% 
+    select(-contraste) %>% 
     flextable() %>%
     bg(bg = "white",part = "all") %>%
     theme_vanilla() %>% 
@@ -49,7 +48,7 @@ f_tabsel_display_PDF <- \(dfi,
     colformat_num(digits = 2) %>% 
     width(j="Moran I statistic (res)",width = 1.25) %>% 
     width(j="modelo",width = 1.75) %>% 
-    {if (logcontraste) add_header_row(.,values=dfi$contraste[1],colwidths = ncol(dfi)-1) else .} %>% 
+    add_header_row(values=dfi$contraste[1],colwidths = ncol(dfi)-1) %>%
     align(align = "center", part = "all") %>% 
     set_table_properties(layout = "autofit")  
 }
@@ -57,11 +56,10 @@ f_tabsel_display_word <- \(dfi,
                       vfsize=14,
                       vbold=TRUE,
                       vw=1,
-                      logcontraste=TRUE,
                       vffamily="Arial"){
   title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
   dfi %>% 
-    {if (logcontraste) select(., -contraste) else .} %>% 
+    select(-contraste) %>% 
     flextable() %>%
     bg(bg = "white",part = "all") %>%
     theme_vanilla() %>% 
@@ -77,7 +75,7 @@ f_tabsel_display_word <- \(dfi,
     colformat_num(digits = 2) %>% 
     # width(j="Moran I statistic (res)",width = 1.25) %>% 
     # width(j="modelo",width = 1.75) %>% 
-    {if (logcontraste) add_header_row(.,values=dfi$contraste[1],colwidths = ncol(dfi)-1) else .} %>% 
+    add_header_row(values=dfi$contraste[1],colwidths = ncol(dfi)-1) %>%
     align(align = "center", part = "all") %>% 
     # set_table_properties(layout = "autofit")  
     autofit()
@@ -91,10 +89,6 @@ for(i in names(df_tabsel)[sapply(df_tabsel,is.numeric)]){
 }
 vfw=8
 vfh=4
-df_tabsel_sumario <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
-for(i in names(df_tabsel_sumario)[sapply(df_tabsel_sumario,is.numeric)]){
-  df_tabsel_sumario[,i] <- round(df_tabsel_sumario[,i],2)
-}
 #
 # f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se") %>% select(-contraste))
 l_ft_PDF <- dlply(df_tabsel,"contraste",f_tabsel_display_PDF)
@@ -128,13 +122,11 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
-
 ## Overview
-
 
 ## Inventários Florestais Simulados
 
-<p>Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção (tabela SI 1). As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig. \@ref(fig:GE-sitios-amostrados) a). A maioria dos trabalhos foi realizada  em áreas de florestas classificadas como primárias no TreeCo. Apenas 2 sítios possuíam menos de 20 anos de recuperação desde o último grande distúrbio na área e foram removidos (fig. \@ref(fig:GE-sitios-amostrados) c), resultando em 107 sítios. A mediana da área amostrada foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. \@ref(fig:GE-sitios-amostrados) b). Portanto, todos os 107 sítios possuem paisagens contemporâneas na base de mapas de cobertura vegetal do mapbiomas 6. Não foi possível estimar a taxa U em um sítio com baixa densidade de espécies por número de indivíduos e de baixa proporção de cobertura vegetal na paisagem ao redor (SI). Em outro sítio não foi possível desenhar a parcela quadrado no centro da paisagem devido a configuração espacial da paisagem (SI). Esses dois sítios foram removidos, totalizando 105 sítios simulados.</p>
+<p>Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção (tabela SI 1). As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig. \@ref(fig:GE-sitios-amostrados) a). A maioria dos trabalhos foi realizada em áreas de florestas classificadas como primárias no TreeCo. Apenas 2 sítios possuíam menos de 20 anos de recuperação desde o último grande distúrbio na área e foram removidos (fig. \@ref(fig:GE-sitios-amostrados) c), resultando em 107 sítios. A mediana da área amostrada foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. \@ref(fig:GE-sitios-amostrados) b). Portanto, todos os 107 sítios possuem paisagens contemporâneas na base de mapas de cobertura florestal do mapbiomas 6. Não foi possível estimar a taxa U em um sítio com baixa relação de espécies por número de indivíduos e de baixa proporção de cobertura vegetal na paisagem ao redor (SI). Em outro sítio não foi possível desenhar a parcela quadrado no centro da paisagem devido a configuração espacial da paisagem (SI). Esses dois sítios foram removidos, totalizando 105 sítios simulados.</p>
  
 
 ```{r caption GE dados disponiveis,eval=TRUE,include=TRUE}
@@ -153,7 +145,7 @@ knitr::include_graphics("./figuras/figSI_S_N_sizeDA_fillSN.png")
 # getwd()
 ```
 
-<p>Usando a paisagem prístina desses 36 sítios, foi estimado a taxa U para obter a riqueza no equilíbrio variando o lado da paisagem de 0.5 km até 16 km. A seguir, avaliamos se o padrão da estimativa da taxa U em paisagens com lado 16 km se assemelha ao estimado em paisagens infinitas (\@ref(Unull)) e portanto pode ser usado como uma referência de taxa U sem influência da extensão espacial da paisagem. Então usamos um modelo linear misto para descrever como a média da estimativa U entre sítios variou em função do grau de limitação de dispersão e da extensão espacial da paisagem (\@ref(Uescala)). Avaliamos esse modelo linear misto para compreender a menor extensão espacial que acumula a maior parte da variação do aumento da extensão espacial da paisagem. Esperavamos que quanto mais branda a limitação de dispersão, maior a extensão espacial da paisagem prístina para que a taxa U pare de variar com o aumento da extensão espacial da paisagem.</p>
+<p>Usando a paisagem prístina desses 36 sítios, nós estimamos a taxa U necessária para obter a riqueza no equilíbrio variando o lado da paisagem de 0.5 km até 16 km. A seguir, avaliamos se o padrão da estimativa da taxa U em paisagens com lado 16 km se assemelha ao estimado em paisagens infinitas (\@ref(Unull)) e portanto pode ser usado como uma referência de taxa U sem influência da extensão espacial da paisagem. Então usamos um modelo linear misto para descrever como a média da estimativa U entre sítios variou em função do grau de limitação de dispersão e da extensão espacial da paisagem (\@ref(Uescala)). Avaliamos esse modelo linear misto para estimar a menor extensão espacial que acumula a maior parte da variação do aumento da extensão espacial da paisagem. Esperavamos que quanto mais branda a limitação de dispersão, maior a extensão espacial da paisagem prístina necessária para que a taxa U pare de variar com o aumento da extensão espacial da paisagem.</p>
   
 
 ### Estimativa da taxa U na maior extensão espacial da paisagem simulada {#Unull}
@@ -166,9 +158,8 @@ knitr::include_graphics("./figuras/fig2a_tendencia_media.png")
 # getwd()
 ```
 
-Na figura \@ref(fig:Unull16km-rep) há a taxa U estimada na paisagem prístina com 16 km de lado. A tendência média da taxa U (linha azul fig. \@ref(fig:Unull16km-rep)) estimada nessas paisagens apresenta um máximo quando a limitação de dispersão é moderada (pico em k entre 50% e 75%). Esse padrão é qualitativamente semelhante ao esperado em paisaagens infinitas. Em paisagens infinitas se a taxa U for mantida constante, o número de espécies atinge um mínimo quando a limitação de dispersão per capita é moderada (@may_dispersal_2012). Assim, em nosso sistema em que a riqueza é mantida constante e a taxa U é livre, a taxa U apresenta um máximo quando a limitação de dispersão é moderada (. 
-Porém, existe muita diversidade entre sítios (fig. \@ref(fig:Uprist16km-site))), na figura (\@ref(fig:Uprist16km-site)) há o perfil da taxa U em função do grau de limitação de dispersão separado por sítio de amostragem.
-
+<p>Na figura \@ref(fig:Unull16km-rep) há a taxa U estimada na paisagem prístina com 16 km de lado (eixo y, U) em função do grau de limitação de dispersão (eixo x, k). A tendência média da taxa U (linha azul fig. \@ref(fig:Unull16km-rep)) estimada nessas paisagens apresenta um máximo quando a limitação de dispersão é moderada (pico em k entre 50% e 75%). Esse padrão é qualitativamente semelhante ao esperado em paisaagens infinitas. Em paisagens infinitas se a taxa U for mantida constante, o número de espécies atinge um mínimo quando a limitação de dispersão per capita é moderada (@may_dispersal_2012). Assim, em nosso sistema em que a riqueza é mantida constante e a taxa U é livre, a taxa U apresenta um máximo quando a limitação de dispersão é moderada. 
+Porém, existe muita diversidade entre sítios (fig. \@ref(fig:Uprist16km-site))). </p>
 
 ```{r}
 cap <- "Taxa U estimada em paisagens prístina de lado 16 km, separado por sítio de amostragem. Em cada quadro o eixo y é livre para variar em escala. "
@@ -181,12 +172,13 @@ knitr::include_graphics("./figuras/fig2_U16_k.png")
 # getwd()
 ```
 
-O padrão por sítio difere do padrão geral da médio, pois a mudança dos valores da taxa U não é sempre continua, pode ocorrer em patamares. Em graus de limitação de dispersão severos a média da taxa U se mantém baixa e com pouca variação entre graus de limitação de dispersão severos, formando um primeiro patamar de valores baixos (Fig Efeito de Escalar 2a e 2b). Com o relaxamento para graus pouco severos, há um salto na média da taxa U, que pode se manter por alguns graus de limitação de dispersão pouco severos (Fig Efeito de Escalar 2a e 2b). Com o maior relaxamento da limitação de dispersão para graus brandos, há a redução gradual da média da taxa U até valores similares ao observado em graus severos de limitação de dispersão (Fig Efeito de Escalar 2a e 2b). O tamanho dos patamares e a forma com que a redução na taxa U ocorre parece depender de uma relação não trivial entre número de indivíduos, número de espécies e grau de limitação de dispersão (figura Efeito de Escalar 2b).
 
+
+Na figura (\@ref(fig:Uprist16km-site)) há o perfil da taxa U em função do grau de limitação de dispersão separado por sítio de amostragem (note que no gráfico o eixo y varia entre sítios). Ao avaliar o padrão por sítio, ignorando a diferença na escala das estimativas da taxa U entre sítios, é possível observar um padrão similar entre sítios, esse padrão por sítio difere do padrão da média geral, pois a distribuição dos valores da taxa U em função do grau de limitação de dispersão é menos simétrica (fig. \@ref(fig:Uprist16km-site)). Em graus de limitação de dispersão severos a média da taxa U se mantém baixa e com pouca variação entre graus de limitação de dispersão severos, formando um patamar de valores baixos  (fig. \@ref(fig:Uprist16km-site)). Com o relaxamento para graus pouco severos, há um salto na média da taxa U, que pode se manter por alguns graus de limitação de dispersão pouco severos  (fig. \@ref(fig:Uprist16km-site)). Com o maior relaxamento da limitação de dispersão para graus brandos, há a redução gradual da média da taxa U até valores similares ao observado em graus severos de limitação de dispersão  (fig. \@ref(fig:Uprist16km-site)). Essa forma canônica de um patamar baixo sob severa limitação de dispersão, um patamar alto sob limitação de dispersão pouco severa, e uma queda gradual com a redução da limitação de dispersão para graus brandos de limitação apresenta grande variabilidade entre sítios (fig. \@ref(fig:Uprist16km-site)).  O tamanho dos patamares e a forma com que a redução gradual na taxa U ocorre parece depender de uma relação não trivial entre número de indivíduos, número de espécies e grau de limitação de dispersão (fig. \@ref(fig:Uprist16km-site)).
 
 ### Estimativa da taxa U sob diferentes escalas espaciais da paisagem prístina {#Uescala}
-  
-
+ 
+        
 ```{r}
 cap <- "Taxa U estimada em paisagens prístina com extensão espacial de 16x16km"
 ```
@@ -195,9 +187,15 @@ knitr::include_graphics("./figuras/fig3_Uk_ladoKM.png")
 # getwd()
 ```
 
+Na figura  \@ref(fig:Uk-ladokm)  há o perfil da taxa U estimada na paisagem prístina com o lado da paisagem variando entre 0.5 km até 16 km. Os graus de limitação de dispersão brandos, abaixo de 0.50, apresentaram a maior variabilidade em função do efeito de escalar, seguidos dos graus de limitação mais severos (\@ref(fig:Uk-ladokm), detalhes no apêndice ‘Efeito de Escalar”). Os graus de limitação de dispersão pouco brandos, aqueles que ocorrem no patamar de valores elevados de taxa U (ver \@ref(Unull)), apresentam baixa variação com o aumento da extensão espacial (\@ref(fig:Uk-ladokm), detalhes no apêndice ‘Efeito de Escalar”). Nos graus de limitação de dispersão em que a taxa U apresenta maior variabilidade em função do aumento da extensão espacial, os graus de limitação brandos (k<0.50) e severos (k>0.80), observa-se clara tendência de redução da taxa U estimada com o aumento da extensão espacial da paisagem (\@ref(fig:Uk-ladokm), detalhes no apêndice ‘Efeito de Escalar”). Esse padrão de redução da taxa U com o aumento da extensão espacial da paisagem prístina era esperado, uma vez que com o aumento dos progenitores na paisagem ao redor há aumento na possibilidade de reposição de espécies perdidas localmente pela dispersão da área ao redor da parcela (@may_dispersal_2012). Nos graus de limitação de dispersão com pouca variabilidade, a maior parte da variabilidade ocorre entre réplicas de uma mesma extensão espacial e pouco entre as médias de extensão espacial subsequentes (ver apêndice ‘Efeito de Escalar’).  Assim, não é claro um padrão de redução do valor da taxa U média com o aumento da extensão espacial nesses graus de limitação de dispersão, pelo contrário, em alguns sítios parece não existir efeito da extensão espacial e em outros pode existir um mínimo global em extensões espaciais intermediárias  (ver apêndice ‘Efeito de Escalar’).
+
+
+
 ### Descrição estatística da relação entre taxa U, grau de limitação de dispersão e extensão espacial da paisagem
 
-Observamos que a extensão espacial mínima adequada tende a aumentar com a redução da limitação de dispersão (Figura 3), exceto em graus de limitação de dispersão pouco severos, nos valores intermediários simulados (Fig Efeito de Escalar 2a e 2b). Nesses graus de limitação de dispersão intermediários há pouca variação na média da taxa U entre escalas e sempre grande variação entre réplicas de uma mesma bateria de simulações (Fig Efeito de Escalar 2a, A1 2b e A1 4b). Quando a proporção de propágulos que permanece até a vizinhança imediata do progenitor (k) varia entre 0.99 e 0.90, a extensão espacial da paisagem adequada é de 1 km de lado (Figura 3). Para k entre 0.80 e 0.55, que corresponde ao campo de parâmetros com máximo global, não é possível determinar uma tendência de redução da média da estimativa de U (Figura 3); a variação entre escalas para um mesmo sítio é baixa (Figuras Efeito de Escalar 2 e A1 3). Em k entre 0.50 e 0.35 a extensão adequada foi de 1 km de lado; entre 0.30 e 0.20, 2 km de lado; e entre 0.15 e 0.05, 4 km de lado (Figura Efeito de Escalar 5 e 6). Pressuposto que a extensão espacial adequada para simular k entre 0.80 e 0.55 pode ser obtida interpolando as escalas adequadas, então nesses graus de limitação de dispersão a extensão suficiente é de 1 km de lado da paisagem ao redor. Uma vez que a paisagem com 4 km de lado foi suficiente para simular todos os graus de limitação de dispersão todas as simulações serão feitas nessa extensão e tambeḿ o calculo da proporção de cobertura florestal. Não simulamos paisagens com lado de 1 km e 2 km, que foram adequadas para os graus de limitação de dispersão de 0.99 até 0.35 e de 0.35 até 0.20, respectivamente.
+<p>Na figura \@ref(fig:SoE) há a predição do modelo linear misto usado para descrever a taxa U média em paisagens prístina em função do grau de limitação de dispersão, extensão espacial da paisagem e número de indivíduos e de espécies. A predição para cada sítio está colorida segundo a razão entre o número de espécies e indivíduos e cada quadro agrupa os dados de um mesmo grau de limitação de dispersão. Em azul há a média da predição por sítio agrupada por extensão espacial da paisagem (fig. \@ref(fig:SoE)). Nós analisamos o comportamento da média da predição por extensão espacial, esperavamos que a média diminua com o aumento da extensão espacial. Nos graus de limitação de dispersão pouco severos (k entre 0.55 e 0.85) não foi possível detectar o padrão esperado, pois na média não se observa tendência de redução com o aumento da extensão espacial (pontos médios em azul, fig. \@ref(fig:SoE)). Nesses graus de limitação de dispersão pouco severos, alguns sítios apresentam tendência de redução da estimativa da taxa U enquanto outros de aumento, e alguns de ausência de mudanças (linhas coloridas segundo a razão do número de espécies e de indivíduos, fig. \@ref(fig:SoE)). Nos graus de limitação de dispersão brandos (k<=0.50) e severos (k>=0.80) foi possível detectar a mudança esperada de redução da média da taxa U com o aumento da extensão espacial da paisagem ao redor. As retas verticais em vermelho marcam as escalas que acumulam a maior parte da redução na média da taxa U (95% de toda a redução) com o aumento da escala de 0.5km para 16km de lado da paisagem (fig.  \@ref(fig:SoE))</p>
+
+
 
 ```{r cap fig5_SoE}
 cap <- "A extensão espacial é um dos fatores que determina as medidas tomadas das características da paisagem. No conjunto de áreas analisadas há uma forte relação entre a extensão espacial da paisagem ao redor e a proporção de cobertura vegetal. a). O objetivo do estudo do efeito de escalar foi determinar a extensão espacial adequada para simular os 20 graus de limitação de dispersão. c). Definimos a escala adequada para um grau de limitação de dispersão como a extensão espacial que acumula a maior parte da variação na estimativa da taxa U associada ao aumento da extensão espacial da paisagem ao redor, considerando a amplitude de extensões do lado da paisagem local entre 0.5 km e 16 km. Para detalhes sobre os métodos  do estudo de efeito de escalar veja o apêndice ‘Efeito de Escalar’. Nesse  estudo, 36 sítios foram sorteados e selecionados ao longo do gradiente de número de indivíduos e de espécies na parcela. b). Para esse estudo, as estimativas da taxa U foram simuladas em paisagens totalmente preenchidas com habitat, para descontar o efeito do isolamento estrutural, e explorar apenas o efeito de variar a extensão da paisagem ao redor."
@@ -206,23 +204,21 @@ cap <- "A extensão espacial é um dos fatores que determina as medidas tomadas 
 knitr::include_graphics(path = "./figuras/fig5_SoE.png")
 ```
 
-## Efeitos da paisagem propostos por programas de pesquisa em disputa
+<p> Nos graus de limitação de dispersão em que foi possível detectar a redução na média da taxa U com o aumento da extensão espacial, observamos que a menor extensão espacial que acumula a maior parte da redução da taxa U (escala suficiente) tende a aumentar com a redução da limitação de dispersão (fig.  \@ref(fig:SoE)). Em graus de limitação de dispersão severos (k>=0.90), a extensão espacial suficiente foi de 1 km de lado (fig.  \@ref(fig:SoE)). Quando k variou entre 0.50 e 0.35 a extensão suficiente foi de 1 km de lado (fig.  \@ref(fig:SoE)). Com a redução da limitação de dispersão a extensão suficiente vai para 2 km de lado, com k entre 0.30 e 0.20, e para 4km de lado, com k entre 0.15 e 0.05 (fig.  \@ref(fig:SoE)). Usamos as estimativas de escala suficiente obtidas nos graus de limitação de dispersão para extrapolar a escala suficiente para os graus em que não fo possível estimar a extensão suficiente. Assim, consideramos que a extensão espacial de 1 km de lado é suficiente para simular quando k está entre 0.50 e 0.80. Ao estimar a extensão espacial suficiente para todos os graus de limitação de dispersão é possível construir as paisagens hipotéticas de acordo com a escala suficiente.</p>
 
-Nessa seção interpretamos e atribuímos os efeitos da paisagem baseado no contraste de simulações em paisagens contrafactuais. Essas simulações resultam de um mesmo modelo mecanístico demográfico. Nesse modelo mecanístico, à medida que propágulos entram e saem da parcela, a riqueza e a abundância relativa das espécies locais são influenciadas pela paisagem, que determina a quantidade, posição e distância dos progenitores remanescentes. Esse modelo mecanístico possui pressupostos auxiliares que são comuns aos 
+## Os efeitos da paisagem propostos no debate sobre fragmentação de habitat
 
-O modelo é calibrado para capturar a influência da paisagem na riqueza de espécies, expressa na taxa U, levando em conta a limitação de dispersão per capita. Essa taxa corresponde à probabilidade de colonização por uma nova espécie na paisagem necessária para atingir a riqueza observada. A comparação da taxa U entre contrafactuais, expresso no logaritmo da razão da taxa U média, pareado pelo grau de limitação de dispersão k, informa o efeito do contraste da paisagem na manutenção da riqueza local.
-Os efeitos observados da paisagem foram obtidos pelo contraste na congruência da SAD simulada com a SAD observada. Cada efeito corresponde a um contraste de pares de paisagens contrafactuais. Buscamos descrever os efeitos da paisagem — área per se, fragmentação per se e fragmentação total — como previstos pelas práticas ontológicas em disputa (tabela 1), na congruência da SAD simulada. O contraste na congruência da SAD simulada foi obtido pelo logaritmo da razão da chance (em inglês log odds ratio, logOR) da SAD simulado ter boa congruência com a SAD observada.
-A variação no logOR do efeito foi descrito por modelos hierárquicos aditivos generalizados (HGAM), que incluíram até 2 tipos de preditoras: o log da razão da taxa U (log(U/U)) e da proporção de propágulos que permanecem na vizinhança imediata (k). 
-
-A seguir apresentamos o log(U/U) estimado em função de k, que interpretamos como métrica funcional de conectividade local (\@ref(metrica-funcional)); e então descrevemos a tendência central dos efeitos da paisagem na congruência da SAD simulada usando modelos hierarquicos (\@ref(efeito-congruencia).
+<p>__Os resultados presentes aqui foram obtidos em paisagens hipotéticas de lado 4 km para todas os graus de limitação de dispersão. Acredito que posso incluir esses resultados em 1 mês de trabalho. __</p>
+<p> Existem pelo menos 3 efeitos da paisagem — área per se, fragmentação per se e fragmentação total — como previstos pelas práticas ontológicas em disputa (tabela 1). Nesta seção, interpretamos e atribuímos os efeitos da paisagem a partir do contraste de simulações em paisagens hipotéticas. Essas simulações derivam de um modelo mecanístico demográfico que captura a dinâmica de entrada e saída de propágulos na parcela amostrada. Nesse modelo, a riqueza de espécies e a abundância relativa são influenciadas pela configuração da paisagem, que determina a quantidade, posição e distância dos progenitores remanescentes.</p>
+<p> O modelo é calibrado para capturar a influência da paisagem na riqueza de espécies ao ajustar a taxa U para que a riqueza observada seja aproximada. Essa taxa corresponde à probabilidade de colonização por uma nova espécie por evento de nascimento. A comparação da taxa U entre paisagens informa o efeito do contraste da configuração espacial da paisagem na manutenção da riqueza local. Interpretamos o contraste na taxa U usando o log da razão da taxa U (logU/U). Pareado para um mesmo sítio e grau de limitação de dispersão, o logU/U informa se existe diferença na reposição de espécies pela imigração de propágulos vindos da paisagem ao redor (conectividade local).</p>
+<p> Os efeitos da paisagem foram obtidos investigando o efeito do contraste de paisagem na congruência entre SAD simulada e observada. A simulação da SAD foi feita na mesma paisagem em que a taxa U foi estimada. Esperavamos que quanto maior logU/U maior deveria ser o efeito do contraste de paisagens na congruência com a SAD observada, melhorando ou piorando a aproximação com o padrão empírico. Além do logU/U outro parâmetro necessário para compreender o efeito da paisagem na congruência deve ser o grua de limitação de dispersão, pois deve mostrar a interação entre a probabilidade de substituir coespecífico e a configuração espacial da paisagem (@campos2012, @campos2013).</p>
+<p>A seguir, apresentamos o logU/U estimado em função de k, que interpretamos como métrica funcional de conectividade local (\@ref(metrica-funcional)). Em seguida, descrevemos as tendências centrais dos efeitos da paisagem na congruência da SAD simulada, utilizando modelos hierárquicos (@ref(efeito-congruencia)).</p>
 
 ### Métrica funcional da influência da paisagem na biodiversidade local {#metrica-funcional}
 
-Aqui interpretamos como métrica de influência da paisagem na biodiversidade local a razão entre a taxa U estimada nas paisagens contrafactuais em contraste.
-Para um mesmo grau de limitação de dispersão, quanto menor a taxa U necessária para obter a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U (logU/U) estimadas nas paisagens contrafactuais em contraste for igual a zero não há diferença entre contrafactuais com relação a reposição de espécies locais pela paisagem. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. 
+<p>Aqui interpretamos como métrica de influência da paisagem na biodiversidade local a razão entre a taxa U estimada nas paisagens contrafactuais em contraste. Para um mesmo grau de limitação de dispersão e sítio, quanto menor a taxa U necessária para obter a riqueza observada, maior é a reposição simulada de espécies pela imigração de propágulos da paisagem ao redor para a parcela. Assim, se o log da razão das taxa U (logU/U) estimadas nas paisagens contrafactuais em contraste for igual a zero não há diferença entre contrafactuais com relação a reposição de espécies locais pela paisagem. Se for positivo, então a paisagem contrafactual no numerador apresenta taxa U superior; e se for negativo o contrário, o denominador apresenta valor superior. </p>
 
-
-Cada razão entre taxa Us representa um previsto efeito da paisagem: área per se, fragmentação per se e fragmentação total. 
+Cada razão entre taxa Us representa um ‘previsto efeito da paisagem: área per se, fragmentação per se e fragmentação total. 
 Nos 3 efeitos, a maior parte dos valores de logU/U ocorre na mesma faixa de valores de paisagens com pouca cobertura florestal, porém em paisagens com perda de cobertura florestal logU/U pode aumentar em magnitude se a limitação de dispersão for branda ou muito severa (fig. \@ref(fig:GE-contraste-taxaU)). Os valores em paisagens sem perda de cobertura florestal ocorrem ao redor do zero, com valores negativos e positivos (fig. \@ref(fig:GE-contraste-taxaU)).
 O efeito que apresenta menor amplitude de valores é o de área per se, enquanto o efeito de fragmentação total apresenta a maior amplitude (fig. \@ref(fig:GE-contraste-taxaU)). 
 Em alguns sítios, o logU/U do efeito de fragmentação per se pode ser menor do que o observado em paisagens sem perda de cobertura florestal (fig. \@ref(fig:GE-contraste-taxaU)).  
@@ -242,22 +238,19 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 #### Modelos estatísticos para descrever a variabilidade dos efeitos propostos
  
 ```{r tabsel-fragtotal,eval=TRUE,include=TRUE,tab.cap="Frag. total: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
-l_ft_PDF[["Frag. total"]]
-# l_ft_word[["Frag. total"]]
+# l_ft_PDF[["Frag. total"]]
+l_ft_word[["Frag. total"]]
 ```
-
 
 ```{r tabsel-fragperse,eval=TRUE,include=TRUE,tab.cap="Frag. per se: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
-l_ft_PDF[["Frag. per se"]]
-# l_ft_word[["Frag. per se"]]
+# l_ft_PDF[["Frag. per se"]]
+l_ft_word[["Frag. per se"]]
 ```
-
 
 ```{r tabsel-areaperse,eval=TRUE,include=TRUE,tab.cap="Área per se: Tabela de seleção dos HGAM usados para descrever o logOR em função das métricas de paisagem"}
-l_ft_PDF[["Área per se"]]
-# l_ft_word[["Área per se"]]
+# l_ft_PDF[["Área per se"]]
+l_ft_word[["Área per se"]]
 ```
-
 
 #### Diagnóstico do modelo mais plausível de cada efeito
 
@@ -276,15 +269,6 @@ knitr::include_graphics(path="./figuras/comparacao_de_efeitos.jpeg")
 
 #### Comparação das paisagens contrafactuais
 
-```{r tabsel-sumario,tab.cap="Modelos estatísticos para descrever a proporção de SADs simuladas com boa congruência com a SAD observada em função do grau de limitação de dispersão e paisagem hipotética"}
-f_tabsel_display_PDF(df_tabsel_sumario,logcontraste=FALSE)
-# f_tabsel_display_word(df_tabsel_sumario,logcontraste=FALSE)
-```
-
-
-
-
 ```{r sumario-paisagens,fig.cap="sumário do logito da proporção de SADs simuladas com boa congruência com a SAD observada. No quadro da esquerda há o logito da proporção observada e no logito da esquerda há o logito predito pelo modelo mais plausível, sem o efeito do sítio de amostragem.",echo=FALSE}
 knitr::include_graphics("figuras/sumario_paisagens.jpeg")
 ```
-
