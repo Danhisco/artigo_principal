@@ -3,6 +3,18 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
+
+# 9dez2024
+
+
+
+
+
+
+
+
+
+
 # 12/06/2024
 
 Arrumando o diretório de MNEE taxa U correspondente 

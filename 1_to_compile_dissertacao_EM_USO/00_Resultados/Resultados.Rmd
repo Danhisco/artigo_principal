@@ -1,9 +1,9 @@
 ---
 title: "Resultados"
 output:
-  bookdown::word_document2: default
   bookdown::pdf_document2:
     latex_engine: lualatex
+  bookdown::word_document2: default
   pdf_document: default
   html_document:
     df_print: paged
@@ -29,10 +29,11 @@ f_tabsel_display_PDF <- \(dfi,
                       vfsize=14,
                       vbold=TRUE,
                       vw=1,
+                      logcontraste=TRUE,
                       vffamily="Arial"){
   title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
   dfi %>% 
-    select(-contraste) %>% 
+    {if (logcontraste) select(., -contraste) else .} %>% 
     flextable() %>%
     bg(bg = "white",part = "all") %>%
     theme_vanilla() %>% 
@@ -48,7 +49,7 @@ f_tabsel_display_PDF <- \(dfi,
     colformat_num(digits = 2) %>% 
     width(j="Moran I statistic (res)",width = 1.25) %>% 
     width(j="modelo",width = 1.75) %>% 
-    add_header_row(values=dfi$contraste[1],colwidths = ncol(dfi)-1) %>%
+    {if (logcontraste) add_header_row(.,values=dfi$contraste[1],colwidths = ncol(dfi)-1) else .} %>% 
     align(align = "center", part = "all") %>% 
     set_table_properties(layout = "autofit")  
 }
@@ -56,10 +57,11 @@ f_tabsel_display_word <- \(dfi,
                       vfsize=14,
                       vbold=TRUE,
                       vw=1,
+                      logcontraste=TRUE,
                       vffamily="Arial"){
   title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
   dfi %>% 
-    select(-contraste) %>% 
+    {if (logcontraste) select(., -contraste) else .} %>% 
     flextable() %>%
     bg(bg = "white",part = "all") %>%
     theme_vanilla() %>% 
@@ -75,7 +77,7 @@ f_tabsel_display_word <- \(dfi,
     colformat_num(digits = 2) %>% 
     # width(j="Moran I statistic (res)",width = 1.25) %>% 
     # width(j="modelo",width = 1.75) %>% 
-    add_header_row(values=dfi$contraste[1],colwidths = ncol(dfi)-1) %>%
+    {if (logcontraste) add_header_row(.,values=dfi$contraste[1],colwidths = ncol(dfi)-1) else .} %>% 
     align(align = "center", part = "all") %>% 
     # set_table_properties(layout = "autofit")  
     autofit()
@@ -89,6 +91,10 @@ for(i in names(df_tabsel)[sapply(df_tabsel,is.numeric)]){
 }
 vfw=8
 vfh=4
+df_tabsel_sumario <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
+for(i in names(df_tabsel_sumario)[sapply(df_tabsel_sumario,is.numeric)]){
+  df_tabsel_sumario[,i] <- round(df_tabsel_sumario[,i],2)
+}
 #
 # f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se") %>% select(-contraste))
 l_ft_PDF <- dlply(df_tabsel,"contraste",f_tabsel_display_PDF)
@@ -269,6 +275,15 @@ knitr::include_graphics(path="./figuras/comparacao_de_efeitos.jpeg")
 
 #### Comparação das paisagens contrafactuais
 
+```{r tabsel-sumario,tab.cap="Modelos estatísticos para descrever a proporção de SADs simuladas com boa congruência com a SAD observada em função do grau de limitação de dispersão e paisagem hipotética"}
+f_tabsel_display_PDF(df_tabsel_sumario,logcontraste=FALSE)
+# f_tabsel_display_word(df_tabsel_sumario,logcontraste=FALSE)
+```
+
+
+
+
 ```{r sumario-paisagens,fig.cap="sumário do logito da proporção de SADs simuladas com boa congruência com a SAD observada. No quadro da esquerda há o logito da proporção observada e no logito da esquerda há o logito predito pelo modelo mais plausível, sem o efeito do sítio de amostragem.",echo=FALSE}
 knitr::include_graphics("figuras/sumario_paisagens.jpeg")
 ```
+
