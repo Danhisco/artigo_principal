@@ -16,7 +16,7 @@ csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dis
 ---
 
 ```{r setup,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE,dev = 'jpeg')
+knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE,dev = 'jpeg',root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal')
 options(knitr.table.format = "simple")
 # pacotes adicionais´
 source("source/mapa_p_MNEE.R")

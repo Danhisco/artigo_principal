@@ -1,10 +1,10 @@
 ---
 title: "Introdução"
 output:
+  bookdown::word_document2: default
+  word_document: default
   bookdown::pdf_document2:
     latex_engine: lualatex
-  word_document: default
-  bookdown::word_document2: default
   pdf_document:
     latex_engine: xelatex
   html_document:
@@ -16,8 +16,7 @@ csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dis
 ---
 
 ```{r setup, eval=TRUE,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,include=FALSE,eval = FALSE,message = FALSE,warning = FALSE,cache=TRUE,
-                      fig.align='center',tab.align='center')
+knitr::opts_chunk$set(echo = FALSE,include=FALSE,eval = FALSE,message = FALSE,warning = FALSE,cache=TRUE,fig.align='center',tab.align='center',root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal')
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/"
 ```
 ```{r trackdown, include=FALSE,eval=FALSE}
@@ -305,8 +304,7 @@ save_as_image(ft,path=paste0(v_path,"figuras/tabela_box1.png"))
 cap <- "tabela box 1"
 ```
 ```{r tabela box 1,eval=TRUE,include=TRUE}
-v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/"
-knitr::include_graphics(paste0(v_path,"figuras/tabela_box1.png"))
+knitr::include_graphics("figuras/tabela_box1.png")
 ```
 
 

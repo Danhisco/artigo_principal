@@ -59,12 +59,13 @@ image_title <- \(imgobj,
   ) %>% image_trim
 }
 # objetos
+df_p <- read_csv("dados/df_p.csv")
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   inner_join(x=df_p,by="SiteCode")
 df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
   inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
              by="SiteCode") |> 
-  rename(N=Ntotal,S=S_obs) |> 
+  dplyr::rename(N=Ntotal,S=S_obs) |> 
   mutate(across(N:S,log,.names="log.{.col}"),
          across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
          SiteCode = factor(SiteCode)) |> 
@@ -80,7 +81,7 @@ source("source/general_tools.R")
 source("source/GAMMtools.R")
 source("source/fig_tools.R")
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
-df_p <- read_csv("dados/df_p.csv")
+
 # setwd(v_path)
 source(paste0(v_path,"figuras_e_tabelas.R"))
 # source("figuras_e_tabelas.R")
@@ -502,7 +503,7 @@ image_read(f_plot_shgam(vtextsize = 13))
 ###### combinação das 3 figuras
 f_figfinal <- \(df_ajuste,
                 vlegpos=c(0.5,0.04),
-                vimgrs="20%"){
+                vimgrs="75%"){
   # frag. per se e frag total
   l_img <- dlply(filter(df_ajuste,grepl("Frag." ,efeito)),"efeito",\(dfi){
     with(dfi,{

@@ -3,6 +3,104 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
+# 11 dez2024
+
+```{r setup resultados,include=FALSE}
+options(tinytex.verbose = TRUE)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center',root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal')
+library(readr)
+library(dplyr)
+library(plyr)
+library(flextable)
+library(officer)
+library(magick)
+f_tabsel_display_PDF <- \(dfi,
+                      vfsize=14,
+                      vbold=TRUE,
+                      vw=1,
+                      logical_contraste=TRUE
+                      vffamily="Arial"){
+  title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
+  dfi %>% 
+    {if(logical_contraste) select(.,-contraste) else .}%>%
+    select(-contraste) %>% 
+    flextable() %>%
+    bg(bg = "white",part = "all") %>%
+    theme_vanilla() %>% 
+    set_header_labels(
+      modelo = "HGAM",
+      dAICc = "ΔAICc",
+      df = "est. coef.",
+      weight = "weight",
+      dev.expl = "Dev. Exp.",
+      `Moran I statistic (res)` = "Moran's I",
+      `p-value` = "p-value") %>%
+    bold(part = "header") %>%
+    colformat_num(digits = 2) %>% 
+    width(j="Moran I statistic (res)",width = 1.25) %>% 
+    width(j="modelo",width = 1.75) %>% 
+    {if(logical_contraste) add_header_row(.,values=dfi$contraste[1],colwidths = ncol(dfi)-1) else .}%>%
+    align(align = "center", part = "all") %>% 
+    set_table_properties(layout = "autofit")  
+}
+f_tabsel_display_word <- \(dfi,
+                      vfsize=14,
+                      vbold=TRUE,
+                      vw=1,
+                      logical_contraste=TRUE
+                      vffamily="Arial"){
+  title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
+  dfi %>% 
+    {if(logical_contraste) select(.,-contraste) else .}%>% 
+    flextable() %>%
+    bg(bg = "white",part = "all") %>%
+    theme_vanilla() %>% 
+    set_header_labels(
+      modelo = "HGAM",
+      dAICc = "ΔAICc",
+      df = "est. coef.",
+      weight = "weight",
+      dev.expl = "Dev. Exp.",
+      `Moran I statistic (res)` = "Moran's I",
+      `p-value` = "p-value") %>%
+    bold(part = "header") %>%
+    colformat_num(digits = 2) %>% 
+    # width(j="Moran I statistic (res)",width = 1.25) %>% 
+    # width(j="modelo",width = 1.75) %>% 
+    {if(logical_contraste) add_header_row(.,values=dfi$contraste[1],colwidths = ncol(dfi)-1) else .}%>%
+    align(align = "center", part = "all") %>% 
+    # set_table_properties(layout = "autofit")  
+    autofit()
+}
+v_path <- "1_to_compile_dissertacao_EM_USO/00_Resultados/"
+df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
+  as.data.frame() %>% 
+  mutate(across(where(is.numeric),~round(x = .x,digits = 2)))
+for(i in names(df_tabsel)[sapply(df_tabsel,is.numeric)]){
+  df_tabsel[,i] <- round(df_tabsel[,i],2)
+}
+vfw=8
+vfh=4
+#
+# f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se") %>% select(-contraste))
+l_ft_PDF <- dlply(df_tabsel,"contraste",f_tabsel_display_PDF)
+l_ft_word <- dlply(df_tabsel,"contraste",f_tabsel_display_word)
+# l_path <- lapply(names(l_ft),\(li){
+#   fx <- l_ft[[li]] %>% 
+    # add_header_row(values=li,colwidths = ncol(df_tabsel)-1) %>%
+    # align(align = "center", part = "all")
+#   save_as_image(fx,path = tempfile(fileext = ".png"))
+# })
+# names(l_path) <- names(l_ft)
+# l_ft <- lapply(l_path,image_read)
+# img_final <- image_append(do.call("c",l_ft[c("Frag. total", "Frag. per se" ,"Área per se" )]))
+df_tabsel_sumario <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
+
+```
+
+
+
+
 
 # 10dez2024
 
