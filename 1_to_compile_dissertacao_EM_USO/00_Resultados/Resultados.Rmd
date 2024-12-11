@@ -118,7 +118,7 @@ update_file(file ="1_to_compile_dissertacao_EM_USO/00_Resultados/Resultados.Rmd"
             gpath = "mestrado/artigo_principal/secoes_texto/",
             hide_code = TRUE)
 # overwrite the current Rmd with the current google drive 
-download_file(file ="1_to_compile_dissertacao_EM_USO/00_Resultados/Resultados.Rmd",
+download_file(file = "1_to_compile_dissertacao_EM_USO/00_Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
@@ -295,14 +295,34 @@ __Área per se__
  
 #### Os propostos efeitos da paisagem
 
-<p> A figura apresentada ilustra as predições a posteriori dos modelos mais plausíveis para os efeitos analisados. Para cada efeito, são mostradas duas predições: a predição combinada por sítio e comum aos sítios, representada como “fixo + aleatório” (em laranja escuro), e a predição apenas do efeito comum aos sítios (“efeito fixo”), cuja mediana é destacada em preto e o intervalo interquartil em verde. Para os efeitos de fragmentação total e fragmentação per se, os HGAM mais plausíveis incluem um tensor de log(U/U) e k por sítio, além de um tensor comum aos sítios, enquanto, para o efeito de área per se, o modelo mais plausível utiliza um spline para log(U/U) tanto por sítio quanto comum aos sítios. As predições foram geradas a partir de coeficientes amostrados de uma distribuição normal multivariada, resultando em distribuições de predições resumidas em três quantis: 5%, 50% (mediana) e 95%. No quadro principal dos efeitos de fragmentação total e fragmentação per se, é apresentada a superfície de predição do quantil de 50% (mediana), correspondente ao modelo com o tensor comum aos sítios (efeito fixo). Dentro de cada quadro principal, há dois quadros menores: à esquerda, quatro subdivisões mostram predições do efeito fixo para valores específicos de k (0.25, 0.50, 0.75 e 0.99), enquanto, à direita, é mostrada a predição combinada (fixo + aleatório). É importante destacar que, enquanto as predições do efeito fixo permitem extrapolações para todas as combinações de preditoras (log(U/U) e k para fragmentação, e apenas log(U/U) para área per se), as predições combinadas estão restritas às combinações observadas para cada sítio.</p>
-
-
-
+<p> Na figura \@ref(fig:PIfixo-todos) há as predições a posteriori dos modelos mais plausíveis para os efeitos analisados. Para cada efeito, são mostradas duas predições: a predição combinada por sítio e comum aos sítios, representada como “fixo + aleatório” (em laranja escuro), e a predição apenas do efeito comum aos sítios (“efeito fixo”), cuja mediana é destacada em preto e o intervalo interquartil em verde. Para os efeitos de fragmentação total e fragmentação per se, os HGAM mais plausíveis incluem um tensor de logU/U e k por sítio, além de um tensor comum aos sítios. Enquanto, para o efeito de área per se, o modelo mais plausível utiliza um spline para logU/U tanto por sítio quanto comum aos sítios. As predições foram geradas a partir da amostragem dos coeficientes dos HGAMs a partir de uma distribuição normal multivariada, resultando em distribuição de predições que foram resumidas em três quantis: 5%, 50% (mediana) e 95%. No quadro principal dos efeitos de fragmentação total e fragmentação per se, é apresentada a superfície de predição do quantil de 50% (mediana), correspondente ao modelo com o tensor comum aos sítios (efeito fixo). Dentro de cada quadro principal, há dois quadros menores: à esquerda, quatro subdivisões mostram os 3 quantis das predições do efeito fixo para valores específicos de k (0.25, 0.50, 0.75 e 0.99), enquanto, à direita, é mostrada a predição combinada (fixo + aleatório). Para esses efeitos de fragmentação total e per se, a predição do efeito fixo foi feita pela extrapolação das combinações de logU/U e k que ocorrem entre os intervalos de extremos do logU/U em função de k (fig. \@ref(fig:GE-contraste-taxaU) e fig.  \@ref(fig:PIfixo-todos)).</p>
 
 ```{r PIfixo-todos,eval=TRUE,include=TRUE,echo=FALSE,fig.cap="Comparação dos efeitos propostos da paisagem. Da esquerda para a direita há a predição do modelo mais plausível para os efeitos de fragmentação total, fragmentação per se e área per se."}
 knitr::include_graphics(path="./figuras/comparacao_de_efeitos.jpeg")
 ```
+
+__Fragmentação total__
+
+1) descrição do padrão segundo o efeito fixo
+- Para o efeito de fragmentação total, o padrão geral da mediana é similar dos quantis de 5% e 95% como é possível observar no detalhe do recorte do efeito fixo para 4 valores de k.
+- Quando o logU/U está entre 0 e 0.75 o logOR é positivo para todos os graus de limitação de dispersão simulados. Quando o logU/U é superior a 0.75, em graus de limitação de dispersão brandos (k menor do que 0.5), o logOR é negativo \@ref(fig:PIfixo-todos). Portanto, quando o modelo prevê redução moderada na conectividade, com logU/U entre 0 e 0.75, a chance de boa congruência com a SAD aumenta em 2 unidades de logOR. Se a redução na conectividade simulada for maior do que essa faixa de valores de logU/U, então a SAD simulada na paisagem contemporânea apresenta redução de até 6 unidades de logOR em relação à SAD simulada na paisagem prístina ( \@ref(fig:PIfixo-todos)). 
+
+Para o efeito de fragmentação total, observa-se que o padrão geral da mediana é similar aos quantis de 5% e 95%, como evidenciado no detalhe do recorte do efeito fixo para quatro valores de k. Quando o log(U/U) está entre 0 e 0.75, o logOR é consistentemente positivo para todos os graus de limitação de dispersão simulados. No entanto, quando o log(U/U) excede 0.75, em cenários de limitação de dispersão mais brandos (k menor que 0.5), o logOR torna-se negativo (@ref(fig:PIfixo-todos)). Assim, o modelo indica que, em situações de redução moderada na conectividade, com log(U/U) entre 0 e 0.75, a chance de boa congruência com a SAD aumenta em até 2 unidades de logOR. Por outro lado, quando a redução na conectividade simulada ultrapassa essa faixa de valores de log(U/U), a SAD simulada na paisagem contemporânea apresenta uma redução de até 6 unidades de logOR em relação à SAD simulada na paisagem prístina (@ref(fig:PIfixo-todos)).
+
+
+
+
+2) descrição do padrão segundo o efeito fixo e efeito aleatório
+- O padrão por sítio de amostragem, que considera o efeito fixo e efeito aleatório combinado, é muito mais complexo do que o observado no efeito fixo apenas. Além de apresentar maior amplitude de valores, com o logOR variando entre -10 e 5 (fig. ( \@ref(fig:PIfixo-todos)). Quanto maior o logU/U maior variabilidade na predição do logOR (fig. ( \@ref(fig:PIfixo-todos)). Em alguns sítios o perfil de variação do logOR em função de logU/U é similar ao observado no efeito fixo, em que o aumento do logU/U aumenta o logOR para valores positivos variando em grau entre sístios, e em outros sítios o aumento do logU/U reduz o logOR para valores negativos variando em grau (fig. ( \@ref(fig:PIfixo-todos)). Portanto existe grande variabilidade entre sítios e a predição do efeito fixo não é suficiente para resumir a variabilidade entre sítios.
+
+O padrão observado por sítio de amostragem, que combina o efeito fixo e o efeito aleatório, é substancialmente mais complexo do que aquele previsto apenas pelo efeito fixo. Além de apresentar uma maior amplitude de valores, o logOR varia entre -10 e 5 (@ref(fig:PIfixo-todos)). Essa variabilidade aumenta à medida que o log(U/U) cresce, indicando maior dispersão nas predições para valores elevados de conectividade reduzida (@ref(fig:PIfixo-todos)). Em alguns sítios, o perfil de variação do logOR em função do log(U/U) mantém-se similar ao efeito fixo, com o aumento do log(U/U) resultando em logOR positivos que variam em intensidade entre os sítios. Entretanto, em outros sítios, o aumento do log(U/U) reduz o logOR para valores negativos, também com variações de grau entre os sítios (@ref(fig:PIfixo-todos)). Essa grande variabilidade entre sítios evidencia que a predição baseada apenas no efeito fixo não é suficiente para capturar a complexidade do padrão observado entre os sítios.
+__Fragmentação per se__
+
+
+
+__Área per se__
+
+
 
 #### Comparação das paisagens contrafactuais
 
