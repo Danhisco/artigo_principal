@@ -49,17 +49,61 @@ df_sim <- cbind(df_sim,land_type = rep(x=c("ideal","non_frag"),each=nrow(df_sim)
 #
 df_simSAD <- inner_join(
   df_sim %>% filter(land_type=="ideal") %>% select(-land_type),
-  read_csv(U_path) %>% filter(land_type!="ideal")
+  read_csv("dados/csv/taxaU/df_U.csv") %>% filter(land_type!="ideal")
   ) %>% select(-Usd)
 setwd("dados/simulacao")
 # setwd("../..")
 ```
 
 
-```{r}
-diff_1 <- sum(l_mland[[1]]!=0) - sum(l_mland[[2]]!=0)
-diff_1 / length(l_mland[[1]])
+
+```{r desenvolvimento de peça de conexão}
+# 1) para 1a paisagem qualquer a simulação de U e SAD
+f_simUeSAD <- \(df_exti){
+  folder_path <- paste0(general_path,
+                        "/csv/taxaU/MNEE/",
+                        df_exti$land_type[1],
+                        "/")
+  path_df_simSAD <- paste0(folder_path,
+                           df_exti$SiteCode[1],
+                           ".csv")
+  if(!file.exists(path_df_simSAD)){
+    # taxa U
+    f_writeUcsv(df_bySite = df_exti,
+                land_matrix = m_land,
+                path_csv = folder_path,
+                n_replicas = U_rep)
+  }
+  # síntese taxa U
+  df_simSAD <- read_csv(path_df_simSAD) |> 
+    pivot_longer(-c(SiteCode:d)) |> 
+    summarise(Umed = mean(value),.by = "k") |> 
+    inner_join(x=df_exti,by="k")
+  # SAD
+  folder_path <- paste0(general_path,
+                        "/csv/SADs_neutras/MNEE/",
+                        df_exti$land_type[1],
+                        "/")
+  f_writeSADcsv(df_bySite = df_simSAD,
+                land_matrix = m_land, 
+                path_csv = folder_path,
+                n_replicas = SAD_rep)
+}
 ```
+
+Para cada extensão espacial adequada vai rodar todos os k na paisagem:
+Começar com a maior extensão e então ir reduzindo para as escalas intermediárias 
+
+1o filtrar a escala
+2o simular todos os k filtrados em sequência: fragmentada, aglomerada e prístina
+3o repetir na próxima escala
+
+Como é hoje?
+para cada paisagem é rodado a simulação.
+Podemos considerar que entra uma paisagem fragmentada com extensão fixa e todo o processo de
+simulação de U e SAD nas três paisagens é feita, esses documentos ficam no ambiente do R
+
+
 
 
 ```{r função para simular as SADs para MNEE em diferentes tipos de paisagens}
