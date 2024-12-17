@@ -45,12 +45,22 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
     by="SiteCode") |> 
   filter(SiteCode %in% v_site) |>
   left_join(df_p,by="SiteCode")
-df_sim <- cbind(df_sim,land_type = rep(x=c("ideal","non_frag"),each=nrow(df_sim)))
+# df_sim <- cbind(df_sim,land_type = rep(x=c("ideal","non_frag"),each=nrow(df_sim)))
 #
 df_simSAD <- inner_join(
   df_sim %>% filter(land_type=="ideal") %>% select(-land_type),
   read_csv("dados/csv/taxaU/df_U.csv") %>% filter(land_type!="ideal")
   ) %>% select(-Usd)
+#
+df_SoE <- read_csv("./dados/csv/df_plotSoE.csv") %>% 
+  select(k,SoE_0.95) %>% distinct() %>% 
+  rename(SoE=2) %>% 
+  mutate(SoE=ifelse(is.na(SoE),1,SoE))
+#
+df_sim <- inner_join(
+  df_sim,
+  df_SoE
+)
 setwd("dados/simulacao")
 # setwd("../..")
 ```
@@ -58,37 +68,9 @@ setwd("dados/simulacao")
 
 
 ```{r desenvolvimento de peça de conexão}
-# 1) para 1a paisagem qualquer a simulação de U e SAD
-f_simUeSAD <- \(df_exti){
-  folder_path <- paste0(general_path,
-                        "/csv/taxaU/MNEE/",
-                        df_exti$land_type[1],
-                        "/")
-  path_df_simSAD <- paste0(folder_path,
-                           df_exti$SiteCode[1],
-                           ".csv")
-  if(!file.exists(path_df_simSAD)){
-    # taxa U
-    f_writeUcsv(df_bySite = df_exti,
-                land_matrix = m_land,
-                path_csv = folder_path,
-                n_replicas = U_rep)
-  }
-  # síntese taxa U
-  df_simSAD <- read_csv(path_df_simSAD) |> 
-    pivot_longer(-c(SiteCode:d)) |> 
-    summarise(Umed = mean(value),.by = "k") |> 
-    inner_join(x=df_exti,by="k")
-  # SAD
-  folder_path <- paste0(general_path,
-                        "/csv/SADs_neutras/MNEE/",
-                        df_exti$land_type[1],
-                        "/")
-  f_writeSADcsv(df_bySite = df_simSAD,
-                land_matrix = m_land, 
-                path_csv = folder_path,
-                n_replicas = SAD_rep)
-}
+# 2) aplicação darotina de simulação para cada extensão espacial
+
+
 ```
 
 Para cada extensão espacial adequada vai rodar todos os k na paisagem:
@@ -107,13 +89,12 @@ simulação de U e SAD nas três paisagens é feita, esses documentos ficam no a
 
 
 ```{r função para simular as SADs para MNEE em diferentes tipos de paisagens}
-df <- df_simSAD %>% filter(SiteCode=="SPigua1")
+df <- df_sim %>% filter(SiteCode=="SPigua1")
 registerDoMC(3)
 v_gpath <- "/media/danilo/HD_externo/Documentos/mestrado_Ecologia/artigo_principal/dados"
-# formals(f_simMNEE2)$
-f_d_ply <- function(dataframe) f_simMNEE(df = dataframe,general_path = v_gpath)
-d_ply(filter(df_sim,land_type=="ideal") %>% select(-land_type),
-      c("SiteCode"),f_d_ply,.parallel = TRUE)
+formals(f_simMNEE)$general_path <- v_gpath
+# f_d_ply <- function(dataframe) f_simMNEE(df = dataframe,general_path = v_gpath)
+d_ply(df_sim,"SiteCode",f_simMNEE,.parallel = TRUE)
 ```
 
 

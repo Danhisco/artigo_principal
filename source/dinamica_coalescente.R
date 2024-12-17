@@ -153,10 +153,12 @@ f_simMNEE <- function(df,
                       Umin = 1.25e-06,
                       general_path){
   # nessa função já é feito todo o processo: U -> SADs
-  f_simUeSAD <- \(df_exti){
+  f_simUeSAD <- \(df_exti,
+                  land_type,
+                  m_landi){
     folder_path <- paste0(general_path,
                           "/csv/taxaU/MNEE/",
-                          df_exti$land_type[1],
+                          land_type,
                           "/")
     path_df_simSAD <- paste0(folder_path,
                              df_exti$SiteCode[1],
@@ -164,7 +166,7 @@ f_simMNEE <- function(df,
     if(!file.exists(path_df_simSAD)){
       # taxa U
       f_writeUcsv(df_bySite = df_exti,
-                  land_matrix = m_land,
+                  land_matrix = m_landi,
                   path_csv = folder_path,
                   n_replicas = U_rep)
     }
@@ -176,21 +178,37 @@ f_simMNEE <- function(df,
     # SAD
     folder_path <- paste0(general_path,
                           "/csv/SADs_neutras/MNEE/",
-                          df_exti$land_type[1],
+                          land_type,
                           "/")
     f_writeSADcsv(df_bySite = df_simSAD,
-                  land_matrix = m_land, 
+                  land_matrix = m_landi, 
                   path_csv = folder_path,
                   n_replicas = SAD_rep)
   }
+  f_singleext <- \(mland,dfi){
+    # frag
+    
+    # non frag
+    
+    # pristine
+    
+  }
+  f_SoE <- \(m_maxext){
+    v_maxext <- max(df$SoE)
+    ldf <- split(df,df$SoE)
+    v_namesSoE <- abs(sort(desc(as.numeric(names(ldf)))))
+    # 1o ciclo com a paisagem máxima
+    teste <- f_singleext(mland = m_maxext,
+                         dfi=ldf[[as.character(v_maxext)]]) 
+      
+    
+  }
   #
-  SAD_path <- paste0(general_path,
-                     "/csv/SADs_neutras/MNEE/",
-                     df$land_type[1],
-                     "/",
-                     df$SiteCode[1],
-                     ".csv")
-  if(file.exists(SAD_path)){
+  SAD_path <- list.files(path="../csv/SADs_neutras/MNEE",
+                         pattern = df$SiteCode[1],
+                         recursive = TRUE)
+    
+  if(length(SAD_path)==0){
     return(NA)
   }
   # tipo da paisagem
