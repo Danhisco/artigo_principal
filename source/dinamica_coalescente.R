@@ -104,17 +104,26 @@ f_simU <- function(df_1row,land_mat=FALSE){
   v$U_est
 }
 
-f_writeUcsv <- function(df_bySite, land_matrix = FALSE,
-                        n_replicas=10, Umin = 1.25e-06, path_csv){
+f_writeUcsv <- function(df_bySite, 
+                        land_matrix = FALSE,
+                        n_replicas=10, 
+                        Umin = 1.25e-06, 
+                        path_csv){
   l_dfU <- list()
   for(i in 1:nrow(df_bySite)){
-    v_U <- replicate(n=n_replicas,f_simU(df_1row = df_bySite[i,],
-                                         land_mat = land_matrix))
-    l_dfU[[i]] <- cbind(select(df_bySite[i,],SiteCode,land_type,k,d),
-                        matrix(v_U,nrow=1))
+    v_U <- replicate(n=n_replicas,
+                     f_simU(
+                       df_1row = df_bySite[i,],
+                       land_mat = land_matrix)
+                     )
+    
+    l_dfU[[i]] <- cbind(
+      select(df_bySite[i,],SiteCode,k,d),
+      matrix(v_U,nrow=1)
+      )
   }
   df_write <- rbind.fill(l_dfU)
-  write_csv(df_write,file = paste0(path_csv,df_bySite$SiteCode[1],".csv"))
+  write_csv(df_write,file = path_csv)
 }
 
 f_simSAD <- function(df_1row,n=100,land_mat=FALSE){
@@ -138,8 +147,10 @@ f_simSAD <- function(df_1row,n=100,land_mat=FALSE){
                                         landscape = txt.path))  
     }
 }
-f_writeSADcsv <- function(df_bySite, land_matrix = FALSE,
-                          n_replicas=100, path_csv){
+f_writeSADcsv <- function(df_bySite, 
+                          land_matrix = FALSE,
+                          n_replicas=100, 
+                          path_csv){
   f_adply <- \(X) f_simSAD(df_1row = X, land_mat = land_matrix,n = n_replicas)
   v_names <- names(df_bySite)[!names(df_bySite)%in%c("SiteCode","k")]
   m_SADreplicas <- adply(df_bySite,1,f_adply)
@@ -162,12 +173,14 @@ f_simMNEE <- function(df,
                           "/")
     path_df_simSAD <- paste0(folder_path,
                              df_exti$SiteCode[1],
-                             ".csv")
+                             "_SoE",
+                             df_exti$SoE[1],
+                             "km.csv")
     if(!file.exists(path_df_simSAD)){
       # taxa U
       f_writeUcsv(df_bySite = df_exti,
                   land_matrix = m_landi,
-                  path_csv = folder_path,
+                  path_csv = path_df_simSAD,
                   n_replicas = U_rep)
     }
     # síntese taxa U
@@ -179,7 +192,11 @@ f_simMNEE <- function(df,
     folder_path <- paste0(general_path,
                           "/csv_SoE/SADs_neutras/MNEE/",
                           land_type,
-                          "/")
+                          "/",
+                          df_exti$SiteCode[1],
+                          "_SoE",
+                          df_exti$SoE[1],
+                          "km.csv")
     f_writeSADcsv(df_bySite = df_simSAD,
                   land_matrix = m_landi, 
                   path_csv = folder_path,
@@ -187,7 +204,9 @@ f_simMNEE <- function(df,
   }
   f_singleext <- \(mland,dfi){
     # frag
-    
+    f_simUeSAD(df_exti = dfi,
+               land_type = "cont",
+               m_landi = mland)
     # non frag
     
     # pristine
