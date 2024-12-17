@@ -157,7 +157,7 @@ f_simMNEE <- function(df,
                   land_type,
                   m_landi){
     folder_path <- paste0(general_path,
-                          "/csv/taxaU/MNEE/",
+                          "/csv_SoE/taxaU/MNEE/",
                           land_type,
                           "/")
     path_df_simSAD <- paste0(folder_path,
@@ -177,7 +177,7 @@ f_simMNEE <- function(df,
       inner_join(x=df_exti,by="k")
     # SAD
     folder_path <- paste0(general_path,
-                          "/csv/SADs_neutras/MNEE/",
+                          "/csv_SoE/SADs_neutras/MNEE/",
                           land_type,
                           "/")
     f_writeSADcsv(df_bySite = df_simSAD,
