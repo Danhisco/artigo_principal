@@ -59,6 +59,8 @@ dinamica_coalescente <- function(U, S=0, N_simul, disp_range, landscape, seed = 
         U_est <- as.double(U_line[length(U_line)])
         return(list(r = r, U_est = U_est))
     }
+    file.remove(outfile)
+    if(!identical(infile,landscape)) file.remove(infile)
     return(r)
 }
 rec_distribuicao_espacial <- function(r, landscape){
@@ -155,7 +157,7 @@ f_writeSADcsv <- function(df_bySite,
   v_names <- names(df_bySite)[!names(df_bySite)%in%c("SiteCode","k")]
   m_SADreplicas <- adply(df_bySite,1,f_adply)
   write_csv(select(m_SADreplicas,-all_of(v_names)),
-            file = paste0(path_csv,df_bySite$SiteCode[1],".csv"))
+            file = path_csv)
 }
 
 f_simMNEE <- function(df,
@@ -208,17 +210,26 @@ f_simMNEE <- function(df,
                land_type = "cont",
                m_landi = mland)
     # non frag
-    
+    m_land <- f_nonFragLand(m_land)
+    f_simUeSAD(df_exti = dfi,
+               land_type = "non_frag",
+               m_landi = mland)
     # pristine
-    
+    m_land[m_land==0] <- 1
+    f_simUeSAD(df_exti = dfi,
+               land_type = "ideal",
+               m_landi = mland)
   }
   f_SoE <- \(m_maxext){
     v_maxext <- max(df$SoE)
     ldf <- split(df,df$SoE)
     v_namesSoE <- abs(sort(desc(as.numeric(names(ldf)))))
+    v_namesSoE <- as.character(v_namesSoE)
     # 1o ciclo com a paisagem máxima
-    teste <- f_singleext(mland = m_maxext,
-                         dfi=ldf[[as.character(v_maxext)]]) 
+    f_singleext(mland = m_maxext,
+                dfi=ldf[[as.character(v_maxext)]])
+    # preparação para while
+    
       
     
   }
