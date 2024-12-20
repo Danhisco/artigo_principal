@@ -68,9 +68,23 @@ setwd("dados/simulacao")
 
 
 ```{r desenvolvimento de peça de conexão}
-# 2) aplicação darotina de simulação para cada extensão espacial
-
-
+# quais os sítios que estão simulados?
+df_lf <- lapply(c("cont","ideal","non_frag"),\(li){
+  data.frame(
+    files = list.files(path=paste0("dados/csv_SoE/taxaU/MNEE/",li),
+             pattern = ".csv",
+             recursive = TRUE)
+  ) %>% mutate(
+    SiteCode = str_extract(files,"^[^_]+"),
+    SoE = str_extract(files,"(?<=SoE)(.*?)(?=km)")
+  ) %>% count(SiteCode) %>% mutate(contraste=li)
+  }) 
+# %>% do.call("rbind",.) 
+# %>% 
+#   filter(n==3) %>% 
+#   count(SiteCode) %>% 
+#   filter(n==3)
+names(df_lf) <- c("cont","ideal","non_frag")
 ```
 
 Para cada extensão espacial adequada vai rodar todos os k na paisagem:
@@ -93,10 +107,38 @@ df <- df_sim %>% filter(SiteCode=="SPigua1")
 registerDoMC(3)
 v_gpath <- ".."
 formals(f_simMNEE)$general_path <- v_gpath
+#
+# df_sim2 <- filter(df_sim,!SiteCode%in%df_lf$SiteCode)
+df_sim2 <- filter(df_sim,SiteCode%in%vsite)
 # f_d_ply <- function(dataframe) f_simMNEE(df = dataframe,general_path = v_gpath)
-d_ply(df_sim,"SiteCode",f_simMNEE,.parallel = TRUE)
+df <- df_sim2 %>% filter(SiteCode==vsite[2])
+d_ply(df_sim2,"SiteCode",f_simMNEE,.parallel = TRUE)
 ```
 
 
+## Síntese dos dados
+
+```{r}
+setwd("../..")
+df_SADrep <- mutate(
+  data.frame(
+    SADrep.path = list.files(path = "dados/csv_SoE/SADs_neutras/MNEE",
+                             pattern = ".csv",full.names = T,recursive = T)
+    ),
+  SiteCode = str_extract(SADrep.path,"(?<=[cont|frag|ideal]\\/).*?(?=_So)"),
+  land_type = str_extract(SADrep.path,"(?<=MNEE\\/).*?(?=\\/)"),
+  SoE = str_extract(
+    gsub("dados/csv_SoE","",SADrep.path),
+    "(?<=SoE).*?(?=km)"
+    ),
+  SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv")
+)
+vsite <- df_SADrep %>% 
+  group_by(SiteCode,land_type) %>% 
+  tally() %>% 
+  filter(n!=3) %>% 
+  pull(SiteCode)
+df_SADrep %>% filter(SiteCode%in%vsite,land_type=="ideal")
+```
 
 

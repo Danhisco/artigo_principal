@@ -59,21 +59,31 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
     SiteCode = str_extract(txt.path,".*?(?=.txt)")),
     by="SiteCode") |> 
   filter(SiteCode %in% v_site)
-
 ####### df_SADrep: correspondente, prístino, numerador, denominador #######
-
-
-
-
 # df_SADrep
-df_SADrep <- mutate(data.frame(
-  SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE",
+df_SADrep <- mutate(
+  data.frame(
+    SADrep.path = list.files(path = "dados/csv_SoE/SADs_neutras/MNEE",
+                             pattern = ".csv",full.names = T,recursive = T)
+    ),
+  SiteCode = str_extract(SADrep.path,"(?<=[cont|frag|ideal]\\/).*?(?=_So)"),
+  land_type = str_extract(SADrep.path,"(?<=MNEE\\/).*?(?=\\/)"),
+  SoE = str_extract(
+    gsub("dados/csv_SoE","",SADrep.path),
+    "(?<=SoE).*?(?=km)"
+    ),
+  SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv")
+)
+df_SADrep_todos4km <- mutate(data.frame(
+  SADrep.path = list.files(path = "dados/csv_SoE/SADs_neutras/MNEE",
                            pattern = ".csv",full.names = T,recursive = T)),
   SiteCode = str_extract(SADrep.path,"(?<=[cont|frag|ideal]\\/).*?(?=.csv)"),
   land_type = str_extract(SADrep.path,"(?<=MNEE\\/).*?(?=\\/)"),
   SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv"))
-# df_SADrep
-df_SADrep2 <- mutate(data.frame(
+
+######### remoção do 
+
+df_SADrep2_ <- mutate(data.frame(
   SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE_taxaU_idealizado",
                            pattern = ".csv",full.names = T,recursive = T)),
   SiteCode = str_extract(SADrep.path,"(?<=\\_\\_).*?(?=.csv)"),

@@ -165,10 +165,11 @@ f_simMNEE <- function(df,
                       SAD_rep=100,
                       Umin = 1.25e-06,
                       general_path){
-  # nessa função já é feito todo o processo: U -> SADs
+#@ função aplicada em cada sítio de amostragem para simular U e SAD
   f_simUeSAD <- \(df_exti,
                   land_type,
                   m_landi){
+  #@ função que simula U e a SAD em função de um df ref e uma paisagem
     folder_path <- paste0(general_path,
                           "/csv_SoE/taxaU/MNEE/",
                           land_type,
@@ -205,52 +206,50 @@ f_simMNEE <- function(df,
                   n_replicas = SAD_rep)
   }
   f_singleext <- \(mland,dfi){
+  #@ função que pega uma única escala e faz todos as paisagens referência
     # frag
     f_simUeSAD(df_exti = dfi,
                land_type = "cont",
                m_landi = mland)
     # non frag
-    m_land <- f_nonFragLand(m_land)
+    mland <- f_nonFragLand(mland)
     f_simUeSAD(df_exti = dfi,
                land_type = "non_frag",
                m_landi = mland)
     # pristine
-    m_land[m_land==0] <- 1
+    mland[mland==0] <- 1
     f_simUeSAD(df_exti = dfi,
                land_type = "ideal",
                m_landi = mland)
   }
   f_SoE <- \(m_maxext){
+  #@ função que aplica a simulação em todas as escalas espacias suficientes
     v_maxext <- max(df$SoE)
     ldf <- split(df,df$SoE)
     v_namesSoE <- abs(sort(desc(as.numeric(names(ldf)))))
-    v_namesSoE <- as.character(v_namesSoE)
+    v_namesSoE <- v_namesSoE[v_namesSoE!=v_maxext]
+    crop_matrix <- \(mat, ratio){
+      n <- nrow(mat)
+      start_idx <- ceiling(n / 2 - n * ratio / 2 + 1)
+      end_idx <- floor(n / 2 + n * ratio / 2)
+      return(mat[start_idx:end_idx, start_idx:end_idx])
+    }
     # 1o ciclo com a paisagem máxima
     f_singleext(mland = m_maxext,
                 dfi=ldf[[as.character(v_maxext)]])
-    # preparação para while
-    
-      
-    
+    # nas subescalas:
+    lapply(v_namesSoE,\(i){
+      msim <- crop_matrix(m_maxext,
+                          ratio=i/v_maxext)
+      f_singleext(msim,
+                  ldf[[as.character(i)]])
+      })
   }
-  #
-  SAD_path <- list.files(path="../csv/SADs_neutras/MNEE",
-                         pattern = df$SiteCode[1],
-                         recursive = TRUE)
-    
-  if(length(SAD_path)==0){
-    return(NA)
-  }
-  # tipo da paisagem
+  # rotina
+  ## paisagem máxima
   m_land <- read.table(df$txt.path[1]) |> as.matrix()
-  if(df$land_type[1] == "ideal"){
-    m_land[m_land==0] <- 1
-  }else if(df$land_type[1] == "non_frag"){
-    m_land <- f_nonFragLand(m_land)
-  }
-
-  
-  }
+  f_SoE(m_land)
+}
 
 f_simMNEE2 <- \(df, 
                 SAD_rep=100, 
