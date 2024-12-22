@@ -61,7 +61,6 @@ df_sim <- inner_join(
   df_sim,
   df_SoE
 )
-setwd("dados/simulacao")
 # setwd("../..")
 ```
 
@@ -103,6 +102,7 @@ simulação de U e SAD nas três paisagens é feita, esses documentos ficam no a
 
 
 ```{r função para simular as SADs para MNEE em diferentes tipos de paisagens}
+setwd("dados/simulacao")
 df <- df_sim %>% filter(SiteCode=="SPigua1")
 registerDoMC(3)
 v_gpath <- ".."
@@ -120,7 +120,7 @@ d_ply(df_sim2,"SiteCode",f_simMNEE,.parallel = TRUE)
 
 ```{r}
 setwd("../..")
-df_SADrep <- mutate(
+df_estudo <- mutate(
   data.frame(
     SADrep.path = list.files(path = "dados/csv_SoE/SADs_neutras/MNEE",
                              pattern = ".csv",full.names = T,recursive = T)
@@ -133,12 +133,41 @@ df_SADrep <- mutate(
     ),
   SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv")
 )
-vsite <- df_SADrep %>% 
-  group_by(SiteCode,land_type) %>% 
-  tally() %>% 
-  filter(n!=3) %>% 
-  pull(SiteCode)
-df_SADrep %>% filter(SiteCode%in%vsite,land_type=="ideal")
+##################################################################
+############## Existem sítios sem simulação? #####################
+##################################################################
+# vsite <- df_estudo %>% 
+#   group_by(SiteCode,land_type) %>% 
+#   tally() %>% 
+#   filter(n!=3) %>% 
+#   pull(SiteCode)
+# df_estudo %>% filter(SiteCode%in%vsite,land_type=="ideal")
+##################################################################
+#
+# é possível juntar os data frames em um só?
+f_bySite_e_Land <- \(dfi){
+  #
+  l_csv <- lapply(dfi$SADrep.path,read_csv)
+  names(l_csv) <- dfi$SoE
+  #
+  df_sad <- do.call("rbind",l_csv)
+  temppath <- tempfile(fileext = ".csv")
+  write_csv(df_sad,temppath)
+  #
+  dfi <- select(dfi,-SoE) %>% 
+    mutate(SADrep.path=temppath) %>% 
+    distinct()
+  dfr <- f_resultsMN(dfi)
+  #
+  file.remove(temppath)
+  #
+  return(dfr)
+}
+
+
+
+
+
 ```
 
-
+f_resultsMN

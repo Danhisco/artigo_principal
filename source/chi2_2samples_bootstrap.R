@@ -1,5 +1,5 @@
 ## Função que calcula a estatística da somatória dos chi2
-# f_chi.statistic <- \(df_1,df_2){
+f_chi.statistic <- \(df_1,df_2){
   names(df_2) <- names(df_1)
   df_samples <- full_join(df_1,df_2,by=names(df_1)[1]) |> 
     mutate(across(Freq.x:Freq.y,\(x) ifelse(is.na(x),0,x))) |> 
@@ -14,7 +14,7 @@
   return(chi.value)
 } # não usado
 ## Função que calculo o p valor do chi quadrado para duas SADs amostras 
-# f_chi2Boot0 <- function(df_sample1,df_sample2,n_sim=1e4){
+f_chi2Boot0 <- function(df_sample1,df_sample2,n_sim=1e4){
   df_1 <- df_sample1$N |> table() |> as.data.frame()
   df_2 <- df_sample2$N |> table() |> as.data.frame()
   # ci2 observado

@@ -80,21 +80,12 @@ df_SADrep_todos4km <- mutate(data.frame(
   SiteCode = str_extract(SADrep.path,"(?<=[cont|frag|ideal]\\/).*?(?=.csv)"),
   land_type = str_extract(SADrep.path,"(?<=MNEE\\/).*?(?=\\/)"),
   SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv"))
-
-######### remoção do 
-
-df_SADrep2_ <- mutate(data.frame(
-  SADrep.path = list.files(path = "dados/csv/SADs_neutras/MNEE_taxaU_idealizado",
-                           pattern = ".csv",full.names = T,recursive = T)),
-  SiteCode = str_extract(SADrep.path,"(?<=\\_\\_).*?(?=.csv)"),
-  land_type = str_extract(SADrep.path,"(?<=zado\\/).*?(?=\\_\\_)"),
-  SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv"))
-l_SADreps <- list(df_SADrep,df_SADrep2)
-names(l_SADreps) <- c("Ulivre","Upristino")
-
-
-
-
+#
+#
+#
+################################################
+################## todos 4 km ##################
+################################################
 # # df_repMNEE
 df_repMNEE <- read_csv("dados/csv/resultados_MN/MNEE/df_repMNEE")
 # # df_resultMNEE
@@ -111,7 +102,38 @@ df_logOR <- df_resultados |>
 
 ### testes KS e a contagem de espécies
 
-```{r testes KS e S - taxa U por tipo de paisagem}
+```{r versão nova para incluir SoE}
+f_bySite_e_Land <- \(dfi){
+  #
+  l_csv <- lapply(dfi$SADrep.path,read_csv)
+  names(l_csv) <- dfi$SoE
+  #
+  df_sad <- do.call("rbind",l_csv)
+  temppath <- tempfile(fileext = ".csv")
+  write_csv(df_sad,temppath)
+  #
+  dfi <- select(dfi,-SoE) %>% 
+    mutate(SADrep.path=temppath) %>% 
+    distinct()
+  dfr <- f_resultsMN(dfi)
+  #
+  file.remove(temppath)
+  #
+  return(dfr)
+}
+#
+registerDoMC(2)
+df_KSrep <- ddply(df_SADrep,
+                  c("SiteCode","land_type"),
+                  f_bySite_e_Land,
+                  .parallel = TRUE)
+write_csv(df_KSrep,file="dados/csv_SoE/df_KSrep.csv")
+```
+
+
+
+
+```{r VERSÃO COM TODAS AS COMBINAÇÕES DE U - testes KS e S - taxa U por tipo de paisagem}
 # preparação
 path_repo <- "dados/csv/SADs_neutras/"
 v_dirs <- list.dirs(path_repo,full.names = FALSE)
@@ -142,7 +164,28 @@ lapply(names(l_paths),\(li){
 
 ### Sumarização 
 
-```{r}
+```{r 1a versão com SoE}
+f_summarise_SAD_MNEE <- \(df){
+#@ df: df por site, k, e  land_type
+#@ e.g. ddply(.,c("SiteCode","k","land_type"))
+ cbind(df[1,c("SiteCode","k","land_type")],with(df,data.frame(
+   nCongKS = sum(p.KS>0.05),
+   Smed = mean(S),
+   Ssd = sd(S),
+   Smin = min(S),
+   Smax = max(S)))
+  )
+}
+df_KSrep <- read_csv(file="dados/csv_SoE/df_KSrep.csv")
+registerDoMC(3)
+df_ad <- ddply(df_KSrep,c("SiteCode","k","land_type"),
+               f_summarise_SAD_MNEE,
+               .parallel = TRUE)
+write_csv(df_ad,file="dados/csv_SoE/df_congruencia_simulacao.csv")
+```
+
+
+```{r todos os U possíveis}
 l_df <- list.files(path="./dados/csv/SADs_neutras",
                    pattern="df_",full.names = T)
 names(l_df) <- list.files(path="./dados/csv/SADs_neutras",pattern="df_") %>% 
