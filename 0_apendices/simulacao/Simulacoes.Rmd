@@ -65,41 +65,7 @@ df_sim <- inner_join(
 ```
 
 
-
-```{r desenvolvimento de peça de conexão}
-# quais os sítios que estão simulados?
-df_lf <- lapply(c("cont","ideal","non_frag"),\(li){
-  data.frame(
-    files = list.files(path=paste0("dados/csv_SoE/taxaU/MNEE/",li),
-             pattern = ".csv",
-             recursive = TRUE)
-  ) %>% mutate(
-    SiteCode = str_extract(files,"^[^_]+"),
-    SoE = str_extract(files,"(?<=SoE)(.*?)(?=km)")
-  ) %>% count(SiteCode) %>% mutate(contraste=li)
-  }) 
-# %>% do.call("rbind",.) 
-# %>% 
-#   filter(n==3) %>% 
-#   count(SiteCode) %>% 
-#   filter(n==3)
-names(df_lf) <- c("cont","ideal","non_frag")
-```
-
-Para cada extensão espacial adequada vai rodar todos os k na paisagem:
-Começar com a maior extensão e então ir reduzindo para as escalas intermediárias 
-
-1o filtrar a escala
-2o simular todos os k filtrados em sequência: fragmentada, aglomerada e prístina
-3o repetir na próxima escala
-
-Como é hoje?
-para cada paisagem é rodado a simulação.
-Podemos considerar que entra uma paisagem fragmentada com extensão fixa e todo o processo de
-simulação de U e SAD nas três paisagens é feita, esses documentos ficam no ambiente do R
-
-
-
+## Simulação
 
 ```{r função para simular as SADs para MNEE em diferentes tipos de paisagens}
 setwd("dados/simulacao")
@@ -116,35 +82,41 @@ d_ply(df_sim2,"SiteCode",f_simMNEE,.parallel = TRUE)
 ```
 
 
-## Síntese dos dados
+## Teste KS
 
-```{r}
+```{r teste KS}
 setwd("../..")
-df_estudo <- mutate(
+df_SADrep <- mutate(
   data.frame(
     SADrep.path = list.files(path = "dados/csv_SoE/SADs_neutras/MNEE",
-                             pattern = ".csv",full.names = T,recursive = T)
+                             pattern = ".csv",
+                             full.names = T,
+                             recursive = T)
     ),
-  SiteCode = str_extract(SADrep.path,"(?<=[cont|frag|ideal]\\/).*?(?=_So)"),
-  land_type = str_extract(SADrep.path,"(?<=MNEE\\/).*?(?=\\/)"),
-  SoE = str_extract(
-    gsub("dados/csv_SoE","",SADrep.path),
-    "(?<=SoE).*?(?=km)"
-    ),
+  SiteCode = str_extract(SADrep.path,
+                         "(?<=[cont|frag|ideal]\\/).*?(?=_So)"),
+  land_type = str_extract(SADrep.path,
+                          "(?<=MNEE\\/).*?(?=\\/)"),
+  SoE = str_extract(gsub("dados/csv_SoE","",SADrep.path),
+                    "(?<=SoE).*?(?=km)"),
   SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv")
 )
 ##################################################################
 ############## Existem sítios sem simulação? #####################
 ##################################################################
-# vsite <- df_estudo %>% 
-#   group_by(SiteCode,land_type) %>% 
-#   tally() %>% 
-#   filter(n!=3) %>% 
-#   pull(SiteCode)
-# df_estudo %>% filter(SiteCode%in%vsite,land_type=="ideal")
+# em simulação?
+resp <- FALSE
+if(resp){
+  vsite <- df_SADrep %>%
+    group_by(SiteCode,land_type) %>%
+    tally() %>%
+    filter(n!=3) %>%
+    pull(SiteCode)
+  df_SADrep %>% filter(SiteCode%in%vsite,land_type=="ideal")
+}
 ##################################################################
 #
-# é possível juntar os data frames em um só?
+# função que une os data frames de diferentes escaslas em um só e aplica o teste KS
 f_bySite_e_Land <- \(dfi){
   #
   l_csv <- lapply(dfi$SADrep.path,read_csv)
@@ -163,11 +135,33 @@ f_bySite_e_Land <- \(dfi){
   #
   return(dfr)
 }
-
-
-
-
-
+registerDoMC(2)
+df_KSrep <- ddply(df_SADrep,
+                  c("SiteCode","land_type"),
+                  f_bySite_e_Land,
+                  .parallel = TRUE)
+write_csv(df_KSrep,file="dados/csv_SoE/df_KSrep.csv")
 ```
 
-f_resultsMN
+
+```{r sumarização dos resultados do teste KS}
+f_summarise_SAD_MNEE <- \(df){
+#@ df: df por site, k, e  land_type
+#@ e.g. ddply(.,c("SiteCode","k","land_type"))
+ cbind(df[1,c("SiteCode","k","land_type")],with(df,data.frame(
+   nCongKS = sum(p.KS>0.05),
+   Smed = mean(S),
+   Ssd = sd(S),
+   Smin = min(S),
+   Smax = max(S)))
+  )
+}
+df_KSrep <- read_csv(file="dados/csv_SoE/df_KSrep.csv")
+registerDoMC(3)
+df_ad <- ddply(df_KSrep,c("SiteCode","k","land_type"),
+               f_summarise_SAD_MNEE,
+               .parallel = TRUE)
+write_csv(df_ad,file="dados/csv_SoE/df_congruencia_simulacao.csv")
+```
+
+
