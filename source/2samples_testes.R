@@ -169,17 +169,17 @@ f_contraste_Umed <- \(dfUrep,
     inner_join(df_p,by="SiteCode") |>
     pivot_wider(names_from = land_type, values_from = c(Umed,Usd)) |> 
     mutate(area_dif = Umed_non_frag - Umed_ideal,
-           frag.perse_dif = Umed_contemp - Umed_non_frag,
-           frag.total_dif = Umed_contemp - Umed_ideal,
+           frag.perse_dif = Umed_cont - Umed_non_frag,
+           frag.total_dif = Umed_cont - Umed_ideal,
            area_ratio = Umed_non_frag / Umed_ideal,
-           frag.perse_ratio = Umed_contemp / Umed_non_frag,
-           frag.total_ratio = Umed_contemp / Umed_ideal,
+           frag.perse_ratio = Umed_cont / Umed_non_frag,
+           frag.total_ratio = Umed_cont / Umed_ideal,
            area_logratio = log(area_ratio),
            frag.perse_logratio = log(frag.perse_ratio),
            frag.total_logratio = log(frag.total_ratio),
            area_logOR = f_logOR_dfi(Umed_non_frag, Umed_ideal),
-           frag.perse_logOR = f_logOR_dfi(Umed_contemp, Umed_non_frag),
-           frag.total_logOR = f_logOR_dfi(Umed_contemp, Umed_ideal)) |> 
+           frag.perse_logOR = f_logOR_dfi(Umed_cont, Umed_non_frag),
+           frag.total_logOR = f_logOR_dfi(Umed_cont, Umed_ideal)) |> 
     select(-starts_with("U"))
   write_csv(df_contrastes,file=path_land_effect)
   write_csv(df_U,file=path_U)

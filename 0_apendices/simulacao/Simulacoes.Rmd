@@ -117,9 +117,9 @@ if(resp){
 ##################################################################
 #
 # função que une os data frames de diferentes escaslas em um só e aplica o teste KS
-f_bySite_e_Land <- \(dfi){
+f_bySite_e_Land <- \(dfi,fname = "f_resultsMN",colname="SADrep.path"){
   #
-  l_csv <- lapply(dfi$SADrep.path,read_csv)
+  l_csv <- lapply(dfi[[colname]],read_csv)
   names(l_csv) <- dfi$SoE
   #
   df_sad <- do.call("rbind",l_csv)
@@ -129,7 +129,8 @@ f_bySite_e_Land <- \(dfi){
   dfi <- select(dfi,-SoE) %>% 
     mutate(SADrep.path=temppath) %>% 
     distinct()
-  dfr <- f_resultsMN(dfi)
+  f_dfi <- get(fname)
+  dfr <- f_dfi(dfi)
   #
   file.remove(temppath)
   #
@@ -143,6 +144,7 @@ df_KSrep <- ddply(df_SADrep,
 write_csv(df_KSrep,file="dados/csv_SoE/df_KSrep.csv")
 ```
 
+## Sumário dos resultados do teste KS
 
 ```{r sumarização dos resultados do teste KS}
 f_summarise_SAD_MNEE <- \(df){
@@ -164,4 +166,38 @@ df_ad <- ddply(df_KSrep,c("SiteCode","k","land_type"),
 write_csv(df_ad,file="dados/csv_SoE/df_congruencia_simulacao.csv")
 ```
 
+
+## Contraste logU/U
+
+```{r Contraste logU/U}
+# dados
+df_Urep <- mutate(
+  data.frame(
+    Urep.path = list.files(path = "dados/csv_SoE/taxaU/MNEE",
+                           pattern = ".csv",
+                           full.names = T,
+                           recursive = T)
+    ),
+  SiteCode = str_extract(Urep.path,
+                         "(?<=[cont|frag|ideal]\\/).*?(?=_So)"),
+  land_type = str_extract(Urep.path,
+                          "(?<=MNEE\\/).*?(?=\\/)"),
+  SoE = str_extract(gsub("dados/csv_SoE","",Urep.path),
+                    "(?<=SoE).*?(?=km)")
+)
+# função para unir as bases de dados de diferentes SoE
+f_bySite_e_Land <- \(dfi,
+                     colname="Urep.path"){
+  l_csv <- lapply(dfi[[colname]],read_csv)
+  do.call("rbind",l_csv)
+}
+registerDoMC(3)
+df_Urep <- ddply(df_Urep,c("SiteCode","land_type"),f_bySite_e_Land,.parallel = TRUE)
+df_Urep <- relocate(df_Urep,SiteCode)
+# sumarização
+source("source/2samples_testes.R")
+formals(f_contraste_Umed)$path_U <- "dados/csv_SoE/taxaU/df_U.csv"
+formals(f_contraste_Umed)$path_land_effect <- "dados/csv_SoE/taxaU/df_contrastes.csv"
+f_contraste_Umed(df_Urep) # em 2samples_testes.R
+```
 
