@@ -7,7 +7,7 @@ modelo = c("gi", "gs",
            "gi sem p * k","gs sem p * k",
            "p * k + 1|Site", "p + k + 1|Site",
            "mgcv::s")
-f_MoranTest_GAMM <- \(md){
+f_MoranTest_GAMM_severalK <- \(md){
   # setup
   ## functions
   library(spdep)
@@ -60,7 +60,7 @@ f_MoranTest_GAMM <- \(md){
   coordinates <- dfmd_avgbySite[, c("lat","long")]
   coordinates <- as.matrix(coordinates)
   # Calculate Moran's I for residuals
-  registerDoMC(3)
+  doMC::registerDoMC(3)
   df_moranI <- alply(1:100,1,f_applyMoranI_getStatPval,
                     vcoord=coordinates,
                     vres=dfmd_avgbySite$mean_res,
@@ -73,27 +73,101 @@ f_MoranTest_GAMM <- \(md){
   return(df_moranI)
 }
 
-f_TabSelGAMM <- function(l_md){
+f_MoranTest_GAMM <- \(md,vk0=3){
+  # setup
+  ## functions
+  library(spdep)
+  f_applyMoranI_getStatPval <- \(vk=vk0,vcoord,vres){
+    # apply Moran I
+    nb <- knn2nb(knearneigh(vcoord, k=vk))  
+    listw <- nb2listw(nb)
+    moran_output <- moran.test(vres, listw)
+    # get Stat and Pval
+    data.frame(
+      Statistic = c(
+        "MoranI_stat_res", 
+        "Expectation", 
+        "Variance", 
+        "StdDev", 
+        "pvalue"
+      ),
+      Value = c(
+        moran_output$estimate[["Moran I statistic"]], 
+        moran_output$estimate[["Expectation"]], 
+        moran_output$estimate[["Variance"]], 
+        moran_output$statistic, 
+        moran_output$p.value
+      )
+    ) %>% 
+      pivot_wider(names_from = Statistic,
+                  values_from = Value)
+  }
+  ## data
+  dfmd <- md$model
+  dfmd$residuals <- residuals(md)
+  if(sum(names(dfmd)%in%c("lat","long"))<1){
+    df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+      mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+             long = ifelse(is.na(long_correct),long,long_correct),
+             Sitecode = factor(SiteCode)) %>% 
+      select(SiteCode,lat,long)
+    dfmd <- inner_join(
+      dfmd,
+      df_coord
+    )
+  }
+  dfmd_avgbySite <- dfmd %>% 
+    group_by(SiteCode) %>% 
+    summarise(mean_res = mean(residuals),
+              lat = first(lat),
+              long = first(long)) %>% 
+    ungroup()
+  # Prepare spatial data
+  coordinates <- dfmd_avgbySite[, c("lat","long")]
+  coordinates <- as.matrix(coordinates)
+  # Calculate Moran's I for residuals
+  f_applyMoranI_getStatPval(vcoord=coordinates,
+                            vres=dfmd_avgbySite$mean_res)
+}
+
+
+
+f_TabSelGAMM <- function(l_md,test_moranK=FALSE){
+  #
   l_names <- names(l_md)
+  #
   df_aicctab <- AICctab(l_md,weights=TRUE,mnames = l_names) |> as.data.frame()
   df_aicctab$modelo <- row.names(df_aicctab)
   row.names(df_aicctab) <- NULL
+  #
   df_dev.exp <- ldply(l_md,.fun = \(x) summary(x)$dev.expl)
   names(df_dev.exp) <- c("modelo","dev.expl")
+  #
   df_return <- df_dev.exp |> 
     inner_join(y=df_aicctab,"modelo") |> 
     arrange(dAICc) |> 
     select(modelo,dAICc:weight,dev.expl)
+  #
   df_moran <- ldply(l_md,f_MoranTest_GAMM,.id="modelo")
-  inner_join(
-    df_return,
-    df_moran %>% select(modelo,2,`p-value`)
-  )
+  if(test_moranK){
+    lmoranI <- lapply(l_md,f_MoranTest_GAMM_severalK)
+    l_return <- list(
+      "tabsel" =  df_moran,
+      "l_moranK" = lmoranI
+    )
+    return(l_return)
+  }else{
+    df_ret <- inner_join(
+      df_return,
+      df_moran %>% select(modelo,2,pvalue)
+    )
+    return(df_ret)
+  }
 }
 #
 # f_validaGAMM
 # input: um gam (md)
-# uso: en um chunk indivíduo rode 'md |> f_validaGAMM()'
+# uso: em um chunk indivíduo rode 'md |> f_validaGAMM()'
 # outpu: dois outputs de console (k.check e summary) e dois conjuntos de gráficos diag do pacote gratia
 f_validaGAMM <- \(md_name,l_md,size=0,contraste=FALSE){
   if(size == 1){
