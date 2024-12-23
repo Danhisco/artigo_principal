@@ -8,7 +8,35 @@ modelo = c("gi", "gs",
            "p * k + 1|Site", "p + k + 1|Site",
            "mgcv::s")
 f_MoranTest_GAMM <- \(md){
+  # setup
+  ## functions
   library(spdep)
+  f_applyMoranI_getStatPval <- \(vk,vcoord,vres){
+    # apply Moran I
+    nb <- knn2nb(knearneigh(vcoord, k=vk))  
+    listw <- nb2listw(nb)
+    moran_output <- moran.test(vres, listw)
+    # get Stat and Pval
+    data.frame(
+      Statistic = c(
+        "MoranI_stat_res", 
+        "Expectation", 
+        "Variance", 
+        "StdDev", 
+        "pvalue"
+      ),
+      Value = c(
+        moran_output$estimate[["Moran I statistic"]], 
+        moran_output$estimate[["Expectation"]], 
+        moran_output$estimate[["Variance"]], 
+        moran_output$statistic, 
+        moran_output$p.value
+      )
+    ) %>% 
+      pivot_wider(names_from = Statistic,
+                  values_from = Value)
+  }
+  ## data
   dfmd <- md$model
   dfmd$residuals <- residuals(md)
   if(sum(names(dfmd)%in%c("lat","long"))<1){
@@ -31,28 +59,18 @@ f_MoranTest_GAMM <- \(md){
   # Prepare spatial data
   coordinates <- dfmd_avgbySite[, c("lat","long")]
   coordinates <- as.matrix(coordinates)
-  nb <- knn2nb(knearneigh(coordinates, k=4))  
-  listw <- nb2listw(nb)
   # Calculate Moran's I for residuals
-  moran_output <- moran.test(dfmd_avgbySite$mean_res, listw)
-  # return
-  data.frame(
-    Statistic = c(
-      "Moran I statistic (res)", 
-      "Expectation", 
-      "Variance", 
-      "Standard Deviate", 
-      "p-value"
-    ),
-    Value = c(
-      moran_output$estimate[["Moran I statistic"]], 
-      moran_output$estimate[["Expectation"]], 
-      moran_output$estimate[["Variance"]], 
-      moran_output$statistic, 
-      moran_output$p.value
-    )
-  ) %>% pivot_wider(names_from=Statistic,values_from = Value) %>% 
-    as.data.frame()
+  registerDoMC(3)
+  df_moranI <- alply(1:100,1,f_applyMoranI_getStatPval,
+                    vcoord=coordinates,
+                    vres=dfmd_avgbySite$mean_res,
+                    .parallel = TRUE)
+  names(df_moranI) <- 1:100
+  df_moranI <- lapply(names(df_moranI),\(li){
+    mutate(df_moranI[[li]],k=li) %>% relocate(k)
+  }) %>% do.call("rbind",.)
+  #
+  return(df_moranI)
 }
 
 f_TabSelGAMM <- function(l_md){

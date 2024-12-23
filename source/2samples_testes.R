@@ -187,7 +187,7 @@ f_contraste_Umed <- \(dfUrep,
     sapply(nobj_export,\(i) assign(i,get(i),envir = .GlobalEnv))
   }
 }
-f_MoranTest_GAMM <- \(md){
+NAOUSAR_f_MoranTest_GAMM <- \(md){
   library(spdep)
   dfmd <- md$model
   dfmd$residuals <- residuals(md)

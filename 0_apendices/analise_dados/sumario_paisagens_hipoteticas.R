@@ -16,17 +16,28 @@ df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>%
          long = ifelse(is.na(long_correct),long,long_correct),
          Sitecode = factor(SiteCode)) %>% 
   select(SiteCode,lat,long)
-df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
-df_nSAD <- adply(unique(df_adSAD$land_type),1,\(i){
-  df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
-    select(-land_type,-c(Smed:Smax)) %>% 
-    rename("land"="taxaU",
-           "nSAD"="nCongKS")
-},.id=NULL) %>% 
+#
+df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
+  rename(nSAD = nCongKS,
+         land = land_type) %>% 
+  select(-c(Smed:Smax)) %>% 
   mutate(k=round(k,2),
          across(c(land,SiteCode,k),factor)) %>% 
   inner_join(df_coord)
-df_nSAD$SiteCode <- factor(df_nSAD$SiteCode)
+df_ad$SiteCode <- factor(df_ad$SiteCode)
+#############
+# df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
+# df_nSAD <- adply(unique(df_adSAD$land_type),1,\(i){
+#   df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
+#     select(-land_type,-c(Smed:Smax)) %>% 
+#     rename("land"="taxaU",
+#            "nSAD"="nCongKS")
+# },.id=NULL) %>% 
+#   mutate(k=round(k,2),
+#          across(c(land,SiteCode,k),factor)) %>% 
+#   inner_join(df_coord)
+# df_nSAD$SiteCode <- factor(df_nSAD$SiteCode)
+##############
 f_gam <- \(vf,dfi){
   gam(formula=vf,
       family='binomial',
@@ -45,13 +56,14 @@ l_f$`1 + 1|Site` <- cbind(nSAD,100-nSAD) ~ 1 + s(SiteCode,bs="re")
 # l_f$`k + s(lat,long) + 1|Site` <- cbind(nSAD,100-nSAD) ~ k + s(lat,long) + s(SiteCode,bs="re") 
 # l_f$`1 + s(lat,long) + 1|Site` <- cbind(nSAD,100-nSAD) ~ 1 + s(lat,long) + s(SiteCode,bs="re")
 doMC::registerDoMC(3)
-l_md <- llply(l_f,f_gam,dfi=df_nSAD,.parallel = TRUE)
+l_md <- llply(l_f,f_gam,dfi=df_ad,.parallel = TRUE)
 if(!file.exists("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")){
   df_tabsel <- f_TabSelGAMM(l_md)
   write_csv(df_tabsel,"1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")  
 }else{
   df_tabsel <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
 }
+saveRDS(l_md,file="dados/csv_SoE/Rdata/l_md_sumario")
 ######################################### ESTIMATIVAS
 md_sumario <- l_md[[df_tabsel$modelo[1]]]
 new_data <- expand.grid(

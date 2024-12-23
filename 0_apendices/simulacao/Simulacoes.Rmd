@@ -201,3 +201,9 @@ formals(f_contraste_Umed)$path_land_effect <- "dados/csv_SoE/taxaU/df_contrastes
 f_contraste_Umed(df_Urep) # em 2samples_testes.R
 ```
 
+
+## Sumário paisagens hipotéticas
+
+
+## Contraste SAD
+
