@@ -205,5 +205,67 @@ f_contraste_Umed(df_Urep) # em 2samples_testes.R
 ## Sumário paisagens hipotéticas
 
 
+
 ## Contraste SAD
+
+
+```{r}
+f_z <- function(x) (x-mean(x))/sd(x)
+source("source/dinamica_coalescente.R")
+source("source/2samples_testes.R")
+v_pares <- c("contemp-ideal","non_frag-ideal","contemp-non_frag")
+# Resultados
+## congruência 
+df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv")
+## efeito U
+df_contrastes <- read_csv(file="dados/csv_SoE/taxaU/df_contrastes.csv")
+## dados disponíveis
+df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+  select(SiteCode,year_bestProxy,forest_succession,matches("(lat|long)")) %>% 
+  mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+         long = ifelse(is.na(long_correct),long,long_correct),
+         data_year = as.numeric(year_bestProxy),
+         data_year = ifelse(is.na(data_year),2012.5,data_year)) %>% 
+  select(-contains("correct"),-year_bestProxy)
+# dados para modelos
+# df_md0 <- df_adSAD %>%
+#   filter(taxaU=="contemp",land_type=="contemp") %>%
+#   select(SiteCode,k,nCongKS) %>%
+#   inner_join(df_contrastes %>% select(SiteCode:k,frag.total_logratio)) # versão do
+df_contrastes <- df_contrastes %>%
+  select(SiteCode:p, contains("_logratio")) %>% 
+  mutate(across(-SiteCode,f_z,.names = "{.col}_z")) %>% 
+  select(SiteCode,k,p,k_z:frag.total_logratio_z) %>% 
+  rename_with(~str_remove(.,"_logratio_z")) %>% 
+  pivot_longer(cols = c("area","frag.perse","frag.total"),
+               values_to = "Uefeito",
+               names_to = "contraste") %>% 
+  mutate(contraste = case_when(contraste=="area" ~ "non_frag-ideal",
+                               contraste=="frag.total" ~ "contemp-ideal",
+                               contraste=="frag.perse" ~ "contemp-non_frag"))
+# df SADs congruentes
+# df_adSADifself <- adply(c("contemp","ideal","non_frag"),1,\(i){
+#   df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
+#     select(-land_type,-c(Smed:Smax)) %>% 
+#     rename("contrafactual"="taxaU",
+#            "nCong"="nCongKS")
+#   inner_join(df_return,
+#              df_contrastes %>% 
+#                filter(contraste=="non_frag-ideal") %>% 
+#                select(SiteCode:p,ends_with("_z")),
+#              by=c("SiteCode","k"))
+# },.id=NULL)
+# df_logOR para modelar
+df_logOR <- df_ad %>% 
+  mutate(nKS = case_when(nCongKS == 0 ~ 0.09, #min pred for a GLMM for a sampled comb
+                         nCongKS == 100 ~ 99.73, #max pred for a GLMM for a sampled comb
+                         TRUE ~ nCongKS),
+         logitoKS = log (nKS / (100-nKS))) %>% 
+  select(taxaU:land_type,logitoKS) %>% 
+  f_contrasteSAD(.,pares=v_pares) %>% 
+  inner_join(y=df_contrastes,by=c("contraste","SiteCode","k")) %>% 
+  inner_join(y=df_dados_disponiveis,by="SiteCode") %>% 
+  relocate(p,.after=k)
+write_csv(df_logOR,file="dados/csv/df_logOR.csv")
+```
 
