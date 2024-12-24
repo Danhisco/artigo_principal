@@ -149,19 +149,19 @@ f_TabSelGAMM <- function(l_md,test_moranK=FALSE){
     select(modelo,dAICc:weight,dev.expl)
   #
   df_moran <- ldply(l_md,f_MoranTest_GAMM,.id="modelo")
+  df_return <- inner_join(
+    df_return,
+    df_moran %>% select(modelo,2,pvalue)
+  )
   if(test_moranK){
     lmoranI <- lapply(l_md,f_MoranTest_GAMM_severalK)
     l_return <- list(
-      "tabsel" =  df_moran,
+      "tabsel" =  df_return,
       "l_moranK" = lmoranI
     )
     return(l_return)
   }else{
-    df_ret <- inner_join(
-      df_return,
-      df_moran %>% select(modelo,2,pvalue)
-    )
-    return(df_ret)
+    return(df_return)
   }
 }
 #
@@ -840,3 +840,60 @@ f_diagplots <- \(lmd){
     file.remove(do.call("c",lpaths))
   })
 }
+####
+
+# preparação dos dados para o logOR #
+f_logOR_land_type <- \(df,
+                       colname_logito = "logitoKS",
+                       pairs=list(c("cont","non_frag"),
+                                  c("cont","ideal"),
+                                  c("non_frag","ideal"))){
+  f <- \(v_string){
+    dfr <- select(df,SiteCode:land_type,logitoKS)
+    p1 <- dfr |> filter(land_type == v_string[1])
+    p2 <- dfr |> filter(land_type == v_string[2])
+    inner_join(p1,p2,c("SiteCode","k")) %>% 
+      mutate(contraste = paste0(land_type.x,".",land_type.y),
+             logOR = logitoKS.x - logitoKS.y) %>% 
+      select(-matches(".x$|.y$"))
+  }
+  ldply(pairs,f)
+}
+f_logOR_dfi <- \(x,y){
+  x <- x/(1-x)
+  y <- y/(1-y)
+  log(x/y)
+}
+f_prep_contrasteSAD <- \(dftologOR,dfUefeito){
+  l_md <- readRDS(file="dados/csv_SoE/Rdata/l_md_sumario")
+  df_tabsel_sumario <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
+  mdref <- l_md[[df_tabsel_sumario$modelo[1]]]
+  #
+  df_extremos <- mdref$model[,2:4]
+  df_extremos$nSAD <- mdref$model$`cbind(nSAD, 100 - nSAD)`[,1]
+  df_extremos$response <- mgcv::predict.gam(mdref,type = "response",se=FALSE) * 100
+  df_extremos$link <- mgcv::predict.gam(mdref,type = "link",se=FALSE)
+  df_extremos <- df_extremos %>% 
+    filter(nSAD%in%c(0,100)) %>% 
+    group_by(land) %>% 
+    filter(link == max(link) | link == min(link)) %>% 
+    select(land,nSAD,response)
+  #
+  df_return <- left_join(
+    dftologOR,
+    df_extremos,
+    by=c("land_type"="land","nSAD"="nSAD")
+  ) %>% mutate(
+    nSAD = ifelse(is.na(response),nSAD,response),
+    logito = nSAD / 100,
+    logitoKS = log(logito / (1-logito))
+    ) %>% 
+    select(-response,-c(Smed:Smax))
+  #
+  teste <- inner_join(
+    df_return,
+    dfUefeito
+  )
+}
+
+

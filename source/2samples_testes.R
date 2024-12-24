@@ -85,11 +85,9 @@ f_summarise_SAD_MNEE <- \(df){
 }
 # f_logOR_land_type
 f_logOR_land_type <- \(df,
-                       # pairs=list(c("contemp","non_frag"),
-                       #            c("contemp","ideal"))){
-  pairs=list(c("contemp","non_frag"),
-             c("contemp","ideal"),
-             c("non_frag","ideal"))){
+                       pairs=list(c("contemp","non_frag"),
+                                  c("contemp","ideal"),
+                                  c("non_frag","ideal"))){
   df <- df %>% 
     mutate(propCong = case_when(nCongKS == 100 ~ 99.9 / 100,
                                 nCongKS == 0 ~ 0.1 / 100,
