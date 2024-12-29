@@ -864,36 +864,51 @@ f_logOR_dfi <- \(x,y){
   y <- y/(1-y)
   log(x/y)
 }
-f_prep_contrasteSAD <- \(dftologOR,dfUefeito){
+f_prep_contrasteSAD <- \(dftologOR,dfUefeito,pares){
+  # objetos necessários
   l_md <- readRDS(file="dados/csv_SoE/Rdata/l_md_sumario")
   df_tabsel_sumario <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
   mdref <- l_md[[df_tabsel_sumario$modelo[1]]]
-  #
+  # função de pareamento
+  f_ <- \(dflogito){
+    df_wider <- dflogito %>% 
+      select(-nSAD) %>% 
+      pivot_wider(names_from="land_type",
+                  values_from = "logito")
+    f_lapply <- \(vpar){
+      vcols <- grep(gsub("-","|",vpar),names(df_wider))  
+      dfr <- select(df_wider,SiteCode,k)
+      dfr$contraste = vpar
+      dfr$logOR = df_wider[[vcols[1]]] - df_wider[[vcols[2]]]
+      return(dfr)
+    }
+    lapply(pares,f_lapply) %>% do.call("rbind",.)
+  }
+  # referência de extremos de logito 
   df_extremos <- mdref$model[,2:4]
   df_extremos$nSAD <- mdref$model$`cbind(nSAD, 100 - nSAD)`[,1]
   df_extremos$response <- mgcv::predict.gam(mdref,type = "response",se=FALSE) * 100
   df_extremos$link <- mgcv::predict.gam(mdref,type = "link",se=FALSE)
   df_extremos <- df_extremos %>% 
     filter(nSAD%in%c(0,100)) %>% 
-    group_by(land) %>% 
+    group_by(land,k) %>% 
     filter(link == max(link) | link == min(link)) %>% 
-    select(land,nSAD,response)
-  #
+    select(land,k,nSAD,response)
+  # aplicação da função de pareamento dos logitos
   df_return <- left_join(
-    dftologOR,
-    df_extremos,
-    by=c("land_type"="land","nSAD"="nSAD")
-  ) %>% mutate(
-    nSAD = ifelse(is.na(response),nSAD,response),
+    mutate(dftologOR,k=factor(round(k,2))),
+    rename(df_extremos,land_type=land)
+    ) %>% mutate(
+    nSAD = ifelse(!is.na(response),response,nSAD),
     logito = nSAD / 100,
-    logitoKS = log(logito / (1-logito))
-    ) %>% 
-    select(-response,-c(Smed:Smax))
-  #
-  teste <- inner_join(
+    logito = log(logito / (1-logito))
+    ) %>% select(-response,-c(Smed:Smax)) %>% 
+    f_()
+  # retorno com a informação do efeito na taxa U
+  inner_join(
     df_return,
-    dfUefeito
-  )
+    mutate(dfUefeito,k=factor(round(k,2)))
+  ) %>% select(SiteCode:contraste,p:p_z,logOR,Uefeito)
 }
 
 
