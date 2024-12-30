@@ -199,8 +199,7 @@ f_contraste_Umed(df_Urep) # criação dos objetos endereçados acima
 
 ## Contraste SAD
 
-
-```{r}
+```{r preparação dados}
 f_z <- function(x) (x-mean(x))/sd(x)
 source("source/dinamica_coalescente.R")
 source("source/2samples_testes.R")
@@ -218,6 +217,8 @@ df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>%
          data_year = as.numeric(year_bestProxy),
          data_year = ifelse(is.na(data_year),2012.5,data_year)) %>% 
   select(-contains("correct"),-year_bestProxy)
+vsites_capoeira <- df_dados_disponiveis %>% 
+  filter(forest_succession)
 ## efeito U
 df_contrastes <- read_csv(file="dados/csv_SoE/taxaU/df_contrastes.csv") %>% 
   select(SiteCode:p, contains("_logratio")) %>% 
@@ -232,7 +233,17 @@ df_contrastes <- read_csv(file="dados/csv_SoE/taxaU/df_contrastes.csv") %>%
                                contraste=="frag.perse" ~ "cont-non_frag"))
 # df_logOR para modelar
 df_logOR <- df_ad %>% 
-  f_prep_contrasteSAD(.,dfUefeito=df_contrastes,pares=v_pares)
-write_csv(df_logOR,file="dados/csv_SoE/df_logOR.csv")
+  f_prep_contrasteSAD(.,dfUefeito=df_contrastes,pares=v_pares) %>% 
+  inner_join(.,df_dados_disponiveis) %>% 
+  filter(forest_succession!="capoeira") %>% 
+  mutate(contraste =  gsub("non_frag.ideal","Área per se",contraste) %>% 
+           gsub("cont-non_frag","Frag. per se",.) %>% 
+           gsub("cont-ideal","Frag. total",.),
+         across(c(contraste:SiteCode,forest_succession,k),factor))
+saveRDS(df_logOR,file="dados/csv_SoE/df_logOR.rds")
+```
+
+```{r ajuste HGAMs}
+source("0_apendices/analise_dados/ajuste_GAMM.R")
 ```
 
