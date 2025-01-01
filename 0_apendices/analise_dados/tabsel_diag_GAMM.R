@@ -103,77 +103,75 @@ f_diag_maisplaus <- \(dfi){
     vpath <- f_diag(md,vname)
   }
 }
-
-
-vlog <- lapply(l_path$te,f_diag_e_plots)
-
-f_diag_e_plots2 <- \(vpath,
-                     efeitos_paisagem="Área per se",
-                     pattern_extract="(?<=l_md_)(.*?)(?=\\.rds)"){
-  hgam <- readRDS(vpath)[[efeitos_paisagem]]
-  hgam <- hgam[[grep("gs",names(hgam),value=T)]]
-  vpath <- f_diag(hgam,efeitos_paisagem)
-  rm(hgam);gc()
-}
-vpath <- list.files(path = paste0(v_path,"rds"),
-                    pattern = "Pedersen2019",
-                    full.names = TRUE)[4]
-
-
-
-
-# l_md_logOR <- readRDS(file=paste0(v_path,"rds/l_md_simples.rds"))
-df_tabelaSelecao <- ldply(l_md_logOR,f_TabSelGAMM,.id="pair")
-write_csv(df_tabelaSelecao,
-          file=paste0(v_path,"rds/tabsel_simples.csv"))
-###  tabelas e diagnósticos
-l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
-df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples.csv")) %>%
-  filter(dAICc==0)
-l_md <- lapply(split(df_tabsel,df_tabsel$contraste),\(dfi){
-  with(dfi,{l_md[[contraste]][[modelo]]})
-})
+vlog <- lapply(l_path$te,f_diag_maisplaus)
+# 
+# f_diag_e_plots2 <- \(vpath,
+#                      efeitos_paisagem="Área per se",
+#                      pattern_extract="(?<=l_md_)(.*?)(?=\\.rds)"){
+#   hgam <- readRDS(vpath)[[efeitos_paisagem]]
+#   hgam <- hgam[[grep("gs",names(hgam),value=T)]]
+#   vpath <- f_diag(hgam,efeitos_paisagem)
+#   rm(hgam);gc()
+# }
+# vpath <- list.files(path = paste0(v_path,"rds"),
+#                     pattern = "Pedersen2019",
+#                     full.names = TRUE)[4]
+# 
+# 
+# 
+# 
+# # l_md_logOR <- readRDS(file=paste0(v_path,"rds/l_md_simples.rds"))
+# df_tabelaSelecao <- ldply(l_md_logOR,f_TabSelGAMM,.id="pair")
+# write_csv(df_tabelaSelecao,
+#           file=paste0(v_path,"rds/tabsel_simples.csv"))
+# ###  tabelas e diagnósticos
+# l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
+# df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples.csv")) %>%
+#   filter(dAICc==0)
+# l_md <- lapply(split(df_tabsel,df_tabsel$contraste),\(dfi){
+#   with(dfi,{l_md[[contraste]][[modelo]]})
+# })
+# # vpaths <- f_diagplots(l_md)
+# l_k.check <- lapply(l_md,k.check)
+# 
+# ###################
+# #
+# #
+# 
+# 
+# 
+# 
+# 
+# #############################
+# l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
+# l_md <- lapply(l_md, \(li){
+#   names(li) <- paste0("cr::",names(li))
+#   return(li)
+# })
+# l_md_logOR <- lapply(l_md_logOR,\(li){
+#   names(li) <- paste0("tp::",names(li))
+#   return(li)
+# })
+# l_md_geral <- lapply(names(l_md),\(li){
+#   c(l_md[[li]],
+#     l_md_logOR[[li]])
+# })
+# names(l_md_geral) <- names(l_md)
+# df_tabelaSelecao_geral <- ldply(l_md_geral,f_TabSelGAMM,.id="pair")
+# write_csv(df_tabelaSelecao_geral,
+#           file=paste0(v_path,"rds/tabsel_simples_tp_e_cr.csv"))
+# #
+# 
+# 
+# 
+# df_tabsel <- df_tabelaSelecao_geral %>% filter(dAICc==0)
+# l_md <- dlply(df_tabsel,"pair",\(dfi){
+#   with(dfi,{l_md_geral[[pair]][[modelo]]})
+# })
+# # vpaths <- f_diagplots(l_md)
+# l_k.check <- lapply(l_md,k.check)
 # vpaths <- f_diagplots(l_md)
-l_k.check <- lapply(l_md,k.check)
-
-###################
-#
-#
-
-
-
-
-
-#############################
-l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
-l_md <- lapply(l_md, \(li){
-  names(li) <- paste0("cr::",names(li))
-  return(li)
-})
-l_md_logOR <- lapply(l_md_logOR,\(li){
-  names(li) <- paste0("tp::",names(li))
-  return(li)
-})
-l_md_geral <- lapply(names(l_md),\(li){
-  c(l_md[[li]],
-    l_md_logOR[[li]])
-})
-names(l_md_geral) <- names(l_md)
-df_tabelaSelecao_geral <- ldply(l_md_geral,f_TabSelGAMM,.id="pair")
-write_csv(df_tabelaSelecao_geral,
-          file=paste0(v_path,"rds/tabsel_simples_tp_e_cr.csv"))
-#
-
-
-
-df_tabsel <- df_tabelaSelecao_geral %>% filter(dAICc==0)
-l_md <- dlply(df_tabsel,"pair",\(dfi){
-  with(dfi,{l_md_geral[[pair]][[modelo]]})
-})
-# vpaths <- f_diagplots(l_md)
-l_k.check <- lapply(l_md,k.check)
-vpaths <- f_diagplots(l_md)
-
-
-
-
+# 
+# 
+# 
+# 

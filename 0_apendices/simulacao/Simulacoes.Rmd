@@ -247,3 +247,7 @@ saveRDS(df_logOR,file="dados/csv_SoE/df_logOR.rds")
 source("0_apendices/analise_dados/ajuste_GAMM.R")
 ```
 
+```{r diagnóstico HGAMs}
+source("0_apendices/analise_dados/tabsel_diag_GAMM.R")
+```
+
