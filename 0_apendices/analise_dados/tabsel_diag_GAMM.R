@@ -1,3 +1,25 @@
+# pacotes
+library(gratia)
+library(doMC)
+library(gridExtra)
+library(ggplot2)
+theme_set(theme_bw())
+library(readr)
+library(stringr)
+library(tidyr)
+library(bbmle)
+library(DHARMa)
+# library(lme4)
+library(mgcv)
+library(plyr)
+library(dplyr)
+## funções de ajuste e de plot
+source("source/2samples_testes.R")
+source("source/general_tools.R")
+source("source/GAMMtools.R")
+source("source/fig_tools.R")
+library(mgcv)
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
 ###############################################
 ############ tabela de seleção  ###############
 ###############################################
@@ -6,7 +28,7 @@ l_path$te <-  paste0("rds/l_md_",c("areaperse","fragperse","fragtotal"),".rds")
 l_path$U <- "rds/l_md_simples_apudPedersen2019.rds"
 l_path$k <- "rds/l_md_onlyk.rds"
 # veffect <- l_path$te[[1]]
-f_single_lmd <- \(veffect){
+f_single_lmd <- \(veffect,v_path){
   # nome 
   vname <- str_extract(veffect,"(?<=l_md_)(.*?)(?=\\.rds)") %>% 
     gsub("areaperse","Área per se",.) %>% 
@@ -31,6 +53,7 @@ f_single_lmd <- \(veffect){
   rm(lmd);gc()
   return(df_tabsel)
 }
+formals(f_single_lmd)$v_path <- v_path
 df_tabsel_geral <- alply(l_path$te,1,f_single_lmd)
 names(df_tabsel_geral) <- str_extract(l_path$te,"(?<=l_md_)(.*?)(?=\\.rds)") %>% 
   gsub("areaperse","Área per se",.) %>% 
@@ -49,7 +72,6 @@ l_path$U <- "rds/l_md_simples_apudPedersen2019.rds"
 l_path$k <- "rds/l_md_onlyk.rds"
 df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
   filter(dAICc==0)
-# veffect <- l_path$te[1]
 f_diag_e_plots <- \(veffect,
                     pattern_extract="(?<=l_md_)(.*?)(?=\\.rds)"){
   vname <- str_extract(veffect,pattern_extract) %>% 
@@ -61,7 +83,29 @@ f_diag_e_plots <- \(veffect,
   vpath <- f_diag(hgam,vname)
   rm(hgam);gc()
 }
-vlog <- lapply(l_path$te[3],f_diag_e_plots)
+f_diag_maisplaus <- \(dfi){
+  vname <- dfi$contraste
+  hgam <- dfi$modelo
+  if(grepl("logU",hgam)){
+    lmd <- readRDS(paste0(v_path,l_path$U))
+    lmd <- lmd[[vname]]
+    lmd <- lmd[[grep("gs",names(lmd),value=TRUE)]]
+    vpath <- f_diag(lmd,vname)
+  }else if(grepl("s\\(k",hgam)){
+    l_path$k
+  }else if(grepl("te\\(land",hgam)){
+    vp <- gsub("Área per se","areaperse",vname) %>% 
+      gsub("Frag. per se","fragperse",.) %>% 
+      gsub("Frag. total","fragtotal",.)
+    vp <- grep(vp,l_path$te,value=TRUE)
+    md <- readRDS(paste0(v_path,vp))
+    md <- md[[hgam]]
+    vpath <- f_diag(md,vname)
+  }
+}
+
+
+vlog <- lapply(l_path$te,f_diag_e_plots)
 
 f_diag_e_plots2 <- \(vpath,
                      efeitos_paisagem="Área per se",
