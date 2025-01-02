@@ -253,7 +253,7 @@ source("0_apendices/analise_dados/tabsel_diag_GAMM.R")
 
 # Tabelas de seleção 
 
-```{r figuras para tabela}
+```{r criação das tabela em jpeg}
 
 ```
 
@@ -268,3 +268,9 @@ source("0_apendices/analise_dados/intervPred_GAMM.R")
 ```
 
 ## Gráficos diagnóstico para o artigo principal
+
+```{r graficos diagnostico para o artigo principal}
+source("0_apendices/analise_dados/graficos_diag_artigoprincipal.R")
+```
+
+## Figuras 

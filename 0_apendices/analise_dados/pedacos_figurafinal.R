@@ -62,7 +62,7 @@ image_title <- \(imgobj,
 df_p <- read_csv("dados/df_p.csv")
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   inner_join(x=df_p,by="SiteCode")
-df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") |> 
+df_contrastes <- read_csv(file="dados/csv_SoE/taxaU/df_contrastes.csv") |> 
   inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
              by="SiteCode") |> 
   dplyr::rename(N=Ntotal,S=S_obs) |> 
@@ -80,8 +80,7 @@ source("source/2samples_testes.R")
 source("source/general_tools.R")
 source("source/GAMMtools.R")
 source("source/fig_tools.R")
-v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
-
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
 # setwd(v_path)
 source(paste0(v_path,"figuras_e_tabelas.R"))
 # source("figuras_e_tabelas.R")
