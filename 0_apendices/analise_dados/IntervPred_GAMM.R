@@ -18,7 +18,7 @@ library(dplyr)
 # source("source/general_tools.R")
 # source("source/GAMMtools.R")
 # source("source/fig_tools.R")
-v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
 # caminhos para os modelos
 # paths <- list.files(path=paste0(v_path,"rds"),
 #                     pattern="l_md_3aperg",full.names = T)
@@ -142,8 +142,3 @@ md_area <- readRDS(paste0(v_path,l_path$U))
 md_area <- md_area$`Área per se`$`s(land)|Site : gs`
 l_df <- f_calcPI(md_area,to_exclude = "s(Uefeito,SiteCode)",simple_area = TRUE)
 saveRDS(l_df,paste0(v_path,"rds/l_dfpred_areaperse_Ugs.rds"))
-
-# l_df_pred <- lapply(l_md,f_calcPI)
-# saveRDS(l_df_pred,paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019_tp.rds"))
-
-

@@ -61,7 +61,7 @@ image_title <- \(imgobj,
     location = vloc
   )# %>% image_trim
 }
-v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
 l_path <- paste0(v_path,"rds/l_dfpred_",
                  c("areaperse",
                    "fragperse",
@@ -168,6 +168,7 @@ l_img_diag <- lapply(names(l_img_diag),\(li){
     image_trim
 })
 names(l_img_diag) <- paste0(
+  v_path,
   "figuras/diagfinal_",
   case_when(
     grepl("Área",names(l_df)) ~ "areaperse",

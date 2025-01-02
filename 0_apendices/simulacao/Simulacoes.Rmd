@@ -251,3 +251,20 @@ source("0_apendices/analise_dados/ajuste_GAMM.R")
 source("0_apendices/analise_dados/tabsel_diag_GAMM.R")
 ```
 
+# Tabelas de seleção 
+
+```{r figuras para tabela}
+
+```
+
+
+
+# Figuras dos capítulos da dissertação
+
+## Criação da predição a posteriori
+
+```{r intervalo de predição a posteriori dos modelos mais plausíveis}
+source("0_apendices/analise_dados/intervPred_GAMM.R")
+```
+
+## Gráficos diagnóstico para o artigo principal
