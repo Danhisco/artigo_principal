@@ -25,7 +25,8 @@ l_df$paisagem <- inner_join(
   select(df_U,-Usd)
 ) %>% 
   filter(SiteCode %in% unique(l_df$contraste$SiteCode)) %>% 
-  rename("n SAD"="nCongKS","U avg"="Umed") %>% 
+  rename("paisagem"="land_type","n SAD"="nCongKS","U avg"="Umed") %>% 
+  mutate(paisagem = gsub("non_frag","aglomer",paisagem)) %>% 
   pivot_longer(.,cols=c("n SAD","U avg"))
 v_sites <- lapply(l_df, "[[","SiteCode") %>% 
   sapply(.,unique)
@@ -33,6 +34,42 @@ v_sites <- v_sites[,1]
 vc <- "SPigua1"
 f_todasasRespostas_bySite <- \(vc){
   ldf <- lapply(l_df,filter,SiteCode==vc)
+  f_geom_final <- \(vdf){
+    if(vdf=="paisagem"){
+      list(scale_color_manual("paisagem",
+                              values=c("cont"="darkred",
+                                       "ideal"="darkgreen",
+                                       "aglomer"="darkblue")
+                              )
+           )
+    }else{
+      list(scale_color_manual("contraste",
+                              values=c("Frag. total"="darkorange",
+                                       "Área per se"="#301934",
+                                       "Frag. per se"="#158F6E")
+                              )
+      )
+    }
+  }
+  f_ggplot <- \(dfi,ncolor){
+    dfi %>% 
+      ggplot(aes(x=k,
+                 y=value,
+                 color=.data[[ncolor]],
+                 group=.data[[ncolor]])) +
+      geom_point() +
+      geom_line() +
+      f_geom_final(ncolor) +
+      labs(y="") +
+      facet_wrap(as.formula(paste0("~","name")),
+                 scales="free") +
+      theme(legend.position="top")
+  }
+  lp <- lapply(names(ldf),\(li){
+    f_ggplot(dfi=ldf[[li]],ncolor=li)
+  })
+  names(lp) <- names(ldf)
+  grid.arrange(grobs=lp,ncol=1)
 }
 
 
