@@ -1,10 +1,48 @@
+library(gridExtra)
+library(ggplot2)
+theme_set(theme_bw())
+library(readr)
+library(stringr)
+library(tidyr)
+library(tidyselect)
+library(bbmle)
+library(DHARMa)
+library(mgcv)
+library(plyr)
+library(dplyr)
+library(mgcv)
+# dados
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
+l_df <- list()
+l_df$contraste <- read_csv(file="dados/csv_SoE/df_logOR.csv") %>% 
+  select(SiteCode:contraste,logOR:Uefeito) %>%
+  rename("logU/U" = "Uefeito") %>% 
+  pivot_longer(cols=c("logOR","logU/U"))
+df_U <- read_csv(file="dados/csv_SoE/taxaU/df_U.csv")
+df_nSAD <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv")
+l_df$paisagem <- inner_join(
+  select(df_nSAD,SiteCode:nCongKS),
+  select(df_U,-Usd)
+) %>% 
+  filter(SiteCode %in% unique(l_df$contraste$SiteCode)) %>% 
+  rename("n SAD"="nCongKS","U avg"="Umed") %>% 
+  pivot_longer(.,cols=c("n SAD","U avg"))
+v_sites <- lapply(l_df, "[[","SiteCode") %>% 
+  sapply(.,unique)
+v_sites <- v_sites[,1]
+vc <- "SPigua1"
+f_todasasRespostas_bySite <- \(vc){
+  ldf <- lapply(l_df,filter,SiteCode==vc)
+}
+
+
+## funções de ajuste e de plot
+
+
+
+
+
 ##### figuras complementares dos resultados
-
-
-
-
-#### 
-#
 lapply(l_path$te,f_plot_te2)
 f_juntapreditos <- \(vsite){
   lpng <- list.files(path="figuras/predito_te_sites",

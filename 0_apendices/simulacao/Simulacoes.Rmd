@@ -251,12 +251,26 @@ source("0_apendices/analise_dados/ajuste_GAMM.R")
 source("0_apendices/analise_dados/tabsel_diag_GAMM.R")
 ```
 
+
+
+
+
 # Tabelas de seleção 
 
 ```{r criação das tabela em jpeg}
 
 ```
 
+# Figuras complementares
+
+## Resultados por sítio:
+
+Descrição da figura:
+4 paineis por sítio: 
+(1,1) = taxa U média ~ k * land
+(1,2) = nSAD ~ k * land
+(2,1) = logU/U ~ k * contraste
+(2,2) = logOR ~ k * land
 
 
 # Figuras dos capítulos da dissertação

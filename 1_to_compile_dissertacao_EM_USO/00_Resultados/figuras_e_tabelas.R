@@ -824,9 +824,6 @@ l_paths <- paste0(v_path,
                   "rds/l_df_pred_",
                   c("areaperse","fragperse","fragtotal"),
                   ".rds")
-f_todosplots <- \(vpath){
-  
-}
 save_flextable_as_png <- function(ft, 
                                   file_name,
                                   width, 
