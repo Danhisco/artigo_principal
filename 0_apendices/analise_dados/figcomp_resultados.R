@@ -37,6 +37,7 @@ v_sites <- v_sites[,1]
 vc <- "SPigua1"
 f_todasasRespostas_bySite <- \(vc){
   ldf <- lapply(l_df,filter,SiteCode==vc)
+  # gráfico dos dados
   f_geom_final <- \(vdf){
     if(vdf=="paisagem"){
       list(scale_color_manual("paisagem",
@@ -66,13 +67,75 @@ f_todasasRespostas_bySite <- \(vc){
       labs(y="") +
       facet_wrap(as.formula(paste0("~","name")),
                  scales="free") +
-      theme(legend.position="top")
+      theme(legend.position = "top",
+            plot.margin = margin(0,0.75,0,0))
   }
-  lp <- lapply(names(ldf),\(li){
+  lp <- lapply(names(ldf)[2:3],\(li){
     f_ggplot(dfi=ldf[[li]],ncolor=li)
   })
-  names(lp) <- names(ldf)
-  grid.arrange(grobs=lp,ncol=1)
+  names(lp) <- names(ldf)[2:3]
+  p <- arrangeGrob(grobs=lp,ncol=1)
+  # mapa de cobertura florestal usado nas simulações
+  f_plot <- \(mat, filename = "matrix_plot.png") {
+    colors <- c("gray", "darkgreen", "darkorange")
+    mat_size <- 1 
+    # coord centr
+    center_x <- 1 / 2 
+    center_y <- 1 / 2
+    # coord 2km x 2km
+    square_size_2km <- mat_size / 4 
+    x_min_2km <- center_x - square_size_2km 
+    x_max_2km <- center_x + square_size_2km
+    y_min_2km <- center_y - square_size_2km
+    y_max_2km <- center_y + square_size_2km
+    # coord 1km x 1km
+    square_size_1km <- mat_size / 8
+    x_min_1km <- center_x - square_size_1km
+    x_max_1km <- center_x + square_size_1km
+    y_min_1km <- center_y - square_size_1km
+    y_max_1km <- center_y + square_size_1km
+    # Open PNG device
+    png(filename = filename) 
+    # Create the image plot
+    image(mat, col = colors, axes = FALSE)
+    # Add 2km x 2km square
+    rect(xleft = x_min_2km, xright = x_max_2km, ybottom = y_min_2km, ytop = y_max_2km, 
+         border = "black", lwd = 2)
+    # Add 1km x 1km square
+    rect(xleft = x_min_1km, xright = x_max_1km, ybottom = y_min_1km, ytop = y_max_1km, 
+         border = "black", lwd = 2)
+    #
+    vprop <- 0.1
+    text(x = mat_size - 0.05*vprop, y = mat_size - 0.05*vprop, labels = paste0("p=", "p1"), adj = c(1, 1))  # Upper right corner
+    text(x = x_max_2km - 0.05*vprop, y = y_max_2km - 0.05*vprop, labels = paste0("p=", "p2"), adj = c(1, 1)) 
+    text(x = x_max_1km - 0.05*vprop, y = y_max_1km - 0.05*vprop, labels = paste0("p=", "p3"), adj = c(1, 1)) 
+    # Close PNG device
+    dev.off()
+  }
+  
+  
+  
+  vpath <- paste0(
+    "dados/simulacao/",
+    ldf$site_info$SiteCode,
+    ".txt"
+  ) 
+  vtxt <- read.table(vpath) %>% as.matrix()
+  colors <- c("white","darkgreen","darkorange")
+  image(vtxt, col = colors, axes = FALSE)
+  
+  vtxt <- as.data.frame(as.table(vtxt))
+  colnames(vtxt) <- c("x", "y", "value")
+  ggplot(vtxt, aes(x = x, y = y, fill = factor(value))) +
+    geom_tile() +
+    scale_fill_manual("",values=c("0"="white",
+                                  "1"="darkgreen",
+                                  "2"="darkorange")) +
+    labs(x="",y="") +
+    coord_fixed() +
+    theme_bw() +
+    theme(axis.text = element_blank(),
+          legend.position = "none")
 }
 
 
