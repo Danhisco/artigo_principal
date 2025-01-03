@@ -14,6 +14,9 @@ library(mgcv)
 # dados
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
 l_df <- list()
+l_df$site_info <- read_csv(file="dados/csv_SoE/df_logOR.csv") %>% 
+  select(SiteCode,forest_succession:data_year) %>%
+  distinct()
 l_df$contraste <- read_csv(file="dados/csv_SoE/df_logOR.csv") %>% 
   select(SiteCode:contraste,logOR:Uefeito) %>%
   rename("logU/U" = "Uefeito") %>% 
