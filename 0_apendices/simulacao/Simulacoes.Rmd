@@ -196,6 +196,10 @@ f_contraste_Umed(df_Urep) # criação dos objetos endereçados acima
 
 ## Sumário paisagens hipotéticas
 
+```{r roda o sumário dos resultados em função das paisagens hipotéticas}
+source("0_apendices/analise_dados/sumario_paisagens_hipoteticas.R")
+```
+
 
 ## Contraste SAD
 

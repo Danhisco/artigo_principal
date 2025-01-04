@@ -55,16 +55,17 @@ l_f$`1 + 1|Site` <- cbind(nSAD,100-nSAD) ~ 1 + s(SiteCode,bs="re")
 # l_f$`land + s(lat,long) + land|Site` <- cbind(nSAD,100-nSAD) ~ land + s(lat,long) + s(SiteCode,by=land,bs="re")
 # l_f$`k + s(lat,long) + 1|Site` <- cbind(nSAD,100-nSAD) ~ k + s(lat,long) + s(SiteCode,bs="re") 
 # l_f$`1 + s(lat,long) + 1|Site` <- cbind(nSAD,100-nSAD) ~ 1 + s(lat,long) + s(SiteCode,bs="re")
-doMC::registerDoMC(3)
-l_md <- llply(l_f,f_gam,dfi=df_ad,.parallel = TRUE)
 if(!file.exists("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")){
-  l_tabsel <- f_TabSelGAMM(l_md,test_moranK = TRUE)
+  doMC::registerDoMC(3)
+  l_md <- llply(l_f,f_gam,dfi=df_ad,.parallel = TRUE)
+  l_tabsel <- f_TabSelGAMM(l_md,test_moranK = vlog)
   write_csv(l_tabsel$tabsel,"1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")  
   saveRDS(l_tabsel$l_moranK,file="1_to_compile_dissertacao_EM_USO/00_Resultados/rds/l_moranK_sumario_paisagens.rds")
+  saveRDS(l_md,file="dados/csv_SoE/Rdata/l_md_sumario")
 }else{
   df_tabsel <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
+  l_md <- readRDS(file="dados/csv_SoE/Rdata/l_md_sumario")
 }
-saveRDS(l_md,file="dados/csv_SoE/Rdata/l_md_sumario")
 ######################################### ESTIMATIVAS
 md_sumario <- l_md[[df_tabsel$modelo[1]]]
 new_data <- expand.grid(
@@ -162,3 +163,8 @@ img <- image_read("figuras/sumario_paisagens.png") %>%
   image_trim() %>% 
   image_resize("50%")
 image_write(img,"figuras/sumario_paisagens.jpeg")
+
+### diagnóstico
+source("source/GAMMtools.R")
+v_path <- "dados/csv_SoE/figuras/"
+f_diag(hgam = md_sumario,vname = "sumario",patsave = "hgam")

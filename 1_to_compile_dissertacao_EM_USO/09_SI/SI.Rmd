@@ -33,96 +33,7 @@ library(dplyr)
 source("source/nameModel.R")
 source("source/GAMMtools.R")
 source("source/general_tools.R")
-figHeight=28
-figWidth=40
-# dados
-# df_dados_disponiveis
-df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
-# df_p
-df_p <- read_csv("dados/df_p.csv")
-# df_resultMNEE
-df_resultados <- read_csv("dados/csv/resultados_MN/df_resultados.csv")
-# df_sim
-df_sim <- read_csv("dados/df_simulacao.csv")
-# df_Urep
-df_Urep <- list.files(path = "dados/csv/taxaU/MNEE", pattern = ".csv",recursive = T,full.names = T) %>%  
-  adply(.,1,data.table::fread,.id=NULL) %>% na.omit()
-# df_U
-df_U <- data.table::fread("dados/csv/taxaU/df_U.csv")
-# df_contrastes
-df_contrastes <- fread("dados/csv/taxaU/df_contrastes.csv")
-# df_ad: dados completos, com todos os logOR e as proporções observadas para os 3 e as preditoras
 f_z <- function(x) (x-mean(x))/sd(x)
-df_ad <- df_resultados |>
-  arrange(p) |> 
-  inner_join(distinct(select(df_sim,SiteCode,Ntotal:S_obs)),"SiteCode") |> 
-  mutate(diffS = (Smed - S_obs)/S_obs)
-# df_contrastes: contrastes por sítio e grau de limitação de dispersão
-df_contrastes <- fread(file="dados/csv/taxaU/df_contrastes.csv") |> 
-  inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
-             by="SiteCode") |> 
-  rename(N=Ntotal,S=S_obs) |> 
-  mutate(across(N:S,log,.names="log.{.col}"),
-         across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
-         SiteCode = factor(SiteCode)) |> 
-  select(-c(N:log.S))
-# df_md: dados necessários 
-df_md <- df_ad |> 
-  inner_join(df_contrastes |> 
-               select(SiteCode:efeito_conf) |> 
-               mutate(across(.cols=c(p,k,contains("efeito")),f_z,.names="{.col}_z")) |> 
-               select(-c(p,efeito_area:efeito_conf)) |> 
-               pivot_longer(starts_with("efeito_"),names_to="logOR_pair",values_to="contraste_z") |> 
-               mutate(logOR_pair = case_when(logOR_pair == "efeito_area_z" ~ "non_frag.ideal",
-                                             logOR_pair == "efeito_frag_z" ~ "cont.non_frag",
-                                             TRUE ~ "cont.ideal")),
-             by=c("SiteCode","k","logOR_pair")) |> 
-  mutate(SiteCode = factor(SiteCode),
-         land_hyp = factor(land_type),
-         contrasteSAD_z = f(logOR_value)) |> 
-  select(-land_type) |> 
-  rename(nCong=nCongKS)
-  # df_newdata
-fwrite(df_md,"dados/csv/df_md_logOR.csv")
-df_newpred <- fread(file="dados/csv/df_newpred.csv") |> 
-  select(-starts_with("log_"))
-# df_pred
-# df_pred <- read_csv("dados/csv/resultados_MN/MNEE/df_pred.csv")
-# df_newdat <- expand.grid(p_z = seq(min(df_ad$p_z),max(df_ad$p_z), length=150),
-#                          k_cont_z = seq(min(df_ad$k_cont_z),max(df_ad$k_cont_z), length=150))
-# df_newdat <- adply(df_newdat,1,.fun = \(x) cbind(x,distinct(select(df_ad,SiteCode,log_S_obs_z,log_Ntotal_z))))
-# write_csv(df_newdat,"dados/csv/df_newdataSADs.csv")
-#
-# df_intePred_contrastes.csv
-df_intPred <- fread("dados/csv/df_intePred_contrastes.csv")
-# df_congContrastetsREP.cvs
-df_congContrastes <- fread("dados/csv/resultados_MN/df_congContrastes.csv") |> 
-  inner_join(df_md |> 
-               select(SiteCode,p,k,logOR_pair,contraste_z),
-             by=c("SiteCode","k","pair" = "logOR_pair")) |> 
-  arrange(p) |> 
-  relocate(p,.after=k) |> 
-  mutate(SiteCode = factor(SiteCode))
-# loads
-# load("dados/Rdata/l_md.contrastes.Rdata")
-# load("dados/Rdata/md_frag_area.Rdata")
-# load("dados/Rdata/l_md_congContrastes.Rdata")
-# load("dados/Rdata/l_md_PrCong.Rdata")
-df_plot <- df_md |> select(SiteCode:nCong,p_z:k_z) |> 
-  inner_join(df_p) |> 
-  inner_join(df_dados_disponiveis |> 
-               filter(forest_succession != "capoeira") %>% 
-               select(SiteCode, forest_succession)) %>% 
-  arrange(p) |> 
-  mutate(succession = case_when(forest_succession == "primary" ~ "1°",
-                                forest_succession == "secondary" ~ "2°",
-                                forest_succession == "primary/secondary" ~ "1.5°"),
-         label = paste0(SiteCode,", p=",round(p,2)," ,suc=",succession),
-         k_f=factor(round(k,2))) %>% 
-  select(-succession)
-df_plot$label <- factor(df_plot$label,levels=unique(df_plot$label))
-#
-df_tif_txt <- read.csv(file="./dados/csv/df_txt_tif_landscape_paths.csv")
 ```
 
 ```{r trackdown chunk SI, include=FALSE,eval=FALSE}
@@ -141,84 +52,41 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
-# Paisagens Contemporâneas
 
-```{r caption 2}
-cap <- "Paisagens contemporâneas (4x4 km2) aos eventos de amostragem da SAD na área amostrada. Mapas de cobertura da coleção 6 do mapbiomas."
-```
-```{r fig-contempLandscape,fig.cap=cap,fig.pos="H",fig.width=figWidth,fig.height=figHeight}
-v_pngfiles <- list.files(path="./dados/paisagens/png_land_sim/",pattern=".png",full.names = TRUE)
-l_p <- v_pngfiles %>% ll_ggpng()
-grid.arrange(grobs=l_p,ncol=10)
-```
+# Sumário das simulações em função das paisagens hipotéticas
+  
+<p>A partir do sumário das paisagens hipotéticas é feito duas operações:
+- determinar os valores de logito observado quando número de SADs simuladas com boa congruência é igual a 0 ou 100.
+- parametrizar o teste I de Moran por uma análise de sensibilidade a partir dos resíduos do sumário.
+A determinação dos valores de logito observado dos valores extremos de número de SADs simuladas com boa congruência foi aplicado por paisagem hipotética e grau de limitação de dispersão simulado.</p>
 
-
-# Taxa U estimada nas paisagens contrafactuais
-
-a paisagem hipotética contemporânea costuma apresentar estimativas superiores de taxa U em comparação com as outras duas paisagens contrafactuais, resultando em contrastes com maior magnitude (fig. \@ref(fig:GE-contraste_taxaU)). Em alguns casos, a estimativa em paisagem aglomerada pode ser superior ao estimado na paisagem contemporânea, resultando no log da razão da estimativa da taxa U inferior ao observado em paisagens com pouca perda de cobertura florestal (fig. \@ref(fig:GE-contraste_taxaU). Em resumo: i) quanto maior a perda de habitat e mais branda a limitação de dispersão, maior a potencial diferença entre as 3 paisagens contrafactuais; ii) em geral a estimativa em paisagens contemporâneas é superior; iii) em geral o estimado na paisagem aglomerada e prístina são similares, porém, para alguns sítios com pouca proporção de cobertura vegetal, o estimado em paisagem aglomerado pode ser superior. 
-
-ADICIONAR FIGURA DA TAXA U POR SÍTIO
-
-# SADs simuladas com boa congruência com a SAD observada
-
-
-```{r GE SADs congruentes}
-df_adSADifself %>% 
-  mutate(contrafactual = case_when(
-    contrafactual == "contemp" ~ "paisagem e taxa U\n contemporânea",
-    contrafactual == "ideal" ~ "paisagem e taxa U\n prístina",
-    contrafactual == "non_frag" ~ "paisagem e taxa U\n aglomerada",
-  )) %>% 
-  ggplot(aes(x=k,y=nCong,color=p,group=SiteCode)) +
-  geom_line(alpha=0.2) +
-  geom_point(alpha=0.2) +
-  labs(y="número de SADs simuladas com boa congruência com o observado",
-       x="proporção de propágulos até a vizinhança imediata") +
-  scale_colour_gradient2("% CF",midpoint=0.5,
-                         low="darkred",
-                         mid = "blue",
-                         high = "darkgreen") +
-  facet_wrap(~contrafactual,ncol=3)
+```{r roda o sumário dos resultados em função das paisagens hipotéticas,echo=TRUE,eval=FALSE,include=FALSE}
+# vlog = TRUE fará o teste de sensibilidade da estatśticas I de Moran e do p valor 
+vlog <- TRUE
+source("0_apendices/analise_dados/sumario_paisagens_hipoteticas.R")
 ```
 
 
-## Avaliação do parâmetro k da estatística I de Moran
+## Diagnóstico do sumário
 
-```{r}
-names(df_moranI)[c(2,5,6)] <- c("MoranI_stat","SD","pvalue")
-# vvline <- df_moranI %>% filter(MoranI_stat==max(MoranI_stat)) %>% pull(k) %>% as.numeric()
-df_summar <- ddply(df_moran,"modelo",\(dfi){
-  dfi %>% 
-    filter(MoranI_stat_res==max(MoranI_stat_res)) %>% 
-    pull(k) %>% as.numeric()
-})
-df_sumar <- df_moran %>% 
-  group_by(modelo) %>%
-  filter(MoranI_stat_res == max(MoranI_stat_res)) %>% 
-  select(modelo,k) %>% 
-  rename(k_max=k)
-p <- df_moran %>% 
-  inner_join(df_sumar) %>% 
-  mutate(k=as.numeric(k),
-         k_max=as.numeric(k_max),
-         vlabel=paste("valor máximo\nno k =",k_max)) %>% 
-  # filter(k<10) %>% 
-  ggplot(aes(x=k)) +
-  # geom_smooth() +
-  # geom_point(size=4) 
-  geom_hline(yintercept = 0.05,linetype=2) +
-  geom_vline(aes(xintercept = k_max),linetype=3) +
-  geom_line(aes(y = MoranI_stat_res), color = "blue") +
-  geom_line(aes(y = pvalue), color = "red") +
-  scale_y_continuous(
-    "Moran's I (blue)", 
-    expand = c(0,0),
-    sec.axis = sec_axis(~ ., name = "p-value (red)")
-  ) +
-  scale_x_continuous(expand = c(0,0)) +
-  geom_text(aes(label=vlabel,x=k_max+25,y=0.5),size=3) +
-  facet_wrap(~modelo,ncol=3)
-ggsave("figuras/MoranI_k1ate100_PVALeSTAT.jpeg",p,
-       width = 10,height = 4.88)
+```{r diagnóstico do modelo mais plausível}
+
 ```
+
+  
+  
+    
+# Diagnóstico dos modelos mais plausíveis para descrever os propostos efeitos da paisagem no debate sobre ecologia de paisagens
+
+## Fragmentação total
+
+## Fragmentação per se
+
+## Área per se
+
+
+# Resultados por sítios de amostragem: parâmetros fitossociológicos, mapa contemporâneo, taxa U, congruência com a SAD observada e contrastes
+
+Aqui vão os 105 cards dos sítios simulados 
+
 
