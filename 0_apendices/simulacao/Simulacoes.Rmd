@@ -251,23 +251,13 @@ saveRDS(df_logOR,file="dados/csv_SoE/df_logOR.rds")
 source("0_apendices/analise_dados/ajuste_GAMM.R")
 ```
 
-```{r diagnóstico HGAMs}
+```{r tabela de seleção e diagnóstico do HGAM mais plausível}
 source("0_apendices/analise_dados/tabsel_diag_GAMM.R")
-```
-
-
-
-
-
-# Tabelas de seleção 
-
-```{r criação das tabela em jpeg}
-
 ```
 
 # Figuras complementares
 
-## Resultados por sítio:
+Resultados por sítio:
 
 Descrição da figura:
 4 paineis por sítio: 
@@ -275,6 +265,11 @@ Descrição da figura:
 (1,2) = nSAD ~ k * land
 (2,1) = logU/U ~ k * contraste
 (2,2) = logOR ~ k * land
+
+```{r}
+source("0_apendices/analise_dados/figcomp_resultados.R")
+```
+
 
 
 # Figuras dos capítulos da dissertação

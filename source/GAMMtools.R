@@ -894,6 +894,9 @@ f_prep_contrasteSAD <- \(dftologOR,dfUefeito,pares){
     group_by(land,k) %>% 
     filter(link == max(link) | link == min(link)) %>% 
     select(land,k,nSAD,response)
+  df_extremos$response <- df_extremos$response %>% as.numeric() 
+  write_csv(as.data.frame(df_extremos),
+            file = "dados/csv_SoE/df_logito_valores_extremos.csv")
   # aplicação da função de pareamento dos logitos
   df_return <- left_join(
     mutate(dftologOR,k=factor(round(k,2))),
