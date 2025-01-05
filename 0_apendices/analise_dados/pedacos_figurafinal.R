@@ -62,19 +62,9 @@ image_title <- \(imgobj,
 df_p <- read_csv("dados/df_p.csv")
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   inner_join(x=df_p,by="SiteCode")
-df_contrastes <- read_csv(file="dados/csv_SoE/taxaU/df_contrastes.csv") |> 
-  inner_join(df_sim |> select(SiteCode,Ntotal:S_obs) |> distinct(),
-             by="SiteCode") |> 
-  dplyr::rename(N=Ntotal,S=S_obs) |> 
-  mutate(across(N:S,log,.names="log.{.col}"),
-         across(c(p,k,log.N:log.S),f_z,.names = "{.col}_z"),
-         SiteCode = factor(SiteCode)) |> 
-  select(-c(N:log.S))
-df_md <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
-  pivot_longer(-c(SiteCode:p)) %>% 
-  mutate(name = gsub("_logratio","",name),
-         across(c(p,k),f_z,.names = "{.col}_z"),
-         SiteCode = factor(SiteCode))
+df_md <- read_csv("dados/csv_SoE/df_logOR.csv")
+
+
 ## funções de ajuste e de plot
 source("source/2samples_testes.R")
 source("source/general_tools.R")
@@ -86,19 +76,16 @@ v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_
 # source("figuras_e_tabelas.R")
 #
 ####################### 1a linha
-l_figfinal <- list()
 #
 l_path <- paste0(v_path,"rds/l_dfpred_",c("fragtotal","fragperse","areaperse"),".rds")
 l_df_pred <- lapply(l_path,readRDS) %>% 
-  lapply(.,"[[","apenas fixo")
+  lapply(.,"[[","apenas fixo") %>% 
+  lapply(.,rename,k=k_cont)
 names(l_df_pred) <- c("Frag. total","Frag. per se","Área per se")
 # ii) filtrar os valores únicos de k em um novo data frame
 df_ref <- lapply(l_df_pred,select,k_cont,SiteCode) %>% lapply(.,distinct)
 df_ref <- df_ref[[1]]
 l_md <- readRDS(file=paste0(v_path,"rds/l_md_refU.rds"))
-l_md <- 
-  readRDS(
-    file="1_to_compile_dissertacao_EM_USO/00_Resultados/rds/l_md_refU.rds")
 l_df_ref <- lapply(names(l_df_pred),\(li){
   lmd <- l_md[grep(li,names(l_md))]
   names(lmd) <- gsub(paste0(li,"."),"",names(lmd)) 
@@ -122,25 +109,19 @@ df_ref <- lapply(names(l_df_ref),\(li){
     grepl("perse",name) ~ "Frag. per se"),
     label=factor(label,levels=c("Frag. Total","Frag. per se","Área per se"))
   )
-df_plot <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
-  pivot_longer(-c(SiteCode:p)) %>% 
-  mutate(name = gsub("_logratio","",name))
-v_sites_RefNulo <- df_plot %>% filter(p>=0.975) %>% pull(SiteCode) %>% unique
-v_range_RefNulo <- df_plot %>% filter(p>=0.975) %>% pull(value) %>% range
-v_hline <- filter(df_plot,p>=0.95) %>% 
-  pull(value) %>% quantile(.,probs)
 
 
+v_sites_RefNulo <- df_md %>% filter(p>=0.975) %>% pull(SiteCode) %>% unique
+v_range_RefNulo <- df_md %>% filter(p>=0.975) %>% pull(Uefeito) %>% range
+v_hline <- filter(df_nd,p>=0.95) %>% 
+  pull(Uefeito) %>% quantile(.,c(0.25,0.50,0.75))
+# figuras per se
+l_figfinal <- list()
 l_figfinal$`1alinha` <- df_md %>% 
-  mutate(label=case_when(
-    grepl("area",name) ~ "Área per se",
-    grepl("total",name) ~ "Frag. Total",
-    grepl("perse",name) ~ "Frag. per se"),
-    label=factor(label,levels=c("Frag. Total","Frag. per se","Área per se"))
-  ) %>% 
-  ggplot(aes(x=k,y=value,group=SiteCode,color=p)) +
+  mutate(across(c(SiteCode,contraste),factor)) %>% 
+  ggplot(aes(x=k,y=Uefeito,group=SiteCode,color=p)) +
   geom_boxplot(inherit.aes = FALSE,
-               aes(x=k,y=value,group=k)) +
+               aes(x=k,y=Uefeito,group=k)) +
   geom_hline(yintercept = 0,color="black",linetype=3) +
   geom_hline(yintercept = v_hline,color="darkred") + 
   geom_line(alpha=0.75) +

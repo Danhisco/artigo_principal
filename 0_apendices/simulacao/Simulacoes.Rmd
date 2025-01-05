@@ -265,10 +265,6 @@ INCLUIR: criação do apêndice com as SAD simuladas
 
 # Figuras dos capítulos da dissertação
 
-## gráficos exploratórios do log U/U ~ k
-
-
-
 ## Criação da predição a posteriori
 
 ```{r intervalo de predição a posteriori dos modelos mais plausíveis}
@@ -277,6 +273,13 @@ source("0_apendices/analise_dados/intervPred_GAMM.R")
 # cria o regão de buffer
 source("0_apendices/analise_dados/regiao_buffer_figfinal.R")
 ```
+
+## Figuras dos resultados
+
+
+
+
+
 
 ## Gráficos diagnóstico para o artigo principal
 
