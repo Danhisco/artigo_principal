@@ -84,9 +84,6 @@ df_extremos %>%
 ```
 
 
-## Análise de sensibilidade do parâmetro de vizinhança usado na estatística I de Moran
-
-
 ## Avaliação do parâmetro k da estatística I de Moran
 ```{r criacação da figura de sensibilidade da estatística I de Moran, eval=FALSE,include=TRUE}
 df_moran <- readRDS(file="1_to_compile_dissertacao_EM_USO/00_Resultados/rds/l_moranK_sumario_paisagens.rds")
@@ -131,7 +128,9 @@ ggsave("dados/csv_SoE/figuras/MoranI_k1ate100_PVALeSTAT.jpeg",p,
 knitr::include_graphics("dados/csv_SoE/figuras/MoranI_k1ate100_PVALeSTAT.jpeg")
 ```
 
-  
+# Comparação com o simulado na menor extensão espacial que é suficiente para o grau de limitação de dispersão mais brando
+
+EM CONSTRUÇÃO
     
 # Diagnóstico dos modelos mais plausíveis para descrever os propostos efeitos da paisagem no debate sobre ecologia de paisagens
 

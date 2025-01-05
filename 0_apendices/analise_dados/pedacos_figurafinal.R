@@ -82,7 +82,7 @@ source("source/GAMMtools.R")
 source("source/fig_tools.R")
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
 # setwd(v_path)
-source(paste0(v_path,"figuras_e_tabelas.R"))
+# source(paste0(v_path,"figuras_e_tabelas.R"))
 # source("figuras_e_tabelas.R")
 #
 ####################### 1a linha
@@ -96,6 +96,9 @@ names(l_df_pred) <- c("Frag. total","Frag. per se","Área per se")
 df_ref <- lapply(l_df_pred,select,k_cont,SiteCode) %>% lapply(.,distinct)
 df_ref <- df_ref[[1]]
 l_md <- readRDS(file=paste0(v_path,"rds/l_md_refU.rds"))
+l_md <- 
+  readRDS(
+    file="1_to_compile_dissertacao_EM_USO/00_Resultados/rds/l_md_refU.rds")
 l_df_ref <- lapply(names(l_df_pred),\(li){
   lmd <- l_md[grep(li,names(l_md))]
   names(lmd) <- gsub(paste0(li,"."),"",names(lmd)) 

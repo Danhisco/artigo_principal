@@ -257,27 +257,25 @@ source("0_apendices/analise_dados/tabsel_diag_GAMM.R")
 
 # Figuras complementares
 
-Resultados por sítio:
-
-Descrição da figura:
-4 paineis por sítio: 
-(1,1) = taxa U média ~ k * land
-(1,2) = nSAD ~ k * land
-(2,1) = logU/U ~ k * contraste
-(2,2) = logOR ~ k * land
-
 ```{r}
 source("0_apendices/analise_dados/figcomp_resultados.R")
 ```
 
-
+INCLUIR: criação do apêndice com as SAD simuladas
 
 # Figuras dos capítulos da dissertação
+
+## gráficos exploratórios do log U/U ~ k
+
+
 
 ## Criação da predição a posteriori
 
 ```{r intervalo de predição a posteriori dos modelos mais plausíveis}
+# cria a predição a posteriori dos modelos mais plausíveis
 source("0_apendices/analise_dados/intervPred_GAMM.R")
+# cria o regão de buffer
+source("0_apendices/analise_dados/regiao_buffer_figfinal.R")
 ```
 
 ## Gráficos diagnóstico para o artigo principal

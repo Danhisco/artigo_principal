@@ -48,7 +48,7 @@ df_buf %>%
   facet_wrap(~contraste,ncol=3)
 #
 f_gam <- \(dfi){
-  gam(Uefeito~s(k_cont,bs="cr"),data=dfi)
+  gam(Uefeito~s(k,bs="cr"),data=dfi)
 }
 l_md <- dlply(df_buf,c("contraste","ext_class"),f_gam)
 for(i in names(l_md)){
@@ -65,15 +65,15 @@ library(mgcv)
 ## funções de ajuste e de plot
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
 # objetos comuns
-df_logOR <- read_csv(file="dados/csv/df_logOR.csv")
-df_md <- df_logOR %>% 
-  select(-Uefeito,-(pristine:denominator),-matches("(k_z|^p)")) %>% 
-  rename(logOR = itself) %>% 
-  filter(forest_succession!="capoeira") %>% 
-  mutate(contraste =  gsub("non_frag.ideal","Área per se",contraste) %>% 
-           gsub("contemp-non_frag","Frag. per se",.) %>% 
-           gsub("contemp-ideal","Frag. total",.),
-         across(c(contraste:SiteCode,forest_succession,k),factor))
+df_logOR <- read_csv(file="dados/csv_SoE/df_logOR.csv")
+df_md <- df_logOR #%>% 
+  # select(-Uefeito,-(pristine:denominator),-matches("(k_z|^p)")) %>% 
+  # rename(logOR = itself) %>% 
+  # filter(forest_succession!="capoeira") %>% 
+  # mutate(contraste =  gsub("non_frag.ideal","Área per se",contraste) %>% 
+  #          gsub("contemp-non_frag","Frag. per se",.) %>% 
+  #          gsub("contemp-ideal","Frag. total",.),
+  #        across(c(contraste:SiteCode,forest_succession,k),factor))
 df_contrastes <- read_csv("dados/csv/taxaU/df_contrastes.csv") %>% 
   select(SiteCode,k,ends_with("logratio")) %>% 
   pivot_longer(cols = ends_with("logratio"),
