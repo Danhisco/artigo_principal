@@ -11,7 +11,7 @@ library(stringr)
 library(tidyr)
 library(bbmle)
 library(DHARMa)
-# library(lme4)
+library(data.table)
 library(mgcv)
 library(plyr)
 library(dplyr)
@@ -63,8 +63,6 @@ df_p <- read_csv("dados/df_p.csv")
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   inner_join(x=df_p,by="SiteCode")
 df_md <- read_csv("dados/csv_SoE/df_logOR.csv")
-
-
 ## funções de ajuste e de plot
 source("source/2samples_testes.R")
 source("source/general_tools.R")
@@ -81,10 +79,23 @@ l_path <- paste0(v_path,"rds/l_dfpred_",c("fragtotal","fragperse","areaperse"),"
 l_df_pred <- lapply(l_path,readRDS) %>% 
   lapply(.,"[[","apenas fixo") %>% 
   lapply(.,rename,k=k_cont)
-names(l_df_pred) <- c("Frag. total","Frag. per se","Área per se")
+names(l_df_pred) <- case_when(
+  grepl("fragtotal",l_path) ~ "Frag. total",
+  grepl("fragperse",l_path) ~ "Frag. per se",
+  grepl("areaperse",l_path) ~ "Área per se"
+)
+l_df_newpred <- lapply(
+  gsub("dfpred","dfnew",l_path),
+  readRDS
+)
+names(l_df_newpred) <- case_when(
+  grepl("fragtotal",l_path) ~ "Frag. total",
+  grepl("fragperse",l_path) ~ "Frag. per se",
+  grepl("areaperse",l_path) ~ "Área per se"
+)
+
+
 # ii) filtrar os valores únicos de k em um novo data frame
-df_ref <- lapply(l_df_pred,select,k_cont,SiteCode) %>% lapply(.,distinct)
-df_ref <- df_ref[[1]]
 l_md <- readRDS(file=paste0(v_path,"rds/l_md_refU.rds"))
 l_df_ref <- lapply(names(l_df_pred),\(li){
   lmd <- l_md[grep(li,names(l_md))]
@@ -102,23 +113,25 @@ df_ref <- lapply(names(l_df_ref),\(li){
          name=gsub("Área per se","area",li) %>% 
            gsub("Frag. total","frag.total",.) %>% 
            gsub("Frag. per se","frag.perse",.))
-}) %>% rbindlist() %>% rename(k=k_cont) %>% 
+}) %>% rbindlist() %>% 
   mutate(label=case_when(
     grepl("area",name) ~ "Área per se",
-    grepl("total",name) ~ "Frag. Total",
+    grepl("total",name) ~ "Frag. total",
     grepl("perse",name) ~ "Frag. per se"),
-    label=factor(label,levels=c("Frag. Total","Frag. per se","Área per se"))
-  )
-
-
+    label=factor(label,levels=c("Frag. total","Frag. per se","Área per se"))
+  ) %>% select(-name) %>% 
+  as.data.frame()
 v_sites_RefNulo <- df_md %>% filter(p>=0.975) %>% pull(SiteCode) %>% unique
 v_range_RefNulo <- df_md %>% filter(p>=0.975) %>% pull(Uefeito) %>% range
-v_hline <- filter(df_nd,p>=0.95) %>% 
+v_hline <- filter(df_md,p>=0.95) %>% 
   pull(Uefeito) %>% quantile(.,c(0.25,0.50,0.75))
 # figuras per se
 l_figfinal <- list()
-l_figfinal$`1alinha` <- df_md %>% 
-  mutate(across(c(SiteCode,contraste),factor)) %>% 
+
+
+l_figfinal$`1alinha` <- df_md %>%
+  mutate(across(c(SiteCode,contraste),factor),
+         label = contraste) %>% 
   ggplot(aes(x=k,y=Uefeito,group=SiteCode,color=p)) +
   geom_boxplot(inherit.aes = FALSE,
                aes(x=k,y=Uefeito,group=k)) +
@@ -126,8 +139,10 @@ l_figfinal$`1alinha` <- df_md %>%
   geom_hline(yintercept = v_hline,color="darkred") + 
   geom_line(alpha=0.75) +
   geom_point(alpha=0.75) +
-  geom_line(data=df_ref,aes(y=max,x=k),color="black") +
-  geom_line(data=df_ref,aes(y=min,x=k),color="black") +
+  geom_line(inherit.aes = FALSE,
+            data=df_ref,aes(y=max,x=k),color="black") +
+  geom_line(inherit.aes = FALSE,
+            data=df_ref,aes(y=min,x=k),color="black") +
   scale_colour_gradient2("% CF",midpoint=0.5,
                          low="red",
                          mid = "yellow",
