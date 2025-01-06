@@ -908,10 +908,12 @@ f_prep_contrasteSAD <- \(dftologOR,dfUefeito,pares){
     ) %>% select(-response,-c(Smed:Smax)) %>% 
     f_()
   # retorno com a informação do efeito na taxa U
-  inner_join(
-    df_return,
-    mutate(dfUefeito,k=factor(round(k,2)))
-  ) %>% select(SiteCode:contraste,p:p_z,logOR,Uefeito)
+   inner_join(
+    rename(df_return,par=contraste),
+    mutate(dfUefeito,k=factor(round(k,2))),
+  ) %>% 
+     select(SiteCode:par,contraste,p,logOR,Uefeito) %>% 
+     rename(p_4x4 = p)
 }
 
 
