@@ -248,6 +248,16 @@ df_logOR <- df_ad %>%
 saveRDS(df_logOR,file="dados/csv_SoE/df_logOR.rds")
 ```
 
+## Figuras complementares
+
+```{r}
+source("0_apendices/analise_dados/figcomp_resultados.R")
+```
+
+INCLUIR: criação do apêndice com as SAD simuladas
+
+## Ajuste HGAM e diagnóstico
+
 ```{r ajuste HGAMs}
 source("0_apendices/analise_dados/ajuste_GAMM.R")
 ```
@@ -256,13 +266,6 @@ source("0_apendices/analise_dados/ajuste_GAMM.R")
 source("0_apendices/analise_dados/tabsel_diag_GAMM.R")
 ```
 
-# Figuras complementares
-
-```{r}
-source("0_apendices/analise_dados/figcomp_resultados.R")
-```
-
-INCLUIR: criação do apêndice com as SAD simuladas
 
 # Figuras dos capítulos da dissertação
 

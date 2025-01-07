@@ -11,6 +11,76 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 7jan2025
+
+```{r}
+df_U <- read_csv("dados/csv_SoE/taxaU/df_U.csv") %>% 
+  select(-Usd) %>% 
+  pivot_wider(.,names_from="land_type",values_from="Umed")
+df_logOR <- readRDS(file="dados/csv_SoE/df_logOR.rds")
+df_aud <- inner_join(
+  mutate(df_U,k=factor(round(k,2))),
+  select(df_logOR,SiteCode,k,contraste,Uefeito) %>% 
+    pivot_wider(names_from="contraste",values_from="Uefeito")
+)
+dfi <- inner_join(
+  df_logOR %>% 
+    filter(SiteCode=="MGipia1") %>% 
+    select(SiteCode,k,contraste,Uefeito) %>% 
+    pivot_wider(names_from="contraste",values_from="Uefeito") %>% 
+    rename(fragtotal=3,area=4,fraperse=5),
+  df_U %>% 
+    filter(SiteCode=="MGipia1") %>% 
+    select(-non_frag) %>% 
+    mutate(k_cont=k,
+           k=factor(round(k,2)))
+) %>% mutate(teste = log(cont/ideal),
+             diff = fragtotal-teste)
+lp <- list()
+lp[[1]] <- df_logOR %>% 
+  filter(SiteCode=="MGipia1") %>% 
+  mutate(k_cont = as.numeric(as.character(k))) %>% 
+  ggplot(aes(x=k_cont,y=Uefeito,color=contraste)) +
+  geom_point() +
+  geom_line()
+lp[[2]] <- df_U %>% 
+  filter(SiteCode=="MGipia1") %>% 
+  pivot_longer(-c(SiteCode:k)) %>% 
+  ggplot(aes(x=k,y=value,color=name)) +
+  geom_point() +
+  geom_line()
+grid.arrange(grobs=lp,ncol=2)
+
+lp <- list()
+lp[[1]] <- dfi %>% 
+  ggplot(aes(x=k_cont,y=fragtotal)) +
+  geom_point() +
+  geom_line()
+lp[[2]] <- dfi %>% 
+  pivot_longer(c(cont,ideal)) %>% 
+  ggplot(aes(x=k_cont,y=value,color=name)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~name)
+grid.arrange(grobs=lp,ncol=1)
+
+df1 <- df_aud %>% 
+  filter(SiteCode=="MGipia1")
+dfi <- df1[20,]
+with(dfi,{
+  v1 <- log(cont/ideal)
+  `Frag. total` - v1
+})
+dfi %>% 
+  ggplot(aes(x=k,))
+
+
+```
+
+
+
+######
+
 
 ```{r}
 df_aud <- df_plot %>% select(SiteCode,S_obs,Ntotal,S.N) %>% distinct() %>% inner_join(select(df_sim,SiteCode,effort_ha)) %>% mutate(DA=Ntotal/effort_ha)

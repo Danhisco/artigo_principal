@@ -103,4 +103,5 @@ f_diag_maisplaus <- \(dfi){
     vpath <- f_diag(md,vname)
   }
 }
-vlog <- lapply(l_path$te,f_diag_maisplaus)
+vlog <- lapply(split(df_tabsel,df_tabsel$contraste)[[3]],
+               f_diag_maisplaus)
