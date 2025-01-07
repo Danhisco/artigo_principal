@@ -876,7 +876,11 @@ f_prep_contrasteSAD <- \(dftologOR,dfUefeito,pares){
       pivot_wider(names_from="land_type",
                   values_from = "logito")
     f_lapply <- \(vpar){
-      vcols <- grep(gsub("-","|",vpar),names(df_wider))  
+      vindex <- str_split(vpar,"-")[[1]] 
+      vcols <- c(
+        grep(vindex[1],names(df_wider)),
+        grep(vindex[2],names(df_wider))
+      ) 
       dfr <- select(df_wider,SiteCode,k)
       dfr$contraste = vpar
       dfr$logOR = df_wider[[vcols[1]]] - df_wider[[vcols[2]]]
