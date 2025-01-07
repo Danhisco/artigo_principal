@@ -14,6 +14,43 @@ knitr::opts_chunk$set(echo = TRUE)
 # 7jan2025
 
 ```{r}
+# l27 figcomp_resultados.R
+l0 <- list()
+l0[[1]] <- l_df$contraste %>% 
+  filter(SiteCode=="MGipia1",name=="logOR") %>% 
+  mutate(k=as.numeric(as.character(k))) %>% 
+  ggplot(aes(x=k,y=value,color=contraste)) +
+  geom_line() +
+  geom_point() +
+  f_geom_final(vdf="contraste")
+l0[[2]] <- l_df$paisagem %>% 
+  filter(SiteCode=="MGipia1",name=="n SAD") %>% 
+  # mutate(k=as.numeric(as.character(k))) %>% 
+  ggplot(aes(x=k,y=value,color=paisagem)) +
+  geom_line() +
+  geom_point() +
+  f_geom_final(vdf="paisagem")
+grid.arrange(grobs=l0,ncol=2)
+grid.arrange(grobs=lp,ncol=1)
+
+dfa <- inner_join(
+  l_df$contraste %>% 
+    filter(SiteCode=="MGipia1",name=="logOR") %>%
+    select(SiteCode:k,contraste,value) %>% 
+    mutate(k = factor(round(k,2))) %>% 
+    pivot_wider(names_from=contraste,values_from=value),
+  l_df$paisagem %>% 
+    filter(SiteCode=="MGipia1",name=="n SAD") %>% 
+    select(-name) %>% 
+    mutate(k = factor(round(k,2))) %>% 
+    pivot_wider(names_from=paisagem,values_from=value)
+)
+
+```
+
+
+
+```{r}
 df_U <- read_csv("dados/csv_SoE/taxaU/df_U.csv") %>% 
   select(-Usd) %>% 
   pivot_wider(.,names_from="land_type",values_from="Umed")
@@ -36,15 +73,17 @@ dfi <- inner_join(
            k=factor(round(k,2)))
 ) %>% mutate(teste = log(cont/ideal),
              diff = fragtotal-teste)
+vsite <- sample(unique(df_logOR$SiteCode),1,replace = FALSE)
+
 lp <- list()
 lp[[1]] <- df_logOR %>% 
-  filter(SiteCode=="MGipia1") %>% 
+  filter(SiteCode==vsite) %>% 
   mutate(k_cont = as.numeric(as.character(k))) %>% 
   ggplot(aes(x=k_cont,y=Uefeito,color=contraste)) +
   geom_point() +
   geom_line()
 lp[[2]] <- df_U %>% 
-  filter(SiteCode=="MGipia1") %>% 
+  filter(SiteCode==vsite) %>% 
   pivot_longer(-c(SiteCode:k)) %>% 
   ggplot(aes(x=k,y=value,color=name)) +
   geom_point() +

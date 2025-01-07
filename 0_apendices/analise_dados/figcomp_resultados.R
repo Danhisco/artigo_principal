@@ -28,11 +28,11 @@ v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_
 l_df <- list()
 df_info <- read_csv("dados/df_dados_disponiveis.csv") %>% 
   select(SiteCode,effort_ha,Ntotal,S_obs)
-l_df$site_info <- read_csv(file="dados/csv_SoE/df_logOR.csv") %>% 
+l_df$site_info <- readRDS(file="dados/csv_SoE/df_logOR.rds") %>% 
   select(SiteCode,forest_succession:data_year) %>%
   distinct() %>% 
   inner_join(.,df_info)
-l_df$contraste <- read_csv(file="dados/csv_SoE/df_logOR.csv") %>% 
+l_df$contraste <- readRDS(file="dados/csv_SoE/df_logOR.rds") %>% 
   select(SiteCode:contraste,logOR:Uefeito) %>%
   rename("logU/U" = "Uefeito") %>% 
   pivot_longer(cols=c("logOR","logU/U"))
@@ -49,7 +49,7 @@ l_df$paisagem <- inner_join(
 v_sites <- lapply(l_df, "[[","SiteCode") %>% 
   sapply(.,unique)
 v_sites <- v_sites[,1]
-# vc <- "SPigua1"
+# vc <- "MGipia1"
 f_todasasRespostas_bySite <- \(vc){
   ldf <- lapply(l_df,filter,SiteCode==vc)
   # gráfico dos dados
@@ -66,7 +66,8 @@ f_todasasRespostas_bySite <- \(vc){
                               values=c("Frag. total"="darkorange",
                                        "Área per se"="#301934",
                                        "Frag. per se"="#158F6E")
-                              )
+                              ),
+           geom_hline(yintercept = 0,color="darkgray",alpha=0.35)
       )
     }
   }

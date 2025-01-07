@@ -244,8 +244,10 @@ df_logOR <- df_ad %>%
   mutate(contraste =  gsub("area","Área per se",contraste) %>% 
            gsub("frag.perse","Frag. per se",.) %>% 
            gsub("frag.total","Frag. total",.),
-         across(c(SiteCode:contraste,forest_succession),factor))
+         across(c(SiteCode,par,contraste,forest_succession),factor),
+         k = as.numeric(as.character(k)))
 saveRDS(df_logOR,file="dados/csv_SoE/df_logOR.rds")
+write_csv(df_logOR,file="dados/csv_SoE/df_logOR.csv")
 ```
 
 ## Figuras complementares
