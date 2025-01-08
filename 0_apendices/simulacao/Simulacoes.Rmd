@@ -261,7 +261,7 @@ INCLUIR: criação do apêndice com as SAD simuladas
 ## Ajuste HGAM e diagnóstico
 
 ```{r ajuste HGAMs}
-source("0_apendices/analise_dados/ajuste_GAMM.R")
+source("./0_apendices/analise_dados/ajuste_GAMM.R")
 ```
 
 ```{r tabela de seleção e diagnóstico do HGAM mais plausível}
@@ -275,9 +275,9 @@ source("0_apendices/analise_dados/tabsel_diag_GAMM.R")
 
 ```{r intervalo de predição a posteriori dos modelos mais plausíveis}
 # cria a predição a posteriori dos modelos mais plausíveis
-source("0_apendices/analise_dados/intervPred_GAMM.R")
+source("./0_apendices/analise_dados/intervPred_GAMM.R")
 # cria o regão de buffer
-source("0_apendices/analise_dados/regiao_buffer_figfinal.R")
+source("./0_apendices/analise_dados/regiao_buffer_figfinal.R")
 ```
 
 ## Figuras dos resultados

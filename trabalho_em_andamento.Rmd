@@ -13,6 +13,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 7jan2025
 
+olhar sítios:
+MGlavr3: pq o número de SADs está como zero enquanto o logOR varia?
+
+
 ```{r}
 # l27 figcomp_resultados.R
 l0 <- list()

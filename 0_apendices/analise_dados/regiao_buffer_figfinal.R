@@ -28,7 +28,7 @@ df_buf <- ddply(df_md,c("contraste","k"),\(dfi){
            Uefeito_quant=ifelse(ext_class=="min",v_quant[1],v_quant[2])) %>% 
     relocate(ext_class,.after=contraste) %>% 
     relocate(Uefeito_quant,.after=Uefeito)
-}) %>% select(-c(p:p_z))
+}) %>% select(-starts_with("p"))
 df_buf %>% 
   pivot_longer(starts_with("Uefeito")) %>% 
   filter(name=="Uefeito") %>% 
@@ -64,9 +64,8 @@ l_df_pred <- lapply(l_paths,readRDS) %>%
   lapply(.,rename,k=k_cont)
 names(l_df_pred) <- c("Frag. total","Frag. per se","Área per se")
 # ii) filtrar os valores únicos de k em um novo data frame
-l_df_ref <- lapply(l_df_pred,select,k_cont,SiteCode) %>% 
-  lapply(.,distinct) %>% 
-  lapply(.,rename,k=k_cont)
+l_df_ref <- lapply(l_df_pred,select,k,SiteCode) %>% 
+  lapply(.,distinct)
 # iii) fazer a predição média do modelo para cada ponto e guardar em um dataframe
 l_df_ref <- lapply(names(l_df_ref),\(li){
   lmd <- l_md[grep(li,names(l_md))]
@@ -101,14 +100,3 @@ lapply(names(l_df_ref),\(i){
   vpath <- l_paths[i]
   saveRDS(dfrds,file=vpath)
 })
-#
-#
-#
-#
-# figura de predição a posteriori #
-#
-
-
-
-
-

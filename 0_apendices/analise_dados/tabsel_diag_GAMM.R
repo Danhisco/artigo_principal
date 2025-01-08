@@ -103,5 +103,6 @@ f_diag_maisplaus <- \(dfi){
     vpath <- f_diag(md,vname)
   }
 }
-vlog <- lapply(split(df_tabsel,df_tabsel$contraste)[[3]],
+vlog <- lapply(split(df_tabsel,df_tabsel$contraste),
                f_diag_maisplaus)
+# f_diag_maisplaus(filter(df_tabsel,contraste=="Frag. total"))

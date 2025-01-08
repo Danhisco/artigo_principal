@@ -249,9 +249,10 @@ lapply(names(l_img_diag),\(li) image_write(l_img_diag[[li]],path=li))
 # })
 
 ##### combinação das figuras de diagnóstico
-l_img <- list.files("figuras",pattern = "diagfinal",full.names = TRUE)
+l_img <- list.files("dados/csv_SoE/figuras",pattern = "diagfinal",full.names = TRUE)
 l_img <- lapply(l_img,image_read)
-names(l_img) <- list.files("figuras",pattern = "diagfinal",full.names = TRUE)
-img_final <- image_append(do.call("c",l_img[3:1]),stack = FALSE) %>% 
+names(l_img) <- list.files("dados/csv_SoE/figuras",pattern = "diagfinal",full.names = TRUE)
+img_final <- image_append(do.call("c",l_img[3:1]),
+                          stack = FALSE) %>% 
   image_resize("50%")
-image_write(img_final,"figuras/diagfinal_3efeitos.jpeg",format="jpeg")
+image_write(img_final,"dados/csv_SoE/figuras/diagfinal_3efeitos.jpeg",format="jpeg")
