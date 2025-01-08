@@ -69,12 +69,7 @@ source("source/general_tools.R")
 source("source/GAMMtools.R")
 source("source/fig_tools.R")
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
-# setwd(v_path)
-# source(paste0(v_path,"figuras_e_tabelas.R"))
-# source("figuras_e_tabelas.R")
-#
 ####################### 1a linha
-#
 l_path <- paste0(v_path,"rds/l_dfpred_",c("fragtotal","fragperse","areaperse"),".rds")
 l_df_pred <- lapply(l_path,readRDS) %>% 
   lapply(.,"[[","apenas fixo") %>% 
@@ -93,8 +88,6 @@ names(l_df_newpred) <- case_when(
   grepl("fragperse",l_path) ~ "Frag. per se",
   grepl("areaperse",l_path) ~ "Área per se"
 )
-
-
 # ii) filtrar os valores únicos de k em um novo data frame
 l_md <- readRDS(file=paste0(v_path,"rds/l_md_refU.rds"))
 l_df_ref <- lapply(names(l_df_pred),\(li){
@@ -123,16 +116,14 @@ df_ref <- lapply(names(l_df_ref),\(li){
   as.data.frame()
 v_sites_RefNulo <- df_md %>% filter(p>=0.975) %>% pull(SiteCode) %>% unique
 v_range_RefNulo <- df_md %>% filter(p>=0.975) %>% pull(Uefeito) %>% range
-v_hline <- filter(df_md,p>=0.95) %>% 
+v_hline <- filter(df_md,p_4x4>=0.95) %>% 
   pull(Uefeito) %>% quantile(.,c(0.25,0.50,0.75))
 # figuras per se
 l_figfinal <- list()
-
-
 l_figfinal$`1alinha` <- df_md %>%
   mutate(across(c(SiteCode,contraste),factor),
          label = contraste) %>% 
-  ggplot(aes(x=k,y=Uefeito,group=SiteCode,color=p)) +
+  ggplot(aes(x=k,y=Uefeito,group=SiteCode,color=p_4x4)) +
   geom_boxplot(inherit.aes = FALSE,
                aes(x=k,y=Uefeito,group=k)) +
   geom_hline(yintercept = 0,color="black",linetype=3) +
@@ -143,7 +134,7 @@ l_figfinal$`1alinha` <- df_md %>%
             data=df_ref,aes(y=max,x=k),color="black") +
   geom_line(inherit.aes = FALSE,
             data=df_ref,aes(y=min,x=k),color="black") +
-  scale_colour_gradient2("% CF",midpoint=0.5,
+  scale_colour_gradient2("% CF 4km x 4km",midpoint=0.5,
                          low="red",
                          mid = "yellow",
                          high = "darkgreen") +
