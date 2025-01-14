@@ -172,11 +172,8 @@ df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>%
 ##############
 ### 1a parte: figfinal_te_EFEITO PAISAGEM
 ### @descrição: heatmap x=k, y=logU/U, z=
-#v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
-df_ref <- read_csv(paste0(v_path,
-                           "rds/df_limites_predicao_aposteriori_logOR.csv"))
-v_range <-  df_ref %>% 
-  summarise(max=max(max),min=min(min)) %>% 
+v_range <-  df_md %>% 
+  summarise(max=max(Uefeito),min=min(Uefeito)) %>% 
   unlist
 setwd(v_path)
 f_plot_te <- \(veffect,
@@ -189,14 +186,14 @@ f_plot_te <- \(veffect,
                textsize_4q=10,
                ctextsize=10,
                facetspace_4q=0.5,
-               propred_fixo = 0.9,xfixo=0.447, yfixo=0.68,
+               propred_fixo = 0.9, xfixo=0.447, yfixo=0.68,
                propred_fa = 0.7, xfa=0.589, yfa=0.68,
                vw=7,vh=7){
   # veffect <- l_path$te[3]
   f_ggplot_main <- \(dfiQ50,
                      linew=1
                      ){
-    dfref <- rename(l_df_ref[[vname]],k=k_cont)
+    dfref <- l_df_ref[[vname]]
     dfiQ50 %>% 
       mutate(quantiles=paste0(vname,": mediana")) %>% 
       ggplot(aes(x=k,y=Uefeito,z=logOR)) +
@@ -324,8 +321,7 @@ f_plot_te <- \(veffect,
                          names_to="quantiles",
                          values_to="logOR") %>% 
     mutate(quantiles=factor(100 * as.numeric(gsub("Q_","",quantiles)),
-                            levels=c(5,50,95)) ) %>% 
-    rename(k = k_cont)
+                            levels=c(5,50,95)) ) 
   # apenas fixo
   p50 <- f_ggplot_main(dfiQ50 = filter(dfpred,quantiles=="50"))
   p4quan <- f_ggplot_4quantiles(dfpred = dfpred)
@@ -367,7 +363,7 @@ names(l_img) <- gsub("/rds/","/figuras/",l_path$te) %>%
 lapply(names(l_img),\(li){
   img <- image_read(l_img[[li]]) %>% 
     image_trim() %>% 
-    image_resize("20%")
+    image_resize("75%")
   image_write(img,path = li)
 })
 #
@@ -378,12 +374,8 @@ f_plotPI_shgam <- \(nefeito,
                     striptextsize=10,
                     textsize=15){
   # objeto para o gráfico
-  v_range_x <- sapply(l_df,\(li){
-    range(li[["apenas fixo"]]$Uefeito)
-  }) %>% range()
-  v_range_y <- sapply(l_df,\(li){
-    range(select(li[["apenas fixo"]],starts_with("Q_")))
-  }) %>% range()
+  v_range_x <- range(l_df$`apenas fixo`$Uefeito)
+  v_range_y <- range(select(l_df[["apenas fixo"]],starts_with("Q_")))
   f_geom_legend <- list(
     # guide name
     annotate("text", x = 0.01, y =-5.5, 
@@ -410,8 +402,8 @@ f_plotPI_shgam <- \(nefeito,
              label = "s(log(U/U)) + 0|Site", hjust = 0)
   )
   # padronização dos dados
-  l_df[[nefeito]][["apenas fixo"]]$SiteCode <- "apenas fixo"
-  ldfi <- lapply(l_df[[nefeito]],mutate,
+  l_df[["apenas fixo"]]$SiteCode <- "apenas fixo"
+  ldfi <- lapply(l_df,mutate,
                  contraste = nefeito,
                  SiteCode = factor(SiteCode)) %>% 
     lapply(.,select,-any_of("logOR"))
@@ -471,10 +463,10 @@ f_plot_shgam <- \(efeito="Área per se",
                   vstriptextsize=10,
                   vtextsize=15){
   # bases com a predição a posteriori para os modelos com spline simples
-  path_ldf = "rds/l_dfpred_simples_apudPedersen2019.rds"
+  path_ldf = "rds/l_dfpred_areaperse_Ugs.rds"
   l_df <- readRDS(path_ldf)
   # criação dos gráficos de PI
-  p <- f_plotPI_shgam("Área per se",
+  p <- f_plotPI_shgam(efeito,
                       stripspace = vstripspace,
                       striptextsize=vstriptextsize,
                       textsize=vtextsize)
