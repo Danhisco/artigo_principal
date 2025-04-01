@@ -11,6 +11,123 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+# 14/fev/2025
+
+```{r}
+library(plyr)
+library(dplyr)
+df_expostos <- plyr::rdply(.n=33,{
+  data.frame(expostos=rpois(1,lambda = 10))
+},.id = "locais") %>% 
+  adply(.,1,\(dfi){
+    data.frame(infectados=rbinom(1,dfi$expostos,prob=0.5)  )
+  })
+```
+
+
+
+```{r}
+f_sig <- \(x,beta=10,S0=0.4) 1 / (1 + exp(-beta*(x-S0)))
+x <- seq(0,1,by=0.01)
+y <- f_sig(x)
+plot(y~x)
+
+f_logito <- \(x,beta=10,S0=0.4) beta*x - beta*S0
+y_logito <- f_logito(x)
+plot(y_logito~x)
+
+plot(y_logito~y)
+```
+
+
+
+# 24jan2025
+
+```{r}
+library(pROC)
+library(ROCR)
+
+# Simulando dados
+set.seed(123)
+n <- 1000
+classe <- factor(sample(c(0, 1), n, replace = TRUE))
+preditor <- rnorm(n, mean = ifelse(classe == 1, 1, -1), sd = 1)
+
+# Criando um objeto de predição
+pred <- prediction(preditor, classe)
+
+# Calculando a performance
+perf <- performance(pred, measure = "tpr", x.measure = "fpr")
+
+# Plotando a curva ROC
+plot(perf, colorize = TRUE, main = "Curva ROC")
+abline(a = 0, b = 1, lty = 2)
+
+# Calculando a AUC
+auc <- performance(pred, measure = "auc")
+auc <- auc@y.values[[1]]
+cat("AUC =", auc)
+
+# Escolhendo um limiar (exemplo)
+limiar <- 0.5
+pred_class <- ifelse(preditor > limiar, 1, 0)
+
+# Tabela de classificação
+table(pred_class, classe)
+```
+
+
+
+```{r}
+library(doMC)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(plyr)
+library(dplyr)
+f_sig <- \(x) 1 / (1 + exp(-x))
+dfdata <- data.frame(x = seq(-10,10,by=0.01))
+dfdata$y <- f_sig(dfdata$x)
+dfdata$x <- dfdata$x+10
+lp <- list()
+f_ggplot <- \(dff){
+  ggplot(dff,aes(x=x,y=y)) +
+  geom_point() +
+  theme_bw()
+}
+lp$severidade_dias <- f_ggplot(dfdata)  +
+  geom_hline(yintercept = 0.6,color="darkred",alpha=0.75,linetype = 2) +
+  labs(x="dias desde infecção",
+       y="severidade dos sintomas",
+       subtitle = "proposta de valor contínuo de severidade:\nfunção sigmoide de até 2o grau (oligossintomáticos)",
+       caption = "algum limiar de testagem obrigatória dado a visita hospitalar (em vermelho)",
+       title = "Como modelar a severidade dos sintomas?")
+dfdata$x <- dfdata$x / 20
+lp$hosp_severidade <- f_ggplot(dfdata)  +
+  labs(x="severidade dos sintomas",
+       y="Probabilidade de visita hospitalar")
+dfdata$y <- dfdata$y[nrow(dfdata):1]
+lp$comunitario_severidade <- f_ggplot(dfdata)  +
+  labs(x="severidade dos sintomas",
+       y="Probabilidade de visita comunitária")
+p <- arrangeGrob(grobs=lp,
+                 layout_matrix = rbind(c(1,1),
+                                       c(1,1),
+                                       c(1,1),
+                                       c(2,3),
+                                       c(2,3)))
+ggsave(filename = "./modelo_severidade_visitas_hosp_e_comunitaria.jpeg",p,
+       width=6,height=8)
+```
+
+
+
+
+
 # 7jan2025
 
 olhar sítios:

@@ -15,7 +15,7 @@ df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>%
   mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
          long = ifelse(is.na(long_correct),long,long_correct),
          Sitecode = factor(SiteCode)) %>% 
-  select(SiteCode,lat,long)
+  select(SiteCode,lat,long, forest_succession)
 #
 df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
   rename(nSAD = nCongKS,
@@ -45,20 +45,23 @@ f_gam <- \(vf,dfi){
       method="REML")
 }
 l_f <- list()
-l_f$`land * k + land|Site` <- cbind(nSAD,100-nSAD) ~ land * k + s(SiteCode,by=land,bs="re")
-l_f$`land + k + land|Site` <- cbind(nSAD,100-nSAD) ~ land + k + s(SiteCode,by=land,bs="re")
-l_f$`land + land|Site` <- cbind(nSAD,100-nSAD) ~ land + s(SiteCode,by=land,bs="re")
-l_f$`k + 1|Site` <- cbind(nSAD,100-nSAD) ~ k + s(SiteCode,bs="re") 
-l_f$`1 + 1|Site` <- cbind(nSAD,100-nSAD) ~ 1 + s(SiteCode,bs="re")
+l_f$`land * k + class_pert + (lat,long)` <- 
+  cbind(nSAD,100-nSAD) ~ land * k + forest_succession + s(lat,long) + s(SiteCode,by=land,bs="re")
+l_f$`land * k + (lat,long)` <- 
+  cbind(nSAD,100-nSAD) ~ land * k + s(lat,long) + s(SiteCode,by=land,bs="re")
+l_f$`land * k + class_pert` <- 
+  cbind(nSAD,100-nSAD) ~ land * k + forest_succession + s(SiteCode,by=land,bs="re")
+l_f$`land * k` <- 
+  cbind(nSAD,100-nSAD) ~ land * k + s(SiteCode,by=land,bs="re")
 # l_f$`land * k + s(lat,long) + land|Site` <- cbind(nSAD,100-nSAD) ~ land * k + s(lat,long) + s(SiteCode,by=land,bs="re")
 # l_f$`land + s(lat,long) + k + s(lat,long) + land|Site` <- cbind(nSAD,100-nSAD) ~ land + s(lat,long) + k + s(lat,long) + s(SiteCode,by=land,bs="re")
 # l_f$`land + s(lat,long) + land|Site` <- cbind(nSAD,100-nSAD) ~ land + s(lat,long) + s(SiteCode,by=land,bs="re")
 # l_f$`k + s(lat,long) + 1|Site` <- cbind(nSAD,100-nSAD) ~ k + s(lat,long) + s(SiteCode,bs="re") 
 # l_f$`1 + s(lat,long) + 1|Site` <- cbind(nSAD,100-nSAD) ~ 1 + s(lat,long) + s(SiteCode,bs="re")
 if(!file.exists("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")){
-  doMC::registerDoMC(3)
+  doMC::registerDoMC(2)
   l_md <- llply(l_f,f_gam,dfi=df_ad,.parallel = TRUE)
-  l_tabsel <- f_TabSelGAMM(l_md,test_moranK = vlog)
+  l_tabsel <- f_TabSelGAMM(l_md,test_moranK = TRUE)
   write_csv(l_tabsel$tabsel,"1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")  
   saveRDS(l_tabsel$l_moranK,file="1_to_compile_dissertacao_EM_USO/00_Resultados/rds/l_moranK_sumario_paisagens.rds")
   saveRDS(l_md,file="dados/csv_SoE/Rdata/l_md_sumario")
