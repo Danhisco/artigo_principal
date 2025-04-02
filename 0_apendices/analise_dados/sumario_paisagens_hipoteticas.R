@@ -15,15 +15,16 @@ df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>%
   mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
          long = ifelse(is.na(long_correct),long,long_correct),
          Sitecode = factor(SiteCode)) %>% 
-  select(SiteCode,lat,long, forest_succession)
+  select(SiteCode,lat,long, forest_succession) %>% 
+  filter(forest_succession!="capoeira")
 #
 df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
   rename(nSAD = nCongKS,
          land = land_type) %>% 
   select(-c(Smed:Smax)) %>% 
+  inner_join(df_coord) %>% 
   mutate(k=round(k,2),
-         across(c(land,SiteCode,k),factor)) %>% 
-  inner_join(df_coord)
+         across(c(land,SiteCode,forest_succession),factor))
 df_ad$SiteCode <- factor(df_ad$SiteCode)
 #############
 # df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
@@ -45,26 +46,53 @@ f_gam <- \(vf,dfi){
       method="REML")
 }
 l_f <- list()
-l_f$`land * k + class_pert + (lat,long)` <- 
-  cbind(nSAD,100-nSAD) ~ land * k + forest_succession + s(lat,long) + s(SiteCode,by=land,bs="re")
-l_f$`land * k + (lat,long)` <- 
-  cbind(nSAD,100-nSAD) ~ land * k + s(lat,long) + s(SiteCode,by=land,bs="re")
-l_f$`land * k + class_pert` <- 
-  cbind(nSAD,100-nSAD) ~ land * k + forest_succession + s(SiteCode,by=land,bs="re")
-l_f$`land * k` <- 
-  cbind(nSAD,100-nSAD) ~ land * k + s(SiteCode,by=land,bs="re")
+# modelo cheio
+l_f$`s(k,by=land + class_pert) + (lat,long)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=interaction(land,forest_succession),bs="cr",id="fixo") +
+  s(lat,long) + 
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+# modelo sem classe de perturbação
+l_f$`s(k,by=land) + (lat,long)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=land,bs="cr",id="fixo") +
+  s(lat,long) + 
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+# modelo sem coordenadas
+l_f$`s(k,by=land * class_pert)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=interaction(land,forest_succession),bs="cr",id="fixo") +
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+# modelo sem cov
+l_f$`s(k,by=land)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=land,bs="cr",id="fixo") +
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+#
+
+
+
+
+# 
+# 
+# 
+# 
+# l_f$`land * k + class_pert` <- 
+#   cbind(nSAD,100-nSAD) ~ land * k + forest_succession + s(SiteCode,by=land,bs="re")
+# l_f$`land * k` <- 
+#   cbind(nSAD,100-nSAD) ~ land * k + s(SiteCode,by=land,bs="re")
 # l_f$`land * k + s(lat,long) + land|Site` <- cbind(nSAD,100-nSAD) ~ land * k + s(lat,long) + s(SiteCode,by=land,bs="re")
 # l_f$`land + s(lat,long) + k + s(lat,long) + land|Site` <- cbind(nSAD,100-nSAD) ~ land + s(lat,long) + k + s(lat,long) + s(SiteCode,by=land,bs="re")
 # l_f$`land + s(lat,long) + land|Site` <- cbind(nSAD,100-nSAD) ~ land + s(lat,long) + s(SiteCode,by=land,bs="re")
 # l_f$`k + s(lat,long) + 1|Site` <- cbind(nSAD,100-nSAD) ~ k + s(lat,long) + s(SiteCode,bs="re") 
 # l_f$`1 + s(lat,long) + 1|Site` <- cbind(nSAD,100-nSAD) ~ 1 + s(lat,long) + s(SiteCode,bs="re")
 if(!file.exists("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")){
-  doMC::registerDoMC(2)
-  l_md <- llply(l_f,f_gam,dfi=df_ad,.parallel = TRUE)
+  # doMC::registerDoMC(2)
+  l_md <- llply(l_f,f_gam,dfi=df_ad,.parallel = FALSE)
+  saveRDS(l_md,file="dados/csv_SoE/Rdata/l_md_sumario")
   l_tabsel <- f_TabSelGAMM(l_md,test_moranK = TRUE)
   write_csv(l_tabsel$tabsel,"1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")  
   saveRDS(l_tabsel$l_moranK,file="1_to_compile_dissertacao_EM_USO/00_Resultados/rds/l_moranK_sumario_paisagens.rds")
-  saveRDS(l_md,file="dados/csv_SoE/Rdata/l_md_sumario")
 }else{
   df_tabsel <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
   l_md <- readRDS(file="dados/csv_SoE/Rdata/l_md_sumario")
@@ -72,8 +100,11 @@ if(!file.exists("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabseleca
 ######################################### ESTIMATIVAS
 md_sumario <- l_md[[df_tabsel$modelo[1]]]
 new_data <- expand.grid(
-  k = unique(df_nSAD$k),
-  land = unique(df_nSAD$land),
+  k = unique(df_ad$k),
+  land = unique(df_ad$land),
+  forest_succession = unique(df_ad$forest_succession),
+  lat = 0,
+  long = 0,
   SiteCode = "SPigua1"  # Replace with a fixed value
 )
 predictions <- predict(md_sumario, 
