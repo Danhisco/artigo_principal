@@ -26,7 +26,6 @@ df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>%
   mutate(k=round(k,2),
          across(c(land,SiteCode,forest_succession),factor))
 df_ad$SiteCode <- factor(df_ad$SiteCode)
-#saveRDS(df_ad,file="0_apendices/analise_dados/rar/df_ad_sumario.rds")
 #############
 # df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
 # df_nSAD <- adply(unique(df_adSAD$land_type),1,\(i){

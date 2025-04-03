@@ -41,6 +41,7 @@ source("source/f_z.R")
 source("source/nameModel.R")
 # df p extensões
 df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+saveRDS(df_p_extensoes,file="./0_apendices/analise_dados/rar/df_p_extensoes.rds")
 # df dados da proporção de cobertura vegetal
 df_p <- read_csv("dados/df_p.csv")
 # df dados para simulação

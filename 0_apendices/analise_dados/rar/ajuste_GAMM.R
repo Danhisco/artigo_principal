@@ -26,32 +26,11 @@ df_md <- readRDS(file="dados/csv_SoE/df_logOR.rds") %>%
   relocate(k,.after="Uefeito")
 saveRDS(df_md,
         file=paste0(v_path,"rds/df_md.rds"))
-
-
-df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
-v_filter <- with(df_p_extensoes,{
-  v_i <- sapply(c(4,2,1),
-                \(x) which.min(abs(lado_km - x)))
-  return(lado_km[v_i])
-  }
-) 
-df_p <- filter(df_p_extensoes,lado_km %in% v_filter) %>% 
-  mutate(lado_km = round(lado_km,0))
-
-
-
 ##########################################################################
 ### Funções usadas para ajustar os 3 blocos de modelos: te, logU/U e k ###
 ##########################################################################
 ## Seguindo as especifícações de Pedersen et al. 2019 https://peerj.com/articles/6876/
 # te: tensor entre o efeito na riqueza e a capacidade de dispersão per se
-
-##############
-teste <- gam
-
-
-##############
-
 f_gam_te <- \(dfi){
   l_md <- list()
   l_md$`te(land)|Site : gs` <- gam(
