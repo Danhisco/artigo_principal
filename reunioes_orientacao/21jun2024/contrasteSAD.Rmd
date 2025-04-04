@@ -33,7 +33,7 @@ source("source/dinamica_coalescente.R")
 source("source/2samples_testes.R")
 f_z <- function(x) (x-mean(x))/sd(x)
 # obj comum
-v_pares <- c("contemp-ideal","non_frag-ideal","contemp-non_frag")
+v_pares <- c("cont-ideal","non_frag-ideal","cont-non_frag")
 names(v_pares) <- c("frag.total","area","frag.perse")
 # dados
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
@@ -45,7 +45,8 @@ df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>%
   select(-contains("correct"),-year_bestProxy)
 # Resultados
 ## congruência 
-df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
+# df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
+
 ## efeito U
 df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv")
 # dados para modelos
@@ -56,38 +57,40 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv")
 df_contrastes <- df_contrastes %>%
   select(SiteCode:p, contains("_logratio")) %>% 
   mutate(across(-SiteCode,f_z,.names = "{.col}_z")) %>% 
-  select(SiteCode,k,p,k_z:frag.total_logratio_z) %>% 
+  select(SiteCode,k,k_z,area_logratio_z:frag.total_logratio_z) %>% 
   rename_with(~str_remove(.,"_logratio_z")) %>% 
   pivot_longer(cols = c("area","frag.perse","frag.total"),
                values_to = "Uefeito",
                names_to = "contraste") %>% 
   mutate(contraste = case_when(contraste=="area" ~ "non_frag-ideal",
-                               contraste=="frag.total" ~ "contemp-ideal",
-                               contraste=="frag.perse" ~ "contemp-non_frag"))
+                               contraste=="frag.total" ~ "cont-ideal",
+                               contraste=="frag.perse" ~ "cont-non_frag"))
 # df SADs congruentes
-df_adSADifself <- adply(c("contemp","ideal","non_frag"),1,\(i){
-  df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
-    select(-land_type,-c(Smed:Smax)) %>% 
-    rename("contrafactual"="taxaU",
-           "nCong"="nCongKS")
-  inner_join(df_return,
-             df_contrastes %>% 
-               filter(contraste=="non_frag-ideal") %>% 
-               select(SiteCode:p,ends_with("_z")),
-             by=c("SiteCode","k"))
-},.id=NULL)
+# df_adSADifself <- adply(c("contemp","ideal","non_frag"),1,\(i){
+#   df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
+#     select(-land_type,-c(Smed:Smax)) %>% 
+#     rename("contrafactual"="taxaU",
+#            "nCong"="nCongKS")
+#   inner_join(df_return,
+#              df_contrastes %>% 
+#                filter(contraste=="non_frag-ideal") %>% 
+#                select(SiteCode:p,ends_with("_z")),
+#              by=c("SiteCode","k"))
+# },.id=NULL)
 # df_logOR para modelar
-df_logOR <- df_adSAD %>% 
-  mutate(nKS = case_when(nCongKS == 0 ~ 0.09, #min pred for a GLMM for a sampled comb
-                         nCongKS == 100 ~ 99.73, #max pred for a GLMM for a sampled comb
-                         TRUE ~ nCongKS),
-         logitoKS = log (nKS / (100-nKS))) %>% 
-  select(taxaU:land_type,logitoKS) %>% 
+
+# df_mdsumar:
+#@ com o logito estimado pelo modelo sumário, contem os logitos empiricos
+df_mdsumar <- readRDS(file="./dados/csv_SoE/df_mdsumar.rds")
+df_logOR <- df_mdsumar %>% 
+  rename(logitoKS = logito) %>% 
+  select(-c(nSAD,forest_succession,lat,long)) %>% 
   f_contrasteSAD(.,pares=v_pares) %>% 
   inner_join(y=df_contrastes,by=c("contraste","SiteCode","k")) %>% 
   inner_join(y=df_dados_disponiveis,by="SiteCode") %>% 
   relocate(p,.after=k)
-write_csv(df_logOR,file="dados/csv/df_logOR.csv")
+write_csv(df_logOR,file="dados/csv_SoE/df_logOR.csv")
+saveRDS(df_logOR,file="dados/csv_SoE/df_logOR.csv")
 ```
 
 # Número de SADs congruentes 

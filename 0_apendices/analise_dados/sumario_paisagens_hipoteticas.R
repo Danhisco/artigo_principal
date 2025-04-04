@@ -203,3 +203,32 @@ image_write(img,"figuras/sumario_paisagens.jpeg")
 source("source/GAMMtools.R")
 v_path <- "dados/csv_SoE/figuras/"
 f_diag(hgam = md_sumario,vname = "sumario",patsave = "hgam")
+
+
+
+### logitos empíricos
+df_mdsumar <- md_sumario$model
+df_mdsumar[,1] <- df_mdsumar[,1][,1]
+names(df_mdsumar)[1] <-  "nSAD"
+df_mdsumar$logito <- predict(md_sumario,se=FALSE)
+df_save <- df_mdsumar %>% 
+  filter(nSAD %in% c(0,100)) %>% 
+  group_by(nSAD,k,land) %>% 
+  summarise(logito_avg = mean(logito),
+            logito_sd = sd(logito))
+saveRDS(df_save,file="./dados/csv_SoE/df_mdsumar.rds")
+df_md <- left_join(df_mdsumar,
+                   df_save,
+                   by=c("nSAD","k","land")) %>% 
+  rename("forest_succession"=3) %>% 
+  mutate(
+    logito = ifelse(
+      is.na(logito_avg),
+      log(nSAD/(100-nSAD)),
+      logito_avg
+      ),
+    forest_succession = gsub("cont.|ideal.|non_frag.",
+                             "",forest_succession)
+    ) %>% 
+  select(-c(logito_avg,logito_sd))
+saveRDS(df_md,file="./dados/csv_SoE/df_mdsumar.rds")

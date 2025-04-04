@@ -85,8 +85,8 @@ f_summarise_SAD_MNEE <- \(df){
 }
 # f_logOR_land_type
 f_logOR_land_type <- \(df,
-                       pairs=list(c("contemp","non_frag"),
-                                  c("contemp","ideal"),
+                       pairs=list(c("cont","non_frag"),
+                                  c("cont","ideal"),
                                   c("non_frag","ideal"))){
   df <- df %>% 
     mutate(propCong = case_when(nCongKS == 100 ~ 99.9 / 100,
@@ -109,51 +109,53 @@ f_logOR_dfi <- \(x,y){
 }
 
 f_contrasteSAD <- \(dff,pares){
+  f_logOR <- \(dfi,cpair,label_efeito){
+    dfi$logOR <- dfi[[cpair["numerador"]]] - dfi[[cpair["denominador"]]]
+    dfi$EEland <- label_efeito
+    select(dfi,-c(cont:non_frag))
+  }
   dff <- dff %>% 
-    pivot_wider(names_from=land_type,
+    pivot_wider(names_from=land,
                 values_from=logitoKS)
   formals(f_logOR)$dfi <- dff
   f_par.i <- \(v_par){
-    land_contrafac <- str_split_1(v_par,"-")
+    land_contrafac <- stringr::str_split_1(v_par,"-")
     names(land_contrafac) <- c("numerador","denominador")
-    df_return <- dff %>% select(SiteCode,k) %>% distinct()
-    df_return <- cbind(
-      df_return,
-      f_logOR(cpair=land_contrafac)  
-    ) %>% mutate(contraste = v_par) %>% 
-      relocate(contraste) %>% as.data.frame()
-    return(df_return)
+    f_logOR(cpair=land_contrafac,label_efeito=names(v_par)) %>% 
+      mutate(contraste = v_par) %>% 
+      relocate(SiteCode)
   }
-  df_return <- lapply(pares,f_par.i) %>% rbind.fill()
-  df_return %>% select(contraste:denominator)
+  rbind.fill(lapply(pares,f_par.i))
 }
-f_logOR <- \(dfi,cpair){
-  v_itself <- 
-    dfi[dfi$taxaU==cpair["numerador"],
-        cpair["numerador"]] - dfi[dfi$taxaU==cpair["denominador"],
-                                  cpair["denominador"]]
-  v_pristine <- 
-    dfi[dfi$taxaU=="ideal",
-        cpair["numerador"]] - dfi[dfi$taxaU=="ideal",
-                                  cpair["denominador"]]
-  v_num <- 
-    dfi[dfi$taxaU==cpair["numerador"],
-        cpair["numerador"]] - dfi[dfi$taxaU==cpair["numerador"],
-                                  cpair["denominador"]]
-  if(unname(cpair["denominador"])!="ideal"){
-    v_deno <- 
-      dfi[dfi$taxaU==cpair["denominador"],
-          cpair["numerador"]] - dfi[dfi$taxaU==cpair["denominador"],
-                                    cpair["denominador"]]
-  }
-  # return
-  data.frame(
-    itself = unname(v_itself),
-    pristine = unname(v_pristine),
-    numerator = unname(v_num),
-    denominator = ifelse(exists("v_deno"),unname(v_deno),NA) %>% unlist()
-  )
-}
+
+
+# f_logOR <- \(dfi,cpair){
+#   v_itself <- 
+#     dfi[cpair["numerador"],
+#         cpair["numerador"]] - dfi[dfi$taxaU==cpair["denominador"],
+#                                   cpair["denominador"]]
+#   v_pristine <- 
+#     dfi[dfi$taxaU=="ideal",
+#         cpair["numerador"]] - dfi[dfi$taxaU=="ideal",
+#                                   cpair["denominador"]]
+#   v_num <- 
+#     dfi[dfi$taxaU==cpair["numerador"],
+#         cpair["numerador"]] - dfi[dfi$taxaU==cpair["numerador"],
+#                                   cpair["denominador"]]
+#   if(unname(cpair["denominador"])!="ideal"){
+#     v_deno <- 
+#       dfi[dfi$taxaU==cpair["denominador"],
+#           cpair["numerador"]] - dfi[dfi$taxaU==cpair["denominador"],
+#                                     cpair["denominador"]]
+#   }
+#   # return
+#   data.frame(
+#     itself = unname(v_itself),
+#     pristine = unname(v_pristine),
+#     numerator = unname(v_num),
+#     denominator = ifelse(exists("v_deno"),unname(v_deno),NA) %>% unlist()
+#   )
+# }
 
 
 f_contraste_Umed <- \(dfUrep,

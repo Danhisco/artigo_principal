@@ -21,6 +21,7 @@ source("source/fig_tools.R")
 library(mgcv)
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
 # objetos comuns
+df_mdsumar <- readRDS(file="./dados/csv_SoE/df_mdsumar.rds")
 df_md <- readRDS(file="dados/csv_SoE/df_logOR.rds") %>% 
   mutate(k_cont = as.numeric(as.character(k))) %>% 
   relocate(k,.after="Uefeito")
