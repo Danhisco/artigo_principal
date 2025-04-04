@@ -87,10 +87,9 @@ df_logOR <- df_mdsumar %>%
   select(-c(nSAD,forest_succession,lat,long)) %>% 
   f_contrasteSAD(.,pares=v_pares) %>% 
   inner_join(y=df_contrastes,by=c("contraste","SiteCode","k")) %>% 
-  inner_join(y=df_dados_disponiveis,by="SiteCode") %>% 
-  relocate(p,.after=k)
+  inner_join(y=df_dados_disponiveis,by="SiteCode")
 write_csv(df_logOR,file="dados/csv_SoE/df_logOR.csv")
-saveRDS(df_logOR,file="dados/csv_SoE/df_logOR.csv")
+saveRDS(df_logOR,file="dados/csv_SoE/df_logOR.rds")
 ```
 
 # Número de SADs congruentes 
