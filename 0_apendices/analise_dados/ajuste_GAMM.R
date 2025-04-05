@@ -57,7 +57,8 @@ f_gam_te <- \(dfi){
     data=dfi,method = "REML")
   l_md$`s(k)` <- gam(
     logOR ~ 
-      s(k_z,bs="cr",by=forest_succession,id = "fixo") +
+      s(k_z,bs="cr",k=7,
+        by=forest_succession,id = "fixo") +
       s(lat,long) + 
       te(k_z,SiteCode,bs=c("cr","re"),id = "random"),
     data=dfi,method = "REML")
@@ -71,38 +72,38 @@ f_gam_te <- \(dfi){
 }
 lapply(split(df_md,df_md$contraste),f_gam_te)
 # s(k)+s(k)|Site
-f_gam3 <- \(dfi){
-  l_md <- list()
-  l_md$`s(k)+s(k)|Site` <- gam(
-    logOR ~ 
-      s(k_cont,bs="cr",m=2,id = "efeito_comum") +
-      s(k_cont, SiteCode, bs = "fs", xt=list(bs = "cr"), m=2, id="efeito_sitio"),
-    data=dfi,method = "REML")
-  l_md$`s(k)+1|Site` <- gam(
-    logOR ~ 
-      s(k_cont,bs="cr",m=2,id = "efeito_comum") +
-      s(SiteCode,bs="re"),
-    data=dfi,method = "REML")
-  return(l_md)
-}
-  l_md <- dlply(df_md,"contraste",f_gam3)
-  saveRDS(l_md,paste0(v_path,"rds/l_md_onlyk.rds"))
-  rm("l_md");gc()
-  # s(logU/U)+s(logU/U)|Site
-  f_gam <- \(dfi,bs_type="cr"){
-    l_md <- list()
-    l_md$`s(land)|Site : gs` <- gam(
-      logOR ~ 
-        s(Uefeito,bs=bs_type,m=2, id="efeito_comum") +
-        s(Uefeito, SiteCode, bs = "fs", xt=list(bs = bs_type), m=2, id="efeito_sitio"),
-      data=dfi,method = "REML")
-    l_md$`s(land) + 1|Site` <- gam(
-      logOR ~ 
-        s(Uefeito,bs=bs_type,m=2,id="efeito_comum") +
-        s(SiteCode,bs="re"),
-      data=dfi,method = "REML")
-    return(l_md)
-  }
-  l_md_logOR <- dlply(df_md,"contraste",f_gam)
-  saveRDS(l_md_logOR,file=paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
-  rm(l_md_logOR);gc()
+# f_gam3 <- \(dfi){
+#   l_md <- list()
+#   l_md$`s(k)+s(k)|Site` <- gam(
+#     logOR ~
+#       s(k_cont,bs="cr",m=2,id = "efeito_comum") +
+#       s(k_cont, SiteCode, bs = "fs", xt=list(bs = "cr"), m=2, id="efeito_sitio"),
+#     data=dfi,method = "REML")
+#   l_md$`s(k)+1|Site` <- gam(
+#     logOR ~
+#       s(k_cont,bs="cr",m=2,id = "efeito_comum") +
+#       s(SiteCode,bs="re"),
+#     data=dfi,method = "REML")
+#   return(l_md)
+# }
+#   l_md <- dlply(df_md,"contraste",f_gam3)
+#   saveRDS(l_md,paste0(v_path,"rds/l_md_onlyk.rds"))
+#   rm("l_md");gc()
+#   # s(logU/U)+s(logU/U)|Site
+#   f_gam <- \(dfi,bs_type="cr"){
+#     l_md <- list()
+#     l_md$`s(land)|Site : gs` <- gam(
+#       logOR ~
+#         s(Uefeito,bs=bs_type,m=2, id="efeito_comum") +
+#         s(Uefeito, SiteCode, bs = "fs", xt=list(bs = bs_type), m=2, id="efeito_sitio"),
+#       data=dfi,method = "REML")
+#     l_md$`s(land) + 1|Site` <- gam(
+#       logOR ~
+#         s(Uefeito,bs=bs_type,m=2,id="efeito_comum") +
+#         s(SiteCode,bs="re"),
+#       data=dfi,method = "REML")
+#     return(l_md)
+#   }
+#   l_md_logOR <- dlply(df_md,"contraste",f_gam)
+#   saveRDS(l_md_logOR,file=paste0(v_path,"rds/l_md_simples_apudPedersen2019.rds"))
+#   rm(l_md_logOR);gc()
