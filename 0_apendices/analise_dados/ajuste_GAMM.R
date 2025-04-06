@@ -57,7 +57,7 @@ f_gam_te <- \(dfi){
     data=dfi,method = "REML")
   l_md$`s(k)` <- gam(
     logOR ~ 
-      s(k_z,bs="cr",k=7,
+      s(k_z,bs="cr",
         by=forest_succession,id = "fixo") +
       s(lat,long) + 
       te(k_z,SiteCode,bs=c("cr","re"),id = "random"),

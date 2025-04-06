@@ -11,6 +11,16 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+5abril25
+
+diagnostico dos modelos ajustados
+
+```{r}
+df_md
+```
+
+
+
 
 # 14/fev/2025
 

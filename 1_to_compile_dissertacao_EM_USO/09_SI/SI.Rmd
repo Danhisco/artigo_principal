@@ -7,22 +7,22 @@ editor_options:
 ```{r setup4,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE)
 # pacotes
-library(dagitty)
-library(ggdag)
+# library(dagitty)
+# library(ggdag)
 library(gt)
 library(gratia)
 library(sads)
 library(doMC)
-library(metR)
+# library(metR)
 library(gridExtra)
 library(ggplot2)
 library(readr)
 library(purrr)
 library(stringr)
 library(tidyr)
-library(MuMIn)
-library(AICcmodavg)
-library(insight)
+# library(MuMIn)
+# library(AICcmodavg)
+# library(insight)
 library(bbmle)
 library(DHARMa)
 library(mgcv)
@@ -128,18 +128,49 @@ ggsave("dados/csv_SoE/figuras/MoranI_k1ate100_PVALeSTAT.jpeg",p,
 knitr::include_graphics("dados/csv_SoE/figuras/MoranI_k1ate100_PVALeSTAT.jpeg")
 ```
 
-# Comparação com o simulado na menor extensão espacial que é suficiente para o grau de limitação de dispersão mais brando
 
-EM CONSTRUÇÃO
-    
 # Diagnóstico dos modelos mais plausíveis para descrever os propostos efeitos da paisagem no debate sobre ecologia de paisagens
 
 ## Fragmentação total
 
+```{r}
+l_md <- readRDS("dados/csv_SoE/rds/l_md_fragtotal.rds")
+df_tabsel <- f_TabSelGAMM(l_md)
+md_fragtotal <- l_md[[df_tabsel$modelo[1]]]
+v_path <- "dados/csv_SoE/figuras/"
+f_diag(hgam = md_fragtotal,
+       v_path = "dados/csv_SoE/figuras/",
+       vname = "Frag. total",
+       patsave = "hgam")
+```
+
+
 ## Fragmentação per se
+
+```{r}
+l_md <- readRDS("dados/csv_SoE/rds/l_md_fragperse.rds")
+df_tabsel <- f_TabSelGAMM(l_md)
+md_fragtotal <- l_md[[df_tabsel$modelo[1]]]
+v_path <- "dados/csv_SoE/figuras/"
+f_diag(hgam = md_fragtotal,
+       v_path = "dados/csv_SoE/figuras/",
+       vname = "Frag. per se",
+       patsave = "hgam")
+```
+
 
 ## Área per se
 
+```{r}
+l_md <- readRDS("dados/csv_SoE/rds/l_md_areaperse.rds")
+df_tabsel <- f_TabSelGAMM(l_md)
+md_fragtotal <- l_md[[df_tabsel$modelo[1]]]
+v_path <- "dados/csv_SoE/figuras/"
+f_diag(hgam = md_fragtotal,
+       v_path = "dados/csv_SoE/figuras/",
+       vname = "Área per se",
+       patsave = "hgam")
+```
 
 # Resultados por sítios de amostragem: parâmetros fitossociológicos, mapa contemporâneo, taxa U, congruência com a SAD observada e contrastes
 

@@ -64,7 +64,8 @@ df_contrastes <- df_contrastes %>%
                names_to = "contraste") %>% 
   mutate(contraste = case_when(contraste=="area" ~ "non_frag-ideal",
                                contraste=="frag.total" ~ "cont-ideal",
-                               contraste=="frag.perse" ~ "cont-non_frag"))
+                               contraste=="frag.perse" ~ "cont-non_frag"),
+         k = factor(round(k,2)))
 # df SADs congruentes
 # df_adSADifself <- adply(c("contemp","ideal","non_frag"),1,\(i){
 #   df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
@@ -86,6 +87,7 @@ df_logOR <- df_mdsumar %>%
   rename(logitoKS = logito) %>% 
   select(-c(nSAD,forest_succession,lat,long)) %>% 
   f_contrasteSAD(.,pares=v_pares) %>% 
+  mutate(k = factor(round(k,2))) %>% 
   inner_join(y=df_contrastes,by=c("contraste","SiteCode","k")) %>% 
   inner_join(y=df_dados_disponiveis,by="SiteCode")
 write_csv(df_logOR,file="dados/csv_SoE/df_logOR.csv")

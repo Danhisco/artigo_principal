@@ -746,7 +746,7 @@ f_extract_smoothers_f_formula <- \(formula_obj,
     str_split_1(pattern = " \\+ ")
     # grep(pattern='s\\(k_z\\)|s\\(p_z\\)|ti\\(p_z, k_z\\)',value = TRUE,x=.)
 }
-f_diag <- \(hgam,vname,patsave="slogUU"){
+f_diag <- \(hgam,v_path,vname,patsave="slogUU"){
   if(!any(grepl("flextable",search()))) library(flextable)
   if(!any(grepl("gratia",search()))) library(gratia)
   if(!any(grepl("magick",search()))) library(magick)
@@ -781,7 +781,7 @@ f_diag <- \(hgam,vname,patsave="slogUU"){
   final_image <- image_append(c(white_canvas,final_image),stack = TRUE)
   final_image <- image_annotate(
     final_image,
-    text = paste(vname,"~ s(logU/U)"),   # The title text
+    text = vname,   # The title text
     size = 50,                  # Font size
     gravity = "north",          # Positioning the title at the top of the image
     color = "black",            # Font color
@@ -790,7 +790,7 @@ f_diag <- \(hgam,vname,patsave="slogUU"){
   # salvamento e finalização
   file.remove(do.call("c",lpaths))
   v_name <- gsub("Área per se","areaperse",
-                 paste0(vname,patsave)) %>% 
+                 paste0(vname,"_",patsave)) %>% 
     gsub("Frag. per se","fragperse",.) %>%
     gsub("Frag. total","fratotal",.)
   image_write(final_image,paste0(v_path,"figuras/diag_",v_name,".png"), 
