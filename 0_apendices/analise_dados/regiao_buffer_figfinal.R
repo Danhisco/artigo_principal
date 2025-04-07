@@ -14,16 +14,24 @@ library(dplyr)
 library(mgcv)
 # objetos comuns
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
-df_md <- readRDS(file=paste0(v_path,"rds/df_md.rds"))
+df_md <- read_csv("dados/csv_SoE/df_logOR.csv")
+df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>% 
+  select(-contains("_z")) %>% 
+  pivot_longer(cols=contains("logratio"),
+               values_to="Uefeito",
+               names_to = "contraste") %>% 
+  inner_join(.,
+             select(df_md,SiteCode,forest_succession) %>% distinct)
 #
 #############################################################
 ###### máximos e mínimos dos contrastes em função de k ######
 #############################################################
-df_buf <- ddply(df_md,c("forest_succession","contraste","k"),\(dfi){
+df_buf <- ddply(df_logUU,
+                c("forest_succession","contraste","k"),\(dfi){
   v_range <- range(dfi$Uefeito)
   v_quant <- quantile(dfi$Uefeito,probs=c(0.01,0.99))
   filter(dfi,Uefeito%in%v_range) %>% 
-    select(-logOR,-c(forest_succession:data_year),-SiteCode) %>% 
+    select(-c(forest_succession,SiteCode)) %>% 
     mutate(ext_class=ifelse(Uefeito==v_range[1],"min","max"),
            Uefeito_quant=ifelse(ext_class=="min",v_quant[1],v_quant[2])) %>% 
     relocate(ext_class,.after=contraste) %>% 
@@ -44,7 +52,9 @@ df_buf %>%
 f_gam <- \(dfi){
   gam(Uefeito~s(k,bs="cr"),data=dfi)
 }
-l_md <- dlply(df_buf,c("contraste","ext_class"),f_gam)
+l_md <- dlply(df_buf,
+              c("contraste","ext_class","forest_succession"),
+              f_gam)
 for(i in names(l_md)){
   p <- gratia::draw(l_md[[i]],residuals = TRUE) + labs(title=i)
   print(p)

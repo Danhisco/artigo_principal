@@ -69,7 +69,12 @@ df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>%
                values_to="Uefeito",
                names_to = "contraste") %>% 
   inner_join(.,
-             select(df_md,SiteCode,forest_succession) %>% distinct)
+             select(df_md,SiteCode,forest_succession) %>% distinct) %>% 
+  mutate(contraste = gsub("_logratio","",contraste) %>% 
+           gsub("\\.","",.) %>% 
+           gsub("area","Área per se",.) %>% 
+           gsub("fragtotal","Frag. total",.) %>% 
+           gsub("fragperse","Frag. per se",.))
 ## funções de ajuste e de plot
 source("source/2samples_testes.R")
 source("source/general_tools.R")
@@ -77,6 +82,7 @@ source("source/GAMMtools.R")
 source("source/fig_tools.R")
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
 ####################### 1a linha
+##
 l_path <- paste0(v_path,"rds/l_dfpred_",c("fragtotal","fragperse","areaperse"),".rds")
 l_df_pred <- lapply(l_path,readRDS) %>% 
   lapply(.,"[[","apenas fixo") %>% 
@@ -97,17 +103,31 @@ names(l_df_newpred) <- case_when(
 )
 # ii) filtrar os valores únicos de k em um novo data frame
 l_md <- readRDS(file=paste0(v_path,"rds/l_md_refU.rds"))
-l_df_ref <- lapply(names(l_df_pred),\(li){
-  lmd <- l_md[grep(li,names(l_md))]
-  names(lmd) <- gsub(paste0(li,"."),"",names(lmd)) 
-  df_ref <- lapply(names(lmd),\(i){
-    md <- lmd[[i]]
-    dfr <- l_df_pred[[li]]  
+names(l_md) <- names(l_md) %>% 
+  gsub("_logratio","",.) %>% 
+  gsub("primary/secondary","mediano",.) %>% 
+  gsub("primary","1a",.) %>% 
+  gsub("secondary","2a",.) %>% 
+  gsub(".total","total",.) %>% 
+  gsub(".perse","perse",.)
+vmds <- sapply(c("area","fragperse","fragtotal"),\(x){
+  paste(x,c("1a","mediano","2a"),sep = "\\..+\\.")
+}) %>% as.vector()
+  
+l_df_ref <- lapply(vmds,\(li){
+  lmdi <- l_md[grepl(li,names(l_md))]
+  # names(lmdi) <- gsub(paste0(li,"."),"",names(lmdi))
+  df_ref <- lapply(names(lmdi),\(i){
+    md <- lmdi[[i]]
+    dfr <- md$model
+    i <- str_remove_all(i,gsub("\\.\\+","|",li))
     dfr[[i]] <- predict.gam(md,dfr)
-    return(dfr)
+    select(dfr,-Uefeito)
   }) %>% Reduce("inner_join",.)
 })
-names(l_df_ref) <- names(l_df_pred)
+names(l_df_ref) <- gsub("\\.\\+","",vmds) %>% 
+  gsub("\\.","",.) %>% 
+  gsub("\\\\","_",.)
 df_ref <- lapply(names(l_df_ref),\(li){
   mutate(l_df_ref[[li]],
          name=gsub("Área per se","area",li) %>% 
