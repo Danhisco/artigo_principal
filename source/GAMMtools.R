@@ -51,8 +51,8 @@ f_MoranTest_GAMM_severalK <- \(md){
     )
   }
   dfmd_avgbySite <- dfmd %>% 
-    group_by(SiteCode) %>% 
-    summarise(mean_res = mean(residuals),
+    dplyr::group_by(SiteCode) %>% 
+    dplyr::summarise(mean_res = mean(residuals),
               lat = first(lat),
               long = first(long)) %>% 
     ungroup()
@@ -117,8 +117,8 @@ f_MoranTest_GAMM <- \(md,vk0=3){
     )
   }
   dfmd_avgbySite <- dfmd %>% 
-    group_by(SiteCode) %>% 
-    summarise(mean_res = mean(residuals),
+    dplyr::group_by(SiteCode) %>% 
+    dplyr::summarise(mean_res = mean(residuals),
               lat = first(lat),
               long = first(long)) %>% 
     ungroup()
@@ -854,7 +854,7 @@ f_logOR_land_type <- \(df,
     p2 <- dfr |> filter(land_type == v_string[2])
     inner_join(p1,p2,c("SiteCode","k")) %>% 
       mutate(contraste = paste0(land_type.x,".",land_type.y),
-             logOR = logitoKS.x - logitoKS.y) %>% 
+             logOR = logitoKS.x - logitoKS.y) %>% f_TabSelGAMM
       select(-matches(".x$|.y$"))
   }
   ldply(pairs,f)

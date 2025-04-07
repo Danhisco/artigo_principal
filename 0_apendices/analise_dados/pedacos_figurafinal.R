@@ -63,6 +63,13 @@ df_p <- read_csv("dados/df_p.csv")
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   inner_join(x=df_p,by="SiteCode")
 df_md <- read_csv("dados/csv_SoE/df_logOR.csv")
+df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>% 
+  select(-contains("_z")) %>% 
+  pivot_longer(cols=contains("logratio"),
+               values_to="Uefeito",
+               names_to = "contraste") %>% 
+  inner_join(.,
+             select(df_md,SiteCode,forest_succession) %>% distinct)
 ## funções de ajuste e de plot
 source("source/2samples_testes.R")
 source("source/general_tools.R")
@@ -114,16 +121,16 @@ df_ref <- lapply(names(l_df_ref),\(li){
     label=factor(label,levels=c("Frag. total","Frag. per se","Área per se"))
   ) %>% select(-name) %>% 
   as.data.frame()
-v_sites_RefNulo <- df_md %>% filter(p>=0.975) %>% pull(SiteCode) %>% unique
-v_range_RefNulo <- df_md %>% filter(p>=0.975) %>% pull(Uefeito) %>% range
-v_hline <- filter(df_md,p_4x4>=0.95) %>% 
+v_sites_RefNulo <- df_logUU %>% filter(p>=0.975) %>% pull(SiteCode) %>% unique
+v_range_RefNulo <- df_logUU %>% filter(p>=0.975) %>% pull(Uefeito) %>% range
+v_hline <- filter(df_logUU,p>=0.95) %>% 
   pull(Uefeito) %>% quantile(.,c(0.25,0.50,0.75))
 # figuras per se
 l_figfinal <- list()
-l_figfinal$`1alinha` <- df_md %>%
+l_figfinal$`1alinha` <- df_logUU %>%
   mutate(across(c(SiteCode,contraste),factor),
          label = contraste) %>% 
-  ggplot(aes(x=k,y=Uefeito,group=SiteCode,color=p_4x4)) +
+  ggplot(aes(x=k,y=Uefeito,group=SiteCode,color=p)) +
   geom_boxplot(inherit.aes = FALSE,
                aes(x=k,y=Uefeito,group=k)) +
   geom_hline(yintercept = 0,color="black",linetype=3) +

@@ -14,12 +14,12 @@ library(dplyr)
 library(mgcv)
 # objetos comuns
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
-df_md <- read_csv(file="dados/csv_SoE/df_logOR.csv")
+df_md <- readRDS(file=paste0(v_path,"rds/df_md.rds"))
 #
 #############################################################
 ###### máximos e mínimos dos contrastes em função de k ######
 #############################################################
-df_buf <- ddply(df_md,c("contraste","k"),\(dfi){
+df_buf <- ddply(df_md,c("forest_succession","contraste","k"),\(dfi){
   v_range <- range(dfi$Uefeito)
   v_quant <- quantile(dfi$Uefeito,probs=c(0.01,0.99))
   filter(dfi,Uefeito%in%v_range) %>% 
@@ -37,7 +37,7 @@ df_buf %>%
   geom_line() +
   geom_smooth(method="gam",se=FALSE) +
   scale_color_manual(values=c("darkred","darkgreen")) +
-  facet_wrap(~contraste,ncol=3)
+  facet_grid(forest_succession~contraste)
 #############################################################
 ############## ajuste dos gam para os extremos ##############
 #############################################################

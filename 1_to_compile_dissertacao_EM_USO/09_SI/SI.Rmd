@@ -134,9 +134,11 @@ knitr::include_graphics("dados/csv_SoE/figuras/MoranI_k1ate100_PVALeSTAT.jpeg")
 ## Fragmentação total
 
 ```{r}
+l_dftabsel <- list()
 l_md <- readRDS("dados/csv_SoE/rds/l_md_fragtotal.rds")
-df_tabsel <- f_TabSelGAMM(l_md)
+l_dftabsel$fragtotal <- f_TabSelGAMM(l_md)
 md_fragtotal <- l_md[[df_tabsel$modelo[1]]]
+rm(l_md);gc()
 v_path <- "dados/csv_SoE/figuras/"
 f_diag(hgam = md_fragtotal,
        v_path = "dados/csv_SoE/figuras/",
@@ -149,8 +151,9 @@ f_diag(hgam = md_fragtotal,
 
 ```{r}
 l_md <- readRDS("dados/csv_SoE/rds/l_md_fragperse.rds")
-df_tabsel <- f_TabSelGAMM(l_md)
+l_dftabsel$fragperse <- f_TabSelGAMM(l_md)
 md_fragtotal <- l_md[[df_tabsel$modelo[1]]]
+rm(l_md);gc()
 v_path <- "dados/csv_SoE/figuras/"
 f_diag(hgam = md_fragtotal,
        v_path = "dados/csv_SoE/figuras/",
@@ -163,14 +166,30 @@ f_diag(hgam = md_fragtotal,
 
 ```{r}
 l_md <- readRDS("dados/csv_SoE/rds/l_md_areaperse.rds")
-df_tabsel <- f_TabSelGAMM(l_md)
+l_dftabsel$areaperse <- f_TabSelGAMM(l_md)
 md_fragtotal <- l_md[[df_tabsel$modelo[1]]]
+rm(l_md);gc()
 v_path <- "dados/csv_SoE/figuras/"
 f_diag(hgam = md_fragtotal,
        v_path = "dados/csv_SoE/figuras/",
        vname = "Área per se",
        patsave = "hgam")
+rm(md_fragtotal);gc()
 ```
+
+
+
+### todos os efeitos, procedimentos comuns
+
+
+```{r}
+df_tabsel <- lapply(names(l_dftabsel),\(li){
+  mutate(l_dftabsel[[li]],efeito=li)
+}) %>% do.call("rbind",.)
+saveRDS(df_tabsel,"./5_resultados/df_tabsel_tehgam_efeitos.rds")
+```
+
+
 
 # Resultados por sítios de amostragem: parâmetros fitossociológicos, mapa contemporâneo, taxa U, congruência com a SAD observada e contrastes
 

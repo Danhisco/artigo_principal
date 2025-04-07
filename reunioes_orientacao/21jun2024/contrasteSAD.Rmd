@@ -48,7 +48,7 @@ df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>%
 # df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
 
 ## efeito U
-df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv")
+df_contrastes <- read_csv(file="dados/csv_SoE/taxaU/df_contrastes.csv")
 # dados para modelos
 # df_md0 <- df_adSAD %>%
 #   filter(taxaU=="contemp",land_type=="contemp") %>%
@@ -56,7 +56,9 @@ df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv")
 #   inner_join(df_contrastes %>% select(SiteCode:k,frag.total_logratio)) # versão do
 df_contrastes <- df_contrastes %>%
   select(SiteCode:p, contains("_logratio")) %>% 
-  mutate(across(-SiteCode,f_z,.names = "{.col}_z")) %>% 
+  mutate(across(-SiteCode,f_z,.names = "{.col}_z"))
+saveRDS(df_contrastes,file="dados/csv_SoE/df_contrastes_z_e_padraor.rds")
+df_contrastes <- df_contrastes %>%
   select(SiteCode,k,k_z,area_logratio_z:frag.total_logratio_z) %>% 
   rename_with(~str_remove(.,"_logratio_z")) %>% 
   pivot_longer(cols = c("area","frag.perse","frag.total"),
