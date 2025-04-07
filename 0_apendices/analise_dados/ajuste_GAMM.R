@@ -71,6 +71,31 @@ f_gam_te <- \(dfi){
   rm(l_md);gc()
 }
 lapply(split(df_md,df_md$contraste),f_gam_te)
+#
+f_gam_te2 <- \(dfi){
+  l_md <- list()
+  l_md$`te(logU/U,k) - te(logU/U` <- gam(
+    logOR ~ 
+      te(Uefeito,k_z,
+         bs=c("cr","cr"),m=2,
+         by=forest_succession,
+         id = "fixo") +
+      s(lat,long) + 
+      s(SiteCode,bs="re"),
+    data=dfi,method = "REML")
+  saveRDS(l_md,
+          file=paste0(v_path,"rds/l_md_semT2sitio_",
+                      gsub("cont-ideal","fragtotal",dfi$contraste[1]) %>% 
+                        gsub("cont-non_frag","fragperse",.) %>% 
+                        gsub("non_frag-ideal","areaperse",.),
+                      ".rds"))
+  rm(l_md);gc()
+}
+lapply(split(df_md,df_md$contraste),f_gam_te2)
+#
+
+
+
 # s(k)+s(k)|Site
 # f_gam3 <- \(dfi){
 #   l_md <- list()

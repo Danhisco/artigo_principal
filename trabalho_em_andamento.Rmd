@@ -11,7 +11,107 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-5abril25
+
+# 7abril2025
+
+Elementos para apresentar ao PI:
+a) tabelas de seleção
+b) gráficos de predição dos modelos mais plausíveis
+
+```{r tabelas de selecao}
+df_tabsel <- readRDS("./5_resultados/df_tabsel_tehgam_efeitos.rds") %>% 
+  relocate(efeito)
+library(gt)
+tb_save <- gt(df_tabsel) %>% 
+  fmt_number(decimals=3)
+gtsave(tb_save, "./figuras/tabsel_efeitos.png")
+#
+df_tabsel <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
+tb_save <- gt(df_tabsel) %>% 
+  fmt_number(decimals=3)
+#
+df_tabsel_minimo <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_minimo_paisagens.csv")  
+tb_save <- gt(df_tabsel_minimo) %>% 
+  fmt_number(decimals=3)
+```
+
+```{r graficos exploratorios de logUU}
+p <- df_logUU %>% 
+  ggplot(aes(x=k,y=Uefeito,color=p,group=SiteCode)) +
+  geom_hline(yintercept = 0,color="black",linetype=3) +
+  geom_point(alpha=0.75) +
+  geom_line(alpha=0.75) +
+  scale_colour_gradient2("%CF",midpoint=0.5,
+                         low="red",
+                         mid = "yellow",
+                         high = "darkgreen") +
+  labs(x="k (prop. de propágulos até a vizinhança imediata)",
+       y="log(U/U)") +
+  scale_y_continuous(expand=c(0.01,0.01)) +
+  theme_classic() +
+  theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
+        legend.position = "inside",
+        legend.position.inside = c(0.49,0.9),
+        legend.direction="horizontal") +
+  facet_grid(forest_succession ~ contraste)
+ggsave(filename="./figuras/GE_efeitos_logUU_k_p_forest_succession.png",
+       width = 12, height = 10)
+```
+
+
+```{r}
+library(metR)
+l_df_pred_simples <-
+  readRDS("./dados/csv_SoE/rds/l_df_predict_gam_simples.rds")
+vnames <- names(l_df_pred_simples)
+l_df_pred_simples <- lapply(names(l_df_pred_simples),\(li){
+  mutate(l_df_pred_simples[[li]],efeito=li)
+})
+names(l_df_pred_simples) <- vnames 
+f_plot <- \(dfi,linew=1,ctextsize=4,textsize=4){
+  vtitle <- dfi$efeito[1]
+  dfi %>% 
+    ggplot(aes(x=k_z,y=Uefeito,z=pred)) +
+    geom_raster(aes(fill=pred)) +
+    geom_contour(color = "black",linewidth=linew) +
+    geom_text_contour(size=ctextsize,color="black") +
+    scale_fill_viridis_c(name = "logOR",
+                         option = "magma") +
+    labs(y="z(logU/U)",x="z(k)",
+         title=vtitle) +
+    scale_x_continuous(expand = c(0,0)) +
+    scale_y_continuous(expand = c(0,0)) +
+    facet_wrap(~forest_succession,ncol=1) +
+    theme(legend.position="bottom",
+          legend.direction = "horizontal",
+          legend.background = element_rect(
+            fill = "transparent",          
+            color = NA                     
+            ),
+          legend.key = element_rect(
+            fill = "transparent",
+            color = NA
+            ),
+          legend.text = element_text(size = 8),
+          legend.title = element_text(size = 10),
+          legend.key.size = unit(0.5, "cm"),     
+          legend.spacing = unit(0.2, "cm"),      
+          legend.margin = margin(2, 2, 2, 2),
+          strip.text = element_text(size=textsize),
+          aspect.ratio=1,
+          axis.text = element_text(size=textsize),
+          axis.title = element_text(size=textsize))
+}
+lp <- lapply(l_df_pred_simples,f_plot)
+p <- arrangeGrob(grobs=lp,ncol=3)
+grid.arrange(grobs=lp,ncol=3)
+ggsave(filename="./figuras/efeitos_pred_simples.png",
+       plot = p,
+       width = 12, height = 10)
+```
+
+
+# 5abril25
 
 diagnostico dos modelos ajustados
 

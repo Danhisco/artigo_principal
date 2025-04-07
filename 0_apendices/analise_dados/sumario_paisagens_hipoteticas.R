@@ -98,6 +98,22 @@ if(!file.exists("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabseleca
   df_tabsel <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
   l_md <- readRDS(file="dados/csv_SoE/Rdata/l_md_sumario")
 }
+##########
+l_f <- list()
+l_f$`s(k,by=land) + land|Site` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=land,bs="cr",id="fixo") +
+  s(SiteCode,bs="re",by=land)
+l_f$`land + land|Site` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  land +
+  s(SiteCode,bs="re",by=land)
+doMC::registerDoMC(2)
+l_md_minimo <- llply(l_f,f_gam,dfi=df_ad,.parallel = TRUE)
+l_md_minimo$`s(k,by=land)` <- l_md$`s(k,by=land)`
+df_tabsel_minimo <- f_TabSelGAMM(l_md_minimo)
+write_csv(df_tabsel_minimo,"1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_minimo_paisagens.csv")  
+
 ######################################### ESTIMATIVAS
 md_sumario <- l_md[[df_tabsel$modelo[1]]]
 new_data <- expand.grid(
