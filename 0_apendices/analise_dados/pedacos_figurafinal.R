@@ -116,7 +116,6 @@ vmds <- sapply(c("area","fragperse","fragtotal"),\(x){
   
 l_df_ref <- lapply(vmds,\(li){
   lmdi <- l_md[grepl(li,names(l_md))]
-  # names(lmdi) <- gsub(paste0(li,"."),"",names(lmdi))
   df_ref <- lapply(names(lmdi),\(i){
     md <- lmdi[[i]]
     dfr <- md$model

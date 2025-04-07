@@ -25,9 +25,9 @@ v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_
 # names(paths) <- str_extract(paths,"(?<=cov\\_)(.*?)(?=\\.rds)")
 #
 l_path <- list()
-l_path$te <-  paste0("rds/l_md_",c("areaperse","fragperse","fragtotal"),".rds")
-l_path$U <- "rds/l_md_simples_apudPedersen2019.rds"
-df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv"))
+l_path$te <-  paste0(v_path,"rds/l_md_",c("areaperse","fragperse","fragtotal"),".rds")
+# l_path$U <- "rds/l_md_simples_apudPedersen2019.rds"
+df_tabsel <- readRDS("./5_resultados/df_tabsel_tehgam_efeitos.rds") #read_csv(paste0(v_path,"rds/df_tabsel_geral.csv"))
 # l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019_tp.rds"))
 # df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples_tp_e_cr.csv")) %>%
 #   filter(dAICc==0,grepl("tp::",modelo)) %>% 
@@ -45,12 +45,40 @@ f_dfmd2 <- \(dff,length_pred = 100,site.posteriori ="SPigua1",mdarea=FALSE){
                SiteCode=site.posteriori)
   }else{
     v_range <- range(dff$Uefeito)
-    v_k <- range(dff$k_cont)
+    v_k <- range(dff$k_z)
+    v_forest <- levels(dff$forest_succession)
     expand.grid(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred),
-                k_cont = seq(v_k[1],v_k[2],length.out=length_pred),
+                k_z = seq(v_k[1],v_k[2],length.out=length_pred),
+                forest_succession = v_forest,
                 SiteCode=site.posteriori)  
   }
 }
+
+####################### versão predição mais simples
+f_pred_simples <- \(vpath_md){
+  l_md <- readRDS(vpath_md)
+  md <- l_md[["te(logU/U,k)"]];rm(l_md);gc() 
+  dfmd <- f_dfmd2(md$model) %>% 
+    mutate(lat = filter(md$model,SiteCode=="SPigua1") %>% pull(lat) %>% unique,
+           long = filter(md$model,SiteCode=="SPigua1") %>% pull(long) %>% unique)
+  dfmd$pred <- predict.gam(md,newdata = dfmd,exclude = "s(lat,long)")
+  rm(md);gc()
+  return(dfmd)
+}
+l_df_pred_simples <- lapply(l_path$te,f_pred_simples)
+names(l_df_pred_simples) <- str_extract(l_path$te,"(?<=md_)(.+?)(?=\\.rds)")
+saveRDS(l_df_pred_simples,file="./dados/csv_SoE/rds/l_df_predict_gam_simples.rds")
+
+
+
+
+
+
+
+
+
+
+
 # f_dfmd <- \(dff,byforest,length_pred = 150,site.posteriori ="SPigua1"){
 #   v_range <- range(dff$Uefeito)
 #   df_newpred <- select(dff,-logOR,-Uefeito) %>% 
