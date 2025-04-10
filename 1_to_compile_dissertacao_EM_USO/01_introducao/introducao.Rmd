@@ -72,35 +72,6 @@ download_file(file ="relatorio_final.Rmd",
 
 ```
 
-
-
-# Introdução
-
-## Uma história recente do debate sobre fragmentação de habitat
-
-<p>O debate em torno do impacto da perda de cobertura florestal na biodiversidade das populações remanescentes de árvores apresenta desafios significativos para a formulação de práticas de conservação (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Um momento crucial nesse debate foi a divergência nas conclusões de duas revisões importantes: Haddad et al. @haddad_habitat_2015, que avaliou experimentos de fragmentação na escala do fragmento florestal, e as análises de @fahrig_ecological_2017, @fahrig_SLOSS2020, que examinaram os efeitos da fragmentação na escala da paisagem (@valente_toward_2023). @haddad_habitat_2015 concluíram que a fragmentação do habitat exerce um impacto negativo e de grande magnitude na biodiversidade, enquanto a síntese de Fahrig indicou que a fragmentação per se geralmente tem efeitos irrelevantes ou até positivos sobre a biodiversidade @fahrig_ecological_2017, @fahrig_SLOSS2020. Essas conclusões divergentes derivam de concepções fundamentalmente distintas sobre os processos ecológicos em questão (@didham_rethinking_2012; @fahrig_habitat_2019). Enquanto Haddad et al. compreendem a perda e a fragmentação de habitat como efeitos interconectados resultantes de um único processo, Fahrig et al. consideram que se tratam de processos distintos, com a fragmentação per se alterando a complexidade espacial independentemente da perda de cobertura. Apesar das discordâncias sobre o processo gerador dos dados e dos métodos adequados para investigá-lo — como quais métricas de paisagem utilizar ou como avaliar os efeitos propostos — ambos os programas de pesquisa baseiam-se em mecanismos demográficos ecológicos para justificar seus conceitos, métodos e hipóteses (@fletcher2018habitat, @fahrig2019habitatA).</p>
-
-<p>A discordância sobre o processo gerador dos dados levou o grupo de pesquisa que pressupõe independência entre os efeitos da paisagem (ver Tabela 1) a desconsiderar os resultados dos experimentos realizados na escala do fragmento em suas revisões e diretrizes de conservação (@arroyo-rodriguez_designing_2020). As recomendações apresentadas por @arroyo-rodriguez_designing_2020 são fundamentadas em revisões de análises estatísticas de dados observacionais em larga escala e em simulações teóricas (e.g., @fahrig_ecological_2017, @fahrig_SLOSS2020; @watling_support_2020). Essas diretrizes podem ser resumidas em três principais orientações: i) aumentar a cobertura florestal — idealmente, pelo menos 40% da paisagem deve ser composta por áreas florestais; ii) promover a fragmentação per se, distribuindo cerca de 10% da cobertura florestal remanescente em um único fragmento e o restante disperso pela paisagem; e iii) melhorar a qualidade da matriz. Em contrapartida, o grupo que defende a interdependência dos efeitos da paisagem argumentou que, em vez de estabelecer diretrizes gerais, é mais adequado utilizar todas as ferramentas técnicas disponíveis para modelar intervenções específicas para cada região (@banks-leite_suggestion_2021). Em resposta, os defensores da independência dos efeitos da paisagem ressaltaram que, dada a urgência da perda de ecossistemas naturais e a escassez de informações detalhadas sobre esses sistemas, se cada situação exigir o uso de modelos complexos, não será possível conservar e restaurar ecossistemas naturais antes de reunir os dados necessários para calibrar tais modelos (@arroyo-rodriguez_preserving_2021).</p>
-
-<p>Recentemente, os grupos de pesquisa têm redefinido suas discordâncias enquanto enfatizam pontos de convergência. Em um artigo conjunto, representantes de ambos os grupos destacaram um consenso em torno de três aspectos fundamentais: a importância de preservar áreas de cobertura natural (independentemente do ecossistema ou do tamanho da área remanescente), a promoção da conectividade para facilitar a movimentação de indivíduos entre habitats, e a melhoria da qualidade da matriz (@riva_banskleite2024). Outro ponto de concordância é a contextualização dos efeitos da paisagem, particularmente na avaliação de impactos em diferentes contextos regionais (@valente_toward_2023). O grupo que defende a interdependência dos efeitos paisagísticos (ver Tabela 1) tem explorado uma perspectiva macroecológica para entender como a configuração espacial influencia a distribuição de espécies em escalas regionais (@hanski_2015; @BanksLeite2022). Em contraste, o grupo que considera independentes os efeitos de fragmentação e perda de habitat propõe experimentos na escala da paisagem utilizando o design SLOSS (Single Large Or Several Small) em diferentes contextos tróficos (@fahrig_resolving_2022).</p>
-<p>Ainda assim, persiste uma divergência central entre os grupos: a escala de observação utilizada para inferir os efeitos das mudanças na cobertura do solo (@valente_toward_2023). O programa de pesquisa que considera a interdependência dos efeitos tende a mensurar e testar hipóteses na escala do fragmento florestal (mas veja @puttker_indirect_2020 para uma análise que abrange métricas na escala da paisagem). Por outro lado, o grupo que defende a independência dos efeitos prefere medições e experimentos na escala da paisagem (embora veja @watling_support_2020 para uma comparação entre métricas na escala do fragmento e da paisagem).</p>
-
-
-## Linguagem comum: critério estatistico e mecanismos ecológicos
-
-<p>Ambos os grupos de pesquisa utilizam critérios estatísticos baseados em inferência causal para interpretar e atribuir os efeitos da paisagem sobre a diversidade local, fundamentando suas análises na lógica contrafactual (@grace2024). O critério estatístico pode ser entendido como a busca por estimar efeitos que se configuram como contrastes puros de cenários contrafactuais, isolando diferenças entre entidades equivalentes submetidas a diferentes tratamentos ou exposições (@grace2024). Tanto os experimentos conduzidos por @haddad_habitat_2015 quanto aqueles propostos por @fahrig_resolving_2022 seguem esse critério estatístico, pois envolvem design experimental com atribuição aleatória. Além disso, as revisões de análises observacionais realizadas por @fahrig_ecological_2017, @fahrig_SLOSS2020 e @riva_disproportionately_2022 resumem os resultados por contexto amostral (por exemplo, classificação de sítios em função do grau de perturbação), o que pode ser interpretado como uma forma implícita de condicionamento a partir de um diagrama de relações causais (da singles em inglês DAG para Direct Aciclyc Graphs). A análise observacional conduzida por @puttker2020indirect emprega modelos de equações estruturais para modelar as relações propostas em seu DAG (ver Tabela 1 e glossário). Dada a validade de um DAG específico e o cumprimento dos critérios estabelecidos por ele, é possível estimar efeitos causais com uma interpretação contrafactual mesmo a partir de dados observacionais, conforme o critério estatístico (@grace2024).</p> 
-
-<p>Nas análises de dados observacionais, ambos os programas de pesquisa associam os padrões de biodiversidade local observados às características da paisagem mensuradas no momento mais próximo possível (@fahrig_ecological_2017, @fahrig_SLOSS2020, @watling2020support, @puttker2020indirect, @riva_disproportionately_2022). Esse pressuposto de contemporaneidade é amplamente adotado na ecologia de paisagens, especialmente em contextos onde os dados disponíveis são escassos e estáticos (@frazier_landscape_2017). Ele também fundamenta críticas aos experimentos de longo prazo realizados na escala do fragmento (@haddad_habitat_2015), que não utilizam esse pressuposto uma vez que analisam .</p>
-
-<p>Dado que há convergência na proposição da conectividade como mecanismo mínimo (@valente_toward_2023; @riva_banskleite2024), é possível utilizar um modelo mecanístico em que ambos os grupos possam selecionar contrafactuais de acordo com os efeitos propostos por suas respectivas visões do processo gerador dos dados (@bull2021; @gianluca_ch4_2022). Uma das limitações dos critérios estatísticos para inferência causal é que eles frequentemente desconsideram os mecanismos específicos que geram os dados (@DAGinf_epi_2019; @gianluca_ch5_2022; @grace2024). Por outro lado, um modelo que simule a conectividade pode ser adotado por ambos os grupos de pesquisa. Modelos baseados em indivíduos são capazes de simular conectividade enquanto assumem ou relaxam pressupostos auxiliares, como a contemporaneidade (@azaele_statistical_2016; @campos_neutral_2012, @campos_effect_2013, @claudino_extinction_2015, @Gilbert2006). Por exemplo, esses modelos podem pressupor um estado de equilíbrio em uma configuração espacial específica da cobertura remanescente ou incorporar variações na conectividade ao longo do tempo (@martensen2017). Para que um modelo mecanístico seja um dispositivo de mimese do fenômeno em estudo, ele deve possuir três qualidades: robustez teórica, e ser empiricamente calibrável e validado (@gianluca_ch4_2022).
-O uso de contrastes contrafactuais permite avaliar como as evidências se comportariam caso a situação hipotética sugerida pelo contrafactual tivesse ocorrido (@bull2021; @Marshall2014). Portanto, é possível estimar os efeitos propostos por cada grupo de pesquisa com modelos baseados em indivíduos, oferencedo uma interpretação mecanística da influência da paisagem na conectividade com o local de estudo.</p>
-
-# Objetivo
-
-<p>Nosso objetivo é estimar os efeitos da paisagem propostos pelos programas de pesquisa em debate (tabela 1) utilizando um modelo mecanístico, baseado em indivíduos. Buscamos integrar as perspectivas divergentes sobre os efeitos da paisagem na biodiversidade local, a fim de simular dados observacionais estáticos. Para isso, empregamos um modelo neutro espacialmente explícito, teoricamente fundamentado no estudo da perda e fragmentação da cobertura florestal, com o objetivo de avaliar os impactos da configuração da paisagem sobre a biodiversidade. Utilizando um conjunto abrangente de dados de inventários florestais, calibramos o modelo com base na riqueza de espécies e validamos empiricamente a predição da distribuição de abundância das espécies (SAD), alinhando nossa abordagem às metodologias de ambos os programas de pesquisa. A partir do contraste entre pares de três cenários contrafactuais — paisagem fragmentada, paisagem com floresta remanescente aglomerada e paisagem prístina — estimamos os efeitos da paisagem propostos (caixa 1). Este método permite interpretar o contraste entre as paisagens em termos da conectividade simulada, atribuindo esse contraste à capacidade do modelo de aproximar, de forma mais ou menos precisa, a SAD observada, oferecendo assim uma interpretação mecanística dos efeitos propostos da paisagem, com base em dados empíricos.</p>
-
-# tabela 1
-
 ```{r tabela1,eval=FALSE,include=FALSE,tab.cap="Programas de pesquisa em disputa e suas visões ontológicas"}
 # Load required packages
 library(flextable)
@@ -204,14 +175,10 @@ table_1 <- flextable(table_1_data) %>%
 # table_1
 l_ggdag[[1]]
 ```
+
 ```{r tab1,eval=TRUE,include=TRUE}
 knitr::include_graphics("figuras/tabela1.jpeg")
 ```
-
-# box 1: contraste entre paisagens contrafactuais como método de estimativa dos propostos efeitos da paisagem
-
-## tabela box 1: Os contrastes entre paisagens contrafactuais e suas interpretações dentro dos programas de pesquisa (tabela 1)
-
 
 ```{r criacao das figuras exemplo,include=FALSE,eval=FALSE}
 ##### criação das imagens exemplo
@@ -261,6 +228,7 @@ f_plot <- \(drow){
 plyr::a_ply(dfp,1,f_plot)
 
 ```
+
 ```{r tabela do box 1,include=FALSE,eval=FALSE}
 # Install and load necessary packages
 # install.packages("flextable")
@@ -300,23 +268,14 @@ flextable_dim(ft)
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/01_introducao/"
 save_as_image(ft,path=paste0(v_path,"figuras/tabela_box1.png"))
 ```
+
 ```{r caption tabela display da tabela do box 1,include=FALSE,eval=TRUE}
 cap <- "tabela box 1"
 ```
+
 ```{r tabela box 1,eval=TRUE,include=TRUE}
 knitr::include_graphics("figuras/tabela_box1.png")
 ```
-
-
-<p>As paisagens contrafactuais presentes na tabela deste quadro foram escolhidos porque representam variações chave nas características espaciais da paisagem, permitindo isolar e identificar diferentes efeitos potenciais na biodiversidade local. Cada paisagem contrafactual simula uma condição teórica (prístina) ou empírica (agregada ou contemporânea) que ajuda a entender como a perda de habitat e a alteração na configuração espacial influenciam a dinâmica ecológica.</p>
-<p>Considerando que ambas as práticas ontológicas utilizam a paisagem contemporânea como referência para calcular métricas da cobertura florestal remanescente, como a proporção de cobertura florestal (@puttker2020indirect; @watling2020support), a paisagem com a configuração espacial contemporânea da cobertura florestal remanescente torna-se um contrafactual comum.</p>
-<p>Outra paisagem contrafactual possível é a paisagem sem perda de cobertura florestal, referida como paisagem prístina, que é considerada uma referência sem o efeito da perda de cobertura florestal. Métricas como a proporção de cobertura florestal implicitamente utilizam essa paisagem como ponto de referência.</p>
-<p>Entre os efeitos propostos (tabela 1), aquele que pressupõe interdependência pode ser estimado pelo contraste entre a paisagem contemporânea e a paisagem prístina, pois o contraste entre os dois informa o efeito combinado da redução de cobertura florestal e mudança na configuração espacial mudando (@valente_toward_2023, @DAGinf_epi_2019). O efeito obtido do contraste entre paisagem contemporânea e prístina foi chamado de fragmentação total (tabela 2).</p>
-<p>Por outro lado, a prática ontológica independente, que assume que a perda de cobertura florestal ocorre de forma independente do processo que determina a complexidade espacial dessa cobertura, necessita de uma paisagem contrafactual que represente a situação em que não há mudança na configuração espacial da paisagem prístina, apenas a quantidade de habitat (@valente_toward_2023), situação de mínima complexidade espacial possível da cobertura remanescente. A paisagem com a cobertura remanescente aglomerada ao redor da parcela foi usada como essa referência. Com a paisagem aglomerada, é possível estimar o efeito de área per se, comparando-a com a paisagem prístina, e o efeito de fragmentação per se, comparando-a com a paisagem contemporânea (tabela 2).</p>
-<p>Este design oferece uma forma de avaliar como as mudanças na configuração espacial e na quantidade de habitat interagem para determinar os efeitos da paisagem na biodiversidade local.</p>
-
-
-# Glossário
 
 ```{r glossario, include=TRUE,eval=TRUE,fig.cap="Glossário"}
 # Instalar pacotes necessários, se ainda não estiverem instalados
@@ -381,4 +340,85 @@ glossario_table <- flextable(glossario) %>%
 glossario_table
 ```
 
-# Referências
+# Título Dissertação:
+
+“Efeitos explicativos da paisagem na predição da biodiversidade local de árvores: a contribuição de um modelo neutro espacialmente explícito ao debate sobre fragmentação de habitat”[a]
+
+
+
+
+# O debate sobre o efeito causal da fragmentação de habitat na biodiversidade remanescente
+
+## Uma história recente do debate
+<p>Não há consenso sobre o impacto da conversão de habitat na biodiversidade remanescente (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Um episódio recente desse debate envolveu a divergência entre duas revisões que analisaram dados experimentais e observacionais: @haddad_habitat_2015, que avaliou experimentos de fragmentação na escala do fragmento florestal, e @fahrig_ecological_2017, @fahrig_SLOSS2020, que examinaram os efeitos da fragmentação na escala da paisagem (@valente_toward_2023). Enquanto @haddad_habitat_2015 concluiu que a fragmentação do habitat tem um impacto negativo significativo sobre a biodiversidade, a síntese de Fahrig sugeriu que a fragmentação per se – isto é, a mudança na configuração espacial sem a perda de cobertura florestal – geralmente tem efeitos irrelevantes ou até positivos sobre a biodiversidade (@fahrig_ecological_2017, @fahrig_SLOSS2020). Essas conclusões divergentes refletem concepções distintas sobre o processo de perda de cobertura florestal (@didham_rethinking_2012; @fahrig_habitat_2019). Enquanto Haddad et al. consideram a perda de habitat e a fragmentação espacial como partes interligadas de um único processo de fragmentação, Fahrig et al. argumentam que se tratam de processos distintos, sendo a fragmentação per se uma alteração na complexidade espacial que ocorre independentemente da perda de cobertura.</p>
+## Uma definição dos efeitos causais dos grupo de pesquisa em debate
+
+Assim, os grupos de pesquisa em debate propõem distintos efeitos causais da perda de cobertura florestal na biodiversidade remanescente. Para o grupo que considera a perda de habitat e a fragmentação como um único processo, o efeito total da fragmentação pode ser estimado experimentalmente ao contrastar uma paisagem prístina, sem perda de cobertura florestal, com uma paisagem fragmentada ao longo de um gradiente de cobertura florestal (Didham et al. 2012; Haddad et al. 2015; Valente et al. 2023). Como essas paisagens diferem tanto na perda quanto na fragmentação de habitat (Didham et al. 2012; Valente et al. 2023), e assumindo que todas as demais características sejam mantidas constantes, esse contraste revelaria o efeito combinado desses processos.
+Já para o grupo que pressupõe independência entre os efeitos da perda de habitat e da mudança na configuração espacial, a estimativa experimental desses efeitos requer a adição de um novo tratamento: paisagens com a mesma cobertura florestal, mas com diferentes configurações espaciais (Fahrig et al. 2022). Um exemplo seria uma paisagem onde o habitat remanescente está todo aglomerado, minimizando a complexidade espacial (Valente et al. 2023). Dessa forma, dois efeitos distintos poderiam ser estimados: o efeito de área per se e o efeito de fragmentação per se. O efeito de perda de área per se pode ser obtido ao contrastar a paisagem prístina com a paisagem aglomerada, pois ambas teriam a mesma configuração espacial, diferindo apenas na cobertura florestal (Fahrig et al. 2022; Valente et al. 2023). Já o efeito da fragmentação per se poderia ser determinado ao contrastar a paisagem fragmentada com a paisagem aglomerada, pois a única diferença entre elas seria a complexidade espacial do habitat remanescente – a quantidade total de habitat permaneceria constante (Fahrig et al. 2022; Valente et al. 2023).
+Contudo, experimentos em escala de paisagem são inviáveis para ecossistemas florestais como a Floresta a Atlântica, onde grande parte da cobertura original foi reduzida a pequenos fragmentos isolados, com poucas grandes áreas preservadas (Vancine et al. 202[b]4). Dada essa limitação, os efeitos da paisagem ao longo do gradiente de cobertura florestal precisam ser estimados a partir de dados observacionais (Fahrig 2017, 2020; Puttker et al. 2020). Dentro da tradição estatística, se um modelo conceitual de relações causais for válido, é possível interpretar efeitos estimados a partir de dados observacionais da mesma forma que em um experimento (Pearl et al. 2016[c]). No entanto, além da escolha da hipótese causal, essa abordagem exige a escolha de métricas que representem os efeitos causais pressupostos. Como não há consenso sobre a conceituação do problema, também não há acordo sobre quais métricas devem ser usadas para representar a complexidade da configuração espacial (Fletcher Jr et al. 2018; Fahrig et al. 2019; Valente et al. 2023). Além disso, empiricamente, as métricas de complexidade espacial do habitat não são independentes da proporção de cobertura florestal (Villard & Metzger 2014), tornando o debate ainda mais polarizado. Cada grupo tende a adotar métricas que refletem suas concepções teóricas, sem que haja consenso sobre a adequação das estimativas dos efeitos propostos (Valente et al. 2023).
+
+
+
+## Pontos em comum
+
+Além dos pressupostos explícitos nos modelos conceituais de relações causais, ambos os grupos de pesquisa fazem suposições adicionais ao analisar dados observacionais. Essas análises correlacionam padrões de diversidade com as características da paisagem amostrada, assumindo que tais características influenciaram os padrões de biodiversidade observados (@fahrig_ecological_2017, @fahrig_SLOSS2020, @watling2020support, @puttker2020indirect, @riva_disproportionately_2022). Esse pressuposto de contemporaneidade implica a constância das características da paisagem relevantes para gerar os padrões de biodiversidade e a ausência de atrasos na resposta da biodiversidade remanescente, sendo amplamente adotado na ecologia de paisagens, especialmente em contextos onde os dados disponíveis são escassos e estáticos (@frazier_landscape_2017). Em geral, bases de dados que compilam estudos observacionais contêm apenas uma classificação genérica do grau de preservação da parcela amostrada, sem informações detalhadas sobre a paisagem ao redor (Lima et al. 2015[d]; chase2019fragsads[e]). Dessa forma, alguns estudos optam por estratificar os sítios com base no grau de preservação informado na base de dados (e.g., @fahrig_ecological_2017, @fahrig_SLOSS2020, @riva_disproportionately_2022).
+Outro ponto comum entre os grupos é a definição de uma escala espacial de análise, que determina a extensão na qual as métricas escolhidas serão calculadas ou as paisagens serão manipuladas experimentalmente. Todas as métricas do padrão espacial da paisagem são mensuradas em uma escala específica (Fahrig 2003, @fahrig_ecological_2017, @fahrig_SLOSS2020, @riva_disproportionately_2022, Puttker et al. 2020, Valente et al. 2023, Fletcher Jr et al. 2023). Por exemplo, no caso da estimativa experimental do efeito de fragmentação per se é necessário definir a extensão espacial utilizada para determinar o habitat que será aglomerado ao redor da área amostrada.
+Recentemente, os grupos de pesquisa mapearam algumas convergências conceituais. Em um artigo conjunto, representantes de ambos os grupos reconheceram a importância da conectividade para compreender os efeitos da paisagem na biodiversidade remanescente (@riva_banskleite2024). A ênfase na conectividade pode ser justificada pela aplicação da teoria de metacomunidades na interpretação de evidências para a conservação (Chase et al. 2020).
+
+# Nossa abordagem: inferência explicativa baseada em mecanismo
+
+## Teoria ecológica comum
+
+A teoria de metacomunidades conceitualiza as paisagens como conjuntos de comunidades locais interconectadas pela dispersão de indivíduos, sendo que essas comunidades podem apresentar dinâmicas próprias influenciadas por processos locais e regionais (Leibold & Chase 2018[f] ;Chase et al. 2020). Em ecossistemas florestais, um componente essencial da biodiversidade remanescente são as árvores. Os modelos de dinâmica de substituição de indivíduos árboreos no espaço mais simples são modelos neutros (Leibold & Chase 2018[g] ;Chase et al. 2020). Entre esses, destaca-se o modelo neutro espacialmente explícito (MNEE), que foi validado teoricamente em paisagens fragmentadas (Campos et al. 2012, 2013; Claudino et al. 2015) e demonstrou ser capaz de reproduzir padrões de diversidade local observados em bases de dados que compilam inventários florestais, como os da Floresta Atlântica (REF). O padrão fundamental de biodiversidade que  modelos da teoria neutra geram é  a distribuição de abundância de espécies (species abundance distribution, SAD). A SAD descreve a frequência de indivíduos por espécie em uma amostra (McGill et al. 2007). Simulações do MNEE indicam que a configuração espacial da paisagem pode ter uma influência significativa na forma da SAD local (Campos et al. 2012, 2013). Dessa forma, o MNEE pode ser utilizado para explorar como diferentes paisagens afetam a SAD local, permitindo a simulação desses efeitos sob um mecanismo de dinâmica demográfica conhecido e interpretável (detalhes em Materiais e Métodos).
+  
+## MNEE e sua relação com o debate sobre fragmentação de habitat 
+
+Além de sua capacidade de reproduzir a influência da paisagem na SAD local, o MNEE simula resultados para uma situação análoga ao de contemporaneidade utilizado nas estimativas de efeitos causais a partir de dados observacionais praticadas pelos grupos de pesquisa em debate. A situação análoga ao pressuposto de contemporaneidade é a situação de equilíbrio dinâmico, em que a taxa de perda de espécies por deriva ecológica é compensada pela introdução aleatória de novas espécies (Rosindell et al. 2008), que pode ser interpretado como a reposição de espécies pelo banco local de propágulos, imigração de longa distância ou especiação verdadeira (Azaele et al. 2016; Condit et al. 2012). A deriva ecológica refere-se à variação aleatória na abundância das espécies ao longo do tempo (Azaele et al. 2016). O MNEE pressupõem que todas as espécies são equivalentes em termos de taxas demográficas (natalidade e mortalidade) e na capacidade de dispersão (Rosindell et al. 2008), assim, a deriva ecológica resulta da estocasticidade demográfica que emerge da dinâmica de substituições nesse mecanismo demográfico (Azaele et al. 2016). A situação de equilíbrio impõe que a paisagem está influenciando a dinâmica local, pois não há atraso na resposta ecológica em relação à configuração espacial da paisagem (Rosindell et al. 2008; Azaleia et al. 2016; Thompson et al. 2020). Assim, o MNEE pode ser utilizado para reproduzir a influência dos três tipos de paisagens necessários para estimar os efeitos causais propostos no debate, sendo preferido por representar a forma mais simples e mecanística de modelar a dinâmica de comunidades no nível do indivíduo, com pressupostos análogos aos utilizados na análise de dados observacionais.
+Outra característica relevante do MNEE é a presença de um único parâmetro livre: a taxa U. Essa taxa representa a probabilidade de entrada de uma nova espécie na paisagem por evento de nascimento que repõe uma morte. O parâmetro U pode ser calibrado para que o modelo reproduza a riqueza de espécies observada em um determinado cenário de limitação à dispersão per capita (Rosindell et al. 2008).  A reposição local de indivíduos ocorre de duas formas. Em uma fração U dos eventos de nascimento um novo indivíduo introduz uma nova espécie na paisagem. Nos restantes 1 − U dos eventos, a reposição provém de um indivíduo da paisagem ao redor, pertencente a uma espécie já presente ou ausente na amostra local (parcela). Nesse caso, a origem do propágulo segue a estrutura espacial do modelo e pode resultar na chegada de espécies ausentes na parcela, mesmo sem especiação. Assim, a taxa U ajustada para reproduzir a riqueza de espécies observada em uma paisagem pode ser interpretada como uma medida da conectividade simulada entre a parcela e a paisagem circundante, considerando um determinado grau de limitação à dispersão. Quanto maior a taxa U em uma paisagem, maior a reposição de espécies externas ao pool de adultos locais, devido ao pressuposto de equilíbrio do modelo. Portanto, a taxa U ajustada pela riqueza observada permite a comparação das paisagens hipotéticas (fragmentada, aglomerada e prístina). Comparações, como a razão entre as taxas U estimadas para pares de paisagens hipotéticas (por exemplo, via logaritmo da razão das taxas U), podem indicar em qual paisagem a conectividade simulada foi maior. Dessa forma, a taxa U pode ser utilizada como uma métrica funcional de conectividade comum aos efeitos propostos pelos dois grupos em debate.
+
+## Inferência explicativa da paisagem baseada em mecanismo demográfico
+Dada a relação da taxa U com a dispersão de propágulos vindos da paisagem para a parcela, é possível utilizá-la para estimar a extensão espacial necessária para simular a SAD em um determinado cenário de limitação à dispersão. Dessa forma, é possível explorar a sensibilidade dos efeitos propostos em relação à variação na capacidade de dispersão dos indivíduos no espaço e à consequente escala espacial adequada para analisá-los (Jackson & Fahrig 2014, Fletcher Jr. et al. 2018, Fahrig et al. 2019, Valente et al. 2023, Fletcher Jr. et al. 2023). Para isso, é necessário avaliar a extensão espacial da paisagem de modo que a simulação seja influenciada apenas pela capacidade de dispersão dos indivíduos e pela configuração espacial da paisagem hipotética, e não pela própria extensão espacial da paisagem considerada. Uma abordagem possível é avaliar a estimativa da taxa U em paisagens prístinas, pois, nesse caso, apenas a capacidade de dispersão e a extensão espacial devem influenciar a estimativa da taxa U. Quanto menor a paisagem ao redor da parcela, maior deve ser a taxa U estimada, pois, mantendo-se constantes os demais parâmetros, o pool de adultos disponível na paisagem será menor (May et al. 2012). Com o aumento da paisagem, a taxa U tende a diminuir devido ao aumento do pool de adultos disponível, mas essa redução se estabiliza, uma vez que a limitação à dispersão per capita impede um aumento indefinido da influência da paisagem circundante (May et al. 2012). Assim, a extensão espacial que estabiliza a taxa U estimada pode ser considerada como a escala espacial adequada para aquele cenário específico de limitação à dispersão.
+Uma vez que é possível simular a SAD sob diferentes paisagens hipotéticas, utilizando uma métrica de conectividade funcional na escala espacial adequada para simular o mecanismo demográfico, o MNEE pode ser empregado como ferramenta de inferência explicativa baseada em mecanismo demográfico. A ideia central é comparar os resultados do modelo simulado em pares de paisagens hipotéticas, tal como proposto na estimativa experimental de efeitos causais da paisagem na biodiversidade local, avaliando sua capacidade de reproduzir a SAD observada. Dessa forma, é possível avaliar o efeito explicativo que o contraste entre paisagens apresenta em relação à predição dos padrões de biodiversidade observados. Um exemplo de descrição desse efeito explicativo é: “A simulação do mecanismo demográfico na paisagem contemporânea, em relação à paisagem prístina, pressupõe menor/igual conectividade e apresenta piora/melhora na congruência com a SAD observada” — um exemplo aplicável ao efeito explicativo de fragmentação total. O efeito explicativo de área per se deve apresentar uma forma semelhante, uma vez que a conectividade na paisagem aglomerada, em relação à paisagem prístina, só pode ser menor ou igual. Já o efeito de fragmentação per se pode apresentar um padrão distinto. Conforme concluído por Fahrig et al. (2019), o aumento da fragmentação per se, ou seja, o aumento na complexidade do padrão espacial em relação a uma paisagem com a cobertura remanescente aglomerada, pode reduzir a perda de espécies. No contexto do MNEE, em alguns casos, o aumento da fragmentação per se pode reduzir a perda de espécies por deriva, caso a configuração espacial específica impeça que indivíduos substituam indivíduos de outras espécies, seja pelo isolamento das espécies ou pela redistribuição espacial das populações (Campos et al. 2012, 2013). Se a perda de espécies por deriva diminui, a taxa U necessária para reproduzir a riqueza observada também será menor. Assim, no caso do efeito explicativo de fragmentação per se, a conectividade simulada pelo MNEE pode ser maior, igual ou menor ao comparar uma paisagem aglomerada com uma paisagem fragmentada.
+
+# Objetivo
+
+Nosso objetivo é simular os cenário de mudança da perda de cobertura florestal da paisagem postulados pelos dois grupos de pesquisa em debate.Com essas simulações foi possível avaliar as mudanças de conectividade sob cada cenário e na predição da abundância local de espécies arbóreas. Para tanto, simulamos um modelo de dinâmica espacialmente explícita nas paisagens hipotéticas, paisagem fragmentada, paisagem prístina e paisagem aglomerada, tal como descritas anteriormente. Essas simulações em paisagens hipotéticas distintas foram comparadas, tal como previstos nos efeitos das paisagens postulados no debate sobre fragmentação de habitat, quanto a congruência relativa da predição da biodiversidade local.
+
+[a]muito preciso!
+[b]Vancine, M. H., Muylaert, R. L., Niebuhr, B. B., Oshima, J. E. de F., Tonetti, V., Bernardo, R., De Angelo, C., Rosa, M. R., Grohmann, C. H., & Ribeiro, M. C. (2024). The Atlantic Forest of South America: Spatiotemporal dynamics of the vegetation and implications for conservation. In Biological Conservation (Vol. 291, p. 110499). Elsevier BV. https://doi.org/10.1016/j.biocon.2024.110499
+[c]@book{pearl2016causal,
+title={Causal inference in statistics: A primer},
+author={Pearl, Judea and Glymour, Madelyn and Jewell, Nicholas P},
+year={2016},
+publisher={John Wiley \& Sons}
+}
+[d]@article{de2015much,
+title={How much do we know about the endangered Atlantic Forest? Reviewing nearly 70 years of information on tree community surveys},
+author={de Lima, Renato AF and Mori, Danilo P and Pitta, Gregory and Melito, Melina O and Bello, Carolina and Magnago, Luiz F and Zwiener, Victor P and Saraiva, Daniel D and Marques, M{\'a}rcia CM and de Oliveira, Alexandre A and others},
+journal={Biodiversity and Conservation},
+volume={24},
+pages={2135--2148},
+year={2015},
+publisher={Springer}
+}
+[e]@article{chase2019fragsad,
+title={FragSAD: A database of diversity and species abundance distributions from habitat fragments},
+author={Chase, Jonathan M and Liebergesell, Mario and Sagouis, Alban and May, Felix and Blowes, Shane A and Berg, {\AA}ke and Bernard, Enrico and Brosi, Berry J and Cadotte, Marc W and Cayuela, Luis and others},
+journal={Ecology},
+volume={100},
+number={12},
+year={2019},
+publisher={ESA}
+}
+[f]@book{leibold2018metacommunity,
+title={Metacommunity ecology, volume 59},
+author={Leibold, Mathew A and Chase, Jonathan M},
+year={2018},
+publisher={Princeton University Press}
+}
+[g]@book{leibold2018metacommunity,
+title={Metacommunity ecology, volume 59},
+author={Leibold, Mathew A and Chase, Jonathan M},
+year={2018},
+publisher={Princeton University Press}
+}
