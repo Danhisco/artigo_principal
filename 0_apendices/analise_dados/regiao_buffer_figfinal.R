@@ -65,7 +65,14 @@ for(i in names(l_md)){
 }
 saveRDS(l_md,file=paste0(v_path,"rds/l_md_refU.rds"))
 #############################################################
-############## remoção da área do buffer ##############
+############### remoção da área do buffer ################
+
+
+
+
+
+
+
 #############################################################
 # i) carregar os dados de l_df_pred
 l_paths <- paste0(v_path,"rds/l_dfpred_",c("fragtotal","fragperse","areaperse"),".rds")
