@@ -14,6 +14,8 @@ header-includes:
 - \usepackage{lmodern}
 - \usepackage{fontspec}
 - \setmainfont{Times New Roman}
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup resultados,include=FALSE}
@@ -195,7 +197,6 @@ knitr::include_graphics("./figuras/fig3_Uk_ladoKM.png")
 ```
 
 Na figura  \@ref(fig:Uk-ladokm)  há o perfil da taxa U estimada na paisagem prístina com o lado da paisagem variando entre 0.5 km até 16 km. Os graus de limitação de dispersão brandos, abaixo de 0.50, apresentaram a maior variabilidade em função do efeito de escalar, seguidos dos graus de limitação mais severos (\@ref(fig:Uk-ladokm), detalhes no apêndice ‘Efeito de Escalar”). Os graus de limitação de dispersão pouco brandos, aqueles que ocorrem no patamar de valores elevados de taxa U (ver \@ref(Unull)), apresentam baixa variação com o aumento da extensão espacial (\@ref(fig:Uk-ladokm), detalhes no apêndice ‘Efeito de Escalar”). Nos graus de limitação de dispersão em que a taxa U apresenta maior variabilidade em função do aumento da extensão espacial, os graus de limitação brandos (k<0.50) e severos (k>0.80), observa-se clara tendência de redução da taxa U estimada com o aumento da extensão espacial da paisagem (\@ref(fig:Uk-ladokm), detalhes no apêndice ‘Efeito de Escalar”). Esse padrão de redução da taxa U com o aumento da extensão espacial da paisagem prístina era esperado, uma vez que com o aumento dos progenitores na paisagem ao redor há aumento na possibilidade de reposição de espécies perdidas localmente pela dispersão da área ao redor da parcela (@may_dispersal_2012). Nos graus de limitação de dispersão com pouca variabilidade, a maior parte da variabilidade ocorre entre réplicas de uma mesma extensão espacial e pouco entre as médias de extensão espacial subsequentes (ver apêndice ‘Efeito de Escalar’).  Assim, não é claro um padrão de redução do valor da taxa U média com o aumento da extensão espacial nesses graus de limitação de dispersão, pelo contrário, em alguns sítios parece não existir efeito da extensão espacial e em outros pode existir um mínimo global em extensões espaciais intermediárias  (ver apêndice ‘Efeito de Escalar’).
-
 
 
 ### Descrição estatística da relação entre taxa U, grau de limitação de dispersão e extensão espacial da paisagem

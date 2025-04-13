@@ -111,7 +111,8 @@ l_f$`land + land|Site` <-
 doMC::registerDoMC(2)
 l_md_minimo <- llply(l_f,f_gam,dfi=df_ad,.parallel = TRUE)
 l_md_minimo$`s(k,by=land)` <- l_md$`s(k,by=land)`
-df_tabsel_minimo <- f_TabSelGAMM(l_md_minimo)
+l_md_final <- c(l_md,l_md_minimo)
+df_tabsel_minimo <- f_TabSelGAMM(l_md_final)
 write_csv(df_tabsel_minimo,"1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_minimo_paisagens.csv")  
 
 ######################################### ESTIMATIVAS
@@ -124,18 +125,71 @@ new_data <- expand.grid(
   long = 0,
   SiteCode = "SPigua1"  # Replace with a fixed value
 )
-predictions <- predict(md_sumario, 
-                       newdata = new_data, 
-                       type = "link", 
-                       se.fit = TRUE, 
-                       exclude = "s(SiteCode)")
-new_data$fit <- predictions$fit
-new_data$se <- predictions$se.fit
-new_data <- new_data %>% mutate(
+#
+l_dfpred <- list()
+l_dfpred$fixo_e_aleat <- md_sumario$model
+l_dfpred$fixo_e_aleat[,1] <- l_dfpred$fixo_e_aleat[,1][,1]
+names(l_dfpred$fixo_e_aleat)[c(1,3)] <- c("nSAD","forest_sucession")
+lpred <- predict(md_sumario,
+                 type = "response", 
+                 se.fit = TRUE)
+l_dfpred$fixo_e_aleat$fit <- lpred$fit
+l_dfpred$fixo_e_aleat$se <- lpred$se.fit
+l_dfpred$fixo_e_aleat <- mutate(
+  l_dfpred$fixo_e_aleat,
+  lower = fit - 1.96 * se,
+  upper = fit + 1.96 * se,
+  forest_sucession = gsub("cont.","",forest_sucession) %>% 
+    gsub("ideal.","",.) %>% gsub("non_frag.","",.)
+)
+#
+l_dfpred$fixo <- expand.grid(
+  k = unique(df_ad$k),
+  land = unique(df_ad$land),
+  forest_succession = unique(df_ad$forest_succession),
+  lat = 0,
+  long = 0,
+  SiteCode = "SPigua1"
+)
+lpred <-  predict(md_sumario,
+                  newdata=l_dfpred$fixo,
+                  type = "response",
+                  exclude=c("s(lat,long)",
+                            "te(k,SiteCode):landcont",
+                            "te(k,SiteCode):landideal",
+                            "te(k,SiteCode):landnon_frag"),
+                  se.fit = TRUE)
+l_dfpred$fixo$fit <- lpred$fit
+l_dfpred$fixo$se <- lpred$se.fit
+l_dfpred$fixo <- mutate(
+  l_dfpred$fixo,
   lower = fit - 1.96 * se,
   upper = fit + 1.96 * se
 )
-new_data$k_factor <- as.factor(new_data$k)
+#######
+l_dfpred <- lapply(l_dfpred,\(dfi){
+  mutate(dfi,across(fit:upper,~.x*100),
+         land=factor(land,
+                     levels=c("cont",
+                              "non_frag",
+                              "ideal"),
+                     labels=c("fragmentada",
+                              "aglomerada",
+                              "prístina")))
+})
+p <- l_dfpred$fixo_e_aleat %>% 
+  ggplot(aes(x=k,y=nSAD,color=land)) +
+  geom_jitter(alpha=0.3) +
+  geom_line(aes(group=interaction(SiteCode,land)),alpha=0.3) +
+  geom_boxplot(aes(group=k),alpha=0.3) +
+  # geom_line(data = l_dfpred$fixo,
+  #           aes(x))
+  facet_grid(forest_succession~land)
+
+
+
+
+############################################################
 f_geom_final <- \(vs){
   list(
     scale_color_manual(values = c(
