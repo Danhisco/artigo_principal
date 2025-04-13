@@ -18,15 +18,6 @@ library(dplyr)
 # source("source/general_tools.R")
 # source("source/GAMMtools.R")
 # source("source/fig_tools.R")
-
-# l_md <- readRDS(paste0(v_path,"rds/l_md_simples_apudPedersen2019_tp.rds"))
-# df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_simples_tp_e_cr.csv")) %>%
-#   filter(dAICc==0,grepl("tp::",modelo)) %>% 
-#   mutate(modelo = gsub("tp::","",modelo)) %>% 
-#   rename(contraste=pair)
-# l_md <- dlply(df_tabsel,"contraste",\(dfi){
-#   with(dfi,{l_md[[contraste]][[modelo]]})
-# })
 #################################################################
 # função para criar o new data fixo
 f_dfmd2 <- \(dff,length_pred = 100,site.posteriori ="SPigua1"){
@@ -96,51 +87,6 @@ f_dfmd2 <- \(dff,length_pred = 100,site.posteriori ="SPigua1"){
   ## 
   return(df_newpred)
 }
-####################### versão predição mais simples
-# f_pred_simples <- \(vpath_md){
-#   l_md <- readRDS(vpath_md)
-#   md <- l_md[["te(logU/U,k)"]];rm(l_md);gc() 
-#   dfmd <- f_dfmd2(md$model) %>% 
-#     mutate(lat = filter(md$model,SiteCode=="SPigua1") %>% pull(lat) %>% unique,
-#            long = filter(md$model,SiteCode=="SPigua1") %>% pull(long) %>% unique)
-#   dfmd$pred <- predict.gam(md,newdata = dfmd,exclude = "s(lat,long)")
-#   rm(md);gc()
-#   return(dfmd)
-# }
-# l_df_pred_simples <- lapply(l_path$te,f_pred_simples)
-# names(l_df_pred_simples) <- str_extract(l_path$te,"(?<=md_)(.+?)(?=\\.rds)")
-# saveRDS(l_df_pred_simples,file="./dados/csv_SoE/rds/l_df_predict_gam_simples.rds")
-
-
-
-
-
-
-
-
-
-
-
-# f_dfmd <- \(dff,byforest,length_pred = 150,site.posteriori ="SPigua1"){
-#   v_range <- range(dff$Uefeito)
-#   df_newpred <- select(dff,-logOR,-Uefeito) %>% 
-#     mutate(SiteCode=site.posteriori) %>% head(n=1)
-#   try({
-#     df_newpred <- cbind(
-#       data.frame(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred)),
-#       df_newpred)
-#   },silent = TRUE)
-#   if(byforest){
-#     df_return <- adply(as.character(unique(dff$forest_succession)),1,\(vstr){
-#       vrange <- filter(dff,forest_succession==vstr) %>% pull(Uefeito) %>% range
-#       filter(df_newpred,Uefeito>=vrange[1] & Uefeito<=vrange[2])
-#     }) %>% select(-X1)
-#     return(df_return)
-#   }else{
-#     return(df_newpred)
-#   }
-# }
-# função que realiza a predição a posteriori dado o modelo, new data e o vetor de exclusão de componentes
 f_predictions <- \(gamm,nsim,to_exclude,df_newpred,quants=c(0.05,0.5,0.95)){
   coef_samples <- MASS::mvrnorm(n=nsim, mu=coef(gamm), Sigma=vcov(gamm))
   matrix_lprediction <- predict(gamm,
@@ -154,22 +100,6 @@ f_predictions <- \(gamm,nsim,to_exclude,df_newpred,quants=c(0.05,0.5,0.95)){
   names(df_pred) <- paste0("Q_",quants)
   return(df_pred)
 }
-# criação do new data para predição fixo e aleatório
-# f_dfmd_aleat <- \(dfmd,df_newpred){
-#   ddply(dfmd,"SiteCode",\(dfi){
-#     v_range <- range(dfi$Uefeito)
-#     teste <- rbind.fill(
-#       select(dfi,-logOR),
-#       filter(df_newpred,
-#              Uefeito >= v_range[1] & Uefeito <= v_range[2])
-#     ) %>% arrange(Uefeito) %>% 
-#       mutate(forest_succession = dfi$forest_succession[1],
-#              data_year = dfi$data_year[1],
-#              lat = dfi$lat[1],
-#              long = dfi$long[1],
-#              SiteCode = dfi$SiteCode[1])
-#   })
-# }
 # função que simula a predição a posteriori
 f_calcPI <- \(gamm,
               nsim = 1000,
@@ -200,32 +130,62 @@ f_calcPI <- \(gamm,
   # return
   return(l_df)
 }
+##### retorno dos dados para a escala padrão
+f_z <- \(x) (x-mean(x))/sd(x)
+f_anti_z <- \(x,x_ref) (x * sd(x_ref)) + mean(x_ref)
+f_escalaoriginal <- \(ipath){
+  # quais efeitos não serão lidos?
+  efeitos_rm = str_extract(ipath,"(?<=pred\\_)(.*?)(?=\\.rds)") %>% 
+    gsub("areaperse","area",.) %>% 
+    setdiff(c("area","fragperse","fragtotal"),.)
+  # lista com os df de predição
+  l_dfpred <- readRDS(ipath)
+  # juntando o fixo e aleat com os valores empíricos
+  ## fixo e aleatório
+  l_dfpred[["fixo e aleat"]] <- 
+    inner_join(l_dfpred[["fixo e aleat"]],
+               select(df_contrastes,-all_of(efeitos_rm)) %>% 
+                 rename(Uref = last_col()),
+               by=c("SiteCode","k_z"))
+  vUref <- l_dfpred[["fixo e aleat"]]$Uref
+  vkref <- l_dfpred[["fixo e aleat"]]$k
+  ## apenas fixo
+  l_dfpred[["apenas fixo"]] <- l_dfpred[["apenas fixo"]] %>% 
+    mutate(Uref = f_anti_z(x = Uefeito, x_ref = vUref),
+           k = f_anti_z(x = k_z, x_ref = vkref))
+  # salvamento e limpeza
+  saveRDS(l_dfpred,ipath)
+  rm(l_dfpred);gc()
+}
 ##################################################
 # # # # # # # # # # # ROTINA # # # # # # # # # # #
 ##################################################
+# caminho
 v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
+# modelos ajustados
 l_path <- list()
 l_path$te <-  paste0(v_path,"rds/l_md_",c("areaperse","fragperse","fragtotal"),".rds")
+# tabela de seleção
 df_tabsel <- readRDS("./5_resultados/df_tabsel_tehgam_efeitos.rds") %>% 
   relocate(efeito) %>% 
   filter(dAICc==0)
-# if(length(unique(df_tabsel$modelo))==1){
-#   l_md <- list()
-#   for(i in l_path$te){
-#     vefeito <- str_extract(i,pattern = "(?<=md\\_)(.*?)(?=\\.rds)")
-#     l_md0 <- readRDS(i)
-#     l_md[[vefeito]] <- l_md0[[ unique( df_tabsel$modelo ) ]]
-#     rm(l_md0);gc()
-#   }
-# }
-vlog <- lapply(l_path$te,\(i){
-  hgam <- readRDS(i)
-  hgam <- hgam[[ unique( df_tabsel$modelo ) ]]
-  l_df <- f_calcPI(hgam,to_exclude = c("s(lat,long)","t2(Uefeito,k_z,SiteCode)"))
-  saveRDS(l_df,gsub("l_md_","l_dfpred_",i))
-  rm(hgam,l_df);gc()
-})
-# md_area <- readRDS(paste0(v_path,l_path$U))
-# md_area <- md_area$`Área per se`$`s(land)|Site : gs`
-# l_df <- f_calcPI(md_area,to_exclude = "s(Uefeito,SiteCode)",simple_area = TRUE)
-# saveRDS(l_df,paste0(v_path,"rds/l_dfpred_areaperse_Ugs.rds"))
+# predição a posteriori do mais plausível
+if(FALSE){
+  vlog <- lapply(l_path$te,\(i){
+    hgam <- readRDS(i)
+    hgam <- hgam[[ unique( df_tabsel$modelo ) ]]
+    l_df <- f_calcPI(hgam,to_exclude = c("s(lat,long)","t2(Uefeito,k_z,SiteCode)"))
+    saveRDS(l_df,gsub("l_md_","l_dfpred_",i))
+    rm(hgam,l_df);gc()
+  })
+}
+# retornar para a escala padrão
+## df valores de referência e padronização
+df_contrastes <- read_csv(file="dados/csv_SoE/taxaU/df_contrastes.csv") %>% 
+  select(SiteCode:k, contains("_logratio")) %>% 
+  mutate(k_z=f_z(k)) %>% relocate(k_z,.after="k")
+names(df_contrastes) <- gsub("\\.","",names(df_contrastes)) %>% 
+  gsub("\\_logratio","",.)
+## caminhos para os rds e função para padronização
+l_rds <- gsub("l_md_","l_dfpred_",l_path$te)
+lapply(l_rds,f_escalaoriginal)
