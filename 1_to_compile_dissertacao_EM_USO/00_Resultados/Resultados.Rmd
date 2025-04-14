@@ -144,8 +144,8 @@ knitr::include_graphics(path="./figuras/GE_dados_disponiveis.png")
 
 <p>O objetivo dessa análise foi avaliar qual a extensão espacial da paisagem é suficiente para simular cada um dos 20 graus de limitação de dispersão explorados. Foram sorteados 36 sítios entre os 109 sítios inicialmente dentro dos critérios de seleção na base TreeCo. Na figura \@ref(fig:sitios-efeito-escalar) há um resumo das características dos sítios usados na investigação do efeito escalar da dispersão. Nessa análise as simulações são feitas apenas na paisagem prístina, sem perda de cobertura florestal e tem como objetivo maximizar a amplitude de riqueza de espécies e número de indivíduos.</p>
 
-```{r sitios-efeito-escalar,fig.cap="Sítio sorteados para estimar o efeito escalar da dispersão: log do número de indivíduos (eixo x) e número de espécies (eixo y). Os pontos estão preenchidos pela razão do número de espécies e número de indivíduos (S/N) e o tamanho dos pontos é determinado pela densidade de indivíduos na amostra (número de indivíduos dividido pela área da parcela, DA). O número de indivíduos e a área da parcela determinam a parcela central no mapa de cobertura florestal. A densidade de indivíduos determinará a distância média entre indivíduos na paisagem. O número de espécies determina a taxa U. O ano da amostragem determina o mapa de cobertura florestal."}
-knitr::include_graphics("./figuras/figSI_S_N_sizeDA_fillSN.png") ## REMOVER DO TEXTO PRINCIPAL
+```{r EM DESUSO sitios-efeito-escalar,fig.cap="Sítio sorteados para estimar o efeito escalar da dispersão: log do número de indivíduos (eixo x) e número de espécies (eixo y). Os pontos estão preenchidos pela razão do número de espécies e número de indivíduos (S/N) e o tamanho dos pontos é determinado pela densidade de indivíduos na amostra (número de indivíduos dividido pela área da parcela, DA). O número de indivíduos e a área da parcela determinam a parcela central no mapa de cobertura florestal. A densidade de indivíduos determinará a distância média entre indivíduos na paisagem. O número de espécies determina a taxa U. O ano da amostragem determina o mapa de cobertura florestal."}
+# knitr::include_graphics("./figuras/figSI_S_N_sizeDA_fillSN.png") ## REMOVER DO TEXTO PRINCIPAL
 # getwd()
 ```
 
@@ -154,24 +154,24 @@ knitr::include_graphics("./figuras/figSI_S_N_sizeDA_fillSN.png") ## REMOVER DO T
 
 ## 2.1 Estimativa da taxa U na maior extensão espacial da paisagem prístina {#Unull}
 
-```{r}
+```{r LEGENDA EM DESUSO}
 cap <- "Taxa U estimada na paisagem prístina com 16 km de lado. Cada ponto representa a mediana de 10 réplicas da taxa U por sítio de amostragem e grau de limitação de dispersão (k). As linhas verticais pretas marcam a amplitude interquantil de 90%. As linhas em laranja ligam medianas em um mesmo sítio de amostragem."
 ```
-```{r Unull16km-rep,fig.cap=cap,out.width="50%"}
-knitr::include_graphics("./figuras/fig2a_tendencia_media.png") ## REMOVER DO TEXTO PRINCIPAL
+```{r EM DESUSO Unull16km-rep,fig.cap=cap,out.width="50%"}
+# knitr::include_graphics("./figuras/fig2a_tendencia_media.png") ## REMOVER DO TEXTO PRINCIPAL
 # getwd()
 ```
 
 <p>Na figura \@ref(fig:Unull16km-rep) há a taxa U estimada na paisagem prístina com 16 km de lado (eixo y, U) em função do grau de limitação de dispersão (eixo x, k). A tendência média da taxa U (linha azul fig. \@ref(fig:Unull16km-rep)) estimada nessas paisagens apresenta um máximo quando a limitação de dispersão é moderada (pico em k entre 50% e 75%). Esse padrão é qualitativamente semelhante ao esperado em paisagens infinitas. Em paisagens infinitas se a taxa U for mantida constante, o número de espécies atinge um mínimo quando a limitação de dispersão per capita é moderada (@may_dispersal_2012). Assim, em nosso sistema em que a riqueza é mantida constante e a taxa U é livre, a taxa U apresenta um máximo quando a limitação de dispersão é moderada. A seguir vemos a figura que separa os padrões por sítio</p>
 
-```{r}
+```{r LEGENDA EM DESUSO}
 cap <- "Taxa U estimada em paisagens prístina de lado 16 km, separado por sítio de amostragem. Em cada quadro o eixo y é livre para variar em escala. "
 ```
-```{r Uprist16km-site, fig.cap=cap}
+```{r EM DESUSO Uprist16km-site, fig.cap=cap}
 # im <- image_trim(image_read("./0_apendices/EfeitoEscala/figuras/fig2_U16_k.png")) %>%
 #   image_resize("50%")
 # image_write(im,path = "./0_apendices/EfeitoEscala/figuras/fig2_U16_k.png")
-knitr::include_graphics("./figuras/fig2_U16_k.png") ## REMOVER DO TEXTO PRINCIPAL
+# knitr::include_graphics("./figuras/fig2_U16_k.png") ## REMOVER DO TEXTO PRINCIPAL
 # getwd()
 ```
 
@@ -182,8 +182,8 @@ knitr::include_graphics("./figuras/fig2_U16_k.png") ## REMOVER DO TEXTO PRINCIPA
 
 ## 2.2 Estimativa da taxa U sob diferentes escalas espaciais da paisagem prístina {#Uescala}
          
-```{r}
-cap <- "Taxa U estimada em paisagens prístina com extensão espacial de 16x16km"
+```{r legenda de Uk-ladokm EM USO}
+cap <- "Taxa U estimada em paisagens prístina com variação na extensão espacial da paisagem ao redor de 0.5 km até 16 km de lado. Os pontos estão coloridos pelo grau de limitação de dispersão (k). A escala do eixo y varia entre paineis. Cada paínel apresenta um valor por sítio de amostragem."
 ```
 ```{r Uk-ladokm,fig.cap=cap}
 knitr::include_graphics("./figuras/fig3_Uk_ladoKM.png")
@@ -202,7 +202,7 @@ knitr::include_graphics("./figuras/fig3_Uk_ladoKM.png")
 <p>Já nos graus de limitação de dispersão brandos (k<=0.50) e severos (k>=0.80) foi possível detectar a mudança esperada de redução da média da taxa U com o aumento da extensão espacial da paisagem ao redor. Conforme a expectativa. As retas verticais em vermelho marcam as escalas que acumulam a maior parte da redução na média da taxa U (95% de toda a redução) com o aumento da escala de 0.5km para 16km de lado da paisagem (fig.  \@ref(fig:SoE)). Detalhes no apêndice ‘Efeito de Escalar”.</p>
 
 ```{r cap fig5_SoE}
-cap <- "A extensão espacial é um dos fatores que determina as medidas tomadas das características da paisagem. No conjunto de áreas analisadas há uma forte relação entre a extensão espacial da paisagem ao redor e a proporção de cobertura vegetal. a). O objetivo do estudo do efeito de escalar foi determinar a extensão espacial adequada para simular os 20 graus de limitação de dispersão. c). Definimos a escala adequada para um grau de limitação de dispersão como a extensão espacial que acumula a maior parte da variação na estimativa da taxa U associada ao aumento da extensão espacial da paisagem ao redor, considerando a amplitude de extensões do lado da paisagem local entre 0.5 km e 16 km. Para detalhes sobre os métodos  do estudo de efeito de escalar veja o apêndice ‘Efeito de Escalar’. Nesse  estudo, 36 sítios foram sorteados e selecionados ao longo do gradiente de número de indivíduos e de espécies na parcela. b). Para esse estudo, as estimativas da taxa U foram simuladas em paisagens totalmente preenchidas com habitat, para descontar o efeito do isolamento estrutural, e explorar apenas o efeito de variar a extensão da paisagem ao redor."
+cap <- "Estimativa do modelo estatístico (LMM) usado para descrever a variação "
 ```
 ```{r SoE, eval=TRUE,include=TRUE,fig.cap=cap,out.width="75%"}
 knitr::include_graphics(path = "./figuras/fig5_SoE.png")

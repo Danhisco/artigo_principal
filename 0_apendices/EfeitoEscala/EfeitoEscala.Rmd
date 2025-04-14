@@ -339,7 +339,7 @@ __Motivação de cada variável__
 
 A estimativa de U depende da arvóre genalógica da comunidade simulada pelo MNEE. O número de indivíduos (N) determina o número inicial de linhagens que são monitoradas e o número de espécies (S) determina o número final de linhagens monitoradas. A árvore genealógica da comunidade também é influenciada pelo grau de limitação de dispersão (k) e da extensão espacial (scale), pois em alguns graus de limitação de dispersão a árvore genealógica pode ser restringida pela extensão da paisagem e não pela limitação de dispersão. 
 
-__tabela 1__ Seleção das variáveis de controle. S_obs = riqueza observada, N = número de indivíduos, DA = densidade de indivíduos;  Funções lmer do pacote lme4 (REF), AICctab do pacote bblme (REF). 
+__tabela 1__ Seleção das variáveis de controle. S_obs = riqueza observada, N = número de indivíduos, DA = densidade de indivíduos;  Funções lmer do pacote lme4 (@lme4), AICctab do pacote bblme (bbmle_package). 
 
 ```{r GLMM selecao de variaveis para fixar no GLMM final,eval=T,cache=T,echo=TRUE}
 l_md <- list()
