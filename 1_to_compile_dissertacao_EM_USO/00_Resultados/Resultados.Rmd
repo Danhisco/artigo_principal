@@ -250,14 +250,16 @@ knitr::include_graphics(path = "./figuras/fig5_SoE.png")
 
 TABELA DE SELEÇÃO 
 
-
+```{r}
+vcap <- "Modelos candidatos para descrever a congruência absoluta entre a SAD simulada e observada. O modelo mais complexo é o mais plausível. Esse modelo apresenta um spline para k por classe de perturbação e tipo de paisagem hipotética, um spline para as coordenadas centrais e spline de k por tipo de paisagem e sítio de amostragem. Os outros modelos candidatos são versões do mais complexo com menos preditoras. O modelo mais simples possui apenas 1 intercepto por tipo de paisagem hipotética e 1 intercepto por tiipo de paisagem hipotética e sítio de amostragem."
+```
 ```{r ft-CongAbs}
 vnumericcols <- names(df_tabsel_minimo)[sapply(df_tabsel_minimo,is.numeric)]
 f_format <- \(x){
     formatC(x, format = "e", digits = 2)
   }
 ft <- flextable(df_tabsel_minimo) %>% 
-  set_caption("Modelos candidatos para descrever a congruência absoluta entre a SAD simulada e observada") %>% 
+  set_caption() %>% 
   colformat_double(j = vnumericcols, digits = 3) %>% 
   set_formatter(dAICc = f_format,df = f_format) %>% 
   autofit() %>% 
@@ -307,20 +309,22 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 ## 3.3 Efeito da paisagem na congruência com a SAD observada {#efeito-congruencia}
 
 ### tabela de seleção
-
+```{r legenda tabsel efeitos,include=TRUE,eval=TRUE}
+vcap <- "Modelos candidatos para descrever a congruência relativa entre a SAD simulada e observada. Para cada efeito o mesmo conjunto de modelos candidatos foi ajustado. O modelo mais complexo (te(logU/U,k)) apresenta um tensor entre logU/U e k por classe de perturbação, um spline para as coordenadas centrais e um tensor de logU/U e k por sítio de amostragem. O segundo modelo mais complexo (s(k)) remove a preditora logU/U, resultando em um spline para k onde no modelo mais complexo são tensores. O modelos mais simples (te(logU/U,k) - te(logU/U,k,Sítio)´)) é igual o modelo mais complexo exceto pela ausência de tensor por sítio de amostragem, tendo apenas 1 intercepto por sítio de amostragem."
+```
 ```{r tabsel-efeitos, include=TRUE,eval=TRUE}
 vnumericcols <- names(df_tabsel)[sapply(df_tabsel,is.numeric)]
 f_format <- \(x){
     formatC(x, format = "e", digits = 2)
   }
 ft <- df_tabsel %>% 
-  mutate(modelo = gsub(" - te\\(logU\\/U"," - te\\(Site)",modelo),
+  mutate(modelo = gsub(" - te\\(logU\\/U"," - te\\(Sítio)",modelo),
          efeito = gsub("areaperse","Área per se",efeito) %>% 
            gsub("fragperse","Frag. per se",.) %>% 
            gsub("fragtotal","Frag. total",.)) %>% 
   as_grouped_data(groups = "efeito") %>% 
   as_flextable(hide_grouplabel = TRUE) %>% 
-  set_caption("Modelos candidatos para descrever a congruência relativa entre a SAD simulada e observada") %>% 
+  set_caption(vcap) %>% 
   colformat_double(j = vnumericcols, digits = 3) %>% 
   set_formatter(dAICc = f_format,df = f_format) %>% 
   autofit() %>% 
