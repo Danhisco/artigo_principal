@@ -36,14 +36,19 @@ probs = c(0.05,0.25, 0.5, 0.75,0.95)
 ################################
 # criacao GE dados disponiveis #
 ################################
+f_z <- \(x) (x-mean(x))/sd(x)
 theme_set(theme_light())
 # df_dados_disponiveis <- read_csv(file = "../../dados/df_dados_disponiveis.csv")
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
+  vfilter <- dfi$lado_km[which.min(abs(4-dfi$lado_km))]
+  filter(dfi,lado_km==vfilter)
+}) %>% select(-c(Ntotal:S_obs))
 df_plot <- df_dados_disponiveis %>% 
   inner_join(df_p) %>% 
   select(SiteCode, p, effort_ha, Ntotal, S_obs, year_bestProxy, forest_succession, lat:long_correct)
 # df_p_extensoes <- read_csv("../../dados/csv/df_p_extensoes.csv")
-df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
 probs = c(0.05,0.25, 0.5, 0.75,0.95)
 df_contrastes <- read_csv(file="dados/csv/taxaU/df_contrastes.csv") 
 df_md_Uefeito <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>% 
@@ -60,19 +65,12 @@ sf_plot <- st_as_sf(df_plot %>%
                              long = ifelse(is.na(long),long_correct,long)), 
                     coords = c("long", "lat"), crs = 4326)
 sf_plot <- st_transform(sf_plot,crs=st_crs(shp_FA))
-p <- ggplot() +
+l_p[[1]] <- ggplot() +
   geom_sf(data=shp_FA,fill="lightgreen",color="green") +
-  geom_sf(data=sf_plot,aes(color=p),size=3) #+
-  # coord_sf(expand = )
-  
-
-
-l_p[[1]] <- df_plot |> 
-  ggplot(aes(y=lat,x=long,fill=p)) +
-  geom_sf(data=shp_FA) +
-  geom_point(alpha=0.85,shape = 21,size=3,color="black") +
-  scale_fill_gradientn("% CF\n4 km",colours = terrain.colors(10)[10:1]) +
-  guides(fill=guide_colourbar(position="inside")) +
+  geom_sf(data=sf_plot,aes(color=p),size=3) +
+  coord_sf(ylim = c(-32,-5),xlim = c(-56,-34)) +
+  scale_color_gradientn("% CF\n4x4 km",colours = c("red","black")) +
+  guides(color=guide_colourbar(position="inside")) +
   theme(legend.position.inside = c(0.9,0.35)) +
   labs(subtitle = "a)")
 v_labels <- c("effort_ha" = "plot area (ha)",
@@ -114,8 +112,17 @@ l_p[[3]] <- df_p_extensoes |>
   scale_x_continuous(breaks = 2^(-1:4)) +
   coord_cartesian(expand = F) +
   theme_light()
-l_p[[4]] <- df_plot |> 
-  ggplot(aes(x=forest_succession)) +
+l_p[[4]] <- df_plot |>
+  mutate(pert_class = factor(forest_succession,
+                             levels=c("primary",
+                                      "primary/secondary",
+                                      "secondary",
+                                      "capoeira"),
+                             labels=c("baixa",
+                                      "mediana",
+                                      "alta",
+                                      "altíssima"))) %>% 
+  ggplot(aes(x=pert_class)) +
   geom_bar() +
   geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
   labs(x="classificação de perturbação (tempo e grau)",
@@ -123,8 +130,7 @@ l_p[[4]] <- df_plot |>
 # grid.arrange(grobs=l_p,nrow=2)
 p <- arrangeGrob(grobs=l_p,nrow=2)
 ggsave(
-  filename=paste0(v_path,
-                  "figuras/GE_dados_disponiveis.png"),
+  filename="figuras/GE_dados_disponiveis.png",
   plot = p,
   width=12,height = 10)
 ################################
