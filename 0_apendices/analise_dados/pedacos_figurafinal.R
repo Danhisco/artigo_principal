@@ -74,7 +74,19 @@ df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>%
            gsub("\\.","",.) %>% 
            gsub("area","Área per se",.) %>% 
            gsub("fragtotal","Frag. total",.) %>% 
-           gsub("fragperse","Frag. per se",.))
+           gsub("fragperse","Frag. per se",.),
+         contraste = factor(contraste,
+                            levels=c("Frag. total",
+                                     "Frag. per se",
+                                     "Área per se")),
+         pert_class = factor(forest_succession,
+                             levels=c("primary",
+                                      "primary/secondary",
+                                      "secondary"),
+                             labels=c("baixa",
+                                      "mediana",
+                                      "alta"))) %>% 
+  select(-forest_succession)
 ## funções de ajuste e de plot
 source("source/2samples_testes.R")
 source("source/general_tools.R")
@@ -153,31 +165,31 @@ l_figfinal$`1alinha` <- df_logUU %>%
   geom_boxplot(inherit.aes = FALSE,
                aes(x=k,y=Uefeito,group=k)) +
   geom_hline(yintercept = 0,color="black",linetype=3) +
-  geom_hline(yintercept = v_hline,color="darkred") + 
+  # geom_hline(yintercept = v_hline,color="darkred") + 
   geom_line(alpha=0.75) +
   geom_point(alpha=0.75) +
-  geom_line(inherit.aes = FALSE,
-            data=df_ref,aes(y=max,x=k),color="black") +
-  geom_line(inherit.aes = FALSE,
-            data=df_ref,aes(y=min,x=k),color="black") +
-  scale_colour_gradient2("% CF 4km x 4km",midpoint=0.5,
+  # geom_line(inherit.aes = FALSE,
+  #           data=df_ref,aes(y=max,x=k),color="black") +
+  # geom_line(inherit.aes = FALSE,
+  #           data=df_ref,aes(y=min,x=k),color="black") +
+  scale_colour_gradient2("% CF",midpoint=0.5,
                          low="red",
                          mid = "yellow",
                          high = "darkgreen") +
-  labs(x="k (prop. de propágulos até a vizinhança imediata)",
+  labs(x="Proporção de propágulos na vizinhança imediata (k)",
        y="log(U/U)") +
   scale_y_continuous(expand=c(0.01,0.01)) +
   theme_classic() +
   theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
         legend.position = "inside",
-        legend.position.inside = c(0.49,0.9),
+        legend.position.inside = c(0.49,0.92),
         legend.direction="horizontal") +
   # guides(color=guide_legend(direction='horizontal')) +
-  facet_wrap(~label,ncol=3)
-ggsave(paste0(v_path,"figuras/pedacofigfinal_1alinha.png"),
+  facet_grid(pert_class~label)
+ggsave("figuras/pedacofigfinal_1alinha.png",
        l_figfinal$`1alinha`,
-       width = 12,
-       height = 5)
+       width = 13.8,
+       height = 7.33)
 img_obj <- image_read(paste0(v_path,"figuras/pedacofigfinal_1alinha.png")) %>% 
   image_trim() %>% 
   image_resize("50%")

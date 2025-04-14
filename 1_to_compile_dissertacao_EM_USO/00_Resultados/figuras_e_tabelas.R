@@ -31,6 +31,7 @@ library(lme4)
 library(data.table)
 library(plyr)
 library(dplyr)
+library(sf)
 probs = c(0.05,0.25, 0.5, 0.75,0.95)
 ################################
 # criacao GE dados disponiveis #
@@ -51,10 +52,24 @@ df_md_Uefeito <- df_contrastes %>% select(SiteCode:p, contains("_logratio")) %>%
          across(c(p,k),f_z,.names = "{.col}_z"),
          SiteCode = factor(SiteCode)) %>% 
   rename("tp_efeito"="name","v_efeito"=value)
+shp_FA <- read_sf("dados/shapefile/biome_border.shp")
 ##############
 l_p <- list()
+sf_plot <- st_as_sf(df_plot %>% 
+                      mutate(lat = ifelse(is.na(lat),lat_correct,lat),
+                             long = ifelse(is.na(long),long_correct,long)), 
+                    coords = c("long", "lat"), crs = 4326)
+sf_plot <- st_transform(sf_plot,crs=st_crs(shp_FA))
+p <- ggplot() +
+  geom_sf(data=shp_FA,fill="lightgreen",color="green") +
+  geom_sf(data=sf_plot,aes(color=p),size=3) #+
+  # coord_sf(expand = )
+  
+
+
 l_p[[1]] <- df_plot |> 
   ggplot(aes(y=lat,x=long,fill=p)) +
+  geom_sf(data=shp_FA) +
   geom_point(alpha=0.85,shape = 21,size=3,color="black") +
   scale_fill_gradientn("% CF\n4 km",colours = terrain.colors(10)[10:1]) +
   guides(fill=guide_colourbar(position="inside")) +
