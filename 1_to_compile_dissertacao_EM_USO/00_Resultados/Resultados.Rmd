@@ -82,13 +82,18 @@ f_tabsel_display_word <- \(dfi,
     # set_table_properties(layout = "autofit")  
     autofit()
 }
+###### dados
+df_tabsel_minimo <- 
+  read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_minimo_paisagens.csv") %>% 
+  mutate(modelo = gsub("\\*","\\+",modelo))
+
 v_path <- "1_to_compile_dissertacao_EM_USO/00_Resultados/"
 df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
   as.data.frame() %>% 
   mutate(across(where(is.numeric),~round(x = .x,digits = 2)))
-for(i in names(df_tabsel)[sapply(df_tabsel,is.numeric)]){
-  df_tabsel[,i] <- round(df_tabsel[,i],2)
-}
+# for(i in names(df_tabsel)[sapply(df_tabsel,is.numeric)]){
+#   df_tabsel[,i] <- round(df_tabsel[,i],2)
+# }
 vfw=8
 vfh=4
 #
@@ -104,10 +109,10 @@ l_ft_word <- dlply(df_tabsel,"contraste",f_tabsel_display_word)
 # names(l_path) <- names(l_ft)
 # l_ft <- lapply(l_path,image_read)
 # img_final <- image_append(do.call("c",l_ft[c("Frag. total", "Frag. per se" ,"Área per se" )]))
-df_tabsel_sumario <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
-for(i in names(df_tabsel_sumario)[sapply(df_tabsel_sumario,is.numeric)]){
-  df_tabsel_sumario[,i] <- round(df_tabsel_sumario[,i],2)
-}
+# df_tabsel_sumario <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
+# for(i in names(df_tabsel_sumario)[sapply(df_tabsel_sumario,is.numeric)]){
+#   df_tabsel_sumario[,i] <- round(df_tabsel_sumario[,i],2)
+# }
 
 ```
 
@@ -225,9 +230,6 @@ TABELA DE SELEÇÃO
 
 
 ```{r ft-CongAbs}
-df_tabsel_minimo <- 
-  read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_minimo_paisagens.csv") %>% 
-  mutate(modelo = gsub("\\*","\\+",modelo))
 vnumericcols <- names(df_tabsel_minimo)[sapply(df_tabsel_minimo,is.numeric)]
 f_format <- \(x){
     formatC(x, format = "e", digits = 2)
@@ -279,12 +281,6 @@ cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, prev
 # knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.png"))
 knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 ```
-    
-## 3.2 Congruência absoluta da SAD simuladas nas paisagens hipotéticas
-
-
-
-
 
 ## 3.3 Efeito da paisagem na congruência com a SAD observada {#efeito-congruencia}
 
