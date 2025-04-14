@@ -109,10 +109,10 @@ df_tabsel_minimo <-
   mutate(modelo = gsub("\\*","\\+",modelo))
 df_tabsel <- readRDS("./5_resultados/df_tabsel_tehgam_efeitos.rds") %>% 
   relocate(efeito)
-v_path <- "1_to_compile_dissertacao_EM_USO/00_Resultados/"
-df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
-  as.data.frame() %>% 
-  mutate(across(where(is.numeric),~round(x = .x,digits = 2)))
+# v_path <- "1_to_compile_dissertacao_EM_USO/00_Resultados/"
+# df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
+#   as.data.frame() %>% 
+#   mutate(across(where(is.numeric),~round(x = .x,digits = 2)))
 # for(i in names(df_tabsel)[sapply(df_tabsel,is.numeric)]){
 #   df_tabsel[,i] <- round(df_tabsel[,i],2)
 # }
@@ -308,7 +308,7 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 
 ## 3.3 Efeito da paisagem na congruência com a SAD observada {#efeito-congruencia}
 
-### tabela de seleção
+### Modelos concorrentes
 
 ```{r legenda tabsel efeitos,include=TRUE,eval=TRUE}
 vcap <- "Modelos candidatos para descrever a congruência relativa entre a SAD simulada e observada. Para cada efeito o mesmo conjunto de modelos candidatos foi ajustado. Para todos os efeitos, o modelo mais complexo é o mais plausível. O modelo mais complexo (te(logU/U,k)) apresenta um tensor entre logU/U e k por classe de perturbação, um spline para as coordenadas centrais e um tensor de logU/U e k por sítio de amostragem. O segundo modelo mais complexo (s(k)) remove a preditora logU/U, resultando em um spline para k onde no modelo mais complexo são tensores. O modelos mais simples (te(logU/U,k) - te(logU/U,k,Sítio)´)) é igual o modelo mais complexo exceto pela ausência de tensor por sítio de amostragem, tendo apenas 1 intercepto por sítio de amostragem."
@@ -353,4 +353,5 @@ vcap <- "O predito e o observado para os efeitos explicativos da paisagem. No ei
 knitr::include_graphics("figuras/diagfinal_3efeitos.jpeg")
 ```
 
+### Descrição dos efeitos explicativos da paisagem na predição da biodiversidade local de árvores
 

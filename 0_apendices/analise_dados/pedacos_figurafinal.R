@@ -194,29 +194,29 @@ img_obj <- image_read(paste0(v_path,"figuras/pedacofigfinal_1alinha.png")) %>%
   image_trim() %>% 
   image_resize("50%")
 image_write(img_obj,paste0(v_path,"figuras/pedacofigfinal_1alinha.png"))
-## predição a posteriori 
+#########################################################
+############################## predição a posteriori ####
+#########################################################
 #
 ### te for every model
 l_path <- list()
 # l_path$te <-  paste0("rds/l_dfpred_",c("areaperse","fragperse","fragtotal"),".rds")
-l_path$te <-  paste0(v_path,
-                     "rds/l_dfnew_",
+l_path$te <-  paste0("dados/csv_SoE/rds/l_dfpred_",
                      c("areaperse","fragperse","fragtotal"),
                      ".rds")
-l_path$U <- paste0(v_path,
-                   "rds/l_dfpred_areaperse_Ugs.rds")
-df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
+# l_path$U <- paste0(v_path,
+#                    "rds/l_dfpred_areaperse_Ugs.rds")
+v_path <- "./5_resultados/"
+df_tabsel <- readRDS("./5_resultados/df_tabsel_tehgam_efeitos.rds") %>% 
+  relocate(efeito) %>% 
   filter(dAICc==0)
-##############
 ### 1a parte: figfinal_te_EFEITO PAISAGEM
 ### @descrição: heatmap x=k, y=logU/U, z=
-v_range <-  df_md %>% 
-  summarise(max=max(Uefeito),min=min(Uefeito)) %>% 
-  unlist
-setwd(v_path)
+v_range <-  c(max=2,min=-0.5)
+# setwd(v_path)
 f_plot_te <- \(veffect,
                vrange=v_range,
-               pattern_extract="(?<=l_dfnew_)(.*?)(?=\\.rds)",
+               pattern_extract="(?<=l_dfpred_)(.*?)(?=\\.rds)",
                legendfillposition=c(0.5,0.1),
                stripspace=0.5,
                stripspace_fa=1,
@@ -231,25 +231,26 @@ f_plot_te <- \(veffect,
   f_ggplot_main <- \(dfiQ50,
                      linew=1
                      ){
-    dfref <- l_df_ref[[vname]]
+    # dfref <- l_df_ref[[vname]]
     dfiQ50 %>% 
       mutate(quantiles=paste0(vname,": mediana")) %>% 
-      ggplot(aes(x=k,y=Uefeito,z=logOR)) +
-      geom_raster(aes(fill=logOR)) +
+      ggplot(aes(x=k,y=Uref,z=logOR)) +
+      geom_tile(aes(fill=logOR),width = 0.0090, height = 0.0090) +
       geom_contour(color = "black",linewidth=linew) +
       geom_text_contour(size=ctextsize,color="black") +
-      geom_line(data=dfref,
-                aes(y=max,x=k),color="black",
-                inherit.aes = FALSE,
-                linewidth=linew) +
-      geom_line(data=dfref,
-                aes(y=min,x=k),color="black",
-                inherit.aes = FALSE,
-                linewidth=linew) +
+      # geom_line(data=dfref,
+      #           aes(y=max,x=k),color="black",
+      #           inherit.aes = FALSE,
+      #           linewidth=linew) +
+      # geom_line(data=dfref,
+      #           aes(y=min,x=k),color="black",
+      #           inherit.aes = FALSE,
+      #           linewidth=linew) +
       scale_fill_viridis_c(name = "logOR",
                            option = "magma") +
-      labs(y="logU/U") +
-      facet_wrap(~quantiles) +
+      labs(y="logU/U",
+           x="grau de limitação de dispersão (k)") +
+      facet_grid(pert_class~quantiles) +
       scale_x_continuous(expand = c(0,0)) +
       scale_y_continuous(expand = c(0,0),
                          limits=vrange[2:1]) +
@@ -354,14 +355,38 @@ f_plot_te <- \(veffect,
     gsub("fragperse","Frag. per se",.) %>% 
     gsub("fragtotal","Frag. total",.)
   # dfpred <- readRDS(veffect)$`apenas fixo`
-  dfpred <- readRDS(veffect)
-  dfpred <- pivot_longer(dfpred,starts_with("Q_"),
-                         names_to="quantiles",
-                         values_to="logOR") %>% 
-    mutate(quantiles=factor(100 * as.numeric(gsub("Q_","",quantiles)),
-                            levels=c(5,50,95)) ) 
+  l_dfpred <- readRDS(veffect) %>%
+    lapply(.,\(li){
+      mutate(li,
+             across(where(is.numeric),~round(.x,digits=4)),
+             pert_class = factor(forest_succession,
+                                 levels=c("primary",
+                                          "primary/secondary",
+                                          "secondary"),
+                                 labels=c("baixa",
+                                          "mediana",
+                                          "alta"))
+             ) %>% 
+        select(-forest_succession)
+    })
+  dfpred <- ddply(l_dfpred[["apenas fixo"]],"pert_class",
+                  \(dfi){
+                    pivot_longer(
+                      dfi,
+                      starts_with("Q_"),
+                      names_to="quantiles",
+                      values_to="logOR") %>% 
+                      mutate(
+                        quantiles=
+                          factor(100 * as.numeric(gsub("Q_","",quantiles)),
+                                         levels=c(5,50,95)) 
+                      ) 
+                    }
+                  )
   # apenas fixo
-  p50 <- f_ggplot_main(dfiQ50 = filter(dfpred,quantiles=="50"))
+  l50 <- dlply(filter(dfpred,quantiles==50),
+               "pert_class",
+               f_ggplot_main)
   p4quan <- f_ggplot_4quantiles(dfpred = dfpred)
   p_final0 <- ggdraw() +
     draw_plot(p50) +
@@ -404,116 +429,6 @@ lapply(names(l_img),\(li){
     image_resize("75%")
   image_write(img,path = li)
 })
-#
-#
-############## plot do modelo mais plausível para área per se:
-f_plotPI_shgam <- \(nefeito,
-                    stripspace=0.5,
-                    striptextsize=10,
-                    textsize=15){
-  # objeto para o gráfico
-  v_range_x <- range(l_df$`apenas fixo`$Uefeito)
-  v_range_y <- range(select(l_df[["apenas fixo"]],starts_with("Q_")))
-  f_geom_legend <- list(
-    # guide name
-    annotate("text", x = 0.01, y =-5.5, 
-             label = "Posterior Prediction Interval", hjust = 0) ,
-    # mediana
-    annotate("segment", x = 0.01, xend = 0.06, y = -6, yend = -6, 
-             color = "black", linewidth = 1),
-    annotate("text", x = 0.08, y =-6, 
-             label = "median", hjust = 0) ,
-    # quantile range
-    annotate("rect", xmin = 0.01, xmax = 0.06, ymin = -6.75, ymax = -6.25,
-             fill = "gray", alpha = 0.7),
-    annotate("text", x = 0.08, y = -6.5,
-             label = "90% quant. range", hjust = 0),
-    # Site
-    annotate("rect", xmin = 0.01, xmax = 0.06, ymin = -7.5, ymax = -7,
-             fill = "#986868", alpha = 0.7),
-    annotate("text", x = 0.08, y = -7.25,
-             label = "s(log(U/U)) + s(log(U/U))|Site", hjust = 0),
-    # overall
-    annotate("rect", xmin = 0.01, xmax = 0.06, ymin = -8.25, ymax = -7.75,
-             fill = "darkgreen", alpha = 0.7),
-    annotate("text", x = 0.08, y = -8,
-             label = "s(log(U/U)) + 0|Site", hjust = 0)
-  )
-  # padronização dos dados
-  l_df[["apenas fixo"]]$SiteCode <- "apenas fixo"
-  ldfi <- lapply(l_df,mutate,
-                 contraste = nefeito,
-                 SiteCode = factor(SiteCode)) %>% 
-    lapply(.,select,-any_of("logOR"))
-  # gráfico
-  p <- ldfi[["fixo e aleat"]] %>% 
-    mutate(label=nefeito) %>% 
-    ggplot(aes(x = Uefeito, group = SiteCode)) +
-    # fixo e aleat
-    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
-                    fill = "Quantile range", group = SiteCode), 
-                alpha = 0.2) +
-    geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
-              alpha = 0.5) +
-    scale_fill_manual(values = c("Quantile range" = "#986868")) +
-    scale_color_manual(values = c("Median" = "#C04000")) +
-    # apenas fixo
-    ggnewscale::new_scale_color() +
-    ggnewscale::new_scale_fill() +
-    geom_ribbon(data=ldfi[["apenas fixo"]],
-                aes(ymin = Q_0.05, ymax = Q_0.95, 
-                    fill = "Quantile range", group = SiteCode), 
-                alpha = 0.3) +
-    geom_line(data=ldfi[["apenas fixo"]],
-              aes(y = Q_0.5, color = "Median", group = SiteCode), 
-              alpha = 0.7) +
-    scale_fill_manual(values = c("Quantile range" = "darkgreen")) +
-    scale_color_manual(values = c("Median" = "black")) +
-    # 0 x 0 
-    geom_hline(yintercept = 0,color="darkgray",alpha=0.75) +
-    geom_vline(xintercept = 0,color="darkgray",alpha=0.75) +
-    # ajustes
-    scale_x_continuous(expand = expansion(add = c(0,0))) +
-    scale_y_continuous(expand = expansion(add = c(0,0))) +
-    labs(x="logU/U",y="log OR") +
-    facet_wrap(~label) +
-    theme_classic() +
-    theme(
-      axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -2.5)),
-      axis.title.y = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -30)),
-      legend.position = "none",
-      aspect.ratio = 1,
-      axis.text = element_text(size=textsize),
-      axis.title = element_text(size=textsize),
-      strip.text = element_text(size=striptextsize,
-                                margin=margin(t=stripspace,
-                                              b=stripspace))
-    )
-  if(nefeito=="Área per se"){
-    p <- p + f_geom_legend
-  }
-  return(p)
-}
-f_plot_shgam <- \(efeito="Área per se",
-                  vpath="figuras/figfinal_areaperse_shgam.png",
-                  vw=6,vh=8,
-                  vstripspace=0.5,
-                  vstriptextsize=10,
-                  vtextsize=15){
-  # bases com a predição a posteriori para os modelos com spline simples
-  path_ldf = "rds/l_dfpred_areaperse_Ugs.rds"
-  l_df <- readRDS(path_ldf)
-  # criação dos gráficos de PI
-  p <- f_plotPI_shgam(efeito,
-                      stripspace = vstripspace,
-                      striptextsize=vstriptextsize,
-                      textsize=vtextsize)
-  ggsave(vpath, p, width = vw, height = vh)
-  # padronização
-  img_p <- image_trim(image_read(vpath))
-  image_write(img_p,path = vpath)
-  return(vpath)
-}
 ########## leitura e salvamento da amostra
 image_read(f_plot_shgam(vtextsize = 13))
 #
