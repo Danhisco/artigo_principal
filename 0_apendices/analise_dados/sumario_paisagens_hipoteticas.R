@@ -129,7 +129,7 @@ new_data <- expand.grid(
 l_dfpred <- list()
 l_dfpred$fixo_e_aleat <- md_sumario$model
 l_dfpred$fixo_e_aleat[,1] <- l_dfpred$fixo_e_aleat[,1][,1]
-names(l_dfpred$fixo_e_aleat)[c(1,3)] <- c("nSAD","forest_sucession")
+names(l_dfpred$fixo_e_aleat)[c(1,3)] <- c("nSAD","forest_succession")
 lpred <- predict(md_sumario,
                  type = "response", 
                  se.fit = TRUE)
@@ -139,7 +139,7 @@ l_dfpred$fixo_e_aleat <- mutate(
   l_dfpred$fixo_e_aleat,
   lower = fit - 1.96 * se,
   upper = fit + 1.96 * se,
-  forest_sucession = gsub("cont.","",forest_sucession) %>% 
+  forest_succession = gsub("cont.","",forest_succession) %>% 
     gsub("ideal.","",.) %>% gsub("non_frag.","",.)
 )
 #
@@ -175,19 +175,46 @@ l_dfpred <- lapply(l_dfpred,\(dfi){
                               "ideal"),
                      labels=c("fragmentada",
                               "aglomerada",
-                              "prístina")))
+                              "prístina")),
+         pert_class = factor(forest_succession,
+                             levels=c("primary",
+                                      "primary/secondary",
+                                      "secondary"),
+                             labels=c("baixa",
+                                      "mediana",
+                                      "alta"))
+         ) %>% 
+    select(-forest_succession,-lat,-long) %>% 
+    relocate(pert_class,.after="k")
 })
 p <- l_dfpred$fixo_e_aleat %>% 
-  ggplot(aes(x=k,y=nSAD,color=land)) +
-  geom_jitter(alpha=0.3) +
-  geom_line(aes(group=interaction(SiteCode,land)),alpha=0.3) +
-  geom_boxplot(aes(group=k),alpha=0.3) +
-  # geom_line(data = l_dfpred$fixo,
-  #           aes(x))
-  facet_grid(forest_succession~land)
-
-
-
+  ggplot(aes(x=k,y=nSAD)) +
+  geom_point(alpha=0.3) +
+  geom_line(aes(y=fit,group = SiteCode),alpha=0.3) +
+  # geom_boxplot(aes(group=k),alpha=0.6) +
+  geom_ribbon(data=l_dfpred$fixo,
+              aes(x=k,y=fit,ymin=lower,ymax=upper),
+              color="blue",
+              fill="lightblue") +
+  geom_line(data=l_dfpred$fixo,
+            aes(x=k,y=fit),
+            color="darkred") +
+  scale_x_continuous(expand = c(0.01, 0)) +
+  scale_y_continuous(expand = c(0.01, 0)) +
+  labs(x="Proporção de propágulos na vizinhança imediata (k)",
+       y="número de SAD simuladas com boa congruência com o observado (nSAD)",
+       title="Descrição da congruência absoluta da SAD simulada nas paisagens hipotéticas",
+       subtitle="HGAM: nSAD ~ s(k,by=interaction(paisagem hipotética, classe de perturbação) + s(lat,long) + te(k,Sítio,by=paisagem hipotética)") +
+  facet_grid(pert_class ~ land) +
+  theme(strip.text = element_text(size=12, #margin=margin(),
+                                  face="bold"))
+ggsave(filename="figuras/descricao_congruencia_relativa.png",
+       p,height = 7.33,width = 13.8)
+library(magick)
+img <- image_read("figuras/descricao_congruencia_relativa.png") %>% 
+  image_resize("50%") %>% 
+  image_trim()
+image_write(img,path = "figuras/descricao_congruencia_relativa.png")
 
 ############################################################
 f_geom_final <- \(vs){
