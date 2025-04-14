@@ -345,3 +345,12 @@ ft
 
 ### Observado e predito pelo modelo mais plausível
 
+
+```{r}
+vcap <- "O predito e o observado para os efeitos explicativos da paisagem. No eixo x os valores observados de logOR, no eixo y o logOR predito pelo modelos mais plausível. Cada linha é uma regressão linear ajustada aos dados de um sítio de amostragem. Os hexagonos são coloridos segundo a contagem do número de pontos em sua área. Os histogramas na esquerda superior correspondem aos parâmetros da regressão linear, intercepto em cima e inclinação em baixo. Em pontilhado a reta 1 : 1. Bom ajuste ocorre quando ps dados se alinham a reta 1 : 1, resultando em inclinação próxima de 1."
+```
+```{r predito-observado,include=TRUE,eval=TRUE,fig.cap=vcap}
+knitr::include_graphics("figuras/diagfinal_3efeitos.jpeg")
+```
+
+
