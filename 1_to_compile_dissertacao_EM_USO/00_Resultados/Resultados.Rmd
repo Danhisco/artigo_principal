@@ -309,8 +309,9 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 ## 3.3 Efeito da paisagem na congruência com a SAD observada {#efeito-congruencia}
 
 ### tabela de seleção
+
 ```{r legenda tabsel efeitos,include=TRUE,eval=TRUE}
-vcap <- "Modelos candidatos para descrever a congruência relativa entre a SAD simulada e observada. Para cada efeito o mesmo conjunto de modelos candidatos foi ajustado. O modelo mais complexo (te(logU/U,k)) apresenta um tensor entre logU/U e k por classe de perturbação, um spline para as coordenadas centrais e um tensor de logU/U e k por sítio de amostragem. O segundo modelo mais complexo (s(k)) remove a preditora logU/U, resultando em um spline para k onde no modelo mais complexo são tensores. O modelos mais simples (te(logU/U,k) - te(logU/U,k,Sítio)´)) é igual o modelo mais complexo exceto pela ausência de tensor por sítio de amostragem, tendo apenas 1 intercepto por sítio de amostragem."
+vcap <- "Modelos candidatos para descrever a congruência relativa entre a SAD simulada e observada. Para cada efeito o mesmo conjunto de modelos candidatos foi ajustado. Para todos os efeitos, o modelo mais complexo é o mais plausível. O modelo mais complexo (te(logU/U,k)) apresenta um tensor entre logU/U e k por classe de perturbação, um spline para as coordenadas centrais e um tensor de logU/U e k por sítio de amostragem. O segundo modelo mais complexo (s(k)) remove a preditora logU/U, resultando em um spline para k onde no modelo mais complexo são tensores. O modelos mais simples (te(logU/U,k) - te(logU/U,k,Sítio)´)) é igual o modelo mais complexo exceto pela ausência de tensor por sítio de amostragem, tendo apenas 1 intercepto por sítio de amostragem."
 ```
 ```{r tabsel-efeitos, include=TRUE,eval=TRUE}
 vnumericcols <- names(df_tabsel)[sapply(df_tabsel,is.numeric)]
@@ -342,5 +343,5 @@ ft <- df_tabsel %>%
 ft
 ```
 
-
+### Observado e predito pelo modelo mais plausível
 
