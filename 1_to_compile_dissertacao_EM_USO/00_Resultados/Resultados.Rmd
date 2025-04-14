@@ -82,11 +82,33 @@ f_tabsel_display_word <- \(dfi,
     # set_table_properties(layout = "autofit")  
     autofit()
 }
+f_flextable <- \(dfi){
+  dfi %>% 
+    flextable() %>%
+    bg(bg = "white",part = "all") %>%
+    theme_vanilla() %>% 
+    set_header_labels(
+      modelo = "HGAM",
+      dAICc = "ΔAICc",
+      df = "est. coef.",
+      weight = "weight",
+      dev.expl = "Dev. Exp.",
+      `Moran I statistic (res)` = "Moran's I",
+      `p-value` = "p-value") %>%
+    bold(part = "header") %>%
+    colformat_num(digits = 2) %>% 
+    align(align = "center", part = "all") %>% 
+    autofit()
+}
+
+
+
 ###### dados
 df_tabsel_minimo <- 
   read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_minimo_paisagens.csv") %>% 
   mutate(modelo = gsub("\\*","\\+",modelo))
-
+df_tabsel <- readRDS("./5_resultados/df_tabsel_tehgam_efeitos.rds") %>% 
+  relocate(efeito)
 v_path <- "1_to_compile_dissertacao_EM_USO/00_Resultados/"
 df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
   as.data.frame() %>% 
@@ -283,4 +305,32 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 ```
 
 ## 3.3 Efeito da paisagem na congruência com a SAD observada {#efeito-congruencia}
+
+### tabela de seleção
+
+```{r}
+vnumericcols <- names(df_tabsel)[sapply(df_tabsel,is.numeric)]
+f_format <- \(x){
+    formatC(x, format = "e", digits = 2)
+  }
+ft <- df_tabsel %>% 
+  mutate(modelo = gsub(" - te\\(logU\\/U"," - te\\(Site)",modelo)) %>% 
+  flextable() %>% 
+  set_caption("Modelos candidatos para descrever a congruência relativa entre a SAD simulada e observada") %>% 
+  colformat_double(j = vnumericcols, digits = 3) %>% 
+  set_formatter(dAICc = f_format,df = f_format) %>% 
+  autofit() %>% 
+  set_header_labels(
+    modelo = "HGAM",
+    dAICc = "dAICc",
+    df ="núm. aprox. coef.",
+    weight = "peso",
+    dev.expl = "dev. expl.",
+    MoranI_stat_res = "Estat. Moran I",
+    pvalue = "p-valor"
+  )
+ft
+```
+
+
 
