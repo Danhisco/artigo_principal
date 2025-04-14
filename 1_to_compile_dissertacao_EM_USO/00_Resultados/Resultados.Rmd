@@ -263,11 +263,11 @@ ft <- flextable(df_tabsel_minimo) %>%
   autofit() %>% 
   set_header_labels(
     modelo = "HGAM",
-    dAICc = "dAICc",
-    df ="núm. aprox. coef.",
+    dAICc = "ΔAICc",
+    df = "est. coef.",
     weight = "peso",
     dev.expl = "dev. expl.",
-    MoranI_stat_res = "Estat. Moran I",
+    MoranI_stat_res = "Moran's I",
     pvalue = "p-valor"
   )
 ft
@@ -308,27 +308,33 @@ knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 
 ### tabela de seleção
 
-```{r}
+```{r tabsel-efeitos, include=TRUE,eval=TRUE}
 vnumericcols <- names(df_tabsel)[sapply(df_tabsel,is.numeric)]
 f_format <- \(x){
     formatC(x, format = "e", digits = 2)
   }
 ft <- df_tabsel %>% 
-  mutate(modelo = gsub(" - te\\(logU\\/U"," - te\\(Site)",modelo)) %>% 
-  flextable() %>% 
+  mutate(modelo = gsub(" - te\\(logU\\/U"," - te\\(Site)",modelo),
+         efeito = gsub("areaperse","Área per se",efeito) %>% 
+           gsub("fragperse","Frag. per se",.) %>% 
+           gsub("fragtotal","Frag. total",.)) %>% 
+  as_grouped_data(groups = "efeito") %>% 
+  as_flextable(hide_grouplabel = TRUE) %>% 
   set_caption("Modelos candidatos para descrever a congruência relativa entre a SAD simulada e observada") %>% 
   colformat_double(j = vnumericcols, digits = 3) %>% 
   set_formatter(dAICc = f_format,df = f_format) %>% 
   autofit() %>% 
   set_header_labels(
     modelo = "HGAM",
-    dAICc = "dAICc",
-    df ="núm. aprox. coef.",
+    dAICc = "ΔAICc",
+    df = "est. coef.",
     weight = "peso",
     dev.expl = "dev. expl.",
-    MoranI_stat_res = "Estat. Moran I",
+    MoranI_stat_res = "Moran's I",
     pvalue = "p-valor"
-  )
+  ) %>% 
+  align(i = ~ !is.na(efeito), align = "center") %>% 
+  bold(i = ~ !is.na(efeito))
 ft
 ```
 
