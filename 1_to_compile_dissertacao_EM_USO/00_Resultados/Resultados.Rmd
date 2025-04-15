@@ -1,9 +1,9 @@
 ---
 title: "Resultados"
 output:
-  bookdown::word_document2: default
   bookdown::pdf_document2:
     latex_engine: lualatex
+  bookdown::word_document2: default
   pdf_document: default
   html_document:
     df_print: paged
@@ -120,8 +120,8 @@ vfw=8
 vfh=4
 #
 # f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se") %>% select(-contraste))
-l_ft_PDF <- dlply(df_tabsel,"contraste",f_tabsel_display_PDF)
-l_ft_word <- dlply(df_tabsel,"contraste",f_tabsel_display_word)
+# l_ft_PDF <- dlply(df_tabsel,"contraste",f_tabsel_display_PDF)
+# l_ft_word <- dlply(df_tabsel,"contraste",f_tabsel_display_word)
 # l_path <- lapply(names(l_ft),\(li){
 #   fx <- l_ft[[li]] %>% 
     # add_header_row(values=li,colwidths = ncol(df_tabsel)-1) %>%
@@ -181,7 +181,7 @@ knitr::include_graphics(path="./figuras/GE_dados_disponiveis.png")
 
 ## 2.1 Estimativa da taxa U na maior extensão espacial da paisagem prístina {#Unull}
 
-```{r LEGENDA EM DESUSO}
+```{r LEGENDA EM DESUSO 1}
 cap <- "Taxa U estimada na paisagem prístina com 16 km de lado. Cada ponto representa a mediana de 10 réplicas da taxa U por sítio de amostragem e grau de limitação de dispersão (k). As linhas verticais pretas marcam a amplitude interquantil de 90%. As linhas em laranja ligam medianas em um mesmo sítio de amostragem."
 ```
 ```{r EM DESUSO Unull16km-rep,fig.cap=cap,out.width="50%"}
