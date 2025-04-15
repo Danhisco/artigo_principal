@@ -340,7 +340,7 @@ f_plot_te <- \(veffect,
       scale_y_continuous(expand = expansion(add = c(0,0))) +
       ylab("logOR") +
       xlab("logU/U") +
-      facet_grid(pert_class~label) +
+      facet_wrap(~label) +
       theme_classic() +
       theme(
         axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -2.5)),
@@ -400,7 +400,7 @@ f_plot_te <- \(veffect,
                   f_ggplot_4quantiles)
   # colagem dos 'apenas fixo'
   f_colagem <- \(vname){
-    p_final0 <- ggdraw() +
+    ggdraw() +
       draw_plot(l50[[vname]]) +
       draw_plot(l4quan[[vname]],
                 height=0.4*propred_fixo,
@@ -416,18 +416,26 @@ f_plot_te <- \(veffect,
                       f_fixo_e_aleatorio,
                       vtextsize = 10,
                       striptextsize = 10)
-  p_fa <- f_fixo_e_aleatorio(df_fa,
-                             vtextsize = 10,
-                             striptextsize = 10)
-  p_final <- ggdraw() +
-    draw_plot(p_final0) +
-    draw_plot(p_fa,
-              height=0.4*propred_fa,
-              width=0.25*propred_fa,
-              x=xfa,y=yfa)
-  vpath <- ggsave(plot=p_final,
-                  filename=tempfile(fileext=".png"),
-                  width = vw,height = vh)
+  # colagem final
+  f_colagem <- \(vname){
+    ggdraw() +
+      draw_plot(l_apenasfixo[[vname]]) +
+      draw_plot(lfixoealet[[vname]],
+                height=0.4*propred_fa,
+                width=0.25*propred_fa,
+                x=xfa,y=yfa)
+  }
+  l_final <- lapply(names(lfixoealet),f_colagem)
+  names(l_final) <- names(lfixoealet)
+  ## combinação dos arquivos
+  library(magick)
+  l_img <- lapply(l_final,f_imagefunc) %>% 
+    lapply(.,image_read)
+  img <- image_append(do.call("c",l_img),stack = TRUE)
+  vpath <- paste0("figuras/temp_figfinal/",
+                  str_extract(veffect,"(?<=pred\\_)(.*?)(?=\\.rds)"),
+                  ".png")
+  vpath <- image_write(img,path=vpath)
   return(vpath)
 }
 ####### salvamento da amostra
