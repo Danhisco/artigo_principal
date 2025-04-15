@@ -232,12 +232,17 @@ f_plot_te <- \(veffect,
                      linew=1
                      ){
     # dfref <- l_df_ref[[vname]]
+    vbreaks <- quantile(dfiQ50$logOR,c(0.05,0.10,0.25,0.50,0.75,0.90,0.95)) %>% 
+      round(.,digits=3)
     dfiQ50 %>% 
       mutate(quantiles=paste0(vname,": mediana")) %>% 
       ggplot(aes(x=k,y=Uref,z=logOR)) +
       geom_tile(aes(fill=logOR),width = 0.0090, height = 0.0090) +
       geom_contour(color = "black",linewidth=linew) +
-      geom_text_contour(size=ctextsize,color="black") +
+      geom_text_contour(size=ctextsize,
+                        breaks=vbreaks,
+                        color="black",
+                        check_overlap = TRUE, stroke=0.1) +
       # geom_line(data=dfref,
       #           aes(y=max,x=k),color="black",
       #           inherit.aes = FALSE,
@@ -276,22 +281,25 @@ f_plot_te <- \(veffect,
             axis.text = element_text(size=textsize),
             axis.title = element_text(size=textsize))
   }
-  f_ggplot_4quantiles <- \(dfpred,
+  f_ggplot_4quantiles <- \(dfi,
                            tsize=textsize_4q){
-    k_pred <- dfpred$k %>% unique
+    k_pred <- dfi$k %>% unique
     k_sim <- sapply(c(0.25,0.50,0.75,0.99),\(x){
       k_pred[which.min(abs(k_pred - x))]
     })
-    dfpred %>% 
+    df_plot <- dfi %>% 
       filter(k%in%k_sim) %>% 
       mutate(kf=factor(paste0("k = ",round(k,2)),
                        levels=paste0("k = ",c(0.25,0.50,0.75,0.99)))
              ) %>% 
-      pivot_wider(names_from=quantiles,values_from = logOR) %>% 
-      ggplot(aes(x=Uefeito,y=`50`)) +
+      pivot_wider(names_from=quantiles,values_from = logOR)
+    names(df_plot)[grep("[0-9]+",names(df_plot))] <-
+      paste0("Q",names(df_plot)[grep("[0-9]+",names(df_plot))])
+    df_plot %>% 
+      ggplot(aes(x=Uref,y=Q50)) +
       geom_hline(yintercept = 0,color="darkgray",alpha=0.3) +
       geom_vline(xintercept = 0,color="darkgray",alpha=0.3) +
-      geom_ribbon(aes(ymin=`5`,ymax=`95`),
+      geom_ribbon(aes(ymin=Q5,ymax=Q95),
                   fill="darkgreen",
                   alpha=0.3) +
       geom_line(color="black",alpha=0.7) +
@@ -315,7 +323,7 @@ f_plot_te <- \(veffect,
                           striptextsize=15){
     dfi %>% 
       mutate(label="fixo e aleatório") %>% 
-      ggplot(aes(x = Uefeito, group = SiteCode)) +
+      ggplot(aes(x = Uref, group = SiteCode)) +
       # quantiile interval
       geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
                     fill = "Quantile range", group = SiteCode), 
@@ -332,7 +340,7 @@ f_plot_te <- \(veffect,
       scale_y_continuous(expand = expansion(add = c(0,0))) +
       ylab("logOR") +
       xlab("logU/U") +
-      facet_wrap(~label) +
+      facet_grid(pert_class~label) +
       theme_classic() +
       theme(
         axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -2.5)),
@@ -379,25 +387,38 @@ f_plot_te <- \(veffect,
                       mutate(
                         quantiles=
                           factor(100 * as.numeric(gsub("Q_","",quantiles)),
-                                         levels=c(5,50,95)) 
+                                 levels=c(5,50,95)) 
                       ) 
-                    }
-                  )
+                  }
+  )
   # apenas fixo
   l50 <- dlply(filter(dfpred,quantiles==50),
                "pert_class",
                f_ggplot_main)
-  p4quan <- f_ggplot_4quantiles(dfpred = dfpred)
-  p_final0 <- ggdraw() +
-    draw_plot(p50) +
-    draw_plot(p4quan,
-              height=0.4*propred_fixo,
-              width=0.25*propred_fixo,
-              x=xfixo,y=yfixo) 
+  l4quan <- dlply(dfpred,
+                  "pert_class",
+                  f_ggplot_4quantiles)
+  # colagem dos 'apenas fixo'
+  f_colagem <- \(vname){
+    p_final0 <- ggdraw() +
+      draw_plot(l50[[vname]]) +
+      draw_plot(l4quan[[vname]],
+                height=0.4*propred_fixo,
+                width=0.25*propred_fixo,
+                x=xfixo,y=yfixo)
+  }
+  l_apenasfixo <- lapply(names(l4quan),f_colagem)
+  names(l_apenasfixo) <- names(l4quan)
   # incluir o fixo com aleatório
-  df_fa <- readRDS(gsub("dfnew","dfpred",veffect))
-  df_fa <- df_fa[["fixo e aleat"]]
-  p_fa <- f_fixo_e_aleatorio(df_fa,vtextsize = 10,striptextsize = 10)
+  df_fa <- l_dfpred[["fixo e aleat"]]
+  lfixoealet <- dlply(df_fa,
+                      "pert_class",
+                      f_fixo_e_aleatorio,
+                      vtextsize = 10,
+                      striptextsize = 10)
+  p_fa <- f_fixo_e_aleatorio(df_fa,
+                             vtextsize = 10,
+                             striptextsize = 10)
   p_final <- ggdraw() +
     draw_plot(p_final0) +
     draw_plot(p_fa,
