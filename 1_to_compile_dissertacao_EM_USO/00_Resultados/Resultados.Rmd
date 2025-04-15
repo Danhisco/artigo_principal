@@ -355,3 +355,10 @@ knitr::include_graphics("figuras/diagfinal_3efeitos.jpeg")
 
 ### Descrição dos efeitos explicativos da paisagem na predição da biodiversidade local de árvores
 
+```{r legenda comparacao 3efeitos}
+vcap <- ""
+```
+```{r os3efeitos,include=TRUE,eval=TRUE,fig.cap=vcap}
+knitr::include_graphics("figuras/comparacao_3efeitos.jpeg")
+```
+
