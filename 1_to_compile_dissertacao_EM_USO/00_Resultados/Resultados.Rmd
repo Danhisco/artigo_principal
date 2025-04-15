@@ -271,8 +271,10 @@ ft <- flextable(df_tabsel_minimo) %>%
     dev.expl = "dev. expl.",
     MoranI_stat_res = "Moran's I",
     pvalue = "p-valor"
-  )
+  ) %>% 
+  flextable::bg(bg="white",part = "all")
 ft
+save_as_image(ft,path="figuras/tabsel_ranqueamento.png")
 ```
 
 
@@ -339,7 +341,9 @@ ft <- df_tabsel %>%
     pvalue = "p-valor"
   ) %>% 
   align(i = ~ !is.na(efeito), align = "center") %>% 
-  bold(i = ~ !is.na(efeito))
+  bold(i = ~ !is.na(efeito)) %>% 
+  flextable::bg(bg="white",part = "all")
+# save_as_image(ft,path="figuras/tabsel_efeitos.png")
 ft
 ```
 

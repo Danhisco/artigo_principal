@@ -160,7 +160,13 @@ v_hline <- filter(df_logUU,p>=0.95) %>%
 l_figfinal <- list()
 l_figfinal$`1alinha` <- df_logUU %>%
   mutate(across(c(SiteCode,contraste),factor),
-         label = contraste) %>% 
+         label = factor(contraste,
+                        levels=c("Frag total",
+                                 "Frag per se",
+                                 "Área per se"),
+                        labels=c("Frag. total",
+                                 "Frag. per se",
+                                 "Área per se"))) %>% 
   ggplot(aes(x=k,y=Uefeito,group=SiteCode,color=p)) +
   geom_boxplot(inherit.aes = FALSE,
                aes(x=k,y=Uefeito,group=k)) +
