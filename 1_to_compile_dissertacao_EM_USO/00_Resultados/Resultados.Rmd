@@ -145,7 +145,7 @@ vfh=4
 library(trackdown)
 # both overwrite: 
 # overwrite the current google drive file with the current Rmd:
-# upload_file(file="secoes_texto/Resultados/Resultados.Rmd",
+# upload_file(file="1_to_compile_dissertacao_EM_USO/00_Resultados/Resultados.Rmd",
 #             gpath="mestrado/artigo_principal/secoes_texto/",
 #             hide_code=TRUE)
 update_file(file ="1_to_compile_dissertacao_EM_USO/00_Resultados/Resultados.Rmd",
