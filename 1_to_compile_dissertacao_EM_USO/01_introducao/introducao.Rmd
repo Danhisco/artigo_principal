@@ -342,9 +342,7 @@ glossario_table
 
 # Título Dissertação:
 
-“Efeitos explicativos da paisagem na predição da biodiversidade local de árvores: a contribuição de um modelo neutro espacialmente explícito ao debate sobre fragmentação de habitat”[a]
-
-
+“Efeitos explicativos da paisagem na predição da biodiversidade local de árvores: a contribuição de um modelo neutro espacialmente explícito ao debate sobre fragmentação de habitat”
 
 
 # O debate sobre o efeito causal da fragmentação de habitat na biodiversidade remanescente
@@ -374,7 +372,7 @@ A teoria de metacomunidades conceitualiza as paisagens como conjuntos de comunid
 ## MNEE e sua relação com o debate sobre fragmentação de habitat 
 
 Além de sua capacidade de reproduzir a influência da paisagem na SAD local, o MNEE simula resultados para uma situação análoga ao de contemporaneidade utilizado nas estimativas de efeitos causais a partir de dados observacionais praticadas pelos grupos de pesquisa em debate. A situação análoga ao pressuposto de contemporaneidade é a situação de equilíbrio dinâmico, em que a taxa de perda de espécies por deriva ecológica é compensada pela introdução aleatória de novas espécies (Rosindell et al. 2008), que pode ser interpretado como a reposição de espécies pelo banco local de propágulos, imigração de longa distância ou especiação verdadeira (Azaele et al. 2016; Condit et al. 2012). A deriva ecológica refere-se à variação aleatória na abundância das espécies ao longo do tempo (Azaele et al. 2016). O MNEE pressupõem que todas as espécies são equivalentes em termos de taxas demográficas (natalidade e mortalidade) e na capacidade de dispersão (Rosindell et al. 2008), assim, a deriva ecológica resulta da estocasticidade demográfica que emerge da dinâmica de substituições nesse mecanismo demográfico (Azaele et al. 2016). A situação de equilíbrio impõe que a paisagem está influenciando a dinâmica local, pois não há atraso na resposta ecológica em relação à configuração espacial da paisagem (Rosindell et al. 2008; Azaleia et al. 2016; Thompson et al. 2020). Assim, o MNEE pode ser utilizado para reproduzir a influência dos três tipos de paisagens necessários para estimar os efeitos causais propostos no debate, sendo preferido por representar a forma mais simples e mecanística de modelar a dinâmica de comunidades no nível do indivíduo, com pressupostos análogos aos utilizados na análise de dados observacionais.
-Outra característica relevante do MNEE é a presença de um único parâmetro livre: a taxa U. Essa taxa representa a probabilidade de entrada de uma nova espécie na paisagem por evento de nascimento que repõe uma morte. O parâmetro U pode ser calibrado para que o modelo reproduza a riqueza de espécies observada em um determinado cenário de limitação à dispersão per capita (Rosindell et al. 2008).  A reposição local de indivíduos ocorre de duas formas. Em uma fração U dos eventos de nascimento um novo indivíduo introduz uma nova espécie na paisagem. Nos restantes 1 − U dos eventos, a reposição provém de um indivíduo da paisagem ao redor, pertencente a uma espécie já presente ou ausente na amostra local (parcela). Nesse caso, a origem do propágulo segue a estrutura espacial do modelo e pode resultar na chegada de espécies ausentes na parcela, mesmo sem especiação. Assim, a taxa U ajustada para reproduzir a riqueza de espécies observada em uma paisagem pode ser interpretada como uma medida da conectividade simulada entre a parcela e a paisagem circundante, considerando um determinado grau de limitação à dispersão. Quanto maior a taxa U em uma paisagem, maior a reposição de espécies externas ao pool de adultos locais, devido ao pressuposto de equilíbrio do modelo. Portanto, a taxa U ajustada pela riqueza observada permite a comparação das paisagens hipotéticas (fragmentada, aglomerada e prístina). Comparações, como a razão entre as taxas U estimadas para pares de paisagens hipotéticas (por exemplo, via logaritmo da razão das taxas U), podem indicar em qual paisagem a conectividade simulada foi maior. Dessa forma, a taxa U pode ser utilizada como uma métrica funcional de conectividade comum aos efeitos propostos pelos dois grupos em debate.
+Outra característica relevante do MNEE é a presença de um único parâmetro livre: a taxa U. Essa taxa representa a probabilidade de entrada de uma nova espécie na paisagem por evento de nascimento que repõe uma morte. O parâmetro U pode ser calibrado para que o modelo reproduza a riqueza de espécies observada em um determinado cenário de limitação à dispersão per capita (Rosindell et al. 2008).  A reposição local de indivíduos ocorre de duas formas. Em uma fração U dos eventos de nascimento um novo indivíduo introduz uma nova espécie na paisagem. Nos restantes 1−U dos eventos, a reposição provém de um indivíduo da paisagem ao redor, pertencente a uma espécie já presente ou ausente na amostra local (parcela). Nesse caso, a origem do propágulo segue a estrutura espacial do modelo e pode resultar na chegada de espécies ausentes na parcela, mesmo sem especiação. Assim, a taxa U ajustada para reproduzir a riqueza de espécies observada em uma paisagem pode ser interpretada como uma medida da conectividade simulada entre a parcela e a paisagem circundante, considerando um determinado grau de limitação à dispersão. Quanto maior a taxa U em uma paisagem, maior a reposição de espécies externas ao pool de adultos locais, devido ao pressuposto de equilíbrio do modelo. Portanto, a taxa U ajustada pela riqueza observada permite a comparação das paisagens hipotéticas (fragmentada, aglomerada e prístina). Comparações, como a razão entre as taxas U estimadas para pares de paisagens hipotéticas (por exemplo, via logaritmo da razão das taxas U), podem indicar em qual paisagem a conectividade simulada foi maior. Dessa forma, a taxa U pode ser utilizada como uma métrica funcional de conectividade comum aos efeitos propostos pelos dois grupos em debate.
 
 ## Inferência explicativa da paisagem baseada em mecanismo demográfico
 Dada a relação da taxa U com a dispersão de propágulos vindos da paisagem para a parcela, é possível utilizá-la para estimar a extensão espacial necessária para simular a SAD em um determinado cenário de limitação à dispersão. Dessa forma, é possível explorar a sensibilidade dos efeitos propostos em relação à variação na capacidade de dispersão dos indivíduos no espaço e à consequente escala espacial adequada para analisá-los (Jackson & Fahrig 2014, Fletcher Jr. et al. 2018, Fahrig et al. 2019, Valente et al. 2023, Fletcher Jr. et al. 2023). Para isso, é necessário avaliar a extensão espacial da paisagem de modo que a simulação seja influenciada apenas pela capacidade de dispersão dos indivíduos e pela configuração espacial da paisagem hipotética, e não pela própria extensão espacial da paisagem considerada. Uma abordagem possível é avaliar a estimativa da taxa U em paisagens prístinas, pois, nesse caso, apenas a capacidade de dispersão e a extensão espacial devem influenciar a estimativa da taxa U. Quanto menor a paisagem ao redor da parcela, maior deve ser a taxa U estimada, pois, mantendo-se constantes os demais parâmetros, o pool de adultos disponível na paisagem será menor (May et al. 2012). Com o aumento da paisagem, a taxa U tende a diminuir devido ao aumento do pool de adultos disponível, mas essa redução se estabiliza, uma vez que a limitação à dispersão per capita impede um aumento indefinido da influência da paisagem circundante (May et al. 2012). Assim, a extensão espacial que estabiliza a taxa U estimada pode ser considerada como a escala espacial adequada para aquele cenário específico de limitação à dispersão.
@@ -383,42 +381,3 @@ Uma vez que é possível simular a SAD sob diferentes paisagens hipotéticas, ut
 # Objetivo
 
 Nosso objetivo é simular os cenário de mudança da perda de cobertura florestal da paisagem postulados pelos dois grupos de pesquisa em debate.Com essas simulações foi possível avaliar as mudanças de conectividade sob cada cenário e na predição da abundância local de espécies arbóreas. Para tanto, simulamos um modelo de dinâmica espacialmente explícita nas paisagens hipotéticas, paisagem fragmentada, paisagem prístina e paisagem aglomerada, tal como descritas anteriormente. Essas simulações em paisagens hipotéticas distintas foram comparadas, tal como previstos nos efeitos das paisagens postulados no debate sobre fragmentação de habitat, quanto a congruência relativa da predição da biodiversidade local.
-
-[a]muito preciso!
-[b]Vancine, M. H., Muylaert, R. L., Niebuhr, B. B., Oshima, J. E. de F., Tonetti, V., Bernardo, R., De Angelo, C., Rosa, M. R., Grohmann, C. H., & Ribeiro, M. C. (2024). The Atlantic Forest of South America: Spatiotemporal dynamics of the vegetation and implications for conservation. In Biological Conservation (Vol. 291, p. 110499). Elsevier BV. https://doi.org/10.1016/j.biocon.2024.110499
-[c]@book{pearl2016causal,
-title={Causal inference in statistics: A primer},
-author={Pearl, Judea and Glymour, Madelyn and Jewell, Nicholas P},
-year={2016},
-publisher={John Wiley \& Sons}
-}
-[d]@article{de2015much,
-title={How much do we know about the endangered Atlantic Forest? Reviewing nearly 70 years of information on tree community surveys},
-author={de Lima, Renato AF and Mori, Danilo P and Pitta, Gregory and Melito, Melina O and Bello, Carolina and Magnago, Luiz F and Zwiener, Victor P and Saraiva, Daniel D and Marques, M{\'a}rcia CM and de Oliveira, Alexandre A and others},
-journal={Biodiversity and Conservation},
-volume={24},
-pages={2135--2148},
-year={2015},
-publisher={Springer}
-}
-[e]@article{chase2019fragsad,
-title={FragSAD: A database of diversity and species abundance distributions from habitat fragments},
-author={Chase, Jonathan M and Liebergesell, Mario and Sagouis, Alban and May, Felix and Blowes, Shane A and Berg, {\AA}ke and Bernard, Enrico and Brosi, Berry J and Cadotte, Marc W and Cayuela, Luis and others},
-journal={Ecology},
-volume={100},
-number={12},
-year={2019},
-publisher={ESA}
-}
-[f]@book{leibold2018metacommunity,
-title={Metacommunity ecology, volume 59},
-author={Leibold, Mathew A and Chase, Jonathan M},
-year={2018},
-publisher={Princeton University Press}
-}
-[g]@book{leibold2018metacommunity,
-title={Metacommunity ecology, volume 59},
-author={Leibold, Mathew A and Chase, Jonathan M},
-year={2018},
-publisher={Princeton University Press}
-}
