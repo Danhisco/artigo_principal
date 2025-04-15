@@ -305,6 +305,8 @@ f_plot_te <- \(veffect,
       geom_line(color="black",alpha=0.7) +
       ylab("logOR") +
       xlab("logU/U") +
+      scale_x_continuous(expand = c(0,0),
+                         limits=vrange[2:1]) +
       facet_wrap(~kf,ncol=2) +
       theme(aspect.ratio = 1,
             strip.text = element_text(size=tsize,
@@ -336,7 +338,8 @@ f_plot_te <- \(veffect,
       geom_hline(yintercept = 0,color="darkgray",alpha=0.75) +
       geom_vline(xintercept = 0,color="darkgray",alpha=0.75) +
       # ajustes
-      scale_x_continuous(expand = expansion(add = c(0,0))) +
+      scale_x_continuous(expand = c(0,0),
+                         limits=vrange[2:1]) +
       scale_y_continuous(expand = expansion(add = c(0,0))) +
       ylab("logOR") +
       xlab("logU/U") +
@@ -449,84 +452,87 @@ l_img <- lapply(l_path$te,\(li){
             propred_fa = 1.175, xfa = 0.70, yfa=0.58)
   }
 )
-names(l_img) <- gsub("/rds/","/figuras/",l_path$te) %>% 
-  gsub("l_dfnew_","figfinal_",.) %>% 
-  gsub("rds$","jpeg",.)
-lapply(names(l_img),\(li){
-  img <- image_read(l_img[[li]]) %>% 
+names(l_img) <- str_extract(l_img,"(?<=final\\/)(.*?)(?=\\.png)")
+lapply(l_img,\(li){
+  img <- image_read(li) %>% 
     image_trim() %>% 
     image_resize("75%")
   image_write(img,path = li)
 })
-########## leitura e salvamento da amostra
-image_read(f_plot_shgam(vtextsize = 13))
-#
-#
-#
-###### combinação das 3 figuras
-f_figfinal <- \(df_ajuste,
-                vlegpos=c(0.5,0.04),
-                vimgrs="75%"){
-  # frag. per se e frag total
-  l_img <- dlply(filter(df_ajuste,grepl("Frag." ,efeito)),"efeito",\(dfi){
-    with(dfi,{
-      v_effect <- ifelse(efeito=="Frag. total","fragtotal","fragperse")
-      f_plot_te(veffect = grep(v_effect,l_path$te,value=TRUE),
-                legendfillposition=vlegpos,
-                textsize_4q = tsize4q,
-                ctextsize=ctextsize,
-                xfixo = xfixo, yfixo = yfixo, propred_fixo = propred_fixo,
-                facetspace_4q = facetspace_4q,
-                propred_fa = propred_fa, xfa = xfa, yfa = yfa)  
-    })
-  }) %>% lapply(.,image_read)
-  # área em branco
-  # l_img$blank <- 
-  # área per se
-  l_img$`Área per se` <- with(filter(df_ajuste,efeito=="Área per se"),{
-      image_read(f_plot_shgam(vtextsize = vtextsize,
-                              vw = vw, vh = vh,
-                              vstripspace = vstripspace,
-                              vstriptextsize = vstriptextsize))
-    })
-  ## padronização
-  l_img <- lapply(l_img,image_trim) %>% 
-    lapply(.,image_resize,vimgrs)
-  l_img$`Área per se` <- f_resize_2rectangle(ref_img = l_img$`Frag. per se`,
-                                             toresize_img = l_img$`Área per se`,
-                                             ref_side = "height",
-                                             tore_side = "height")
-  l_img$`Área per se` <- f_resize_2rectangle(ref_img = l_img$`Frag. per se`,
-                                             toresize_img = l_img$`Área per se`,
-                                             ref_side = "width",
-                                             tore_side = "width")
-  # imagem combinada
-  image_append(do.call("c",l_img),stack = FALSE)
-}
-dfajuste <- data.frame(
-  efeito = factor(c("Área per se","Frag. per se", "Frag. total"),
-                  levels=c("Frag. total","Frag. per se","Área per se")),
-  tsize4q = c(NA,10,10),
-  ctextsize = c(NA,5,5),
-  xfixo = c(NA,0.45,0.45),
-  yfixo = c(NA,0.610,0.610), 
-  propred_fixo = c(NA,1,1),
-  facetspace_4q = c(NA,0.1,0.1),
-  propred_fa = c(NA,1.175,1.175), 
-  xfa = c(NA,0.70,0.70), 
-  yfa=c(NA,0.58,0.58),
-  vw=c(7,NA,NA),
-  vh=c(9,NA,NA),
-  vstripspace=c(0.5,NA,NA),
-  vstriptextsize=c(10,NA,NA),
-  vtextsize=c(15,NA,NA),
-  qrange_fixo="NA",
-  median_fixo="NA",
-  qrange_aleat="NA",
-  median_aleat="NA"
-)
-img_final <- f_figfinal(dfajuste)
-image_write(
-  img_final,
-  path="/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/figuras/comparacao_de_efeitos.jpeg"
-  )
+img_final <- lapply(l_img,image_read)
+img_final <- img_final[c("fragtotal","fragperse","areaperse")]
+img_final <- image_append(do.call("c",img_final),stack = FALSE)
+image_write(img_final,"figuras/comparacao_3efeitos.jpeg")
+# 
+# ########## leitura e salvamento da amostra
+# image_read(f_plot_shgam(vtextsize = 13))
+# #
+# #
+# #
+# ###### combinação das 3 figuras
+# f_figfinal <- \(df_ajuste,
+#                 vlegpos=c(0.5,0.04),
+#                 vimgrs="75%"){
+#   # frag. per se e frag total
+#   l_img <- dlply(filter(df_ajuste,grepl("Frag." ,efeito)),"efeito",\(dfi){
+#     with(dfi,{
+#       v_effect <- ifelse(efeito=="Frag. total","fragtotal","fragperse")
+#       f_plot_te(veffect = grep(v_effect,l_path$te,value=TRUE),
+#                 legendfillposition=vlegpos,
+#                 textsize_4q = tsize4q,
+#                 ctextsize=ctextsize,
+#                 xfixo = xfixo, yfixo = yfixo, propred_fixo = propred_fixo,
+#                 facetspace_4q = facetspace_4q,
+#                 propred_fa = propred_fa, xfa = xfa, yfa = yfa)  
+#     })
+#   }) %>% lapply(.,image_read)
+#   # área em branco
+#   # l_img$blank <- 
+#   # área per se
+#   l_img$`Área per se` <- with(filter(df_ajuste,efeito=="Área per se"),{
+#       image_read(f_plot_shgam(vtextsize = vtextsize,
+#                               vw = vw, vh = vh,
+#                               vstripspace = vstripspace,
+#                               vstriptextsize = vstriptextsize))
+#     })
+#   ## padronização
+#   l_img <- lapply(l_img,image_trim) %>% 
+#     lapply(.,image_resize,vimgrs)
+#   l_img$`Área per se` <- f_resize_2rectangle(ref_img = l_img$`Frag. per se`,
+#                                              toresize_img = l_img$`Área per se`,
+#                                              ref_side = "height",
+#                                              tore_side = "height")
+#   l_img$`Área per se` <- f_resize_2rectangle(ref_img = l_img$`Frag. per se`,
+#                                              toresize_img = l_img$`Área per se`,
+#                                              ref_side = "width",
+#                                              tore_side = "width")
+#   # imagem combinada
+#   image_append(do.call("c",l_img),stack = FALSE)
+# }
+# dfajuste <- data.frame(
+#   efeito = factor(c("Área per se","Frag. per se", "Frag. total"),
+#                   levels=c("Frag. total","Frag. per se","Área per se")),
+#   tsize4q = c(NA,10,10),
+#   ctextsize = c(NA,5,5),
+#   xfixo = c(NA,0.45,0.45),
+#   yfixo = c(NA,0.610,0.610), 
+#   propred_fixo = c(NA,1,1),
+#   facetspace_4q = c(NA,0.1,0.1),
+#   propred_fa = c(NA,1.175,1.175), 
+#   xfa = c(NA,0.70,0.70), 
+#   yfa=c(NA,0.58,0.58),
+#   vw=c(7,NA,NA),
+#   vh=c(9,NA,NA),
+#   vstripspace=c(0.5,NA,NA),
+#   vstriptextsize=c(10,NA,NA),
+#   vtextsize=c(15,NA,NA),
+#   qrange_fixo="NA",
+#   median_fixo="NA",
+#   qrange_aleat="NA",
+#   median_aleat="NA"
+# )
+# img_final <- f_figfinal(dfajuste)
+# image_write(
+#   img_final,
+#   path="/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/figuras/comparacao_de_efeitos.jpeg"
+#   )
