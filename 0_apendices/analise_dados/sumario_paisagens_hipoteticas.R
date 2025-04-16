@@ -187,9 +187,10 @@ l_dfpred <- lapply(l_dfpred,\(dfi){
     select(-forest_succession,-lat,-long) %>% 
     relocate(pert_class,.after="k")
 })
+library(hexbin)
 p <- l_dfpred$fixo_e_aleat %>% 
   ggplot(aes(x=k,y=nSAD)) +
-  geom_point(alpha=0.3) +
+  # geom_point(alpha=0.3) +
   geom_line(aes(y=fit,group = SiteCode),alpha=0.3) +
   # geom_boxplot(aes(group=k),alpha=0.6) +
   geom_ribbon(data=l_dfpred$fixo,
@@ -199,6 +200,8 @@ p <- l_dfpred$fixo_e_aleat %>%
   geom_line(data=l_dfpred$fixo,
             aes(x=k,y=fit),
             color="darkred") +
+  geom_hex(bins = 50,alpha=0.5) + 
+  scale_fill_gradient("contagem",low = "gray", high = "black", na.value = NA) +
   scale_x_continuous(expand = c(0.01, 0)) +
   scale_y_continuous(expand = c(0.01, 0)) +
   labs(x="Proporção de propágulos na vizinhança imediata (k)",
