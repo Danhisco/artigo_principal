@@ -218,10 +218,17 @@ df_tabsel <- readRDS("./5_resultados/df_tabsel_tehgam_efeitos.rds") %>%
   filter(dAICc==0)
 ### 1a parte: figfinal_te_EFEITO PAISAGEM
 ### @descrição: heatmap x=k, y=logU/U, z=
-v_range <-  c(max=2,min=-0.5)
+v_range <-  c(max=1.75,min=-0.5)
+v_range_logOR <- sapply(l_path$te,\(li){
+  dfp <- readRDS(li)[["apenas fixo"]]
+  range(dfp$Q_0.5)
+})
+v_range_logOR <- c("min"=min(v_range_logOR[1,]),
+                   "max"=max(v_range_logOR[2,]))
 # setwd(v_path)
 f_plot_te <- \(veffect,
                vrange=v_range,
+               vrangelogOR=v_range_logOR,
                pattern_extract="(?<=l_dfpred_)(.*?)(?=\\.rds)",
                legendfillposition=c(0.5,0.1),
                stripspace=0.5,
@@ -241,7 +248,7 @@ f_plot_te <- \(veffect,
     vbreaks <- quantile(dfiQ50$logOR,c(0.05,0.10,0.25,0.50,0.75,0.90,0.95)) %>% 
       round(.,digits=3)
     dfiQ50 %>% 
-      mutate(quantiles=paste0(vname,": mediana")) %>% 
+      mutate(quantiles=paste0(vname,": Q50")) %>% 
       ggplot(aes(x=k,y=Uref,z=logOR)) +
       geom_tile(aes(fill=logOR),width = 0.0090, height = 0.0090) +
       geom_contour(color = "black",linewidth=linew) +
@@ -258,7 +265,8 @@ f_plot_te <- \(veffect,
       #           inherit.aes = FALSE,
       #           linewidth=linew) +
       scale_fill_viridis_c(name = "logOR",
-                           option = "magma") +
+                           option = "magma",
+                           limits=vrangelogOR) +
       labs(y="logU/U",
            x="grau de limitação de dispersão (k)") +
       facet_grid(pert_class~quantiles) +
@@ -375,7 +383,7 @@ f_plot_te <- \(veffect,
   l_dfpred <- readRDS(veffect) %>%
     lapply(.,\(li){
       mutate(li,
-             across(where(is.numeric),~round(.x,digits=4)),
+             across(where(is.numeric),~round(.x,digits=3)),
              pert_class = factor(forest_succession,
                                  levels=c("primary",
                                           "primary/secondary",
@@ -398,67 +406,153 @@ f_plot_te <- \(veffect,
                           factor(100 * as.numeric(gsub("Q_","",quantiles)),
                                  levels=c(5,50,95)) 
                       ) 
-                  }
-  )
+                    }
+                  )
   # apenas fixo
-  l50 <- dlply(filter(dfpred,quantiles==50),
-               "pert_class",
+  lp <- dlply(dfpred,
+               c("pert_class","quantiles"),
                f_ggplot_main)
-  l4quan <- dlply(dfpred,
-                  "pert_class",
-                  f_ggplot_4quantiles)
+  # l4quan <- dlply(dfpred,
+  #                 "pert_class",
+  #                 f_ggplot_4quantiles)
   # colagem dos 'apenas fixo'
-  f_colagem <- \(vname){
-    ggdraw() +
-      draw_plot(l50[[vname]]) +
-      draw_plot(l4quan[[vname]],
-                height=0.4*propred_fixo,
-                width=0.25*propred_fixo,
-                x=xfixo,y=yfixo)
-  }
-  l_apenasfixo <- lapply(names(l4quan),f_colagem)
-  names(l_apenasfixo) <- names(l4quan)
+  # f_colagem <- \(vname){
+  #   ggdraw() +
+  #     draw_plot(l50[[vname]]) +
+  #     draw_plot(l4quan[[vname]],
+  #               height=0.4*propred_fixo,
+  #               width=0.25*propred_fixo,
+  #               x=xfixo,y=yfixo)
+  # }
+  # l_apenasfixo <- lapply(names(l4quan),f_colagem)
+  # names(l_apenasfixo) <- names(l4quan)
   # incluir o fixo com aleatório
   df_fa <- l_dfpred[["fixo e aleat"]]
-  lfixoealet <- dlply(df_fa,
-                      "pert_class",
-                      f_fixo_e_aleatorio,
-                      vtextsize = 10,
-                      striptextsize = 10)
-  # colagem final
-  f_colagem <- \(vname){
-    ggdraw() +
-      draw_plot(l_apenasfixo[[vname]]) +
-      draw_plot(lfixoealet[[vname]],
-                height=0.4*propred_fa,
-                width=0.25*propred_fa,
-                x=xfa,y=yfa)
+  f_boxplot <- \(dfixo,dfixoealeat,vefeito){
+    dfp1 <- dfixo %>%
+      select(SiteCode, k, logOR,Q_0.5,pert_class) %>% 
+      rename("fixo e aleat."="Q_0.5") %>% 
+      pivot_longer(cols = c("logOR","fixo e aleat."),values_to = "logOR") %>% 
+      mutate(name=gsub("logOR","obs",name))
+    dfp0 <- dfixoealeat %>% 
+      filter(quantiles=="50") %>% 
+      select(SiteCode,k,pert_class,logOR) %>% 
+      mutate(name="fixo")
+    dfp <- rbind(dfp1,dfp0) %>% 
+      mutate(name = factor(name,
+                           levels=c("obs","fixo e aleat.","fixo")),
+             label = vefeito)
+    dfp %>% 
+      ggplot(aes(x=name,y=logOR)) +
+      geom_jitter(alpha=0.1) +
+      geom_boxplot() +
+      labs(x="") +
+      scale_y_continuous(limits=vrangelogOR,expand=c(0,0)) +
+      facet_grid(pert_class~label)
   }
-  l_final <- lapply(names(lfixoealet),f_colagem)
-  names(l_final) <- names(lfixoealet)
+  pboxplot <- f_boxplot(df_fa,dfpred,vname)
+  # lfixoealet <- dlply(df_fa,
+  #                     "pert_class",
+  #                     f_fixo_e_aleatorio,
+  #                     vtextsize = 10,
+  #                     striptextsize = 10)
+  # # colagem final
+  # f_colagem <- \(vname){
+  #   ggdraw() +
+  #     draw_plot(l_apenasfixo[[vname]]) +
+  #     draw_plot(lfixoealet[[vname]],
+  #               height=0.4*propred_fa,
+  #               width=0.25*propred_fa,
+  #               x=xfa,y=yfa)
+  # }
+  # l_final <- lapply(names(lfixoealet),f_colagem)
+  # names(l_final) <- names(lfixoealet)
   ## combinação dos arquivos
   library(magick)
-  l_img <- lapply(l_final,f_imagefunc) %>% 
+  gc()
+  l_img <- lapply(lp,f_imagefunc) %>% 
     lapply(.,image_read)
-  img <- image_append(do.call("c",l_img),stack = TRUE)
+  gc()
+  l_img <- lapply(paste0("\\.",c("5$","50","95")),\(li){
+    vi <- grep(li,names(l_img))
+    image_append(do.call("c",l_img[vi]),stack=TRUE)
+  })
+  gc()
+  names(l_img) <- paste0("Q",c(5,50,95))
   vpath <- paste0("figuras/temp_figfinal/",
                   str_extract(veffect,"(?<=pred\\_)(.*?)(?=\\.rds)"),
                   ".png")
-  vpath <- image_write(img,path=vpath)
-  return(vpath)
+  lpath <- lapply(names(l_img),\(li){
+    img <- l_img[[li]]
+    vp <- gsub("\\.png",paste0("_",li,".png"),vpath)
+    image_write(img,path=vp)
+    gc()
+    return(vp)
+  })
+  gc()
+  #
+  img <- f_imagefunc(pboxplot) %>% 
+    image_read()
+  gc()
+  vpath <- gsub("\\.png",paste0("_boxplot",".png"),vpath)
+  image_write(img,path=vpath)
+  gc()
+  #
+  l_path <- list()
+  l_path$pred_fixo <- lpath
+  l_path$boxplotQ50 <- vpath
+  return(lpath)
 }
 ####### salvamento da amostra
-l_img <- lapply(l_path$te,\(li){
-  f_plot_te(veffect = li,
-            textsize_4q = 10,
-            ctextsize=5,
-            legendfillposition=c(0.5,0.05),
-            xfixo = 0.45, yfixo = 0.610, propred_fixo = 1,
-            facetspace_4q = 0.1,
-            propred_fa = 1.175, xfa = 0.70, yfa=0.58)
-  }
-)
-names(l_img) <- str_extract(l_img,"(?<=final\\/)(.*?)(?=\\.png)")
+# l_img <- lapply(l_path$te,\(li){
+#   gc()
+#   vp <- f_plot_te(veffect = li,
+#             textsize_4q = 10,
+#             ctextsize=5,
+#             legendfillposition=c(0.5,0.05),
+#             xfixo = 0.45, yfixo = 0.610, propred_fixo = 1,
+#             facetspace_4q = 0.1,
+#             propred_fa = 1.175, xfa = 0.70, yfa=0.58)
+#   gc()
+#   return(vp)
+#   }
+# )
+l_img <- list()
+library(stringi)
+for(li in l_path$te){
+  gc()
+  l_img[[str_extract(li,"(?<=pred\\_)(.*?)(?=\\.rds)")]] <- 
+    f_plot_te(veffect = li,
+              textsize_4q = 10,
+              ctextsize=5,
+              legendfillposition=c(0.5,0.05),
+              xfixo = 0.45, yfixo = 0.610, propred_fixo = 1,
+              facetspace_4q = 0.1,
+              propred_fa = 1.175, xfa = 0.70, yfa=0.58)
+  gc()
+}
+
+l_files <- list.files(path = "figuras/temp_figfinal",
+                      pattern = "Q50",
+                      full.names = T)
+names(l_files) <- str_extract(l_files,"(?<=final\\/)(.*?)(?=\\_Q)")
+l_img <- lapply(l_files,image_read) %>% 
+  lapply(.,image_resize,"50%")
+gc()
+img <- 
+  image_append(
+    do.call(
+      "c",
+      l_img[c("fragtotal","fragperse","areaperse")]
+      ),
+    stack = FALSE) %>% 
+  image_resize("50%")
+
+
+
+
+
+
 lapply(l_img,\(li){
   img <- image_read(li) %>% 
     image_trim() %>% 

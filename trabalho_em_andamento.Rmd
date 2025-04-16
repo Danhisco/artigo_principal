@@ -11,6 +11,35 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 15 abril 2025
+
+```{r}
+f_boxplot <- \(dfixo,dfixoealeat,vefeito){
+  dfp1 <- dfixo %>%
+    select(SiteCode, k, logOR,Q_0.5,pert_class) %>% 
+    rename("fixo e aleat."="Q_0.5") %>% 
+    pivot_longer(cols = c("logOR","fixo e aleat."),values_to = "logOR") %>% 
+    mutate(name=gsub("logOR","obs",name))
+  dfp0 <- dfixoealeat %>% 
+    filter(quantiles=="50") %>% 
+    select(SiteCode,k,pert_class,logOR) %>% 
+    mutate(name="fixo")
+  dfp <- rbind(dfp1,dfp0) %>% 
+    mutate(name = factor(name,
+                         levels=c("obs","fixo e aleat.","fixo")),
+           label = vefeito)
+  dfp %>% 
+    ggplot(aes(x=name,y=logOR)) +
+    geom_jitter(alpha=0.1) +
+    geom_boxplot() +
+    labs(x="") +
+    scale_y_continuous(limits=vrangelogOR,expand=c(0,0)) +
+    facet_grid(pert_class~label)
+}
+```
+
+
+
 # 14 de abril 2025
 
 ```{r}
