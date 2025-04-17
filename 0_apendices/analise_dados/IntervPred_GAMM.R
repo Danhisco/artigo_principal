@@ -21,27 +21,26 @@ library(dplyr)
 #################################################################
 # função para criar o new data fixo
 f_dfmd2 <- \(dff,length_pred = 100,site.posteriori ="SPigua1"){
+  #0) dados empíricos
+  df_ref <- read_csv(file="dados/csv_SoE/taxaU/df_contrastes.csv") %>% 
+    select(SiteCode:k, contains("_logratio")) #%>% 
+  names(df_ref) <- gsub("\\.","",names(df_ref)) %>% 
+    gsub("\\_logratio","",.)
+  df_ref <- pivot_longer(df_ref,c("area","fragperse","fragtotal"),
+                         values_to="Uefeito",names_to="efeitos") %>% 
+    inner_join(.,y=select(dff,SiteCode,forest_succession) %>% distinct())
   #1o criar predição para todo o intervalo de dados
-  f_bypert2 <- \(dfi){
-    v_range <- range(dfi$Uefeito)
-    v_k <- range(dfi$k_z)
+  f_bypert2 <- \(dff){
+    v_range <- range(df_ref$Uefeito)
+    v_k <- range(df_ref$k)
     dfr <- expand.grid(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred),
-                k_z = seq(v_k[1],v_k[2],length.out=length_pred),
+                k = seq(v_k[1],v_k[2],length.out=length_pred),
                 SiteCode=site.posteriori)
-    adply(levels(dff$forest_succession),1,\(i){
+    dfr <- adply(levels(dff$forest_succession),1,\(i){
       mutate(dfr,forest_succession=i)
-    })
+    },.id=NULL)
   }
-  f_bypert <- \(dfi){
-    v_range <- range(dfi$Uefeito)
-    v_k <- range(dfi$k_z)
-    v_forest <- levels(dfi$forest_succession)
-    expand.grid(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred),
-                k_z = seq(v_k[1],v_k[2],length.out=length_pred),
-                forest_succession = v_forest,
-                SiteCode=site.posteriori)
-    }
-  df_pred <- f_bypert(dff)
+  df_pred_comum <- f_bypert2(dff)
   #2o cortar a parte extra
   ## dados para ajustar os modelos de corte
   f_dfbuffer <- \(dfi){
@@ -54,7 +53,7 @@ f_dfmd2 <- \(dff,length_pred = 100,site.posteriori ="SPigua1"){
       relocate(ext_class,.after=last_col()) %>% 
       relocate(Uefeito_quant,.after=Uefeito)
   }
-  df_buf <- ddply(dff,c("k_z","forest_succession"),f_dfbuffer)
+  df_buf <- ddply(df_ref,c("efeitos","k","forest_succession"),f_dfbuffer)
   # df_buf %>%
   #   df_newpred %>% 
   #   pivot_longer(starts_with("Uefeito")) %>%
@@ -67,36 +66,48 @@ f_dfmd2 <- \(dff,length_pred = 100,site.posteriori ="SPigua1"){
   #   facet_wrap(~forest_succession,ncol=1)
   ## ajuste e predição
   f_gam <- \(dfi){
-    gam(Uefeito~s(k_z,bs="cr"),data=dfi)
+    gam(Uefeito~s(k,bs="cr"),data=dfi)
   }
   l_md <- dlply(df_buf,
-                c("ext_class","forest_succession"),
+                c("efeitos","ext_class","forest_succession"),
                 f_gam)
   ## fazer a predição média do modelo e guardar
-  l_df_ref <- lapply(levels(dff$forest_succession),\(li){
-    lmd <- l_md[paste0(c("max.","min."),li)]
+  l_df_ref <- alply(distinct(select(df_buf,forest_succession,efeitos)),1,\(li){
+    vname <- paste0(li$efeitos[1],c(".max.",".min."),li$forest_succession[1])
+    lmd <- l_md[vname]
     #names(lmd) <- gsub(paste0(li,"."),"",names(lmd)) 
     df_ref <- lapply(names(lmd),\(i){
       md <- lmd[[i]]
-      dfr <- filter(df_pred,forest_succession==li)
-      dfr[[ gsub(paste0("\\.",li),"",i) ]] <- predict.gam(md,dfr)
+      dfr <- filter(df_pred_comum,forest_succession==li$forest_succession[1])
+      dfr[[ gsub("\\.","",str_extract(i,"\\.(.*?)\\.")) ]] <- predict.gam(md,dfr)
       return(dfr)
     }) %>% Reduce("inner_join",.)
   })
-  names(l_df_ref) <- levels(dff$forest_succession)
+  names(l_df_ref) <- apply(distinct(select(df_buf,forest_succession,efeitos)),1,\(dfx){
+   paste0(dfx["efeitos"],"_",dfx["forest_succession"]) 
+  })
   ## filtrar para cada k os valores entre predições
   library(data.table)
   df_newpred <- lapply(names(l_df_ref),\(li){
-    df_pred <- l_df_ref[[li]]
-    setDT(df_pred)
-    as.data.frame(df_pred[, 
-                          .SD[.SD$min <= .SD$Uefeito & .SD$Uefeito <= .SD$max,
-                              .(Uefeito,forest_succession,SiteCode)], 
-                          by = k_z])
-  }) %>% do.call("rbind",.)
+    dfpred <- l_df_ref[[li]]
+    setDT(dfpred)
+    dfr <- as.data.frame(dfpred[,
+                         .SD[.SD$min <= .SD$Uefeito & .SD$Uefeito <= .SD$max,
+                             .(Uefeito,forest_succession,SiteCode)], 
+                          by = k])
+    mutate(dfr,efeito=str_split_1(li,"\\_")[1])
+  }) %>% do.call("rbind",.) %>% 
+    rename(Uref=Uefeito) %>% 
+    mutate(k_z = f_z2(k,x_ref=df_ref$k),
+           Uefeito = f_z2(Uref,x_ref=df_ref$Uefeito))
   ## 
   return(df_newpred)
 }
+dff <- gamm$model
+df_p_pred <- f_dfmd2(dff)
+saveRDS(df_p_pred,file="dados/csv_SoE/df_p_pred")
+df_p_pred <- readRDS(file="dados/csv_SoE/df_p_pred")
+
 f_predictions <- \(gamm,nsim,to_exclude,df_newpred,quants=c(0.05,0.5,0.95)){
   coef_samples <- MASS::mvrnorm(n=nsim, mu=coef(gamm), Sigma=vcov(gamm))
   matrix_lprediction <- predict(gamm,
@@ -112,13 +123,15 @@ f_predictions <- \(gamm,nsim,to_exclude,df_newpred,quants=c(0.05,0.5,0.95)){
 }
 # função que simula a predição a posteriori
 f_calcPI <- \(gamm,
+              dfppred=df_p_pred,
+              vefeito,
               nsim = 1000,
               to_exclude,
               simple_area=FALSE,
               quants=c(0.05,0.5,0.95)){
   #### 1a parte: somente efeito fixo ####
   # create the new data 
-  df_newpred <- f_dfmd2(gamm$model)
+  df_newpred <- filter(dfppred,efeito==vefeito)
   # quais componentes serão zerados?
   # to_exclude <- to_exclude[
   #   grep(pattern = paste(names(df_newpred),collapse = "|"),
@@ -142,6 +155,7 @@ f_calcPI <- \(gamm,
 }
 ##### retorno dos dados para a escala padrão
 f_z <- \(x) (x-mean(x))/sd(x)
+f_z2 <- \(x,x_ref) (x-mean(x_ref))/sd(x_ref)
 f_anti_z <- \(x,x_ref) (x * sd(x_ref)) + mean(x_ref)
 f_escalaoriginal <- \(ipath){
   # quais efeitos não serão lidos?
@@ -151,14 +165,14 @@ f_escalaoriginal <- \(ipath){
   # lista com os df de predição
   l_dfpred <- readRDS(ipath)
   # juntando o fixo e aleat com os valores empíricos
-  ## fixo e aleatório
-  l_dfpred[["fixo e aleat"]] <- 
-    inner_join(l_dfpred[["fixo e aleat"]],
-               select(df_contrastes,-all_of(efeitos_rm)) %>% 
-                 rename(Uref = last_col()),
-               by=c("SiteCode","k_z"))
-  vUref <- l_dfpred[["fixo e aleat"]]$Uref
-  vkref <- l_dfpred[["fixo e aleat"]]$k
+  df_ref <- read_csv(file="dados/csv_SoE/taxaU/df_contrastes.csv") %>% 
+    select(SiteCode:k, contains("_logratio")) #%>% 
+  names(df_ref) <- gsub("\\.","",names(df_ref)) %>% 
+    gsub("\\_logratio","",.)
+  df_ref <- pivot_longer(df_ref,c("area","fragperse","fragtotal"),
+                         values_to="Uefeito",names_to="efeitos")
+  vUref <- df_ref$Uefeito
+  vkref <- df_ref$k
   ## apenas fixo
   l_dfpred[["apenas fixo"]] <- l_dfpred[["apenas fixo"]] %>% 
     mutate(Uref = f_anti_z(x = Uefeito, x_ref = vUref),
@@ -184,7 +198,9 @@ if(FALSE){
   vlog <- lapply(l_path$te,\(i){
     hgam <- readRDS(i)
     hgam <- hgam[[ unique( df_tabsel$modelo ) ]]
-    l_df <- f_calcPI(hgam,to_exclude = c("s(lat,long)","t2(Uefeito,k_z,SiteCode)"))
+    vefeito <- str_extract(i,"(?<=md\\_)(.*?)(?=\\.rds)") %>% 
+      gsub("areaperse","area",.)
+    l_df <- f_calcPI(hgam,vefeito = vefeito,to_exclude = c("s(lat,long)","t2(Uefeito,k_z,SiteCode)"))
     saveRDS(l_df,gsub("l_md_","l_dfpred_",i))
     rm(hgam,l_df);gc()
   })

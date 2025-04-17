@@ -211,13 +211,13 @@ p <- l_dfpred$fixo_e_aleat %>%
   facet_grid(pert_class ~ land) +
   theme(strip.text = element_text(size=12, #margin=margin(),
                                   face="bold"))
-ggsave(filename="figuras/descricao_congruencia_relativa.png",
+ggsave(filename="figuras/descricao_congruencia_absoluta.png",
        p,height = 7.33,width = 13.8)
 library(magick)
-img <- image_read("figuras/descricao_congruencia_relativa.png") %>% 
+img <- image_read("figuras/descricao_congruencia_absoluta.png") %>% 
   image_resize("50%") %>% 
   image_trim()
-image_write(img,path = "figuras/descricao_congruencia_relativa.png")
+image_write(img,path = "figuras/descricao_congruencia_absoluta.png")
 ############################################################
 # f_geom_final <- \(vs){
 #   list(
