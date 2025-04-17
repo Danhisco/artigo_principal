@@ -22,6 +22,16 @@ library(dplyr)
 # função para criar o new data fixo
 f_dfmd2 <- \(dff,length_pred = 100,site.posteriori ="SPigua1"){
   #1o criar predição para todo o intervalo de dados
+  f_bypert2 <- \(dfi){
+    v_range <- range(dfi$Uefeito)
+    v_k <- range(dfi$k_z)
+    dfr <- expand.grid(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred),
+                k_z = seq(v_k[1],v_k[2],length.out=length_pred),
+                SiteCode=site.posteriori)
+    adply(levels(dff$forest_succession),1,\(i){
+      mutate(dfr,forest_succession=i)
+    })
+  }
   f_bypert <- \(dfi){
     v_range <- range(dfi$Uefeito)
     v_k <- range(dfi$k_z)
@@ -31,7 +41,7 @@ f_dfmd2 <- \(dff,length_pred = 100,site.posteriori ="SPigua1"){
                 forest_succession = v_forest,
                 SiteCode=site.posteriori)
     }
-  df_pred <- ddply(dff,"forest_succession",f_bypert)
+  df_pred <- f_bypert(dff)
   #2o cortar a parte extra
   ## dados para ajustar os modelos de corte
   f_dfbuffer <- \(dfi){

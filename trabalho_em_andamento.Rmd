@@ -11,6 +11,71 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+16 abril 2025
+
+```{r}
+#
+l_dfpred <- lapply(l_path$te,readRDS) %>% 
+  lapply(.,"[[","apenas fixo")
+names(l_dfpred) <- str_extract(l_path$te,"(?<=pred\\_)(.*?)(?=\\.rds)")
+dfpred <- lapply(names(l_dfpred),\(li){
+  mutate(l_dfpred[[li]],efeito=li)
+}) %>% do.call("rbind",.) %>% 
+  pivot_longer(starts_with("Q_"),values_to = "predicao", names_to = "quantil") %>% 
+  mutate(quantil = gsub("Q_0\\.","",quantil) %>% gsub("^5","50",.),
+         across(where(is.numeric),~round(.x,digits=3))) %>% 
+  select(efeito,quantil,predicao,Uref,k,forest_succession)
+#
+f_interpolate <- \(dfi){
+  # Interpolar a grade regular
+  interp_result <- akima::interp(
+    x = dfi$k,
+    y = dfi$Uref,
+    z = dfi$predicao,
+    duplicate = "mean",  # caso haja valores repetidos em x e y
+    nx = 100, ny = 100   # resolução da grade (pode ajustar)
+  )
+  # Transformar o resultado em data frame "long"
+  interp_df <- expand.grid(
+    k = interp_result$x,
+    Uref = interp_result$y
+  )
+  interp_df$predicao <- as.vector(interp_result$z)
+  return(interp_df)
+}
+# teste <- f_interpolate(dfi)
+
+
+dfi <- filter(dfpred,quantil=="50")
+length(unique(diff(sort(unique(dfi$k)))))
+length(unique(diff(sort(unique(dfi$Uref)))))
+
+length(unique(diff(sort(unique(df_pred$Uefeito)))))
+df_newpred$predicao <- rnorm(nrow(df_newpred))
+
+df_newpred %>% 
+  ggplot(aes(x=k_z,y=Uefeito,color=predicao)) +
+  geom_raster() +
+  facet_wrap(~forest_succession)
+
+
+
+f_ggplot <- \(dfi){
+  dfi %>% 
+    filter(efeito=="areaperse",forest_succession=="primary") %>% 
+    arrange(k, Uref) %>%
+    ggplot(aes(x=k,y=Uref,fill=predicao)) +
+    geom_tile(width = , 
+              height = ) +
+    # geom_raster(aes(fill=predicao),interpolate = TRUE) +
+    facet_grid(efeito ~ forest_succession)
+}
+
+
+```
+
+
+
 # 15 abril 2025
 
 ```{r}
