@@ -95,12 +95,13 @@ dfpred <- rbindlist(l_dfpred) %>%
   mutate(quantil = gsub("Q_0\\.","",quantil) %>% gsub("^5","50",.)) %>% 
   select(efeito,quantil,predicao,Uref,k,forest_succession)
 #
+library(tidyverse)
 saveRDS(dfpred,file = "dados/csv_SoE/rds/dfpred_p_plot_figfinal.rds")
-
+dfpred <- readRDS(file = "dados/csv_SoE/rds/dfpred_p_plot_figfinal.rds")
 f_ggplot <- \(dff,
               vscales="fixed",
               lwidth=0.3,
-              textsize=2.5
+              textsize=3.5
               ){
   library(metR)
   dff %>% 
@@ -125,7 +126,7 @@ f_ggplot <- \(dff,
                linewidth=lwidth) +
   geom_text_contour(size=textsize,
                     color="black",
-                    breaks=c(-2,-1,0,1,2),
+                    breaks=c(-2,-1,-0.5,0,0.5,1,2),
                     check_overlap = FALSE, stroke=0.1) +
   scale_fill_gradient2("logOR",
                        midpoint=0,
@@ -141,15 +142,20 @@ f_ggplot <- \(dff,
 }
 p <- f_ggplot(filter(dfpred,quantil=="50"),vscales = "fixed")
 p2 <- f_ggplot(dfpred,vscales = "free")
+p_ate1km <- f_ggplot(filter(dfpred,quantil=="50",k>=0.35),vscales = "fixed")
 ggsave(filename="figuras/temp_figfinal/comparacao_efeitos_scalefixed.png",
        plot = p,width=14,height = 12)
 ggsave(filename="figuras/temp_figfinal/comparacao_efeitos_scalefree.png",
        plot = p2,width=14,height = 12)
-
-
-
-
-
+ggsave(filename="figuras/temp_figfinal/comparacao_efeitos_scalefixed_ate1km.png",
+       plot = p_ate1km,width=14,height = 12)
+library(magick)
+vpath <- "figuras/temp_figfinal/comparacao_efeitos_scalefixed_ate1km.png"
+img <- image_read(vpath) %>% 
+  image_trim() %>% 
+  image_resize("75%")
+image_write(img,gsub("png","jpeg",vpath))
+file.remove(vpath)
 ```
 
 
