@@ -26,50 +26,59 @@ dfpred <- lapply(names(l_dfpred),\(li){
          across(where(is.numeric),~round(.x,digits=3))) %>% 
   select(efeito,quantil,predicao,Uref,k,forest_succession)
 #
-f_interpolate <- \(dfi){
-  # Interpolar a grade regular
-  interp_result <- akima::interp(
-    x = dfi$k,
-    y = dfi$Uref,
-    z = dfi$predicao,
-    duplicate = "mean",  # caso haja valores repetidos em x e y
-    nx = 100, ny = 100   # resolução da grade (pode ajustar)
-  )
-  # Transformar o resultado em data frame "long"
-  interp_df <- expand.grid(
-    k = interp_result$x,
-    Uref = interp_result$y
-  )
-  interp_df$predicao <- as.vector(interp_result$z)
-  return(interp_df)
+saveRDS(dfpred,file = "dados/csv_SoE/rds/dfpred_p_plot_figfinal.rds")
+
+f_ggplot <- \(dff,
+              vscales="fixed",
+              lwidth=0.8,
+              textsize=3
+              ){
+  dfpred %>% 
+  mutate(pert_class = factor(forest_succession,
+                                 levels=c("primary",
+                                          "primary/secondary",
+                                          "secondary"),
+                                 labels=c("baixa",
+                                          "mediana",
+                                          "alta")),
+         efeito = factor(efeito,
+                         levels=c("fragtotal",
+                                  "fragperse",
+                                  "areaperse"),
+                         labels=c("Frag. total",
+                                  "Frag. per se",
+                                  "Área per se"))) %>% 
+  select(-forest_succession) %>% 
+  filter(quantil=="50") %>% 
+  ggplot(aes(x=k,y=Uref,z=predicao)) +
+  geom_raster(aes(fill=predicao),interpolate = TRUE) +
+  geom_contour(color = "black",
+               linewidth=lwidth) +
+  geom_text_contour(size=textsize,
+                    color="black",
+                    breaks=c(-2,-1,0,1,2),
+                    check_overlap = FALSE, stroke=0.1) +
+  scale_fill_gradient2("logOR",
+                       midpoint=0,
+                       low="red",
+                       mid = "#EEDC82",
+                       high = "darkblue") +
+  labs(y="logU/U",
+       x="grau de limitação de dispersão (k)") +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0)) +
+  facet_grid(pert_class~efeito,scales = vscales) +
+  theme_classic()
 }
-# teste <- f_interpolate(dfi)
-
-
-dfi <- filter(dfpred,quantil=="50")
-length(unique(diff(sort(unique(dfi$k)))))
-length(unique(diff(sort(unique(dfi$Uref)))))
-
-length(unique(diff(sort(unique(df_pred$Uefeito)))))
-df_newpred$predicao <- rnorm(nrow(df_newpred))
-
-df_newpred %>% 
-  ggplot(aes(x=k_z,y=Uefeito,color=predicao)) +
-  geom_raster() +
-  facet_wrap(~forest_succession)
+p <- f_ggplot(dfpred,vscales = "free")
+p2 <- f_ggplot(dfpred,vscales = "free")
+ggsave(filename="figuras/temp_figfinal/comparacao_efeitos_scalefixed.png",
+       plot = p,width=14,height = 12)
+ggsave(filename="figuras/temp_figfinal/comparacao_efeitos_scalefree.png",
+       plot = p2,width=14,height = 12)
 
 
 
-f_ggplot <- \(dfi){
-  dfi %>% 
-    filter(efeito=="areaperse",forest_succession=="primary") %>% 
-    arrange(k, Uref) %>%
-    ggplot(aes(x=k,y=Uref,fill=predicao)) +
-    geom_tile(width = , 
-              height = ) +
-    # geom_raster(aes(fill=predicao),interpolate = TRUE) +
-    facet_grid(efeito ~ forest_succession)
-}
 
 
 ```
