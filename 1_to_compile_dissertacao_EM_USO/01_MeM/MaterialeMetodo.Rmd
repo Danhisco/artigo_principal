@@ -1,10 +1,10 @@
 ---
 title: "Metodologia"
 output:
+  bookdown::word_document2: default
+  word_document: default
   bookdown::pdf_document2:
     latex_engine: lualatex
-  word_document: default
-  bookdown::word_document2: default
   pdf_document:
     latex_engine: xelatex
   html_document:
@@ -114,13 +114,13 @@ gt_table
 
 
 
-# 1. Fonte de Dados
+# Fonte de Dados
 
-## 1.1 TreeCo
+## TreeCo
 
 <p> Consultamos a base de dados TreeCo, que reuniu amplamente estudos fitossociológicos realizados na Floresta Atlântica (@de_lima_how_2015). Selecionamos nessa base de dados inventários florestais que amostraram indivíduos arbóreos com diâmetro à altura do peito (DBH) ≥ 4,8 cm, em parcelas únicas de pelo menos 1 ha de floresta. Selecionamos inventários com altas confiabilidades taxonômica, no nível de morfoespécie, e na precisão da coordenada central da parcela. Detalhes do procedimento de avaliação dos inventários pode ser obtido em @de2020erosion. Em resumo, a base TreeCo classificou os inventários florestais quanto à confiabilidade da identificação das morfoespécies e das coordenadas geográficas centrais. A resolução taxonômica foi aprimorada a partir da verificação de espécimes de referência fornecidos por cerca de um terço dos inventários, com base em atualizações de identificação disponíveis na rede speciesLink. Além disso, os nomes das espécies foram padronizados conforme um catálogo taxonômico nacional de referência, corrigindo erros tipográficos, sinônimos e variantes ortográficas (@de2020erosion). Morfoespécies marcadas como confer foram atribuídas à espécie sugerida, enquanto aquelas marcadas como affinis foram consideradas no nível de gênero. Quanto à localização, as coordenadas centrais de cada inventário foram verificadas para garantir correspondência com o fragmento florestal descrito. Inventários com localização inconsistente foram descartados. Quando necessário, as coordenadas foram ajustadas com base em mapas, descrições dos locais nos estudos originais ou outras fontes disponíveis online. </p> 
     
-## 1.2 Mapbiomas
+## Mapbiomas
 
 <p>Para caracterizar a cobertura vegetal em torno da área de cada inventário, utilizamos os mapas da coleção 6 do MapBiomas com resolução de 30x30 m², que compilam dados anuais de 1985 a 2020 (@mapbiomas). Selecionamos o mapa de cobertura florestal mais próximo ao ano da amostragem de cada parcela para assegurar o pressuposto de contemporaneidade entre a amostragem da parcela e a cobertura florestal mapeada.</p>
       
@@ -128,16 +128,16 @@ gt_table
   
 <p>As parcelas foram delineadas como quadrados centralizados no mapa, alocando um total de N unidades de habitat (posições para indivíduos), correspondendo ao número total de indivíduos na parcela. Quando não foi possível centralizar a parcela por conta da particular configuração espacial da cobertura florestal remanescente, ela foi ligeiramente deslocada para uma área adjacente que permitisse a demarcação de um quadrado adequado.</p>
 
-# 2. Paisagens Hipotéticas
+# Paisagens Hipotéticas
 
 <p>As paisagens hipotéticas têm forma quadrada, foram criadas com  a mesma densidade de pixels, área da parcela amostrada e dimensões espaciais.</p>
 <p>Denominaremos paisagem fragmentada o mapa de cobertura florestal no ano mais próximo ao da amostragem do inventário florestal selecionado. Em alguns casos, os inventários podem informar o ano da amostragem ou apenas o ano de publicação do estudo (@de_lima_how_2015). Nesses casos, a data do mapa é estimada com base na informação disponível na base TreeCo.</p>
 <p>Denominaremos paisagem prístina um mapa  gerado convertendo todas as unidades de não-habitat da paisagem fragmentada em unidades de habitat. Assim, ela mantém as mesmas características da paisagem fragmentada, exceto pela perda de habitat e sua configuração espacial. Em outras palavras, as paisagens pristinas são mapas com 100% de cobertura florestal.</p>
 <p>Chamaremos de  paisagem aglomerada a obtida pela quantificação do número de unidades de habitat na paisagem fragmentada. Então é calculado a menor paisagem prístina que contém o número de unidades de habitat da paisagem fragmentada. Essa paisagem prístina é inserida no centro de uma paisagem sem cobertura florestal de mesma dimensão espacial que a paisagem fragmentada. Dessa forma, a paisagem aglomerada possui a mesma proporção de cobertura florestal da paisagem fragmentada e a mesma configuração espacial da paisagem prístina.</p> 
 
-# 3. MNEE
+# MNEE
 
-## 3.1 Caracterização de MNEE
+## Caracterização de MNEE
 
 <p>O modelo neutro espacialmente explícito (MNEE) é parte de uma família de modelos fundamentados pela Teoria Neutra da Biodiversidade (TNB, @hubbell_unified_2011). Na TNB, modelos demográficos buscam reproduzir padrões de biodiversidade pela representação das dinâmicas de morte, nascimento, dispersão e especiação de múltiplas espécies no espaço (@azaele_statistical_2016). No MNEE, a única interação entre os indivíduos é da competição neutra por espaço, o que resulta em flutuações estocásticas nos tamanhos populacionais das espécies, um processo conhecido como deriva ecológica (@azaele_statistical_2016).</p> 
   
@@ -153,7 +153,7 @@ gt_table
     
 <p>Estudos de simulação testaram a validade do MNEE em cenários de paisagens fragmentadas, variando os níveis de perda de habitat e autocorrelação espacial  (@campos_neutral_2012, @campos_effect_2013, @claudino_extinction_2015). Esses estudos demonstraram que a configuração espacial da cobertura florestal remanescente exerce um papel significativo na conformação da distribuição de abundância de espécies locais (SAD) simulada pelo MNEE (@campos_neutral_2012, @campos_effect_2013, @claudino_extinction_2015).</p>
 
-## 3.2 Descrição da simulação de MNEE {#descricao-MNEE}
+## Descrição da simulação de MNEE {#descricao-MNEE}
   
 <p>No MNEE, a dinâmica das comunidades ecológicas é modelada por meio de uma abordagem coalescente, que rastreia a ancestralidade das espécies até um conjunto comum de indivíduos fundadores na paisagem. O MNEE utiliza uma abordagem coalescente para modelar a dinâmica das comunidades ecológicas (@rosindell_coalescence_2008; @thompson_pycoalescence_2020). A simulação inicia sem informação prévia sobre a identidade das espécies presentes na parcela amostral. Durante a simulação, a cada passo temporal, um indivíduo da parcela é sorteado aleatoriamente para ser substituído. A substituição pode ocorrer de duas maneiras: (i) por um singleton, ou seja, um indivíduo de uma nova espécie que surge na paisagem com probabilidade U; ou (ii) pela prole de um adulto residente na paisagem, com probabilidade 1−U (@rosindell_coalescence_2008; @thompson_pycoalescence_2020). Nos casos em que a substituição ocorre por meio de um propágulo residente (1−U), o evento de dispersão é modelado através de um kernel de dispersão com distribuição exponencial espelhada, sendo i.i.d. (independentemente e identicamente distribuído) em duas dimensões (@bullock_synthesis_2017; @thompson_pycoalescence_2020). Para determinar a origem do propágulo, o modelo centraliza a função de dispersão no habitat vago e sorteia posições na paisagem até encontrar um indivíduo adulto. O processo termina quando todos os indivíduos na parcela coalescem em um conjunto ancestral de indivíduos que são os primeiros de sua espécie na paisagem, criando uma árvore genealógica da comunidade local (@rosindell_coalescence_2008). Cada ramo dessa árvore é composto por indivíduos que compartilham um ancestral comum, representando a espécie que originalmente colonizou a paisagem. Isso permite a reconstrução da distribuição de abundância de espécies (SAD) a partir da árvore genealógica. A abordagem coalescente pressupõe que apenas um indivíduo pode ocupar uma unidade de habitat por vez, e que cada morte é imediatamente compensada pelo nascimento de um novo indivíduo adulto (pressuposto de soma zero, @rosindell_coalescence_2008).</p>  
 
@@ -161,12 +161,12 @@ gt_table
 <p>A capacidade de dispersão é controlada variando-se a proporção de propágulos que permanecem próximos à planta progenitora (i.e., distância até o vizinho imediato). A taxa U, que representa a probabilidade de introdução de novas espécies por nascimento, é estimada usando um método analítico proposto por @rosindell_coalescence_2008 (Apêndice A). Essa abordagem combina a simulação da árvore genealógica da comunidade sob a hipótese da taxa 
 U tendendo a zero e uma equação construída a partir dessa simulação para relacionar a riqueza de espécies observadas com a taxa U média. Dessa forma, é possível calibrar de MNEE com a riqueza de espécies observada (@rosindell_coalescence_2008, Apêndice A).</p>
 
-## 3.3 parametrização do modelo: paisagem hipotética, k e U
+## parametrização do modelo: paisagem hipotética, k e U
 
 <p>Para realizar as simulações da SAD, o MNEE requer informações sobre a paisagem hipotética (fragmentada, aglomerada ou prístina), o parâmetro k (proporção de propágulos que permanecem na vizinhança imediata conforme uma distribuição exponencial espelhada) e a taxa U (entrada de novas espécies no sistema).</p>
 <p>A proporção de propágulos que permanecem na vizinhança imediata (k) foi estimada por simulação, considerando a distância entre vizinhos imediatos. O objetivo foi determinar o parâmetro de escala (b) da distribuição de Laplace em duas dimensões, de forma que k propágulos fossem alocados entre a origem e o centro do vizinho imediato. Como a densidade de indivíduos pode variar entre inventários e paisagens, o valor de b foi calculado individualmente para cada inventário florestal e cenário de limitação de dispersão. Foram simulados 20 cenários de limitação de dispersão, com k variando de 99% (limitação severa) a 5% (limitação branda). Para cada combinação de sítio de amostragem, tipo de paisagem hipotética e cenário de limitação de dispersão, foi estimada a taxa U necessária para simular a riqueza observada. A estimativa da taxa média U foi obtida a partir de 20 réplicas para cada bateria de simulação.</p>
         
-# 4. Estimativa da extensão espacial adequada
+# Estimativa da extensão espacial adequada
 
 <p> Em nossa metodologia consideramos o efeito escalar da dispersão no  mecanismo demográfico simulado e então buscamos determinar a extensão espacial da análise de acordo. 
 Como a capacidade de dispersão do mecanismo empírico que gera a SAD observada é desconhecida, simulamos diversos graus de limitação de dispersão para avaliar a sensibilidade dos resultados em relação à dispersão e sua consequente influência na escala espacial da paisagem. Para isso investigamos a estimativa da taxa U em paisagens prístinas, onde, para um particular sítio de amostragem, a única influência na estimativa da taxa U é a capacidade de dispersão e a extensão espacial da paisagem. Nós buscamos estimar a extensão espacial da paisagem que seja suficiente para estimar a taxa U sem que a simulação seja afetada pelas dimensões da paisagem. Uma expectativa é que a redução da limitação de dispersão aumente a extensão espacial mínima necessária para simular a dinâmica coalescente.</p>
@@ -181,40 +181,40 @@ Como a capacidade de dispersão do mecanismo empírico que gera a SAD observada 
 
 
 
-# 5. Estimativa da métrica funcional de conectividade
-## 5.1 procedimento para obter logU/U
+# Estimativa da métrica funcional de conectividade
+##  procedimento para obter logU/U
 
 <p>A métrica funcional de conectividade foi definida na introdução como o log da razão da taxa U de um par de paisagens hipotéticas. A taxa U média na bateria de simulação corresponde a uma particular configuração de sítio de amostragem, grau de limitação de dispersão simulado e paisagem hipotética. A razão entre taxas U (U/U) pode variar entre 0 e mais infinito, tornando a comparação assimétrica, Na escala log essa razão varia entre menos e mais infinito, com o valor zero correspondendo a equivalência de taxas U.</p> 
 
-# 6. Congruência entre a SAD simulada e a SAD observada
-## 6.1 procedimento para obter logOR
+# Congruência entre a SAD simulada e a SAD observada
+## procedimento para obter logOR
 
 <p> A congruência entre as SAD simuladas e a SAD observada é feita em duas etapas. Primeiro é feita a comparação de uma SAD simulada réplica com a SAD observada a partir do teste de hipótese Kolmogorov-Smirnov bootstrap (@dowd_twosamples_2023). Esse teste pressupõe a hipótese nula de que os dois vetores em comparação (SAD observada e SAD simulada) são amostras de uma mesma distribuição teórica; a estatística de interesse do teste é a maior diferença entre as curvas acumuladas das SAD (@dowd_twosamples_2023). Contabilizamos o número de SAD réplicas que são congruentes com a SAD observada para cada sítio, paisagem hipotética e grau de limitação de dispersão simulado.</p>
 <p>Segundo, a partir do número de SADs réplicas com boa congruência é calculado o logito da proporção de SADs simuladas com boa congruência. Para cada par de paisagens hipotéticas propostas como contrastes para os efeitos explicativos descritos na introdução é calculado a diferença no logito pareado pelo sítio de amostragem e capacidade de dispersão simulado (k). A descrição do logito empírico quando o número de SADs congruentes é zero ou 100, o número total de réplicas simuladas, está na seção 7.3.2.1.</p>
 
-# 7. Análise dos Resultados 
+# Análise dos Resultados 
 
 <p>A seção dos resultados será composta de 3 seções (7.1, 7.2 e 7.3). Em 7.1 foi apresentada a análise exploratória dos dados empíricos selecionados, i.e., os dados de inventários florestais dentro do critério de inclusão e os respectivos mapas de cobertura florestal do ano mais próximo do inventário. Na subseção 7.2 foi mencionado os procedimentos para os principais resultados do estudo da análise do efeito escalar da extensão espacial da paisagem ao redor associado com o aumento da capacidade de dispersão per capita. Na subseção 7.3 a análise dos efeitos explicativos da paisagem na predição da biodiversidade local foi dividida em duas partes (7.3.1 e 7.3.2). Em 7.3.1 foi feita a análise exploratória da métrica de conectividade, definida como logU/U, para cada tipo de efeito explicativo. Em 7.3.2 foi desenvolvido a descrição da congruência da SAD simulada com a SAD observada, essa seção foi dividida em duas partes: 7.3.2.1 - descrição da congruência absoluta da SAD simulada por paisagem hipotética; e 7.3.2.2 - descrição da congruência relativa da SAD simulada entre as paisagens hipotéticas em contraste no efeito explicativo.</p>
 
-## 7.1 Dados Empíricos: inventários florestais e mapa de cobertura florestal contemporâneo
+## Dados Empíricos: inventários florestais e mapa de cobertura florestal contemporâneo
 
 <p>Nessa seção foi apresentado as características dos inventários florestais: coordenadas geográficas, área da parcela, número de indivíduos na amostra, riqueza de espécies, ano aproximado da amostragem. Os sítios serão contabilizados segundo a classe de perturbação usado na base de dados TreeCo, que considera o histórico e tipo de perturbações na parcela (mais detalhes na seção 6.3.2).</p> 
 
-## 7.2 Efeito escalar da dispersão no mecanismo simulado
+## Efeito escalar da dispersão no mecanismo simulado
 
 <p>Nessa seção foi feita a análise exploratória e a descrição estatística dos resultados obtidos a partir da subseção 4.Estimativa da extensão espacial adequada. O objetivo foi determinar a extensão espacial da paisagem hipotética suficiente para simular cada cenário de limitação de dispersão.</p> 
 
-## 7.3 Efeitos explicativos da paisagem na predição da biodiversidade local
+## Efeitos explicativos da paisagem na predição da biodiversidade local
 
-### 7.3.1 Análise exploratória da métrica de conectividade funcional
+### Análise exploratória da métrica de conectividade funcional
 
 <p>A análise exploratória tem como objetivo observar a relação entre a métrica de conectividade, logU/U, com a variação da limitação de dispersão (k) e classe de perturbação. A métrica de conectividade deve variar apenas em função da limitação de dispersão e a diferença entre paisagens hipotéticas. Nessa primeira análise gráfica, os pontos foram coloridos pela proporção de cobertura florestal remanescente na paisagem (p) na escala suficiente para simular todos os k. Com isso foi possível avaliar a coerência entre as métricas de conectividade (logU/U) em função da p, métrica comum da paisagem usada no contexto do debate sobre fragmentação de habitat (@fahrig_rethinking_2013; @villard_beyond_2014; @puttker_indirect_2020).</p> 
 
 <p>Caso o logU/U apresente grande variação entre classes de perturbação, então isso pode indicar associação entre a configuração espacial da paisagem fragmentada e a classe de perturbação da parcela. Em estudo extenso sobre a base de dados TreeCo (@de2020erosion), foi observado que dentro de áreas estritamente protegidas as perdas de biodiversidade local tendem a ser menores. Porém, foi estimado pouca influência do indice de impacto humano na paisagem ou da distância de grandes centros sobre biodiversidade local (@de2020erosion). Assim, a hipótese de autocorrelação espacial dos resultados de congruência da SAD simulada com SAD local observada pode ser plausível dentro do conjunto de inventários selecionados. E uma primeira análise que pode indicar isso é a análise gráfica de logU/U.</p>
 
-### 7.3.2 Congruência da SAD simulada com a SAD observada
+### Congruência da SAD simulada com a SAD observada
 
-#### 7.3.2.1 Descrição da congruência absoluta das paisagens hipotéticas
+#### Descrição da congruência absoluta das paisagens hipotéticas
 
 <p>A descrição estatística da probabilidade de uma SAD simulada ter boa congruência com a SAD observada por paisagem hipotética, complementa os efeitos explicativos que se baseiam na congruência relativa para um par de paisagens hipotéticas. Para essa descrição estatística foi ajustado um modelo aditivo generalizado hierárquico em que a probabilidade da SAD simulada ter boa congruência foi descrita em função do tipo de paisagem hipotética e de k, a proporção de propágulos na vizinhança imediata. Em todos os modelos estatísticos a variáveis k foi interpretada como variável contínua. Além de k e paisagem hipotética, outras possíveis variáveis fixas no modelo hierárquico foram a classe de perturbação e as coordenadas centrais (@wood2017).</p>
 
@@ -222,24 +222,43 @@ Como a capacidade de dispersão do mecanismo empírico que gera a SAD observada 
 
 <p>A probabilidade de uma distribuição de abundância de espécies (SAD) simulada apresentar boa congruência com a SAD observada foi modelada utilizando seis modelos estatísticos com diferentes níveis de complexidade.</p>
 O modelo mais completo (modelo cheio) inclui:
-+ Um intercepto por tipo de paisagem hipotética (comum aos sítios) e por sítio de amostragem;
-+ Um termo de suavização (spline) para o parâmetro k (grau de limitação de dispersão), também especificado por tipo de paisagem hipotética e por sítio de amostragem;
-+ Duas covariáveis adicionais comuns a todos os sítios: (i) a classe de perturbação do sítio de amostragem, que interage com o tipo de paisagem no spline para k, e (ii) um spline bidimensional para as coordenadas centrais do sítio.
+  
+        
+* Um intercepto por tipo de paisagem hipotética (comum aos sítios) e por sítio de amostragem;  
+  
+    
+* Um termo de suavização (spline) para o parâmetro k (grau de limitação de dispersão), também especificado por tipo de paisagem hipotética e por sítio de amostragem;  
+  
+    
+* Duas covariáveis adicionais comuns a todos os sítios: (i) a classe de perturbação do sítio de amostragem, que interage com o tipo de paisagem no spline para k, e (ii) um spline bidimensional para as coordenadas centrais do sítio.   
+  
 
 Os cinco modelos restantes representam simplificações progressivas do modelo cheio, obtidas pela exclusão de uma ou mais covariáveis:
-+ Dois modelos mantêm apenas uma das duas covariáveis adicionais (classe de perturbação ou coordenadas);
-+ Um modelo possui apenas o spline de k por tipo de paisagem e por sítio, sem as covariáveis adicionais;
-+ Um modelo ainda mais simples inclui apenas o spline de k por tipo de paisagem (sem variação por sítio);
-+ O modelo mais simples inclui apenas interceptos por tipo de paisagem e por sítio, sem spline para k.
+  
+    
+* Dois modelos mantêm apenas uma das duas covariáveis adicionais (classe de perturbação ou coordenadas);
+  
+    
+* Um modelo possui apenas o spline de k por tipo de paisagem e por sítio, sem as covariáveis adicionais;  
+  
+    
+* Um modelo ainda mais simples inclui apenas o spline de k por tipo de paisagem (sem variação por sítio);  
+  
+    
+* O modelo mais simples inclui apenas interceptos por tipo de paisagem e por sítio, sem spline para k.  
+  
 
-#### 7.3.2.2 Descrição dos efeitos explicativos da paisagem na biodiversidade local
+#### Descrição dos efeitos explicativos da paisagem na biodiversidade local
 
 <p>A descrição do efeito explicativo apresentado na introdução requer que o modelo estatístico relacione a congruência relativa da SAD simulada com a SAD observada (expresso no logOR) e a métrica de conectividade (expresso em logU/U) por grau de limitação de dispersão (k) e sítio de amostragem. Assim, o objetivo da descrição estatística foi fazer um sumário quantitativo da variação de logOR, a métrica de congruência relativa, em função de logU/U, a métrica funcional de conectividade. Uma outra preditora básica no modelo estatístico é k, a proporção de propágulos na vizinhança imediata, pois os resultados de diferentes paisagens hipotéticas são comparados pareado por k. É importante que esse sumário quantitativo considere o padrão por sítio de amostragem e da população de sítios de amostragem, para poder expressar a natureza hierárquica dos resultados. Por isso foram usados modelos hierárquicos aditivos generalizados, que além de possibilitar expressar a estrutura dos dados por sítio de amostragem (@Pedersen2019), também possibilitam descrever efeitos explicativos não lineares por splines e tensores de suas preditoras contínuas (@wood2017). Os modelos foram ajustados pelo método da verossimilhança restrita (@wood2017), e os modelos foram comparados usando métricas derivadas do ‘Akaike Information Criteria’ para amostras pequenas (AICc), o delta AICc, o peso de evidência. Também incluímos o ‘deviance explained’ que pode foi interpretado de forma análoga ao coeficiente de determinação (R2), como forma de descrever a variabilidade explicada pelo modelo estatístico. Para essas tarefas foram utilizadas funções dos pacotes mgcv (@wood2011) e bblme (@bbmle_package).</p>
 
 <p>Dado a possibilidade de autocorrelação espacial dos inventários florestais, incluímos no modelo estatístico cheio um spline para as coordenadas centrais das parcelas (@wood2017). Além disso, incluímos um teste de autocorrelação espacial dos resíduos dos modelos estatísticos. Uma vez que os splines são ideais para descrever relações contínuas, a autocorrelação espacial negativa pode não ser bem descrita pelo modelo estatístico. Assim, se  houver autocorrelação espacial que não foi bem descrita pelo modelo estatístico, esperamos que a média, por sítio de amostragem, dos resíduos do modelo apresentem a estatística I de Moran diferente de zero. A estatística I de Moran varia entre -1 e 1, ou seja, entre a autocorrelação espacial negativa e positiva, respectivamente. E possui um teste de hipótese associado que avalia se o valor é significativamente diferente de zero, se o p valor for próximo de zero então a hipótese de ausência de autocorrelação espacial possui pouco suporte. A estatística I de Moran requer que um parâmetro livre seja escolhido. Para isso utilizamos os resíduos de um modelo estatístico de ranqueamento das paisagens hipotéticas mais plausível, tal como descrito no final da seção 6.3.1, análise exploratória. Para obter a estatística I de Moran e seu p valor associado utilizamos funções do pacote spdep (@bivand2020).</p> 
 
 <p>Outra preditora avaliada foi o nível de perturbação da parcela, tal como classificado na base TreeCo (@de2020erosion).  Essa classe é construída conforme a informação disponível sobre o tipo, intensidade e tempo da perturbação antrópica na área da parcela (@de2020erosion). Foram consideradas 3 classes de perturbação: alta, com florestas severamente ou cronicamente perturbadas a pelo menos 50 anos antes do inventário; mediana, com florestas pouco ou esporadicamente perturbadas e/ou perturbada entre 50 e 80 anos; e baixa, com florestas não perturbadas por pelo menos 80 anos (@de2020erosion). Existe grande variabilidade intra classe de perturbação, porém essa é a informação disponível nos trabalhos originais (@de2020erosion).</p>
+
 <p>A interpretação dos efeitos será feita a partir das estimativas de  medianas e intervalos de confiança quantílicos (5% e 95%). Nós assumimos que a distribuição conjunta dos coeficientes do modelo mais plausível pode ser aproximada por uma normal multivariada, parametrizada pelas estimativas pontuais dos coeficientes (vetor de médias) e sua matriz de covariância estimada. Realizei 10.000 amostragens dessa distribuição multivariada, cada uma gerando um conjunto de coeficientes simulados. Para cada amostra, calculei as predições condicionais do modelo, obtendo assim uma distribuição empírica das predições. Dessa distribuição, extraí os quantis correspondentes aos percentis 5% (limite inferior), 50% (mediana) e 95% (limite superior). Essa operação de construção das medianas e intervalos de confiança quantílicos foi feito com funções do pacote mgcv (@wood2011) e do pacote MASS (@mass_package).</p>
 
-<p> Para descrever o log da razão da chance da SAD simulada em uma paisagem hipotética ter boa congruência com a SAD observada (logOR) foram usados modelos hierarquicos aditivos mistos (HGAM da sigla em inglês hierarchical generalized additive model Pedersen et al. 2019). Foi ajustado 3 HGAM variando em complexidade. o HGAM mais complexo possui um tensor entre o logU/U e k por sítio de amostragem e comum a todos os sítios (ver metodologia). Os outros HGAM são simplificações desse HGAM mais complexo. Assim, é possível que os HGAM descrevam o logOR em função da combinação de valores de logU/U e k por sítio ou até apenas em função de 1 intercepto por sítio. Esses HGAM foram comparados segundo 3 classes de métricas: AICc; proporção da deviance explicada; e pela estatística I de Moran aplicada à média dos resíduos por sítio. Nas tabelas \@ref(tab:tabsel-fragtotal), \@ref(tab:tabsel-fragperse), \@ref(tab:tabsel-areaperse) estão a comparação dos 7 HGAM para cada um dos três efeitos, respectivamente, fragmentação total, fragmentação per se, e área per se. Na figura \@ref(fig:diagfinal) há o diagnóstico dos HGAM mais plausíveis para cada efeito e na figura \@ref(fig:diagfinal) há a predição desses modelos. Essa seção termina com um sumário quantitativo da proporção de SADs simuladas congruentes em função do tipo de paisagem hipotética e grau de limitação de dispersão.</p> 
+<p> Para descrever o log da razão da chance da SAD simulada em uma paisagem hipotética ter boa congruência com a SAD observada (logOR) foram usados modelos hierarquicos aditivos mistos (HGAM da sigla em inglês hierarchical generalized additive model Pedersen et al. 2019). Foi ajustado 3 HGAM variando em complexidade. o HGAM mais complexo possui um tensor entre o logU/U e k por sítio de amostragem e comum a todos os sítios (ver metodologia). Os outros HGAM são simplificações desse HGAM mais complexo. Assim, é possível que os HGAM descrevam o logOR em função da combinação de valores de logU/U e k por sítio ou até apenas em função de 1 intercepto por sítio. Esses HGAM foram comparados segundo 3 classes de métricas: AICc; proporção da deviance explicada; e pela estatística I de Moran aplicada à média dos resíduos por sítio.</p> 
 
+
+# Referências
