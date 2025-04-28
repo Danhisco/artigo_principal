@@ -11,6 +11,15 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 28 abril 2025
+
+```{r}
+rmarkdown::render("1_to_compile_dissertacao_EM_USO/00_Resultados/Resultados.Rmd", 
+                  output_format = "bookdown::pdf_document2")
+```
+
+
+
 17 abril 
 
 ```{r}
