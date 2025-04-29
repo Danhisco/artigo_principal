@@ -186,3 +186,40 @@ ggsave(
   plot=p,
   width = 10.2,
   height = 6.7)
+#############################################################################
+################################ congruência absoluta #######################
+#############################################################################
+l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
+library(hexbin)
+p <- l_dfpred$fixo_e_aleat %>% 
+  ggplot(aes(x=k,y=nSAD)) +
+  # geom_point(alpha=0.3) +
+  geom_line(aes(y=fit,group = SiteCode),alpha=0.3) +
+  # geom_boxplot(aes(group=k),alpha=0.6) +
+  geom_ribbon(data=l_dfpred$fixo,
+              aes(x=k,y=fit,ymin=lower,ymax=upper),
+              color="blue",
+              fill="lightblue") +
+  geom_line(data=l_dfpred$fixo,
+            aes(x=k,y=fit),
+            color="darkred") +
+  geom_hex(bins = 50,alpha=0.5) + 
+  scale_fill_gradient("contagem",low = "gray", high = "black", na.value = NA) +
+  scale_x_continuous(expand = c(0.01, 0)) +
+  scale_y_continuous(expand = c(0.01, 0)) +
+  labs(x="Proporção de propágulos na vizinhança imediata (k)",
+       y="número de SAD simuladas com boa congruência com o observado (nSAD)",
+       title="Descrição da congruência absoluta da SAD simulada nas paisagens hipotéticas",
+       subtitle="HGAM: nSAD ~ s(k,by=interaction(paisagem hipotética, classe de perturbação) + s(lat,long) + te(k,Sítio,by=paisagem hipotética)") +
+  facet_grid(pert_class ~ land) +
+  theme(strip.text = element_text(size=12, #margin=margin(),
+                                  face="bold"))
+ggsave(filename="figuras/descricao_congruencia_absoluta.png",
+       p,height = 7.33,width = 13.8)
+library(magick)
+img <- image_read("figuras/descricao_congruencia_absoluta.png") %>% 
+  image_resize("50%") %>% 
+  image_trim()
+image_write(img,path = "figuras/descricao_congruencia_absoluta.png")
+
+

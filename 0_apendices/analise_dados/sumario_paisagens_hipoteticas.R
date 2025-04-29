@@ -26,20 +26,9 @@ df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>%
   mutate(k=round(k,2),
          across(c(land,SiteCode,forest_succession),factor))
 df_ad$SiteCode <- factor(df_ad$SiteCode)
-#saveRDS(df_ad,file="0_apendices/analise_dados/rar/df_ad_sumario.rds")
-#############
-# df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
-# df_nSAD <- adply(unique(df_adSAD$land_type),1,\(i){
-#   df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
-#     select(-land_type,-c(Smed:Smax)) %>% 
-#     rename("land"="taxaU",
-#            "nSAD"="nCongKS")
-# },.id=NULL) %>% 
-#   mutate(k=round(k,2),
-#          across(c(land,SiteCode,k),factor)) %>% 
-#   inner_join(df_coord)
-# df_nSAD$SiteCode <- factor(df_nSAD$SiteCode)
-##############
+#
+#
+###### formulas dos gam
 f_gam <- \(vf,dfi){
   gam(formula=vf,
       family='binomial',
@@ -70,23 +59,6 @@ l_f$`s(k,by=land)` <-
   s(k,by=land,bs="cr",id="fixo") +
   te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
 #
-
-
-
-
-# 
-# 
-# 
-# 
-# l_f$`land * k + class_pert` <- 
-#   cbind(nSAD,100-nSAD) ~ land * k + forest_succession + s(SiteCode,by=land,bs="re")
-# l_f$`land * k` <- 
-#   cbind(nSAD,100-nSAD) ~ land * k + s(SiteCode,by=land,bs="re")
-# l_f$`land * k + s(lat,long) + land|Site` <- cbind(nSAD,100-nSAD) ~ land * k + s(lat,long) + s(SiteCode,by=land,bs="re")
-# l_f$`land + s(lat,long) + k + s(lat,long) + land|Site` <- cbind(nSAD,100-nSAD) ~ land + s(lat,long) + k + s(lat,long) + s(SiteCode,by=land,bs="re")
-# l_f$`land + s(lat,long) + land|Site` <- cbind(nSAD,100-nSAD) ~ land + s(lat,long) + s(SiteCode,by=land,bs="re")
-# l_f$`k + s(lat,long) + 1|Site` <- cbind(nSAD,100-nSAD) ~ k + s(lat,long) + s(SiteCode,bs="re") 
-# l_f$`1 + s(lat,long) + 1|Site` <- cbind(nSAD,100-nSAD) ~ 1 + s(lat,long) + s(SiteCode,bs="re")
 if(!file.exists("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")){
   # doMC::registerDoMC(2)
   l_md <- llply(l_f,f_gam,dfi=df_ad,.parallel = FALSE)
@@ -99,21 +71,23 @@ if(!file.exists("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabseleca
   l_md <- readRDS(file="dados/csv_SoE/Rdata/l_md_sumario")
 }
 ##########
-l_f <- list()
-l_f$`s(k,by=land) + land|Site` <- 
-  cbind(nSAD,100-nSAD) ~ 
-  s(k,by=land,bs="cr",id="fixo") +
-  s(SiteCode,bs="re",by=land)
-l_f$`land + land|Site` <- 
-  cbind(nSAD,100-nSAD) ~ 
-  land +
-  s(SiteCode,bs="re",by=land)
-doMC::registerDoMC(2)
-l_md_minimo <- llply(l_f,f_gam,dfi=df_ad,.parallel = TRUE)
-l_md_minimo$`s(k,by=land)` <- l_md$`s(k,by=land)`
-l_md_final <- c(l_md,l_md_minimo)
-df_tabsel_minimo <- f_TabSelGAMM(l_md_final)
-write_csv(df_tabsel_minimo,"1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_minimo_paisagens.csv")  
+if(FALSE){
+  l_f <- list()
+  l_f$`s(k,by=land) + land|Site` <- 
+    cbind(nSAD,100-nSAD) ~ 
+    s(k,by=land,bs="cr",id="fixo") +
+    s(SiteCode,bs="re",by=land)
+  l_f$`land + land|Site` <- 
+    cbind(nSAD,100-nSAD) ~ 
+    land +
+    s(SiteCode,bs="re",by=land)
+  doMC::registerDoMC(2)
+  l_md_minimo <- llply(l_f,f_gam,dfi=df_ad,.parallel = TRUE)
+  l_md_minimo$`s(k,by=land)` <- l_md$`s(k,by=land)`
+  l_md_final <- c(l_md,l_md_minimo)
+  df_tabsel_minimo <- f_TabSelGAMM(l_md_final)
+  write_csv(df_tabsel_minimo,"1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_minimo_paisagens.csv")  
+}
 
 ######################################### ESTIMATIVAS
 md_sumario <- l_md[[df_tabsel$modelo[1]]]
@@ -187,6 +161,7 @@ l_dfpred <- lapply(l_dfpred,\(dfi){
     select(-forest_succession,-lat,-long) %>% 
     relocate(pert_class,.after="k")
 })
+saveRDS(l_dfpred,file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
 library(hexbin)
 p <- l_dfpred$fixo_e_aleat %>% 
   ggplot(aes(x=k,y=nSAD)) +
@@ -218,116 +193,3 @@ img <- image_read("figuras/descricao_congruencia_absoluta.png") %>%
   image_resize("50%") %>% 
   image_trim()
 image_write(img,path = "figuras/descricao_congruencia_absoluta.png")
-############################################################
-# f_geom_final <- \(vs){
-#   list(
-#     scale_color_manual(values = c(
-#       "Contemporânea"="darkred",
-#       "Aglomerada"="darkblue",
-#       "Prístina"="darkgreen")),
-#     scale_y_continuous(expand=c(0,0)),
-#     facet_wrap(~label),
-#     labs(
-#       x = "k", 
-#       y = "logito(Proporção de SADs simuladas com boa congruência)", 
-#       color = "Paisagem\nhipotética"
-#     ),
-#     theme_classic(),
-#     theme(text=element_text(size=vs))
-#   )
-# } 
-# f_efeitosumario <- \(dfi,
-#                      vsize=5,
-#                      vrange,
-#                      vposleg=c(0.49,0.9)){
-#   dfi %>% 
-#     mutate(land = gsub("contemp","Contemporânea",land) %>% 
-#              gsub("ideal","Prístina",.) %>% 
-#              gsub("non_frag","Aglomerada",.),
-#            land = factor(land,levels=c("Contemporânea",
-#                                        "Aglomerada",
-#                                        "Prístina")),
-#            label="Estimativa sem o efeito particular da paisagem") %>% 
-#     ggplot(aes(x = k_factor, y = fit, color = land, group = land)) +
-#     geom_line(aes(x=k)) +
-#     geom_point(size = 3, position = position_dodge(0.5)) + # Points for categories
-#     geom_errorbar(
-#       aes(ymin = lower, ymax = upper),
-#       width = 0.2,
-#       position = position_dodge(0.5)
-#     ) + # Error bars for uncertainty
-#     f_geom_final(vsize) +
-#     scale_y_continuous(expand=c(0,0),limits = vrange)+
-#     theme(legend.position = "inside",
-#           legend.position.inside = vposleg,
-#           legend.direction="horizontal")
-# }
-# #
-# f_obssumario <- \(dfi,
-#                   vsize=5){
-#   dfi %>% 
-#     mutate(k_factor=factor(k),
-#            label="Distribuição dos valores observados de logito",
-#            land = gsub("contemp","Contemporânea",land) %>% 
-#              gsub("ideal","Prístina",.) %>% 
-#              gsub("non_frag","Aglomerada",.),
-#            land = factor(land,levels=c("Contemporânea",
-#                                        "Aglomerada",
-#                                        "Prístina"))) %>% 
-#     ggplot(aes(x = k_factor, y = p, color = land, group = interaction(k_factor,land))) +
-#     geom_jitter() +
-#     geom_boxplot() +
-#     f_geom_final(vsize) +
-#     theme(legend.position = "none")
-# }
-# ve=0.9
-# df_nSAD <- df_nSAD %>% 
-#   mutate(p = (nSAD+ve)/(100+2*ve),
-#          p = log(p/(1-p)))
-# l_p <- list()
-# l_p$obs <- f_obssumario(df_nSAD,vsize = 15)
-# l_p$efeito <- f_efeitosumario(new_data,
-#                               vsize = 15,
-#                               vposleg = c(0.5,0.1),
-#                               vrange = range(df_nSAD$p))
-# p <- arrangeGrob(grobs=l_p,ncol=2)
-# ggsave(filename = "figuras/sumario_paisagens.png",plot = p,
-#        width = 16,height = 8)
-# img <- image_read("figuras/sumario_paisagens.png") %>% 
-#   image_trim() %>% 
-#   image_resize("50%")
-# image_write(img,"figuras/sumario_paisagens.jpeg")
-# 
-# ### diagnóstico
-# source("source/GAMMtools.R")
-# v_path <- "dados/csv_SoE/figuras/"
-# f_diag(hgam = md_sumario,vname = "sumario",patsave = "hgam")
-# 
-# 
-# 
-# ### logitos empíricos
-# df_mdsumar <- md_sumario$model
-# df_mdsumar[,1] <- df_mdsumar[,1][,1]
-# names(df_mdsumar)[1] <-  "nSAD"
-# df_mdsumar$logito <- predict(md_sumario,se=FALSE)
-# df_save <- df_mdsumar %>% 
-#   filter(nSAD %in% c(0,100)) %>% 
-#   group_by(nSAD,k,land) %>% 
-#   summarise(logito_avg = mean(logito),
-#             logito_sd = sd(logito))
-# saveRDS(df_save,file="./dados/csv_SoE/df_mdsumar.rds")
-# df_md <- left_join(df_mdsumar,
-#                    df_save,
-#                    by=c("nSAD","k","land")) %>% 
-#   rename("forest_succession"=3) %>% 
-#   mutate(
-#     logito = ifelse(
-#       is.na(logito_avg),
-#       log(nSAD/(100-nSAD)),
-#       logito_avg
-#       ),
-#     forest_succession = gsub("cont.|ideal.|non_frag.",
-#                              "",forest_succession)
-#     ) %>% 
-#   select(-c(logito_avg,logito_sd))
-# saveRDS(df_md,file="./dados/csv_SoE/df_mdsumar.rds")
