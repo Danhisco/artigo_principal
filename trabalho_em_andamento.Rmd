@@ -16,6 +16,26 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 rmarkdown::render("1_to_compile_dissertacao_EM_USO/00_Resultados/Resultados.Rmd", 
                   output_format = "bookdown::pdf_document2")
+df_files <- data.frame(
+  paths = list.files(path="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras",
+                     pattern=".png",
+                     full.names = T)
+)
+df_files$tamanho = lapply(df_files$paths,\(li){
+  if(file.info(li)$size/(10^6)>1){
+    return("grande")
+  }else{
+    return("pequena")
+  }
+})
+library(magick)
+a_ply(filter(df_files,tamanho=="grande"),1,\(dfi){
+  img <- image_read(dfi$paths) %>% 
+    image_trim() %>% 
+    image_resize("50%")
+  image_write(img,path=dfi$paths)
+})
+
 ```
 
 

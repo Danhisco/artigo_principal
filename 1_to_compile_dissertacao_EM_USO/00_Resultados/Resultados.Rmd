@@ -23,6 +23,7 @@ knitr::opts_chunk$set(echo = FALSE,
                       message = FALSE,
                       warning = FALSE,
                       cache=FALSE,
+                      fig.pos="h",
                       fig.align='center',
                       tab.align='center')
 library(readr)
@@ -160,13 +161,15 @@ download_file(file = "1_to_compile_dissertacao_EM_USO/00_Resultados/Resultados.R
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
+# Resultados
+
 ## Dados empíricos: inventários florestais simulados
 
 <p>Dos sítios presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção (tab. SI 1). As coordenadas dos sítios variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig.1 a). A maioria dos trabalhos foi realizada em áreas de florestas classificadas como primárias no TreeCo. Apenas 2 sítios possuíam menos de 20 anos de recuperação desde o último grande distúrbio na área e foram removidos (fig. 1 c), resultando em 107 sítios. A mediana da área amostrada foi de 1 ha; o número de indivíduos amostrados mediano foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. 1 b). Portanto, todos os 107 sítios possuem paisagens contemporâneas na base de mapas de cobertura florestal do mapbiomas 6. Desses 107 sítios, 2 não foram simulados. Em um sítio não foi possível estimar a taxa U na paisagem fragmentada, nesse sítio a relação de espécies por número de indivíduos é baixa além disso apresenta baixa proporção de cobertura vegetal na paisagem ao redor (SI). Em outro sítio não foi possível desenhar a parcela quadrada no centro da paisagem devido a configuração espacial da paisagem (SI). Assim, as análises do efeito explicativo da paisagem na predição da biodiversidade local são desenvolvidas a partir de 105 sítios simulados.</p> 
 ```{r caption GE dados disponiveis,eval=TRUE,include=TRUE}
 cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográficas e proporção de cobertura florestal nas paisagens contemporâneas aos eventos de amostragem com extensão espacial de 4 x 4 km2. A área em verde marca a delimitação política da Floresta Atlântica (IBGE 2022). b) Características gerais dos inventários, da esquerda para a direita: número de indivíduos amostrados, área da parcela amostrada, número de espécies observado, ano de amostragem. c) Proporção de cobertura florestal na paisagem ao redor da parcela amostrada em função do lado da paisagem ao redor. d) Contagem do número de sítios pelas classes de perturbação simulados. Essas classes de perturbação que consideram tanto o tempo desde a última grande perturbação quanto o grau de perturbação: baixa, sem perturbação conhecida nos últimos 80 anos; mediana, perturbação moderada entre 80 e 50 anos atrás; alta, perturbação mediana ou elevada nos últimos 50 anos; altíssima, perturbação mediana ou elevada nos últimos 20 anos."
 ```
-```{r GE-sitios-amostrados,eval=TRUE,include=TRUE,fig.cap=cap,out.width="75%",cache=FALSE}
+```{r GE-sitios-amostrados,eval=TRUE,include=TRUE,fig.cap=cap,out.width="75%",cache=FALSE,fig.pos="h"}
 knitr::include_graphics(path="../../figuras/GE_dados_disponiveis.png")
 ```
 
@@ -181,7 +184,7 @@ knitr::include_graphics(path="../../figuras/GE_dados_disponiveis.png")
 ```{r legenda de Uk-ladokm EM USO}
 cap <- "Taxa U estimada em paisagens prístina com variação na extensão espacial da paisagem ao redor de 0.5 km até 16 km de lado. Os pontos estão coloridos pelo grau de limitação de dispersão (k). A escala do eixo y varia entre paineis. Cada paínel apresenta um valor por sítio de amostragem."
 ```
-```{r Uk-ladokm,fig.cap=cap}
+```{r Uk-ladokm,fig.cap=cap,out.width="150%"}
 knitr::include_graphics("./figuras/fig3_Uk_ladoKM.png")
 # getwd()
 ```
@@ -202,7 +205,7 @@ knitr::include_graphics("./figuras/fig3_Uk_ladoKM.png")
 ```{r LEGENDA EM USO cap fig5_SoE}
 cap <- "Estimativa do modelo estatístico (LMM) usado para descrever a variação no logito da taxa U. Os pontos são as estimativas para cada sítio, que estão coloridos conforme a razão entre riqueza de espécies e número de indivíduos na SAD observada. No eixo x o lado da paisagem ao redor varia entre 0.5 e 16 km. Os quadros estão divididos conforme o grau de limitação de dispersão simulado (k), sua ordem varia da situação de severa limitação de dispersão (na esquerda superior, k=0.99) até a situação mais branda (na direita inferior, k=0.05).  Em azul escuro a estimativa média do modelo considera toda a população de sítios simulados. As retas verticais em vermelho marcam a extensão espacial que acumulam a maior parte da redução da média com o aumento do lado da paisagem (>=95% da variação). Nas paisagens em que não houve esse padrão de decrescimento da média com o aumento do lado, não há um lado da paisagem que acumulou a maior parte da redução da média."
 ```
-```{r SoE, eval=TRUE,include=TRUE,fig.cap=cap,out.width="75%"}
+```{r SoE, eval=TRUE,include=TRUE,fig.cap=cap,out.width="125%"}
 knitr::include_graphics(path = "./figuras/fig5_SoE.png")
 ```
 
@@ -252,8 +255,8 @@ ft
 vcap <- "Predito pelo modelos mais plausível (HGAM) para descrever a congruência absoluta da SAD simulada nas paisagens hipotéticas (fragmentada, aglomerada, e prístina). Os hexágonos são coloridos conforme o númeo de pontos em sua área. Os pontos são o número de SADs simuladas com boa congruência com a SAD observada segundo o teste de Kolmogorov-Smirnov. As linhas transparentes em cinza são a predição do modelo para esses pontos. Em vermelho escuro o predito pelo modelo para a média, desconsiderando o efeito dos sítios e o efeito das coordenadas centrais. Em azul claro o intervalo de predição de 95% ao redor da média."
 ```
 ```{r fig-ranq-land,fig.cap=vcap,echo=FALSE,eval=TRUE}
-#knitr::include_graphics("./figuras/descricao_congruencia_relativa.png")
-getwd()
+knitr::include_graphics("./figuras/descricao_congruencia_relativa.png")
+#getwd()
 ```
 
 <p>Na figura 4 há o número de SADs simuladas com boa congruência empírica e predita pelo modelo mais plausível.  Os hexágonos informam o número de pontos em sua área, cada ponto é o valor observado de SADs simuladas com boa congruência. No eixo x há o grau de limitação de dispersão e no eixo y o número de SADs simuladas com boa congruência. As linhas e áreas contínuas são a predição do modelo. Os quadros estão divididos segundo o tipo da paisagem hipotética, título na horizontal (fragmentada, aglomerada, prístina), e classe de perturbação, título na vertical (baixa, mediana, alta). As linhas cinzas são os valores preditos para os pontos de um mesmo sítio. A linha em vermelho representa a predição do modelo considerando apenas o efeito do spline de k comum aos sítios, desconsiderando o efeito das coordenadas e do spline por sítio. A área em azul é o intervalo de 95% de erro em torno da média.</p>
