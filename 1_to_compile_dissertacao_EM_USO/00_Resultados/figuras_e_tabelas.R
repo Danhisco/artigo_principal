@@ -221,5 +221,113 @@ img <- image_read("figuras/descricao_congruencia_absoluta.png") %>%
   image_resize("50%") %>% 
   image_trim()
 image_write(img,path = "figuras/descricao_congruencia_absoluta.png")
+#
+#
+###################################################################################
+##################################### LogU/U ######################################
+###################################################################################
+# objetos
+df_p <- read_csv("dados/df_p.csv")
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  inner_join(x=df_p,by="SiteCode")
+df_md <- read_csv("dados/csv_SoE/df_logOR.csv")
+df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>% 
+  select(-contains("_z")) %>% 
+  pivot_longer(cols=contains("logratio"),
+               values_to="Uefeito",
+               names_to = "contraste") %>% 
+  inner_join(.,
+             select(df_md,SiteCode,forest_succession) %>% distinct) %>% 
+  mutate(contraste = gsub("_logratio","",contraste) %>% 
+           gsub("\\.","",.) %>% 
+           gsub("area","Área per se",.) %>% 
+           gsub("fragtotal","Frag. total",.) %>% 
+           gsub("fragperse","Frag. per se",.),
+         contraste = factor(contraste,
+                            levels=c("Frag. total",
+                                     "Frag. per se",
+                                     "Área per se")),
+         pert_class = factor(forest_succession,
+                             levels=c("primary",
+                                      "primary/secondary",
+                                      "secondary"),
+                             labels=c("baixa",
+                                      "mediana",
+                                      "alta"))) %>% 
+  select(-forest_succession)
+p <- df_logUU %>%
+  mutate(across(c(SiteCode,contraste),factor),
+         label = factor(contraste,
+                        levels=c("Frag. total",
+                                 "Frag. per se",
+                                 "Área per se"))) %>% 
+  ggplot(aes(x=k,y=Uefeito,group=SiteCode,color=p)) +
+  geom_hline(yintercept = 0,color="black",linetype=3) +
+  # geom_hline(yintercept = v_hline,color="darkred") + 
+  geom_line(alpha=0.75) +
+  geom_point(alpha=0.75) +
+  geom_boxplot(inherit.aes = FALSE,
+               aes(x=k,y=Uefeito,group=k),alpha=0.25) +
+  scale_colour_gradient2("% CF",midpoint=0.5,
+                         low="red",
+                         mid = "yellow",
+                         high = "darkgreen") +
+  labs(x="Proporção de propágulos na vizinhança imediata (k)",
+       y="log(U/U)") +
+  scale_y_continuous(expand=c(0.01,0.01)) +
+  theme_classic() +
+  theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
+        legend.position = "inside",
+        legend.position.inside = c(0.49,0.92),
+        legend.direction="horizontal") +
+  facet_grid(pert_class~label)
+ggsave("figuras/pedacofigfinal_1alinha.png",
+       p,
+       width = 13.8,
+       height = 7.33)
+img_obj <- image_read("figuras/pedacofigfinal_1alinha.png") %>% 
+  image_trim() %>% 
+  image_resize("75%")
+image_write(img_obj,"figuras/pedacofigfinal_1alinha.png")
+#
+#
+#########################################################################################
+########################### logU/U : área per se e fragmentçaão per se ##################
+#########################################################################################
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
+  vfilter <- dfi$lado_km[which.min(abs(4-dfi$lado_km))]
+  filter(dfi,lado_km==vfilter)
+}) %>% select(-c(Ntotal:S_obs))
+df_logUU %>% 
+  filter(contraste!="Frag. total") %>% 
+  mutate(contraste = factor(contraste,
+                            levels=c("Área per se",
+                                     "Frag. per se"),
+                            labels=c("area",
+                                     "frag"))) %>% 
+  pivot_wider(names_from=contraste,values_from=Uefeito) %>% 
+  ggplot(aes(x=area,y=frag,group=SiteCode)) +
+  geom_line(alpha=0.1,color="black") +
+  geom_hline(yintercept = 0,color="black") +
+  geom_vline(xintercept = 0,color="black") +
+  geom_abline(slope=1,intercept=0,color="darkblue",linetype=1) +
+  geom_abline(slope=-1,intercept=0,color="darkblue",linetype=1) +
+  geom_hex(bins = 70,alpha=0.5) + 
+  labs(title="logU/U :  fragmentação per se ~ área per se",
+       x="área per se",
+       y="fragmentação per se") +
+  scale_fill_gradient("contagem",low = "yellow", high = "red", na.value = NA) +
+  facet_wrap(~pert_class,ncol=3) +
+  theme_classic()
+
+
+
+
+
+
+############################################################################################
+############################## diagnóstico dos modelos mais plausíveis #####################
+############################################################################################
 
 
