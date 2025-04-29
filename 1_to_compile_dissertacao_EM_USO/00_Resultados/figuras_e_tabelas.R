@@ -299,31 +299,70 @@ df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
   vfilter <- dfi$lado_km[which.min(abs(4-dfi$lado_km))]
   filter(dfi,lado_km==vfilter)
 }) %>% select(-c(Ntotal:S_obs))
-df_logUU %>% 
+df_plot <- df_logUU %>% 
   filter(contraste!="Frag. total") %>% 
   mutate(contraste = factor(contraste,
                             levels=c("Área per se",
                                      "Frag. per se"),
                             labels=c("area",
-                                     "frag"))) %>% 
-  pivot_wider(names_from=contraste,values_from=Uefeito) %>% 
-  ggplot(aes(x=area,y=frag,group=SiteCode)) +
-  geom_line(alpha=0.1,color="black") +
+                                     "frag")))
+df_plot %>% 
+  pivot_wider(names_from=contraste,values_from=Uefeito) %>%   
+  ggplot(aes(x=area,y=frag)) +
   geom_hline(yintercept = 0,color="black") +
   geom_vline(xintercept = 0,color="black") +
   geom_abline(slope=1,intercept=0,color="darkblue",linetype=1) +
   geom_abline(slope=-1,intercept=0,color="darkblue",linetype=1) +
-  geom_hex(bins = 70,alpha=0.5) + 
+  geom_hex(bins = 50,alpha=0.5) + 
   labs(title="logU/U :  fragmentação per se ~ área per se",
        x="área per se",
        y="fragmentação per se") +
   scale_fill_gradient("contagem",low = "yellow", high = "red", na.value = NA) +
   facet_wrap(~pert_class,ncol=3) +
   theme_classic()
+### a tabela que acompanha
+df_plot <- df_plot %>% 
+  mutate(Uefeito_abs = abs(Uefeito)) %>% 
+  select(-Uefeito) %>% 
+  pivot_wider(names_from=contraste,values_from=Uefeito_abs) %>%
+  mutate(diff_efeito = area - frag,
+         class_diff = ifelse(diff_efeito>0,
+                             "|área| > |frag. per se|",
+                             "|frag. per se| > |área|")) 
+p <- df_plot%>% 
+  group_by(pert_class,class_diff) %>% 
+  tally() %>% 
+  group_by(pert_class) %>% 
+  mutate(n_rel = round(n * 100 / sum(n),2)) %>% 
+  ggplot(aes(y=class_diff,x=pert_class,fill=n_rel)) +
+  geom_raster() +
+  labs(x="",y="",
+       title="Proporção de casos com o módulo do logU/U superior") +
+  scale_fill_gradient("",low = "yellow", high = "red", na.value = NA) +
+  geom_text(aes(label=n_rel),size=10) +
+  scale_x_discrete(expand = c(0,0)) +
+  scale_y_discrete(expand =  c(0,0)) +
+  theme_classic() +
+  facet_wrap(~pert_class,ncol=3,scales = "free_x") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.y = element_text(size=15),
+        axis.ticks.y = element_blank(),
+        title = element_text(size=15),
+        strip.text = element_text(size=15),
+        legend.position = "none")
 
 
-
-
+df_plot %>% 
+  ggplot(aes(x=diff_efeito)) +
+  geom_histogram() +
+  geom_vline(xintercept = 0,color="red",linetype=2) +
+  theme_classic() +
+  labs(x="logU/U: |área per se| - |frag. per se|",
+       y="") +
+  scale_x_continuous(expand=c(0,0)) +
+  scale_y_continuous(expand=c(0,0)) +
+  facet_wrap(~pert_class,ncol=3,scales="free_y")
 
 
 ############################################################################################
