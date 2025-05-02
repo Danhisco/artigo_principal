@@ -332,6 +332,7 @@ l_fplot$efeito_x_efeito <- \(df_plot,
                              ylab = NULL){
   #@ xylab = "area","fragperse","fragtotal"
   if(is.null(label_efeitos)) stop("precisa fornecer label_efeitos = e.g. fragmentação per se ~ área per se")
+  if(is.null(x|y)) stop("precisa fornecer label_efeitos = e.g. fragmentação per se ~ área per se")
   geom_list1 <- list(
     geom_hline(yintercept = 0,color="black"),
     geom_vline(xintercept = 0,color="black"),
@@ -391,102 +392,63 @@ l_fplot$histograma_efeito_menos_efeito <- \(dfi,xlabel=NULL){
          y="") 
 }
 #
-l_df <- list()
-l_df$area_e_fragperse <- df_logUU_pk %>% 
-  filter(contraste!="Frag. total") %>% 
-  mutate(contraste = factor(contraste,
-                            levels=c("Área per se",
-                                     "Frag. per se"),
-                            labels=c("area",
-                                     "fragperse")))
-l_df$area_e_fragperse2 <- l_df$area_e_fragperse %>% 
-  mutate(Uefeito_abs = abs(Uefeito)) %>% 
-  select(-Uefeito) %>% 
-  pivot_wider(names_from=contraste,values_from=Uefeito_abs) %>%
-  mutate(diff_efeito = area - fragperse,
-         class_diff = ifelse(diff_efeito>0,
-                             "|área| > |frag. per se|",
-                             "|frag. per se| > |área|")) 
-
-
-
-
-df_plot <- df_logUU_pk %>% 
-# mudar para cada efeito
-  filter(contraste!="Frag. total") %>% 
-  mutate(contraste = factor(contraste,
-                            levels=c("Área per se",
-                                     "Frag. per se"),
-                            labels=c("area",
-                                     "frag")))
-# comum ao df_plot
-  
-### a tabela que acompanha
-df_plot <- df_plot %>% 
-  
-p <- df_plot%>% 
-  group_by(pert_class,class_diff) %>% 
-  tally() %>% 
-  group_by(pert_class) %>% 
-  mutate(n_rel = round(n * 100 / sum(n),2)) %>% 
-  ggplot(aes(y=class_diff,x=pert_class,fill=n_rel)) +
-  geom_raster() +
-  labs(x="",y="",
-       title="Proporção de casos com o módulo do logU/U superior") +
-  scale_fill_gradient("",low = "yellow", high = "red", na.value = NA) +
-  geom_text(aes(label=n_rel),size=10) +
-  scale_x_discrete(expand = c(0,0)) +
-  scale_y_discrete(expand =  c(0,0)) +
-  theme_classic() +
-  facet_wrap(~pert_class,ncol=3,scales = "free_x") +
-  theme(axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.text.y = element_text(size=15),
-        axis.ticks.y = element_blank(),
-        title = element_text(size=15),
-        strip.text = element_text(size=15),
-        legend.position = "none")
-
-geom_list2 <- list(
-  geom_histogram() ,
-    geom_vline(xintercept = 0,color="red",linetype=2) ,
-    theme_classic() ,
-    scale_x_continuous(expand=c(0,0)) ,
-    scale_y_continuous(expand=c(0,0)) ,
-    facet_wrap(~pert_class,ncol=3)
-)
-
-df_plot %>% 
-  ggplot(aes(x=diff_efeito)) +
-  geom_list2 +
-  labs(x="logU/U: |área per se| - |frag. per se|",
-       y="") 
-
-
-df_plot <- df_logUU %>% 
-  filter(contraste!="Área per se") %>% 
-  mutate(contraste = factor(contraste,
-                            levels=c("Frag. total",
-                                     "Frag. per se"),
-                            labels=c("total",
-                                     "perse"))) 
-df_plot <- df_plot %>% 
-  mutate(Uefeito_abs = abs(Uefeito)) %>% 
-  select(-Uefeito) %>% 
-  pivot_wider(names_from=contraste,values_from=Uefeito_abs) %>%
-  mutate(diff_efeito = total - perse,
-         class_diff = ifelse(diff_efeito>0,
-                             "|frag. total| > |frag. per se|",
-                             "|frag. per se| > |frag. total|")) 
-
-df_plot %>% 
-  ggplot(aes(x=diff_efeito)) +
-  geom_list2 +
-  labs(x="logU/U: |frag. total| - |frag. per se|",
-       y="") 
-
-
-
+f_plots <- \(comp_efeitos=c("fragperse ~ area",
+                            "fragtotal ~ fragperse",
+                            "fragtotal ~ area")){
+  #@ y ~ x
+  l_s <- list()
+  l_s$filtro <- gsub("fragperse ~ area","Frag. total",comp_efeitos) %>% 
+    gsub("fragtotal ~ fragperse","Área per se",.) %>% 
+    gsub("fragtotal ~ area","Frag. per se",.)
+  l_s$labels <- str_split_1(comp_efeitos," \\~ ")
+  names(l_s$labels) <- c("y","x")
+  l_s$levels <- gsub("area","Área per se",l_s$labels) %>% 
+    gsub("fragperse","Frag. per se",.) %>% 
+    gsub("fragtotal","Frag. total",.)
+  names(l_s$levels) <- c("y","x")
+  l_s$axis_values <- tolower(l_s$levels) %>% 
+    gsub("área per se","área",.) %>% 
+    paste0("|",.,"|")
+  names(l_s$axis_values) <- c("y","x")
+  # 
+  l_df <- list()
+  l_df[[1]] <- df_logUU_pk %>% 
+    filter(contraste!=l_s$filtro) %>% 
+    mutate(contraste = factor(contraste,
+                              levels=l_s$levels,
+                              labels=l_s$labels))
+  l_df[[2]] <- l_df[[1]] %>% 
+    mutate(Uefeito_abs = abs(Uefeito)) %>% 
+    select(-Uefeito) %>% 
+    ddply(.,c("k","SiteCode"),\(dfi){
+      dfi$diff_efeito <- with(dfi,{
+        Uefeito_abs[contraste==l_s$labels["x"]] -
+          Uefeito_abs[contraste==l_s$labels["y"]]
+        })
+      return(dfi)
+    }) %>% pivot_wider(names_from=contraste,values_from=Uefeito_abs) %>%
+    mutate(class_diff = ifelse(diff_efeito>0,
+                               paste(l_s$axis_values["x"], ">", l_s$axis_values["y"]),
+                               paste(l_s$axis_values["y"], ">", l_s$axis_values["x"]))) 
+  #
+  l_p <- list()
+  l_p[[1]] <- l_fplot[[1]](l_df[[1]],
+                           label_efeitos = paste0(l_s$levels["y"]," ~ ",l_s$levels["x"]),
+                           xlab = l_s$labels["x"],
+                           ylab = l_s$labels["y"])
+  l_p[[2]] <- l_fplot[[2]](l_df[[2]])
+  l_p[[3]] <- l_fplot[[3]](l_df[[2]],
+                           xlabel = paste0("logU/U: ",l_s$levels["x"]," - ",l_s$levels["y"]))
+  #
+  names(l_p) <- names(l_fplot)
+  return(l_p)
+}
+v_comparacao_efeitos <- c("fragperse ~ area",
+            "fragtotal ~ fragperse",
+            "fragtotal ~ area")
+l_p <- lapply(v_comparacao_efeitos,f_plots)
+names(l_p) <- v_comparacao_efeitos
+saveRDS(l_p,file="./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/l_p_comparacao_empirica_efeitos_diferenca_entre_pares.rds")
 ############################################################################################
 ############################## diagnóstico dos modelos mais plausíveis #####################
 ############################################################################################
