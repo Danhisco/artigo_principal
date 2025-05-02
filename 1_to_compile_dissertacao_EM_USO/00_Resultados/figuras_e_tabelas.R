@@ -147,6 +147,7 @@ v_threshold <- paste0("SoE >= ",
 cols <- c("blue","red") # "#f04546","3 quant"=
 names(cols) <- c("avg+-sd",v_threshold )
 a <- 0.5
+df_SoE_k <- df_plot %>% select(k,SoE_0.95) %>% distinct()
 p <- df_plot |> 
   ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
   geom_point(alpha=0.40,aes(color=S.N)) +
@@ -255,7 +256,31 @@ df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>%
                                       "mediana",
                                       "alta"))) %>% 
   select(-forest_succession)
-p <- df_logUU %>%
+df_SoE_k <- mutate(df_SoE_k,SoE_0.95 = ifelse(is.na(SoE_0.95),1,SoE_0.95))
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+df_pk <- ddply(df_SoE_k,"SoE_0.95",\(dfi){
+  vref <- unique(dfi$SoE_0.95)
+  ddply(df_p_extensoes,"SiteCode",\(dfi){
+    vfilter <- dfi$lado_km[which.min(abs(vref-dfi$lado_km))]
+    filter(dfi,lado_km==vfilter)
+  }) %>% 
+    mutate(SoE_0.95 = round(lado_km)) %>% 
+    select(-c(Ntotal:S_obs,lado_km)) %>% 
+    inner_join(dfi,by="SoE_0.95",relationship="many-to-many")
+}) %>% arrange(k)
+df_pk %>% 
+  ggplot(aes(x=k,y=p,color=factor(SoE_0.95),group=SiteCode)) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual("Escala Espacial",values=c("red","blue","green")) +
+  theme(legend.position = "top")
+df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
+  vfilter <- dfi$lado_km[which.min(abs(4-dfi$lado_km))]
+  filter(dfi,lado_km==vfilter)
+}) %>% select(-c(Ntotal:S_obs))
+df_logUU_pk <- inner_join(select(df_logUU,-p),
+                          df_pk,by=c("SiteCode","k"))
+p <- df_logUU_pk %>%
   mutate(across(c(SiteCode,contraste),factor),
          label = factor(contraste,
                         levels=c("Frag. total",
@@ -268,7 +293,7 @@ p <- df_logUU %>%
   geom_point(alpha=0.75) +
   geom_boxplot(inherit.aes = FALSE,
                aes(x=k,y=Uefeito,group=k),alpha=0.25) +
-  scale_colour_gradient2("% CF",midpoint=0.5,
+  scale_colour_gradient2("% CF\n(4km)",midpoint=0.5,
                          low="red",
                          mid = "yellow",
                          high = "darkgreen") +
@@ -294,41 +319,111 @@ image_write(img_obj,"figuras/pedacofigfinal_1alinha.png")
 #########################################################################################
 ########################### logU/U : área per se e fragmentçaão per se ##################
 #########################################################################################
-df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
-df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
-  vfilter <- dfi$lado_km[which.min(abs(4-dfi$lado_km))]
-  filter(dfi,lado_km==vfilter)
-}) %>% select(-c(Ntotal:S_obs))
-df_plot <- df_logUU %>% 
+f_gsub <- \(xlab){
+  gsub("area","Área per se",xlab) %>% 
+    gsub("fragperse","Frag. per se",.) %>% 
+    gsub("fragtotal","Frag. total",.)
+}
+
+l_fplot <- list()
+l_fplot$efeito_x_efeito <- \(df_plot,
+                             label_efeitos=NULL,
+                             xlab = NULL,
+                             ylab = NULL){
+  #@ xylab = "area","fragperse","fragtotal"
+  if(is.null(label_efeitos)) stop("precisa fornecer label_efeitos = e.g. fragmentação per se ~ área per se")
+  geom_list1 <- list(
+    geom_hline(yintercept = 0,color="black"),
+    geom_vline(xintercept = 0,color="black"),
+    geom_abline(slope=1,intercept=0,color="darkblue",linetype=1),
+    geom_abline(slope=-1,intercept=0,color="darkblue",linetype=1),
+    geom_hex(bins = 50,alpha=0.5),
+    scale_fill_gradient("contagem",low = "yellow", high = "red", na.value = NA),
+    facet_wrap(~pert_class,ncol=3),
+    theme_classic()
+  )
+  df_plot %>% 
+    pivot_wider(names_from=contraste,values_from=Uefeito) %>%   
+    ggplot(aes(x=.data[[xlab]],y=.data[[ylab]])) +
+    geom_list1 +
+    labs(title=paste0("logU/U :",label_efeitos),
+         x=f_gsub(xlab),
+         y=f_gsub(ylab))
+}
+l_fplot$tabela_contagem_maior_magnitude_absoluta <- \(dfi){
+  dfi %>% 
+    group_by(pert_class,class_diff) %>% 
+    tally() %>% 
+    group_by(pert_class) %>% 
+    mutate(n_rel = round(n * 100 / sum(n),2)) %>% 
+    ggplot(aes(y=class_diff,x=pert_class,fill=n_rel)) +
+    geom_raster() +
+    labs(x="",y="",
+         title="Proporção de casos com o módulo do logU/U superior") +
+    scale_fill_gradient("",low = "yellow", high = "red", na.value = NA) +
+    geom_text(aes(label=n_rel),size=10) +
+    scale_x_discrete(expand = c(0,0)) +
+    scale_y_discrete(expand =  c(0,0)) +
+    theme_classic() +
+    facet_wrap(~pert_class,ncol=3,scales = "free_x") +
+    theme(axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.text.y = element_text(size=15),
+          axis.ticks.y = element_blank(),
+          title = element_text(size=15),
+          strip.text = element_text(size=15),
+          legend.position = "none")
+}
+l_fplot$histograma_efeito_menos_efeito <- \(dfi,xlabel=NULL){
+  if(is.null(xlabel)) stop("precisa fornecer xlabel = e.g. logU/U: |área per se| - |frag. per se|")
+  geom_list2 <- list(
+    geom_histogram() ,
+    geom_vline(xintercept = 0,color="red",linetype=2) ,
+    theme_classic() ,
+    scale_x_continuous(expand=c(0,0)) ,
+    scale_y_continuous(expand=c(0,0)) ,
+    facet_wrap(~pert_class,ncol=3)
+  )
+  dfi %>% 
+    ggplot(aes(x=diff_efeito)) +
+    geom_list2 +
+    labs(x=xlabel,
+         y="") 
+}
+#
+l_df <- list()
+l_df$area_e_fragperse <- df_logUU_pk %>% 
+  filter(contraste!="Frag. total") %>% 
+  mutate(contraste = factor(contraste,
+                            levels=c("Área per se",
+                                     "Frag. per se"),
+                            labels=c("area",
+                                     "fragperse")))
+l_df$area_e_fragperse2 <- l_df$area_e_fragperse %>% 
+  mutate(Uefeito_abs = abs(Uefeito)) %>% 
+  select(-Uefeito) %>% 
+  pivot_wider(names_from=contraste,values_from=Uefeito_abs) %>%
+  mutate(diff_efeito = area - fragperse,
+         class_diff = ifelse(diff_efeito>0,
+                             "|área| > |frag. per se|",
+                             "|frag. per se| > |área|")) 
+
+
+
+
+df_plot <- df_logUU_pk %>% 
+# mudar para cada efeito
   filter(contraste!="Frag. total") %>% 
   mutate(contraste = factor(contraste,
                             levels=c("Área per se",
                                      "Frag. per se"),
                             labels=c("area",
                                      "frag")))
-df_plot %>% 
-  pivot_wider(names_from=contraste,values_from=Uefeito) %>%   
-  ggplot(aes(x=area,y=frag)) +
-  geom_hline(yintercept = 0,color="black") +
-  geom_vline(xintercept = 0,color="black") +
-  geom_abline(slope=1,intercept=0,color="darkblue",linetype=1) +
-  geom_abline(slope=-1,intercept=0,color="darkblue",linetype=1) +
-  geom_hex(bins = 50,alpha=0.5) + 
-  labs(title="logU/U :  fragmentação per se ~ área per se",
-       x="área per se",
-       y="fragmentação per se") +
-  scale_fill_gradient("contagem",low = "yellow", high = "red", na.value = NA) +
-  facet_wrap(~pert_class,ncol=3) +
-  theme_classic()
+# comum ao df_plot
+  
 ### a tabela que acompanha
 df_plot <- df_plot %>% 
-  mutate(Uefeito_abs = abs(Uefeito)) %>% 
-  select(-Uefeito) %>% 
-  pivot_wider(names_from=contraste,values_from=Uefeito_abs) %>%
-  mutate(diff_efeito = area - frag,
-         class_diff = ifelse(diff_efeito>0,
-                             "|área| > |frag. per se|",
-                             "|frag. per se| > |área|")) 
+  
 p <- df_plot%>% 
   group_by(pert_class,class_diff) %>% 
   tally() %>% 
@@ -352,17 +447,44 @@ p <- df_plot%>%
         strip.text = element_text(size=15),
         legend.position = "none")
 
+geom_list2 <- list(
+  geom_histogram() ,
+    geom_vline(xintercept = 0,color="red",linetype=2) ,
+    theme_classic() ,
+    scale_x_continuous(expand=c(0,0)) ,
+    scale_y_continuous(expand=c(0,0)) ,
+    facet_wrap(~pert_class,ncol=3)
+)
 
 df_plot %>% 
   ggplot(aes(x=diff_efeito)) +
-  geom_histogram() +
-  geom_vline(xintercept = 0,color="red",linetype=2) +
-  theme_classic() +
+  geom_list2 +
   labs(x="logU/U: |área per se| - |frag. per se|",
-       y="") +
-  scale_x_continuous(expand=c(0,0)) +
-  scale_y_continuous(expand=c(0,0)) +
-  facet_wrap(~pert_class,ncol=3,scales="free_y")
+       y="") 
+
+
+df_plot <- df_logUU %>% 
+  filter(contraste!="Área per se") %>% 
+  mutate(contraste = factor(contraste,
+                            levels=c("Frag. total",
+                                     "Frag. per se"),
+                            labels=c("total",
+                                     "perse"))) 
+df_plot <- df_plot %>% 
+  mutate(Uefeito_abs = abs(Uefeito)) %>% 
+  select(-Uefeito) %>% 
+  pivot_wider(names_from=contraste,values_from=Uefeito_abs) %>%
+  mutate(diff_efeito = total - perse,
+         class_diff = ifelse(diff_efeito>0,
+                             "|frag. total| > |frag. per se|",
+                             "|frag. per se| > |frag. total|")) 
+
+df_plot %>% 
+  ggplot(aes(x=diff_efeito)) +
+  geom_list2 +
+  labs(x="logU/U: |frag. total| - |frag. per se|",
+       y="") 
+
 
 
 ############################################################################################
