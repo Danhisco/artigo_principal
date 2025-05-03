@@ -1,7 +1,18 @@
 ---
-output: html_document
-editor_options: 
+title: "Informação de Suporte"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+  pdf_document:
+    latex_engine: xelatex
+  bookdown::word_document2: default
+editor_options:
   chunk_output_type: console
+bibliography: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/citations2.bib
+csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/ecological-monographs.csl
 ---
 
 ```{r setup4,include=FALSE}
@@ -30,6 +41,7 @@ library(lme4)
 library(data.table)
 library(plyr)
 library(dplyr)
+library(flextable)
 source("source/nameModel.R")
 source("source/GAMMtools.R")
 source("source/general_tools.R")
@@ -51,4 +63,82 @@ update_file(file ="apendices/A2_figuras_tabelas/A2_figuras_tabelas.Rmd",
 download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
+
+
+## Tabela com as características dos sítios selecionados
+
+```{r dados-disponiveis, tab.cap="Características dos sítios dentro do critério de inclusão"}
+df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+  mutate(LAT = ifelse(is.na(lat_correct),lat,lat_correct),
+         LONG = ifelse(is.na(long_correct),long,long_correct),
+         across(where(is.numeric),~round(.x,digits=2)),
+         pert_class = factor(forest_succession,
+                             levels=c("primary",
+                                      "primary/secondary",
+                                      "secondary",
+                                      "capoeira"),
+                             labels=c("baixa",
+                                      "mediana",
+                                      "alta",
+                                      "altíssima")),
+         forest_type_label = gsub("Formacao pioneira sob influencia marinha",
+                                  "FPIM",
+                                  forest_type) %>% 
+           gsub("Contato ","",.),
+         year_bestProxy = gsub("2012_2013","2012/2013",year_bestProxy)
+         ) %>% 
+  select(SiteCode, refID, LAT, LONG, state, effort_ha, dbh_cutoff, Ntotal, S_obs, forest_type_label,
+         pert_class, year_bestProxy) %>% 
+  filter(pert_class!="altíssima")
+##############################################
+df_dados_disponiveis %>%
+  flextable() %>%
+  bg(bg = "white",part = "all") %>%
+  theme_vanilla() %>%
+  set_header_labels(
+    SiteCode = "Sítio",
+    refID = "refID",
+    LAT = "lat",
+    LONG = "long",
+    state = "Estado",
+    effort_ha = "Área parc.\n(ha)",
+    dbh_cutoff = "critério inclusão",
+    Ntotal = "N",
+    S_obs = "S",
+    forest_type_label = "tipo florestal",
+    pert_class = "classe pert.",
+    year_bestProxy = "ano aprox. dados"
+    ) %>%
+  bold(part = "header") %>%
+  colformat_num(digits = 2) %>%
+  align(align = "center", part = "all") %>%
+  flextable::footnote(i = 1, j = c(2,7,10),
+           value = flextable::as_paragraph(
+             c("refID do TreeCo",
+               "PBH = 'perimeter at breast height' e DBH = 'diameter at breast height",
+               "FPIM = Formacao pioneira sob influencia marinha - demais tipos são o padrão TreeCo")),
+           ref_symbols = c("a", "b", "c"),
+           part = "header", inline = TRUE) %>% 
+  autofit()
+```
+
+## Mapas de cobertura florestal dos sítios simulados
+
+```{r}
+
+```
+
+
+
+## Sítio em que não foi possível simular MNEE com paisagem fragmentada
+
+## Diagnóstico do modelo mais plausível para descrever a congruência absolusta com a SAD observada
+
+## Sensibilidade da parametrização da estatística I de Moran
+
+## Gráficos comparativos dos efeitos explicativos da paisagem na taxa U
+
+## Diagnostico do modelos mais plausível para descrever a congruência relativa (logOR)
+
+## Gráficos comparativos do logOR dos efeitos explicativos da paisagem
 
