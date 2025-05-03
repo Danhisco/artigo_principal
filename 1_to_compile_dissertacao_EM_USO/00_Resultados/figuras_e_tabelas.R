@@ -293,7 +293,7 @@ p <- df_logUU_pk %>%
   geom_point(alpha=0.75) +
   geom_boxplot(inherit.aes = FALSE,
                aes(x=k,y=Uefeito,group=k),alpha=0.25) +
-  scale_colour_gradient2("% CF\n(4km)",midpoint=0.5,
+  scale_colour_gradient2("% CF",midpoint=0.5,
                          low="red",
                          mid = "yellow",
                          high = "darkgreen") +
