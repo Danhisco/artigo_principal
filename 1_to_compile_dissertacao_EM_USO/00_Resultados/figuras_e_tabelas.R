@@ -450,7 +450,120 @@ l_p <- lapply(v_comparacao_efeitos,f_plots)
 names(l_p) <- v_comparacao_efeitos
 saveRDS(l_p,file="./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/l_p_comparacao_empirica_efeitos_diferenca_entre_pares.rds")
 ############################################################################################
-############################## diagnóstico dos modelos mais plausíveis #####################
+############################## diagnóstico dos modelos mais plausíveis 2#####################
 ############################################################################################
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/"
+# modelos ajustados
+l_path <- list()
+l_path$te <-  paste0(v_path,"rds/l_md_",c("areaperse","fragperse","fragtotal"),".rds")
+l_rds <- gsub("l_md_","l_dfpred_",l_path$te)
+names(l_rds) <- str_extract(l_rds,"(?<=dfpred\\_)(.*?)(?=\\.rds)") %>% 
+  gsub("areaperse","area",.)
+l_dfplot <- lapply(l_rds,readRDS) %>% 
+  lapply(.,"[[","fixo e aleat") %>% 
+  lapply(.,select, logOR:k_z, SiteCode, Q_0.5, forest_succession)
+df_plot <- lapply(names(l_dfplot),\(li){
+  dfi <- select(l_dfplot[[li]],-Uefeito)
+  inner_join(dfi,
+             select(df_contrastes,SiteCode:k_z,all_of(li)),
+             by=c("SiteCode","k_z")) %>% 
+    rename("Uefeito" = li) %>% 
+    mutate(efeito = li,
+           pert_class = factor(forest_succession,
+                               levels=c("primary",
+                                        "primary/secondary",
+                                        "secondary"),
+                               labels=c("baixa",
+                                        "mediana",
+                                        "alta"))) %>% 
+    select(-forest_succession)
+}) %>% do.call("rbind",.)
+f_lmbySite <- \(dfs){
+  md <- lm(logOR ~ Q_0.5,data=dfs)
+  coef <- unname(md$coefficients)
+  data.frame(slope=coef[2],
+             intercept=coef[1])
+}
+df_lmpars <- ddply(df_plot,c("efeito","SiteCode"),f_lmbySite)
+df_plot2 <- inner_join(df_plot,df_lmpars,by=c("SiteCode","efeito"))
+
+f_plot <- \(df_plot){
+  #@ xylab = "logOR","logU/U"
+  geom_list1 <- list(
+    geom_hline(yintercept = 0,color="black"),
+    geom_vline(xintercept = 0,color="black"),
+    geom_abline(slope=1,intercept=0,color="darkblue",linetype=1),
+    geom_abline(slope=-1,intercept=0,color="darkblue",linetype=1),
+    geom_hex(bins = 50,alpha=0.5),
+    scale_fill_gradient("contagem",low = "yellow", high = "red", na.value = NA),
+    facet_grid(pert_class~label),
+    theme_classic(),
+    scale_x_continuous(expand=c(0,0)),
+    scale_y_continuous(expand=c(0,0))
+  )
+  df_plot <- df_plot %>% 
+    mutate(label = factor(efeito,
+                          levels=c("fragtotal",
+                                   "fragperse",
+                                   "area"),
+                          labels=c("Frag. total",
+                                   "Frag. per se",
+                                   "Área per se")))
+  
+  l_p <- list()
+  l_p[[1]] <- df_plot %>% 
+    ggplot(aes(x=Uefeito,y=logOR)) + # ,color=intercept,group=SiteCode
+    #geom_point(alpha=0.1) +
+    #geom_line(alpha=0.1) +
+    geom_list1 +
+    labs(x="logU/U",
+         y="logOR")
+  df_plot <- mutate(df_plot,diff_logs=abs(logOR)-abs(Uefeito))
+  geom_list2 <- list(
+    geom_histogram() ,
+    geom_vline(xintercept = 0,color="red",linetype=2) ,
+    theme_classic() ,
+    scale_x_continuous(expand=c(0,0)) ,
+    scale_y_continuous(expand=c(0,0)) ,
+    facet_grid(pert_class~label)
+  )
+  l_p[[2]] <- df_plot %>% 
+    ggplot(aes(x=diff_logs)) +
+    geom_list2 +
+    labs(x="|logOR| - |logU/U|",y="")
+  l_p[[3]] <- df_plot %>% 
+    pivot_longer(c(logOR,Uefeito)) %>% 
+    mutate(name=gsub("Uefeito","logU/U",name)) %>% 
+    ggplot(aes(x=slope,y=value,colour = name)) +
+    geom_vline(xintercept = 1,color="black") +
+    geom_point(alpha=0.1) +
+    scale_color_manual("",values=c("black","red")) +
+    facet_grid(pert_class~label)
+  l_p[[4]] <- ggplot(df_plot,aes(x=logOR,y=Q_0.5,color=slope)) +
+    geom_point() +
+    scale_colour_gradient2("inclinação",midpoint=1,
+                           low="red",
+                           mid = "blue",
+                           high = "green") +
+    facet_grid(pert_class~label)
+}
+p <- f_plot(df_plot2)
+
+f_plot2 <- \(dfplot){
+  
+}
 
 
+df_plot %>% 
+  pivot_longer(c(logOR,Q_0.5)) %>% 
+  mutate(SiteCode=factor(SiteCode),
+         name=gsub("Q\\_0\\.5","Quant. 50%",name),
+         k_f=factor(round(k,2))) %>% 
+  ggplot(aes(x=k_f,y=value,color=name)) +
+  geom_jitter(alpha=0.1) +
+  geom_boxplot(alpha=0.1) +
+  scale_color_manual(values=c("red","blue")) +
+    # geom_abline(slope=1,intercept=0) +
+  # geom_point(alpha=0.1) +
+  # geom_smooth(se=FALSE) +
+  facet_grid(pert_class~label)
