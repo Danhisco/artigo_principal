@@ -279,7 +279,8 @@ df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
   filter(dfi,lado_km==vfilter)
 }) %>% select(-c(Ntotal:S_obs))
 df_logUU_pk <- inner_join(select(df_logUU,-p),
-                          df_pk,by=c("SiteCode","k"))
+                          df_pk,by=c("SiteCode","k")) %>% 
+  inner_join(distinct(select(df_md,SiteCode,k,k_z)))
 p <- df_logUU_pk %>%
   mutate(across(c(SiteCode,contraste),factor),
          label = factor(contraste,
@@ -332,7 +333,7 @@ l_fplot$efeito_x_efeito <- \(df_plot,
                              ylab = NULL){
   #@ xylab = "area","fragperse","fragtotal"
   if(is.null(label_efeitos)) stop("precisa fornecer label_efeitos = e.g. fragmentação per se ~ área per se")
-  if(is.null(x|y)) stop("precisa fornecer label_efeitos = e.g. fragmentação per se ~ área per se")
+  if(is.null(xlab)|is.null(ylab)) stop("precisa fornecer label_efeitos = e.g. fragmentação per se ~ área per se")
   geom_list1 <- list(
     geom_hline(yintercept = 0,color="black"),
     geom_vline(xintercept = 0,color="black"),
@@ -360,7 +361,7 @@ l_fplot$tabela_contagem_maior_magnitude_absoluta <- \(dfi){
     ggplot(aes(y=class_diff,x=pert_class,fill=n_rel)) +
     geom_raster() +
     labs(x="",y="",
-         title="Proporção de casos com o módulo do logU/U superior") +
+         title="") +
     scale_fill_gradient("",low = "yellow", high = "red", na.value = NA) +
     geom_text(aes(label=n_rel),size=10) +
     scale_x_discrete(expand = c(0,0)) +
@@ -462,10 +463,17 @@ names(l_rds) <- str_extract(l_rds,"(?<=dfpred\\_)(.*?)(?=\\.rds)") %>%
 l_dfplot <- lapply(l_rds,readRDS) %>% 
   lapply(.,"[[","fixo e aleat") %>% 
   lapply(.,select, logOR:k_z, SiteCode, Q_0.5, forest_succession)
+#####
+df_logUU_plot <- df_logUU_pk %>% select(SiteCode:k,k_z,contraste,Uefeito) %>% 
+  mutate(contraste = gsub("Área per se","area",contraste) %>% 
+           gsub("Frag. per se","fragperse",.) %>% 
+           gsub("Frag. total","fragtotal",.)) %>% 
+  pivot_wider(names_from="contraste",values_from="Uefeito")
+#####
 df_plot <- lapply(names(l_dfplot),\(li){
   dfi <- select(l_dfplot[[li]],-Uefeito)
   inner_join(dfi,
-             select(df_contrastes,SiteCode:k_z,all_of(li)),
+             select(df_logUU_plot,SiteCode:k_z,all_of(li)),
              by=c("SiteCode","k_z")) %>% 
     rename("Uefeito" = li) %>% 
     mutate(efeito = li,
@@ -486,7 +494,6 @@ f_lmbySite <- \(dfs){
 }
 df_lmpars <- ddply(df_plot,c("efeito","SiteCode"),f_lmbySite)
 df_plot2 <- inner_join(df_plot,df_lmpars,by=c("SiteCode","efeito"))
-
 f_plot <- \(df_plot){
   #@ xylab = "logOR","logU/U"
   geom_list1 <- list(
@@ -549,35 +556,11 @@ f_plot <- \(df_plot){
                            mid = "blue",
                            high = "green") +
     facet_grid(pert_class~label)
+  names(l_p) <- c("logOR ~ loU/U","histograma: logOR - logU/U","logOR ~ inclinação","logOR_pred ~ logOR_obs")
+  return(l_p)
 }
-p <- f_plot(df_plot2)
-
-f_plot2 <- \(dfplot){
-  
-}
-
-
-# df_plot %>% 
-#   pivot_longer(c(logOR,Q_0.5)) %>% 
-#   mutate(SiteCode=factor(SiteCode),
-#          name=gsub("Q\\_0\\.5","Quant. 50%",name),
-#          k_f=factor(round(k,2))) %>% 
-#   ggplot(aes(x=k_f,y=value,color=name)) +
-#   geom_jitter(alpha=0.1) +
-#   geom_boxplot(alpha=0.1) +
-#   scale_color_manual(values=c("red","blue")) +
-#     # geom_abline(slope=1,intercept=0) +
-#   # geom_point(alpha=0.1) +
-#   # geom_smooth(se=FALSE) +
-#   facet_grid(pert_class~label)
-
-
-
-
-
-
-
-
+l_p <- f_plot(df_plot2)
+saveRDS(l_p,file="./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/l_p_comparacao_empirica_logOR_logUU.rds")
 ###############################################################################################
 ####################################### diagnóstico final artigo
 

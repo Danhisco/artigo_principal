@@ -138,6 +138,38 @@ df_dados_disponiveis %>%
 
 ## Gráficos comparativos dos efeitos explicativos da paisagem na taxa U
 
+```{r criacao das figuras comparativas de taxa U, eval=FALSE}
+l_p <- readRDS(file="./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/l_p_comparacao_empirica_efeitos_diferenca_entre_pares.rds")
+df_conf <- data.frame(plot = names(l_p[[1]]),
+                      vw = c(12,7,12),
+                      vh = c(5,2.75,4))
+setwd("./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI")
+vcomparacao <- names(l_p)[1]
+f_saveplots <- \(vcomparacao){
+  #
+  vrepo <- paste0("./logUU/",
+                  gsub(" ~ ","_",vcomparacao))
+  if( !dir.exists("./logUU") )dir.create("./logUU")
+  if( !dir.exists(vrepo) )dir.create(vrepo)
+  #
+  lp <- l_p[[vcomparacao]]
+  f_ggsave <- \(dfi){
+    with(dfi,{
+      ggsave(filename = paste0(vrepo,"/",plot,".png"),
+             plot = lp[[plot]],
+             width=vw,
+             height = vh,
+             dpi=200)
+    })
+  }
+  #
+  a_ply(df_conf,1,f_ggsave)
+}
+lapply(names(l_p),f_saveplots)
+```
+
+
+
 ## Diagnostico do modelos mais plausível para descrever a congruência relativa (logOR)
 
 ## Gráficos comparativos do logOR dos efeitos explicativos da paisagem
