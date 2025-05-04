@@ -85,7 +85,7 @@ f_plot <- \(dfp,bypert=FALSE){
            quantile=as.character(quantile*100))
   fggplot <- \(dfi){
     df_slopes <- ddply(dfi,"SiteCode",\(dfii){
-      mdl <- as.data.frame(lm(logOR~preditor,data=dfii)$coefficients)
+      mdl <- as.data.frame(lm(preditor~logOR,data=dfii)$coefficients)
       mdl$coef = rownames(mdl) %>% gsub("\\(","",.) %>% gsub("\\)","",.)
       rownames(mdl) <- NULL
       names(mdl)[1] <- "valor"
