@@ -174,3 +174,12 @@ lapply(names(l_p),f_saveplots)
 
 ## Gráficos comparativos do logOR dos efeitos explicativos da paisagem
 
+```{r}
+l_p <- readRDS(file="./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/l_p_comparacao_empirica_logOR_logUU.rds")
+ggsave(filename = "./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/logOR_inclinacao_predito_obs.png",
+       plot = l_p[[3]],
+       width=13.8,
+       height=7.33, 
+       dpi=300)
+```
+
