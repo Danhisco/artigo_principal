@@ -268,19 +268,27 @@ df_pk <- ddply(df_SoE_k,"SoE_0.95",\(dfi){
     select(-c(Ntotal:S_obs,lado_km)) %>% 
     inner_join(dfi,by="SoE_0.95",relationship="many-to-many")
 }) %>% arrange(k)
-df_pk %>% 
+p <- df_pk %>% 
+  inner_join(distinct(select(df_logUU,SiteCode,pert_class))) %>% 
   ggplot(aes(x=k,y=p,color=factor(SoE_0.95),group=SiteCode)) +
-  geom_point() +
+  geom_point(alpha=0.2) +
   geom_line() +
   scale_color_manual("Escala Espacial",values=c("red","blue","green")) +
-  theme(legend.position = "top")
+  theme(legend.position = "top") +
+  facet_wrap(~pert_class,nrow=1)
+ggsave(filename="./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/p_k_pert_class.png",
+       plot=p,
+       width=12,
+       height=5,
+       dpi=200)
 df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
   vfilter <- dfi$lado_km[which.min(abs(4-dfi$lado_km))]
   filter(dfi,lado_km==vfilter)
 }) %>% select(-c(Ntotal:S_obs))
 df_logUU_pk <- inner_join(select(df_logUU,-p),
-                          df_pk,by=c("SiteCode","k")) %>% 
-  inner_join(distinct(select(df_md,SiteCode,k,k_z)))
+                          df_pk,by=c("SiteCode","k")) #%>% 
+  #inner_join(distinct(select(df_md,SiteCode,k,k_z)))
+saveRDS(df_logUU_pk,file="dados/csv_SoE/rds/df_logUUpk.rds")
 p <- df_logUU_pk %>%
   mutate(across(c(SiteCode,contraste),factor),
          label = factor(contraste,
@@ -309,6 +317,7 @@ p <- df_logUU_pk %>%
   facet_grid(pert_class~label)
 ggsave("figuras/pedacofigfinal_1alinha.png",
        p,
+       dpi=300,
        width = 13.8,
        height = 7.33)
 img_obj <- image_read("figuras/pedacofigfinal_1alinha.png") %>% 
@@ -450,6 +459,85 @@ v_comparacao_efeitos <- c("fragperse ~ area",
 l_p <- lapply(v_comparacao_efeitos,f_plots)
 names(l_p) <- v_comparacao_efeitos
 saveRDS(l_p,file="./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/l_p_comparacao_empirica_efeitos_diferenca_entre_pares.rds")
+#########################################################################################
+########################### classificação das paisagens hipotéticas quanto ao número de boas congruências
+df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
+  rename(nSAD = nCongKS,
+         land = land_type) %>% 
+  select(-c(Smed:Smax)) %>% 
+  mutate(k=round(k,2),
+         SiteCode = factor(SiteCode),
+         land = factor(land,
+                       levels=c(
+                         "cont",
+                         "non_frag",
+                         "ideal"),
+                       labels=c(
+                         "fragmentada",
+                         "aglomerada",
+                         "prístina")),
+         congruencia = case_when(
+           nSAD >= 95 ~ "muito alta",
+           nSAD %in% 76:94 ~ "alta",
+           nSAD %in% 25:75 ~ "mediana",
+           nSAD %in% 6:24 ~ "baixa",
+           nSAD <= 5 ~ "muito baixa"),
+         congruencia = factor(congruencia,
+                              levels=c("muito alta",
+                                       "alta",
+                                       "mediana",
+                                       "baixa",
+                                       "muito baixa")[5:1],
+                              labels=c("muito alta\n>=95",
+                                       "alta\n75 ~ 95",
+                                       "mediana\n25 ~ 75",
+                                       "baixa\n5 ~ 25",
+                                       "muito baixa\n<=5")[5:1])) %>% 
+  filter(k>=0.49999)
+df_plot <- df_ad %>% 
+  group_by(land,congruencia) %>% 
+  tally()
+df_plot %>% 
+  ggplot(aes(x=land,y=congruencia,fill=n)) +
+  geom_tile(color="white") +
+  geom_label(aes(label=n),fill="white",size=10) +
+  labs(x="",y="",title="Núm. SADs cong. - k>=0.50") +
+  scale_x_discrete(expand=c(0,0),position = "top") +
+  scale_y_discrete(expand=c(0,0)) +
+  scale_fill_viridis_c("n") +
+  theme_classic() +
+  theme(text=element_text(size=15,face="bold"))
+
+df_ij <- df_ad %>% 
+  group_by(SiteCode) %>% 
+  summarise(nSAD_maiorigual75 = all(nSAD>=75))
+
+df_logUU_plot <- inner_join(df_logUU_pk,df_ij)
+df_logUU_plot %>% 
+  filter(k>=0.49999) %>% 
+  ggplot(aes(x=k,y=Uefeito,color=p)) +
+  geom_boxplot(aes(group=k)) +
+  geom_point() +
+  geom_line(aes(group=SiteCode)) +
+  scale_colour_gradient2("% CF",midpoint=0.5,
+                         low="red",
+                         mid = "yellow",
+                         high = "darkgreen") +
+  facet_grid(nSAD_maiorigual75~contraste)
+df_logUU_plot %>% 
+  filter(k==0.99,contraste=="Frag. total") %>% 
+  ggplot(aes(x=nSAD_maiorigual75,y=p)) +
+  geom_boxplot() +
+  geom_jitter(alpha=0.4)
+
+
+############################### anterior ao 3o comitê
+# acordamos de remover a parte do logOR! E dessa forma as coisas ficaram bem mais focadas e claras!!!
+
+
+
+
+
 ############################################################################################
 ############################## diagnóstico dos modelos mais plausíveis 2#####################
 ############################################################################################

@@ -73,6 +73,30 @@ names(l_df) <- gsub("areaperse","Área per se",
   gsub("fragperse","Frag. per se",.) %>% 
   gsub("fragtotal","Frag. total",.)
 l_df <- lapply(l_df,"[[","fixo e aleat")
+#######
+df_plot <- lapply(names(l_df),\(li) mutate(l_df[[li]],efeito=li)) %>% 
+  do.call("rbind",.) %>% 
+  mutate(pert_class = factor(forest_succession,
+                             levels=c("primary",
+                                      "primary/secondary",
+                                      "secondary"),
+                             labels=c("baixa",
+                                      "mediana",
+                                      "alta")),
+         efeito = factor(efeito,
+                         levels=c("Frag. total",
+                                  "Frag. per se",
+                                  "Área per se"))) %>% 
+  select(logOR,pert_class,efeito)
+df_plot %>% 
+  ggplot(aes(x=logOR)) +
+  geom_histogram(bins=60) +
+  geom_vline(xintercept = 0,color="red") +
+  labs(y="",x="logOR empírico") +
+  theme_classic() +
+  facet_grid(pert_class~efeito)
+
+
 ######### gráficos diagnósticos para o artigo principal
 library(hexbin)
 f_plot <- \(dfp,bypert=FALSE){
