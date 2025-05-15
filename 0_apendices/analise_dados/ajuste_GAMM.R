@@ -38,12 +38,63 @@ saveRDS(df_md,
 #   mutate(lado_km = round(lado_km,0))
 ######################################################################################
 #################### descrição de logU/U
-df_logUU_pk <- readRDS(file="dados/csv_SoE/rds/df_logUUpk.rds")
-
-
-
-
-
+df_logUU_pk <- readRDS(file="dados/csv_SoE/rds/df_logUUpk.rds") %>% 
+  mutate(SiteCode=factor(SiteCode))
+library(mgcv)
+f_gam <- \(dfi){
+  l_md <- list()
+  l_md[[1]] <- gam(
+    Uefeito ~ 
+      te(Uefeito,k,
+         bs=c("cr","cr"),m=2,
+         id = "fixo") +
+      s(k, SiteCode, 
+        bs = "fs", xt=list(bs = "cr"), m=2, 
+        id="efeito_sitio"),
+    data=dfi, method = "REML")
+  l_md[[2]] <- gam(
+    Uefeito ~ 
+      te(Uefeito,k,
+         bs=c("cr","cr"),m=2,
+         id = "fixo") +
+      s(SiteCode,bs = "re"),
+    data=dfi, method = "REML")
+  names(l_md) <- c("~ te(p,k) + s(k)|Site",
+                   "~ te(p,k) + 1|Site")
+  return(l_md)
+}
+if(FALSE){
+  l_md <- dlply(df_logUU_pk,"contraste",f_gam)
+  saveRDS(l_md,file="dados/csv_SoE/rds/l_md_logUUpk.rds")
+}
+# df2ef <- df_logUU_pk %>% filter(contraste!="Frag. total")
+f_gam <- \(df2ef){
+  l_md <- list()
+  l_md[[1]] <- gam(Uefeito ~ 
+                     te(Uefeito,k,
+                        by=contraste,
+                        bs=c("cr","cr"),m=2,
+                        id = "fixo") +
+                     s(k, SiteCode, 
+                       by=contraste,
+                       bs = "fs", xt=list(bs = "cr"), m=2, 
+                       id="efeito_sitio"),
+                   data=df2ef, method = "REML")
+  l_md[[2]] <- gam(Uefeito ~ 
+                     te(Uefeito,k,
+                        bs=c("cr","cr"),m=2,
+                        id = "fixo") +
+                     s(k, SiteCode, 
+                       bs = "fs", xt=list(bs = "cr"), m=2, 
+                       id="efeito_sitio"),
+                   data=df2ef, method = "REML")
+  names(l_md) <- c("por contraste","comum")
+  return(l_md)
+}
+l_md_2ef <- f_gam(
+  df_logUU_pk %>% filter(contraste!="Frag. total")
+)
+saveRDS(l_md_2ef,file="dados/csv_SoE/rds/l_md_logUUpk_2ef.rds")
 
 
 

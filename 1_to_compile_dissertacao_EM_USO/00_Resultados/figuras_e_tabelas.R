@@ -501,7 +501,7 @@ df_plot %>%
   ggplot(aes(x=land,y=congruencia,fill=n)) +
   geom_tile(color="white") +
   geom_label(aes(label=n),fill="white",size=10) +
-  labs(x="",y="",title="Núm. SADs cong. - k>=0.50") +
+  labs(x="",y="",title="Núm. SADs cong.: k>=0.50") +
   scale_x_discrete(expand=c(0,0),position = "top") +
   scale_y_discrete(expand=c(0,0)) +
   scale_fill_viridis_c("n") +
@@ -511,24 +511,59 @@ df_plot %>%
 df_ij <- df_ad %>% 
   group_by(SiteCode) %>% 
   summarise(nSAD_maiorigual75 = all(nSAD>=75))
+v_ij <- c("alta congruência sempre"=sum(df_ij$nSAD_maiorigual75),
+          "baixa congruência em algum k"=nrow(df_ij)-sum(df_ij$nSAD_maiorigual75))
 
-df_logUU_plot <- inner_join(df_logUU_pk,df_ij)
-df_logUU_plot %>% 
+df_logUU_plot <- inner_join(df_logUU_pk,df_ij) %>% 
+  mutate(label = ifelse(nSAD_maiorigual75,
+                        paste0("alta cong. sempre",", n sítios=",v_ij[1]),
+                        paste0("cong. baixa em algum k",", n sítios=",v_ij[2])))
+p1 <- df_logUU_plot %>% 
   filter(k>=0.49999) %>% 
   ggplot(aes(x=k,y=Uefeito,color=p)) +
   geom_boxplot(aes(group=k)) +
-  geom_point() +
-  geom_line(aes(group=SiteCode)) +
+  geom_point(alpha=0.6) +
+  labs(y="logU/U",x="proporção de propágulos até a vizinhança imediata (k)") +
+  geom_line(aes(group=SiteCode),alpha=0.6) +
   scale_colour_gradient2("% CF",midpoint=0.5,
                          low="red",
                          mid = "yellow",
                          high = "darkgreen") +
-  facet_grid(nSAD_maiorigual75~contraste)
-df_logUU_plot %>% 
+  facet_grid(label~contraste) +
+  theme_classic()
+p2 <- df_logUU_plot %>% 
+  mutate(label = gsub(", n sítios\\=","",label) %>% 
+           gsub("\\d+","",.) %>% 
+           gsub(" sempre","",.) %>% 
+           gsub(" em algum k","",.)) %>% 
   filter(k==0.99,contraste=="Frag. total") %>% 
-  ggplot(aes(x=nSAD_maiorigual75,y=p)) +
-  geom_boxplot() +
-  geom_jitter(alpha=0.4)
+  ggplot(aes(fill=label,x=p)) +
+  geom_histogram(position = "dodge",bins=60) +
+  labs(x="%CF",y="contagem") +
+  scale_fill_manual("",values=c("red","blue")) +
+  guides(fill=guide_legend(override.aes = list(size = 3))) +
+  scale_x_continuous(expand=c(0,0)) +
+  scale_y_continuous(expand=c(0,0)) +
+  theme_minimal_grid() +
+  theme(legend.position = "top",
+        text = element_text(size=8,face="bold"),
+        axis.text = element_text(size=8),
+        legend.margin = margin(),
+        plot.margin = margin())
+library(cowplot)
+p <- ggdraw() +
+  draw_plot(p1) +
+  draw_plot(p2,
+            height = 0.27, width = 0.25,
+            x=0.66, y=0.35)
+ggsave(filename="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.png",
+       plot=p,
+       width = ,
+       height = ,
+       dpi=200)
+df_md <- select(df_logUU_plot[df_logUU_plot$nSAD_maiorigual75,],
+                SiteCode:Uefeito,p)
+saveRDS(df_md,"dados/csv_SoE/rds/df_logUUpk.rds")
 
 
 ############################### anterior ao 3o comitê
