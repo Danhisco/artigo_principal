@@ -18,6 +18,18 @@ library(dplyr)
 # source("source/general_tools.R")
 # source("source/GAMMtools.R")
 # source("source/fig_tools.R")
+###### Modelos ajustados #########
+l_md_logUUpk <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk.rds")
+
+
+
+
+
+
+
+
+
+
 #################################################################
 # função para criar o new data fixo
 f_dfmd2 <- \(dff,length_pred = 100,site.posteriori ="SPigua1"){
@@ -153,6 +165,38 @@ f_calcPI <- \(gamm,
   # return
   return(l_df)
 }
+f_calcPI2 <- \(gamm,
+               #df_newpred,
+               vefeito,
+               nsim = 1000,
+               to_exclude,
+               simple_area=FALSE,
+               quants=c(0.05,0.5,0.95)){
+  #### 1a parte: somente efeito fixo ####
+  # create the new data 
+  df_newpred <- f_newpred_df(gamm$model)
+  # quais componentes serão zerados?
+  # to_exclude <- to_exclude[
+  #   grep(pattern = paste(names(df_newpred),collapse = "|"),
+  #        to_exclude)]
+  # obtain the predictions
+  df_pred <- f_predictions(gamm,nsim,to_exclude,df_newpred)
+  # save the data frame
+  l_df <- list()
+  l_df$`apenas fixo` <- cbind(df_newpred,df_pred)
+  #### 2a parte: efeito fixo e aleatório ####
+  # take the original data
+  df_newpred <- gamm$model
+  # quais componentes serão zerados?
+  to_exclude <- NULL
+  # obtain the predictions
+  df_pred <- f_predictions(gamm,nsim,to_exclude,df_newpred)
+  # save the data frame
+  l_df$`fixo e aleat` <- cbind(df_newpred,df_pred)
+  # return
+  return(l_df)
+}
+
 ##### retorno dos dados para a escala padrão
 f_z <- \(x) (x-mean(x))/sd(x)
 f_z2 <- \(x,x_ref) (x-mean(x_ref))/sd(x_ref)
