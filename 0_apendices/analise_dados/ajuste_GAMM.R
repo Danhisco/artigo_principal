@@ -251,6 +251,8 @@ f_ggplot <- \(dfp,lw=1,ctextsize=5,stripspace=0.5,textsize=15){
           axis.title = element_text(size=textsize))
 }
 l_p_apenas_fixo <- dlply(dfpred,"efeito",f_ggplot)
+saveRDS(l_p_apenas_fixo,file="./figuras/logUU_construcao/l_p_apenas_fixo.rds")
+
 #grid.arrange(grobs=l_p_apenas_fixo,ncol=3)
 
 #############################
