@@ -102,6 +102,13 @@ saveRDS(l_md_2ef,file="dados/csv_SoE/rds/l_md_logUUpk_2ef.rds")
 ## Os modelos ajustados para os efeitos individuais
 # tabela de seleção
 l_tabsel <- lapply(l_md_logUUpk,f_TabSelGAMM,test_moranK=FALSE)
+df_tabsel <- lapply(names(l_tabsel),\(li){
+  mutate(l_tabsel[[li]],efeito=li)}) %>% 
+  do.call("rbind",.) %>% 
+  relocate(efeito) %>% 
+  select(efeito:dev.expl) %>% 
+  mutate(across(where(is.numeric),~round(.x,2)))
+saveRDS(df_tabsel,file="dados/csv_SoE/rds/df_tabsel_logUU_pk.rds")
 # modelos mais plausíveis
 df_tabsel <- lapply(names(l_tabsel),\(li){
   mutate(l_tabsel[[li]],efeito=li) %>% 
