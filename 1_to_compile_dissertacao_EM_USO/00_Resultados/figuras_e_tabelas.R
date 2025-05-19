@@ -335,6 +335,10 @@ f_gsub <- \(xlab){
     gsub("fragtotal","Frag. total",.)
 }
 
+df_plot <- df_logUU_plot %>% filter(contraste!="Frag. total",nSAD_maiorigual75)
+label_efeitos="fragmentação per se ~ área per se"
+xlab="Área per se"
+ylab="Frag. per se"
 l_fplot <- list()
 l_fplot$efeito_x_efeito <- \(df_plot,
                              label_efeitos=NULL,
@@ -348,26 +352,28 @@ l_fplot$efeito_x_efeito <- \(df_plot,
     geom_vline(xintercept = 0,color="black"),
     geom_abline(slope=1,intercept=0,color="darkblue",linetype=1),
     geom_abline(slope=-1,intercept=0,color="darkblue",linetype=1),
-    geom_hex(bins = 50,alpha=0.5),
+    geom_hex(bins = 15,alpha=0.5),
     scale_fill_gradient("contagem",low = "yellow", high = "red", na.value = NA),
-    facet_wrap(~pert_class,ncol=3),
-    theme_classic()
+    # facet_wrap(~pert_class,ncol=3),
+    theme_classic(),
+    theme(aspect.ratio = 1)
   )
-  df_plot %>% 
+  p <- df_plot %>% 
     pivot_wider(names_from=contraste,values_from=Uefeito) %>%   
     ggplot(aes(x=.data[[xlab]],y=.data[[ylab]])) +
     geom_list1 +
     labs(title=paste0("logU/U :",label_efeitos),
          x=f_gsub(xlab),
          y=f_gsub(ylab))
+  # saveRDS(p,file="figuras/logUU_construcao/p_fragperse_areaperse.rds")
+  return(p)
 }
 l_fplot$tabela_contagem_maior_magnitude_absoluta <- \(dfi){
   dfi %>% 
-    group_by(pert_class,class_diff) %>% 
+    group_by(class_diff) %>% 
     tally() %>% 
-    group_by(pert_class) %>% 
     mutate(n_rel = round(n * 100 / sum(n),2)) %>% 
-    ggplot(aes(y=class_diff,x=pert_class,fill=n_rel)) +
+    ggplot(aes(x=class_diff,y="",fill=n_rel)) +
     geom_raster() +
     labs(x="",y="",
          title="") +
@@ -376,7 +382,6 @@ l_fplot$tabela_contagem_maior_magnitude_absoluta <- \(dfi){
     scale_x_discrete(expand = c(0,0)) +
     scale_y_discrete(expand =  c(0,0)) +
     theme_classic() +
-    facet_wrap(~pert_class,ncol=3,scales = "free_x") +
     theme(axis.text.x = element_blank(),
           axis.ticks.x = element_blank(),
           axis.text.y = element_text(size=15),
@@ -385,6 +390,23 @@ l_fplot$tabela_contagem_maior_magnitude_absoluta <- \(dfi){
           strip.text = element_text(size=15),
           legend.position = "none")
 }
+
+dfp <- df_plot %>% 
+  mutate(Uefeito_abs = abs(Uefeito)) %>% 
+  select(-Uefeito) %>% 
+  ddply(.,c("k","SiteCode"),\(dfi){
+    dfi$diff_efeito <- with(dfi,{
+      Uefeito_abs[contraste=="Área per se"] -
+        Uefeito_abs[contraste=="Frag. per se"]
+    })
+    return(dfi)
+  }) %>% pivot_wider(names_from=contraste,values_from=Uefeito_abs) %>%
+  mutate(class_diff = ifelse(diff_efeito>0,
+                             paste("Área per se", ">", "Frag. per se"),
+                             paste("Frag. per se", ">", "Área per se")))
+dfi <- dfp
+
+
 l_fplot$histograma_efeito_menos_efeito <- \(dfi,xlabel=NULL){
   if(is.null(xlabel)) stop("precisa fornecer xlabel = e.g. logU/U: |área per se| - |frag. per se|")
   geom_list2 <- list(
@@ -392,14 +414,14 @@ l_fplot$histograma_efeito_menos_efeito <- \(dfi,xlabel=NULL){
     geom_vline(xintercept = 0,color="red",linetype=2) ,
     theme_classic() ,
     scale_x_continuous(expand=c(0,0)) ,
-    scale_y_continuous(expand=c(0,0)) ,
-    facet_wrap(~pert_class,ncol=3)
+    scale_y_continuous(expand=c(0,0))
   )
-  dfi %>% 
+p <- dfi %>% 
     ggplot(aes(x=diff_efeito)) +
     geom_list2 +
     labs(x=xlabel,
          y="") 
+saveRDS(p,file="figuras/logUU_construcao/p_hist_diff_fragperse_areaperse.rds")
 }
 #
 f_plots <- \(comp_efeitos=c("fragperse ~ area",
