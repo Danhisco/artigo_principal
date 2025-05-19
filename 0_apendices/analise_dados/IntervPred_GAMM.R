@@ -16,15 +16,17 @@ library(dplyr)
 ## funções de ajuste e de plot
 # source("source/2samples_testes.R")
 # source("source/general_tools.R")
-# source("source/GAMMtools.R")
+source("source/GAMMtools.R")
 # source("source/fig_tools.R")
 ###### Modelos ajustados #########
 l_md_logUUpk <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk.rds")
+l_tabsel <- lapply(l_md_logUUpk,f_TabSelGAMM,test_moranK = FALSE)
 
 
 
 
-
+write_csv(l_tabsel$tabsel,"1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")  
+saveRDS(l_tabsel$l_moranK,file="1_to_compile_dissertacao_EM_USO/00_Resultados/rds/l_moranK_sumario_paisagens.rds")
 
 
 

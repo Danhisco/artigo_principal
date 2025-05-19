@@ -45,7 +45,7 @@ f_gam <- \(dfi){
   l_md <- list()
   l_md[[1]] <- gam(
     Uefeito ~ 
-      te(Uefeito,k,
+      te(p,k,
          bs=c("cr","cr"),m=2,
          id = "fixo") +
       s(k, SiteCode, 
@@ -54,7 +54,7 @@ f_gam <- \(dfi){
     data=dfi, method = "REML")
   l_md[[2]] <- gam(
     Uefeito ~ 
-      te(Uefeito,k,
+      te(p,k,
          bs=c("cr","cr"),m=2,
          id = "fixo") +
       s(SiteCode,bs = "re"),
@@ -64,14 +64,17 @@ f_gam <- \(dfi){
   return(l_md)
 }
 if(FALSE){
-  l_md <- dlply(df_logUU_pk,"contraste",f_gam)
+  doMC::registerDoMC(2)
+  l_md <- dlply(df_logUU_pk,"contraste",f_gam,.parallel = TRUE)
   saveRDS(l_md,file="dados/csv_SoE/rds/l_md_logUUpk.rds")
+}else{
+  l_md_logUUpk <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk.rds")
 }
 # df2ef <- df_logUU_pk %>% filter(contraste!="Frag. total")
 f_gam <- \(df2ef){
   l_md <- list()
   l_md[[1]] <- gam(Uefeito ~ 
-                     te(Uefeito,k,
+                     te(p,k,
                         by=contraste,
                         bs=c("cr","cr"),m=2,
                         id = "fixo") +
@@ -81,7 +84,7 @@ f_gam <- \(df2ef){
                        id="efeito_sitio"),
                    data=df2ef, method = "REML")
   l_md[[2]] <- gam(Uefeito ~ 
-                     te(Uefeito,k,
+                     te(p,k,
                         bs=c("cr","cr"),m=2,
                         id = "fixo") +
                      s(k, SiteCode, 
@@ -95,12 +98,162 @@ l_md_2ef <- f_gam(
   df_logUU_pk %>% filter(contraste!="Frag. total")
 )
 saveRDS(l_md_2ef,file="dados/csv_SoE/rds/l_md_logUUpk_2ef.rds")
+######################## diagnósticos 
+## Os modelos ajustados para os efeitos individuais
+# tabela de seleção
+l_tabsel <- lapply(l_md_logUUpk,f_TabSelGAMM,test_moranK=FALSE)
+# modelos mais plausíveis
+df_tabsel <- lapply(names(l_tabsel),\(li){
+  mutate(l_tabsel[[li]],efeito=li) %>% 
+    select(-pvalue,-MoranI_stat_res) %>% 
+    filter(dAICc==0)
+}) %>% do.call("rbind",.)
+# lista com os modelos mais plausíveis
+l_md <- dlply(df_tabsel,"efeito",\(dfi){
+  l_md_logUUpk[[dfi$efeito]][[dfi$modelo]]
+})
+# diagnostico dos mais plausíveis
+l_paths <- lapply(names(l_md),\(li){
+  f_diag(hgam=l_md[[li]],v_path = v_path,vname = li,patsave = "te_pk")
+})
+########################################### predito e observado
+#li <- names(l_md)[[1]]
+#hgam <- l_md[[li]]
+vSites <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+  filter(forest_succession!="capoeira") %>% 
+  pull(SiteCode) %>% unique
+## fixo e aleatorio: variações por sítio
+f_obs_predito_bysite <- \(hgam,vname=li){
+  dfobs <- hgam$model %>% filter(k>=0.49999,SiteCode %in% vSites)
+  dfpred <- as.data.frame(predict.gam(hgam,newdata = dfobs,se.fit = TRUE))
+  dfpred <- cbind(dfobs,dfpred)
+  dfpred <- dfpred %>% 
+    mutate(
+      p_class = case_when(
+        p>0.60 ~ "%CF > 60",
+        p<=0.60 & p>=0.30 ~ "30 < %CF < 60",
+        p<0.60 ~ "%CF < 30"),
+      p_class = factor(p_class,levels=c("%CF < 30","30 < %CF < 60","%CF > 60")),
+      lower = fit - 1.96 * se.fit,
+      upper = fit + 1.96 * se.fit
+      )
+  df_ij <- dfpred %>% 
+    select(SiteCode,p_class) %>% 
+    distinct() %>% 
+    group_by(p_class) %>% 
+    tally() %>% 
+    mutate(label = paste0(p_class,", n Sítios=",n)) %>% 
+    select(-n)
+  df_ij$label <- factor(df_ij$label,
+                        levels=unique(df_ij$label))
+  inner_join(dfpred,df_ij) %>% 
+    ggplot(aes(x=k,y=Uefeito)) +
+      geom_boxplot(aes(group=k),alpha=0.6) +
+      geom_hline(yintercept = 0,color="black") +
+      geom_ribbon(aes(x=k,y=fit,ymin=lower,ymax=upper,group = SiteCode),
+                  color="blue",
+                  fill="lightblue",
+                  alpha=0.4) + 
+      geom_line(aes(y=fit,group = SiteCode),color="darkred",alpha=0.7) +
+      geom_point(aes(color=p),alpha=0.7) +
+      scale_colour_gradient2("% CF",midpoint=0.5,
+                             low="red",
+                             mid = "yellow",
+                             high = "darkgreen") +
+      labs(x="k",y="logU/U",title=vname) +
+      facet_wrap(~label,ncol=3) +
+      theme_classic() +
+      theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
+            legend.position = "inside",
+            legend.position.inside = c(0.49,0.92),
+            legend.direction="horizontal") 
+}
+l_p_fixo_e_aleat <- lapply(names(l_md),\(li) f_obs_predito_bysite(hgam=l_md[[li]],vname=li))
+names(l_p_fixo_e_aleat) <- names(l_md)
+saveRDS(l_p_fixo_e_aleat,file="./figuras/logUU_construcao/l_p_fixo_e_aleat.rds")
 
+## fixo:o efeito médio desconsiderando a variabilidade entre sítios
+f_calcPI <- \(hgam,vname,
+              ctextsize=5){
+  dfobs <- hgam$model %>% filter(k>=0.49999,SiteCode %in% vSites)
+  dfrange <- data.frame(
+    X = c("p","k"),
+    max = sapply(dfobs[,c("p","k")],max),
+    min = sapply(dfobs[,c("p","k")],min)
+  )
+  dfpred0 <- expand.grid(
+    p = seq(dfrange[dfrange$X=="p","min"],
+            dfrange[dfrange$X=="p","max"],
+            length.out=100),
+    k = seq(dfrange[dfrange$X=="k","min"],
+            dfrange[dfrange$X=="k","max"],
+            length.out=100)
+  ) %>% mutate(SiteCode=factor("BAjuss"))
+  dfpred <- cbind(
+    dfpred0,
+    as.data.frame(
+      predict.gam(hgam,newdata = dfpred0,se.fit=TRUE,
+                  exclude = c("s(k,SiteCode)"))
+      )
+    ) %>% 
+    mutate(efeito = vname)
+  return(dfpred)
+}
+dfpred <- lapply(names(l_md),\(li) f_calcPI(hgam=l_md[[li]],vname=li)) %>% 
+  do.call("rbind",.)
+vrangelogUU <- range(dfpred$fit)
+library(metR)
+f_ggplot <- \(dfp,lw=1,ctextsize=5,stripspace=0.5,textsize=15){
+  vbreaks <- c(-0.10,0,0.10,0.20,0.30)
+  # vbreaks <- quantile(dfp$fit,c(0.05,0.10,0.25,0.50,0.75,0.90,0.95)) %>% 
+  #   round(.,digits=3)
+  #
+  dfp %>% 
+    ggplot(aes(x=k,y=p,z=fit)) +
+    geom_tile(aes(fill=fit),width = 0.0090, height = 0.0090) +
+    geom_contour(color = "black",linewidth=lw,
+                 breaks=vbreaks,) +
+    geom_text_contour(size=ctextsize,
+                      breaks=vbreaks,
+                      color="black",
+                      check_overlap = TRUE, stroke=0.1) +
+    scale_fill_gradient2("logU/U",
+                         midpoint=0,
+                         low="#440154",
+                         mid = "#21908CFF",
+                         high = "#FDE725",
+                         limits=vrangelogUU) +
+    labs(y="%CF",
+         x="grau de limitação de dispersão (k)") +
+    facet_wrap(~efeito) +
+    scale_x_continuous(expand = c(0,0)) +
+    scale_y_continuous(expand = c(0,0)) +
+    theme(legend.position="right",
+          # legend.direction = "horizontal",
+          # legend.background = element_rect(
+          #   fill = "transparent",          
+          #   color = NA                     
+          # ),
+          legend.key = element_rect(       
+            fill = "transparent",          
+            color = NA                     
+          ),
+          legend.text = element_text(size = 8),
+          legend.title = element_text(size = 10),
+          legend.key.size = unit(0.5, "cm"),     
+          legend.spacing = unit(0.2, "cm"),      
+          legend.margin = margin(2, 2, 2, 2),
+          strip.text = element_text(size=textsize,
+                                    margin=margin(t=stripspace,
+                                                  b=stripspace)),
+#          aspect.ratio=1,#
+          axis.text = element_text(size=textsize),
+          axis.title = element_text(size=textsize))
+}
+l_p_apenas_fixo <- dlply(dfpred,"efeito",f_ggplot)
+#grid.arrange(grobs=l_p_apenas_fixo,ncol=3)
 
-
-
-
-
+#############################
 ############################################################################################
 ####################### ANTIGO -> FUTURO ARTIGO: estudo do logOR ###########################
 ############################################################################################

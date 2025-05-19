@@ -793,8 +793,10 @@ f_diag <- \(hgam,v_path,vname,patsave="slogUU"){
                  paste0(vname,"_",patsave)) %>% 
     gsub("Frag. per se","fragperse",.) %>%
     gsub("Frag. total","fratotal",.)
-  image_write(final_image,paste0(v_path,"figuras/diag_",v_name,".png"), 
+  vret <- paste0(v_path,"figuras/diag_",v_name,".png")
+  image_write(final_image,vret, 
               format = "png")
+  return(vret)
 }
 
 
