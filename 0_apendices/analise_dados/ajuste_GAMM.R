@@ -94,10 +94,13 @@ f_gam <- \(df2ef){
   names(l_md) <- c("por contraste","comum")
   return(l_md)
 }
-l_md_2ef <- f_gam(
-  df_logUU_pk %>% filter(contraste!="Frag. total")
-)
-saveRDS(l_md_2ef,file="dados/csv_SoE/rds/l_md_logUUpk_2ef.rds")
+if(FALSE){
+  l_md_2ef <- f_gam(
+    df_logUU_pk %>% filter(contraste!="Frag. total")
+  )
+  saveRDS(l_md_2ef,file="dados/csv_SoE/rds/l_md_logUUpk_2ef.rds")
+}
+
 ######################## diagnósticos 
 ## Os modelos ajustados para os efeitos individuais
 # tabela de seleção
@@ -120,27 +123,56 @@ l_md <- dlply(df_tabsel,"efeito",\(dfi){
   l_md_logUUpk[[dfi$efeito]][[dfi$modelo]]
 })
 # diagnostico dos mais plausíveis
-l_paths <- lapply(names(l_md),\(li){
-  f_diag(hgam=l_md[[li]],v_path = v_path,vname = li,patsave = "te_pk")
-})
+if(FALSE){
+  l_paths <- lapply(names(l_md),\(li){
+    f_diag(hgam=l_md[[li]],v_path = v_path,vname = li,patsave = "te_pk")
+  })
+}
 ########################################### predito e observado
 #li <- names(l_md)[[1]]
 #hgam <- l_md[[li]]
+l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
+vsites105 <- l_dfpred$fixo_e_aleat$SiteCode %>% unique
 vSites <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
   filter(forest_succession!="capoeira") %>% 
   pull(SiteCode) %>% unique
+vSites <- intersect(vSites,vsites105)
+# criação de df geral
+dfpred100 <- ldply(l_md,\(li){
+  li$model %>% 
+    filter(p==1) %>% 
+    summarise(maxU = max(Uefeito), minU = min(Uefeito))
+}) %>% summarise(maxU = max(maxU), minU = min(minU))
 ## fixo e aleatorio: variações por sítio
-f_obs_predito_bysite <- \(hgam,vname=li){
-  dfobs <- hgam$model %>% filter(k>=0.49999,SiteCode %in% vSites)
+
+df_obs_pred_plot <- lapply(names(l_md),\(li){
+  hgam <- l_md[[li]]
+  dfobs <- hgam$model %>% 
+    filter(k>=0.49999,SiteCode %in% vSites) %>% 
+    mutate(efeito=li) %>% relocate(efeito)
   dfpred <- as.data.frame(predict.gam(hgam,newdata = dfobs,se.fit = TRUE))
   dfpred <- cbind(dfobs,dfpred)
+})
+saveRDS(df_obs_pred_plot,"dados/csv_SoE/rds/df_obs_pred_plot_logUU_pk.rds")
+
+
+f_obs_predito_bysite <- \(lmd){
+  
+  
+  
   dfpred <- dfpred %>% 
     mutate(
       p_class = case_when(
-        p>0.60 ~ "%CF > 60",
-        p<=0.60 & p>=0.30 ~ "30 < %CF < 60",
-        p<0.60 ~ "%CF < 30"),
-      p_class = factor(p_class,levels=c("%CF < 30","30 < %CF < 60","%CF > 60")),
+        p==1 ~ "%CF = 100",
+        p<1 & p>=0.80 ~ "80 ≤ %CF < 100",
+        p<0.80 & p>=0.60 ~ "60 ≤ %CF < 80",
+        p<0.60 & p>=0.30 ~ "30 ≤ %CF < 60",
+        p<0.30 ~ "%CF < 30"),
+      p_class = factor(p_class,levels=c("%CF < 30",
+                                        "30 ≤ %CF < 60",
+                                        "60 ≤ %CF < 80",
+                                        "80 ≤ %CF < 100",
+                                        "%CF = 100")),
       lower = fit - 1.96 * se.fit,
       upper = fit + 1.96 * se.fit
       )
@@ -153,15 +185,17 @@ f_obs_predito_bysite <- \(hgam,vname=li){
     select(-n)
   df_ij$label <- factor(df_ij$label,
                         levels=unique(df_ij$label))
-  inner_join(dfpred,df_ij) %>% 
+  dfp <- inner_join(dfpred,df_ij)
+  # dfp <- filter(dfp100,p_class!="%CF = 100")
+  # dfp100 <- filter(dfp100,p_class=="%CF = 100")
+  dfp %>% 
     ggplot(aes(x=k,y=Uefeito)) +
       geom_boxplot(aes(group=k),alpha=0.6) +
       geom_hline(yintercept = 0,color="black") +
       geom_ribbon(aes(x=k,y=fit,ymin=lower,ymax=upper,group = SiteCode),
-                  color="blue",
                   fill="lightblue",
                   alpha=0.4) + 
-      geom_line(aes(y=fit,group = SiteCode),color="darkred",alpha=0.7) +
+      geom_line(aes(y=fit,group = SiteCode),color="darkred",alpha=0.5) +
       geom_point(aes(color=p),alpha=0.7) +
       scale_colour_gradient2("% CF",midpoint=0.5,
                              low="red",

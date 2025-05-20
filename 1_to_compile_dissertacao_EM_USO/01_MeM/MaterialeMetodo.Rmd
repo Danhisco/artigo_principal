@@ -1,11 +1,11 @@
 ---
 title: ""
 output:
+  bookdown::word_document2: default
+  word_document: default
   bookdown::pdf_document2:
     number_sections: true
     latex_engine: lualatex
-  word_document: default
-  bookdown::word_document2: default
   pdf_document:
     latex_engine: xelatex
   html_document:
