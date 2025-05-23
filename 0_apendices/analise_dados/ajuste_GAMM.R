@@ -104,14 +104,18 @@ if(FALSE){
 ######################## diagnósticos 
 ## Os modelos ajustados para os efeitos individuais
 # tabela de seleção
-l_tabsel <- lapply(l_md_logUUpk,f_TabSelGAMM,test_moranK=FALSE)
-df_tabsel <- lapply(names(l_tabsel),\(li){
-  mutate(l_tabsel[[li]],efeito=li)}) %>% 
-  do.call("rbind",.) %>% 
-  relocate(efeito) %>% 
-  select(efeito:dev.expl) %>% 
-  mutate(across(where(is.numeric),~round(.x,2)))
-saveRDS(df_tabsel,file="dados/csv_SoE/rds/df_tabsel_logUU_pk.rds")
+if(FALSE){
+  l_tabsel <- lapply(l_md_logUUpk,f_TabSelGAMM,test_moranK=FALSE)
+  df_tabsel <- lapply(names(l_tabsel),\(li){
+    mutate(l_tabsel[[li]],efeito=li)}) %>% 
+    do.call("rbind",.) %>% 
+    relocate(efeito) %>% 
+    select(efeito:dev.expl) %>% 
+    mutate(across(where(is.numeric),~round(.x,2)))
+  saveRDS(df_tabsel,file="dados/csv_SoE/rds/df_tabsel_logUU_pk.rds")
+}else{
+  df_tabsel <- readRDS(file="dados/csv_SoE/rds/df_tabsel_logUU_pk.rds")
+}
 # modelos mais plausíveis
 df_tabsel <- lapply(names(l_tabsel),\(li){
   mutate(l_tabsel[[li]],efeito=li) %>% 
@@ -242,34 +246,46 @@ f_calcPI <- \(hgam,vname,
 }
 dfpred <- lapply(names(l_md),\(li) f_calcPI(hgam=l_md[[li]],vname=li)) %>% 
   do.call("rbind",.)
+saveRDS(dfpred,file="dados/csv_SoE/rds/dfpred_efeitofixo_logUUpk.rds")
 vrangelogUU <- range(dfpred$fit)
 library(metR)
-f_ggplot <- \(dfp,lw=1,ctextsize=5,stripspace=0.5,textsize=15){
-  vbreaks <- c(-0.10,0,0.10,0.20,0.30)
-  # vbreaks <- quantile(dfp$fit,c(0.05,0.10,0.25,0.50,0.75,0.90,0.95)) %>% 
-  #   round(.,digits=3)
-  #
-  dfp %>% 
-    ggplot(aes(x=k,y=p,z=fit)) +
-    geom_tile(aes(fill=fit),width = 0.0090, height = 0.0090) +
+f_ggplot <- \(dfp,
+              xlab="p",
+              ylab="k",
+              zlab="fit",
+              scales_free=TRUE,
+              lw=1,ctextsize=5,stripspace=0.5,textsize=15){
+  f_perfit <- 
+  
+  
+  if(scales_free){
+    vbreaks <- quantile(dfp[[zlab]],c(0.05,0.25,0.50,0.75,0.95)) %>%
+      round(.,digits=3)
+  }else{
+    vbreaks <- c(-0.10,0,0.10,0.20,0.30)
+  }
+  p <- dfp %>% 
+    pivot_longer(c(fit,se.fit)) %>% 
+    ggplot(aes(x=.data[[xlab]],y=.data[[ylab]],z=value)) +
+    geom_tile(aes(fill=value),width = 0.0090, height = 0.0090) +
     geom_contour(color = "black",linewidth=lw,
-                 breaks=vbreaks,) +
+                 breaks=vbreaks) +
     geom_text_contour(size=ctextsize,
                       breaks=vbreaks,
                       color="black",
-                      check_overlap = TRUE, stroke=0.1) +
+                      check_overlap = TRUE, 
+                      stroke=0.1) +
     scale_fill_gradient2("logU/U",
                          midpoint=0,
                          low="#440154",
                          mid = "#21908CFF",
-                         high = "#FDE725",
-                         limits=vrangelogUU) +
-    labs(y="%CF",
-         x="grau de limitação de dispersão (k)") +
-    facet_wrap(~efeito) +
+                         high = "#FDE725") +
+    labs(y=ifelse(ylab=="p","%CF","grau de limitação de dispersão (k)"),
+         x=ifelse(xlab=="p","%CF","grau de limitação de dispersão (k)")) +
+    facet_wrap(efeito~name,ncol=1) +
     scale_x_continuous(expand = c(0,0)) +
     scale_y_continuous(expand = c(0,0)) +
-    theme(legend.position="right",
+    theme(legend.position="top",
           # legend.direction = "horizontal",
           # legend.background = element_rect(
           #   fill = "transparent",          
