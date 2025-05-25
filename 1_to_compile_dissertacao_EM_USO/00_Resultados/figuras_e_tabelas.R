@@ -33,6 +33,8 @@ library(plyr)
 library(dplyr)
 library(sf)
 probs = c(0.05,0.25, 0.5, 0.75,0.95)
+l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
+vsites105 <- l_dfpred$fixo_e_aleat$SiteCode %>% unique
 ################################################################################################
 ################################# criacao GE dados disponiveis #################################
 ################################################################################################
@@ -190,8 +192,6 @@ ggsave(
 #############################################################################
 ################################ congruência absoluta #######################
 #############################################################################
-l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
-vsites105 <- l_dfpred$fixo_e_aleat$SiteCode %>% unique
 library(hexbin)
 p <- l_dfpred$fixo_e_aleat %>% 
   ggplot(aes(x=k,y=nSAD)) +
@@ -294,6 +294,7 @@ saveRDS(df_logUU_pk,file="dados/csv_SoE/rds/df_logUUpk.rds")
 #########################################################################################
 ########################### classificação das paisagens hipotéticas quanto ao número de boas congruências
 df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
+  filter(SiteCode %in% vsites105) %>% 
   rename(nSAD = nCongKS,
          land = land_type) %>% 
   select(-c(Smed:Smax)) %>% 
@@ -324,35 +325,48 @@ df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>%
                                        "alta\n75 ~ 95",
                                        "mediana\n25 ~ 75",
                                        "baixa\n5 ~ 25",
-                                       "muito baixa\n<=5")[5:1])) %>% 
-  filter(k>=0.49999)
+                                       "muito baixa\n<=5")[5:1]))
 df_plot <- df_ad %>% 
   group_by(land,congruencia) %>% 
-  tally() %>% 
+  summarise(n=n(),
+            nSites=length(unique(SiteCode))) %>% 
   group_by(land) %>% 
-  mutate(perc = round(n * 100/sum(n),2),
-         label = paste0(perc,"%"))
-p <- df_plot %>% 
-  ggplot(aes(x=land,y=congruencia,fill=perc)) +
-  geom_tile(color="white") +
-  geom_label(aes(label=label),fill="white",size=10) +
-  labs(x="",y="",title="Núm. SADs cong.: k>=0.50") +
-  scale_x_discrete(expand=c(0,0),position = "top") +
-  scale_y_discrete(expand=c(0,0)) +
-  scale_fill_viridis_c("%") +
-  theme_classic() +
-  theme(text=element_text(size=15,face="bold"))
+  mutate(perc = round(n * 100/sum(n),2)) %>% 
+  ungroup() %>% 
+  mutate(percSites = round(nSites * 100/105,2)) %>% 
+  pivot_longer(starts_with("perc")) %>% 
+  mutate(name=ifelse(name=="perc","% simulações","% sítios (n=105)"))
+f_ggplot <- \(dfp,lsize=4,tsize=8,legsize=0.25){
+  dfp %>% 
+    ggplot(aes(x=land,y=congruencia,fill=value)) +
+    geom_tile(color="white") +
+    geom_label(aes(label=paste0(value,"%")),fill="white",size=lsize) +
+    labs(x="",y="",title="Classes de congruência",subtitle="pelo menos 1 simulação, k≥0.50") +
+    scale_x_discrete(expand=c(0,0),position = "bottom") +
+    scale_y_discrete(expand=c(0,0)) +
+    scale_fill_viridis_c("%") +
+    facet_wrap(~name,scales="free") +
+    theme_classic() +
+    theme(text=element_text(size=tsize,face="bold"),
+          legend.position = "none",
+          legend.key.size = unit(legsize, 'cm'),
+          plot.margin = margin(0,0,0,0),
+          axis.text = element_text(color="black"),
+          legend.text = element_text(angle=90))
+}
+lp <- dlply(df_plot,"name",f_ggplot)
+p <- arrangeGrob(grobs=lp,ncol=2)
 ggsave(filename="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/heatmap_nSAD_land.png",
-       plot=p,
-       width = 8,
-       height = 5,
+       plot=lp[[2]],
+       width = 3.5,
+       height = 2.15,
        dpi=200)
 saveRDS(p,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/heatmap_nSAD_land.rds")
 img <- image_read("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/heatmap_nSAD_land.png") %>% 
   image_trim()
 image_write(img,"1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/heatmap_nSAD_land.png")
 df_ij <- df_ad %>% 
-  filter(SiteCode %in% unique(df_logUU_pk$SiteCode)) %>% 
+  filter(k>=0.49999) %>%
   group_by(SiteCode) %>% 
   summarise(nSAD_maiorigual75 = all(nSAD>=75))
 v_ij <- c("alta congruência sempre"=sum(df_ij$nSAD_maiorigual75),
@@ -360,10 +374,55 @@ v_ij <- c("alta congruência sempre"=sum(df_ij$nSAD_maiorigual75),
 library(cowplot)
 df_logUU_plot <- inner_join(df_logUU_pk,df_ij) %>% 
   mutate(label = ifelse(nSAD_maiorigual75,
-                        paste0("alta cong. sempre",", n sítios=",v_ij[1]),
-                        paste0("cong. baixa em algum k",", n sítios=",v_ij[2])))
+                        paste0("alta cong. sempre (≥75%)",", n sítios=",v_ij[1]),
+                        paste0("cong. baixa em alguma sim.",", n sítios=",v_ij[2])))
+f_ggplot <- \(dfp,tsize1=15,tsize2=10,fsize=3){
+  vcolor = c("red","blue")
+  names(vcolor) = unique(dfp$label)
+  p2 <- dfp %>% 
+    filter(k==0.99,contraste=="Frag. total") %>% 
+    ggplot(aes(fill=label,x=p)) +
+    geom_histogram(position = "dodge",bins=60) +
+    labs(x="",y="",title="%CF: sítios com boa cong. sempre") +
+    scale_fill_manual("",values=vcolor) +
+    guides(fill=guide_legend(override.aes = list(size = fsize),
+                             nrow = 2,byrow=TRUE)) +
+    scale_x_continuous(expand=c(0,0)) +
+    scale_y_continuous(expand=c(0,0)) +
+    theme_minimal_grid() +
+    theme(legend.position = c(0.01,0.9),
+          legend.box = "horizontal",
+          legend.key.size = unit(0.1, 'cm'),
+          legend.key.height = unit(0.1, 'cm'),
+          legend.key.width = unit(0.1, 'cm'),
+          legend.title = element_text(size=7),
+          legend.text = element_text(size=7),
+          text = element_text(size=tsize2),
+          axis.text = element_text(size=9),
+          legend.margin = margin(),
+          plot.margin = margin())
+  return(p2)
+}
+p_boasempre_ounao <- f_ggplot(df_logUU_plot,tsize1 = 10,tsize2 = 7.5,fsize = 0.5)
+p <- free(lp[[2]],side = "tb") + p_boasempre_ounao
+saveRDS(p,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/heatmap_nSAD_land.rds")
+ggsave(filename="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/sitios_filtrados.png",
+       plot=p,
+       width = 6,
+       height = 2.15,
+       dpi=200)
+img <- image_read("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/sitios_filtrados.png") %>% 
+  image_trim()
+image_write(img,"1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/sitios_filtrados.png")
+
+
+
 f_ggplot <- \(dfp,tsize1=15,tsize2=10){
   p1 <- dfp %>% 
+    mutate(label=gsub(", n sítios=","",label) %>% 
+             gsub("[1-9]{2}","",.) %>% 
+             gsub("k","sim.",.) %>% 
+             gsub(" \\(\\≥\\%\\)","",.)) %>% 
     filter(k>=0.49999) %>% 
     ggplot(aes(x=k,y=Uefeito,color=p)) +
     geom_boxplot(aes(group=k)) +
@@ -376,40 +435,21 @@ f_ggplot <- \(dfp,tsize1=15,tsize2=10){
                            high = "darkgreen") +
     facet_grid(label~contraste) +
     theme_classic() +
-    theme(text=element_text(size=tsize1))
-  p2 <- dfp %>% 
-    mutate(label = gsub(", n sítios\\=","",label) %>% 
-             gsub("\\d+","",.) %>% 
-             gsub(" sempre","",.) %>% 
-             gsub(" em algum k","",.)) %>% 
-    filter(k==0.99,contraste=="Frag. total") %>% 
-    ggplot(aes(fill=label,x=p)) +
-    geom_histogram(position = "dodge",bins=60) +
-    labs(x="%CF",y="contagem") +
-    scale_fill_manual("",values=c("red","blue")) +
-    guides(fill=guide_legend(override.aes = list(size = 3))) +
-    scale_x_continuous(expand=c(0,0)) +
-    scale_y_continuous(expand=c(0,0)) +
-    theme_minimal_grid() +
-    theme(legend.position = "top",
-          text = element_text(size=tsize2), #,face="bold"
-          axis.text = element_text(size=9),
-          legend.margin = margin(),
-          plot.margin = margin())
-  library(cowplot)
-  p <- ggdraw() +
-    draw_plot(p1) +
-    draw_plot(p2,
-              height = 0.27, width = 0.25,
-              x=0.65, y=0.35)
-  return(p)
+    theme(text=element_text(size=tsize1),
+          legend.position = "top",
+          legend.title = element_text(size=tsize2),
+          legend.text = element_text(size=tsize2))
+  return(p1)
 }
-p <- f_ggplot(df_logUU_plot,tsize1 = 18)
+p <- f_ggplot(df_logUU_plot,tsize1 = 15)
 ggsave(filename="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.png",
        plot=p,
-       width = ,
-       height = ,
+       width = 12,
+       height = 7,
        dpi=200)
+img <- image_read("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.png") %>% 
+  image_trim()
+image_write(img,"1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.png")
 saveRDS(p,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.rds")
 df_md <- select(df_logUU_plot[df_logUU_plot$nSAD_maiorigual75,],
                 SiteCode:Uefeito,p)
