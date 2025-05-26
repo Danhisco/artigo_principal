@@ -372,6 +372,7 @@ df_ij <- df_ad %>%
 v_ij <- c("alta congruência sempre"=sum(df_ij$nSAD_maiorigual75),
           "baixa congruência em algum k"=nrow(df_ij)-sum(df_ij$nSAD_maiorigual75))
 library(cowplot)
+df_logUU_pk <- readRDS(file="dados/csv_SoE/rds/df_logUUpk.rds")
 df_logUU_plot <- inner_join(df_logUU_pk,df_ij) %>% 
   mutate(label = ifelse(nSAD_maiorigual75,
                         paste0("alta cong. sempre (≥75%)",", n sítios=",v_ij[1]),
@@ -621,9 +622,187 @@ p <- arrangeGrob(grobs=l_p_apenas_fixo,nrow=1)
 ggsave(filename="figuras/todos_efeitos_medios_desconsiderandoSitios.png",plot=p,
        width = 15,
        height = 7)
+#####################################################################################
+################# objetos criados em 'ajuste_GAMM.R"
+# dados dos observados e preditos para os sítios
+df_real <- readRDS("dados/csv_SoE/rds/df_obs_pred_plot_logUU_pk.rds") %>% 
+  do.call("rbind",.) %>% 
+  mutate(
+    p_class = case_when(
+      p==1 ~ "%CF = 100",
+      p<1 & p>=0.80 ~ "80 ≤ %CF < 100",
+      p<0.80 & p>=0.60 ~ "60 ≤ %CF < 80",
+      p<0.60 & p>=0.30 ~ "30 ≤ %CF < 60",
+      p<0.30 ~ "%CF < 30"),
+    p_class = factor(p_class,levels=c("%CF < 30",
+                                      "30 ≤ %CF < 60",
+                                      "60 ≤ %CF < 80",
+                                      "80 ≤ %CF < 100",
+                                      "%CF = 100")),
+    lower = fit - 1.96 * se.fit,
+    upper = fit + 1.96 * se.fit
+  )
+# paisagens sem perda de cobertura florestal
+df_refCF1 <- df_real %>% 
+  filter(p==1) %>% 
+  reframe(
+    names = c("min","max","Q5%","Q95%"),
+    value = c(min(Uefeito), max(Uefeito),quantile(Uefeito,probs=0.05),quantile(Uefeito,probs=0.95))
+  )
+# comparação das paisagens sem perda com outras paisagens: elas são maiores do que o quantil de 90% dos %CF=1? 
+df_sites <- ddply(df_refCF1,"names",\(dfi){
+  #
+  df_ref <- df_real %>% filter(p!=1)
+  vsig <- ifelse(dfi$names%in%c("min","Q5%"),"<",">")
+  #
+  dfret <- ddply(df_ref,c("efeito","p_class"),\(dfd){
+    vlog <- eval(
+      parse(text=paste("dfd$Uefeito",vsig,dfi$value[1]))
+    )
+    dfd[vlog,c("efeito","p_class","SiteCode")] %>% 
+      distinct() %>% 
+      mutate(cond_class = paste(vsig,dfi$names))
+  })
+}) %>% select(-names) %>% relocate(cond_class)
+# qual a % de sítios que ultrapassa essa região de ausência de diferença?
+df_sites_summary <- df_sites %>% 
+  group_by(efeito,p_class,cond_class) %>% 
+  tally() %>% 
+  inner_join(df_sites %>% 
+               group_by(p_class) %>% 
+               summarise(nSite = unique(SiteCode) %>% length())) %>% 
+  ungroup() %>% 
+  mutate(perc = round(n*100/nSite,1),
+         cond_class = factor(cond_class,
+                             levels=c(
+                               "< min","< Q5%",
+                               "> Q95%","> max"
+                             )),
+         efeito = factor(efeito,
+                         levels=c(
+                           "Frag. total",
+                           "Frag. per se",
+                           "Área per se"),
+                         labels=c(
+                           "FT",
+                           "FPS",
+                           "APS"
+                         )))
+###################
+df_ij <- df_real %>% 
+  select(SiteCode,p_class) %>% 
+  distinct() %>% 
+  group_by(p_class) %>% 
+  tally() %>% 
+  mutate(label = paste0(p_class,", n Sítios=",n)) %>% 
+  select(-n)
+df_ij$label <- factor(df_ij$label,
+                      levels=unique(df_ij$label))
+dfp <- inner_join(df_sites_summary,df_ij)
 
 
 
-
-
+# Gráficos
+p <- dfp %>% 
+  ggplot(aes(x=cond_class,y=factor(1))) +
+  geom_col(aes(,fill=perc)) +
+  scale_fill_gradient("% sítios",low="gray",high="red") +
+  # ggnewscale::new_scale_fill() +
+  geom_label(aes(label=paste0(perc,"%"),y=0.5)) +
+  labs(x="em comparação com logU/U quando %CF=100",y="",
+       title="Sítios que ultrapassam os efeitos da paisagem sem perda de cobertura florestal em pelo menos uma sim.",
+       caption="FT = frag. total; FPS = frag. per se; APS = área per se") +
+  scale_y_discrete(expand=c(0,0)) +
+  scale_x_discrete(expand=c(0,0)) +
+  facet_grid(efeito~label,scales="free") +
+  theme_classic() +
+  theme(legend.position = "none",
+        text=element_text(face="bold"),
+        plot.caption = element_text(lineheight = 0.5,size=7),
+        plot.title = element_text(hjust=0.5,face="bold"),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+ggsave(filename = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/propSitios_ultrapassam_efeitoCF100.png",
+       plot=p,
+       width = 12,
+       height = 2.23,
+       dpi=200)
+saveRDS(p,file = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/propSitios_ultrapassam_efeitoCF100.rds")
+######### obs X predito (fixo + aleatório)
+f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE){
+  dfpred <- dff %>% 
+    mutate(
+      p_class = case_when(
+        p==1 ~ "%CF = 100",
+        p<1 & p>=0.80 ~ "80 ≤ %CF < 100",
+        p<0.80 & p>=0.60 ~ "60 ≤ %CF < 80",
+        p<0.60 & p>=0.30 ~ "30 ≤ %CF < 60",
+        p<0.30 ~ "%CF < 30"),
+      p_class = factor(p_class,levels=c("%CF < 30",
+                                        "30 ≤ %CF < 60",
+                                        "60 ≤ %CF < 80",
+                                        "80 ≤ %CF < 100",
+                                        "%CF = 100")),
+      lower = fit - 1.96 * se.fit,
+      upper = fit + 1.96 * se.fit
+    )
+  df_ij <- dfpred %>% 
+    select(SiteCode,p_class) %>% 
+    distinct() %>% 
+    group_by(p_class) %>% 
+    tally() %>% 
+    mutate(label = paste0(p_class,", n Sítios=",n)) %>% 
+    select(-n)
+  df_ij$label <- factor(df_ij$label,
+                        levels=unique(df_ij$label))
+  dfp <- inner_join(dfpred,df_ij)
+  nsites <- filter(dfp,p_class=="%CF = 100") %>% pull(SiteCode) %>% unique %>% length()
+  dfrange <- filter(dfp,p_class=="%CF = 100") %>% 
+    reframe(
+      names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
+      value = c(min(Uefeito), max(Uefeito),quantile(Uefeito,probs=0.05),quantile(Uefeito,probs=0.95))
+    )
+  # across(Uefeito,
+  #            .fns = list(min=min,max=max),
+  #            .names = "{.fn}")
+  # 
+  dfp <- filter(dfp,p_class!="%CF = 100")
+  dfp %>% 
+    mutate(efeito = factor(efeito,
+                           levels=c("Frag. total",
+                                    "Frag. per se",
+                                    "Área per se"))) %>% 
+    ggplot(aes(x=k,y=Uefeito)) +
+    geom_boxplot(aes(group=k),alpha=0.6) +
+    geom_hline(yintercept = 0,color="black") +
+    geom_hline(data = dfrange, aes(yintercept = value,linetype=names),
+               color="black",linewidth=0.5) +
+    scale_linetype_manual(name = paste0("logU/U %CF=100",", n sítios=",nsites),
+                          values=c("dotted","dashed")) +
+    {if(logic_ribbon)geom_ribbon(aes(x=k,y=fit,ymin=lower,ymax=upper,group = SiteCode),
+                                 fill="lightblue",
+                                 alpha=0.2)}+
+    geom_line(aes(y=fit,group = SiteCode,color=p),alpha=0.4) + #,color="darkred"
+    geom_point(aes(color=p),alpha=0.85) +
+    scale_colour_gradient2("% CF",midpoint=0.5,
+                           low="red",
+                           mid = "yellow",
+                           high = "darkgreen") +
+    labs(x="prop. de propágulos na vizinhança imediata (k)",y="logU/U",title="") +
+    facet_grid(efeito~label,scales="free") +
+    theme_classic() +
+    theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
+          legend.position = "inside",
+          legend.position.inside = c(0.72,0.25),
+          legend.direction="horizontal") 
+}
+p_efeitos <- f_obs_predito_bysite(df_real,logic_ribbon = TRUE)
+ggsave(filename = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.png",
+       dpi=200,
+       plot=p_efeitos,
+       width=12,height=8)
+saveRDS(p_efeitos,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.rds")
+###############
+#
+#### Sorteio de sítios para ilustrar os maiores desvios da paisagem
 
