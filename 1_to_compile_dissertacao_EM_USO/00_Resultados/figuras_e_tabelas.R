@@ -817,5 +817,18 @@ df_sites_q5_25_75_95 <- ddply(df_sites,c("p_class"),\(dfi){
   filter(dfi,max_logUU%in%vsites) %>% 
     select(-max_logUU)
 }) %>% select(-efeito) %>% distinct()
-
+vsites <- df_sites_q5_25_75_95 %>% filter(p_class=="%CF < 30") %>% pull(SiteCode)
+vsites <- df_sites %>% 
+  filter(p_class=="%CF < 30" & !(SiteCode%in%vsites)) %>% 
+  pull(SiteCode) %>% unique %>% sample()
 # olhar f_SoE em source/dinamica_coalescente.R
+df_sites_q5_25_75_95 <- rbind(df_sites_q5_25_75_95,
+                              data.frame(p_class="%CF < 30",
+                                         SiteCode=vsites[1])) %>% 
+  arrange(p_class)
+a_ply(df_sites_q5_25_75_95,1,\(dfi){
+  porigem <- paste0("dados/simulacao/",dfi$SiteCode,".txt")
+  pdestino <- gsub("simulacao","mapas_sitios_gdrive",porigem)
+  file.copy(from = porigem, to = pdestino)
+})
+saveRDS(df_sites_q5_25_75_95,"dados/csv_SoE/rds/df_sites_q5_25_75_95.rds")
