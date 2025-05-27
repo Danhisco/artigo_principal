@@ -805,4 +805,17 @@ saveRDS(p_efeitos,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_
 ###############
 #
 #### Sorteio de sítios para ilustrar os maiores desvios da paisagem
+df_sites <- df_real %>% 
+  filter(p_class!="%CF = 100") %>% 
+  group_by(efeito,p_class,SiteCode) %>% 
+  summarise(max_logUU = max(Uefeito))
+df_sites_q5_25_75_95 <- ddply(df_sites,c("p_class"),\(dfi){
+  vqlogUU <- quantile(dfi$max_logUU,probs=c(0.05,0.25,0.75,0.95))
+  vsites <- sapply(vqlogUU,\(x){
+    dfi$max_logUU[which.min(abs(x-dfi$max_logUU))]
+  })
+  filter(dfi,max_logUU%in%vsites) %>% 
+    select(-max_logUU)
+}) %>% select(-efeito) %>% distinct()
 
+# olhar f_SoE em source/dinamica_coalescente.R
