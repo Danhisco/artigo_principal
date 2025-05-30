@@ -832,3 +832,75 @@ a_ply(df_sites_q5_25_75_95,1,\(dfi){
   file.copy(from = porigem, to = pdestino)
 })
 saveRDS(df_sites_q5_25_75_95,"dados/csv_SoE/rds/df_sites_q5_25_75_95.rds")
+
+
+######################################################################################
+library(ggplot2)
+library(hexbin)
+library(ggforce)
+library(sf)
+
+# Dados simulados (substitua pelos seus dados)
+set.seed(123)
+df_referencia <- data.frame(
+  x = rnorm(200, mean = 0, sd = 0.05),
+  y = rnorm(200, mean = 0, sd = 0.04)
+)
+
+df_analise <- data.frame(
+  x = rnorm(300, mean = 0.05, sd = 0.08),
+  y = rnorm(300, mean = -0.02, sd = 0.1)
+)
+
+## 1. Calcular o polígono convexo do grupo de referência
+hull <- df_referencia[chull(df_referencia$x, df_referencia$y), ]
+
+## 2. Converter para objeto sf (simple features) para análise espacial
+polygon <- st_as_sf(hull, coords = c("x", "y")) %>% 
+  summarise(geometry = st_combine(geometry)) %>% 
+  st_cast("POLYGON")
+
+points <- st_as_sf(df_analise, coords = c("x", "y"))
+
+## 3. Verificar quais pontos estão dentro do polígono
+inside <- st_contains(polygon, points, sparse = FALSE)[1,]
+
+## 4. Calcular a porcentagem
+percent_inside <- mean(inside) * 100
+label_text <- sprintf("%.1f%% dentro", percent_inside)
+
+## 5. Encontrar o centroide do polígono para posicionar o label
+centroid <- st_centroid(polygon)
+centroid_coords <- st_coordinates(centroid)
+
+## 6. Criar o gráfico
+ggplot() +
+  # Camada de hexágonos para o conjunto de análise
+  geom_hex(data = df_analise, aes(x = x, y = y), bins = 30) +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", name = "Contagem") +
+  
+  # Polígono de referência
+  geom_polygon(data = hull, aes(x = x, y = y), 
+               fill = "gray", color = NA, alpha = 0.3) +
+  
+  # Label com a porcentagem
+  geom_label(aes(x = centroid_coords[1], y = centroid_coords[2], 
+                 label = label_text),
+             fill = "white", alpha = 0.8, size = 5) +
+  
+  # Pontos do conjunto de análise (opcional)
+  geom_point(data = df_analise, aes(x = x, y = y), alpha = 0.3, size = 1) +
+  
+  # Linhas de referência
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  
+  # Configurações do gráfico
+  labs(title = "Análise com região de referência",
+       subtitle = paste("Total de pontos analisados:", nrow(df_analise)),
+       x = "Variável X", y = "Variável Y") +
+  theme_minimal() +
+  coord_equal()
+
+# Mostrar a porcentagem no console também
+cat("Porcentagem de pontos dentro do polígono de referência:", label_text, "\n")
