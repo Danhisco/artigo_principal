@@ -990,13 +990,13 @@ f_circle_plot2 <- \(dfp,df_ref,boxlabelsize=10,tsize=15,lsize=15){
   lp[[1]]+lp[[2]]
 }
 
-f_hist_ggplot <- \(dff=df_real,tsize=10){
+f_hist_ggplot <- \(dff=df_real,tsize=10,diffrange){
   dff <- dff %>% 
-    select(-fit,-se.fit) %>% 
+    #select(-fit,-se.fit) %>% 
     filter(efeito!="Frag. total") %>% 
     mutate(Uefeito_abs = abs(Uefeito)) %>% 
     select(-Uefeito) %>% 
-    ddply(.,c("k","SiteCode"),\(dfi){
+    ddply(.,c("SiteCode"),\(dfi){
       dfi$diff_efeito <- with(dfi,{
         Uefeito_abs[efeito=="Área per se"] -
           Uefeito_abs[efeito=="Frag. per se"]
@@ -1010,11 +1010,11 @@ f_hist_ggplot <- \(dff=df_real,tsize=10){
     geom_histogram() ,
     geom_vline(xintercept = 0,color="red",linetype=2) ,
     theme_classic() ,
-    scale_x_continuous(expand=c(0,0)) ,
+    scale_x_continuous(expand=c(0,0),limits = diffrange) ,
     scale_y_continuous(expand=c(0,0))
   )
   p <- dff %>% 
-    mutate(flab = "|Área per se| - |Frag. per se|") %>% 
+    mutate(flab = "|APS| - |FPS|") %>% 
     ggplot(aes(x=diff_efeito)) +
     geom_list2 +
     labs(x="",y="") +
@@ -1023,13 +1023,38 @@ f_hist_ggplot <- \(dff=df_real,tsize=10){
           plot.margin = margin(0,0,0,0))
   return(p)
 }
-f_scatterplot <- \(dfp,xrange,yrange,axislabs=TRUE){
+f_polig_ref <- \(df_ref,df_analise){
+  ## 1. Calcular o polígono convexo do grupo de referência
+  hull <- df_ref[chull(df_ref[["Área per se"]], df_ref[["Frag. per se"]]), ]
+  hull_analise <- df_analise[chull(df_analise[["Área per se"]], df_analise[["Frag. per se"]]), ]
+  ## 2. Converter para objeto sf (simple features) para análise espacial
+  polygon <- st_as_sf(hull, coords = c("Área per se", "Frag. per se")) %>% 
+    summarise(geometry = st_combine(geometry)) %>% 
+    st_cast("POLYGON")
+  points <- st_as_sf(df_analise, coords = c("Área per se", "Frag. per se"))
+  ## 3. Verificar quais pontos estão dentro do polígono
+  inside <- st_contains(polygon, points, sparse = FALSE)[1,]
+  ## 4. Calcular a porcentagem
+  percent_inside <- mean(inside) * 100
+  label_text <- sprintf("%.1f%% dentro", percent_inside)
+  ## 5. Encontrar o centroide do polígono para posicionar o label
+  centroid <- st_centroid(polygon)
+  centroid_coords <- st_coordinates(centroid)
+  list(
+    "ref_hull"=hull,
+    "pontos_hull"=hull_analise,
+    "centro_coords"=centroid_coords,
+    "label"=label_text
+  )
+}
+f_scatterplot <- \(dfp,xrange,yrange,axislabs=TRUE,df_ref,
+                   tsize=15){
   label_efeitos="fragmentação per se ~ área per se"
   xlab="Área per se"
   ylab="Frag. per se"
   f_gsub <- \(xlab){
-    gsub("area","Área per se",xlab) %>% 
-      gsub("fragperse","Frag. per se",.) %>% 
+    gsub("area","APS",xlab) %>% 
+      gsub("fragperse","FPS",.) %>% 
       gsub("fragtotal","Frag. total",.)
   }
   geom_list1 <- list(
@@ -1040,29 +1065,145 @@ f_scatterplot <- \(dfp,xrange,yrange,axislabs=TRUE){
     geom_point(alpha=1),
     scale_x_continuous(limits = xrange),
     scale_y_continuous(limits = yrange),
-    # geom_hex(bins = 60,alpha=0.5),
-    # scale_fill_gradient("número de\nsimulaçoes",low = "yellow", high = "red", na.value = NA),
+    geom_hex(bins = 60,alpha=0.5),
+    scale_fill_gradient("número de\nsimulaçoes",low = "yellow", high = "red", na.value = NA),
     theme_classic(),
     guides(fill=guide_colourbar(position="inside")),
-    theme(legend.position.inside = c(0.7, 0.9),
+    theme(legend.position = "none",
+          legend.position.inside = c(0.7, 0.9),
           legend.direction="horizontal",
-          axis.title = element_blank(),
+          # axis.title = element_blank(),
+          aspect_ratio=1,
           plot.margin = margin(0,0,0,0),
-          text=element_text(size=15,face="bold"))
+          text=element_text(size=tsize,face="bold"))
   )
+  # valores de referência
+  l_poligons <- f_polig_ref(df_ref=df_ref,df_analise=dfp)
+  #
   p <- dfp %>% 
     ggplot(aes(x=.data[[xlab]],y=.data[[ylab]])) +
-    labs(x=f_gsub(xlab),
-         y=f_gsub(ylab)) +
+    geom_polygon(data=l_poligons[["pontos_hull"]],
+                 aes(x=.data[[xlab]],y=.data[[ylab]]),
+                 fill="#90EE90",color="black")+
+    geom_polygon(data=l_poligons[["ref_hull"]],
+                 aes(x=.data[[xlab]],y=.data[[ylab]]),
+                 fill="darkgray",color=NA,alpha=0.75) +
+    labs(x=ifelse(axislabs,f_gsub(xlab),""),
+         y=ifelse(axislabs,f_gsub(ylab),"")) +
     geom_list1
   p_reg <- ggExtra::ggMarginal(p, type = "boxplot",
                                fill = "steelblue", col = "darkblue",size=17)
   return(p_reg)
 }
+
 library(cowplot)
 library(patchwork)
 
-f_final <- \(dfdados){
+
+
+####### versão mais simples 
+
+f_figgeral <- \(df_plot){
+  dfp0 <- df_plot %>% 
+    select(-`Frag. total`) %>% 
+    mutate(k=factor(round(k,2)),
+           A_maior0 = ifelse(`Área per se`>=0,"Área per se>=0","Área per se<0"),
+           A_maior0 = factor(A_maior0,levels=c("Área per se<0","Área per se>=0")),
+           F_maior0 = ifelse(`Frag. per se`>=0,"Frag per se>=0","Frag per se<0"),
+           F_maior0 = factor(F_maior0,levels=c("Frag per se>=0","Frag per se<0")),
+           abs_AmaiorF = case_when(
+             abs(`Área per se`) > abs(`Frag. per se`) ~ "|Área per se|>|Frag per se|",
+             abs(`Área per se`) < abs(`Frag. per se`) ~ "|Frag per se|>|Área per se|",
+             abs(`Área per se`) == abs(`Frag. per se`) ~ "|frag|=|area|"))
+  df_ref <- dfp0 %>% filter(p_class=="%CF = 100")
+  df_pclass <-  dfp0 %>% 
+    filter(p_class!="%CF = 100",
+           k%in%c("0.99","0.75","0.5"))
+  xrange <- range(df_pclass$`Área per se`)
+  yrange <- range(df_pclass$`Frag. per se`)
+  diffrange <- df_pclass %>% 
+    select(SiteCode,`Área per se`,`Frag. per se`) %>% 
+    pivot_longer(-SiteCode) %>% 
+    pull(value) %>% range()
+  diffrange[2] <- 0.4
+  lp <- dlply(df_pclass,c("p_class","k"),\(dfi){
+    # 
+    dfp <- dfi %>% 
+      select(SiteCode,`Área per se`,`Frag. per se`) %>% 
+      pivot_longer(-SiteCode,names_to="efeito",values_to="Uefeito")
+      # group_by(A_maior0,F_maior0,abs_AmaiorF) %>% 
+      # summarise(n=n(),
+      #           nSite=length(unique(SiteCode))) %>% 
+      # group_by(A_maior0,F_maior0) %>% 
+      # mutate(perc = round(n*100/sum(n),2),
+      #        perc_sites = round(nSite*100/67,2))
+    # 
+    p_reg <- f_scatterplot(dfp = dfi,
+                           xrange = xrange, yrange = yrange,
+                           df_ref=df_ref,
+                           axislabs = TRUE,
+                           tsize = 8)
+    #p_circ <- f_circle_plot2(dfp,boxlabelsize=3.5,tsize=6,lsize = 8)
+    p_hist <- f_hist_ggplot(dff = dfp,
+                            tsize = 8,
+                            diffrange=diffrange)
+    p_final <- wrap_plots(A=p_reg,B=p_hist,widths = c(1.5,1))
+    return(p_reg)  
+  })
+  matnames <- matrix(names(lp),ncol=4,byrow=FALSE)
+  pfinal <- wrap_plots(lp,ncol=4,byrow = FALSE,axes = "collect")
+  # inclusão dos títulos
+  # Definir um layout com:
+  # - 4 linhas: 3 para os gráficos + 1 para os títulos das colunas
+  # - 4 colunas: 3 para os gráficos + 1 para os títulos das linhas
+  layout_matrix <- rbind(
+    1:5,   # Títulos das colunas (acima dos gráficos)
+    6:10,    # Linha 1 de gráficos
+    11:15, # Linha 2 de gráficos
+    16:20 # Linha 3 de gráficos
+  )
+  # Alturas e larguras relativas:
+  hstrip <- 0.1
+  heights <- c(hstrip, 1, 1, 1)    # 10% para títulos das colunas, resto para gráficos
+  widths <- c(1, 1, 1, 1, hstrip)     # 10% para títulos das linhas (direita)
+  #
+  # Lista de todos os elementos (títulos + gráficos)
+  elementos <- list(
+    # Títulos das colunas (linha 1 do layout)
+    textGrob(vcolunas[1], gp = gpar(fontsize = 12, fontface = "bold")),
+    textGrob(vcolunas[2], gp = gpar(fontsize = 12, fontface = "bold")),
+    textGrob(vcolunas[3], gp = gpar(fontsize = 12, fontface = "bold")),
+    textGrob(vcolunas[4], gp = gpar(fontsize = 12, fontface = "bold")),
+    textGrob("", gp = gpar(fontsize = 12)),  # Espaço vazio (canto superior direito)
+    # Gráficos + títulos das linhas (à direita)
+    ## 1a linha
+    lp[[ matnames[1,1] ]], lp[[ matnames[1,2] ]], lp[[ matnames[1,3] ]], lp[[ matnames[1,4] ]],
+    textGrob(vlinhas[1], rot = 270, gp = gpar(fontsize = 12, fontface = "bold")),
+    ## 2a linha
+    lp[[ matnames[2,1] ]], lp[[ matnames[2,2] ]], lp[[ matnames[2,3] ]], lp[[ matnames[2,4] ]],
+    textGrob(vlinhas[2], rot = 270, gp = gpar(fontsize = 12, fontface = "bold")),
+    ## 3a linha
+    lp[[ matnames[3,1] ]], lp[[ matnames[3,2] ]], lp[[ matnames[3,3] ]], lp[[ matnames[3,4] ]],
+    textGrob(vlinhas[3], rot = 270, gp = gpar(fontsize = 12, fontface = "bold"))
+  )
+  # Plotar tudo
+  p <- arrangeGrob(
+    grobs = elementos,
+    layout_matrix = layout_matrix,
+    heights = heights,
+    widths = widths
+  )
+}
+df_plot <- df_real %>% 
+  select(efeito,Uefeito,k,SiteCode,p_class) %>%
+  pivot_wider(names_from="efeito",values_from="Uefeito")
+p <- f_figgeral(df_plot)
+ggsave(filename="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fragperse_e_areaperse_exploracaofinal.png",
+       plot=p,
+       width = 12,
+       dpi=200)
+############################### 1a versão
+f_finalNAOUSADA <- \(dfdados){
   df_plot <- dfdados %>% 
     filter(efeito!="Frag. total") %>% 
     select(-fit,-se.fit,-lower,-upper) %>% 
@@ -1083,7 +1224,7 @@ f_final <- \(dfdados){
     mutate(perc = round(n*100/sum(n),2),
            perc_sites = round(nSite*100/67,2))  
   #####
-  p_reg <- f_scatterplot(dfp = df_plot)
+  p_reg <- f_scatterplot(dfp = df_plot,xrange = xrange,yrange = yrange)
   p_circ <- f_circle_plot(dfp,boxlabelsize=3.5,tsize=6,lsize = 8)
   p_hist <- f_hist_ggplot(dff = dfdados,tsize = 15)
   design <- "AB
@@ -1094,125 +1235,3 @@ f_final <- \(dfdados){
   p_final <- wrap_plots(A=p_reg,B=p_circ,C=p_hist,design = design,widths = c(2,1.5))
   return(p_final)
 }
-
-
-####### versão mais simples 
-f_polig_ref <- \(df_ref,df_analise){
-  ## 1. Calcular o polígono convexo do grupo de referência
-  hull <- df_ref[chull(df_ref[["Área per se"]], df_ref[["Frag. per se"]]), ]
-  ## 2. Converter para objeto sf (simple features) para análise espacial
-  polygon <- st_as_sf(hull, coords = c("Área per se", "Frag. per se")) %>% 
-    summarise(geometry = st_combine(geometry)) %>% 
-    st_cast("POLYGON")
-  points <- st_as_sf(df_analise, coords = c("Área per se", "Frag. per se"))
-  ## 3. Verificar quais pontos estão dentro do polígono
-  inside <- st_contains(polygon, points, sparse = FALSE)[1,]
-  ## 4. Calcular a porcentagem
-  percent_inside <- mean(inside) * 100
-  label_text <- sprintf("%.1f%% dentro", percent_inside)
-  ## 5. Encontrar o centroide do polígono para posicionar o label
-  centroid <- st_centroid(polygon)
-  centroid_coords <- st_coordinates(centroid)
-}
-
-f_figgeral <- \(df_plot){
-  dfp0 <- df_plot %>% 
-    select(-`Frag. total`) %>% 
-    mutate(k=factor(round(k,2)),
-           A_maior0 = ifelse(`Área per se`>=0,"Área per se>=0","Área per se<0"),
-           A_maior0 = factor(A_maior0,levels=c("Área per se<0","Área per se>=0")),
-           F_maior0 = ifelse(`Frag. per se`>=0,"Frag per se>=0","Frag per se<0"),
-           F_maior0 = factor(F_maior0,levels=c("Frag per se>=0","Frag per se<0")),
-           abs_AmaiorF = case_when(
-             abs(`Área per se`) > abs(`Frag. per se`) ~ "|Área per se|>|Frag per se|",
-             abs(`Área per se`) < abs(`Frag. per se`) ~ "|Frag per se|>|Área per se|",
-             abs(`Área per se`) == abs(`Frag. per se`) ~ "|frag|=|area|"))
-  df_ref <- dfp0 %>% filter(p_class=="%CF = 100")
-  df_pclass <-  dfp0 %>% 
-    filter(p_class!="%CF = 100",
-           k%in%c("0.99","0.75","0.5"))
-  xrange <- range(df_pclass$`Área per se`)
-  yrange <- range(df_pclass$`Frag. per se`)
-  lp <- dlply(df_pclass,c("k","p_class"),\(dfi){
-    # 
-    dfp <- dfi %>% 
-      group_by(A_maior0,F_maior0,abs_AmaiorF) %>% 
-      summarise(n=n(),
-                nSite=length(unique(SiteCode))) %>% 
-      group_by(A_maior0,F_maior0) %>% 
-      mutate(perc = round(n*100/sum(n),2),
-             perc_sites = round(nSite*100/67,2))
-    # 
-    p_reg <- f_scatterplot(dfp = dfi,xrange = xrange, yrange = yrange)
-    p_circ <- f_circle_plot2(dfp,boxlabelsize=3.5,tsize=6,lsize = 8)
-    p_hist <- f_hist_ggplot(dff = dfdados,tsize = 15)
-    design <- "AB
-             AB
-             AC
-             AC
-             AC"
-    p_final <- wrap_plots(A=p_reg,B=p_circ,C=p_hist,design = design,widths = c(2,1.5))
-    return(p_final)  
-  })
-  
-}
-
-df_plot <- dfdados %>% 
-  select(efeito,Uefeito,k,SiteCode,p_class) %>%
-  pivot_wider(names_from="efeito",values_from="Uefeito")
-
-
-
-
-
-
-
-library(ggplot2)
-library(hexbin)
-library(ggforce)
-library(sf)
-
-# Dados simulados (substitua pelos seus dados)
-set.seed(123)
-df_referencia <- data.frame(
-  x = rnorm(200, mean = 0, sd = 0.05),
-  y = rnorm(200, mean = 0, sd = 0.04)
-)
-
-df_analise <- data.frame(
-  x = rnorm(300, mean = 0.05, sd = 0.08),
-  y = rnorm(300, mean = -0.02, sd = 0.1)
-)
-
-
-## 6. Criar o gráfico
-ggplot() +
-  # Camada de hexágonos para o conjunto de análise
-  geom_hex(data = df_analise, aes(x = x, y = y), bins = 30) +
-  scale_fill_gradient(low = "lightblue", high = "darkblue", name = "Contagem") +
-  
-  # Polígono de referência
-  geom_polygon(data = hull, aes(x = x, y = y), 
-               fill = "gray", color = NA, alpha = 0.3) +
-  
-  # Label com a porcentagem
-  geom_label(aes(x = centroid_coords[1], y = centroid_coords[2], 
-                 label = label_text),
-             fill = "white", alpha = 0.8, size = 5) +
-  
-  # Pontos do conjunto de análise (opcional)
-  geom_point(data = df_analise, aes(x = x, y = y), alpha = 0.3, size = 1) +
-  
-  # Linhas de referência
-  geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  
-  # Configurações do gráfico
-  labs(title = "Análise com região de referência",
-       subtitle = paste("Total de pontos analisados:", nrow(df_analise)),
-       x = "Variável X", y = "Variável Y") +
-  theme_minimal() +
-  coord_equal()
-
-# Mostrar a porcentagem no console também
-cat("Porcentagem de pontos dentro do polígono de referência:", label_text, "\n")
