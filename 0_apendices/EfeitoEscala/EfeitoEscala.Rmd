@@ -97,10 +97,17 @@ df_md <- df_Usoe |>
          across(c(k,log2_lado.km,S_obs:log_S.DA),f_z,.names="{.col}_z"))
 # dados usados na simulação com os valores preditos e os residuos z transformados
 ## códigos para gerar df_plot
-md_SoE <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
-                  data=df_md)
-# dados usados na simulação com os valores preditos e os residuos z transformados
-df_plot <- df_md |> 
+if(FALSE){
+  md_SoE <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
+                    data=df_md)
+  ####
+  if(false){
+    library(mgcv)
+    md_SoE <- gam(logit_Umed ~ te())
+  }
+  ###s
+  
+  df_plot <- df_md |> 
   select(SiteCode, logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
 df_plot$deviance <- residuals(md_SoE,scale=T)
 df_plot$predict <- predict(md_SoE)
@@ -116,7 +123,13 @@ df_plot <- df_plot |>
   ddply("k_factor",f_k.SoE) |> 
   select(k_factor,matches("SoE")) |> 
   inner_join(x=df_plot,by="k_factor")
-write_csv(df_plot,"dados/csv/df_plotSoE.csv")
+  write_csv(df_plot,"dados/csv/df_plotSoE.csv")
+}else{
+  df_plot <- read_csv("dados/csv/df_plotSoE.csv")
+}
+
+# dados usados na simulação com os valores preditos e os residuos z transformados
+
 # df_plot <- read_csv("dados/csv/df_plotSoE.csv") |> as.data.frame()
 # df_plot$k_factor <- factor(round(df_plot$k_factor,2),
 #                            levels = unique(round(df_plot$k_factor,2))[20:1])
@@ -171,13 +184,15 @@ l_p[[2]] <- df_p |>
   theme(legend.position = "bottom")
 l_p[[3]] <- df_sim |> 
   ggplot(aes(x=k,y=d,group=k)) +
+  scale_x_reverse(expand = c(0.01,0),breaks = c(seq(0.05,0.95,0.05),0.99)) +
+  scale_y_continuous(expand = c(0.01,0),breaks = seq(0,20,2)) +
   geom_jitter() +
   geom_boxplot() +
-  labs(x = "k",
+  labs(x = "prop. de propágulos na vizinhança imediata\n(k - eixo reverso)",
        y = "d",
        title = "c) 20 graus de dispersão")
 grid.arrange(grobs=l_p,nrow=1)
-save(l_p,file="./apendices/EfeitoEscala/Rdata/fig1_grobs.Rdata")
+saveRDS(l_p,file="./0_apendices/EfeitoEscala/Rdata/fig1_grobs.rds")
 ```
 
 <font size="1"> 
@@ -202,13 +217,27 @@ p <- df_Unull |>
   geom_line(data=df_median,aes(x=k,y=y,group=SiteCode),alpha=0.4,color="darkorange") +
   stat_summary(aes(group=interaction(SiteCode,k)),fun.data = my_summary_fun, geom = "pointrange",alpha=0.5) +
   geom_smooth(se=F,method = "gam") +
-  scale_x_continuous(expand = c(0.01,0)) +
+  scale_x_reverse(expand = c(0.01,0),breaks = c(seq(0.05,0.95,0.05),0.99)) +
   scale_y_continuous(expand = c(0.01,0)) +
   theme_bw() +
-  ggtitle("Estimativa em paisagens prístinas com 16 km de lado") +
+  labs(x="proporção de propágulos na vizinhança imediata (k - eixo reverso)",
+       y="taxa U") +
+  ggtitle("b) Estimativa em paisagens\nprístinas com 16 km de lado") +
   theme(plot.title = element_text(hjust = 0.5, size = 13))
 ggsave(filename = "0_apendices/EfeitoEscala/figuras/fig2a_tendencia_media.png",plot = p)
+saveRDS(object = p,file = "0_apendices/EfeitoEscala/figuras/fig2a_tendencia_media.rds")
 p
+```
+```{r}
+library(magick)
+library(patchwork)
+library(cowplot)
+img <- image_read("./0_apendices/EfeitoEscala/figuras/may2012_fi1a.png") %>% 
+  image_trim()
+combined_plot <- ggdraw() +
+  draw_image(img, x = 0, y = 0, width = 0.5, height = 1) +  # Metade esquerda
+  draw_plot(p, x = 0.5, y = 0, width = 0.5, height = 1)   # Metade direita
+saveRDS(object = combined_plot,file = "0_apendices/EfeitoEscala/figuras/fig2comparacao_resultados.rds")
 ```
 
 <font size="1"> 
@@ -235,6 +264,7 @@ p <- df_p |>
 ggsave("0_apendices/EfeitoEscala/figuras/fig2_U16_k.png",plot = p,
        width = 14,
        height = 6.7)
+saveRDS(p,"0_apendices/EfeitoEscala/figuras/fig2_U16_k.rds")
 ```
 
 <font size="1"> 
