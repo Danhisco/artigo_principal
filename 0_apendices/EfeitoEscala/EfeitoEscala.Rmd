@@ -94,45 +94,46 @@ df_md <- df_Usoe |>
          lado_factor = factor(round(lado_km,1)) ) |> 
   select(SiteCode,Umed,logit_Umed,k,k_factor,lado_factor,lado_km,log2_lado.km,S_obs,Ntotal,DA,S.DA) |> 
   mutate(across(S_obs:S.DA,log,.names="log_{.col}"),
-         across(c(k,log2_lado.km,S_obs:log_S.DA),f_z,.names="{.col}_z"))
+         across(c(k,log2_lado.km,S_obs:log_S.DA),f_z,.names="{.col}_z"),
+         SiteCode=factor(SiteCode))
 # dados usados na simulação com os valores preditos e os residuos z transformados
 ## códigos para gerar df_plot
+saveRDS(df_md,"0_apendices/EfeitoEscala/figuras/df_md.rds")
+
 if(FALSE){
-  md_SoE <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
-                    data=df_md)
+  l_md <- readRDS("0_apendices/EfeitoEscala/figuras/l_md.rds")
+  md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |>
+  (\(.) l_md[[.]])()
   ####
   if(false){
     library(mgcv)
     md_SoE <- gam(logit_Umed ~ te())
   }
   ###s
-  
-  df_plot <- df_md |> 
-  select(SiteCode, logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
+df_plot <- df_md |> 
+  select(SiteCode, Umed,logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
 df_plot$deviance <- residuals(md_SoE,scale=T)
 df_plot$predict <- predict(md_SoE)
-df_plot <- df_plot |> 
-  mutate(Umed = exp(logit_Umed) / exp(1-logit_Umed),
-         Pre_Umed = exp(predict) / exp(1-predict),
+df_plot0 <- df_plot |> 
+  mutate(
+    #Umed = 1/(1+exp(logit_Umed)),
+     #    Pre_Umed = 1/(1+exp(predict)),
          lado_numeric = as.numeric(as.character(lado_factor)),
          S.N = S_obs / Ntotal)
-df_plot <- df_plot |>
+df_plot1 <- df_plot0 |>
   group_by(k_factor,lado_factor) |> 
-  summarise(Umed = mean(Pre_Umed)) |> 
-  ddply("k_factor",f_lag.U) |>
-  ddply("k_factor",f_k.SoE) |> 
+  # summarise(Umed = mean(predict)) |> 
+  summarise(Umed = mean(Umed)) |> 
+  ddply("k_factor",f_lag.U)
+df_plot <- df_plot1 |>
+  ddply("k_factor",f_k.SoE,limiar=0.9) |> 
   select(k_factor,matches("SoE")) |> 
-  inner_join(x=df_plot,by="k_factor")
-  write_csv(df_plot,"dados/csv/df_plotSoE.csv")
+  inner_join(x=df_plot0,by="k_factor")
+write_csv(df_plot,"dados/csv/df_plotSoE.csv")
 }else{
   df_plot <- read_csv("dados/csv/df_plotSoE.csv")
 }
 
-# dados usados na simulação com os valores preditos e os residuos z transformados
-
-# df_plot <- read_csv("dados/csv/df_plotSoE.csv") |> as.data.frame()
-# df_plot$k_factor <- factor(round(df_plot$k_factor,2),
-#                            levels = unique(round(df_plot$k_factor,2))[20:1])
 ```
 
 ```{r trackdown,eval=FALSE}
@@ -323,6 +324,7 @@ f_img_trim_resize <- \(vpath){
   image_write(img,path=vpath)
 }
 f_img_trim_resize("0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM.png")
+saveRDS(p,"0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM.rds")
 p
 
 ```
@@ -342,6 +344,7 @@ l_p[[1]] <- df_Usoe |>
   ggplot(aes(x=k,y=Ucv, group=k)) +
   geom_jitter() +
   geom_boxplot() +
+  scale_x_continuous(breaks=c(seq(0.05,0.95,0.05),0.99))
   labs(x="k",
        y="Coef. Var. de Umed (%)",
        title="a) variação da média entre escalas")
@@ -349,9 +352,11 @@ l_p[[2]] <- df_Usoe |>
   ggplot(aes(x=k,y=Usd,group=k)) +
   geom_jitter() +
   geom_boxplot() +
-  labs(y="sd taxas U réplicas",
+  scale_x_continuous(breaks=c(seq(0.05,0.95,0.05),0.99))
+  labs(y="desvio padrão taxas U réplicas",
        title="b) variabilidade entre réplicas")
-grid.arrange(grobs=l_p,ncol=2)
+#grid.arrange(grobs=l_p,ncol=2)
+saveRDS(l_p,"0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM_complementos.rds")
 ```
 
 <font size="1"> 
@@ -373,28 +378,76 @@ __tabela 1__ Seleção das variáveis de controle. S_obs = riqueza observada, N 
 
 ```{r GLMM selecao de variaveis para fixar no GLMM final,eval=T,cache=T,echo=TRUE}
 l_md <- list()
-l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
+l_md[[1]] <- lmer(Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
                   data=df_md)
-l_md[[2]] <- lmer(logit_Umed ~ log_S_obs_z * k_factor * lado_factor + (1|SiteCode),
+l_md[[2]] <- lmer(Umed ~ log_S_obs_z * k_factor * lado_factor + (1|SiteCode),
                   data=df_md)
-l_md[[3]] <- lmer(logit_Umed ~ S_obs_z * Ntotal_z * k_factor * lado_factor  + (1|SiteCode),
+l_md[[3]] <- lmer(Umed ~ S_obs_z * Ntotal_z * k_factor * lado_factor  + (1|SiteCode),
                   data=df_md)
-l_md[[4]] <- lmer(logit_Umed ~ S_obs_z * k_factor * lado_factor + (1|SiteCode),
+l_md[[4]] <- lmer(Umed ~ S_obs_z * k_factor * lado_factor + (1|SiteCode),
                   data=df_md)
 names(l_md) <-laply(l_md,f_nameModel)
 AICctab(l_md,weights=T)
+saveRDS(l_md,"0_apendices/EfeitoEscala/figuras/l_md.rds")
 ```
 
 __Tabela 2__ Coeficientes de determinal (R2) do modelo mais plausível: marginal(m, desconsiderando o efeito aleatório) e condicional(c, considerando o efeito aleatório):
 
 ```{r R2 marginal e condicional do modelo mais plausível para descrever SoE}
 # print("R2 marginal e condicional, respectivamente:")
+l_md <- readRDS("0_apendices/EfeitoEscala/figuras/l_md.rds")
 md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |>
   (\(.) l_md[[.]])()
 md_SoE |> (\(.) MuMIn::r.squaredGLMM(.))()
 ```
 
 O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1). Os coeficientes de determinação marginal e condional do modelo são aproximadamente iguais à 0.96. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos apresentarem algum desvio (Figura SI 1), o modelo faz uma boa predição do observado (Figura SI 1). Na figura 5 há o predito para os dados observados na escala padrão da variável resposta, taxa U. Para cada escala e grau de limitação de dispersão foi calculado a média entre sítios (pontos em azul). Os pontos estão coloridos pela razão entre número de espécies e número de indivíduos (S/N).
+
+
+```{r}
+dfp <- df_plot1 %>% 
+  mutate(lado = as.numeric(as.character(lado_factor)))
+l_df <- list()
+vxout <- 0.75
+for(i in 1:length(levels(dfp$k_factor))){
+  dfi <- filter(dfp,k_factor==levels(dfp$k_factor)[i])
+  dfi$Ucsum <- c(NA,dfi$Ucsum[1:(nrow(dfi)-1)])
+  df0 <- filter(dfi,!is.na(Ucsum))
+  vaprox <- sapply(1:(nrow(df0)-1),\(x){
+    dados <- df0[x:(x+1),]
+    approx(dados$Ucsum, dados$lado, xout = vxout)$y
+  })
+  dfi$vapprox <- ifelse(length(vaprox[!is.na(vaprox)])==0,
+                        NA,
+                        round(vaprox[!is.na(vaprox)],0))
+  l_df[[i]] <- dfi
+}
+dfp <- do.call("rbind",l_df)
+l_p <- list()
+l_p[[1]] <- dfp %>% 
+  ggplot(aes(x=lado_factor,y=Umed)) +
+  geom_point() +
+  geom_line(group=1) +
+  labs(x="lado da paisagem (km)",y="predição da média da taxa U",
+       title="a)") +
+  scale_y_continuous(labels = scales::scientific_format(digits = 1)) +
+  facet_wrap(~k_factor,ncol=4,scales="free") +
+  theme_classic()
+l_p[[2]] <- dfp %>% 
+  ggplot(aes(x=lado_factor,y=Ucsum)) +
+  geom_point() +
+  geom_line(group=1) +
+  geom_hline(yintercept = vxout,color="red") +
+  geom_label(aes(label=paste0("aprox: ",vapprox),x=5,y=vxout)) +
+  labs(x="lado da paisagem (km)",y="diferença acumulada entre lados da paisagem",
+       title="b)") +
+  # scale_y_continuous(labels = scales::scientific_format(digits = 2)) +
+  facet_wrap(~k_factor,ncol=4) +
+  theme_classic()
+grid.arrange(grobs=l_p,ncol=1)
+saveRDS(l_p,file="0_apendices/EfeitoEscala/figuras/l_p_efeito_escala.rds")
+
+```
 
 ```{r figura 5 para resultados do efeito de escala,fig.width=8,fig.height=8.5}
 v_threshold <- paste0("SoE >= ",
@@ -404,7 +457,7 @@ cols <- c("blue","red") # "#f04546","3 quant"=
 names(cols) <- c("avg+-sd",v_threshold )
 a <- 0.5
 p <- df_plot |> 
-  ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
+  ggplot(aes(x=lado_numeric,y=Umed)) + #,group=k_factor,color=k
   geom_point(alpha=0.70,aes(color=S.N)) +
   geom_line(aes(group=SiteCode,color=S.N),alpha=0.25) +
   scale_color_distiller(palette = "Spectral",name="S / N") +
@@ -414,8 +467,8 @@ p <- df_plot |>
                fun.min = function(x) mean(x) - sd(x), 
                fun.max = function(x) mean(x) + sd(x), 
                geom = "pointrange",
-               aes(x=lado_numeric,y=Pre_Umed,color="avg+-sd"),alpha=0.6,size=a) +
-  geom_vline(aes(xintercept=SoE_0.95,color=names(cols)[2]),alpha=0.5) +
+               aes(x=lado_numeric,y=predict,color="avg+-sd"),alpha=0.6,size=a) +
+  geom_vline(aes(xintercept=SoE_0.9,color=names(cols)[2]),alpha=0.5) +
   scale_color_manual(name="",values=cols) +
   scale_x_continuous(trans = log2_trans(),
                      breaks = trans_breaks("log2", function(x) 2^x)) +
@@ -424,13 +477,14 @@ p <- df_plot |>
   facet_wrap(~k_factor,ncol=5,scales="free_y") +
   theme_classic() +
   labs(title = "Média da estimativa média da taxa U predito pelo LMM:",
-       subtitle="logit(Umed) ~ log(S) * log(N) * k * scale + (1|Site)",
+       subtitle="Umed ~ log(S) * log(N) * k * scale + (1|Site)",
        x="scale (landscape side, km)",
        y="avg U rate (Umed)",
        color="") +
   theme(legend.position = "top",
         strip.text = element_text(size = 10,margin = margin()),
         panel.spacing = unit(3, "pt"))
+saveRDS(p,file="0_apendices/EfeitoEscala/figuras/fig5_SoE.rds")
 vpath <- ggsave("0_apendices/EfeitoEscala/figuras/fig5_SoE.png",plot = p,
        width = 10.2,
        height = 6.7)
