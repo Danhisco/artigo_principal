@@ -422,9 +422,12 @@ f_soe <- \(vlimiar){
   }
   do.call("rbind",l_df)  
 }
-
 l_df <- lapply(c(0.75,0.90,0.95),f_soe)
 names(l_df) <- c(0.75,0.90,0.95)
+df_SoE <- l_df[["0.9"]] %>% 
+  mutate(k = as.numeric(as.character(k_factor))) %>% 
+  select(k,vapprox) %>% distinct()
+write_csv(df_SoE,file="./dados/csv_SoE/df_plotSoE.csv")
 f_ggplot <- \(vtitle){
   dfi <- l_df[[vtitle]]
   dfi %>% 

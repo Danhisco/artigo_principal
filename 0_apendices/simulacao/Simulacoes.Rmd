@@ -34,8 +34,16 @@ library(dplyr)
 # df_p
 df_p <- read_csv("dados/df_p.csv")
 #df_sítios simuláveis em MNEE contemporâneo
-v_site <- read_csv("dados/csv/resultados_MN/MNEE/cont/df_resultados.csv") |> 
+df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+  mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+         long = ifelse(is.na(long_correct),long,long_correct),
+         Sitecode = factor(SiteCode)) %>% 
+  select(SiteCode,lat,long, forest_succession) %>% 
+  filter(forest_succession!="capoeira")
+
+v_site <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
   pull(SiteCode) |> unique()
+v_site <- intersect(df_coord$SiteCode,v_site)
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   dplyr::select(-tif.path) |> 
@@ -44,17 +52,19 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
     SiteCode = str_extract(txt.path,".*?(?=.txt)")),
     by="SiteCode") |> 
   filter(SiteCode %in% v_site) |>
-  left_join(df_p,by="SiteCode")
+  left_join(df_p,by="SiteCode") %>% 
+  mutate(k=round(k,2))
 # df com o efeito de escalar
-df_SoE <- read_csv("./dados/csv/df_plotSoE.csv") %>% 
-  select(k,SoE_0.95) %>% distinct() %>% 
+df_SoE <- read_csv("./dados/csv_SoE/df_plotSoE.csv") %>% 
   rename(SoE=2) %>% 
-  mutate(SoE=ifelse(is.na(SoE),1,SoE))
+  mutate(SoE=ifelse(k>=0.50,2,SoE),
+         k = round(k,2))
 # df com as informações para simulação
 df_sim <- inner_join(
   df_sim,
   df_SoE
-)
+) %>% 
+  filter(k>=0.50)
 ```
 
 
@@ -63,14 +73,30 @@ df_sim <- inner_join(
 ```{r função para simular as SADs para MNEE em diferentes tipos de paisagens}
 setwd("dados/simulacao")
 df <- df_sim %>% filter(SiteCode=="SPigua1")
-registerDoMC(3)
 v_gpath <- ".."
 formals(f_simMNEE)$general_path <- v_gpath
 #
+lpaths <- list.files(path="../csv_SoE2",
+                     pattern = ".csv",
+                     recursive = TRUE,
+                     all.files = TRUE,
+                     full.names = TRUE,
+                     include.dirs = TRUE) %>% 
+  gsub("../csv_SoE2/","",.) %>% 
+  gsub("taxaU/MNEE/","",.) %>% 
+  gsub("SADs_neutras/MNEE/","",.) %>% 
+  gsub("cont|non_frag|ideal","",.) %>% 
+  gsub("/","",.) %>% 
+  gsub("_SoE2km.csv","",.)
+vsites2 <- table(lpaths)
+vsites_completos <- names(vsites2)[vsites2==6]
+#
+vsites <- setdiff(unique(df_sim$SiteCode),vsites_completos)
 # df_sim2 <- filter(df_sim,!SiteCode%in%df_lf$SiteCode)
-df_sim2 <- filter(df_sim,SiteCode%in%vsite)
+df_sim2 <- filter(df_sim,SiteCode%in%vsites)
 # f_d_ply <- function(dataframe) f_simMNEE(df = dataframe,general_path = v_gpath)
-df <- df_sim2 %>% filter(SiteCode==vsite[2])
+# df <- df_sim2 %>% filter(SiteCode==vsite[2])
+registerDoMC(3)
 d_ply(df_sim2,"SiteCode",f_simMNEE,.parallel = TRUE)
 ```
 

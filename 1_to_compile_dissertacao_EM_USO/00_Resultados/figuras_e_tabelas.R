@@ -89,32 +89,17 @@ l_p[[2]] <- df_plot |>
     name == "S_obs" ~ "S obs",
     name == "year_bestProxy" ~ "year"
   )) %>% 
-  ggplot(aes(x=name,y=value)) +
+  ggplot(aes(x=p,y=value)) +
   theme_bw() +
-  geom_jitter(alpha=0.4) +
-  geom_boxplot() +
-  labs(x="",y="",subtitle="b)") +
+  geom_point() +
+  labs(x="%CF (4x4km)",y="",subtitle="b)") +
   theme(
-    strip.background = element_blank(),
-    strip.text.x = element_blank()
     # axis.text.x = element_blank(),
     #     axis.ticks.x = element_blank()
     ) +
-  facet_wrap(~name,nrow=1,scales="free")
+  facet_wrap(~name,ncol=1,scales="free")
 # coord_flip()
-l_p[[3]] <- df_p_extensoes |> 
-  filter(lado_km<=16.02) |> 
-  ggplot(aes(x=lado_km,y=p)) + 
-  geom_point(size=0.2,alpha=0.2) +
-  geom_line(aes(group=SiteCode),linewidth=0.2,alpha=0.2) +
-  geom_vline(xintercept = 2^(-1:4),color="darkred",alpha=0.3) +
-  labs(x="lado da paisagem quadrada (km)",y="proporção de cobertura florestal (%CF)",
-       subtitle="c)") +
-  scale_y_continuous(breaks = seq(0,1,by=0.1)) +
-  scale_x_continuous(breaks = 2^(-1:4)) +
-  coord_cartesian(expand = F) +
-  theme_light()
-l_p[[4]] <- df_plot |>
+l_p[[3]] <- df_plot |>
   mutate(pert_class = factor(forest_succession,
                              levels=c("primary",
                                       "primary/secondary",
@@ -124,13 +109,28 @@ l_p[[4]] <- df_plot |>
                                       "mediana",
                                       "alta",
                                       "altíssima"))) %>% 
-  ggplot(aes(x=pert_class)) +
-  geom_bar() +
-  geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
-  labs(x="classificação de perturbação (tempo e grau)",
-       y="contagem",subtitle="d)")
+  group_by(pert_class) %>% 
+  tally() %>% 
+  mutate(label = "classe de pert.") %>% 
+  ggplot(aes(y=pert_class,x=1,fill=n)) +
+  geom_tile() +
+  geom_label(aes(label=n),fill="white",size=7) +
+  labs(x="",
+       y="",subtitle="d)") +
+  scale_x_continuous(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text=element_text(size=10),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  facet_wrap(~label)
+  # geom_text(aes(label = after_stat(count)), stat = "count", vjust = -0.2, colour = "black") +
 # grid.arrange(grobs=l_p,nrow=2)
-p <- arrangeGrob(grobs=l_p,nrow=2)
+saveRDS(l_p,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fig1dados_disponiveis.rds")
+p <- arrangeGrob(grobs=l_p,nrow=1)
+
 ggsave(
   filename="figuras/GE_dados_disponiveis.png",
   plot = p,
