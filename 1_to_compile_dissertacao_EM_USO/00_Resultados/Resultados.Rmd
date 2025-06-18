@@ -166,7 +166,7 @@ cap <- "\\footnotesize Sítios selecionados na base de dados TreeCo. a) Coordena
 ```{r GE-sitios,eval=TRUE,include=TRUE,fig.cap=cap,fig.width=12}
 l_p <- readRDS(file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fig1dados_disponiveis.rds")
 grid.arrange(grobs=l_p,
-             widths = c(3, 2, 1),
+             widths = c(6, 4, 1.75),
              layout_matrix = rbind(c(1, 2, 3))
              )
 ```
@@ -175,7 +175,7 @@ grid.arrange(grobs=l_p,
 ## Efeito escalar da dispersão no mecanismo simulado
 
 
-<p>O objetivo desta análise foi determinar qual extensão espacial da paisagem em torno da parcela do inventário é suficiente para simular adequadamente diferentes graus de limitação de dispersão. Foram selecionados 36 sítios entre os pré selecionados (fig. \@ref(fig:sitios-SoE)). Com base na paisagens prístinas (sem perda de cobertura florestal), estimou-se a taxa U necessária para manter a riqueza de espécies no equilíbrio, variando o tamanho da paisagem de 0,5 km a 16 km. Utilizando um modelo linear misto, avaliou-se como a média de U variava com a extensão da paisagem e o grau de limitação de dispersão, buscando identificar a menor escala que estabiliza a estimativa de U.</p>
+<p>O objetivo desta análise foi determinar qual extensão espacial da paisagem em torno da parcela do inventário é suficiente para simular adequadamente diferentes graus de limitação de dispersão. A extensão espacial da paisagem determina a máxima quantia de habitat disponível ao redor da parcela amostrada, e dessa forma modifica a proporção de cobertura florestal na paisagem fragmentada (fig. \@ref(fig:sitios-SoE) a). Foram selecionados 36 sítios entre os pré selecionados (fig. \@ref(fig:sitios-SoE)). Com base na paisagens prístinas (sem perda de cobertura florestal), estimou-se a taxa U necessária para manter a riqueza de espécies no equilíbrio, variando o tamanho da paisagem de 0,5 km a 16 km. Utilizando um modelo linear misto, avaliou-se como a média de U variava com a extensão da paisagem e o grau de limitação de dispersão, buscando identificar a menor escala que estabiliza a estimativa de U.</p>
 
 ```{r capsitiosSoE, eval=TRUE}
 vcap <- "\\footnotesize Qual a escala adequada para simular os cenários de limitação de dispersão? a) Mudança na extensão espacial da paisagem a proporção de cobertura vegetal. Cada ponto representa a proporção de cobertura vegetal (eixo y) para aquela determinada extensão espacial da paisagem ao redor (eixo x), as linhas ligam pontos de um sítio de amostragem. b) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). c) Cenários de limitação de dispersão simulados. k = proporção de propágulos que permanece até a vizinhança imediata (distância média entre indivíduos); d = desvio padrão da função de dispersão com distribuição de Laplace. Para detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal. "
@@ -229,9 +229,7 @@ Os graus de limitação de dispersão brandos, k abaixo de 0.50, apresentaram a 
 <p> Assim, a expectativa teórica era de redução da taxa U em função do aumento da extensão espacial da paisagem, para uma dada limitação de dispersão. Para avaliar essa expectativa usamos um algoritmo que avalia o quanto que cada incremento na extensão espacial acumula na redução total esperada na taxa U. Primeiro ajustamos um modelo linear para obter a taxa U média para cada combinação de cenário de limitação de dispersão e extensão espacial da paisagem. Segundo, Para cada cenário de limitação de dispersão, é calculado a amplitude de valores da média da taxa U entre todas as extensões espaciais simuladas, esse valor é considerado como a referência de mudança total. Terceiro, para cada grau de limitação de dispersão, é ordenado os valores de taxa U em função da extensão espacial, em ordem crescente, e é calculado a diferença entre valores consecutivos, partindo da menor escala (lado da paisagem = 0.5 km). Quarto, os valores acumulados são divididos pelo valor de referência de mudança total. Quinto, interpolamos linearmente os valores acumulados em função do lado da paisagem. O lado da paisagem suficiente foi definido como o lado mais próximo do valor acumulado de 75%. Na figura \@ref(fig:SoE) há os resultados desse algoritmo de avaliação. 
 </p>
 
-
-
-Nos graus de limitação de dispersão pouco severos (k entre 0.55 e 0.85) não foi possível detectar o padrão esperado, pois na média não se observa tendência de redução com o aumento da extensão espacial (pontos médios em azul, fig. 3). Nesses graus de limitação de dispersão pouco severos, alguns sítios apresentam tendência de redução da estimativa da taxa U enquanto outros de aumento, e alguns de ausência de mudanças (linhas coloridas segundo a razão do número de espécies e de indivíduos, fig. 3).</p>
+<p> Nos graus de limitação de dispersão pouco severos (k entre 0.55 e 0.85) não foi possível detectar o padrão esperado, pois na média não se observa tendência de redução com o aumento da extensão espacial (pontos médios em azul, fig. 3). Nesses graus de limitação de dispersão pouco severos, alguns sítios apresentam tendência de redução da estimativa da taxa U enquanto outros de aumento, e alguns de ausência de mudanças (linhas coloridas segundo a razão do número de espécies e de indivíduos, fig. 3).</p>
 <p>Já nos graus de limitação de dispersão brandos (k<=0.50) e severos (k>=0.80) foi possível detectar a mudança esperada de redução da média da taxa U com o aumento da extensão espacial da paisagem ao redor. Conforme a expectativa. As retas verticais em vermelho marcam as escalas que acumulam a maior parte da redução na média da taxa U (95% de toda a redução) com o aumento da escala de 0.5km para 16km de lado da paisagem (fig. \@ref(fig:SoE)). Detalhes no apêndice ‘Efeito de Escalar”.</p>
 
 ```{r LEGENDA EM USO cap fig5_SoE}
@@ -245,11 +243,101 @@ grid.arrange(grobs=l_p,ncol=2)
 ```
   
 <p>
-Ao aplicar o algoritmo de escolha da extensão espacial da paisagem que considera o acumulo de cerca de 75% da esperada redução da taxa U com a escala, observamos que na maior parte dos cenários de limitação de dispersão o padrão observado é de redução da taxa U com o aumento do lado da paisagem (fig. \@ref(fig:SoE) a). Esse padrão não é consistente quando k está entre 0.75 e e 0.65, uma vez que existem picos quando o lado da paisagem não é mínimo (fig. \@ref(fig:SoE) a). Assim, quando o algoritmo de escolha da extensão espacial é aplicado, há incerteza em alguns cenários de dispersão (fig. \@ref(fig:SoE) b). Quando k é igual 0.70, não foi possível aplicar o algoritmo (fig. \@ref(fig:SoE) b), pois o pico global da taxa U ocorre com lado da paisagem igual a 1 km (fig. \@ref(fig:SoE) a), contradizendo a expectativa de redução da taxa U com o aumento. Quando k é igual 0.75 ou 0.65 há um pico local da taxa U no lado igual 2 km (fig. \@ref(fig:SoE) b).Nos cenários de dispersão com k abaixo de 0.70, o lado escolhido varia entre 1 e 2 (fig. \@ref(fig:SoE) b). Quando k varia entre 0.65 e 0.50 o lado da paisagem escolhido é 1 km; com k entre 0.45 e 0.2 é 2 km de lado; e com k abaixo de 0.15 é de 3 km de lado (fig. \@ref(fig:SoE) b). </p>
+Na figura \@ref(fig:SoE) há o resultado do algoritmo de escolha da extensão espacial da paisagem, que busca a extensão espacial da paisagem que acumula cerca de 75% da redução esperada da taxa U com o aumento da escala. Observamos que na maior parte dos cenários de limitação de dispersão o padrão observado é de redução da taxa U com o aumento do lado da paisagem (fig. \@ref(fig:SoE) a). Esse padrão não é consistente quando k está entre 0.75 e e 0.65, uma vez que existem picos quando o lado da paisagem não é mínimo (fig. \@ref(fig:SoE) a). Assim, quando o algoritmo de escolha da extensão espacial é aplicado, há incerteza em alguns cenários de dispersão (fig. \@ref(fig:SoE) b). Quando k é igual 0.70, não foi possível aplicar o algoritmo (fig. \@ref(fig:SoE) b), pois o pico global da taxa U ocorre com lado da paisagem igual a 1 km (fig. \@ref(fig:SoE) a), contradizendo a expectativa de redução da taxa U com o aumento e resultando em um valor não definido ('NA' em fig. \@ref(fig:SoE) b). Quando k é igual 0.75 ou 0.65 há um pico local da taxa U no lado igual 2 km (fig. \@ref(fig:SoE) b).Nos cenários de dispersão com k abaixo de 0.70, o lado escolhido varia entre 1 e 2 (fig. \@ref(fig:SoE) b). Quando k varia entre 0.65 e 0.50 o lado da paisagem escolhido é 1 km; com k entre 0.45 e 0.2 é 2 km de lado; e com k abaixo de 0.15 é de 3 km de lado (fig. \@ref(fig:SoE) b). </p>
 
 <p>
-Uma vez que o lado escolhido para k entre 0.65 e 0.50 é igual a 1 km, consideramos que todos os graus de limitação de dispersão mais severos que estes (com k maior do que 0.65) também possuem o mesmo lado da paisagem. Uma vez que a extensão da paisagem de lado 3 km não foi simulada, os cenários de limitação de dispersão brandos (k menor do que 0.15) serão aproximados pelo lado da paisagem 4 km nas próximas análises. Ao estimar a extensão espacial suficiente para todos os graus de limitação de dispersão é possível construir as paisagens hipotéticas de acordo com a escala suficiente.
+Uma vez que o lado escolhido pelo algoritmo para k entre 0.65 e 0.50 é igual a 1 km, consideramos que todos os graus de limitação de dispersão mais severos que estes (com k maior do que 0.65) também possuem o mesmo lado da paisagem. Quando a limitação de dispersão é mais severa, há incerteza na definição do lado da paisagem, variando entre 1km e 2km de lado (fig. \@ref(fig:SoE). Uma vez que a extensão da paisagem de lado 3 km não foi simulada, os cenários de limitação de dispersão brandos (k menor do que 0.15) serão aproximados pelo lado da paisagem 4 km nas próximas análises com o conjunto completo de dados (todos os sítios e paisagens hipotéticas).
 </p>
+
+
+## Validação empírica de MNEE: congruência com a SAD observada
+
+<p> O objetivo dessa seção é descrever a variabilidade na congruência da predição do MNEE e, dessa forma, avaliar se esse modelo é adequado para ter os parâmetros interpretados. A SAD é a predição de MNEE que é possível depois da estimativa da taxa U nas paisagens hipotéticas, conforme a escala adequada para cada cenário de limitação de dispersão (fig. \@ref(fig:SoE). Para descrever a congruência da SAD simulada por MNEE, foram usados modelos estatísticos para descrever a probabilidade de uma SAD simulada ser congruente com a SAD observada em função da capacidade de dispersão e da paisagem hipotética usadas em cada simulação. O modelo mais complexo inclui efeitos específicos por tipo de paisagem e por sítio, além de splines para o parâmetro k, variando entre classe de perturbação da parcela, e também possui um spline para as coordenadas geográficas dos sítios. Modelos mais simples foram obtidos pela remoção progressiva de termos.
+</p> 
+
+<p>Na tabela 1 há a comparação desses modelos estatísticos. O modelo cheio foi o mais plausível. Esse modelo soma a maior parte do peso de evidência (>0.90) e não apresenta evidência de autocorrelação espacial dos resíduos (tab. 1). Os únicos modelos que apresentam evidência de autocorrelação espacial são aqueles sem um spline de k por tipo de paisagem e sítio de amostragem (tab. 1). Entre os 4 primeiros modelos mais plausíveis a deviance explicada é similar, próxima de 0.94 (tab. 1). O modelo mais plausível apresenta bom ajuste com o observado (SI).</p>
+
+
+
+
+```{r tabela congruencia SAD}
+vcap <- " Modelos estatísticos para descrever a congruência absoluta da SAD simulada com a SAD observada. O modelo mais complexo é o mais plausível com peso de evidência de 0.986. Esse modelo possui um spline para k por tipo de paisagem e classe de perturbação, um spline para as coordenadas geográficas e um spline por sítio de amostragem para k e tipo de paisagem. Os outros modelos são simplificações desse modelo mais complexo."
+vnumericcols <- names(df_tabsel_minimo)[sapply(df_tabsel_minimo,is.numeric)]
+```
+```{r ft-cong,tab.cap=vcap,tab.width=12,eval=FALSE,include=FALSE}
+vnumericcols <- names(df_tabsel_minimo)[sapply(df_tabsel_minimo,is.numeric)]
+f_format <- \(x){
+    formatC(x, format = "e", digits = 2)
+  }
+ft <- flextable(df_tabsel_minimo) %>%
+  set_caption() %>%
+  colformat_double(j = vnumericcols, digits = 3) %>%
+  set_formatter(dAICc = f_format,df = f_format) %>%
+  autofit() %>%
+  fontsize(size=12) %>% 
+  set_header_labels(
+    modelo = "HGAM",
+    dAICc = "ΔAICc",
+    df = "est. coef.",
+    weight = "peso",
+    dev.expl = "dev. expl.",
+    MoranI_stat_res = "Moran's I",
+    pvalue = "p-valor"
+  ) %>% 
+  set_table_properties(
+    layout = "autofit",
+    align = "center",
+    opts_pdf = list(caption_repeat=FALSE)
+  )
+ft
+```
+```{r tabcong,tab.width=12,tab.caption=vcap,tab.id="tab:gt-cong",results='asis',eval=TRUE,include=TRUE}
+# função científica
+library(gt)
+f_format <- function(x) formatC(x, format = "e", digits = 2)
+
+gt_tbl <- df_tabsel_minimo |>
+  gt() |>
+  fmt_number(
+    columns = all_of(vnumericcols),
+    decimals = 3
+  ) |>
+  fmt(columns = c(dAICc, df), fns = f_format) |>
+  cols_label(
+    modelo = "HGAM",
+    dAICc = "ΔAICc",
+    df = "est. coef.",
+    weight = "peso",
+    dev.expl = "dev. expl.",
+    MoranI_stat_res = "Moran's I",
+    pvalue = "p-valor"
+  ) |>
+  tab_options(
+    table.font.size = px(10),
+    table.width = pct(100),
+    column_labels.padding = px(2),
+    data_row.padding = px(2),
+    heading.align = "left"
+  ) %>% 
+tab_caption(caption = vcap)
+gt_tbl
+```
+
+
+
+```{r legenda figura ranqueamento,echo=FALSE,eval=TRUE}
+vcap <- "\\footnotesize Predito pelo modelos mais plausível (HGAM) para descrever a congruência absoluta da SAD simulada nas paisagens hipotéticas (fragmentada, aglomerada, e prístina). Os pontos são o número de SADs simuladas com boa congruência com a SAD observada segundo o teste de Kolmogorov-Smirnov. As linhas transparentes em cinza são a predição do modelo. Em vermelho escuro o predito pelo modelo na ausência de diferença entre os sítio de amostragem e no efeito das coordendas centrais. Em azul claro o intervalo de predição de 95% ao redor da média."
+```
+```{r p-cong,fig.cap=vcap,echo=FALSE,eval=TRUE,fig.width=12,fig.height=8}
+p <- readRDS(file="0_apendices/EfeitoEscala/figuras/p_cong.rds")
+p
+```
+
+<p>Na figura \@ref(fig:p-cong) há o número de SADs simuladas com boa congruência observada e o número predito pelo modelo mais plausível. A maior parte dos pontos está próximo dos 100% (ou seja, todas as 100 repetições da simulação resultaram em SADs congruentes com a empírica, para um dado sítio, valor de k e paisagem). Parece existir muita variabilidade de tendências entre sítios, que resulta na predição por sítio com diferentes padrões, alguns com pouca variabilidade em função de k outros com padrões não lineares (fig. \@ref(fig:p-cong)). Existe pouca diferença no valor médio (em azul) para diferentes paisagens hipotéticas e classes de perturbação (fig. \@ref(fig:p-cong)). A maior diferença média entre paisagens hipotéticas ocorre quando a limitação de dispersão é branda ( k < 0.25, fig. \@ref(fig:p-cong)). Nessa faixa de limitação de dispersão branda, simulações usando a paisagem hipotética fragmentada têm maior probabilidade média de gerar uma SAD com boa congruência com a empírica, seguido da paisagem prístina. Porém, essa faixa de valores apresenta a maior variabilidade entre sítios e entre classes de perturbação. Os sítios de baixa perturbação tendem a apresentar congruência média mais elevada (fig. \@ref(fig:p-cong)). Os valores de congruência média tendem a ser menores no nível mediano de perturbação do sítio de amostragem (fig. \@ref(fig:p-cong)). Contudo, em média tanto as paisagens hipotéticas quanto as classes de perturbação apresentam boa congruência (fig. \@ref(fig:p-cong)). </p>
+
+
+
+
 
 
 ################################################# ANTIGO
@@ -268,41 +356,12 @@ Uma vez que o lado escolhido para k entre 0.65 e 0.50 é igual a 1 km, considera
 
 <p>Seis modelos foram comparados para avaliar a probabilidade de congruência entre SADs simuladas e observadas, variando em complexidade quanto à estrutura dos efeitos aleatórios e termos de suavização. O modelo mais complexo inclui efeitos específicos por tipo de paisagem e por sítio, além de splines para o parâmetro k, variando entre tipos de paisagens hipotéticas e classe de perturbação da parcela, e também possui um spline para as coordenadas geográficas dos sítios. Modelos mais simples foram obtidos pela remoção progressiva de termos. Na tabela 1 há a comparação desses modelos. O modelo cheio foi o mais plausível. Esse modelo soma a maior parte do peso de evidência (>0.95) e não apresenta evidência de autocorrelação espacial dos resíduos (tabela 1). Os únicos modelos que apresentam evidência de autocorrelação espacial são aqueles sem um spline de k por tipo de paisagem e sítio de amostragem (tabela 1). Entre os modelos com um spline de k por tipo de paisagem e sítio de amostragem (os 4 primeiros modelos mais plausíveis) a deviance explicada é similar, próxima de 0.941 (tabela 1). A maior queda na deviance explicada ocorre quando é removido o spline de k por sítio e paisagem hipotética - o contraste entre os modelos ‘s(k,by=land)’ e ‘s(k,by=land) + land|Site’ foi de 0.27 de deviance explicada (tabela 1). A remoção do spline de k que descreve a média dos sítios de amostragem teve baixo impacto na deviance  - a diferença entre os dois modelos menos plausível é de 0.067 (tabela 1). O modelo mais plausível apresenta bom ajuste com o observado (SI).</p>
 
-```{r}
-vcap <- "Modelos candidatos para descrever a congruência absoluta entre a SAD simulada e observada. O modelo mais complexo é o mais plausível. Esse modelo apresenta um spline para k por classe de perturbação e tipo de paisagem hipotética, um spline para as coordenadas centrais e spline de k por tipo de paisagem e sítio de amostragem. Os outros modelos candidatos são versões do mais complexo com menos preditoras. O modelo mais simples possui apenas 1 intercepto por tipo de paisagem hipotética e 1 intercepto por tiipo de paisagem hipotética e sítio de amostragem."
-```
-```{r ft-CongAbs}
-vnumericcols <- names(df_tabsel_minimo)[sapply(df_tabsel_minimo,is.numeric)]
-f_format <- \(x){
-    formatC(x, format = "e", digits = 2)
-  }
-ft <- flextable(df_tabsel_minimo) %>%
-  set_caption() %>%
-  colformat_double(j = vnumericcols, digits = 3) %>%
-  set_formatter(dAICc = f_format,df = f_format) %>%
-  autofit() %>%
-  set_header_labels(
-    modelo = "HGAM",
-    dAICc = "ΔAICc",
-    df = "est. coef.",
-    weight = "peso",
-    dev.expl = "dev. expl.",
-    MoranI_stat_res = "Moran's I",
-    pvalue = "p-valor"
-  )
-ft
-```
+
 Tab. 1. Modelos estatísticos para descrever a congruência absoluta da SAD simulada com a SAD observada. O modelo mais complexo é o mais plausível com peso de evidência de 0.986. Esse modelo possui um spline para k por tipo de paisagem e classe de perturbação, um spline para as coordenadas geográficas e um spline por sítio de amostragem para k e tipo de paisagem. Os outros modelos são simplificações desse modelo mais complexo.
 
 
 
 
-```{r legenda figura ranqueamento,echo=FALSE,eval=TRUE}
-vcap <- "Predito pelo modelos mais plausível (HGAM) para descrever a congruência absoluta da SAD simulada nas paisagens hipotéticas (fragmentada, aglomerada, e prístina). Os pontos são o número de SADs simuladas com boa congruência com a SAD observada segundo o teste de Kolmogorov-Smirnov. As linhas transparentes em cinza são a predição do modelo. Em vermelho escuro o predito pelo modelo na ausência de diferença entre os sítio de amostragem e no efeito das coordendas centrais. Em azul claro o intervalo de predição de 95% ao redor da média."
-```
-```{r fig-ranq-land,fig.cap=vcap,echo=FALSE,eval=TRUE}
-knitr::include_graphics("figuras/descricao_congruencia_relativa.png")
-```
 
 
 

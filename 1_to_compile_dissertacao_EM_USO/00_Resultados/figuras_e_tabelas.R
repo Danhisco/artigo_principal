@@ -114,7 +114,7 @@ l_p[[3]] <- df_plot |>
   mutate(label = "classe de pert.") %>% 
   ggplot(aes(y=pert_class,x=1,fill=n)) +
   geom_tile() +
-  geom_label(aes(label=n),fill="white",size=7) +
+  geom_label(aes(label=n),fill="white",size=4) +
   labs(x="",
        y="",subtitle="d)") +
   scale_x_continuous(expand=c(0,0)) +
@@ -216,6 +216,8 @@ p <- l_dfpred$fixo_e_aleat %>%
   facet_grid(pert_class ~ land) +
   theme(strip.text = element_text(size=12, #margin=margin(),
                                   face="bold"))
+
+saveRDS(p,file="0_apendices/EfeitoEscala/figuras/p_cong.rds")
 ggsave(filename="figuras/descricao_congruencia_absoluta.png",
        p,height = 7.33,width = 13.8)
 library(magick)
