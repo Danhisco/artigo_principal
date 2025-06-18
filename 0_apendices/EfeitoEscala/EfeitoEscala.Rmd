@@ -403,12 +403,54 @@ md_SoE |> (\(.) MuMIn::r.squaredGLMM(.))()
 
 O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1). Os coeficientes de determinação marginal e condional do modelo são aproximadamente iguais à 0.96. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos apresentarem algum desvio (Figura SI 1), o modelo faz uma boa predição do observado (Figura SI 1). Na figura 5 há o predito para os dados observados na escala padrão da variável resposta, taxa U. Para cada escala e grau de limitação de dispersão foi calculado a média entre sítios (pontos em azul). Os pontos estão coloridos pela razão entre número de espécies e número de indivíduos (S/N).
 
+```{r}
+f_soe <- \(vlimiar){
+  l_df <- list()
+  vxout <- vlimiar
+  for(i in 1:length(levels(dfp$k_factor))){
+    dfi <- filter(dfp,k_factor==levels(dfp$k_factor)[i])
+    dfi$Ucsum <- c(NA,dfi$Ucsum[1:(nrow(dfi)-1)])
+    df0 <- filter(dfi,!is.na(Ucsum))
+    vaprox <- sapply(1:(nrow(df0)-1),\(x){
+      dados <- df0[x:(x+1),]
+      approx(dados$Ucsum, dados$lado, xout = vxout)$y
+    })
+    dfi$vapprox <- ifelse(length(vaprox[!is.na(vaprox)])==0,
+                          NA,
+                          round(vaprox[!is.na(vaprox)],0))
+    l_df[[i]] <- dfi
+  }
+  do.call("rbind",l_df)  
+}
+
+l_df <- lapply(c(0.75,0.90,0.95),f_soe)
+names(l_df) <- c(0.75,0.90,0.95)
+f_ggplot <- \(vtitle){
+  dfi <- l_df[[vtitle]]
+  dfi %>% 
+    ggplot(aes(x=lado_factor,y=Ucsum)) +
+    geom_point() +
+    geom_line(group=1) +
+    geom_hline(yintercept = vxout,color="red") +
+    geom_label(aes(label=paste0("aprox: ",vapprox),x=5,y=0.5)) +
+    labs(x="lado da paisagem (km)",y="diferença acumulada entre lados da paisagem",
+         title=paste0("critério: ",vtitle)) +
+    # scale_y_continuous(labels = scales::scientific_format(digits = 2)) +
+    facet_wrap(~k_factor,ncol=4) +
+    theme_classic()
+}
+lp <- lapply(names(l_df),f_ggplot)
+p <- arrangeGrob(grobs=lp,ncol=1)
+ggsave(plot=p,filename = "0_apendices/EfeitoEscala/figuras/lp_pPI.png",
+       dpi=200,width = 8,height = 21)
+```
+
 
 ```{r}
 dfp <- df_plot1 %>% 
   mutate(lado = as.numeric(as.character(lado_factor)))
 l_df <- list()
-vxout <- 0.75
+vxout <- 0.95
 for(i in 1:length(levels(dfp$k_factor))){
   dfi <- filter(dfp,k_factor==levels(dfp$k_factor)[i])
   dfi$Ucsum <- c(NA,dfi$Ucsum[1:(nrow(dfi)-1)])
@@ -422,9 +464,9 @@ for(i in 1:length(levels(dfp$k_factor))){
                         round(vaprox[!is.na(vaprox)],0))
   l_df[[i]] <- dfi
 }
-dfp <- do.call("rbind",l_df)
+dfp0 <- do.call("rbind",l_df)
 l_p <- list()
-l_p[[1]] <- dfp %>% 
+l_p[[1]] <- dfp0 %>% 
   ggplot(aes(x=lado_factor,y=Umed)) +
   geom_point() +
   geom_line(group=1) +
@@ -433,7 +475,7 @@ l_p[[1]] <- dfp %>%
   scale_y_continuous(labels = scales::scientific_format(digits = 1)) +
   facet_wrap(~k_factor,ncol=4,scales="free") +
   theme_classic()
-l_p[[2]] <- dfp %>% 
+l_p[[2]] <- dfp0 %>% 
   ggplot(aes(x=lado_factor,y=Ucsum)) +
   geom_point() +
   geom_line(group=1) +
@@ -446,6 +488,8 @@ l_p[[2]] <- dfp %>%
   theme_classic()
 grid.arrange(grobs=l_p,ncol=1)
 saveRDS(l_p,file="0_apendices/EfeitoEscala/figuras/l_p_efeito_escala.rds")
+######
+
 
 ```
 

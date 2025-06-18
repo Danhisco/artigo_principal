@@ -1,9 +1,9 @@
 ---
 title: ""
 output:
-  bookdown::word_document2: default
   bookdown::pdf_document2:
     latex_engine: lualatex
+  bookdown::word_document2: default
   pdf_document: default
   html_document:
     df_print: paged
