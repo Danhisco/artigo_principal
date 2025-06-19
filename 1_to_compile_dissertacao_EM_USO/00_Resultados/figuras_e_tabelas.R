@@ -140,55 +140,8 @@ ggsave(
 ################################################################################################
 ##################################### criação de fig5_SoE ######################################
 ################################################################################################
-library(ggnewscale)
-library(scales)
-df_plot <- read_csv("dados/csv/df_plotSoE.csv")
-v_threshold <- paste0("SoE >= ",
-                      str_extract(paste(names(df_plot),collapse = " "),
-                                  "(?<=SoE\\_)[0-9]{1}[.][0-9]{1,2}")) 
-cols <- c("blue","red") # "#f04546","3 quant"=
-names(cols) <- c("avg+-sd",v_threshold )
-a <- 0.5
-df_SoE_k <- df_plot %>% select(k,SoE_0.95) %>% distinct()
-p <- df_plot |> 
-  ggplot(aes(x=lado_numeric,y=Pre_Umed)) + #,group=k_factor,color=k
-  geom_point(alpha=0.40,aes(color=S.N)) +
-  geom_line(aes(group=SiteCode,color=S.N),alpha=0.25) +
-  scale_color_distiller(palette = "Spectral",name="S / N") +
-  new_scale_color() +
-  stat_summary(fun.data = mean_se,
-               geom ="line",
-               aes(group=k_factor,color="avg+-sd"),
-               alpha=0.6,size=a) +
-  stat_summary(fun = mean,
-               fun.min = function(x) mean(x) - sd(x), 
-               fun.max = function(x) mean(x) + sd(x), 
-               geom = "pointrange",
-               aes(x=lado_numeric,
-                   y=Pre_Umed,
-                   color="avg+-sd"),
-               alpha=0.6,size=a) +
-  geom_vline(aes(xintercept=SoE_0.95,
-                 color=names(cols)[2]),
-             alpha=0.5) +
-  scale_color_manual(name="",values=cols) +
-  scale_x_continuous(trans = log2_trans(),
-                     breaks = trans_breaks("log2", function(x) 2^x)) +
-  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-  facet_wrap(~k_factor,ncol=5) +
-  theme_classic() +
-  labs(title = "Média da estimativa média da taxa U predito pelo LMM:",
-       subtitle="logit(Umed) ~ log(S) * log(N) * k * scale + (1|Site)",
-       x="scale (landscape side, km)",
-       y="avg U rate (Umed)",
-       color="") +
-  theme(legend.position = "top")
-ggsave(
-  file=paste0(v_path,
-              "figuras/fig5_SoE.png"),
-  plot=p,
-  width = 10.2,
-  height = 6.7)
+###### tudo de SoE está no apendice  ######
+
 #############################################################################
 ################################ congruência absoluta #######################
 #############################################################################
@@ -231,6 +184,14 @@ image_write(img,path = "figuras/descricao_congruencia_absoluta.png")
 ##################################### LogU/U ######################################
 ###################################################################################
 # objetos
+df_plot <- read_csv("dados/csv/df_plotSoE.csv")
+v_threshold <- paste0("SoE >= ",
+                      str_extract(paste(names(df_plot),collapse = " "),
+                                  "(?<=SoE\\_)[0-9]{1}[.][0-9]{1,2}")) 
+cols <- c("blue","red") # "#f04546","3 quant"=
+names(cols) <- c("avg+-sd",v_threshold )
+a <- 0.5
+df_SoE_k <- df_plot %>% select(k,SoE_0.95) %>% distinct()
 df_p <- read_csv("dados/df_p.csv")
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   inner_join(x=df_p,by="SiteCode")
@@ -407,6 +368,7 @@ f_ggplot <- \(dfp,tsize1=15,tsize2=10,fsize=3){
   return(p2)
 }
 p_boasempre_ounao <- f_ggplot(df_logUU_plot,tsize1 = 10,tsize2 = 7.5,fsize = 0.5)
+saveRDS(p_boasempre_ounao,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_boasempre_ounao.rds")
 p <- free(lp[[2]],side = "tb") + p_boasempre_ounao
 saveRDS(p,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/heatmap_nSAD_land.rds")
 ggsave(filename="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/sitios_filtrados.png",
@@ -1237,3 +1199,52 @@ f_finalNAOUSADA <- \(dfdados){
   p_final <- wrap_plots(A=p_reg,B=p_circ,C=p_hist,design = design,widths = c(2,1.5))
   return(p_final)
 }
+#######################################
+df_real <- readRDS("1_to_compile_dissertacao_EM_USO/00_Resultados/rds/df_obs_pred_plot_logUU_pk.rds")
+dfU <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/rds/df_U.csv") %>% 
+  mutate(land = factor(land_type,
+                       levels=c("cont","non_frag","ideal"),
+                       labels=c("Fragmentada","Aglomerada","Prístina")),
+         k=factor(round(k,2)))
+p1 <- dfU %>% 
+  ggplot(aes(x=k,y=Umed)) +
+  geom_boxplot(aes(fill=land,color=land)) +
+  geom_jitter(alpha=0.4,aes(color=land)) +
+  scale_x_discrete(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_fill_manual("paisagens\nhipotéticas",
+                    values=c("Fragmentada"="red","Aglomerada"="blue","Prístina"="green")) +
+  scale_color_manual(values=c("Fragmentada"="red","Aglomerada"="blue","Prístina"="green")) +
+  guides(color="none") +
+  theme_classic() +
+  labs(x="prop. propágulos na vizinhança imediata (k)",y="avg(U)") +
+  theme(legend.position=c(0.95,0.90))
+p2 <- dfU %>% 
+  group_by(land) %>% 
+  reframe(names=c("min","Q5%","Q95%","max"),
+          values=c(min(Umed),
+                   quantile(Umed,probs=0.05),
+                   quantile(Umed,probs=0.95),
+                   max(Umed)) ) %>% 
+  mutate(label=sprintf("%.2e", values),
+         names=factor(names,levels=c("min","Q5%","Q95%","max"))) %>% 
+  ggplot(aes(x=land,y=names)) + #,fill=values
+  geom_tile(fill="white") +
+  scale_fill_gradient2(name = "avg(U)",
+                       low="#440154",
+                       mid = "#21908CFF",
+                       high = "#FDE725") +
+  geom_text(aes(label=label),size=4) + #fill="white",
+  scale_x_discrete(expand=c(0,0),position="top") +
+  scale_y_discrete(expand=c(0,0)) +
+  labs(x="",y="") +
+  theme_minimal_grid() +
+  theme(text=element_text(size=2),
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(hjust=0.5))
+p <- ggdraw() +
+  draw_plot(p1) +
+  draw_plot(p2,
+            height = 0.15, width = 0.25,
+            x=0.75, y=0.6)
+saveRDS(p,"1_to_compile_dissertacao_EM_USO/00_Resultados/rds/plot_taxaU_paisagens.rds")

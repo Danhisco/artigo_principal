@@ -249,7 +249,6 @@ Na figura \@ref(fig:SoE) há o resultado do algoritmo de escolha da extensão es
 Uma vez que o lado escolhido pelo algoritmo para k entre 0.65 e 0.50 é igual a 1 km, consideramos que todos os graus de limitação de dispersão mais severos que estes (com k maior do que 0.65) também possuem o mesmo lado da paisagem. Quando a limitação de dispersão é mais severa, há incerteza na definição do lado da paisagem, variando entre 1km e 2km de lado (fig. \@ref(fig:SoE). Uma vez que a extensão da paisagem de lado 3 km não foi simulada, os cenários de limitação de dispersão brandos (k menor do que 0.15) serão aproximados pelo lado da paisagem 4 km nas próximas análises com o conjunto completo de dados (todos os sítios e paisagens hipotéticas).
 </p>
 
-
 ## Validação empírica de MNEE: congruência com a SAD observada
 
 <p> O objetivo dessa seção é descrever a variabilidade na congruência da predição do MNEE e, dessa forma, avaliar se esse modelo é adequado para ter os parâmetros interpretados. A SAD é a predição de MNEE que é possível depois da estimativa da taxa U nas paisagens hipotéticas, conforme a escala adequada para cada cenário de limitação de dispersão (fig. \@ref(fig:SoE). Para descrever a congruência da SAD simulada por MNEE, foram usados modelos estatísticos para descrever a probabilidade de uma SAD simulada ser congruente com a SAD observada em função da capacidade de dispersão e da paisagem hipotética usadas em cada simulação. O modelo mais complexo inclui efeitos específicos por tipo de paisagem e por sítio, além de splines para o parâmetro k, variando entre classe de perturbação da parcela, e também possui um spline para as coordenadas geográficas dos sítios. Modelos mais simples foram obtidos pela remoção progressiva de termos.
@@ -334,6 +333,38 @@ p
 ```
 
 <p>Na figura \@ref(fig:p-cong) há o número de SADs simuladas com boa congruência observada e o número predito pelo modelo mais plausível. A maior parte dos pontos está próximo dos 100% (ou seja, todas as 100 repetições da simulação resultaram em SADs congruentes com a empírica, para um dado sítio, valor de k e paisagem). Parece existir muita variabilidade de tendências entre sítios, que resulta na predição por sítio com diferentes padrões, alguns com pouca variabilidade em função de k outros com padrões não lineares (fig. \@ref(fig:p-cong)). Existe pouca diferença no valor médio (em azul) para diferentes paisagens hipotéticas e classes de perturbação (fig. \@ref(fig:p-cong)). A maior diferença média entre paisagens hipotéticas ocorre quando a limitação de dispersão é branda ( k < 0.25, fig. \@ref(fig:p-cong)). Nessa faixa de limitação de dispersão branda, simulações usando a paisagem hipotética fragmentada têm maior probabilidade média de gerar uma SAD com boa congruência com a empírica, seguido da paisagem prístina. Porém, essa faixa de valores apresenta a maior variabilidade entre sítios e entre classes de perturbação. Os sítios de baixa perturbação tendem a apresentar congruência média mais elevada (fig. \@ref(fig:p-cong)). Os valores de congruência média tendem a ser menores no nível mediano de perturbação do sítio de amostragem (fig. \@ref(fig:p-cong)). Contudo, em média tanto as paisagens hipotéticas quanto as classes de perturbação apresentam boa congruência (fig. \@ref(fig:p-cong)). </p>
+
+##  Estimativa da taxa U para os inventários nas paisagens hipotéticas
+
+```{r}
+cap="A média da taxa U ajustada a partir da riqueza observada e das paisagens hipotéticas nos 20 cenários de limitação de dispersão explorados. Cerca de 90% das simulações estimam taxa U entre 1e-3 e 1e-2, no limite o modelo variou entre ~4e-2 e ~4e-4."
+```
+```{r taxaU-lands, fig.cap=cap,fig.width=12}
+p <- readRDS("1_to_compile_dissertacao_EM_USO/00_Resultados/rds/plot_taxaU_paisagens.rds")
+p
+```
+
+
+<p> O objetivo dessa seção é descrever a variabilidade na taxa U calibrada empiricamente para aproximar a riqueza observada. A primeira etapa da modelagem da biodiversidade local pelo MNEE é estimar a taxa U necessária para aproximar a riqueza observada dado o cenário de limitação de dispersão e paisagem hipotética (fig. \@ref(fig:taxaU-lands)). Uma vez estimado a taxa U, a distribuição de abundância de espécies (SAD) é simulada para a mesma bateria de simulações (cenário de limitação de dispersão e paisagem hipotética) e é possível avaliar a congruência da predição de MNEE com a SAD observada.</p>
+
+<p> A maior parte das taxas U estimadas foram entre 1e-3 e 1e-2 (\@ref(fig:taxaU-lands)). Ou seja, aproximadamente, 1 em cada de 100 até 1 mil (chegando até 10 mil) nascimentos devem ser de indivíduos pertencentes a espécies ainda não presentes na paisagem (\@ref(fig:taxaU-lands)), para manter a riqueza observada nos inventários. Nos trabalhos que investigam os padrão de biodiversidade usando MNEE em paisagens fragmentadas simuladas, sem calibração empírica, a taxa U avaliada variou entre 1e-8 e 1-4 (@campos_neutral_2012; @campos_effect_2013; @thompson_characterising_2019). Nesses trabalhos a única interpretação da taxa U era como taxa de especiação, o que justifica a taxa simulada com ordens de magnitude inferior. Observou-se que quando a taxa U era muito elevada a influência da biodiversidade remanescente era menos acentuada (@campos_neutral_2012; @campos_effect_2013). </p>
+
+<p>Aqui a taxa U foi um parâmetro livre para que as simulações resultassem em uma riqueza igual à riqueza observada, para cada nível de limitação à  dispersão (valor de k) e a paisagem hipotética na qual a simulação foi realizada (isto é os 3 tipos de paisagens utilizados). Assim, uma interpretação mais apropriada para a taxa U em nosso estudo é o efeito de especiação mas principalmente da  dispersão de longa dispersão de fora da paisagem - principalmente para os graus de limitação de dispersão onde a extensão espacial da paisagem suficiente é de 1km de lado (fig. \@ref(fig:SoE)). Outro processo que pode explicar a taxa U é o surgimento de indivíduos adultos de novas espécies que estavam antes apenas no banco de propágulos (@etienne2007zero,@jabot2008reconciling, @condit_thirty_2012). Uma vez que apenas indivíduos com DAP maior ou igual a 5 cm são inventariados (e portanto também simulados), é possível interpretar parte da reposição de espécies pela taxa U como reposição por propágulos de espécies ausentes entre os adultos na paisagem.</p> 
+
+
+## Critérios de interpretação dos efeitos simulados da paisagem
+
+<p> Nesta seção iremos separar as simulações que serão usadas para interpretar os efeitos propostos da paisagem. Apesar da boa congruência de MNEE em média, iremos utilizar apenas um subconjunto das simulações feitas. Primeiro, focamos nos cenários de limitação de dispersão mais realistas para árvores em florestas tropicais, em que a maior parte dos propágulos se dispersa para a vizinhança imediata da progenitora (@bullock_synthesis_2017; @clark1999seed). Iremos considerar apenas as simulações em que a proporção de propágulos na vizinhança imediata de cada adulto (k) é maior ou igual a 0.50. Ou seja, simulações em que pelo menos metade dos propágulos caem até a árvore-mãe e a árvore vizinha imediata. Nesses cenários de limitação de dispersão a extensão espacial escolhida pelo algoritmo de seleção da escala espacial foi de 1 km de lado (fig. \@ref(fig:SoE)). Com isso, a extensão espacial de 1km de lado da paisagem é suficiente para simular todos os cenários de dispersão (fig. \@ref(fig:SoE)). </p>
+
+<p> Segundo,  aplicamos um filtro de congruência com a SAD observada para selecionar os sítios nos quais o MNEE apresentou bom desempenho (fig. \@ref(fig:p-cong)). Consideramos como "congruentes" os sítios que, para cada combinação de limitação de dispersão (k) e paisagem hipotética, apresentaram distribuições de abundância de espécies (SADs) compatíveis com a observada em pelo menos 75% das réplicas. Apenas esses sítios foram mantidos para as análises subsequentes. Com isso restaram 67 sítios, dos 105 totais, em que a predição de MNEE foi congruente com o observado. Os outros 38 sítios apresentam baixa congruência em pelo menos alguma combinação de cenário de limitação de dispersão e paisagem hipotética, e não serão incluídos na interpretação da taxa U (fig. 6 e 7). A distribuição de proporção de cobertura florestal (%CF) entre os dois grupos de sítios é similar (Fig. 6 e 7).</p>
+
+```{r}
+cap="Os sítios selecionados conforme a classificação de congruência da SAD simulada com a SAD observada. Os sítios com boa congruência são aqueles em que pelo menos 75% das SAD simuladas foram congruentes com a SAD observada, considerando todos os cenários de limitação de dispersão e paisagens hipotéticas (em vermelho). Os sítios com alguma simulação com congruência abaixo de 75% (em azul). Os sítios em azul e vermelho estão distribuídos conforme a proporção de cobertura florestal (eixo x, %CF)."
+```
+```{r sitioscong, fig.cap=cap,fig.width=6}
+p_boasempre_ounao <- readRDS(file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_boasempre_ounao.rds")
+p_boasempre_ounao
+```
 
 
 
