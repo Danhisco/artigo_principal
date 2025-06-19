@@ -18,7 +18,10 @@ header-includes:
 
 ```{r setup resultados,include=FALSE}
 options(tinytex.verbose = TRUE)
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center',root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal')
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center',
+                      root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal',
+                      dev = "png",
+                      dpi = 72)
 library(gridExtra)
 library(ggplot2)
 library(readr)
@@ -282,7 +285,19 @@ ft <- df_tabsel_minimo %>%
     dev.expl = "dev. expl.",
     MoranI_stat_res = "Moran's I",
     pvalue = "p-valor"
-  )
+  ) %>% 
+  set_table_properties(
+  layout = "autofit"
+  # ,
+  # width = 12
+  # ,
+  # align = NULL,
+  # opts_html = list(),
+  # opts_word = list(),
+  # opts_pdf = list(),
+  # word_title = NULL,
+  # word_description = NULL
+)
 ft
 ```
 ```{r teste,tab.width=12,tab.caption=vcap,results='asis',eval=FALSE,include=FALSE}
@@ -424,6 +439,8 @@ ft
 <p>Para facilitar a interpretação, o predito pelo modelo mais plausível será dividido conforme a porcentagem de cobertura florestal (%CF). Os inventários estão divididos em 5 classes: %CF menor do que 30; entre 30 e 60; entre 60 e 80; entre 80 e 100; e igual 100 (Fig. 8). A classe de %CF igual a 100 foi usada como referência de ausência de efeito da paisagem, e seus valores extremos (máximo, mínimo e quantis de 95% e 5%) foram adicionados ao gráficos em todos os paineis (linhas pontilhadas, máximo e mínimo, e tracejadas, quantis). Adicionalmente, para cada grau de limitação de dispersão (valor de k, no eixo x), incluímos um boxplot que sumariza os valores observados (Fig. 8). Para auxiliar a interpretação da fig. 8, a fig. 9 sumariza os sítios em que pelo menos um cenário de limitação de dispersão ultrapassou os valores de referência de ausência de efeito na fig. 8. </p>
 
 <p> Os valores de logU/U dos sítios referência de ausência de efeito (%CF=100) variaram entre -0.13 e 0.10 (Fig. 8). Se considerarmos a exponenciação do módulo desses valores, então as razões de U/U (1.13 e 1.10, respectivamente) informam que a variação na taxa U foi de até cerca de 11.5% nos dois sentidos. Esta variação observada na métrica funcional de paisagens sem perda de cobertura florestal (%CF=100) pode ser explicada em função da estocasticidade demográfica representada em MNEE. </p>
+
+
 
 
 ## Referências

@@ -256,6 +256,7 @@ saveRDS(df_logUU_pk,file="dados/csv_SoE/rds/df_logUUpk.rds")
 
 #########################################################################################
 ########################### classificação das paisagens hipotéticas quanto ao número de boas congruências
+rename <- dplyr::rename
 df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
   filter(SiteCode %in% vsites105) %>% 
   rename(nSAD = nCongKS,
@@ -291,7 +292,7 @@ df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>%
                                        "muito baixa\n<=5")[5:1]))
 df_plot <- df_ad %>% 
   group_by(land,congruencia) %>% 
-  summarise(n=n(),
+  summarise(n=dplyr::n(),
             nSites=length(unique(SiteCode))) %>% 
   group_by(land) %>% 
   mutate(perc = round(n * 100/sum(n),2)) %>% 
