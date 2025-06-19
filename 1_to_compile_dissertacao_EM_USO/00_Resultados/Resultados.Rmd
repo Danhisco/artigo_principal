@@ -442,21 +442,38 @@ ft
 <p> Os valores de logUi/Uj da referência de ausência de efeito (%CF=100) variaram entre -0.13 e 0.10 (Figs. \@ref(fig:bp-efeitos-pclass), \@ref(fig:p-efeitos)). Se considerarmos a exponenciação do módulo desses valores, então as razões de Ui/Uj (1.14 e 1.10, respectivamente) informam que a variação na taxa U foi de até cerca de 12% entre paisagens hipotéticas (tanto no numerador quanto no denominador). Esta variação observada na métrica funcional de paisagens sem perda de cobertura florestal (%CF=100) pode ser explicada em função da estocasticidade demográfica simulada em MNEE, que explica o motivo de simulações feitas na mesma paisagem difiram na estimativa da taxa U. A maior magnitude de logUi/Uj foi observada nos extremos de cobertura florestal (Figs. \@ref(fig:bp-efeitos-pclass), \@ref(fig:p-efeitos)), variando entre -0.33 e 0.56, respectivamente, -39%	e +75% de variação na taxa U da paisagem no numerador em relação a do denominador. Contudo, considerando todo os efeitos a maior parte das simulações permanece dentro dos valores de referência em paisagens acima de 30% de cobertura florestal (figs. \@ref(fig:bp-efeitos-pclass), \@ref(fig:p-efeitos)). </p>
 
 #### Efeito de área per se
+  
+    
+<p> No padrão geral, os efeitos da paisagem intensificam-se com a redução da cobertura florestal (%CF), mas variam conforme o grau de limitação de dispersão (k), como é possivel observar nos boxplots da figura \@ref(fig:p-efeitos). O efeito de área per se segue um padrão consistente entre inventários, de efeito negativo que aumenta com a perda de cobertura florestal (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)). O efeito de área per se apresenta menor magnitude quando a limitação de dispersão é intermediária (Fig \@ref(fig:p-efeitos)). Nesses cenários de limitação de dispersão se observa os valores máximos de taxa U nas três paisagens hipotéticas (Fig. taxa U), e também apresentam menor sensibilidade a escala espacial da paisagem prístina (seção SoE).</p>
 
-<p> No padrão geral, os efeitos da paisagem intensificam-se com a redução da cobertura florestal (%CF), mas variam conforme o grau de limitação de dispersão (k), como é possivel observar nos boxplots da figura \@ref(fig:p-efeitos). O efeito de área per se segue um padrão consistente entre inventários, de efeito negativo que aumenta com a perda de cobertura florestal (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)). O efeito de área per se apresenta menor magnitude quando a limitação de dispersão é intermediária (Fig \@ref(fig:p-efeitos)). Nesses cenários de limitação de dispersão se observa os valores máximos de taxa U nas três paisagens hipotéticas (Fig. taxa U), e também apresentam menor sensibilidade a escala espacial da paisagem prístina (seção SoE). 
-
-A métrica funcional, logUi/Uj, variou entre cerca de -0.12 até 0.41 no efeito de área per se (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)). Uma vez que o intervalo inferior, -0.12 está contido no valor de referência de ausência de efeito, esse magnitude de efeito representa um aumento entre 0% e 50% na taxa U estimada na paisagem aglomerada em relação à paisagem prístina. O efeito de área per se começa a aumentar em paisagens abaixo de 60% de cobertura florestal (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)), tal que .
+<p>A métrica funcional, logUi/Uj, variou entre cerca de -0.12 até 0.41 no efeito de área per se (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)). Uma vez que o intervalo inferior, -0.12 está contido no valor de referência de ausência de efeito, esse magnitude de efeito representa um aumento entre 0% e 50% na taxa U estimada na paisagem aglomerada em relação à paisagem prístina. O efeito de área per se começa a aumentar em paisagens abaixo de 60% de cobertura florestal (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)).</p>
 
 
 #### Efeito de fragmentação per se
+  
+  
+<p>Diferente do efeito de área per se, em que existe maior consistência entre no padrão entre inventários florestais, nos efeitos de fragmentação per se e total se observa mais inventários que diferem do padrão geral. O padrão geral do efeito de fragmentação per se é de efeito positivo quando a limitação de dispersão é severa e negativo quando a limitação de dispersão é branda, que se intensifica com a redução da cobertura florestal (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)). No padrão geral, o efeito de fragmentação per se se torna mais relevante em paisagens com cobertura florestal abaixo de 60%, mas principalmente abaixo de 30% (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)). O ponto de virada no sinal do efeito de fragmentação per se em função da capacidade de dispersão ocorre aproximadamente na mesma faixa de limitação intermediários que corresponde a menor magnitude do efeito de área per se (k em cerca de 0.70, \@ref(fig:p-efeitos)).</p>
 
-<p>Diferente do efeito de área per se, nos efeitos de fragmentação per se e total 
-</p>
+<p>No efeito de fragmentação per se, o padrão por inventário florestal varia do padrão geral em paisagens com cobertura florestal acima de 60% (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)). Principalmente em paisagens entre 80% e 100% de cobertura florestal, onde foi observado a maior magnitude do efeito de fragmentação per se, seguindo o mesmo padrão de efeito positivo sob severa limitação de dispersão e negativo quando a limitação é branda (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)). Nessa faixa de cobertura florestal, considerando todas os cenários de limitação de dispersão simulados, o efeito negativo de fragmentação per se é significativo em cerca de 35% dos inventários e o efeito positivo em cerca de 17% dos inventários (\@ref(fig:propsitio-efeito)). O efeito de fragmentação per se apresentou menor magnitude em paisagens com cobertura florestal entre 30% e 80% (figs. \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)).</p>
+
+<p> A métrica funcional, logUi/Uj, variou entre -0.33 e 0.56 no efeito de fragmentação per se em paisagens com a cobertura florestal entre 80% e 100% (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)). E entre -0.26 e 0.27 em paisagens com cobertura florestal abaixo de 30% (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)). Essa variação implica que a taxa U estimada na paisagem fragmentada variou entre cerca de 75% maior até cerca de 39% menor do que a taxa U estimada na paisagem aglomerada.</p>
 
 
 #### Efeito de fragmentação total
 
 
+</p>
+
+
+</p>
+
+```{r}
+# df_real %>% 
+#   group_by(efeito,p_class) %>% 
+#   reframe(quantils=c("min",0.05,0.95,"max"),
+#           values=c(min(Uefeito),quantile(Uefeito,probs = c(0.05,0.95)),max(Uefeito))) %>% 
+#   filter(efeito=="Frag. per se")
+```
 
 ```{r}
 vcap="Os efeitos da paisagem em logU/U observado e predito. Cada ponto resulta da comparação de duas simulações, que mudam conforme o efeito da paisagem (título nos quadros por linha). O efeito de fragmentação total é a comparação entre a paisagem fragmentada e prístina; o de fragmentação per se entre a fragmentada e a aglomerada; e área per se entre aglomerada e prístina (Fig. 5). No eixo x o grau de limitação de dispersão, quanto maior a limitação de dispersão maior k. Os pontos estão coloridos pela porcentagem de cobertura florestal na paisagem (de lado 1km, como ajustado pelo k (Fig. 3)). Os quadros estão divididos em colunas correspondendo a classes de cobertura florestal (título das colunas). Os sítios com %CF=100 foram removidos do gráfico e apenas a sua amplitude (mínimo = -0.133 e máximo = 0.104) e o intervalo interquartil de 90% (quantil de 5% = -0.060 e de 95% = 0.048) foram marcados no eixo y. Os boxplots sumarizam valores para um mesmo k. O eixo y varia em escala entre os efeitos (quadros de uma mesma linha). "
