@@ -172,7 +172,7 @@ grid.arrange(grobs=l_p,
 ```
   
 
-## Efeito escalar da dispersão no mecanismo simulado
+## Efeito escalar da dispersão no mecanismo simulado  {#efeito-escala}
 
 
 <p>O objetivo desta análise foi determinar qual extensão espacial da paisagem em torno da parcela do inventário é suficiente para simular adequadamente diferentes graus de limitação de dispersão. A extensão espacial da paisagem determina a máxima quantia de habitat disponível ao redor da parcela amostrada, e dessa forma modifica a proporção de cobertura florestal na paisagem fragmentada (fig. \@ref(fig:sitios-SoE) a). Foram selecionados 36 sítios entre os pré selecionados (fig. \@ref(fig:sitios-SoE)). Com base na paisagens prístinas (sem perda de cobertura florestal), estimou-se a taxa U necessária para manter a riqueza de espécies no equilíbrio, variando o tamanho da paisagem de 0,5 km a 16 km. Utilizando um modelo linear misto, avaliou-se como a média de U variava com a extensão da paisagem e o grau de limitação de dispersão, buscando identificar a menor escala que estabiliza a estimativa de U.</p>
@@ -347,14 +347,14 @@ p
 
 <p> O objetivo dessa seção é descrever a variabilidade na taxa U calibrada empiricamente para aproximar a riqueza observada. A primeira etapa da modelagem da biodiversidade local pelo MNEE é estimar a taxa U necessária para aproximar a riqueza observada dado o cenário de limitação de dispersão e paisagem hipotética (fig. \@ref(fig:taxaU-lands)). Uma vez estimado a taxa U, a distribuição de abundância de espécies (SAD) é simulada para a mesma bateria de simulações (cenário de limitação de dispersão e paisagem hipotética) e é possível avaliar a congruência da predição de MNEE com a SAD observada.</p>
 
-<p> A maior parte das taxas U estimadas foram entre 1e-3 e 1e-2 (\@ref(fig:taxaU-lands)). Ou seja, aproximadamente, 1 em cada de 100 até 1 mil (chegando até 10 mil) nascimentos devem ser de indivíduos pertencentes a espécies ainda não presentes na paisagem (\@ref(fig:taxaU-lands)), para manter a riqueza observada nos inventários. Nos trabalhos que investigam os padrão de biodiversidade usando MNEE em paisagens fragmentadas simuladas, sem calibração empírica, a taxa U avaliada variou entre 1e-8 e 1-4 (@campos_neutral_2012; @campos_effect_2013; @thompson_characterising_2019). Nesses trabalhos a única interpretação da taxa U era como taxa de especiação, o que justifica a taxa simulada com ordens de magnitude inferior. Observou-se que quando a taxa U era muito elevada a influência da biodiversidade remanescente era menos acentuada (@campos_neutral_2012; @campos_effect_2013). </p>
+<p> A maior parte das taxas U estimadas foram entre 1e-3 e 1e-2 (\@ref(fig:taxaU-lands)). Ou seja, aproximadamente, 1 em cada de 100 até 1 mil (chegando até 10 mil) nascimentos devem ser de indivíduos pertencentes a espécies ainda não presentes na paisagem (fig. \@ref(fig:taxaU-lands)), para manter a riqueza observada nos inventários. Nos trabalhos que investigam os padrão de biodiversidade usando MNEE em paisagens fragmentadas simuladas, sem calibração empírica, a taxa U avaliada variou entre 1e-8 e 1-4 (@campos_neutral_2012; @campos_effect_2013; @thompson_characterising_2019). Nesses trabalhos a única interpretação da taxa U era como taxa de especiação, o que justifica a taxa simulada com ordens de magnitude inferior. Observou-se que quando a taxa U era muito elevada a influência da biodiversidade remanescente era menos acentuada (@campos_neutral_2012; @campos_effect_2013). </p>
 
 <p>Aqui a taxa U foi um parâmetro livre para que as simulações resultassem em uma riqueza igual à riqueza observada, para cada nível de limitação à  dispersão (valor de k) e a paisagem hipotética na qual a simulação foi realizada (isto é os 3 tipos de paisagens utilizados). Assim, uma interpretação mais apropriada para a taxa U em nosso estudo é o efeito de especiação mas principalmente da  dispersão de longa dispersão de fora da paisagem - principalmente para os graus de limitação de dispersão onde a extensão espacial da paisagem suficiente é de 1km de lado (fig. \@ref(fig:SoE)). Outro processo que pode explicar a taxa U é o surgimento de indivíduos adultos de novas espécies que estavam antes apenas no banco de propágulos (@etienne2007zero,@jabot2008reconciling, @condit_thirty_2012). Uma vez que apenas indivíduos com DAP maior ou igual a 5 cm são inventariados (e portanto também simulados), é possível interpretar parte da reposição de espécies pela taxa U como reposição por propágulos de espécies ausentes entre os adultos na paisagem.</p> 
 
 
 ## Critérios de interpretação dos efeitos simulados da paisagem
 
-<p> Nesta seção iremos separar as simulações que serão usadas para interpretar os efeitos propostos da paisagem. Apesar da boa congruência de MNEE em média, iremos utilizar apenas um subconjunto das simulações feitas. Primeiro, focamos nos cenários de limitação de dispersão mais realistas para árvores em florestas tropicais, em que a maior parte dos propágulos se dispersa para a vizinhança imediata da progenitora (@bullock_synthesis_2017; @clark1999seed). Iremos considerar apenas as simulações em que a proporção de propágulos na vizinhança imediata de cada adulto (k) é maior ou igual a 0.50. Ou seja, simulações em que pelo menos metade dos propágulos caem até a árvore-mãe e a árvore vizinha imediata. Nesses cenários de limitação de dispersão a extensão espacial escolhida pelo algoritmo de seleção da escala espacial foi de 1 km de lado (fig. \@ref(fig:SoE)). Com isso, a extensão espacial de 1km de lado da paisagem é suficiente para simular todos os cenários de dispersão (fig. \@ref(fig:SoE)). </p>
+<p> Nesta seção iremos separar as simulações que serão usadas para interpretar os efeitos propostos da paisagem. Apesar da boa congruência de MNEE em média, iremos utilizar apenas um subconjunto das simulações feitas. Primeiro, focamos nos cenários de limitação de dispersão mais realistas para árvores em florestas tropicais, em que a maior parte dos propágulos se dispersa para a vizinhança imediata da progenitora (@bullock_synthesis_2017; @clark1999seed). Iremos considerar apenas as simulações em que a proporção de propágulos na vizinhança imediata de cada adulto (k) é maior ou igual a 0.50. Ou seja, simulações em que pelo menos metade dos propágulos caem até a árvore-mãe e a árvore vizinha imediata. Nesses cenários de limitação de dispersão a extensão espacial escolhida pelo algoritmo de seleção da escala espacial foi de 1 km de lado (\@ref(Uescala)). Com isso, a extensão espacial de 1km de lado da paisagem é suficiente para simular todos os cenários de dispersão (fig. \@ref(fig:SoE)). </p>
 
 <p> Segundo,  aplicamos um filtro de congruência com a SAD observada para selecionar os sítios nos quais o MNEE apresentou bom desempenho (fig. \@ref(fig:p-cong)). Consideramos como "congruentes" os sítios que, para cada combinação de limitação de dispersão (k) e paisagem hipotética, apresentaram distribuições de abundância de espécies (SADs) compatíveis com a observada em pelo menos 75% das réplicas. Apenas esses sítios foram mantidos para as análises subsequentes. Com isso restaram 67 sítios, dos 105 totais, em que a predição de MNEE foi congruente com o observado. Os outros 38 sítios apresentam baixa congruência em pelo menos alguma combinação de cenário de limitação de dispersão e paisagem hipotética, e não serão incluídos na interpretação da taxa U (fig. 6 e 7). A distribuição de proporção de cobertura florestal (%CF) entre os dois grupos de sítios é similar (Fig. 6 e 7).</p>
 
@@ -366,9 +366,22 @@ p_boasempre_ounao <- readRDS(file="1_to_compile_dissertacao_EM_USO/00_Resultados
 p_boasempre_ounao
 ```
 
+## A métrica funcional da influência da paisagem na biodiversidade local {#metrica-funcional}
+
+### Apresentação 
+  
+<p> Nesta seção descrevemos como a métrica de efeito da paisagem, logUi/Uj, variou em função do tipo de efeito, da porcentagem de cobertura florestal (%CF) e proporção de propágulos na vizinhança imediata (k). Com esta métrica (logUi/Uj) avaliamos  3 efeitos da paisagem: o efeito de fragmentação total, dado pela razão entre as taxas U obtidas para a  paisagem fragmentada e a prístina; o efeito de fragmentação per se, a razão entre a taxa U estimada  para a paisagem fragmentada e aglomerada; e o efeito de área per se, pela razão  das taxas U da paisagem aglomerada e prístina. O contraste logUi/Uj entre paisagens busca revelar diferentes efeitos da paisagem na manutenção da biodiversidade local. Primeiro, a conectividade, movimentação dos indivíduos no habitat remanescente. Segundo, na dinâmica de substituição de indivíduos na paisagem, resultando em variação no número de espécies perdido por deriva ecológica. Dessa forma, a métrica de efeito da paisagem proposta, logUi/Uj, busca descrever a vulnerabilidade da biodiversidade local, definida pelo grau em que a paisagem ao redor exige fontes externas de biodiversidade árborea.</p>.
 
 
+<p> Na figura \@ref(fig:logUU-sitios) há a métrica de efeito da paisagem na vulnerabilidade local (logUi/Uj) para os propostos efeitos da paisagem entre os sítios classificados como congruentes e os outros (fig. \@ref(fig:sitioscong)). 
 
+```{r}
+cap = "O perfil de logU/U dos efeitos da paisagem entre os sítios em que a predição de MNEE foi classificado como congruente (paineis superiores) e os outros sítios (paineis inferiores). Os sítios classificados como congruentes são aqueles em que a SAD simulada por MNEE é congruente com a SAD observada em pelo menos 75% dos casos, para cada combinação de cenário de limitação de dispersão e paisagem hipotética. No eixo y há o logU/U e no eixo x há o grau de limitação de dispersão, os pontos estão coloridos pela proporção de cobertura florestal (%CF) e conectados pelo sítio de amostragem. Para cada k existem um boxplot resumindo a distribuição de valores atrás dos pontos."
+```
+```{r logUU-sitios, fig.cap=cap,fig.width=12,eval=TRUE,include=TRUE,message=FALSE,warning=FALSE,fig.height=8}
+p <- readRDS("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/logUU_comparacaositios.rds")
+p
+```
 
 
 ################################################# ANTIGO
@@ -408,7 +421,7 @@ Fig. 4. Predito pelo modelos mais plausível (HGAM) para descrever a congruênci
 
 
 
-## Métrica funcional da influência da paisagem na biodiversidade local {#metrica-funcional}
+## Métrica funcional da influência da paisagem na biodiversidade local 
 
 <p>O logU/U informa o efeito de um particular contraste de paisagens hipotéticas na manutenção da riqueza local. Os pares de paisagens em contraste são determinados pelo tipo de efeito explicativo que expressam. O efeito explicativo de área per se e fragmentação per são previstos pelo grupo de pesquisa que defende a independência dos efeitos da área e da mudança na configuração espacial da paisagem (e.g. Fahrig 2003, Fahrig 2017) . O efeito de área per se é obtido pelo contraste entre paisagem aglomerada e paisagem prístina. Essas paisagens hipotéticas diferem apenas na quantidade de habitat remanescente. O efeito de fragmentação per se é obtido pelo contraste entre paisagem fragmentada e aglomerada. Essas paisagens diferem apenas na configuração espacial do habitat remanescente. Já o efeito explicativo de fragmentação total é obtido pelo contraste entre paisagem fragmentada e paisagem prístina, tal como é usado nos designs experimentais do grupo que defende interdependência entre os efeitos da perda e fragmentação de habitat (e.g. Haddad et al. 2015). Essas paisagens hipotéticas diferem tanto na quantidade de habitat quanto na configuração espacial do habitat remanescente.</p>
 
@@ -417,7 +430,7 @@ Fig. 4. Predito pelo modelos mais plausível (HGAM) para descrever a congruênci
 ```{r caption figura exploratoria da taxa U}
 cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, previstos em cada prática ontológica (tabela 1). a) Distribuição dos valores de cada contraste; em vermelhos os quantis de todos os contrastes observados em paisagens com proporção de cobertura florestal igual ou superior 0.95. b) Contraste por sítio de amostragem, pontos ligados pelo sítio de amostragem e coloridos pela proporção de cobertura florestal remanescente."
 ```
-```{r GE-contraste-taxaU, include=TRUE,eval=TRUE,fig.cap=cap}
+```{r GE-contraste-taxaU, include=FALSE,eval=FALSE,fig.cap=cap}
 # knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.png"))
 knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
 ```

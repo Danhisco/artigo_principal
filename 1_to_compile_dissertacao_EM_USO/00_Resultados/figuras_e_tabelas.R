@@ -380,6 +380,33 @@ img <- image_read("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/sitios_
   image_trim()
 image_write(img,"1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/sitios_filtrados.png")
 
+## logU/U entre 
+
+f_ggplot <- \(dfp,tsize1=15,tsize2=10){
+  p1 <- dfp %>% 
+    mutate(label=gsub(", n sítios=","",label) %>% 
+             gsub("[1-9]{2}","",.) %>% 
+             gsub("k","sim.",.) %>% 
+             gsub(" \\(\\≥\\%\\)","",.)) %>% 
+    filter(k>=0.49999) %>% 
+    ggplot(aes(x=k,y=Uefeito,color=p)) +
+    geom_boxplot(aes(group=k)) +
+    geom_point(alpha=0.6) +
+    labs(y="logU/U",x="proporção de propágulos até a vizinhança imediata (k)") +
+    geom_line(aes(group=SiteCode),alpha=0.6) +
+    scale_colour_gradient2("% CF",midpoint=0.5,
+                           low="red",
+                           mid = "yellow",
+                           high = "darkgreen") +
+    facet_grid(label~contraste) +
+    theme_classic() +
+    theme(text=element_text(size=tsize1),
+          legend.position = "top",
+          legend.title = element_text(size=tsize2),
+          legend.text = element_text(size=tsize2))
+  return(p1)
+}
+
 
 
 f_ggplot <- \(dfp,tsize1=15,tsize2=10){
@@ -407,6 +434,7 @@ f_ggplot <- \(dfp,tsize1=15,tsize2=10){
   return(p1)
 }
 p <- f_ggplot(df_logUU_plot,tsize1 = 15)
+saveRDS(p,file = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/logUU_comparacaositios.rds")
 ggsave(filename="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.png",
        plot=p,
        width = 12,
@@ -419,6 +447,20 @@ saveRDS(p,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigf
 df_md <- select(df_logUU_plot[df_logUU_plot$nSAD_maiorigual75,],
                 SiteCode:Uefeito,p)
 saveRDS(df_md,"dados/csv_SoE/rds/df_logUUpk.rds")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #########################################################################################
 ########################### logU/U : área per se e fragmentçaão per se ##################
 #########################################################################################
