@@ -1290,3 +1290,7 @@ p <- ggdraw() +
             height = 0.15, width = 0.25,
             x=0.75, y=0.6)
 saveRDS(p,"1_to_compile_dissertacao_EM_USO/00_Resultados/rds/plot_taxaU_paisagens.rds")
+#######
+#### tabela de seleção 
+l_md_logUUpk <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk.rds")
+df_tabsel <- 

@@ -107,7 +107,7 @@ f_flextable <- \(dfi){
 df_tabsel_minimo <- 
   read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_minimo_paisagens.csv") %>% 
   mutate(modelo = gsub("\\*","\\+",modelo))
-df_tabsel <- readRDS("./5_resultados/df_tabsel_tehgam_efeitos.rds") %>% 
+df_tabsel <- readRDS(file="dados/csv_SoE/rds/df_tabsel_logUU_pk.rds") %>% 
   relocate(efeito)
 # v_path <- "1_to_compile_dissertacao_EM_USO/00_Resultados/"
 # df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
@@ -260,20 +260,20 @@ Uma vez que o lado escolhido pelo algoritmo para k entre 0.65 e 0.50 é igual a 
 
 
 ```{r tabela congruencia SAD}
-vcap <- " Modelos estatísticos para descrever a congruência absoluta da SAD simulada com a SAD observada. O modelo mais complexo é o mais plausível com peso de evidência de 0.986. Esse modelo possui um spline para k por tipo de paisagem e classe de perturbação, um spline para as coordenadas geográficas e um spline por sítio de amostragem para k e tipo de paisagem. Os outros modelos são simplificações desse modelo mais complexo."
+vcap <- "Modelos estatísticos para descrever a congruência absoluta da SAD simulada com a SAD observada. O modelo mais complexo é o mais plausível com peso de evidência de 0.986. Esse modelo possui um spline para k por tipo de paisagem e classe de perturbação, um spline para as coordenadas geográficas e um spline por sítio de amostragem para k e tipo de paisagem. Os outros modelos são simplificações desse modelo mais complexo."
 vnumericcols <- names(df_tabsel_minimo)[sapply(df_tabsel_minimo,is.numeric)]
 ```
-```{r ft-cong,tab.cap=vcap,tab.width=12,eval=FALSE,include=FALSE}
+```{r tabcong,tab.width=12,tab.caption=vcap,tab.id="tab:gt-cong",results='asis',eval=TRUE,include=TRUE}
 vnumericcols <- names(df_tabsel_minimo)[sapply(df_tabsel_minimo,is.numeric)]
 f_format <- \(x){
     formatC(x, format = "e", digits = 2)
   }
-ft <- flextable(df_tabsel_minimo) %>%
-  set_caption() %>%
+ft <- df_tabsel_minimo %>%
+  flextable() %>%
+  set_caption(vcap) %>%
   colformat_double(j = vnumericcols, digits = 3) %>%
   set_formatter(dAICc = f_format,df = f_format) %>%
   autofit() %>%
-  fontsize(size=12) %>% 
   set_header_labels(
     modelo = "HGAM",
     dAICc = "ΔAICc",
@@ -282,15 +282,10 @@ ft <- flextable(df_tabsel_minimo) %>%
     dev.expl = "dev. expl.",
     MoranI_stat_res = "Moran's I",
     pvalue = "p-valor"
-  ) %>% 
-  set_table_properties(
-    layout = "autofit",
-    align = "center",
-    opts_pdf = list(caption_repeat=FALSE)
   )
 ft
 ```
-```{r tabcong,tab.width=12,tab.caption=vcap,tab.id="tab:gt-cong",results='asis',eval=TRUE,include=TRUE}
+```{r teste,tab.width=12,tab.caption=vcap,results='asis',eval=FALSE,include=FALSE}
 # função científica
 library(gt)
 f_format <- function(x) formatC(x, format = "e", digits = 2)
@@ -373,72 +368,25 @@ p_boasempre_ounao
 <p> Nesta seção descrevemos como a métrica de efeito da paisagem, logUi/Uj, variou em função do tipo de efeito, da porcentagem de cobertura florestal (%CF) e proporção de propágulos na vizinhança imediata (k). Com esta métrica (logUi/Uj) avaliamos  3 efeitos da paisagem: o efeito de fragmentação total, dado pela razão entre as taxas U obtidas para a  paisagem fragmentada e a prístina; o efeito de fragmentação per se, a razão entre a taxa U estimada  para a paisagem fragmentada e aglomerada; e o efeito de área per se, pela razão  das taxas U da paisagem aglomerada e prístina. O contraste logUi/Uj entre paisagens busca revelar diferentes efeitos da paisagem na manutenção da biodiversidade local. Primeiro, a conectividade, movimentação dos indivíduos no habitat remanescente. Segundo, na dinâmica de substituição de indivíduos na paisagem, resultando em variação no número de espécies perdido por deriva ecológica. Dessa forma, a métrica de efeito da paisagem proposta, logUi/Uj, busca descrever a vulnerabilidade da biodiversidade local, definida pelo grau em que a paisagem ao redor exige fontes externas de biodiversidade árborea.</p>.
 
 
-<p> Na figura \@ref(fig:logUU-sitios) há a métrica de efeito da paisagem na vulnerabilidade local (logUi/Uj) para os propostos efeitos da paisagem entre os sítios classificados como congruentes e os outros (fig. \@ref(fig:sitioscong)). 
+<p> Na figura \@ref(fig:logUU-sitios) há a métrica de efeito da paisagem na vulnerabilidade local (logUi/Uj) para os propostos efeitos da paisagem entre os inventários florestais classificados como congruentes e os outros (fig. \@ref(fig:sitioscong)). Para os três efeitos da paisagem a maior parte dos casos a métrica funcional logUi/Uj é próximo de zero, com alguns sítios ultrapassando essa faixa de valores próximo de zero ao passo que a porcentagem de cobertura florestal (%CF) diminui (fig. \@ref(fig:logUU-sitios)). Os valores da métrica funcional varia entre cerca de -0.25 e 0.50 em ambos grupos de sítios, com variação similar entre os efeitos (fig. \@ref(fig:logUU-sitios)). Assim, é possível concluir que os inventários da classe 'alta congruência sempre' apresentam perfil similar de variação de cobertura florestal (fig. \@ref(fig:sitioscong)) e de métrica funcional da paisagem (fig. \@ref(fig:logUU-sitios)) com os inventários da outra classe de congruência.
+
 
 ```{r}
-cap = "O perfil de logU/U dos efeitos da paisagem entre os sítios em que a predição de MNEE foi classificado como congruente (paineis superiores) e os outros sítios (paineis inferiores). Os sítios classificados como congruentes são aqueles em que a SAD simulada por MNEE é congruente com a SAD observada em pelo menos 75% dos casos, para cada combinação de cenário de limitação de dispersão e paisagem hipotética. No eixo y há o logU/U e no eixo x há o grau de limitação de dispersão, os pontos estão coloridos pela proporção de cobertura florestal (%CF) e conectados pelo sítio de amostragem. Para cada k existem um boxplot resumindo a distribuição de valores atrás dos pontos."
+cap = "A métrica funcional logUi/Uj em função da limitação de dispersão (eixo x), colorido pela porcentagem de cobertura florestal na paisagem de 1 km de lado (%CF) e agrupado pela classe de congruência de MNEE com o observado em inventários florestais. A classificação de congruência segue a definição: os inventários da classe 'alta congruência sempre' são aqueles em que pelo menos 75% das SAD simuladas foram congruentes com a SAD observada, considerando todos os cenários de limitação de dispersão e paisagens hipotéticas. Os outros inventários apresentam congruência baixa (menor do que 75%) em algum simulação. Cada ponto representa uma bateria o contraste entre simulações de MNEE para um mesmo inventário mas variando a paisagem hipotética, pontos de um mesmo inventário estão conectados por uma linha. Frag. total é o contraste entre paisagem fragmentada, tal como no ano mais próximo ao inventário florestal, e prístina, sem perda de cobertura florestal. Frag. per se é o contraste entre a paisagem fragmentada e a paisagem com a cobertura remanescente aglomerada ao redor da parcela tal como a forma do recorte de paisagem (paisagem aglomerada). Área per se é o contraste entre paisagem aglomerada e prístina. Uma vez que o logUi/Uj = logUi - logUj, então Frag. total = Frag. per se + Área per se. Concluímos com essa figura que a métrica funcional varia em função da capacidade dispersão e %CF de forma similar entre os grupos de inventários classificados conforme a congruência da predição de MNEE."
 ```
 ```{r logUU-sitios, fig.cap=cap,fig.width=12,eval=TRUE,include=TRUE,message=FALSE,warning=FALSE,fig.height=8}
 p <- readRDS("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/logUU_comparacaositios.rds")
 p
 ```
 
+### Descrição estatística da métrica funcional da paisagem de cada proposto efeito da paisagem
 
-################################################# ANTIGO
-
-
-
-# Os efeitos explicativos da paisagem na predição da biodiversidade local de árvores
-
-<p>Nesta seção, interpretamos os efeitos explicativos da paisagem na predição da biodiversidade local de árvores a partir do contraste de simulações em paisagens hipotéticas. Essas simulações resultam de um modelo mecanístico demográfico de substituição de indivíduos no espaço, o modelo neutro espacialmente explícito. Nesse modelo, a riqueza de espécies e a abundância relativa são influenciadas pela configuração da paisagem, que determina a quantidade, posição e distância dos progenitores remanescentes.</p>
-
-<p> O modelo é calibrado para capturar a influência da paisagem na riqueza de espécies ao ajustar a taxa U para que a riqueza observada seja aproximada. Essa taxa corresponde à probabilidade de colonização por uma nova espécie por evento de nascimento. A comparação da taxa U entre paisagens informa o efeito do contraste da configuração espacial da paisagem na manutenção da riqueza local. Interpretamos o contraste na taxa U usando o log da razão da taxa U (logU/U). Pareado para um mesmo sítio e grau de limitação de dispersão, o logU/U informa se existe diferença na reposição de espécies pela imigração de propágulos vindos da paisagem ao redor entre paisagens hipotéticas.</p>
-<p> Os efeitos da paisagem na predição da biodiversidade local são obtidos investigando o efeito do contraste de paisagem na congruência entre SAD simulada e observada. A simulação da SAD foi feita na mesma paisagem em que a taxa U foi estimada. Esperávamos que quanto maior logU/U, maior o contraste de paisagens hipotéticas quanto a congruência com a SAD observada, melhorando ou piorando a aproximação com o padrão empírico. Além do logU/U, outro parâmetro necessário para compreender o efeito da paisagem na congruência deve ser o grau de limitação de dispersão, pois deve mostrar a interação entre a probabilidade de substituir coespecífico e a configuração espacial da paisagem (@campos_neutral_2012, @campos_effect_2013).</p>
-<p>A seguir, a descrição da congruência absoluta da SAD simulada nas paisagens hipotéticas com a SAD observada. O modelo mais plausível para descrever a congruência absoluta da SAD simulada nas paisagens hipotéticas é usado como referência para as análises subsequentes, pois as covariáveis (classe de perturbação e coordenadas centrais) selecionadas são usadas como covariáveis do modelo para descrever a congruência relativa da SAD simulada expressa nos efeitos explicativos. Antes da descrição da congruência relativa da SAD simulada em pares específicos de paisagens hipotéticas, é apresentada a métrica de conectividade relativa.</p>
-
-## Congruência absoluta da SAD simuladas na paisagens hipotéticas com a SAD observada
-
-<p>Seis modelos foram comparados para avaliar a probabilidade de congruência entre SADs simuladas e observadas, variando em complexidade quanto à estrutura dos efeitos aleatórios e termos de suavização. O modelo mais complexo inclui efeitos específicos por tipo de paisagem e por sítio, além de splines para o parâmetro k, variando entre tipos de paisagens hipotéticas e classe de perturbação da parcela, e também possui um spline para as coordenadas geográficas dos sítios. Modelos mais simples foram obtidos pela remoção progressiva de termos. Na tabela 1 há a comparação desses modelos. O modelo cheio foi o mais plausível. Esse modelo soma a maior parte do peso de evidência (>0.95) e não apresenta evidência de autocorrelação espacial dos resíduos (tabela 1). Os únicos modelos que apresentam evidência de autocorrelação espacial são aqueles sem um spline de k por tipo de paisagem e sítio de amostragem (tabela 1). Entre os modelos com um spline de k por tipo de paisagem e sítio de amostragem (os 4 primeiros modelos mais plausíveis) a deviance explicada é similar, próxima de 0.941 (tabela 1). A maior queda na deviance explicada ocorre quando é removido o spline de k por sítio e paisagem hipotética - o contraste entre os modelos ‘s(k,by=land)’ e ‘s(k,by=land) + land|Site’ foi de 0.27 de deviance explicada (tabela 1). A remoção do spline de k que descreve a média dos sítios de amostragem teve baixo impacto na deviance  - a diferença entre os dois modelos menos plausível é de 0.067 (tabela 1). O modelo mais plausível apresenta bom ajuste com o observado (SI).</p>
+<p> O objetivo dessa seção é descrever para cada proposto efeito da paisagem a métrica funcional da paisagem (logUi/Uj) em função da porcentagem de cobertura florestal (%CF) e cenário de limitação de dispersão (k, proporção de propágulos na vizinhança imediata). Apenas os inventários florestais classificados como 'alta congruência sempre' são considerados nessa seção (figs. \@ref(fig:sitioscong), \@ref(fig:logUU-sitios)). Os efeitos da paisagem em logU/U foram descritos por dois modelos estatísticos cada, que diferem quanto ao spline de k por sítio (tab. 2). Para todos os contrastes, o modelo estatístico mais plausível descreve o logUi/Uj em função de um tensor entre %CF e k como efeito fixo e um spline de k por sítio (Tab. 2). Isso significa que a razão logUi/Uj é modelada por uma interação multidimensional entre %CF e k (via tensor), que captura efeitos conjuntos não lineares e dependentes do contexto entre essas variáveis. E por variações locais de k em cada sítio, ajustadas por um spline, permitindo padrões distintos e não-lineares. Os modelos mais plausíveis explicam mais de 90% da ‘deviance’ (Tab. 2) e apresentam bom ajuste, conforme evidenciado nos gráficos de diagnóstico do pacote Gratia (@gratia) no material de suporte (Fig. SI X).</p> 
 
 
-Tab. 1. Modelos estatísticos para descrever a congruência absoluta da SAD simulada com a SAD observada. O modelo mais complexo é o mais plausível com peso de evidência de 0.986. Esse modelo possui um spline para k por tipo de paisagem e classe de perturbação, um spline para as coordenadas geográficas e um spline por sítio de amostragem para k e tipo de paisagem. Os outros modelos são simplificações desse modelo mais complexo.
-
-
-
-
-
-
-
-Fig. 4. Predito pelo modelos mais plausível (HGAM) para descrever a congruência absoluta da SAD simulada nas paisagens hipotéticas (fragmentada, aglomerada, e prístina). Os hexágonos são coloridos conforme o número de pontos em sua área. Os pontos são o número de SADs simuladas com boa congruência com a SAD observada segundo o teste de Kolmogorov-Smirnov. As linhas transparentes em cinza são a predição do modelo para esses pontos. Em vermelho escuro o predito pelo modelo para a média, desconsiderando o efeito dos sítios e o efeito das coordenadas centrais. Em azul claro o intervalo de predição de 95% ao redor da média.
-
-<p>Na figura 4 há o número de SADs simuladas com boa congruência empírica e predita pelo modelo mais plausível.  Os hexágonos informam o número de pontos em sua área, cada ponto é o valor observado de SADs simuladas com boa congruência. No eixo x há o grau de limitação de dispersão e no eixo y o número de SADs simuladas com boa congruência. As linhas e áreas contínuas são a predição do modelo. Os quadros estão divididos segundo o tipo da paisagem hipotética, título na horizontal (fragmentada, aglomerada, prístina), e classe de perturbação, título na vertical (baixa, mediana, alta). As linhas cinzas são os valores preditos para os pontos de um mesmo sítio. A linha em vermelho representa a predição do modelo considerando apenas o efeito do spline de k comum aos sítios, desconsiderando o efeito das coordenadas e do spline por sítio. A área em azul é o intervalo de 95% de erro em torno da média.</p>
-
-<p> A maior parte dos pontos está próximo do 100 e parece existir muita variabilidade entre sítios, que resulta na predição por sítio com diferentes padrões, alguns com pouca variabilidade em função de k outros com padrões não lineares (fig. 4). Existe pouca diferença no valor médio em azul para diferentes paisagens hipotéticas (fig. 4). A maior parte das diferenças entre paisagens hipotéticas ocorre quando a limitação de dispersão é branda ( k < 0.25, fig. 4). Nessa faixa de limitação de dispersão branda, a paisagem hipotética fragmentada parece apresentar maior probabilidade média de uma SAD com boa congruência. Seguido da paisagem prístina. Porém, essa faixa de valores apresenta a maior variabilidade entre sítios e entre classes de perturbação. Os sítios de baixa perturbação apresentam média mais elevada (fig. 4). Os valores médios tendem a ser menores no nível mediano de perturbação do sítio de amostragem (fig. 4).</p>
-
-
-
-
-
-
-
-## Métrica funcional da influência da paisagem na biodiversidade local 
-
-<p>O logU/U informa o efeito de um particular contraste de paisagens hipotéticas na manutenção da riqueza local. Os pares de paisagens em contraste são determinados pelo tipo de efeito explicativo que expressam. O efeito explicativo de área per se e fragmentação per são previstos pelo grupo de pesquisa que defende a independência dos efeitos da área e da mudança na configuração espacial da paisagem (e.g. Fahrig 2003, Fahrig 2017) . O efeito de área per se é obtido pelo contraste entre paisagem aglomerada e paisagem prístina. Essas paisagens hipotéticas diferem apenas na quantidade de habitat remanescente. O efeito de fragmentação per se é obtido pelo contraste entre paisagem fragmentada e aglomerada. Essas paisagens diferem apenas na configuração espacial do habitat remanescente. Já o efeito explicativo de fragmentação total é obtido pelo contraste entre paisagem fragmentada e paisagem prístina, tal como é usado nos designs experimentais do grupo que defende interdependência entre os efeitos da perda e fragmentação de habitat (e.g. Haddad et al. 2015). Essas paisagens hipotéticas diferem tanto na quantidade de habitat quanto na configuração espacial do habitat remanescente.</p>
-
-<p>Como a taxa U contém informação sobre os propágulos da paisagem ao redor que contribuem com a reposição local de espécies perdidas por deriva (Fig. 2 e 3), a razão entre as taxas U estimada em diferentes paisagens hipotéticas informa a influência do particular contraste de paisagem na manutenção da biodiversidade local. Nessa seção o log da razão entre taxas U (logU/U) é avaliado em função do grau de limitação de dispersão e da cobertura florestal na paisagem na escala de 4 x 4 km2, escala suficiente para simular todos os graus de limitação de dispersão.</p>
-
-```{r caption figura exploratoria da taxa U}
-cap <- "Contrastes na taxa U estimada em pares de paisagens contrafactuais, previstos em cada prática ontológica (tabela 1). a) Distribuição dos valores de cada contraste; em vermelhos os quantis de todos os contrastes observados em paisagens com proporção de cobertura florestal igual ou superior 0.95. b) Contraste por sítio de amostragem, pontos ligados pelo sítio de amostragem e coloridos pela proporção de cobertura florestal remanescente."
+```{r}
+vcap="Modelos estatísticos para descrever os efeitos da paisagem em logU/U. te(p,k) = tensor entre porcentagem de cobertura florestal na paisagem (p) e grau de limitação de dispersão (k); s(k)|Site = spline para k por sítio; 1|Site = apenas 1 intercepto por sítio."
 ```
-```{r GE-contraste-taxaU, include=FALSE,eval=FALSE,fig.cap=cap}
-# knitr::include_graphics(path=paste0(getwd(),"/1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigfinal_1alinha.png"))
-knitr::include_graphics(path="figuras/pedacofigfinal_1alinha.png")
-```
-
-```{r legenda tabsel efeitos,include=TRUE,eval=TRUE}
-vcap <- "Modelos candidatos para descrever a congruência relativa entre a SAD simulada e observada. Para cada efeito o mesmo conjunto de modelos candidatos foi ajustado. Para todos os efeitos, o modelo mais complexo é o mais plausível. O modelo mais complexo (te(logU/U,k)) apresenta um tensor entre logU/U e k por classe de perturbação, um spline para as coordenadas centrais e um tensor de logU/U e k por sítio de amostragem. O segundo modelo mais complexo (s(k)) remove a preditora logU/U, resultando em um spline para k onde no modelo mais complexo são tensores. O modelos mais simples (te(logU/U,k) - te(logU/U,k,Sítio)´)) é igual o modelo mais complexo exceto pela ausência de tensor por sítio de amostragem, tendo apenas 1 intercepto por sítio de amostragem."
-```
-
 ```{r tabsel-efeitos, include=TRUE,eval=TRUE}
 vnumericcols <- names(df_tabsel)[sapply(df_tabsel,is.numeric)]
 f_format <- \(x){
@@ -469,27 +417,13 @@ ft <- df_tabsel %>%
 ft
 ```
 
-```{r}
-vcap <- "O predito e o observado para os efeitos explicativos da paisagem. No eixo x os valores observados de logOR, no eixo y o logOR predito pelo modelos mais plausível. Cada linha é uma regressão linear ajustada aos dados de um sítio de amostragem. Os hexagonos são coloridos segundo a contagem do número de pontos em sua área. Os histogramas na esquerda superior correspondem aos parâmetros da regressão linear, intercepto em cima e inclinação em baixo. Em pontilhado a reta 1 : 1. Bom ajuste ocorre quando ps dados se alinham a reta 1 : 1, resultando em inclinação próxima de 1."
-```
+### A predição do modelo mais plausível para descrever a métrica funcional (logUi/Uj)
 
-```{r predito-observado,include=TRUE,eval=TRUE,fig.cap=vcap}
-knitr::include_graphics("figuras/diagfinal_3efeitos.jpeg")
-```
+<p>Nessa seção iremos interpretar a predição do modelo estatístico mais plausível para descrever a métrica funcional (logUi/Uj) de cada proposto efeito da paisagem. Quando o logU/U é negativo, então o efeito da paisagem é positivo na manutenção da biodiversidade local, pois isso significa que na paisagem do numerador a taxa U é menor do que a taxa U no denominador. Quanto menor a taxa U menor a necessidade da entrada de novas espécies na paisagem para manter a riqueza local observada, ou seja, menor a dependência por processos locais de reposição como especiação verdadeira, reposição do banco de propágulos de espécies ausentes entre os adultos e dispersão de longa distância de fora da paisagem.</p>
+ 
+<p>Para facilitar a interpretação, o predito pelo modelo mais plausível será dividido conforme a porcentagem de cobertura florestal (%CF). Os inventários estão divididos em 5 classes: %CF menor do que 30; entre 30 e 60; entre 60 e 80; entre 80 e 100; e igual 100 (Fig. 8). A classe de %CF igual a 100 foi usada como referência de ausência de efeito da paisagem, e seus valores extremos (máximo, mínimo e quantis de 95% e 5%) foram adicionados ao gráficos em todos os paineis (linhas pontilhadas, máximo e mínimo, e tracejadas, quantis). Adicionalmente, para cada grau de limitação de dispersão (valor de k, no eixo x), incluímos um boxplot que sumariza os valores observados (Fig. 8). Para auxiliar a interpretação da fig. 8, a fig. 9 sumariza os sítios em que pelo menos um cenário de limitação de dispersão ultrapassou os valores de referência de ausência de efeito na fig. 8. </p>
 
-```{r legenda comparacao 3efeitos}
-vcap <- ""
-```
-
-```{r os3efeitos,include=TRUE,eval=TRUE,fig.cap=vcap}
-#knitr::include_graphics("figuras/comparacao_3efeitos.jpeg")
-```
+<p> Os valores de logU/U dos sítios referência de ausência de efeito (%CF=100) variaram entre -0.13 e 0.10 (Fig. 8). Se considerarmos a exponenciação do módulo desses valores, então as razões de U/U (1.13 e 1.10, respectivamente) informam que a variação na taxa U foi de até cerca de 11.5% nos dois sentidos. Esta variação observada na métrica funcional de paisagens sem perda de cobertura florestal (%CF=100) pode ser explicada em função da estocasticidade demográfica representada em MNEE. </p>
 
 
-
-Fig. 5. Métrica de conectividade funcional obtida pelo contraste entre paisagens hipotéticas. Cada efeito (título horizontal dos quadros) corresponde a um contraste entre paisagens hipotéticas. Área per se: aglomerada e prístina; Fragmentação per se: fragmentada e aglomerada; Fragmentação total: fragmentada e prístina. Os pontos estão coloridos pela proporção de cobertura florestal na paisagem com extensão de 4 x 4 km2. Os boxplots são sumários dos valores de um mesmo grau de limitação de dispersão simulado (k) considerando todos os sítios. Os quadros estão divididos verticalmente pela classe de perturbação da área amostrada: baixa, mediana e alta.
-
-<p>Na figura 5 há o logU/U em função do grau de limitação de dispersão (k) e colorido pela cobertura florestal na paisagem na extensão de 4x4km2 (%CF), os boxplots sumarizam os valores para um mesmo k e os quadros estão divididos conforme o tipo de efeito explicativo e a classe de perturbação da parcela. Como esperado, quando a proporção de cobertura florestal é alta o logU/U é próximo de zero para todos os efeitos explicativos (fig. 5). O logU/U aumenta com a redução na proporção de cobertura florestal, principalmente em graus de limitação de dispersão brandos (fig. 5). O efeito com maior magnitude na variação do logU/U foi o efeito de fragmentação total, uma vez que a mediana e terceiro quantil estão sempre acima do que os respectivos boxplots em outros efeitos para uma mesma classe de perturbação (fig. 5). O efeito com menor magnitude na variação foi o efeito de área per se (fig. 5).</p>
-
-<p>Nos efeitos de fragmentação per se e total, em alguns poucos sítios o logU/U é negativo quando a limitação de dispersão é muito severa (k>0.80), indicando que a taxa U estimada na paisagem fragmentada é menor do que a taxa U estimada na paisagem prístina ou aglomerada. Esse padrão pode indicar que a particular configuração espacial está aumentando a probabilidade de substituição de coespecíficos, dessa forma, reduzindo a perda local de espécies. Uma expectativa teórica é que o aumento da fragmentação per se possa reduzir a perda local de espécies em algumas situações (Campos et al. 2012, 2013; Fahrig et al. 2019). Contudo, esse padrão foi observado em poucos sítios e com menor magnitude do que quando o logU/U é positivo.</p>
-<p>Em resumo, o padrão geral da métrica de influência da paisagem na manutenção da riqueza local é de que quanto maior a perda de cobertura florestal e menor a limitação de dispersão, maior é o contraste na taxa U estimada entre paisagens hipotéticas, principalmente se a classe de perturbação foi alta (Fig. 5). A maior magnitude de contraste entre paisagens hipotéticas pode ser observado no efeito de fragmentação total, e o menor no efeito de área per se. Tanto o efeito de fragmentação total, quanto de fragmentação per se, podem apresentar raros casos em que a taxa U estimada na paisagem fragmentada é inferior à taxa U estimada nas paisagens aglomeradas e prístinas.</p>
+## Referências
