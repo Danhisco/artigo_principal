@@ -290,6 +290,12 @@ df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>%
                                        "mediana\n25 ~ 75",
                                        "baixa\n5 ~ 25",
                                        "muito baixa\n<=5")[5:1]))
+
+# df_plot <- ddply(df_ad,c("land","congruencia"),\(dfi){
+#   data.frame(n=nrow(dfi),
+#              nSites=length(unique(dfi$SiteCode)))
+# })
+
 df_plot <- df_ad %>% 
   group_by(land,congruencia) %>% 
   summarise(n=dplyr::n(),
@@ -448,20 +454,6 @@ saveRDS(p,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/pedacofigf
 df_md <- select(df_logUU_plot[df_logUU_plot$nSAD_maiorigual75,],
                 SiteCode:Uefeito,p)
 saveRDS(df_md,"dados/csv_SoE/rds/df_logUUpk.rds")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #########################################################################################
 ########################### logU/U : área per se e fragmentçaão per se ##################
 #########################################################################################
@@ -675,7 +667,7 @@ df_sites <- ddply(df_refCF1,"names",\(dfi){
 df_sites_summary <- df_sites %>% 
   group_by(efeito,p_class,cond_class) %>% 
   tally() %>% 
-  inner_join(df_sites %>% 
+  inner_join(df_real %>% 
                group_by(p_class) %>% 
                summarise(nSite = unique(SiteCode) %>% length())) %>% 
   ungroup() %>% 
@@ -735,6 +727,88 @@ ggsave(filename = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/propSit
        height = 2.23,
        dpi=200)
 saveRDS(p,file = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/propSitios_ultrapassam_efeitoCF100.rds")
+
+library(scales)
+p <- df_real %>% 
+  ggplot(aes(x=efeito,y=Uefeito,color=efeito)) +
+  geom_hline(yintercept = 0,color="black") +
+  geom_boxplot() +
+  geom_jitter(alpha=0.3) +
+  scale_color_manual(values=c("Frag. total"="darkred","Frag. per se"="darkblue","Área per se"="darkgreen")) +
+  theme_classic() +
+  labs(x="",y="logU/U") +
+  facet_wrap(~p_class,nrow=1) +
+  theme(legend.position = "top")
+
+
+dfrange <- filter(df_real,p_class=="%CF = 100") %>% 
+  reframe(
+    names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
+    value = c(min(Uefeito), max(Uefeito),quantile(Uefeito,probs=0.05),quantile(Uefeito,probs=0.95))
+  )
+df_sumario <- df_real %>% 
+  select(p_class,SiteCode) %>% 
+  distinct() %>% 
+  group_by(p_class) %>% 
+  tally()
+p_hist <- df_real %>% 
+  inner_join(df_sumario) %>% 
+  mutate(efeito = factor(efeito,
+                         levels=c("Frag. total",
+                                  "Frag. per se",
+                                  "Área per se")),
+         label=paste0(p_class,", n = ",n)) %>% 
+  filter(p_class!="%CF = 100") %>% 
+  ggplot(aes(x = Uefeito, fill = efeito)) +
+  geom_histogram(bins = 30, alpha = 0.7, position = "identity") +
+  geom_vline(xintercept = 0, color = "black", linetype = "solid") +
+  geom_vline(data = dfrange, aes(xintercept = value,linetype=names),
+             color="black",linewidth=0.5) +
+  scale_linetype_manual(name = paste0("logU/U %CF=100",", n sítios=",20),
+                        values=c("dotted","dashed")) +
+  scale_fill_manual(values = c("Frag. total" = "darkred", 
+                               "Frag. per se" = "darkblue", 
+                               "Área per se" = "darkgreen")) +
+  theme_classic() +
+  labs(x = "logU/U", y = "Frequência", fill = "Efeito") +
+  facet_grid(efeito ~ label, scales = "free_y") +  # Faceta dupla para melhor comparação
+  theme(legend.position = "top",
+        strip.text = element_text(size = 10),
+        panel.spacing = unit(1, "lines")) +
+  scale_x_continuous(expand=c(0,0)) + #labels = scientific_format(digits = 2),
+  scale_y_continuous(expand=c(0,0))
+saveRDS(p_hist,file = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/boxplot_efeitos_pclass.rds")
+
+df_real %>% 
+  group_by(p_class,efeito) %>% 
+  reframe(quantils = c("min",0.05,0.25,0.50,0.75,0.95,"max"),
+          Uefeito = c(min(Uefeito),quantile(Uefeito,probs=c(0.05,0.25,0.50,0.75,0.95)),max(Uefeito))) %>% 
+  mutate(quantils = factor(quantils,
+                           levels=c("min",0.05,0.25,0.50,0.75,0.95,"max"))) %>% 
+  ggplot(aes(x=p_class,y=quantils,z=Uefeito,fill=Uefeito)) +
+  geom_tile(color = "darkgray", linewidth = 0.5) +
+  geom_label(aes(label = scientific(Uefeito, digits = 3)), 
+             fill = "white",
+             size = 3, 
+             label.size = 0,  # Remove borda do label
+             label.padding = unit(0.15, "lines")) +
+  scale_fill_gradient(low = "lightblue", 
+                      high = "darkred",
+                      labels = scientific_format(digits = 3)) +
+  # guides(fill = guide_legend(label.theme = element_text(angle = 90, hjust = 0.5))) +
+  scale_x_discrete(position = "bottom",expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  labs(x="",y="") +
+  theme_classic() +
+  facet_wrap(~efeito,nrow=1) +
+  theme(panel.grid = element_blank(),
+        axis.text = element_text(size = 10),
+        axis.text.x=element_text(angle=90),
+        legend.position = "top")
+  
+  
+
+
 ######### obs X predito (fixo + aleatório)
 f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE){
   dfpred <- dff %>% 
@@ -804,6 +878,8 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE){
           legend.direction="horizontal") 
 }
 p_efeitos <- f_obs_predito_bysite(df_real,logic_ribbon = TRUE)
+saveRDS(p_efeitos,"1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.rds")
+
 ggsave(filename = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.png",
        dpi=200,
        plot=p_efeitos,
