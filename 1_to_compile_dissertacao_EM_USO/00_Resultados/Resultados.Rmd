@@ -249,7 +249,7 @@ Na figura \@ref(fig:SoE) há o resultado do algoritmo de escolha da extensão es
 Uma vez que o lado escolhido pelo algoritmo para k entre 0.65 e 0.50 é igual a 1 km, consideramos que todos os graus de limitação de dispersão mais severos que estes (com k maior do que 0.65) também possuem o mesmo lado da paisagem. Quando a limitação de dispersão é mais severa, há incerteza na definição do lado da paisagem, variando entre 1km e 2km de lado (fig. \@ref(fig:SoE). Uma vez que a extensão da paisagem de lado 3 km não foi simulada, os cenários de limitação de dispersão brandos (k menor do que 0.15) serão aproximados pelo lado da paisagem 4 km nas próximas análises com o conjunto completo de dados (todos os sítios e paisagens hipotéticas).
 </p>
 
-## Validação empírica de MNEE: congruência com a SAD observada
+## Congruência entre a SAD observada e predita por MNEE nas paisagens hipotéticas
 
 <p> O objetivo dessa seção é descrever a variabilidade na congruência da predição do MNEE e, dessa forma, avaliar se esse modelo é adequado para ter os parâmetros interpretados. A SAD é a predição de MNEE que é possível depois da estimativa da taxa U nas paisagens hipotéticas, conforme a escala adequada para cada cenário de limitação de dispersão (fig. \@ref(fig:SoE). Para descrever a congruência da SAD simulada por MNEE, foram usados modelos estatísticos para descrever a probabilidade de uma SAD simulada ser congruente com a SAD observada em função da capacidade de dispersão e da paisagem hipotética usadas em cada simulação. O modelo mais complexo inclui efeitos específicos por tipo de paisagem e por sítio, além de splines para o parâmetro k, variando entre classe de perturbação da parcela, e também possui um spline para as coordenadas geográficas dos sítios. Modelos mais simples foram obtidos pela remoção progressiva de termos.
 </p> 
@@ -334,12 +334,12 @@ p
 
 <p>Na figura \@ref(fig:p-cong) há o número de SADs simuladas com boa congruência observada e o número predito pelo modelo mais plausível. A maior parte dos pontos está próximo dos 100% (ou seja, todas as 100 repetições da simulação resultaram em SADs congruentes com a empírica, para um dado sítio, valor de k e paisagem). Parece existir muita variabilidade de tendências entre sítios, que resulta na predição por sítio com diferentes padrões, alguns com pouca variabilidade em função de k outros com padrões não lineares (fig. \@ref(fig:p-cong)). Existe pouca diferença no valor médio (em azul) para diferentes paisagens hipotéticas e classes de perturbação (fig. \@ref(fig:p-cong)). A maior diferença média entre paisagens hipotéticas ocorre quando a limitação de dispersão é branda ( k < 0.25, fig. \@ref(fig:p-cong)). Nessa faixa de limitação de dispersão branda, simulações usando a paisagem hipotética fragmentada têm maior probabilidade média de gerar uma SAD com boa congruência com a empírica, seguido da paisagem prístina. Porém, essa faixa de valores apresenta a maior variabilidade entre sítios e entre classes de perturbação. Os sítios de baixa perturbação tendem a apresentar congruência média mais elevada (fig. \@ref(fig:p-cong)). Os valores de congruência média tendem a ser menores no nível mediano de perturbação do sítio de amostragem (fig. \@ref(fig:p-cong)). Contudo, em média tanto as paisagens hipotéticas quanto as classes de perturbação apresentam boa congruência (fig. \@ref(fig:p-cong)). </p>
 
-##  Estimativa da taxa U para os inventários nas paisagens hipotéticas
+##  Estimativa da taxa U nas paisagens hipotéticas
 
 ```{r}
 cap="A média da taxa U ajustada a partir da riqueza observada e das paisagens hipotéticas nos 20 cenários de limitação de dispersão explorados. Cerca de 90% das simulações estimam taxa U entre 1e-3 e 1e-2, no limite o modelo variou entre ~4e-2 e ~4e-4."
 ```
-```{r taxaU-lands, fig.cap=cap,fig.width=12}
+```{r taxaU-lands, fig.cap=cap,fig.width=12,fig.height=8}
 p <- readRDS("1_to_compile_dissertacao_EM_USO/00_Resultados/rds/plot_taxaU_paisagens.rds")
 p
 ```
@@ -361,7 +361,7 @@ p
 ```{r}
 cap="Os sítios selecionados conforme a classificação de congruência da SAD simulada com a SAD observada. Os sítios com boa congruência são aqueles em que pelo menos 75% das SAD simuladas foram congruentes com a SAD observada, considerando todos os cenários de limitação de dispersão e paisagens hipotéticas (em vermelho). Os sítios com alguma simulação com congruência abaixo de 75% (em azul). Os sítios em azul e vermelho estão distribuídos conforme a proporção de cobertura florestal (eixo x, %CF)."
 ```
-```{r sitioscong, fig.cap=cap,fig.width=6}
+```{r sitioscong, fig.cap=cap,fig.width=4,fig.height=2.5}
 p_boasempre_ounao <- readRDS(file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_boasempre_ounao.rds")
 p_boasempre_ounao
 ```
