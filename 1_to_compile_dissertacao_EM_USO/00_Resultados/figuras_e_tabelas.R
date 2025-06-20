@@ -1369,5 +1369,180 @@ p <- ggdraw() +
 saveRDS(p,"1_to_compile_dissertacao_EM_USO/00_Resultados/rds/plot_taxaU_paisagens.rds")
 #######
 #### tabela de seleção 
-l_md_logUUpk <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk.rds")
-df_tabsel <- 
+p <- df_real %>% 
+  group_by(efeito,p_class) %>% 
+  reframe(quantils=c("min",0.05,0.25,0.50,0.75,,0.95,"max"),
+          values=c(min(Uefeito),quantile(Uefeito,probs = c(0.05,0.25,0.50,0.75,0.95)),max(Uefeito))) %>% 
+  mutate(quantils=factor(quantils,
+                         levels=c("min",0.05,0.25,0.50,0.75,,0.95,"max"))) %>% 
+  filter(p_class!="%CF = 100") %>% 
+  ggplot(aes(x=p_class,y=quantils,fill=values)) +
+  geom_tile(color="white") +
+  geom_label(aes(label=round(values,2)),fill="white") +
+  facet_wrap(~efeito,ncol=1) +
+  theme_classic() +
+  theme(legend.position = "none")
+saveRDS(p,"1_to_compile_dissertacao_EM_USO/00_Resultados/rds/plot_sumario_efeitos.rds")
+
+##################################
+###################### criação da figura resumo das 8 regiões:
+
+f_circle_plot <- \(dfp,boxlabelsize=10,tsize=15,lsize=15){
+  dfp2 <- mutate(
+    dfp,
+    region_id = case_when(
+      A_maior0 == "Área per se>=0" & F_maior0 == "Frag per se>=0" & abs_AmaiorF == "|Área per se|>|Frag per se|" ~ 1,
+      A_maior0 == "Área per se>=0" & F_maior0 == "Frag per se>=0" & abs_AmaiorF == "|Frag per se|>|Área per se|" ~ 2,
+      A_maior0 == "Área per se<0" & F_maior0 == "Frag per se>=0" & abs_AmaiorF == "|Frag per se|>|Área per se|" ~ 3,
+      A_maior0 == "Área per se<0" & F_maior0 == "Frag per se>=0" & abs_AmaiorF == "|Área per se|>|Frag per se|" ~ 4,
+      A_maior0 == "Área per se<0" & F_maior0 == "Frag per se<0" & abs_AmaiorF == "|Área per se|>|Frag per se|" ~ 5,
+      A_maior0 == "Área per se<0" & F_maior0 == "Frag per se<0" & abs_AmaiorF == "|Frag per se|>|Área per se|" ~ 6,
+      A_maior0 == "Área per se>=0" & F_maior0 == "Frag per se<0" & abs_AmaiorF == "|Frag per se|>|Área per se|" ~ 7,
+      A_maior0 == "Área per se>=0" & F_maior0 == "Frag per se<0" & abs_AmaiorF == "|Área per se|>|Frag per se|" ~ 8)) %>% 
+    ungroup() %>% 
+    # select(-starts_with("perc_")) %>% 
+    mutate(perc=round(n*100/sum(n),2))
+  #
+  angles <- seq(0, 2*pi, length.out = 9)
+  #
+  circle_data <- data.frame()
+  for(i in 1:9){
+    segment <- data.frame(
+      region_id = i,
+      x = c(0, cos(angles[i]), cos(angles[i+1])),
+      y = c(0, sin(angles[i]), sin(angles[i+1]))
+    )
+    circle_data <- rbind(circle_data, segment)
+  }
+  # 
+  plot_data <- circle_data %>%
+    left_join(dfp2, by = "region_id")
+  #
+  segment_data <- data.frame(
+    x = 0,
+    y = 0,
+    xend = cos(angles),
+    yend = sin(angles)
+  )
+  #
+  df_label <- plot_data %>% 
+    group_by(region_id) %>% 
+    summarise(x_lab=mean(x),y_lab=mean(y)) %>% 
+    inner_join(select(plot_data,region_id,perc,perc_sites) %>% distinct()) %>% 
+    mutate(across(starts_with("perc"),~paste0(.x,"%")))
+  f_ggplot <- \(vfill){
+    vtitle=ifelse(grepl("site",vfill),"% de sítios","% de simulações")
+    plot_data %>% 
+      mutate(facet_label = vtitle) %>% 
+      ggplot() +
+      geom_polygon(
+        aes(x = x, y = y, group = region_id, fill = .data[[vfill]]),
+        color = "white", linewidth = 0.5
+      ) +
+      scale_fill_gradient("%",low = "gray", high = "brown") +
+      geom_label(data=df_label,
+                 aes(label=.data[[vfill]],x=x_lab,y=y_lab),
+                 fill="white",
+                 size=boxlabelsize) +
+      scale_x_continuous(expand = c(0,0)) +
+      scale_y_continuous(expand = c(0,0)) +
+      theme_bw() +
+      facet_wrap(~facet_label) +
+      theme(text=element_text(size=tsize),
+            plot.margin = margin(0,0,0,0),
+            strip.text = element_text(size=lsize,face="bold"),
+            legend.position = "none",
+            axis.ticks = element_blank(),
+            axis.text = element_blank(),
+            axis.title = element_blank(),
+            axis.line = element_blank(),
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank())  
+  }
+  lp <- lapply(c("% sim"="perc","% sitios"="perc_sites"),f_ggplot)
+  library(patchwork)
+  lp[[1]]+lp[[2]]
+}
+f_hist_ggplot <- \(dff=df_real,tsize=10){
+  dff <- dff %>% 
+    select(-fit,-se.fit) %>% 
+    filter(efeito!="Frag. total") %>% 
+    mutate(Uefeito_abs = abs(Uefeito)) %>% 
+    select(-Uefeito) %>% 
+    ddply(.,c("k","SiteCode"),\(dfi){
+      dfi$diff_efeito <- with(dfi,{
+        Uefeito_abs[efeito=="Área per se"] -
+          Uefeito_abs[efeito=="Frag. per se"]
+      })
+      return(dfi)
+    }) %>% 
+    pivot_wider(names_from=efeito,values_from=Uefeito_abs) %>%
+    mutate(class_diff = ifelse(diff_efeito>0,
+                               paste("Área per se", ">", "Frag. per se"),paste("Frag. per se", ">", "Área per se")))
+  geom_list2 <- list(
+    geom_histogram() ,
+    geom_vline(xintercept = 0,color="red",linetype=2) ,
+    theme_classic() ,
+    scale_x_continuous(expand=c(0,0)) ,
+    scale_y_continuous(expand=c(0,0))
+  )
+  p <- dff %>% 
+    mutate(flab = "|Área per se| - |Frag. per se|") %>% 
+    ggplot(aes(x=diff_efeito)) +
+    geom_list2 +
+    labs(x="",y="") +
+    facet_wrap(~flab) +
+    theme(text=element_text(size=tsize,face="bold"),
+          plot.margin = margin(0,0,0,0))
+  return(p)
+}
+#####################
+label_efeitos="fragmentação per se ~ área per se"
+xlab="Área per se"
+ylab="Frag. per se"
+f_gsub <- \(xlab){
+  gsub("area","Área per se",xlab) %>% 
+    gsub("fragperse","Frag. per se",.) %>% 
+    gsub("fragtotal","Frag. total",.)
+}
+
+geom_list1 <- list(
+  geom_hline(yintercept = 0,color="black"),
+  geom_vline(xintercept = 0,color="black"),
+  geom_abline(slope=1,intercept=0,color="darkblue",linetype=1),
+  geom_abline(slope=-1,intercept=0,color="darkblue",linetype=1),
+  geom_point(alpha=0.001),
+  geom_hex(bins = 60,alpha=0.5),
+  scale_fill_gradient("número de\nsimulaçoes",low = "yellow", high = "red", na.value = NA),
+  theme_classic(),
+  guides(fill=guide_colourbar(position="inside")),
+  theme(legend.position.inside = c(0.7, 0.9),
+        legend.direction="horizontal",
+        plot.margin = margin(0,0,0,0),
+        text=element_text(size=15,face="bold"))
+)
+p <- df_plot %>% 
+  ggplot(aes(x=.data[[xlab]],y=.data[[ylab]])) +
+  geom_list1 +
+  labs(x=f_gsub(xlab),
+       y=f_gsub(ylab))
+p_reg <- ggExtra::ggMarginal(p, type = "boxplot",
+                             fill = "steelblue", col = "darkblue",size=17)
+library(cowplot)
+p_circ <- f_circle_plot(dfp,boxlabelsize=3.5,tsize=6,lsize = 8)
+p_hist <- f_hist_ggplot(tsize = 15)
+# p <- ggdraw() +
+#   draw_plot(p_reg) +
+#   draw_plot(p_circ,
+#             height = 0.1, width = 0.1,
+#             x=0.6, y=0.15)
+design <- "AB
+           AB
+           AC
+           AC
+           AC"
+library(patchwork)
+p_final <- wrap_plots(A=p_reg,B=p_circ,C=p_hist,design = design,widths = c(2,1.5))
+saveRDS(p_final,file="1_to_compile_dissertacao_EM_USO/00_Resultados/rds/comp_fragarea_todos_k.rds")
+
