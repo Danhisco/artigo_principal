@@ -345,8 +345,8 @@ library(cowplot)
 df_logUU_pk <- readRDS(file="dados/csv_SoE/rds/df_logUUpk.rds")
 df_logUU_plot <- inner_join(df_logUU_pk,df_ij) %>% 
   mutate(label = ifelse(nSAD_maiorigual75,
-                        paste0("alta cong. sempre (≥75%)",", n sítios=",v_ij[1]),
-                        paste0("cong. baixa em alguma sim.",", n sítios=",v_ij[2])))
+                        paste0("alta cong. sempre (≥75%)",", n =",v_ij[1]),
+                        paste0("cong. baixa em alguma sim.",", n =",v_ij[2])))
 f_ggplot <- \(dfp,tsize1=15,tsize2=10,fsize=3){
   vcolor = c("red","blue")
   names(vcolor) = unique(dfp$label)
@@ -391,7 +391,7 @@ image_write(img,"1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/sitios_fi
 
 f_ggplot <- \(dfp,tsize1=15,tsize2=10){
   p1 <- dfp %>% 
-    mutate(label=gsub(", n sítios=","",label) %>% 
+    mutate(label=gsub(", n =","",label) %>% 
              gsub("[1-9]{2}","",.) %>% 
              gsub("k","sim.",.) %>% 
              gsub(" \\(\\≥\\%\\)","",.)) %>% 
@@ -418,7 +418,7 @@ f_ggplot <- \(dfp,tsize1=15,tsize2=10){
 
 f_ggplot <- \(dfp,tsize1=15,tsize2=10){
   p1 <- dfp %>% 
-    mutate(label=gsub(", n sítios=","",label) %>% 
+    mutate(label=gsub(", n =","",label) %>% 
              gsub("[1-9]{2}","",.) %>% 
              gsub("k","sim.",.) %>% 
              gsub(" \\(\\≥\\%\\)","",.)) %>% 
@@ -693,7 +693,7 @@ df_ij <- df_real %>%
   distinct() %>% 
   group_by(p_class) %>% 
   tally() %>% 
-  mutate(label = paste0(p_class,", n Sítios=",n)) %>% 
+  mutate(label = paste0(p_class,", n =",n)) %>% 
   select(-n)
 df_ij$label <- factor(df_ij$label,
                       levels=unique(df_ij$label))
@@ -764,7 +764,7 @@ p_hist <- df_real %>%
   geom_vline(xintercept = 0, color = "black", linetype = "solid") +
   geom_vline(data = dfrange, aes(xintercept = value,linetype=names),
              color="black",linewidth=0.5) +
-  scale_linetype_manual(name = paste0("logU/U %CF=100",", n sítios=",20),
+  scale_linetype_manual(name = paste0("logU/U %CF=100",", n=",20),
                         values=c("dotted","dashed")) +
   scale_fill_manual(values = c("Frag. total" = "darkred", 
                                "Frag. per se" = "darkblue", 
@@ -832,7 +832,7 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE){
     distinct() %>% 
     group_by(p_class) %>% 
     tally() %>% 
-    mutate(label = paste0(p_class,", n Sítios=",n)) %>% 
+    mutate(label = paste0(p_class,", n =",n)) %>% 
     select(-n)
   df_ij$label <- factor(df_ij$label,
                         levels=unique(df_ij$label))
@@ -858,7 +858,7 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE){
     geom_hline(yintercept = 0,color="black") +
     geom_hline(data = dfrange, aes(yintercept = value,linetype=names),
                color="black",linewidth=0.5) +
-    scale_linetype_manual(name = paste0("logU/U %CF=100",", n sítios=",nsites),
+    scale_linetype_manual(name = paste0("logU/U %CF=100",", n =",nsites),
                           values=c("dotted","dashed")) +
     {if(logic_ribbon)geom_ribbon(aes(x=k,y=fit,ymin=lower,ymax=upper,group = SiteCode),
                                  fill="lightblue",
