@@ -536,6 +536,13 @@ se simulados em todos os sítios (Fig. 10) e agrupados pela classe de cobertura 
 
 Para o grupo de pesquisa que pressupoẽm que o efeito de fragmentação total pode ser decomposto ortogonalmente em efeito de fragmentação per se e efeito de área per se fica claro 
 
+```{r}
+vcap="Comparação dos efeitos de fragmentação per se e área per se agrupado pelas classes de cobertura florestal (divisão das colunas) e da capacidade de dispersão (divisão das linhas). Os pontos são sítios indivíduais. Pequenos hexagonos cobrem as áreas com pontos, quando os pontos se tocam a área do hexagono muda de amarelo para mais avermelhado. Nos quadros além dos eixos x e y, há as retas 1:1 e -1:1. O menor poligono que envolve todos os pontos está em verde. O menor poligono que envolve todos os pontos com %CF=100 está em cinza no centro da figura. Os valores em cada eixo são resumidos por boxplots nos quantos opostos dos gráficos. "
+```
+```{r fraarea-expfinal, fig.cap=vcap, fig.width=12, fig.height= 8}
+p <- readRDS("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fragperse_e_areaperse_exploracaofinal.rds")
+grid::grid.draw(p)
+```
 
 
 ## Referências

@@ -1185,7 +1185,23 @@ library(patchwork)
 
 
 ####### versão mais simples 
-
+df_real <- readRDS("dados/csv_SoE/rds/df_obs_pred_plot_logUU_pk.rds") %>% 
+  do.call("rbind",.) %>% 
+  mutate(
+    p_class = case_when(
+      p==1 ~ "%CF = 100",
+      p<1 & p>=0.80 ~ "80 ≤ %CF < 100",
+      p<0.80 & p>=0.60 ~ "60 ≤ %CF < 80",
+      p<0.60 & p>=0.30 ~ "30 ≤ %CF < 60",
+      p<0.30 ~ "%CF < 30"),
+    p_class = factor(p_class,levels=c("%CF < 30",
+                                      "30 ≤ %CF < 60",
+                                      "60 ≤ %CF < 80",
+                                      "80 ≤ %CF < 100",
+                                      "%CF = 100"))
+  )
+vcolunas <- levels(df_real$p_class)[1:4]
+vlinhas <- c("0.5","0.75","0.99")
 f_figgeral <- \(df_plot){
   dfp0 <- df_plot %>% 
     select(-`Frag. total`) %>% 
@@ -1214,23 +1230,15 @@ f_figgeral <- \(df_plot){
     dfp <- dfi %>% 
       select(SiteCode,`Área per se`,`Frag. per se`) %>% 
       pivot_longer(-SiteCode,names_to="efeito",values_to="Uefeito")
-      # group_by(A_maior0,F_maior0,abs_AmaiorF) %>% 
-      # summarise(n=n(),
-      #           nSite=length(unique(SiteCode))) %>% 
-      # group_by(A_maior0,F_maior0) %>% 
-      # mutate(perc = round(n*100/sum(n),2),
-      #        perc_sites = round(nSite*100/67,2))
-    # 
     p_reg <- f_scatterplot(dfp = dfi,
                            xrange = xrange, yrange = yrange,
                            df_ref=df_ref,
                            axislabs = TRUE,
                            tsize = 8)
-    #p_circ <- f_circle_plot2(dfp,boxlabelsize=3.5,tsize=6,lsize = 8)
-    p_hist <- f_hist_ggplot(dff = dfp,
-                            tsize = 8,
-                            diffrange=diffrange)
-    p_final <- wrap_plots(A=p_reg,B=p_hist,widths = c(1.5,1))
+    # p_hist <- f_hist_ggplot(dff = dfp,
+    #                         tsize = 8,
+    #                         diffrange=diffrange)
+    # p_final <- wrap_plots(A=p_reg,B=p_hist,widths = c(1.5,1))
     return(p_reg)  
   })
   matnames <- matrix(names(lp),ncol=4,byrow=FALSE)
@@ -1276,11 +1284,13 @@ f_figgeral <- \(df_plot){
     heights = heights,
     widths = widths
   )
+  return(p)
 }
 df_plot <- df_real %>% 
   select(efeito,Uefeito,k,SiteCode,p_class) %>%
   pivot_wider(names_from="efeito",values_from="Uefeito")
 p <- f_figgeral(df_plot)
+saveRDS(p,"1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fragperse_e_areaperse_exploracaofinal.rds")
 ggsave(filename="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fragperse_e_areaperse_exploracaofinal.png",
        plot=p,
        width = 12,
