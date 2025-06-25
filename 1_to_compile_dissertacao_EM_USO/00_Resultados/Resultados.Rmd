@@ -193,31 +193,10 @@ grid.arrange(grobs=l_p,nrow=1)
 
 Em nossa avaliação a taxa U é livre para estimar a riqueza, enquanto que na análise de @may_dispersal_2012 a taxa U é fixa (1e-5) e a riqueza varia, por isso, na esquerda há um mínimo, enquanto na direita há um máximo. Os cenários de limitação de dispersão em que os valores extremos ocorrem são semelhantes. O máximo da taxa U média ocorre quando k varia entre 0.75 e 0.50 dos propagulos na vizinhança imediata (fig. \@ref(fig:Unull16)). Nesses cenários de limitação de dispersão o desvio padrão da função de dispersão variou entre cerca de 1.51 e 2.85, quantils de 5% e 95% (fig. sitios-SoE). Para obter os valores médios da distribuição de Laplace, usada na função de dispersão, basta multiplicar por $\sqrt{2}$, resultando em cerca de 2.14 e 4.04, respectivamente. Nesses valores de dispersão média, @may_dispersal_2012 observou seus valores de mínimo de riqueza observada. Além disso, considerando o fato de que eles são espelhados e são variáveis com natureza distinta (riqueza observa e taxa U), concluímos que os padrões são qualitativamente similares. Assim, a extensão de 16x16 km foi adotada como referência de ausência de efeito da extensão espacial na simulação dos cenários de limitação de dispersão, por permitir estimativas de U consistentes com aquelas esperadas em paisagens sem restrição espacial.</p>
 
-```{r cap Unull16}
-cap <- "\\footnotesize Comparação entre o simulado em paisagens infinitas (a) e em paisagens de lado 16 km (b). Em a há um recorte da figura 1 de May et al. 2012, o eixo x corresponde a média da função de dispersão em número de pixels e o eixo y ao número de espécies para uma taxa U com valor fixo (1e-5), os pontos tem diferentes formatos baseado no tipo de função de dispersão usados (exponencial negativa (ponto preenchido) e lognormal com diferentes coeficientes de variação (símbolos sem preenchimento de 0.5 até 2)). Em b há as estimativas da taxa U no eixo y e a capaciade de dispersão no eixo x (para comparação nessa figura o eixo x está reverso, dessa forma a capacidade de dispersão é crescente para a direita - tal como na figura a). Na figura b cada ponto representa a mediana de 10 réplicas de uma bateria de simulação (para um mesmo sítio e k) as linhas verticais são o intervalo interquantil de 95%, as linhas em laranja claro ligam pontos de um mesmo sítio. Na figura b a linha 1 representa um modelo de suavização com um spline gaussiano considerando todos os pontos simulados. Diferenta da figura a que mantem a taxa U e avalia a variação da riqueza, na figura b a riqueza de espécies é mantida e a taxa U varia por isso em na figura há um mínimo e na figura b um máximo."
-```
-```{r Unull16, fig.cap=cap,fig.width=12,cache=TRUE}
-combined_plot <- readRDS(file = "0_apendices/EfeitoEscala/figuras/fig2comparacao_resultados.rds")
-combined_plot
-```
 
 ## Estimativa da taxa U sob diferentes escalas espaciais da paisagem prístina {#Uescala}
          
-```{r legenda de Uk-ladokm}
-cap <- "Taxa U estimada em paisagens prístina com variação na extensão espacial da paisagem ao redor de 0.5 km até 16 km de lado, para dinâmica neutra espacialmente explícita simulada com parâmetros de 36 inventários florestais. Os pontos estão coloridos pelo grau de limitação de dispersão (k). A escala do eixo y varia entre paineis. Cada paínel apresenta um valor por sítio de amostragem."
-```
-```{r Uk-ladokm,fig.cap=cap,fig.width=12,fig.height=8,cache=TRUE}
-p <- readRDS("0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM.rds")
-p
-```
 
-```{r cap Uk-ladokm-complemento}
-cap <- "\\footnotesize Variação na estimativa U entre réplicas e na média entre escalas. a) Coeficiente de variação (desvio padrão/média) de Umed (eixo y) para um mesmo grau de limitação de dispersão (eixo x) e sítio, considerando todas as escalas. b) Desvio padrão entre réplicas de taxa U para uma mesma bateria de simulação (sítio de amostragem e grau de limitação de dispersão)."
-```
-```{r Uk-ladokm-complemento,fig.cap=cap,fig.width=12}
-l_p <- readRDS("0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM_complementos.rds")
-grid.arrange(grobs=l_p,ncol=2)
-```
 
 
 <p>Na figura \@ref(fig:Uk-ladokm) há o perfil da taxa U estimada na paisagem prístina com o lado da paisagem variando entre 0.5 km até 16 km, cada quadro representa uma paisagem. A figura \@ref(fig:Uk-ladokm-complemento) sumariza a variabilidade entre graus de limitação de dispersão do efeito escalar presente na figura \@ref(fig:Uk-ladokm). 
