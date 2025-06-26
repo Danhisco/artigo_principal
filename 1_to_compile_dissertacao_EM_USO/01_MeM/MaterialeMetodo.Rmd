@@ -1,5 +1,5 @@
 ---
-title: "Resultados"
+title: "Materais e Método"
 output:
   bookdown::pdf_document2:
     latex_engine: lualatex
@@ -14,6 +14,9 @@ header-includes:
 - \usepackage{lmodern}
 - \usepackage{fontspec}
 - \setmainfont{Times New Roman}
+- \usepackage{caption}
+- \captionsetup[figure]{font=it}
+- \captionsetup[table]{font=it}
 ---
 
 ```{r setup,include=FALSE}
@@ -220,7 +223,7 @@ gt_table
 # gtsave(gt_table, paste0(v_path,"figuras/tabela_descricao_modelos_hgam.png"))
 ```
 
-# Sumário
+# Apresentação
 
 <p>Selecionamos inventários florestais realizados na Floresta Atlântica e mapas de cobertura florestal contemporâneos aos respectivos anos de amostragem. Os mapas são centrados nas parcelas amostradas e processados de modo que a densidade de pixels corresponda à densidade de indivíduos registrada nos inventários. Em seguida, foi estimada a extensão espacial da paisagem adequada para simular diferentes graus de limitação à dispersão. Na terceira etapa, o Modelo Neutro Espacialmente Explícito (MNEE) foi calibrado: para cada paisagem hipotética e nível de limitação de dispersão simulado, a taxa de entrada de novas espécies na paisagem (U) foi ajustada para reproduzir a riqueza local observada no inventário correspondente. A validação do MNEE foi feita por meio da comparação entre a distribuição de abundância de espécies (SAD) observada e a simulada em diferentes paisagens hipotéticas e graus de limitação à dispersão. Por fim, nos sítios em que a SAD simulada reproduziu de forma satisfatória a observada, interpretamos os efeitos da paisagem com base na diferença entre os valores de log U estimados em pares de paisagens hipotéticas.</p>
   

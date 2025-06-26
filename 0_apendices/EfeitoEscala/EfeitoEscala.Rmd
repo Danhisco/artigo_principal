@@ -144,12 +144,12 @@ write_csv(df_plot,"dados/csv/df_plotSoE.csv")
 }
 
 
-if(FALSE){
+if(TRUE){
   l_md <- readRDS("0_apendices/EfeitoEscala/figuras/l_md.rds")
   md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |>
   (\(.) l_md[[.]])()
   ####
-  if(false){
+  if(FALSE){
     library(mgcv)
     md_SoE <- gam(logit_Umed ~ te())
   }
@@ -177,7 +177,6 @@ write_csv(df_plot,"dados/csv/df_plotSoE.csv")
 }else{
   df_plot <- read_csv("dados/csv/df_plotSoE.csv")
 }
-
 ```
 
 ```{r trackdown,eval=FALSE}
@@ -238,7 +237,7 @@ l_p[[2]] <- df_p |>
   scale_color_manual(values=c("black","red"),name="SoE: 36 sites") +
   labs(x="density (individuals / ha)", 
        y="spp richness",
-       title="b) 108 sítios totais, 36 para estudo") +
+       title="b) 109 sítios totais, 36 para estudo") +
   theme(legend.position = "bottom")
 l_p[[3]] <- df_sim |> 
   ggplot(aes(x=k,y=d,group=k)) +
@@ -559,13 +558,13 @@ l_p[[2]] <- dfp0 %>%
   geom_point() +
   geom_line(group=1) +
   geom_hline(yintercept = vxout,color="red") +
-  geom_label(aes(label=paste0("aprox: ",vapprox),x=5,y=vxout)) +
+  geom_label(aes(label=paste0("aprox: ",vapprox),x=5,y=0.25)) +
   labs(x="lado da paisagem (km)",y="diferença acumulada entre lados da paisagem",
        title="b)") +
   # scale_y_continuous(labels = scales::scientific_format(digits = 2)) +
   facet_wrap(~k_factor,ncol=4) +
   theme_classic()
-grid.arrange(grobs=l_p,ncol=1)
+grid.arrange(grobs=l_p,nrow=1)
 saveRDS(l_p,file="0_apendices/EfeitoEscala/figuras/l_p_efeito_escala.rds")
 ######
 

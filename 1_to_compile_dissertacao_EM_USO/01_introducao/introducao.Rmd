@@ -14,6 +14,9 @@ header-includes:
 - \usepackage{lmodern}
 - \usepackage{fontspec}
 - \setmainfont{Times New Roman}
+- \usepackage{caption}
+- \captionsetup[figure]{font=it}
+- \captionsetup[table]{font=it}
 ---
 
 ```{r setup, eval=TRUE,include=FALSE}
@@ -237,7 +240,7 @@ glossario_table
 # O debate sobre o efeito causal da fragmentação de habitat na biodiversidade remanescente
 
 <p>
-Não há consenso sobre o impacto da conversão de habitat sobre a biodiversidade remanescente nos ecossistemas terrestres (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Um grupo de pesquisa defende que existem dois efeitos independentes: efeito de perda per se de área e efeito de fragmentação per se - que é o efeito da mudança da configuração espacial, independente do efeito da perda de área (@fahrig_effects_2003, @fahrig_ecological_2017, @fahrig_SLOSS2020, @fahrig_habitat_2019; @fahrig2019habitatA). Outro grupo de pesquisa defende que existe um processo comum de perda e fragmentação de habitat (@didham_rethinking_2012, @haddad_habitat_2015, @fletcher2018habitat), que pode ser descrito como um efeito total de fragmentação .
+Não há consenso sobre o impacto da conversão de habitat sobre a biodiversidade remanescente nos ecossistemas terrestres (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Um grupo de pesquisa defende que existem dois efeitos independentes: efeito de perda *per se* de área e efeito de fragmentação *per se* - que é o efeito da mudança da configuração espacial, independente do efeito da perda de área (@fahrig_effects_2003, @fahrig_ecological_2017, @fahrig_SLOSS2020, @fahrig_habitat_2019; @fahrig2019habitatA). Outro grupo de pesquisa defende que existe um processo comum de perda e fragmentação de habitat (@didham_rethinking_2012, @haddad_habitat_2015, @fletcher2018habitat), que pode ser descrito como um efeito total de fragmentação .
 </p>
 
 <p>
@@ -245,7 +248,7 @@ Esses propostos efeitos da paisagem poderiam ser idealmente estimados em experim
 </p>
 
 <p>
-Para o grupo que pressupõe independência entre os efeitos da perda de habitat e da mudança na configuração espacial, a estimativa experimental desses efeitos requer a adição de um novo contraste: paisagens com a mesma cobertura florestal, mas com diferentes configurações espaciais (@fahrig_SLOSS2020). Um exemplo seria comparar uma paisagem com algum grau de fragmentação com uma paisagem de igual proporção de habitat remanescente, mas com o habitat remanescente todo aglomerado ao redor da parcela amostrada, minimizando a complexidade espacial (@valente2023toward). Dessa forma, nesse tipo de experimento seria possível distinguir dois efeitos da paisagem: o efeito de área per se e o efeito de fragmentação per se. O efeito de área per se seria então o  contraste entre a paisagem prístina com a paisagem aglomerada, pois ambas possuem a mesma configuração espacial, diferindo apenas na cobertura florestal (@fahrig_SLOSS2020; @valente2023toward). O efeito da fragmentação per se seria o contraste entre a paisagem fragmentada e a paisagem aglomerada, pois a única diferença entre elas é a configuração espacial do habitat remanescente – a quantidade total de habitat permanece constante (@fahrig_SLOSS2020; @valente2023toward).
+Para o grupo que pressupõe independência entre os efeitos da perda de habitat e da mudança na configuração espacial, a estimativa experimental desses efeitos requer a adição de um novo contraste: paisagens com a mesma cobertura florestal, mas com diferentes configurações espaciais (@fahrig_SLOSS2020). Um exemplo seria comparar uma paisagem com algum grau de fragmentação com uma paisagem de igual proporção de habitat remanescente, mas com o habitat remanescente todo aglomerado ao redor da parcela amostrada, minimizando a complexidade espacial (@valente2023toward). Dessa forma, nesse tipo de experimento seria possível distinguir dois efeitos da paisagem: o efeito de área *per se* e o efeito de fragmentação *per se*. O efeito de área *per se* seria então o  contraste entre a paisagem prístina com a paisagem aglomerada, pois ambas possuem a mesma configuração espacial, diferindo apenas na cobertura florestal (@fahrig_SLOSS2020; @valente2023toward). O efeito da fragmentação *per se* seria o contraste entre a paisagem fragmentada e a paisagem aglomerada, pois a única diferença entre elas é a configuração espacial do habitat remanescente – a quantidade total de habitat permanece constante (@fahrig_SLOSS2020; @valente2023toward).
 </p>
 
 <p>
@@ -269,7 +272,7 @@ O único parâmetro livre de MNEE é a taxa de entrada de indivíduos de novas e
 
 # Objetivo
 
-<p>Nosso objetivo é estimar os propostos efeitos da paisagem a partir de um modelo mecanístico de primeira aproximação da conectividade nas paisagens fragmentadas e de dados observacionais de comunidades arbóreas da Floresta Atlântica. Nós cruzamos uma base de dados que compilou os últimos 70 anos de pesquisa fitossociológica na Floresta Atlântica e fez a curadoria fina (@de_lima_how_2015) e uma coleção de mapas de cobertura florestal da Floresta Atlântica que classifica os padrões de ocupação do solo nos últimos 40 anos (@mapbiomas) obtendo 105 sítios, que refletem a diversidade de paisagens na Floresta Atlântica. Com esses dados e o modelo neutro espacialmente explícito (MNEE) pudemos reconstruir a biodiversidade local de árvores - riqueza de espécies e distribuição de abundância de espécies (em inglês, species abundance distribution, SAD) - simulando a dinâmica demográfica das espécies em três cenários hipotéticas de paisagem: fragmentada (f), tal como no momento mais próximo da amostragem do sítio; aglomerada (a), com o habitat remanescente na paisagem fragmentada aglomerado ao redor da parcela; prístina (p), com toda a paisagem preenchida com habitat. O contraste entre a simulação nas paisagens hipotéticas informa os efeitos de fragmentação total (f-p), fragmentação per se (f-a) e área per se (a-p). Para isso buscamos:
+<p>Nosso objetivo é estimar os propostos efeitos da paisagem a partir de um modelo mecanístico de primeira aproximação da conectividade nas paisagens fragmentadas e de dados observacionais de comunidades arbóreas da Floresta Atlântica. Nós cruzamos uma base de dados que compilou os últimos 70 anos de pesquisa fitossociológica na Floresta Atlântica e fez a curadoria fina (@de_lima_how_2015) e uma coleção de mapas de cobertura florestal da Floresta Atlântica que classifica os padrões de ocupação do solo nos últimos 40 anos (@mapbiomas) obtendo 105 sítios, que refletem a diversidade de paisagens na Floresta Atlântica. Com esses dados e o modelo neutro espacialmente explícito (MNEE) pudemos reconstruir a biodiversidade local de árvores - riqueza de espécies e distribuição de abundância de espécies (em inglês, species abundance distribution, SAD) - simulando a dinâmica demográfica das espécies em três cenários hipotéticas de paisagem: fragmentada (f), tal como no momento mais próximo da amostragem do sítio; aglomerada (a), com o habitat remanescente na paisagem fragmentada aglomerado ao redor da parcela; prístina (p), com toda a paisagem preenchida com habitat. O contraste entre a simulação nas paisagens hipotéticas informa os efeitos de fragmentação total (f-p), fragmentação *per se* (f-a) e área *per se* (a-p). Para isso buscamos:
 </p>
 
 __1) Estimar a extensão espacial da paisagem__
@@ -286,14 +289,14 @@ Calibrar a taxa U para reproduzir a riqueza observada em cada paisagem hipotéti
     
 __3) Descrever os efeitos da paisagem na taxa U estimada__
 <p>  
-Os propostos efeitos da paisagem (fragmentação total, fragmentação per se e área per se) são obtidos pelo logaritmo da razão entre as taxas U (logUi/Uj) estimadas nos pares de paisagens em comparação. Com o logUi/Uj é possível expressar as expectativas derivadas das conclusões de cada grupo de pesquisa usando uma métrica funcional comum: 
+Os propostos efeitos da paisagem (fragmentação total, fragmentação *per se* e área *per se*) são obtidos pelo logaritmo da razão entre as taxas U (logUi/Uj) estimadas nos pares de paisagens em comparação. Com o logUi/Uj é possível expressar as expectativas derivadas das conclusões de cada grupo de pesquisa usando uma métrica funcional comum: 
 </p>
   
     
 + O grupo que defende um efeito combinado de perda e fragmentação de habitat, pode esperar que quanto maior a perda e fragmentação de habitat maior deve ser o efeito negativo na manutenção da biodiversidade local (@didham_rethinking_2012; @haddad_habitat_2015; @fletcher2018habitat; @puttker2020indirect). Resultando em aumento do logUf/Up com a redução da cobertura florestal.   
  
     
-+ O grupo que defende dois efeitos independentes, de área per se e de fragmentação per se, pode esperar que o efeito negativo de área per se tenha magnitude muito maior do que o efeito marginal e idiossincrático da fragmentação per se (@fahrig_effects_2003; @fahrig_ecological_2017; @fahrig2019habitatA). Resultando em um esperado aumento do logUa/Up com a redução cobertura florestal e pouca variação de logUf/Ua que deve se manter próximo de zero. 
++ O grupo que defende dois efeitos independentes, de área *per se* e de fragmentação *per se*, pode esperar que o efeito negativo de área *per se* tenha magnitude muito maior do que o efeito marginal e idiossincrático da fragmentação *per se* (@fahrig_effects_2003; @fahrig_ecological_2017; @fahrig2019habitatA). Resultando em um esperado aumento do logUa/Up com a redução cobertura florestal e pouca variação de logUf/Ua que deve se manter próximo de zero. 
 
 
 # Referências

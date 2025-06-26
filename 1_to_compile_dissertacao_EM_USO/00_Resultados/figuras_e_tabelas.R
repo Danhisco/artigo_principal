@@ -165,8 +165,9 @@ p <- l_dfpred$fixo_e_aleat %>%
   labs(x="Proporção de propágulos na vizinhança imediata (k)",
        y="número de SAD simuladas com boa congruência com o observado (nSAD)",
        title="Descrição da congruência absoluta da SAD simulada nas paisagens hipotéticas",
-       subtitle="HGAM: nSAD ~ s(k,by=interaction(paisagem hipotética, classe de perturbação) + s(lat,long) + te(k,Sítio,by=paisagem hipotética)") +
+       subtitle="MAGH: nSAD ~ s(k,by=interaction(paisagem hipotética, classe de perturbação) + s(lat,long) + te(k,Sítio,by=paisagem hipotética)") +
   facet_grid(pert_class ~ land) +
+  theme_classic() +
   theme(strip.text = element_text(size=12, #margin=margin(),
                                   face="bold"))
 
@@ -1329,6 +1330,7 @@ f_finalNAOUSADA <- \(dfdados){
   return(p_final)
 }
 #######################################
+library(cowplot)
 df_real <- readRDS("1_to_compile_dissertacao_EM_USO/00_Resultados/rds/df_obs_pred_plot_logUU_pk.rds")
 dfU <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/rds/df_U.csv") %>% 
   mutate(land = factor(land_type,
@@ -1337,8 +1339,18 @@ dfU <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/rds/df_U.csv") %>
          k=factor(round(k,2)))
 p1 <- dfU %>% 
   ggplot(aes(x=k,y=Umed)) +
-  geom_boxplot(aes(fill=land,color=land)) +
-  geom_jitter(alpha=0.4,aes(color=land)) +
+  # geom_jitter(alpha = 0.4,
+  #             aes(color = land),
+  #             width = 0.2,
+  #             height = 0,
+  #             size = 1 ) +
+  geom_boxplot(aes(fill=land,color=land),
+               width = 0.5, 
+               linewidth = 0.5,
+               size = 0.3,         
+               outlier.size = 0.8, 
+               outlier.shape = 1,  
+               outlier.alpha = 0.6 ) +
   scale_x_discrete(expand = c(0,0)) +
   scale_y_continuous(expand = c(0,0)) +
   scale_fill_manual("paisagens\nhipotéticas",
@@ -1346,7 +1358,7 @@ p1 <- dfU %>%
   scale_color_manual(values=c("Fragmentada"="red","Aglomerada"="blue","Prístina"="green")) +
   guides(color="none") +
   theme_classic() +
-  labs(x="prop. propágulos na vizinhança imediata (k)",y="avg(U)") +
+  labs(x="prop. propágulos na vizinhança imediata (k)",y="Taxa U média") +
   theme(legend.position=c(0.95,0.90))
 p2 <- dfU %>% 
   group_by(land) %>% 
@@ -1374,8 +1386,8 @@ p2 <- dfU %>%
 p <- ggdraw() +
   draw_plot(p1) +
   draw_plot(p2,
-            height = 0.15, width = 0.25,
-            x=0.75, y=0.6)
+            height = 0.15, width = 0.30,
+            x=0.55, y=0.6)
 saveRDS(p,"1_to_compile_dissertacao_EM_USO/00_Resultados/rds/plot_taxaU_paisagens.rds")
 #######
 #### tabela de seleção 
