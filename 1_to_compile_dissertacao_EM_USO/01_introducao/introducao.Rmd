@@ -1,24 +1,19 @@
 ---
-title: "Efeitos explicativos da paisagem na predição da biodiversidade local de árvores: a contribuição de um modelo neutro espacialmente explícito ao debate sobre fragmentação de habitat"
+title: "Introdução"
 output:
-  bookdown::word_document2: default
-  word_document: default
   bookdown::pdf_document2:
     latex_engine: lualatex
-    documentclass: article
-    classoption: twocolumn
-  pdf_document:
-    latex_engine: xelatex
+  bookdown::word_document2: default
+  pdf_document: default
   html_document:
     df_print: paged
-editor_options:
-  chunk_output_type: inline
 bibliography: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/citations2.bib
-csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/ecological-monographs.csl
+csl: "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/ecological-monographs.csl"
 header-includes:
-  - \usepackage{indentfirst}
-  - \setlength{\parindent}{1.5em}
-  - \setlength{\columnsep}{18pt}
+- \usepackage[brazil]{babel}
+- \usepackage{lmodern}
+- \usepackage{fontspec}
+- \setmainfont{Times New Roman}
 ---
 
 ```{r setup, eval=TRUE,include=FALSE}
@@ -238,32 +233,67 @@ glossario_table <- flextable(glossario) %>%
 glossario_table
 ```
 
-# Introdução
+
+# O debate sobre o efeito causal da fragmentação de habitat na biodiversidade remanescente
+
+<p>
+Não há consenso sobre o impacto da conversão de habitat sobre a biodiversidade remanescente nos ecossistemas terrestres (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Um grupo de pesquisa defende que existem dois efeitos independentes: efeito de perda per se de área e efeito de fragmentação per se - que é o efeito da mudança da configuração espacial, independente do efeito da perda de área (@fahrig_effects_2003, @fahrig_ecological_2017, @fahrig_SLOSS2020, @fahrig_habitat_2019; @fahrig2019habitatA). Outro grupo de pesquisa defende que existe um processo comum de perda e fragmentação de habitat (@didham_rethinking_2012, @haddad_habitat_2015, @fletcher2018habitat), que pode ser descrito como um efeito total de fragmentação .
+</p>
+
+<p>
+Esses propostos efeitos da paisagem poderiam ser idealmente estimados em experimentos (@haddad_habitat_2015 e @fahrig_SLOSS2020). O efeito total da fragmentação pode ser estimado pelo contraste entre o observado em uma paisagem prístina, sem perda de cobertura florestal, com o observado em uma paisagem fragmentada ao longo de um gradiente de cobertura florestal, tal como observado nas paisagem empíricas (@didham_rethinking_2012; @haddad_habitat_2015; @valente2023toward; @gonccalves2025species). Como essas paisagens difeririam tanto na perda quanto na fragmentação de habitat, e assumindo que todas as demais características sejam mantidas constantes, esse contraste revelaria o efeito combinado da mudança na configuração espacial e na cobertura florestal (@didham_rethinking_2012; @valente2023toward).
+</p>
+
+<p>
+Para o grupo que pressupõe independência entre os efeitos da perda de habitat e da mudança na configuração espacial, a estimativa experimental desses efeitos requer a adição de um novo contraste: paisagens com a mesma cobertura florestal, mas com diferentes configurações espaciais (@fahrig_SLOSS2020). Um exemplo seria comparar uma paisagem com algum grau de fragmentação com uma paisagem de igual proporção de habitat remanescente, mas com o habitat remanescente todo aglomerado ao redor da parcela amostrada, minimizando a complexidade espacial (@valente2023toward). Dessa forma, nesse tipo de experimento seria possível distinguir dois efeitos da paisagem: o efeito de área per se e o efeito de fragmentação per se. O efeito de área per se seria então o  contraste entre a paisagem prístina com a paisagem aglomerada, pois ambas possuem a mesma configuração espacial, diferindo apenas na cobertura florestal (@fahrig_SLOSS2020; @valente2023toward). O efeito da fragmentação per se seria o contraste entre a paisagem fragmentada e a paisagem aglomerada, pois a única diferença entre elas é a configuração espacial do habitat remanescente – a quantidade total de habitat permanece constante (@fahrig_SLOSS2020; @valente2023toward).
+</p>
+
+<p>
+Contudo, experimentos em escala de paisagem são inviáveis para ecossistemas florestais como a Floresta Atlântica, onde grande parte da cobertura original foi reduzida a pequenos fragmentos isolados, com poucas grandes áreas preservadas (@vancine2024atlantic). Dada a inviabilidade de experimentos na escala da paisagem, os efeitos da paisagem são estimados a partir de dados observacionais (@fahrig_ecological_2017; @fahrig_SLOSS2020; @puttker2020indirect). No entanto, essa abordagem depende da validade do modelo causal e da escolha de métricas que representem os efeitos causais pressupostos (@pearl2016causal). Como não há consenso sobre a conceituação do problema, também não há acordo sobre quais métricas devem ser usadas (@fletcher2018habitat; @fahrig2019habitatA; @valente2023toward). Empiricamente, as métricas de configuração espacial não são independentes da proporção de cobertura florestal (@villard_beyond_2014), tornando o debate ainda mais polarizado. Cada grupo tende a adotar métricas e métodos que refletem suas concepções sobre a conversão de habitat, sem que haja consenso sobre a adequação das estimativas ou sobre a escala espacial da análise dos dados (@fletcher2018habitat, @fahrig2019habitatA, @valente2023toward).
+</p>
+
+# Simulação de efeitos explicativos a partir de dados observacionais
+
+<p>
+Diante dessa polarização, modelos mecanísticos que simulam processos-chave (como conectividade) emergem como ferramentas promissoras para testar empiricamente as previsões conflitantes dos dois grupos. Há consenso sobre o papel central da conectividade — a movimentação de indivíduos entre o habitat remanescente — como mecanismo explicativo mínimo dos efeitos da paisagem (@riva_banskleite2024). Isso abre espaço para o uso de modelos mecanísticos capazes de simular a conectividade em diferentes cenários hipotéticos de paisagem. Se esse modelo for capaz de reproduzir a conectividade nos três tipos de paisagens hipotéticas, então é possível estimar os efeitos propostos (@Marshall2014; @DAGinf_epi_2019). Os efeitos são obtidos pelo contraste da simulação desse modelo nas paisagens hipotéticas (@Marshall2014; @DAGinf_epi_2019), com os parâmetros livres necessários para predizer o padrão de biodiversidade em investigação. Uma vez que o modelo tenha uma boa aproximação do observado, então é possível interpretar o contraste de seus parâmetros, tal como, em um modelo de regressão (@gianluca_ch5_2022). Assim, nesta abordagem, o mesmo tipo de dado empírico, usado na análise estatística de dados observacionais, é usado para calibrar, validar e interpretar o modelo mecanístico. 
+</p>
+
+<p>
+Uma classe de modelos usados como primeira aproximação para descrever a dinâmica que mantém uma comunidade arbórea são os modelos neutros (@leibold2018metacommunity; @chase_biodiversity_2020). Entre esses, destaca-se o modelo neutro espacialmente explícito (MNEE), que foi validado em paisagens simuladas (@campos_neutral_2012; @campos_effect_2013; @claudino_extinction_2015). Em MNEE todos os indivíduos da paisagem são simulados, tanto dentro da parcela amostrada quanto na paisagem ao redor, nos possíveis fragmentos remanescentes (@campos_neutral_2012; @campos_effect_2013; @claudino_extinction_2015). Esses indivíduos têm igual chance de morrer ou de produzir propágulos que podem dispersar com a mesma capacidade (@azaele_statistical_2016; @rosindell_coalescence_2008; @thompson_pycoalescence_2020). Por conta do pressuposto de soma zero, todas as mortes são compensadas pelo nascimento de um novo indivíduo que pode ser de uma nova espécie na paisagem com probabilidade U ou de dispersão de dentro da paisagem de uma espécie já presente na paisagem com probabilidade 1-U (@azaele_statistical_2016; @rosindell_coalescence_2008; @thompson_pycoalescence_2020). O MNEE reproduz a distribuição espacial estocástica dos indivíduos, na qual a dispersão é probabilística e limitada, e influenciada pela configuração da paisagem (@McGill2010; @May2015, @may_abundance_2016). No MNEE, a ocupação de um sítio é determinada tanto pela capacidade de dispersão dos propágulos quanto pela distância entre a fonte de propágulo e os habitats disponíveis (@rosindell_coalescence_2008). Ao replicar essa distribuição espacial estocástica de forma dinâmica, o MNEE assegura que a simulação expressa a conectividade entre a parcela amostrada e a paisagem circundante, refletindo a interação do espaço na competição entre indivíduos (@campos_neutral_2012; @campos_effect_2013).
+</p>
+
+<p>
+O único parâmetro livre de MNEE é a taxa de entrada de indivíduos de novas espécies na paisagem (aqui denominada taxa U). Esse parâmetro pode ser calibrado para que MNEE reproduza a riqueza observada de espécies numa comunidade, dado um grau de limitação à dispersão e uma paisagem hipotética (@rosindell_coalescence_2008; @thompson_pycoalescence_2020). Quanto maior a taxa U estimada para manter uma certa riqueza em uma paisagem em relação a outra, maior a perda local de espécies na comunidade por deriva que não é compensada pela imigração de novas espécies vindas da paisagem (@may_dispersal_2012). Assim, a taxa U ajustada para manter a riqueza observada permite a comparação das paisagens quanto a promoção da manutenção da biodiversidade local. Além disso, o parâmetro U ajustado pela riqueza também pode ser usado para estimar a extensão espacial da paisagem adequada para a simulação, controlado pelo grau de limitação de dispersão (Apêndice Efeito de Escala)
+</p>
 
 
+# Objetivo
 
+<p>Nosso objetivo é estimar os propostos efeitos da paisagem a partir de um modelo mecanístico de primeira aproximação da conectividade nas paisagens fragmentadas e de dados observacionais de comunidades arbóreas da Floresta Atlântica. Nós cruzamos uma base de dados que compilou os últimos 70 anos de pesquisa fitossociológica na Floresta Atlântica e fez a curadoria fina (@de_lima_how_2015) e uma coleção de mapas de cobertura florestal da Floresta Atlântica que classifica os padrões de ocupação do solo nos últimos 40 anos (@mapbiomas) obtendo 105 sítios, que refletem a diversidade de paisagens na Floresta Atlântica. Com esses dados e o modelo neutro espacialmente explícito (MNEE) pudemos reconstruir a biodiversidade local de árvores - riqueza de espécies e distribuição de abundância de espécies (em inglês, species abundance distribution, SAD) - simulando a dinâmica demográfica das espécies em três cenários hipotéticas de paisagem: fragmentada (f), tal como no momento mais próximo da amostragem do sítio; aglomerada (a), com o habitat remanescente na paisagem fragmentada aglomerado ao redor da parcela; prístina (p), com toda a paisagem preenchida com habitat. O contraste entre a simulação nas paisagens hipotéticas informa os efeitos de fragmentação total (f-p), fragmentação per se (f-a) e área per se (a-p). Para isso buscamos:
+</p>
 
-## O debate sobre o efeito causal da fragmentação de habitat na biodiversidade remanescente
-
-<p>Não há consenso sobre o impacto da conversão de habitat na biodiversidade remanescente nos ecossistemas terrestres (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Um grupo de pesquisa defende que existem dois efeitos independentes: efeito de perda per se de área e efeito de fragmentação per se - que é o efeito da mudança da configuração espacial, controlado pelo efeito da perda de área (@fahrig_effects_2003, @fahrig_ecological_2017, @fahrig_SLOSS2020, @fahrig_habitat_2019; @fahrig2019habitatA). Outro grupo de pesquisa defende que existe um processo comum de perda e fragmentação de habitat (@didham_rethinking_2012, @fletcher2018habitat), que resultaria em um único efeito comum de fragmentação total (e.g. @haddad_habitat_2015 e @gonccalves2025species).</p>
+__1) Estimar a extensão espacial da paisagem__
+<p>
+A extensão espacial da paisagem suficiente foi estimada pela análise de sensibilidade da taxa U ao cenário de limitação de dispersão e extensão espacial da paisagem prístina (Apêndice “Efeito de Escala”). A expectativa é que quanto mais branda a limitação de dispersão, maior a extensão espacial da paisagem necessária para que a simulação não seja influenciada pelo recorte da paisagem ao redor (@rosindell2013universal). 
+</p>
   
     
-### Os propostos efeitos da paisagem poderiam ser estimados experimentalmente
+__2) Calibrar e validar empíricamente MNEE__
+<p>
+Calibrar a taxa U para reproduzir a riqueza observada em cada paisagem hipotética e cenário de limitação de dispersão. E validar empiricamente a predição a partir da congruência da SAD simulada e observada. Dessa forma, é possível selecionar apenas os sítios em que o mecanismo expresso em MNEE aproximou bem o padrão observado de biodiversidade nas três paisagens hipotéticas e cenários de limitação de dispersão.
+</p>
   
-<p>Esses propostos efeitos da paisagem poderiam ser estimados experimentalmente (@haddad_habitat_2015 e @fahrig_SLOSS2020). O efeito total da fragmentação pode ser estimado experimentalmente ao contrastar uma paisagem prístina, sem perda de cobertura florestal, com uma paisagem fragmentada ao longo de um gradiente de cobertura florestal (@didham_rethinking_2012; @haddad_habitat_2015; @valente2023toward). Como essas paisagens diferem tanto na perda quanto na fragmentação de habitat (@didham_rethinking_2012; @valente2023toward), e assumindo que todas as demais características sejam mantidas constantes, esse contraste revelaria o efeito combinado da mudança na configuração espacial e na cobertura florestal (@haddad_habitat_2015, @gonccalves2025species.</p>
+    
+__3) Descrever os efeitos da paisagem na taxa U estimada__
+<p>  
+Os propostos efeitos da paisagem (fragmentação total, fragmentação per se e área per se) são obtidos pelo logaritmo da razão entre as taxas U (logUi/Uj) estimadas nos pares de paisagens em comparação. Com o logUi/Uj é possível expressar as expectativas derivadas das conclusões de cada grupo de pesquisa usando uma métrica funcional comum: 
+</p>
+  
+    
++ O grupo que defende um efeito combinado de perda e fragmentação de habitat, pode esperar que quanto maior a perda e fragmentação de habitat maior deve ser o efeito negativo na manutenção da biodiversidade local (@didham_rethinking_2012; @haddad_habitat_2015; @fletcher2018habitat; @puttker2020indirect). Resultando em aumento do logUf/Up com a redução da cobertura florestal.   
+ 
+    
++ O grupo que defende dois efeitos independentes, de área per se e de fragmentação per se, pode esperar que o efeito negativo de área per se tenha magnitude muito maior do que o efeito marginal e idiossincrático da fragmentação per se (@fahrig_effects_2003; @fahrig_ecological_2017; @fahrig2019habitatA). Resultando em um esperado aumento do logUa/Up com a redução cobertura florestal e pouca variação de logUf/Ua que deve se manter próximo de zero. 
 
-<p>Para o grupo que pressupõe independência entre os efeitos da perda de habitat e da mudança na configuração espacial, a estimativa experimental desses efeitos requer a adição de um novo tratamento: paisagens com a mesma cobertura florestal, mas com diferentes configurações espaciais (@fahrig_SLOSS2020). Um exemplo seria uma paisagem onde o habitat remanescente está todo aglomerado, minimizando a complexidade espacial (@valente2023toward). Dessa forma, dois efeitos distintos poderiam ser estimados: o efeito de área per se e o efeito de fragmentação per se. O efeito de perda de área per se é o contraste entre a paisagem prístina com a paisagem aglomerada, pois ambas possuem a mesma configuração espacial, diferindo apenas na cobertura florestal (@fahrig_SLOSS2020; @valente2023toward). O efeito da fragmentação per se é o contraste entre a paisagem fragmentada e a paisagem aglomerada, pois a única diferença entre elas é a complexidade espacial do habitat remanescente – a quantidade total de habitat permanece constante (@fahrig_SLOSS2020; @valente2023toward).</p>
 
-<p>Contudo, experimentos em escala de paisagem são inviáveis para ecossistemas florestais como a Floresta Atlântica, onde grande parte da cobertura original foi reduzida a pequenos fragmentos isolados, com poucas grandes áreas preservadas (@vancine2024atlantic). Dada a inviabilidade de experimentos na escala da paisagem, os efeitos da paisagem são estimados a partir de dados observacionais (@fahrig_ecological_2017; @fahrig_SLOSS2020; @puttker2020indirect). No entanto, essa abordagem depende da validade do modelo causal e da escolha de métricas que representem os efeitos causais pressupostos (@pearl2016causal). Como não há consenso sobre a conceituação do problema, também não há acordo sobre quais métricas devem ser usadas (@fletcher2018habitat; @fahrig2019habitatA; @valente2023toward). Empiricamente, as métricas de configuração espacial não são independentes da proporção de cobertura florestal (@villard_beyond_2014), tornando o debate ainda mais polarizado. Cada grupo tende a adotar métricas e métodos que refletem suas concepções sobre a conversão de habitat, sem que haja consenso sobre a adequação das estimativas ou sobre a escala espacial da análise dos dados (@fletcher2018habitat, @fahrig2019habitatA, @valente2023toward).</p>
-
-## Simulação de efeitos explicativos a partir de dados observacionais
-
-<p>Apesar do impasse conceitual, há consenso sobre o papel central da conectividade — a movimentação de indivíduos entre fragmentos — como mecanismo explicativo dos efeitos da paisagem (@riva_banskleite2024). Isso abre espaço para o uso de modelos mecanísticos capazes de simular a conectividade em diferentes cenários hipotéticos de paisagem a partir dos mesmos dados observacionais. Se esse modelo for capaz de reproduzir a conectividade nos três tipos de paisagens hipotéticas, então é possível obter os efeitos propostos pelo contraste da simulação em diferentes paisagens para uma mesma observação (@Marshall2014; @DAGinf_epi_2019). Dessa forma é possível usar o mesmo tipo de dado empírico, usado na análise estatística de dados observacionais, para calibrar, validar e interpretar o modelo mecanístico.</p>
-<p>Uma classe de modelos usados como primeira aproximação para descrever a comunidade arbórea são os modelos neutros (@leibold2018metacommunity; @chase_biodiversity_2020). Entre esses, destaca-se o modelo neutro espacialmente explícito (MNEE), que foi validado em paisagens simuladas (@campos_neutral_2012; @campos_effect_2013; @claudino_extinction_2015). O MNEE reproduz a geometria estocástica dos indivíduos, na qual a dispersão é probabilística e limitada, resultando em forte agregação de coespecíficos e influenciada pela configuração espacial (@McGill2010; @May2015, @may_abundance_2016). No MNEE, a colonização é determinada tanto pela capacidade de dispersão dos propágulos quanto pela distância entre a fonte de propágulo e os habitats disponíveis (@rosindell_coalescence_2008). Ao replicar essa geometria estocástica de forma dinâmica, o MNEE assegura que a simulação expressa a conectividade entre a parcela amostrada e a paisagem circundante, refletindo a interação do espaço na competição entre indivíduos (@campos_neutral_2012, @campos_effect_2013).</p>
-<p>O único parâmetro livre de MNEE é a taxa U, de entrada de novas espécies na paisagem. Esse parâmetro pode ser calibrado para que MNEE reproduza a riqueza local de espécies, dado um grau de limitação à dispersão e paisagem hipotética (@rosindell_coalescence_2008, @thompson_pycoalescence_2020). Quanto maior a taxa U estimada em uma paisagem hipotética em relação a outra, maior a perda local de espécies por deriva que não é compensada pela imigração de novas espécies vindas da paisagem para a parcela (@may_dispersal_2012). Assim, a taxa U ajustada pela riqueza observada permite a comparação das paisagens hipotéticas. Além disso, o parâmetro U ajustado pela riqueza também pode ser usado para estimar a extensão espacial da paisagem, controlado pelo grau de limitação de dispersão (Apêndice Efeito de Escalar)</p>
-
-## Objetivo
-
-<p>Nosso objetivo é estimar os efeitos da paisagem sobre a manutenção da biodiversidade local — expressa em termos de riqueza de espécies (S) e distribuição de abundância de espécies (em inglês species abundance distribution, SAD) — de comunidades arbóreas na Floresta Atlântica. Para isso, utilizamos um modelo neutro espacialmente explícito (MNEE) como ferramenta de primeira aproximação. A escala da paisagem considerada em cada cenário foi ajustada de acordo com o grau de limitação à dispersão, representando a área da paisagem que deve estar contribuindo com propágulos para a parcela, na ausência de perda de cobertura florestal. Dado esse grau de limitação, a taxa U (entrada de novas espécies na paisagem) foi calibrada de forma a reproduzir a riqueza local observada, pressupondo uma paisagem hipotética. Em seguida, validamos MNEE comparando as SADs simuladas e observadas em três cenários hipotéticos de paisagem: fragmentada (f), aglomerada (a) e prístina (p). Quando o modelo apresenta boa congruência média com os dados observados, comparamos os efeitos da paisagem com base no logaritmo da taxa U nos três contrastes definidos: fragmentação total (f–p), fragmentação per se (f–a) e área per se (a–p). Dessa forma, o efeito total de fragmentação é a soma da fragmentação per se e área per se, integrando os grupos de pesquisa por design em torno de uma métrica comum de influência da paisagem, ajustada a escala espacial da dispersão simulada.</p>
-
-## Referências
+# Referências
