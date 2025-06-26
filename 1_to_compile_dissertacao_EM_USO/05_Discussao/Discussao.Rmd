@@ -16,6 +16,11 @@ header-includes:
 - \setmainfont{Times New Roman}
 ---
 
+<!-- a onde?? -->
+<!-- <p>Quando o MNEE é simulado em paisagens infinitas e contínuas (i.e., sem perda de habitat), a taxa U necessária para manter a riqueza local apresenta um máximo global sob um grau intermediário de limitação de dispersão (@may_dispersal_2012). Isso reflete o balanço entre deriva ecológica e dispersão. Em cenários de dispersão muito limitada, a substituição tende a ocorrer entre coespecíficos, reduzindo a perda de espécies e, consequentemente, a necessidade de introdução de novas espécies (baixa U). À medida que a dispersão se torna menos restrita, aumenta a substituição entre indivíduos de espécies diferentes, elevando a perda de espécies locais e exigindo maior U. Quando a dispersão é ampla demais, há maior contribuição de subpopulações mais distantes da parcela, o que reduz novamente a estimativa da taxa U (@may_dispersal_2012), porém à custa de uma maior homogeneização na escala da paisagem (@Mouquet2003Community).</p> -->
+
+
+
 # Qual o significado dos achados ao debate sobre fragmentação de habitat?
 
 <p>
