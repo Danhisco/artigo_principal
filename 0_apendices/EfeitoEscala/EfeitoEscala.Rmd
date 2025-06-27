@@ -1,8 +1,5 @@
 ---
-title: "Efeito de escala na estimativa da taxa U necessária para manter a riqueza local no equilíbrio em um modelo neutro espacialmente explícito"
-author: 
-  - Danilo Pereira Mori, Laboratório de Ecologia Teórica (IBUSP)
-date: ""
+title: "Escala de Efeito"
 output:
   bookdown::pdf_document2:
     latex_engine: lualatex
@@ -20,11 +17,15 @@ header-includes:
 - \usepackage{caption}
 - \captionsetup[figure]{font=it}
 - \captionsetup[table]{font=it}
-editor_options: 
-  chunk_output_type: console
 ---
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE,dpi=100)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center',
+                      # fig.pos = "H", 
+                      fig.show = "hold",
+                      root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal',
+                      dev = "png",
+                      dpi = 72)
 # pacotes
 library(lubridate)
 library(doMC)
@@ -209,8 +210,7 @@ download_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
 
 # Objetivo
  
-O objetivo desse apêndice é descrever a relação dos graus de limitação de dispersão simulados e a extensão espacial da paisagem ao redor da parcela amostrada. A extensão espacial da paisagem determina a posição da paisagem local no gradiente de cobertura vegetal, para uma dada configuração espacial da cobertura florestal remanescente (figura 1a).
-Buscamos descrever qual escala mínima suficiente para simular os 20 graus de limitação de dispersão inicialmente propostos (Figura 1c). As simulações ocorrerm em 6 paisagens que diferem em sua extensão espacial com o lado variando entre 0.5 km e 16 km de lado (0.5, 1, 2,4 ,8,16). Sorteamos e selecionamos 36 sítios da base de dados completo (109 sítios). Esses 36 sítios incluem os extremos da riqueza de espécies e número de indivíduos observado e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (figura 1b). 
+Buscamos descrever qual escala mínima suficiente para simular os 20 graus de limitação de dispersão inicialmente propostos (texto principal). As simulações ocorrerm em 6 paisagens que diferem em sua extensão espacial com o lado variando entre 0.5 km e 16 km de lado (0.5, 1, 2,4 ,8,16). Sorteamos e selecionamos 36 sítios da base de dados completo (109 sítios). Esses 36 sítios incluem os extremos da riqueza de espécies e número de indivíduos observado e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (texto principal). 
 
   
 <!-- A expecativa é que a redução da limitação de dispersão aumente a extensão da paisagem ao redor mínima para simular a árvore genealógica da comunidade sem que esta seja limitada pela extensão espacial. Para cada combinação de grau de limitação de dispersão e extensão espacial iremos estimar a taxa U de colonização de novas espécies na paisagem por nascimento necessária para obter a riqueza observada, pressuposto equilíbrio. A taxa U compensa o número de espécies perdidas por deriva ecológica e que não são repostas por subpopulações na paisagem. Então quando a paisagem é pequena a taxa U deve ser elevada para compensar a ausência da chuva de propágulos esperada para aquele grau de limitação de dispersão em uma paisagem sem perda de habitat. Com o aumento da extensão da paisagem a taxa U pode diminuir, caso exista aumento dos indivíduos que podem contribuir com propágulos para aquele grau de limitação de dispersão. Esperamos descrever a escala que acumula a maior parte da variação da média geral associada com o aumento da escala por grau de limitação de dispersão. -->
@@ -220,10 +220,13 @@ Buscamos descrever qual escala mínima suficiente para simular os 20 graus de li
 <!-- Em nossa avaliação a taxa U é livredeixada como um parâmetro livre, para estimarajustar a riqueza final simulada à observada na parcela. , enquanto que naNa análise de May et al. (2012) a taxa U é fixa (1e-5) e, por consequência a riqueza varia em função da limitação à dispersão utilizada nas simulações. , porPor isso, no painel daa esquerda da figura 2.2 há um mínimo, enquanto na direita há um máximo. Os cenários de limitação de dispersão em que os valores extremos ocorrem nestes dois painési são semelhantes. O máximo da taxa U média ocorre quando k varia entre 0.75 e 0.50 dos propáagulos na vizinhança imediata (fig. 2.2). Nesses cenários de limitação de dispersão o desvio padrão da função de dispersão variou entre cerca de 1.51 e 2.85, quantils de 5% e 95% (fig. sitios-SoE). Para obter os valores médios da distribuição de Laplace, usada na função de dispersão, basta multiplicar por 2, resultando em cerca de 2.14 e 4.04, respectivamente. Nesses valores de dispersão média, May et al. (2012) observou seus valores de mínimo de riqueza observada. Além disso, considerando o fato de que eles são espelhados e são variáveis com natureza distinta (há uma relação matemática a riqueza observa resultante das simulações e taxa U), concluímos que os padrões são qualitativamente similares. Assim, a extensão de 16x16 km foi adotada como referência de ausência de efeito da extensão espacial na simulação dos cenários de limitação de dispersão, por permitir estimativas de U consistentes com aquelas esperadas em paisagens sem restrição espacial. -->
 
 
-A expectativa teórica é de redução do lado da paisagem suficiente (Lk) com o relaxamento da limitação de dispersão, k. Uma vez que quanto maior a capacidade de dispersão das espécies, maior é área ao redor da parcela que contém todas as espécies observadas na parcela (Rosindell & Cornell 2013). Ao reduzir a área de paisagem ao redor reduzimos o número de progenitores que podem fornecer propágulos para repor as espécies perdidas localmente. Assim, a expectativa é que a taxa U estimada para aproximar a riqueza local aumente com a redução da extensão espacial da paisagem ao redor, para compensar a redução no número de progenitores repondo espécies perdidas localmente. Ou seja, espera-se que a taxa U estimada reduza com o aumento do lado da paisagem ao redor da parcela (L). Nesse contexto, desenvolvemos um algoritmo heurístico que busca a extensão espacial que acumula a maior parte da redução esperada na taxa U com o aumento de L e aplicamos-o a cada cenário de limitação de dispersão para obter Lk.
+A expectativa teórica é de redução do lado da paisagem suficiente (Lk) com o relaxamento da limitação de dispersão, k. Uma vez que quanto maior a capacidade de dispersão das espécies, maior é área ao redor da parcela que contém todas as espécies observadas na parcela (@rosindell2013universal). Ao reduzir a área de paisagem ao redor reduzimos o número de progenitores que podem fornecer propágulos para repor as espécies perdidas localmente. Assim, a expectativa é que a taxa U estimada para aproximar a riqueza local aumente com a redução da extensão espacial da paisagem ao redor, para compensar a redução no número de progenitores repondo espécies perdidas localmente. Ou seja, espera-se que a taxa U estimada reduza com o aumento do lado da paisagem ao redor da parcela (L). Nesse contexto, desenvolvemos um algoritmo heurístico que busca a extensão espacial que acumula a maior parte da redução esperada na taxa U com o aumento de L e aplicamos-o a cada cenário de limitação de dispersão para obter Lk.
 
+Nas próximas seções iremos avaliar se as simulações na maior extensão espacial são qualitativamente semelhantes ao simulado em paisagens infinitas. Dessa forma, avaliamos se as paisagens na maior extensão podem ser usadas como referência de ausência de efeito da extensão espacial. Na seção seguinte, exploramos como a taxa U varia em função da extensão espacial e fazemos a descrição estatística (no anexo no final há os gráficos diagnóstico). A última seção apresenta os L escolhidos pelo metódo heurístico de escolha da extensão com o limiar de acúmulo de 90% e 95%. 
 
-```{r comparacao-May,fig.height=3.5,fig.width=10,eval=FALSE,include=FALSE,fig.cap="Comparação entre simulações em paisagens infinitas (a) e em paisagens finitas de 16x16km2 (b). Em (a) há o recorte"}
+# Taxa U estimada na maior extensão espacial da paisagem (16x16km2)
+
+```{r REMOVERcomparacao-May,fig.height=3.5,fig.width=10,eval=FALSE,include=FALSE,fig.cap="Comparação entre simulações em paisagens infinitas (a) e em paisagens finitas de 16x16km2 (b). Em (a) há o recorte",eval=FALSE}
 if(FALSE){
   df_p <- df_sim |>
     filter(k==0.05) |> 
@@ -264,14 +267,15 @@ if(FALSE){
 }
 ```
 
-<!-- <font size="1">  -->
-<!-- __Figura 1__ a) Mudança na extensão espacial da paisagem a proporção de cobertura vegetal. Cada ponto representa a proporção de cobertura vegetal (eixo y) para aquela determinada extensão espacial da paisagem ao redor (eixo x), as linhas ligam pontos de um sítio de amostragem. b) Riqueza de espécies e densidade de indivíduos nas parcelas dos 106 sítios selecionados (parcela contígua de pelo menos 1ha). Em vermelho os pontos amostrados e selecionados para investigar a extensão espacial da paisagem ao redor usando MNEE (Scale of Effect, SoE). c) Cenários de limitação de dispersão simulados. k = proporção de propágulos que permanece até a vizinhança imediata (distância média entre indivíduos); d = desvio padrão da função de dispersão com distribuição de Laplace. Para detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão olhar o texto principal.  -->
-<!-- </font>  -->
 
+<p>Quando o MNEE é simulado em paisagens prístina infinitas, a taxa U necessária para manter a riqueza local apresenta um máximo global sob um grau intermediário de limitação de dispersão (@may_dispersal_2012). Isso reflete o balanço entre deriva ecológica e dispersão. Neste caso, em cenários de dispersão muito limitada, a substituição de um indivíduo morto por um nascimento  tende a ocorrer entre coespecíficos, reduzindo a perda de espécies e, consequentemente, a necessidade de introdução de novas espécies (baixa U), para manter um certo número de espécies na parcela. À medida que a dispersão se torna menos restrita, aumenta a substituição por  indivíduos de espécies diferentes, elevando a perda de espécies locais e exigindo maior U. Quando a dispersão é ampla demais, há maior contribuição de subpopulações mais distantes da parcela, o que reduz novamente a estimativa da taxa U (May et al. (2012)), porém à custa de uma maior homogeneização na escala da paisagem (@Mouquet2003Community).
+</p>
 
-# Taxa U estimada na maior extensão espacial da paisagem (16x16km2)
+<p>
+A taxa U estimada na extensão de 16x16 km2 apresenta padrão não linear com máximo em graus pouco severos de limitação de dispersão, qualitativamente é semelhante ao esperado em paisagens infinitas (fig. \@ref(fig:Unull16)). Há muita variação entre os sítios (\@ref(fig:fig2a)). A variação das réplicas em torno da média também pode ser elevada (fig. \@ref(fig:Unull16), \@ref(fig:fig2a)). Os valores médios sugerem um padrão de patamares, com valores baixos de U quando a limitação de dispersão é severa e em graus pouco severos um aumento brusco que suavemente diminui com o relaxamento da limitação de dispersão (fig. \@ref(fig:Unull16), \@ref(fig:fig2a)). Uma vez que observamos um padrão qualitativamente similar ao esperado em paisagens infinitas, iremos considerar a extensão espacial de 16x16 km2 como apropriada para servir como referência de ausência de efeito da extensão espacial na estimativa da taxa U.
+</p>
 
-```{r figura 2a, eval=FALSE, include=FALSE}
+```{r figura comparacao com May criacao, eval=FALSE, include=FALSE}
 my_summary_fun <- function(x) {
   data.frame(
     y = median(x),
@@ -295,7 +299,7 @@ p <- df_Unull |>
   theme(plot.title = element_text(hjust = 0.5, size = 13))
 ggsave(filename = "0_apendices/EfeitoEscala/figuras/fig2a_tendencia_media.png",plot = p)
 saveRDS(object = p,file = "0_apendices/EfeitoEscala/figuras/fig2a_tendencia_media.rds")
-p
+# p
 ```
 ```{r criacao dde Unull16, eval=FALSE, include=FALSE}
 library(magick)
@@ -352,8 +356,6 @@ p
 ```
 
 
-A taxa U estimada na extensão de 16x16 km2 apresenta padrão não linear com máximo em graus pouco severos de limitação de dispersão, qualitativamente é semelhante ao esperado em paisagens infinitas (Figura 2a,b). Há muita variação entre os sítios, por isso na figura 2b o eixo y varia entre paineis. A variação das réplicas em torno da média também pode ser elevada (Figura 2b). Os valores médios sugerem um padrão de patamares, com valores baixos de U quando a limitação de dispersão é severa e em graus pouco severos um aumento brusco que suavemente diminui com o relaxamento da limitação de dispersão (Figura 2b). Uma vez que observamos um padrão qualitativamente similar ao esperado em paisagens infinitas, iremos considerar a extensão espacial de 16x16 km2 como maior escala de referência para os graus de limitação de dispersão. 
-
 # Efeito da escala na estimativa média da taxa U por grau de limitação de dispersão
 
 ```{r figura 3 Umed por lado da paisagem,fig.width=14,fig.height=8.5,eval=FALSE,include=FALSE}
@@ -402,8 +404,7 @@ p <- readRDS("0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM.rds")
 p
 ```
 
-
-Na maioria dos graus de limitação de dispersão observamos o padrão esperado de a taxa U diminuir com o aumento da escala, principalmente para os graus de limitação de dispersão brandos e muito severos (Figura 3). Em graus pouco severos de limitação de dispersão pode existir pouca variação na estimativa média entre escalas (Figura 3 e 4); nesses graus, a estimativa média da taxa U ocorre no patamar superior de valores médios da taxa U(Figura 2b). No patamar superior da taxa U há a menor variação na média entre escalas e maior variabilidade entre réplicas de uma mesma bateria de simulação (figura 4). 
+Ao considerar o efeito da escala na taxa U estimada agregado por parcela amostrada (fig. \@ref(fig:Uk-ladokm)), é possível observar um padrão de decaimento da taxa U com o aumento da escala espacial da paisagem, de forma mais consistente em cenários de limitação de dispersão branda e severa. Nos cenários de limitação de dispersão mais severos e mais brandos a influência da escala na taxa U é maior e existe menos variação entre réplicas (\@ref(fig:Uk-ladokm-complemento)). Nos cenários de limitação de dispersão intermediário a taxa U estimada é menos sensível a variação na escala (figs. \@ref(fig:Uk-ladokm), \@ref(fig:Uk-ladokm-complemento)).
 
 
 ```{r figura 4 Ucv por k,fig.width=8,fig.height=4, eval=FALSE, include=FALSE}
@@ -438,13 +439,18 @@ grid.arrange(grobs=l_p,ncol=2)
 ```
 
 
-## Grau de limitação de dispersão e extensão espacial da paisagem adequada
+## Descrição estatística
 
-Para descrever a média da estimativa da taxa U optamos por transformar a variável usando a função logito e usar um modelo gaussiano misto (LMM). O número de indivíduos e riqueza foram modelados na escala log e z (transformação z). As variáveis graus de limitação de dispersão (k) e extensão espacial da paisagem ao redor (scale) foram interpretados como fatores, então cada combinação de k e scale possui um intercepto. Os dados foram agrupados por sítio, então cada sítio possui um intercepto comum. 
+<p>
+Para descrever a média da estimativa da taxa U usamos um modelo linear misto. O número de indivíduos e riqueza foram modelados na escala log e z (transformação z). As variáveis graus de limitação de dispersão (k) e extensão espacial da paisagem ao redor (scale) foram interpretados como fatores, então cada combinação de k e scale possui um intercepto. Os dados foram agrupados por sítio, então cada sítio possui um intercepto comum. 
+</p>
 
+<p>
 A estimativa de U depende da arvóre genalógica da comunidade simulada pelo MNEE. O número de indivíduos (N) determina o número inicial de linhagens que são monitoradas e o número de espécies (S) determina o número final de linhagens monitoradas. A árvore genealógica da comunidade também é influenciada pelo grau de limitação de dispersão (k) e da extensão espacial (scale), pois em alguns graus de limitação de dispersão a árvore genealógica pode ser restringida pela extensão da paisagem e não pela limitação de dispersão. 
+</p>
 
-__tabela 1__ Seleção das variáveis de controle. S_obs = riqueza observada, N = número de indivíduos, DA = densidade de indivíduos;  Funções lmer do pacote lme4 (@lme4), AICctab do pacote bblme (bbmle_package). 
+
+__tabela 1__ Seleção das variáveis de controle. S_obs = riqueza observada, N = número de indivíduos, DA = densidade de indivíduos;  Funções lmer do pacote lme4 (@lme4), AICctab do pacote bblme (@bbmle_package). 
 
 ```{r GLMM selecao de variaveis para fixar no GLMM final,eval=T,cache=T,echo=TRUE}
 l_md <- list()
@@ -458,7 +464,7 @@ l_md[[4]] <- lmer(Umed ~ S_obs_z * k_factor * lado_factor + (1|SiteCode),
                   data=df_md)
 ```
 
-__Tabela 2__ Coeficientes de determinal (R2) do modelo mais plausível: marginal(m, desconsiderando o efeito aleatório) e condicional(c, considerando o efeito aleatório):
+__Tabela 2__ Coeficientes de determinal (R2) do modelo mais plausível: marginal(m, desconsiderando o efeito aleatório) e condicional(c, considerando o efeito aleatório) do pacote (@mumin):
 
 ```{r R2 marginal e condicional do modelo mais plausível para descrever SoE}
 # print("R2 marginal e condicional, respectivamente:")
@@ -468,7 +474,8 @@ md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names()
 md_SoE |> (\(.) MuMIn::r.squaredGLMM(.))()
 ```
 
-O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1). Os coeficientes de determinação marginal e condional do modelo são aproximadamente iguais à 0.96. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos apresentarem algum desvio (Figura SI 1), o modelo faz uma boa predição do observado (Figura SI 1). Na figura 5 há o predito para os dados observados na escala padrão da variável resposta, taxa U. Para cada escala e grau de limitação de dispersão foi calculado a média entre sítios (pontos em azul). Os pontos estão coloridos pela razão entre número de espécies e número de indivíduos (S/N).
+O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1). Os coeficientes de determinação marginal e condional do modelo são 0.50 e 0.87, respectivamente. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos (@dharma) apresentarem algum desvio (fig. \@ref(fig:diagnostico-parametros)), o modelo faz uma boa predição do observado (fig. \@ref(fig:diagnostico-parametros)). No texto principal há a média predita pelo modelo mais plausível. A seguir os lados escolhidos caso tivessemos optados por um limiar de redução de 90% e 95%. O algoritmo de escolha de lado foi descrito na seção dos materiais e método.
+
 
 ```{r criacao de figura fsoe, include=FALSE,eval=FALSE}
 f_soe <- \(vlimiar){
@@ -525,18 +532,8 @@ grid.arrange(grobs=lp[2:3],ncol=2)
 ```
 
 
+# Anexo do apêndice
 
-<font size="1"> 
-__Figura 5__ Média das estimativas médias da taxa U (eixo x) em fução do lado da paisagem ao redor (scale, eixo x). Em azul a média e o desvio padrão para cada combinação de grau de limitação de dispersão (título dos paineis, k = proporção de propágulos que permanece até a vizinhança imediata) e scale. S = número de espécies, N = número de indivíduos. As linhas verticais em vermelho marcam a escala que acumula pelo menos 95% de toda a variação da média com o aumento da escala (Ver seção "Escala que acumula a maior parte do efeito da escala").
-</font> 
-
-__Escala que acumula a maior parte do efeito da escala__
-
-Para determinar quais os graus de limitação de dispersão são adequados avaliamos qual a escala que acumula pelo menos 95% de toda a variação observada para a média geral com o aumento da escala até paisagens de lado 16 km. Para isso, calculei por grau de limitação de dispersão: a diferença entre a média da estimativa entre 2 escalas consecutivas e dividi o valor pela amplitude para todas as escalas; então os valores de escalas consecutivas são somados em ordem crescente. A escala que acumula pelo menos 95% é considerada como a extensão espacial mínima suficiente para simular aquele grau de limitação de dispersão (linhas vermelhas na figura 5). 
-
-
-### Support Information
-    
 
 ```{r diagnostico modelo mais plausivel GLMM efeito de escala}
 df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame()
@@ -545,7 +542,7 @@ p_plot <- simulateResiduals(md_SoE,n=1000)
 plot(p_plot)
 ```
 
-```{r diagnostico parametros,cache=TRUE,dpi=72}
+```{r diagnostico-parametros,fig.cap="Resíduos quantilícos do LMM mais plausível: logit(Umed) ~ log(S) + log(N). Umed = média da bateria de simulações (# réplicas = 10), S = riqueza de espécies, N = número de indivíduos.",cache=FALSE,dpi=72}
 df_ranef <- ranef(md_SoE)$SiteCode 
 df_ranef$SiteCode <- row.names(df_ranef)
 row.names(df_ranef) <- NULL
@@ -560,7 +557,7 @@ l_p[[1]] <- df_ranef |>
   facet_wrap(~name) +
   labs(title="qqnorm: interceptos por sítios")
 l_p[[2]] <- df_plot |> 
-  ggplot(aes(x=logit_Umed,y=predict)) +
+  ggplot(aes(x=Umed,y=predict)) +
   geom_point() +
   geom_smooth(aes(group=SiteCode),se = F,method = "lm") +
   geom_abline(slope = 1,intercept = 0,color="red")
@@ -579,10 +576,6 @@ grid.arrange(grobs=l_p,
 #        height = 6.7)
 ```
 
-<font size="1"> 
-__Figura SI 1__ 
-Resíduos quantilícos do LMM mais plausível: logit(Umed) ~ log(S) + log(N). Umed = média da bateria de simulações (# réplicas = 10), S = riqueza de espécies, N = número de indivíduos.
-<fon> 
 
 <!-- ##### Códigos para rodar as simulações -->
 
@@ -653,3 +646,5 @@ df_sorteio_sitios <- df |>
   rbind(filter(df,S_obs %in% range(df$S_obs) | DA %in% range(df$DA))) |>  distinct()
 write_csv(df_sorteio_sitios,file = "dados/csv/df_sorteio_sitios.csv")
 ```
+
+# Referências
