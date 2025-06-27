@@ -147,7 +147,7 @@ plot <- img_to_gg(img)
 saveRDS(plot,"1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
 ```
 
-```{r desloc-parcela, fig.height=4,fig.width=4.5}
+```{r desloc-parcela, fig.height=2.5,fig.width=4.5}
 plot <- readRDS("1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
 plot
 ```
@@ -223,11 +223,11 @@ plot_matrix
 limg <- c("0_apendices/mapas_p_MNEE/figuras/sitio_removido.png",
           "0_apendices/mapas_p_MNEE/figuras/sitio_removido_BAURUC.png")
 limg <- lapply(limg,img_to_gg)
-saveRDS(limg,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
+saveRDS(limg,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/mapas_semquadrado.rds")
 ```
 ```{r sitios-removidos}
-p <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
-p
+p <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/mapas_semquadrado.rds")
+grid.arrange(grobs=p,nrow=1)
 ```
 
 # Sensibilidade da parametrização da estatística I de Moran
