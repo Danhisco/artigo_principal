@@ -75,6 +75,7 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 # Tabela com as características de todos os sítios selecionados no TreeCo (n=109)
 
 ```{r dados-disponiveis, tab.cap="Características dos sítios dentro do critério de inclusão",warning=FALSE,message=FALSE,tab.width=12,results='asis'}
+library(kableExtra)
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
   mutate(LAT = ifelse(is.na(lat_correct),lat,lat_correct),
          LONG = ifelse(is.na(long_correct),long,long_correct),
@@ -98,35 +99,68 @@ df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>%
          pert_class, year_bestProxy)
 ##############################################
 df_dados_disponiveis %>%
-  flextable() %>%
-  bg(bg = "white",part = "all") %>%
-  theme_vanilla() %>%
-  set_header_labels(
-    SiteCode = "Código",
-    LAT = "lat",
-    LONG = "long",
-    effort_ha = "Área (ha)",
-    dbh_cutoff = "critério",
-    Ntotal = "N",
-    S_obs = "S",
-    forest_type_label = "floresta",
-    pert_class = "clas. pert.",
-    year_bestProxy = "ano"
-    ) %>%
-  bold(part = "header") %>%
-  colformat_num(digits = 2) %>%
-  align(align = "center", part = "all") %>%
-  flextable::footnote(i = 1, j = c(5,8),
-           value = flextable::as_paragraph(
-             c("PBH = 'perimeter at breast height' e DBH = 'diameter at breast height",
-               "FPIM = Formacao pioneira sob influencia marinha - demais tipos são o padrão TreeCo")),
-           ref_symbols = c("a", "b"),
-           part = "header", inline = TRUE) %>% 
-  autofit() %>% 
-  fontsize(size = 8, part = "all") %>%
-  width(width = 0.4) %>%
-  padding(padding = 2, part = "all") %>%
-  set_table_properties(layout = "autofit")
+  # flextable() %>%
+  # bg(bg = "white",part = "all") %>%
+  # theme_vanilla() %>%
+  # set_header_labels(
+  #   SiteCode = "Código",
+  #   LAT = "lat",
+  #   LONG = "long",
+  #   effort_ha = "Área (ha)",
+  #   dbh_cutoff = "critério",
+  #   Ntotal = "N",
+  #   S_obs = "S",
+  #   forest_type_label = "floresta",
+  #   pert_class = "clas. pert.",
+  #   year_bestProxy = "ano"
+  #   ) %>%
+  # bold(part = "header") %>%
+  # colformat_num(digits = 2) %>%
+  # align(align = "center", part = "all") %>%
+  # flextable::footnote(i = 1, j = c(5,8),
+  #          value = flextable::as_paragraph(
+  #            c("PBH = 'perimeter at breast height' e DBH = 'diameter at breast height",
+  #              "FPIM = Formacao pioneira sob influencia marinha - demais tipos são o padrão TreeCo")),
+  #          ref_symbols = c("a", "b"),
+  #          part = "header", inline = TRUE) %>% 
+  # autofit() %>% 
+  # fontsize(size = 8, part = "all") %>%
+  # width(width = 0.4) %>%
+  # padding(padding = 2, part = "all") %>%
+  # set_table_properties(layout = "autofit")
+  rename(
+    "Código" = SiteCode,
+    "lat" = LAT,
+    "long" = LONG,
+    "Área (ha)" = effort_ha,
+    "critério" = dbh_cutoff,
+    "N" = Ntotal,
+    "S" = S_obs,
+    "floresta" = forest_type_label,
+    "clas. pert." = pert_class,
+    "ano" = year_bestProxy
+  ) %>%
+  kable(
+    format = "latex",
+    digits = 2,
+    align = "c",
+    booktabs = TRUE,
+    caption = "Tabela de dados disponíveis",
+    longtable = TRUE  # Esta opção é crucial para tabelas longas
+  ) %>%
+  kable_styling(
+    font_size = 8,
+    latex_options = c("hold_position", "repeat_header")  # Repete cabeçalho em cada página
+  ) %>%
+  footnote(
+    general = c(
+      "a PBH = 'perimeter at breast height' e DBH = 'diameter at breast height'",
+      "b FPIM = Formacao pioneira sob influencia marinha - demais tipos são o padrão TreeCo"
+    ),
+    general_title = "",
+    footnote_as_chunk = TRUE,
+    threeparttable = TRUE
+  )
 ```
 
 # Exemplo de deslocamento da parcela para a vizinhança imediata
@@ -248,7 +282,50 @@ plot <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/moranI.rds")
 plot
 ```
 
-# Diagnóstico do modelo mais plausível para descrever a congruência absolusta com a SAD observada
+
+
+
+# Descrição estatística da congruência da SAD simulada e observada
+
+## MAGH usados
+
+```{r modelos usados na descrição, eval=FALSE, echo=TRUE}
+library(mgcv)
+f_gam <- \(vf,dfi){
+  gam(formula=vf,
+      family='binomial',
+      data=dfi,
+      method="REML")
+}
+l_f <- list()
+# modelo cheio
+l_f$`s(k,by=land + class_pert) + (lat,long)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=interaction(land,forest_succession),bs="cr",id="fixo") +
+  s(lat,long) + 
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+# modelo sem classe de perturbação
+l_f$`s(k,by=land) + (lat,long)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=land,bs="cr",id="fixo") +
+  s(lat,long) + 
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+# modelo sem coordenadas
+l_f$`s(k,by=land * class_pert)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=interaction(land,forest_succession),bs="cr",id="fixo") +
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+# modelo sem cov
+l_f$`s(k,by=land)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=land,bs="cr",id="fixo") +
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+#
+l_md <- lapply(l_f,f_gam,dfi=df_ad)
+```
+
+
+## Diagnóstico do modelo mais plausível para descrever a congruência absolusta com a SAD observada
 
 ```{r criacao diag cong, eval=FALSE, include=FALSE}
 img <- image_read("dados/csv_SoE/figuras/diag_s(k,by=land + class_pert) + (lat,long)_te_pk.png") %>% 
@@ -262,9 +339,41 @@ plot <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_cong.rds")
 plot
 ```
 
-# Diagnóstico dos modelos mais plausíveis para descrever a métrica funcional de cada efeito da paisagem
+# Descrição estatística de logUi/Uj de cada efeito da paisagem
 
-## Fragmentação total
+```{r modelos usados para logUi/Uj, echo=TRUE,eval=FALSE}
+library(plyr)
+library(mgcv)
+f_gam <- \(dfi){
+  l_md <- list()
+  l_md[[1]] <- gam(
+    Uefeito ~ 
+      te(p,k,
+         bs=c("cr","cr"),m=2,
+         id = "fixo") +
+      s(k, SiteCode, 
+        bs = "fs", xt=list(bs = "cr"), m=2, 
+        id="efeito_sitio"),
+    data=dfi, method = "REML")
+  l_md[[2]] <- gam(
+    Uefeito ~ 
+      te(p,k,
+         bs=c("cr","cr"),m=2,
+         id = "fixo") +
+      s(SiteCode,bs = "re"),
+    data=dfi, method = "REML")
+  names(l_md) <- c("~ te(p,k) + s(k)|Site",
+                   "~ te(p,k) + 1|Site")
+  return(l_md)
+}
+# contraste = efeito da paisagem (frag. total, frag. per se e área per se)
+l_md <- dlply(df_logUU_pk,"contraste",f_gam)
+```
+
+
+## Diagnóstico dos modelos mais plausíveis para descrever a métrica funcional de cada efeito da paisagem
+
+### Fragmentação total
 
 ```{r criacao diag FT, eval=FALSE, include=FALSE}
 img <- image_read("dados/csv_SoE/figuras/diag_fratotal_te_pk.png") %>% 
@@ -279,7 +388,7 @@ plot
 ```
 
 
-## Fragmentação *per se*
+### Fragmentação *per se*
 
 ```{r criacao diag FPS, eval=FALSE, include=FALSE}
 img <- image_read("dados/csv_SoE/figuras/diag_fragperse_te_pk.png") %>% 
@@ -294,7 +403,7 @@ plot
 ```
 
 
-## Área *per se*
+### Área *per se*
 
 
 ```{r criacao diag APS, eval=FALSE, include=FALSE}
