@@ -69,6 +69,9 @@ if(!file.exists("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabseleca
 }else{
   df_tabsel <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
   l_md <- readRDS(file="dados/csv_SoE/Rdata/l_md_sumario")
+  md <- l_md[[df_tabsel$modelo[1]]]
+  
+  
 }
 ##########
 if(FALSE){

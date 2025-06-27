@@ -1,22 +1,29 @@
 ---
-title: "Informação de Suporte"
+title: "Informação de Suporte (SI)"
 output:
-  html_document:
-    df_print: paged
-  word_document: default
   bookdown::pdf_document2:
     latex_engine: lualatex
-  pdf_document:
-    latex_engine: xelatex
   bookdown::word_document2: default
-editor_options:
-  chunk_output_type: console
+  pdf_document: default
+  html_document:
+    df_print: paged
 bibliography: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/citations2.bib
-csl: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/ecological-monographs.csl
+csl: "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/ecological-monographs.csl"
+header-includes:
+- \usepackage[brazil]{babel}
+- \usepackage{lmodern}
+- \usepackage{fontspec}
+- \setmainfont{Times New Roman}
+- \usepackage{caption}
+- \captionsetup[figure]{font=it}
+- \captionsetup[table]{font=it}
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup4,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
+                      fig.pos = "H", fig.show = "hold",dpi = 72)
 # pacotes
 # library(dagitty)
 # library(ggdag)
@@ -65,9 +72,9 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 ```
 
 
-## Tabela com as características dos sítios selecionados
+# Tabela com as características de todos os sítios selecionados no TreeCo (n=109)
 
-```{r dados-disponiveis, tab.cap="Características dos sítios dentro do critério de inclusão"}
+```{r dados-disponiveis, tab.cap="Características dos sítios dentro do critério de inclusão",warning=FALSE,message=FALSE,tab.width=12,results='asis'}
 df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
   mutate(LAT = ifelse(is.na(lat_correct),lat,lat_correct),
          LONG = ifelse(is.na(long_correct),long,long_correct),
@@ -85,69 +92,219 @@ df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>%
                                   "FPIM",
                                   forest_type) %>% 
            gsub("Contato ","",.),
-         year_bestProxy = gsub("2012_2013","2012/2013",year_bestProxy)
+         year_bestProxy = gsub("2012_2013","2012-2013",year_bestProxy)
          ) %>% 
-  select(SiteCode, refID, LAT, LONG, state, effort_ha, dbh_cutoff, Ntotal, S_obs, forest_type_label,
-         pert_class, year_bestProxy) %>% 
-  filter(pert_class!="altíssima")
+  select(SiteCode, LAT, LONG, effort_ha, dbh_cutoff, Ntotal, S_obs, forest_type_label,
+         pert_class, year_bestProxy)
 ##############################################
 df_dados_disponiveis %>%
   flextable() %>%
   bg(bg = "white",part = "all") %>%
   theme_vanilla() %>%
   set_header_labels(
-    SiteCode = "Sítio",
-    refID = "refID",
+    SiteCode = "Código",
     LAT = "lat",
     LONG = "long",
-    state = "Estado",
-    effort_ha = "Área parc.\n(ha)",
-    dbh_cutoff = "critério inclusão",
+    effort_ha = "Área (ha)",
+    dbh_cutoff = "critério",
     Ntotal = "N",
     S_obs = "S",
-    forest_type_label = "tipo florestal",
-    pert_class = "classe pert.",
-    year_bestProxy = "ano aprox. dados"
+    forest_type_label = "floresta",
+    pert_class = "clas. pert.",
+    year_bestProxy = "ano"
     ) %>%
   bold(part = "header") %>%
   colformat_num(digits = 2) %>%
   align(align = "center", part = "all") %>%
-  flextable::footnote(i = 1, j = c(2,7,10),
+  flextable::footnote(i = 1, j = c(5,8),
            value = flextable::as_paragraph(
-             c("refID do TreeCo",
-               "PBH = 'perimeter at breast height' e DBH = 'diameter at breast height",
+             c("PBH = 'perimeter at breast height' e DBH = 'diameter at breast height",
                "FPIM = Formacao pioneira sob influencia marinha - demais tipos são o padrão TreeCo")),
-           ref_symbols = c("a", "b", "c"),
+           ref_symbols = c("a", "b"),
            part = "header", inline = TRUE) %>% 
-  autofit()
+  autofit() %>% 
+  fontsize(size = 8, part = "all") %>%
+  width(width = 0.4) %>%
+  padding(padding = 2, part = "all") %>%
+  set_table_properties(layout = "autofit")
 ```
 
-## Mapas de cobertura florestal dos sítios simulados
+# Exemplo de deslocamento da parcela para a vizinhança imediata
 
-```{r}
-
-```
-
-
-
-## Sítio em que não foi possível simular MNEE com paisagem fragmentada
-
-## Diagnóstico do modelo mais plausível para descrever a congruência absolusta com a SAD observada
-
-## Sensibilidade da parametrização da estatística I de Moran
-
-## Todos os mapas de cobertura florestal
-
-```{r}
-f_image <- \(mat,title){
-  image(mat,
-        main=title,
-        zlim=c(0,2),
-        axes=FALSE,
-        col=terrain.colors(12,rev = TRUE))
+```{r deslocamento parcela, eval=FALSE, include=FALSE}
+# library(purrr)
+# library(magick)
+# library(cowplot)
+# library(ggplot2)
+img_to_gg <- function(img) {
+  ggdraw() + 
+    draw_image(img) +  # Scale de 0.9 para margens
+    theme_void()
 }
-path_name <- "./dados/simulacao/SPigua1.txt"
-m <- read_table(file = path_name) |> as.matrix()
-f_image(mat=m,title="SPigua1")
+img <- image_read("0_apendices/mapas_p_MNEE/figuras/exemplo_redesenho_parcela.png") %>% 
+  image_trim()
+plot <- img_to_gg(img)
+saveRDS(plot,"1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
 ```
 
+```{r desloc-parcela, fig.height=4,fig.width=4.5}
+plot <- readRDS("1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
+plot
+```
+
+# Exemplo das três paisagens hipotéticas
+
+```{r criacao paisagens hipoteticas, eval=FALSE, include=FALSE}
+img <- image_read("figuras/exemplo paisagens hipoteticas-1.png") %>% 
+  image_trim()
+plot <- img_to_gg(img)
+saveRDS(plot,"1_to_compile_dissertacao_EM_USO/09_SI/RDS/3paisagenship.rds")
+```
+
+```{r paisagens-hipoteticas, fig.cap="As 3 paisagem hipotéticas: paisagem fragmentada = contemporâneo; paisagem aglomerada = sem isolamento estrutural; paisagem prístina = idealizado"}
+plot <- readRDS("1_to_compile_dissertacao_EM_USO/09_SI/RDS/3paisagenship.rds")
+plot
+```
+
+
+# Mapas de cobertura florestal dos sítios simulados (n=105)
+
+```{r criacao de plot_matrix, eval=FALSE,include=FALSE}
+img <- image_read("./0_apendices/EfeitoEscala/figuras/may2012_fi1a.png") %>% 
+  image_trim()
+combined_plot <- ggdraw() +
+  draw_image(img, x = 0, y = 0, width = 0.5, height = 1) +  # Metade esquerda
+  draw_plot(p, x = 0.5, y = 0, width = 0.5, height = 1)   # Metade direita
+saveRDS(object = combined_plot,file = "0_apendices/EfeitoEscala/figuras/fig2comparacao_resultados.rds")
+```
+```{r criação de plot mat sitios, eval=FALSE, include=FALSE}
+l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
+vsites105 <- l_dfpred$fixo_e_aleat$SiteCode %>% unique
+#
+limg <- list.files(path="dados/paisagens/png_land_sim",pattern = ".png",full.names = TRUE)
+names(limg) <- gsub("dados/paisagens/png_land_sim/","",limg) %>% 
+  gsub(".png","",.)
+limg <- limg[vsites105]
+#
+library(purrr)
+library(magick)
+library(cowplot)
+library(ggplot2)
+img_to_gg <- function(img) {
+  ggdraw() + 
+    draw_image(img) +  # Scale de 0.9 para margens
+    theme_void()
+}
+# 
+plot_matrix <- map(limg, img_to_gg) %>%
+  plot_grid(
+    plotlist = .,
+    ncol = 10,  # 10 colunas
+    nrow = 11,   # 11 linhas
+    scale = 1  # Ajuste de espaçamento
+  )
+# 4. Exportar para PDF
+ggsave("1_to_compile_dissertacao_EM_USO/09_SI/RDS/plot_matrix_105parcelas.png", plot_matrix, 
+       width = 29.7, height = 21,  # Tamanho A4 em cm (landscape)
+       units = "cm", dpi = 400,bg = "white")
+saveRDS(plot_matrix,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/plot_matrix_105parcelas.rds")
+```
+
+```{r mapas-sitios,fig.width=15,fig.height=16,dpi=400}
+# knitr::include_graphics("1_to_compile_dissertacao_EM_USO/09_SI/RDS/plot_matrix_105parcelas.png")
+plot_matrix <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/plot_matrix_105parcelas.rds")
+plot_matrix
+```
+
+
+# Mapas em que não foi possível criar uma parcela quadrada
+
+```{r criacao sitios remov, eval=FALSE, include=FALSE}
+limg <- c("0_apendices/mapas_p_MNEE/figuras/sitio_removido.png",
+          "0_apendices/mapas_p_MNEE/figuras/sitio_removido_BAURUC.png")
+limg <- lapply(limg,img_to_gg)
+saveRDS(limg,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
+```
+```{r sitios-removidos}
+p <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
+p
+```
+
+# Sensibilidade da parametrização da estatística I de Moran
+
+<p>
+Para avaliar a sensibilidade da estatística I de Moran usamos modelos mais simples do que os explorados no texto principal, exceto por 'land + land|Site' que é o mesmo descrito na tabela 1. Aqui a variável resposta continua sendo o número de SADs simuladas congruentes com as SADs observadas nas parcelas. As preditoras são mais simples, uma simplificçaão de land + land combinado com a limitação de dispersão (k) enquanto fator.
+</p>
+
+```{r criacao de MoranI,eval=FALSE,include=FALSE}
+img <- image_read("dados/csv_SoE/figuras/MoranI_k1ate100_PVALeSTAT.jpeg") %>% 
+  image_trim()
+plot <- img_to_gg(img)
+saveRDS(plot,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/moranI.rds")
+```
+
+```{r MoranI, fig.cap="Avaliação da sensibilidade do parâmetro livre da estatística I de Moran e do p-valor associado"}
+plot <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/moranI.rds")
+plot
+```
+
+# Diagnóstico do modelo mais plausível para descrever a congruência absolusta com a SAD observada
+
+```{r criacao diag cong, eval=FALSE, include=FALSE}
+img <- image_read("dados/csv_SoE/figuras/diag_s(k,by=land + class_pert) + (lat,long)_te_pk.png") %>% 
+  image_trim() %>% 
+  image_resize("50%")
+plot <- img_to_gg(img)
+saveRDS(plot,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_cong.rds")
+```
+```{r diag-cong}
+plot <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_cong.rds")
+plot
+```
+
+# Diagnóstico dos modelos mais plausíveis para descrever a métrica funcional de cada efeito da paisagem
+
+## Fragmentação total
+
+```{r criacao diag FT, eval=FALSE, include=FALSE}
+img <- image_read("dados/csv_SoE/figuras/diag_fratotal_te_pk.png") %>% 
+  image_trim() %>% 
+  image_resize("50%")
+plot <- img_to_gg(img)
+saveRDS(plot,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_FT.rds")
+```
+```{r diag-FT}
+plot <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_FT.rds")
+plot
+```
+
+
+## Fragmentação *per se*
+
+```{r criacao diag FPS, eval=FALSE, include=FALSE}
+img <- image_read("dados/csv_SoE/figuras/diag_fragperse_te_pk.png") %>% 
+  image_trim() %>% 
+  image_resize("50%")
+plot <- img_to_gg(img)
+saveRDS(plot,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_FPS.rds")
+```
+```{r diag-FPS}
+plot <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_FPS.rds")
+plot
+```
+
+
+## Área *per se*
+
+
+```{r criacao diag APS, eval=FALSE, include=FALSE}
+img <- image_read("dados/csv_SoE/figuras/diag_areaperse_te_pk.png") %>% 
+  image_trim() %>% 
+  image_resize("50%")
+plot <- img_to_gg(img)
+saveRDS(plot,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_APS.rds")
+```
+```{r diag-APS}
+plot <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_APS.rds")
+plot
+```
