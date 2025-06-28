@@ -1,7 +1,22 @@
 rmd_files: [
-"compilacao_integral.Rmd",
-"EfeitoEscala.Rmd",
-"SI.Rmd"
+  "compilacao_integral.Rmd",
+  "EfeitoEscala.Rmd",
+  "SI.Rmd"
 ]
 
 delete_merged_file: true
+
+output_dir: "docs"
+
+language:
+  label:
+    fig: "Figura "
+    tab: "Tabela "
+    eq: "Equação "
+    thm: "Teorema "
+    lem: "Lema "
+    def: "Definição "
+    cor: "Corolário "
+    prp: "Proposição "
+    exm: "Exemplo "
+    proof: "Prova. "
