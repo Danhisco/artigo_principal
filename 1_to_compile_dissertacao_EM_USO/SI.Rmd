@@ -52,7 +52,7 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 ```
 
 
-## Tabela com as características de todos os sítios selecionados no TreeCo (n=109)   {-}
+## Tabela com as características de todos os sítios selecionados no TreeCo (n=109)   {.unnumbered}
 
 ```{r}
 vcap <- "Características dos sítios dentro do critério de inclusão. (a) PBH : 'perimeter at breast height' e DBH : 'diameter at breast height'. (b) FPIM : Formacao pioneira sob influencia marinha - demais tipos são o padrão TreeCo"
@@ -149,7 +149,7 @@ df_dados_disponiveis %>%
   # )
 ```
 
-## Exemplo de deslocamento da parcela para a vizinhança imediata   {-}
+## Exemplo de deslocamento da parcela para a vizinhança imediata   {.unnumbered}
 
 ```{r deslocamento parcela, eval=FALSE, include=FALSE}
 # library(purrr)
@@ -172,7 +172,7 @@ plot <- readRDS("./09_SI/RDS/deslocamento_parcela.rds")
 plot
 ```
 
-## Exemplo das três paisagens hipotéticas   {-}
+## Exemplo das três paisagens hipotéticas   {.unnumbered}
 
 ```{r criacao paisagens hipoteticas, eval=FALSE, include=FALSE}
 img <- image_read("figuras/exemplo paisagens hipoteticas-1.png") %>% 
@@ -187,7 +187,7 @@ plot
 ```
 
 
-## Mapas de cobertura florestal dos sítios simulados (n=105)   {-}
+## Mapas de cobertura florestal dos sítios simulados (n=105)   {.unnumbered}
 
 ```{r criacao de plot_matrix, eval=FALSE,include=FALSE}
 img <- image_read("./0_apendices/EfeitoEscala/figuras/may2012_fi1a.png") %>% 
@@ -237,7 +237,7 @@ plot_matrix
 ```
 
 
-## Mapas em que não foi possível criar uma parcela quadrada   {-}
+## Mapas em que não foi possível criar uma parcela quadrada   {.unnumbered}
 
 ```{r criacao sitios remov, eval=FALSE, include=FALSE}
 limg <- c("0_apendices/mapas_p_MNEE/figuras/sitio_removido.png",
@@ -250,7 +250,7 @@ p <- readRDS(file="./09_SI/RDS/mapas_semquadrado.rds")
 grid.arrange(grobs=p,nrow=1)
 ```
 
-## Sensibilidade da parametrização da estatística I de Moran  {-}
+## Sensibilidade da parametrização da estatística I de Moran  {.unnumbered}
 
 <p>
 Para avaliar a sensibilidade da estatística I de Moran usamos modelos mais simples do que os explorados no texto principal, exceto por 'land + land|Site' que é o mesmo descrito na tabela 1. Aqui a variável resposta continua sendo o número de SADs simuladas congruentes com as SADs observadas nas parcelas. As preditoras são mais simples, uma simplificçaão de land + land combinado com a limitação de dispersão (k) enquanto fator.
@@ -271,9 +271,9 @@ plot
 
 
 
-## Descrição estatística da congruência da SAD simulada e observada  {-}
+## Descrição estatística da congruência da SAD simulada e observada  {.unnumbered}
 
-### MAGH usados  {-}
+### MAGH usados  {.unnumbered}
 
 ```{r modelos usados na descrição, eval=FALSE, echo=TRUE}
 library(mgcv)
@@ -311,7 +311,7 @@ l_md <- lapply(l_f,f_gam,dfi=df_ad)
 ```
 
 
-## Diagnóstico do modelo mais plausível para descrever a congruência absolusta com a SAD observada  {-}
+## Diagnóstico do modelo mais plausível para descrever a congruência absolusta com a SAD observada  {.unnumbered}
 
 ```{r criacao diag cong, eval=FALSE, include=FALSE}
 img <- image_read("~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/figuras/diag_s(k,by=land + class_pert) + (lat,long)_te_pk.png") %>% 
@@ -325,7 +325,7 @@ plot <- readRDS(file="./09_SI/RDS/diag_cong.rds")
 plot
 ```
 
-## Descrição estatística de logUi/Uj de cada efeito da paisagem  {-}
+## Descrição estatística de logUi/Uj de cada efeito da paisagem  {.unnumbered}
 
 ```{r modelos usados para logUi/Uj, echo=TRUE,eval=FALSE}
 library(plyr)
@@ -357,9 +357,9 @@ l_md <- dlply(df_logUU_pk,"contraste",f_gam)
 ```
 
 
-## Diagnóstico dos modelos mais plausíveis para descrever a métrica funcional de cada efeito da paisagem  {-}
+## Diagnóstico dos modelos mais plausíveis para descrever a métrica funcional de cada efeito da paisagem  {.unnumbered}
 
-### Fragmentação total  {-}
+### Fragmentação total  {.unnumbered}
 
 ```{r criacao diag FT, eval=FALSE, include=FALSE}
 img <- image_read("~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/figuras/diag_fratotal_te_pk.png") %>% 
@@ -374,7 +374,7 @@ plot
 ```
 
 
-### Fragmentação *per se*  {-}
+### Fragmentação *per se*  {.unnumbered}
 
 ```{r criacao diag FPS, eval=FALSE, include=FALSE}
 img <- image_read("~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/figuras/diag_fragperse_te_pk.png") %>% 
@@ -389,7 +389,7 @@ plot
 ```
 
 
-### Área *per se*  {-}
+### Área *per se*  {.unnumbered}
 
 
 ```{r criacao diag APS, eval=FALSE, include=FALSE}

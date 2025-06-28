@@ -189,7 +189,7 @@ download_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
               gpath = "mestrado/DaniloPMori-artigo_mestrado/")
 ```
 
-# Objetivo  {-}
+## Apresentação  {.unnumbered}
  
 Buscamos descrever qual escala mínima suficiente para simular os 20 graus de limitação de dispersão inicialmente propostos (texto principal). As simulações ocorrerm em 6 paisagens que diferem em sua extensão espacial com o lado variando entre 0.5 km e 16 km de lado (0.5, 1, 2,4 ,8,16). Sorteamos e selecionamos 36 sítios da base de dados completo (109 sítios). Esses 36 sítios incluem os extremos da riqueza de espécies e número de indivíduos observado e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (texto principal). 
 
@@ -205,7 +205,7 @@ A expectativa teórica é de redução do lado da paisagem suficiente (Lk) com o
 
 Nas próximas seções iremos avaliar se as simulações na maior extensão espacial são qualitativamente semelhantes ao simulado em paisagens infinitas. Dessa forma, avaliamos se as paisagens na maior extensão podem ser usadas como referência de ausência de efeito da extensão espacial. Na seção seguinte, exploramos como a taxa U varia em função da extensão espacial e fazemos a descrição estatística (no anexo no final há os gráficos diagnóstico). A última seção apresenta os L escolhidos pelo metódo heurístico de escolha da extensão com o limiar de acúmulo de 90% e 95%. 
 
-# Taxa U estimada na maior extensão espacial da paisagem (16x16km2)   {-}
+## Taxa U estimada na maior extensão espacial da paisagem (16x16km2)   {.unnumbered}
 
 
 <p>Quando o MNEE é simulado em paisagens prístina infinitas, a taxa U necessária para manter a riqueza local apresenta um máximo global sob um grau intermediário de limitação de dispersão (@may_dispersal_2012). Isso reflete o balanço entre deriva ecológica e dispersão. Neste caso, em cenários de dispersão muito limitada, a substituição de um indivíduo morto por um nascimento  tende a ocorrer entre coespecíficos, reduzindo a perda de espécies e, consequentemente, a necessidade de introdução de novas espécies (baixa U), para manter um certo número de espécies na parcela. À medida que a dispersão se torna menos restrita, aumenta a substituição por  indivíduos de espécies diferentes, elevando a perda de espécies locais e exigindo maior U. Quando a dispersão é ampla demais, há maior contribuição de subpopulações mais distantes da parcela, o que reduz novamente a estimativa da taxa U (May et al. (2012)), porém à custa de uma maior homogeneização na escala da paisagem (@Mouquet2003Community).
@@ -297,7 +297,7 @@ p
 ```
 
 
-# Efeito da escala na estimativa média da taxa U por grau de limitação de dispersão   {-}
+## Efeito da escala na estimativa média da taxa U por grau de limitação de dispersão   {.unnumbered}
 
 ```{r figura 3 Umed por lado da paisagem,fig.width=14,fig.height=8.5,eval=FALSE,include=FALSE}
 df_p <- df_Usoe.rep |> 
@@ -380,7 +380,7 @@ grid.arrange(grobs=l_p,ncol=2)
 ```
 
 
-## Descrição estatística   {-}
+## Descrição estatística   {.unnumbered}
 
 <p>
 Para descrever a média da estimativa da taxa U usamos um modelo linear misto. O número de indivíduos e riqueza foram modelados na escala log e z (transformação z). As variáveis graus de limitação de dispersão (k) e extensão espacial da paisagem ao redor (scale) foram interpretados como fatores, então cada combinação de k e scale possui um intercepto. Os dados foram agrupados por sítio, então cada sítio possui um intercepto comum. 
@@ -478,7 +478,7 @@ grid.arrange(grobs=lp[2:3],ncol=2)
 ```
 
 
-# Anexo do apêndice  {-}
+## Anexo do apêndice  {.unnumbered}
 
 ```{r criacao diag par, eval=FALSE, include=FALSE}
 df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame()
@@ -602,4 +602,4 @@ write_csv(df_sorteio_sitios,file = "dados/csv/df_sorteio_sitios.csv")
 ```
   
     
-## Referências  {-}
+## Referências  {.unnumbered}
