@@ -602,5 +602,4 @@ write_csv(df_sorteio_sitios,file = "dados/csv/df_sorteio_sitios.csv")
 ```
   
     
-## Referências  {.unnumbered}
 
