@@ -149,7 +149,7 @@ vfh=4
 
 ```
 
-```{r trackdown}
+```{r trackdown compilacao integral, eval=FALSE, include=FALSE}
 library(trackdown)
 # both overwrite: 
 # overwrite the current google drive file with the current Rmd:

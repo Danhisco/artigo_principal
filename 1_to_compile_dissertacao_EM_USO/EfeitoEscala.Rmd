@@ -173,7 +173,7 @@
 # }
 ```
 
-```{r trackdown,eval=FALSE}
+```{r trackdown efeito escala,eval=FALSE}
 library(trackdown)
 # 1a vez:
 upload_file(file="apendices/EfeitoEscala/EfeitoEscala.Rmd",
