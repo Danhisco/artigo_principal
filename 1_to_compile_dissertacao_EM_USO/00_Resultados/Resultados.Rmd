@@ -146,7 +146,6 @@ vfh=4
 ```
 
 ```{r trackdown chunk resultados, include=FALSE,eval=FALSE}
-# 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
 # pacotes
 # install.packages("trackdown")
 library(trackdown)

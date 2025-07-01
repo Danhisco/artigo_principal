@@ -2,10 +2,10 @@
 title: ""
 author: ""
 output:
-  bookdown::word_document2: default
   bookdown::pdf_document2:
     latex_engine: lualatex
     # citation_package: citeproc
+  bookdown::word_document2: default
   pdf_document: default
   html_document:
     df_print: paged
@@ -17,6 +17,7 @@ header-includes:
 - \usepackage{fontspec}
 - \usepackage{threeparttable} 
 - \setmainfont{Times New Roman}
+- \fontsize{12}{22}
 - \usepackage{caption}
 - \captionsetup[figure]{font=it}
 - \captionsetup[table]{font=it}
@@ -148,6 +149,20 @@ vfh=4
 
 ```
 
+```{r trackdown}
+library(trackdown)
+# both overwrite: 
+# overwrite the current google drive file with the current Rmd:
+upload_file(file="compilacao_integral.Rmd",
+            gpath="mestrado/artigo_principal/secoes_texto/",
+            hide_code=TRUE)
+update_file(file="compilacao_integral.Rmd",
+            gpath = "mestrado/artigo_principal/secoes_texto/",
+            hide_code = TRUE)
+# overwrite the current Rmd with the current google drive 
+download_file(file="compilacao_integral.Rmd",
+              gpath = "mestrado/artigo_principal/secoes_texto/")
+```
 
 
 # Resumo {-}
