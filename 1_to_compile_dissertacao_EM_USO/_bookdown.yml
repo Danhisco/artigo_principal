@@ -1,7 +1,8 @@
 rmd_files: [
   "compilacao_integral.Rmd",
   "EfeitoEscala.Rmd",
-  "SI.Rmd"
+  "SI.Rmd",
+  "RelaxamentoEquivalencia.Rmd"
 ]
 
 delete_merged_file: true
