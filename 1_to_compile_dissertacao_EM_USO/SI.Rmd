@@ -51,6 +51,9 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
+## Função de dispersão
+
+incluir o código da função de dispersão
 
 ## Tabela com as características de todos os sítios selecionados no TreeCo (n=109)   {.unnumbered}
 
