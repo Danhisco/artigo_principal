@@ -1,3 +1,3 @@
-# Apêndice: Exemplo relaxamento da equivalência funcional  {-} {#EquivaFunc}
+# Apêndice: Exemplo relaxamento da equivalência funcional  {-#EquivaFunc}
 
 Este apêndice apresenta um exercício de modelagem estocástica que visa explorar a possibilidade de relaxar o pressuposto de equivalência funcional no contexto de modelos ecológicos baseados em indivíduos. O modelo implementado é um sistema estocástico de campo médio para até duas espécies em competição, cuja dinâmica segue o algoritmo de Gillespie. A equivalência funcional entre espécies emerge como um caso particular do modelo geral, permitindo investigar a transição entre regimes neutros e de dominância competitiva da espécie residente ou invasora. Este apêndice foi originalmente desenvolvido como trabalho final da disciplina “Modelos Estocásticos”, ministrada pelo Prof. Ricardo Martínez no Programa de Pós-Graduação em Ecologia.

@@ -5,7 +5,7 @@ output:
 editor_options: 
   chunk_output_type: console
 ---
-# Apêndice: Efeito de Escala  {-} {#apendSoE}
+# Apêndice: Efeito de Escala  {-#apendSoE}
 
 ```{r setup efeito escala, include=FALSE,eval=FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center',
@@ -430,7 +430,12 @@ R2mEc <- readRDS(file="~/Documentos/mestrado_Ecologia/artigo_principal/0_apendic
 ```
 
 
-O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1). Os coeficientes de determinação marginal e condional do modelo são 0.50 e 0.87, respectivamente. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos (@dharma) apresentarem algum desvio (figs. \@ref(fig:diagnostico-parametros),  \@ref(fig:diagnostico-parametros)), o modelo faz uma boa predição do observado (figs. \@ref(fig:diagnostico-parametros),  \@ref(fig:diagnostico-parametros)). No texto principal há a média predita pelo modelo mais plausível. A seguir os lados escolhidos caso tivessemos optados por um limiar de redução de 90% e 95%. O algoritmo de escolha de lado foi descrito na seção dos materiais e método.
+
+O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1). Os coeficientes de determinação marginal e condional do modelo são 0.50 e 0.87, respectivamente. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos (@dharma) apresentarem algum desvio (figs. \@ref(fig:diagnostico-parametros),  \@ref(fig:diagnostico-parametros)), o modelo faz uma boa predição do observado (figs. \@ref(fig:diagnostico-parametros),  \@ref(fig:diagnostico-parametros)). No texto principal há a média predita pelo modelo mais plausível. 
+
+## Limiares alternativos
+
+A seguir os lados escolhidos caso tivessemos optados por um limiar de redução de 90% e 95%. O algoritmo de escolha de lado foi descrito na seção dos materiais e método.
 
 
 ```{r criacao de figura fsoe, include=FALSE,eval=FALSE}
@@ -488,7 +493,7 @@ grid.arrange(grobs=lp[2:3],ncol=2)
 ```
 
 
-```{r criação figura SoE}
+```{r criação figura SoE,include=FALSE,eval=FALSE}
 dfp <- df_plot1 %>% 
   mutate(lado = as.numeric(as.character(lado_factor)))
 l_df <- list()

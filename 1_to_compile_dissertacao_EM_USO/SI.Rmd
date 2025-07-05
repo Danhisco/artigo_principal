@@ -1,34 +1,34 @@
 
-# Apêndice: Informação de Suporte (SI) {-} {#SI}
+# Apêndice: Informação de Suporte (SI)  {-#SI}
 
-```{r setup4,include=FALSE}
+```{r setup4,include=FALSE,eval=FALSE}
 # knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
 #                       fig.pos = "H", fig.show = "hold",dpi = 72)
 # # pacotes
 # # library(dagitty)
 # # library(ggdag)
-# library(gt)
-# library(gratia)
-# library(sads)
-# library(doMC)
-# # library(metR)
-# library(gridExtra)
-# library(ggplot2)
-# library(readr)
-# library(purrr)
-# library(stringr)
-# library(tidyr)
-# # library(MuMIn)
-# # library(AICcmodavg)
-# # library(insight)
-# library(bbmle)
-# library(DHARMa)
-# library(mgcv)
-# library(lme4)
-# library(data.table)
-# library(plyr)
-# library(dplyr)
-# library(flextable)
+library(gt)
+library(gratia)
+library(sads)
+library(doMC)
+# library(metR)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+# library(MuMIn)
+# library(AICcmodavg)
+# library(insight)
+library(bbmle)
+library(DHARMa)
+library(mgcv)
+library(lme4)
+library(data.table)
+library(plyr)
+library(dplyr)
+library(flextable)
 # source("source/nameModel.R")
 # source("source/GAMMtools.R")
 # source("source/general_tools.R")
@@ -152,22 +152,22 @@ df_dados_disponiveis %>%
 ## Exemplo de deslocamento da parcela para a vizinhança imediata   {.unnumbered}
 
 ```{r deslocamento parcela, eval=FALSE, include=FALSE}
-# library(purrr)
-# library(magick)
-# library(cowplot)
-# library(ggplot2)
+library(purrr)
+library(magick)
+library(cowplot)
+library(ggplot2)
 img_to_gg <- function(img) {
   ggdraw() + 
     draw_image(img) +  # Scale de 0.9 para margens
     theme_void()
 }
-img <- image_read("0_apendices/mapas_p_MNEE/figuras/exemplo_redesenho_parcela.png") %>% 
+img <- image_read("../0_apendices/mapas_p_MNEE/figuras/exemplo_redesenho_parcela.png") %>% 
   image_trim()
 plot <- img_to_gg(img)
-saveRDS(plot,"1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
+saveRDS(plot,"09_SI/RDS/deslocamento_parcela.rds")
 ```
 
-```{r desloc-parcela, fig.height=2.5,fig.width=4.5}
+```{r desloc-parcela, fig.height=2,fig.width=4.5,fig.cap="Exemplo de deslocamenteo da parcela quadrada do centro da parcela para a vizinhança próxima."}
 plot <- readRDS("./09_SI/RDS/deslocamento_parcela.rds")
 plot
 ```
@@ -175,14 +175,18 @@ plot
 ## Exemplo das três paisagens hipotéticas   {.unnumbered}
 
 ```{r criacao paisagens hipoteticas, eval=FALSE, include=FALSE}
-img <- image_read("figuras/exemplo paisagens hipoteticas-1.png") %>% 
-  image_trim()
-plot <- img_to_gg(img)
-saveRDS(plot,"1_to_compile_dissertacao_EM_USO/09_SI/RDS/3paisagenship.rds")
+img <- image_read("../figuras/exemplo paisagens hipoteticas-1.png") %>% 
+  image_trim() 
+altura_original <- 790
+porcao_remover <- round(altura_original * 0.10)  # 20% de 790 = 158
+nova_altura <- altura_original - porcao_remover
+img_cropped <- image_crop(img, paste0("2723x", nova_altura, "+0+", porcao_remover))
+plot <- img_to_gg(img_cropped)
+saveRDS(plot,"09_SI/RDS/3paisagenship.rds")
 ```
 
-```{r paisagens-hipoteticas, fig.cap="As 3 paisagem hipotéticas em paisagens com lado de 4 km: paisagem fragmentada = contemporâneo; paisagem aglomerada = sem isolamento estrutural; paisagem prístina = idealizado"}
-plot <- readRDS("./09_SI/RDS/3paisagenship.rds")
+```{r paisagens-hipoteticas, fig.cap="As 3 paisagem hipotéticas em paisagens com lado de 4 km: na esquerda, paisagem fragmentada; no centro, paisagem aglomerada; na direita paisagem prístina. Detalhes no texto principal",dpi=200}
+plot <- readRDS("09_SI/RDS/3paisagenship.rds")
 plot
 ```
 
@@ -230,7 +234,7 @@ ggsave("1_to_compile_dissertacao_EM_USO/09_SI/RDS/plot_matrix_105parcelas.png", 
 saveRDS(plot_matrix,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/plot_matrix_105parcelas.rds")
 ```
 
-```{r mapas-sitios,fig.width=15,fig.height=16,dpi=400}
+```{r mapas-sitios,fig.width=15,fig.height=16,dpi=400,fig.cap="Mapas de cobertura florestal das parcelas simuladas nas paisagens com lado de 4 km, detalhes no texto principal."}
 # knitr::include_graphics("1_to_compile_dissertacao_EM_USO/09_SI/RDS/plot_matrix_105parcelas.png")
 plot_matrix <- readRDS(file = "./09_SI/RDS/plot_matrix_105parcelas.rds")
 plot_matrix
@@ -245,7 +249,7 @@ limg <- c("0_apendices/mapas_p_MNEE/figuras/sitio_removido.png",
 limg <- lapply(limg,img_to_gg)
 saveRDS(limg,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/mapas_semquadrado.rds")
 ```
-```{r sitios-removidos}
+```{r sitios-removidos, fig.cap="Parcelas removidas, detalhes no texto principal"}
 p <- readRDS(file="./09_SI/RDS/mapas_semquadrado.rds")
 grid.arrange(grobs=p,nrow=1)
 ```
@@ -260,10 +264,10 @@ Para avaliar a sensibilidade da estatística I de Moran usamos modelos mais simp
 img <- image_read("~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/figuras/MoranI_k1ate100_PVALeSTAT.jpeg") %>% 
   image_trim()
 plot <- img_to_gg(img)
-saveRDS(plot,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/moranI.rds")
+saveRDS(plot,file="09_SI/RDS/moranI.rds")
 ```
 
-```{r MoranI, fig.cap="Avaliação da sensibilidade do parâmetro livre da estatística I de Moran e do p-valor associado"}
+```{r MoranI, fig.cap="Avaliação da sensibilidade do parâmetro livre da estatística I de Moran e do p-valor associado",dpi=200}
 plot <- readRDS(file="./09_SI/RDS/moranI.rds")
 plot
 ```
@@ -273,7 +277,7 @@ plot
 
 ## Descrição estatística da congruência da SAD simulada e observada  {.unnumbered}
 
-### MAGH usados  {.unnumbered} {#formulas-md-CONG}
+### MAGHs usados para descrever a congruência com a SAD observada  {.unnumbered#formulas-md-CONG}
 
 ```{r modelos usados na descrição, eval=FALSE, echo=TRUE}
 library(mgcv)
@@ -315,17 +319,17 @@ l_md <- lapply(l_f,f_gam,dfi=df_ad)
 
 ```{r criacao diag cong, eval=FALSE, include=FALSE}
 img <- image_read("~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/figuras/diag_s(k,by=land + class_pert) + (lat,long)_te_pk.png") %>% 
-  image_trim() %>% 
+  image_trim() %>%  
   image_resize("50%")
 plot <- img_to_gg(img)
-saveRDS(plot,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_cong.rds")
+saveRDS(plot,file="09_SI/RDS/diag_cong.rds")
 ```
-```{r diag-cong}
+```{r diag-cong,dpi=200,fig.cap="Diagnóstico do modelo mais plausível para descrever a congruência da SAD simulada e SAD observada, detalhes no texto principal"}
 plot <- readRDS(file="./09_SI/RDS/diag_cong.rds")
 plot
 ```
 
-## Descrição estatística de logUi/Uj de cada efeito da paisagem  {.unnumbered}
+## Descrição estatística de logUi/Uj de cada efeito da paisagem  {.unnumbered#formulasloUU}
 
 ```{r modelos usados para logUi/Uj, echo=TRUE,eval=FALSE}
 library(plyr)
@@ -366,9 +370,9 @@ img <- image_read("~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE
   image_trim() %>% 
   image_resize("50%")
 plot <- img_to_gg(img)
-saveRDS(plot,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_FT.rds")
+saveRDS(plot,file="09_SI/RDS/diag_FT.rds")
 ```
-```{r diag-FT}
+```{r diag-FT, fig.cap="Diagnóstico do modelo estatístico mais plausível usado para descreve o efeito de fragmentação total.",dpi=200}
 plot <- readRDS(file="./09_SI/RDS/diag_FT.rds")
 plot
 ```
@@ -376,12 +380,12 @@ plot
 
 ### Fragmentação *per se*  {.unnumbered}
 
-```{r criacao diag FPS, eval=FALSE, include=FALSE}
+```{r criacao diag FPS, eval=FALSE, include=FALSE, fig.cap="Diagnóstico do modelo estatístico mais plausível usado para descreve o efeito de fragmentação per se."}
 img <- image_read("~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/figuras/diag_fragperse_te_pk.png") %>% 
   image_trim() %>% 
-  image_resize("50%")
+  image_resize("75%")
 plot <- img_to_gg(img)
-saveRDS(plot,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_FPS.rds")
+saveRDS(plot,file="09_SI/RDS/diag_FPS.rds")
 ```
 ```{r diag-FPS}
 plot <- readRDS(file="./09_SI/RDS/diag_FPS.rds")
@@ -397,9 +401,9 @@ img <- image_read("~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE
   image_trim() %>% 
   image_resize("50%")
 plot <- img_to_gg(img)
-saveRDS(plot,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/diag_APS.rds")
+saveRDS(plot,file="09_SI/RDS/diag_APS.rds")
 ```
-```{r diag-APS}
+```{r diag-APS,fig.cap="Diagnóstico do modelo estatístico mais plausível usado para descreve o efeito de área per se."}
 plot <- readRDS(file="./09_SI/RDS/diag_APS.rds")
 plot
 ```
