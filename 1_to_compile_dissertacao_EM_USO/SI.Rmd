@@ -1,5 +1,5 @@
 
-# Apêndice: Informação de Suporte (SI) {-}
+# Apêndice: Informação de Suporte (SI) {-} {#SI}
 
 ```{r setup4,include=FALSE}
 # knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
@@ -181,7 +181,7 @@ plot <- img_to_gg(img)
 saveRDS(plot,"1_to_compile_dissertacao_EM_USO/09_SI/RDS/3paisagenship.rds")
 ```
 
-```{r paisagens-hipoteticas, fig.cap="As 3 paisagem hipotéticas: paisagem fragmentada = contemporâneo; paisagem aglomerada = sem isolamento estrutural; paisagem prístina = idealizado"}
+```{r paisagens-hipoteticas, fig.cap="As 3 paisagem hipotéticas em paisagens com lado de 4 km: paisagem fragmentada = contemporâneo; paisagem aglomerada = sem isolamento estrutural; paisagem prístina = idealizado"}
 plot <- readRDS("./09_SI/RDS/3paisagenship.rds")
 plot
 ```
@@ -273,7 +273,7 @@ plot
 
 ## Descrição estatística da congruência da SAD simulada e observada  {.unnumbered}
 
-### MAGH usados  {.unnumbered}
+### MAGH usados  {.unnumbered} {#formulas-md-CONG}
 
 ```{r modelos usados na descrição, eval=FALSE, echo=TRUE}
 library(mgcv)

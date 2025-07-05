@@ -2,180 +2,185 @@
 output:
   pdf_document: default
   html_document: default
+editor_options: 
+  chunk_output_type: console
 ---
-# Apêndice: Efeito de Escala  {-}
+# Apêndice: Efeito de Escala  {-} {#apendSoE}
 
-```{r setup efeito escala, include=FALSE}
-# knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center',
-#                       # fig.pos = "H",
-#                       fig.show = "hold",
-#                       # root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal',
-#                       dev = "png",
-#                       dpi = 72)
-# # pacotes
-# library(lubridate)
-# library(doMC)
-# library(raster)
-# library(insight)
-# library(DHARMa)
-# library(bbmle)
-# library(broom.mixed)
-# library(lme4)
-# library(scales)
-# library(ggnewscale)
-# library(gridExtra)
-# library(ggplot2)
-# library(readr)
-# library(purrr)
-# library(stringr) 
-# library(tidyr)
-# library(plyr)
-# library(dplyr)
-# # funções
-# source("source/dinamica_coalescente.R")
-# source("source/SoE_MNEE.R")
-# source("source/f_z.R")
-# source("source/nameModel.R")
-# f_lag.U <- function(df){
-#   v_Udiff <- diff(range(df$Umed))
-#   df$Ulag <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
-#   df <- df |> mutate(Ulag0 = ifelse(Ulag<0,0,Ulag))
-#   df$Ucsum <- cumsum(df$Ulag)
-#   df$Ucsum0 <- cumsum(df$Ulag0)
-#   df <- df |> mutate(Ucsum0 = ifelse(Ucsum0>1,1,Ucsum0))
-#   return(df)
-# }
-# f_k.SoE <- \(df,limiar=0.95){
-#   if(max(df$Ucsum,na.rm = T)<limiar){
-#     df |> head(n=1) |> mutate("SoE_{limiar}":=NA)
-#   }else{
-#     df |> filter(Ucsum>=limiar) |> head(n=1) |> 
-#       mutate("SoE_{limiar}":=as.numeric(as.character(lado_factor)))
-#   }
-# }
-# # df p extensões
-# df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
-# saveRDS(df_p_extensoes,file="./0_apendices/analise_dados/rar/df_p_extensoes.rds")
-# # df dados da proporção de cobertura vegetal
-# df_p <- read_csv("dados/df_p.csv")
-# # df dados para simulação
-# df_sim <- read_csv("dados/df_simulacao.csv") |> 
-#   inner_join(x=df_p,by="SiteCode")
-# # df_sorteio_sitios
-# df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv") |> 
-#   select(-d) |> 
-#   inner_join(x=select(df_sim,SiteCode,d,k),by="SiteCode")
-# # v_sim_sites: se precisar é só mover as paisagens de volta ou incluir um programa coalescente na outra pasta
-# ## acabei perdendo a mão e deletei as paisagens nulas de ambas situações, mas tudo bem faz mais em mapas_...Rmd
-# # v_sim_sites <- list.files(path="dados/simulacao",pattern = "_null.txt")
-# # file.copy(from=paste0("dados/simulacao/",v_sim_sites),
-# #           to=paste0("dados/paisagens/paisagens_SoE_MNEE/",v_sim_sites))
-# # file.remove(paste0("dados/simulacao/",v_sim_sites))
-# # df_SoE
-# df_Usoe.rep <- read_csv("dados/csv/df_Usoe.csv") |> 
-#   pivot_longer(cols=`1`:`10`, names_to = "n", values_to = "U") |> 
-#   inner_join(x=distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
-#   arrange(S_obs,k)
-# # df_Unull
-# df_Unull <- df_Usoe.rep |> filter(round(lado_km) == 16) 
-# # df_Usoe
-# df_Usoe <- df_Usoe.rep |> 
-#   arrange(lado_km) |> 
-#   group_by(SiteCode,k,lado_km) |> 
-#   summarise(Umed = mean(U),
-#             Umedian = median(U),
-#             Usd = sd(U)) |> 
-#   mutate(diffU = Umed - Umedian)
-# registerDoMC(2)
-# df_Usoe <- ddply(df_Usoe,c("SiteCode","k"),f_lag.U,.parallel = TRUE)
-# df_Usoe$Schange <- factor(df_Usoe$lado_km,labels=c(paste(16/(2^(5:1)),"->",16/(2^(4:0))),NA))
-# df_Usoe$Schange_cumulative <- factor(df_Usoe$lado_km,labels=c(paste(0.5,"->",16/(2^(4:0))),NA))
-# df_Usoe$k_factor <- factor(round(df_Usoe$k,2),levels = sort(unique(round(df_Usoe$k,2)),decreasing = T))
-# df_Usoe <- df_Usoe |> 
-#   group_by(SiteCode,k) |> 
-#   summarise(Ucv = sd(Umed)*100/mean(Umed),
-#             Ulag_f = ifelse(any(Ulag < -0.1,na.rm = T),"neg_v","pos_v")) |> 
-#   mutate(Ucv_f = ifelse(Ucv>10,"top90","low10")) |> 
-#   # select(-Ucv) |> 
-#   inner_join(x=df_Usoe,by=c("SiteCode","k"))
-# # df_md
-# df_md <- df_Usoe |> 
-#   inner_join(distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
-#   mutate(logit_Umed = log(Umed/(1-Umed)),
-#          DA = Ntotal / effort_ha,
-#          S.DA = S_obs / Ntotal,
-#          log2_lado.km = log2(round(lado_km,1)),
-#          lado_factor = factor(round(lado_km,1)) ) |> 
-#   select(SiteCode,Umed,logit_Umed,k,k_factor,lado_factor,lado_km,log2_lado.km,S_obs,Ntotal,DA,S.DA) |> 
-#   mutate(across(S_obs:S.DA,log,.names="log_{.col}"),
-#          across(c(k,log2_lado.km,S_obs:log_S.DA),f_z,.names="{.col}_z"),
-#          SiteCode=factor(SiteCode))
-# # dados usados na simulação com os valores preditos e os residuos z transformados
-# ## códigos para gerar df_plot
-# saveRDS(df_md,"0_apendices/EfeitoEscala/figuras/df_md.rds")
-# 
-# 
-# if(FALSE){
-#   df_md <- readRDS("0_apendices/EfeitoEscala/figuras/df_md.rds")
-#   # versão para obter os dados antigos de df_plotSoE
-#   md_SoE <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
-#                   data=df_md)
-# # dados usados na simulação com os valores preditos e os residuos z transformados
-# df_plot <- df_md |> 
-#   select(SiteCode, logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
-# df_plot$deviance <- residuals(md_SoE,scale=T)
-# df_plot$predict <- predict(md_SoE)
-# df_plot <- df_plot |> 
-#   mutate(Umed = exp(logit_Umed) / exp(1-logit_Umed),
-#          Pre_Umed = exp(predict) / exp(1-predict),
-#          lado_numeric = as.numeric(as.character(lado_factor)),
-#          S.N = S_obs / Ntotal)
-# df_plot <- df_plot |>
-#   group_by(k_factor,lado_factor) |> 
-#   summarise(Umed = mean(Pre_Umed)) |>
-#   ddply("k_factor",f_lag.U) |>
-#   ddply("k_factor",f_k.SoE) |> 
-#   select(k_factor,matches("SoE")) |> 
-#   inner_join(x=df_plot,by="k_factor")
-# write_csv(df_plot,"dados/csv/df_plotSoE.csv")
-# }
-# 
-# 
-# if(TRUE){
-#   l_md <- readRDS("0_apendices/EfeitoEscala/figuras/l_md.rds")
-#   md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |>
-#   (\(.) l_md[[.]])()
-#   ####
-#   if(FALSE){
-#     library(mgcv)
-#     md_SoE <- gam(logit_Umed ~ te())
-#   }
-#   ###s
-# df_plot <- df_md |> 
-#   select(SiteCode, Umed,logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
-# df_plot$deviance <- residuals(md_SoE,scale=T)
-# df_plot$predict <- predict(md_SoE)
-# df_plot0 <- df_plot |> 
-#   mutate(
-#     #Umed = 1/(1+exp(logit_Umed)),
-#      #    Pre_Umed = 1/(1+exp(predict)),
-#          lado_numeric = as.numeric(as.character(lado_factor)),
-#          S.N = S_obs / Ntotal)
-# df_plot1 <- df_plot0 |>
-#   group_by(k_factor,lado_factor) |> 
-#   # summarise(Umed = mean(predict)) |> 
-#   summarise(Umed = mean(Umed)) |> 
-#   ddply("k_factor",f_lag.U)
-# df_plot <- df_plot1 |>
-#   ddply("k_factor",f_k.SoE,limiar=0.9) |> 
-#   select(k_factor,matches("SoE")) |> 
-#   inner_join(x=df_plot0,by="k_factor")
-# write_csv(df_plot,"dados/csv/df_plotSoE.csv")
-# dfp <- df_plot1 %>% 
-#   mutate(lado = as.numeric(as.character(lado_factor)))
-# }else{
-#   df_plot <- read_csv("dados/csv/df_plotSoE.csv")
-# }
+```{r setup efeito escala, include=FALSE,eval=FALSE}
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center',
+                      # fig.pos = "H",
+                      fig.show = "hold",
+                      # root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal',
+                      dev = "png",
+                      dpi = 72)
+# pacotes
+library(lubridate)
+library(doMC)
+library(raster)
+library(insight)
+library(DHARMa)
+library(bbmle)
+library(broom.mixed)
+library(lme4)
+library(scales)
+library(ggnewscale)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(plyr)
+library(dplyr)
+# funções
+source("../source/dinamica_coalescente.R")
+source("../source/SoE_MNEE.R")
+source("../source/f_z.R")
+source("../source/nameModel.R")
+f_lag.U <- function(df){
+  v_Udiff <- diff(range(df$Umed))
+  df$Ulag <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
+  df <- df |> mutate(Ulag0 = ifelse(Ulag<0,0,Ulag))
+  df$Ucsum <- cumsum(df$Ulag)
+  df$Ucsum0 <- cumsum(df$Ulag0)
+  df <- df |> mutate(Ucsum0 = ifelse(Ucsum0>1,1,Ucsum0))
+  return(df)
+}
+f_k.SoE <- \(df,limiar=0.95){
+  if(max(df$Ucsum,na.rm = T)<limiar){
+    df |> head(n=1) |> mutate("SoE_{limiar}":=NA)
+  }else{
+    df |> filter(Ucsum>=limiar) |> head(n=1) |>
+      mutate("SoE_{limiar}":=as.numeric(as.character(lado_factor)))
+  }
+}
+# df p extensões
+df_p_extensoes <- read_csv("../dados/csv/df_p_extensoes.csv")
+# saveRDS(df_p_extensoes,file="../0_apendices/analise_dados/rar/df_p_extensoes.rds")
+# df dados da proporção de cobertura vegetal
+df_p <- read_csv("../dados/df_p.csv")
+# df dados para simulação
+df_sim <- read_csv("../dados/df_simulacao.csv") |>
+  inner_join(x=df_p,by="SiteCode")
+# df_sorteio_sitios
+df_sorteio_sitios <- read_csv(file="../dados/csv/df_sorteio_sitios.csv") |>
+  select(-d) |>
+  inner_join(x=select(df_sim,SiteCode,d,k),by="SiteCode")
+# v_sim_sites: se precisar é só mover as paisagens de volta ou incluir um programa coalescente na outra pasta
+## acabei perdendo a mão e deletei as paisagens nulas de ambas situações, mas tudo bem faz mais em mapas_...Rmd
+# v_sim_sites <- list.files(path="dados/simulacao",pattern = "_null.txt")
+# file.copy(from=paste0("dados/simulacao/",v_sim_sites),
+#           to=paste0("dados/paisagens/paisagens_SoE_MNEE/",v_sim_sites))
+# file.remove(paste0("dados/simulacao/",v_sim_sites))
+# df_SoE
+df_Usoe.rep <- read_csv("../dados/csv/df_Usoe.csv") |>
+  pivot_longer(cols=`1`:`10`, names_to = "n", values_to = "U") |>
+  inner_join(x=distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |>
+  arrange(S_obs,k)
+# df_Unull
+df_Unull <- df_Usoe.rep |> filter(round(lado_km) == 16)
+# df_Usoe
+summarise <- dplyr::summarise
+df_Usoe <- df_Usoe.rep |>
+  arrange(lado_km) |>
+  group_by(SiteCode,k,lado_km) |>
+  dplyr::summarise(Umed = mean(U),
+            Umedian = median(U),
+            Usd = sd(U)) |>
+  mutate(diffU = Umed - Umedian)
+registerDoMC(2)
+df_Usoe <- ddply(df_Usoe,c("SiteCode","k"),f_lag.U,.parallel = TRUE)
+df_Usoe$Schange <- factor(df_Usoe$lado_km,labels=c(paste(16/(2^(5:1)),"->",16/(2^(4:0))),NA))
+df_Usoe$Schange_cumulative <- factor(df_Usoe$lado_km,labels=c(paste(0.5,"->",16/(2^(4:0))),NA))
+df_Usoe$k_factor <- factor(round(df_Usoe$k,2),levels = sort(unique(round(df_Usoe$k,2)),decreasing = T))
+df_Usoe <- df_Usoe |>
+  group_by(SiteCode,k) |>
+  summarise(Ucv = sd(Umed)*100/mean(Umed),
+            Ulag_f = ifelse(any(Ulag < -0.1,na.rm = T),"neg_v","pos_v")) |>
+  mutate(Ucv_f = ifelse(Ucv>10,"top90","low10")) |>
+  # select(-Ucv) |>
+  inner_join(x=df_Usoe,by=c("SiteCode","k"))
+# df_md
+select <- dplyr::select
+mutate <- dplyr::mutate
+df_md <- df_Usoe |>
+  inner_join(distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |>
+  mutate(logit_Umed = log(Umed/(1-Umed)),
+         DA = Ntotal / effort_ha,
+         S.DA = S_obs / Ntotal,
+         log2_lado.km = log2(round(lado_km,1)),
+         lado_factor = factor(round(lado_km,1)) ) |>
+  select(SiteCode,Umed,logit_Umed,k,k_factor,lado_factor,lado_km,log2_lado.km,S_obs,Ntotal,DA,S.DA) |>
+  mutate(across(S_obs:S.DA,log,.names="log_{.col}"),
+         across(c(k,log2_lado.km,S_obs:log_S.DA),f_z,.names="{.col}_z"),
+         SiteCode=factor(SiteCode))
+# dados usados na simulação com os valores preditos e os residuos z transformados
+## códigos para gerar df_plot
+saveRDS(df_md,"../0_apendices/EfeitoEscala/figuras/df_md.rds")
+
+
+if(FALSE){
+  df_md <- readRDS("../0_apendices/EfeitoEscala/figuras/df_md.rds")
+  # versão para obter os dados antigos de df_plotSoE
+  md_SoE <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+# dados usados na simulação com os valores preditos e os residuos z transformados
+df_plot <- df_md |>
+  select(SiteCode, logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
+df_plot$deviance <- residuals(md_SoE,scale=T)
+df_plot$predict <- predict(md_SoE)
+df_plot <- df_plot |>
+  mutate(Umed = exp(logit_Umed) / exp(1-logit_Umed),
+         Pre_Umed = exp(predict) / exp(1-predict),
+         lado_numeric = as.numeric(as.character(lado_factor)),
+         S.N = S_obs / Ntotal)
+df_plot <- df_plot |>
+  group_by(k_factor,lado_factor) |>
+  summarise(Umed = mean(Pre_Umed)) |>
+  ddply("k_factor",f_lag.U) |>
+  ddply("k_factor",f_k.SoE) |>
+  select(k_factor,matches("SoE")) |>
+  inner_join(x=df_plot,by="k_factor")
+write_csv(df_plot,"../dados/csv/df_plotSoE.csv")
+}
+
+
+if(TRUE){
+  l_md <- readRDS("../0_apendices/EfeitoEscala/figuras/l_md.rds")
+  md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |>
+  (\(.) l_md[[.]])()
+  ####
+  if(FALSE){
+    library(mgcv)
+    md_SoE <- gam(logit_Umed ~ te())
+  }
+  ###s
+df_plot <- df_md |>
+  select(SiteCode, Umed,logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
+df_plot$deviance <- residuals(md_SoE,scale=T)
+df_plot$predict <- predict(md_SoE)
+df_plot0 <- df_plot |>
+  mutate(
+    #Umed = 1/(1+exp(logit_Umed)),
+     #    Pre_Umed = 1/(1+exp(predict)),
+         lado_numeric = as.numeric(as.character(lado_factor)),
+         S.N = S_obs / Ntotal)
+df_plot1 <- df_plot0 |>
+  group_by(k_factor,lado_factor) |>
+  # summarise(Umed = mean(predict)) |>
+  summarise(Umed = mean(Umed)) |>
+  ddply("k_factor",f_lag.U)
+df_plot <- df_plot1 |>
+  ddply("k_factor",f_k.SoE,limiar=0.9) |>
+  select(k_factor,matches("SoE")) |>
+  inner_join(x=df_plot0,by="k_factor")
+write_csv(df_plot,"../dados/csv/df_plotSoE.csv")
+dfp <- df_plot1 %>%
+  mutate(lado = as.numeric(as.character(lado_factor)))
+}else{
+  df_plot <- read_csv("../dados/csv/df_plotSoE.csv")
+}
 ```
 
 ```{r trackdown efeito escala,eval=FALSE}
@@ -481,6 +486,52 @@ vcap <- "Comparação entre os limiares de acúmulo 0.90 e 0.95. Para detalhes o
 lp <- readRDS("~/Documentos/mestrado_Ecologia/artigo_principal/0_apendices/EfeitoEscala/figuras/lp_pPI.rds")
 grid.arrange(grobs=lp[2:3],ncol=2)
 ```
+
+
+```{r criação figura SoE}
+dfp <- df_plot1 %>% 
+  mutate(lado = as.numeric(as.character(lado_factor)))
+l_df <- list()
+vxout <- 0.75
+for(i in 1:length(levels(dfp$k_factor))){
+  dfi <- filter(dfp,k_factor==levels(dfp$k_factor)[i])
+  dfi$Ucsum <- c(NA,dfi$Ucsum[1:(nrow(dfi)-1)])
+  df0 <- filter(dfi,!is.na(Ucsum))
+  vaprox <- sapply(1:(nrow(df0)-1),\(x){
+    dados <- df0[x:(x+1),]
+    approx(dados$Ucsum, dados$lado, xout = vxout)$y
+  })
+  dfi$vapprox <- ifelse(length(vaprox[!is.na(vaprox)])==0,
+                        NA,
+                        round(vaprox[!is.na(vaprox)],0))
+  l_df[[i]] <- dfi
+}
+dfp0 <- do.call("rbind",l_df)
+l_p <- list()
+l_p[[1]] <- dfp0 %>% 
+  ggplot(aes(x=lado_factor,y=Umed)) +
+  geom_point() +
+  geom_line(group=1) +
+  labs(x="lado da paisagem (km)",y="predição da média da taxa U",
+       title="a)") +
+  scale_y_continuous(labels = scales::scientific_format(digits = 1)) +
+  facet_wrap(~k_factor,ncol=4,scales="free") +
+  theme_classic()
+l_p[[2]] <- dfp0 %>% 
+  ggplot(aes(x=lado_factor,y=Ucsum)) +
+  geom_point() +
+  geom_line(group=1) +
+  geom_hline(yintercept = vxout,color="red") +
+  geom_label(aes(label=paste0("aprox: ",vapprox),x=5,y=0.25)) +
+  labs(x="lado da paisagem (km)",y="diferença acumulada entre lados da paisagem",
+       title="b)") +
+  # scale_y_continuous(labels = scales::scientific_format(digits = 2)) +
+  facet_wrap(~k_factor,ncol=4) +
+  theme_classic()
+grid.arrange(grobs=l_p,nrow=1)
+saveRDS(l_p,file="../0_apendices/EfeitoEscala/figuras/l_p_efeito_escala.rds")
+```
+
 
 
 ## Anexo do apêndice  {.unnumbered}
