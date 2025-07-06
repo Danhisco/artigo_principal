@@ -7,28 +7,28 @@
 # # pacotes
 # # library(dagitty)
 # # library(ggdag)
-library(gt)
-library(gratia)
-library(sads)
-library(doMC)
-# library(metR)
-library(gridExtra)
-library(ggplot2)
-library(readr)
-library(purrr)
-library(stringr)
-library(tidyr)
-# library(MuMIn)
-# library(AICcmodavg)
-# library(insight)
-library(bbmle)
-library(DHARMa)
-library(mgcv)
-library(lme4)
-library(data.table)
-library(plyr)
-library(dplyr)
-library(flextable)
+# library(gt)
+# library(gratia)
+# library(sads)
+# library(doMC)
+# # library(metR)
+# library(gridExtra)
+# library(ggplot2)
+# library(readr)
+# library(purrr)
+# library(stringr)
+# library(tidyr)
+# # library(MuMIn)
+# # library(AICcmodavg)
+# # library(insight)
+# library(bbmle)
+# library(DHARMa)
+# library(mgcv)
+# library(lme4)
+# library(data.table)
+# library(plyr)
+# library(dplyr)
+# library(flextable)
 # source("source/nameModel.R")
 # source("source/GAMMtools.R")
 # source("source/general_tools.R")
@@ -51,10 +51,31 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
-## Função de dispersão
+A delimitação política da Floresta Atlântica foi obtida do IBGE 2021 (@IBGE), acessado em março de 2025.
 
-incluir o código da função de dispersão
+## Função de dispersão {.unnumbered}
 
+No código a seguir há a inversa da Função de Distribuição Cumulativa (CDF) da distribuição de Laplace, que foi usada para gerar números aleatórios (em nosso caso, as distâncias de dispersão).
+
+```{r codigo funcao de dispersao, echo=TRUE,include=FALSE}
+# código em C++
+int laplace(double sigma){
+    double u;
+    u = - genrand_real2() + 0.5;
+    return ((int) (-sigma/sqrt(2.) * sign(u)*log(1-2*abs(u))));
+ }
+```
+
+A distribuição de Laplace tem função de densidade descrita por:
+
+$$ f(x) = \frac{1}{2b} \exp\left(-\frac{|x|}{b}\right) $$
+
+No código em C++ sigma representa o desvio-padrão ($\sigma$) da distribuição de Laplace:
+
+$$ \sigma = \sqrt{2} \cdot b $$
+$$ b = \frac{\sigma}{\sqrt{2}} $$
+
+ 
 ## Tabela com as características de todos os sítios selecionados no TreeCo (n=109)   {.unnumbered}
 
 ```{r}
