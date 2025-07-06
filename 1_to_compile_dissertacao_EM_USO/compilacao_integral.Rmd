@@ -51,7 +51,7 @@ f_tabsel_display_PDF <- \(dfi,
     bg(bg = "white",part = "all") %>%
     theme_vanilla() %>% 
     set_header_labels(
-      modelo = "HGAM",
+      modelo = "MAGH",
       dAICc = "ΔAICc",
       df = "est. coef.",
       weight = "weight",
@@ -79,7 +79,7 @@ f_tabsel_display_word <- \(dfi,
     bg(bg = "white",part = "all") %>%
     theme_vanilla() %>% 
     set_header_labels(
-      modelo = "HGAM",
+      modelo = "MAGH",
       dAICc = "ΔAICc",
       df = "est. coef.",
       weight = "weight",
@@ -101,7 +101,7 @@ f_flextable <- \(dfi){
     bg(bg = "white",part = "all") %>%
     theme_vanilla() %>% 
     set_header_labels(
-      modelo = "HGAM",
+      modelo = "MAGH",
       dAICc = "ΔAICc",
       df = "est. coef.",
       weight = "weight",
@@ -436,21 +436,18 @@ As covariáveis ambientais usadas no modelo estatístico anterior, usado para de
 # Resultados
 
 ## Apresentação dos resultados
-
-Começamos descrevendo os inventários florestais simulados (Seção \@ref(dadosEmp)), que servem de base para as análises subsequentes. Então, dedicamos duas seções à validação do MNEE:
-
-1. Na Seção \@ref(efeito-escala), avaliamos a sensibilidade da estimativa da taxa U a variações na escala espacial da paisagem, determinando a extensão espacial mais adequada para simular cada cenário de limitação de dispersão.
-2. Na Seção \@ref(congSAD), comparamos a SAD simulada pelo MNEE com a SAD observada em parcelas amostradas.
-
-Estas seções (\@ref(efeito-escala) e \@ref(congSAD)) identificam as condições mais apropriadas para interpretar nossa métrica funcional: o logaritmo da razão entre taxas U estimadas para pares de paisagens hipotéticas (logUi/Uj).
-
-A Seção \@ref(taxaU) descreve a taxa U estimada em sua escala padrão, estabelecendo a referência necessária para interpretar a métrica funcional - que é relativa por definição. Aqui apresentamos resultados para todos os inventários florestais simulados.
-
-Na Seção \@ref(criterios) aplicamos critérios para interpretar logUi/Uj considerando a congruência com a SAD observada e cenários realistas de limitação de dispersão.
-
-Concluímos com a Seção \@ref(metrica-funcional), onde descrevemos como logUi/Uj varia em função da cobertura florestal e limitação de dispersão, avaliando diretamente as predições teóricas sobre os propostos efeitos da paisagem na biodiversidade arbórea local.
-
-
+  
+    
+<p>
+A seção de resultados está organizada conforme as etapas necessárias para estimar os efeitos funcionais da paisagem na predição da biodiversidade arbórea local com o MNEE. Começamos apresentando os inventários florestais simulados (seção \@ref(dadosEmp)), que servem de base empírica para as análises subsequentes. Em seguida, duas seções são dedicadas à calibração e validação do modelo: a seção \@ref(efeito-escala) avalia a sensibilidade da taxa U à escala espacial da paisagem, definindo o tamanho adequado para simular diferentes cenários de limitação de dispersão; e a seção \@ref(congSAD) compara a distribuição de abundância de espécies (SAD) simulada com a observada, identificando os inventários para os quais o modelo reproduz adequadamente os padrões empíricos.
+</p>  
+  
+    
+<p>
+A partir dessas condições validadas, a seção \@ref(taxaU) apresenta a taxa U estimada para cada cenário, estabelecendo a referência necessária para interpretar a métrica funcional (logUi/Uj), que é relativa por definição. Na seção \@ref(criterios), aplicamos critérios para selecionar os inventários e cenários realistas de dispersão nos quais a métrica pode ser interpretada com maior confiabilidade. Por fim, a seção \@ref(metrica-funcional) descreve como a métrica funcional varia em função da cobertura florestal e da limitação de dispersão, avaliando diretamente as predições teóricas sobre os propostos efeitos da paisagem na biodiversidade arbórea local.
+</p>
+  
+    
 ## Dados empíricos: inventários florestais simulados {#dadosEmp}
 
 <p>
@@ -512,12 +509,12 @@ O objetivo dessa seção é descrever a variabilidade na congruência da prediç
 </p>
 
 <p>
-Na tabela \@ref(tab:tabcong) há a comparação desses modelos estatísticos. O modelo cheio foi o mais plausível. Esse modelo soma a maior parte do peso de evidência (>0.90) e não apresenta evidência de autocorrelação espacial dos resíduos (tab. \@ref(tab:tabcong)). Os únicos modelos que apresentam evidência de autocorrelação espacial são aqueles sem um spline de k por inventário florestal (tab. \@ref(tab:tabcong)). Entre os 4 primeiros modelos mais plausíveis a deviance explicada é similar, próxima de 0.94 (tab. \@ref(tab:tabcong)). O modelo mais plausível apresenta bom ajuste com o observado (SI).
+Na tabela \@ref(tab:tabcong) há a comparação desses modelos estatísticos. O modelo cheio foi o mais plausível. Esse modelo soma a maior parte do peso de evidência (>0.90) e não apresenta evidência de autocorrelação espacial dos resíduos (tab. \@ref(tab:tabcong)). Os únicos modelos que apresentam evidência de autocorrelação espacial são aqueles sem um spline de k por inventário florestal (tab. \@ref(tab:tabcong)). Entre os 4 primeiros modelos mais plausíveis a deviance explicada é similar, próxima de 0.94 (tab. \@ref(tab:tabcong)). O modelo mais plausível apresenta bom ajuste com o observado (gráficos diagnóstico no material suplementar).
 </p>
 
 
 ```{r tabela congruencia SAD}
-vcap <- "Modelos estatísticos para descrever a congruência da SAD simulada com a SAD observada. O modelo mais complexo é o mais plausível com peso de evidência de 0.986. Esse modelo possui um spline para k (limitação de dispersão) por tipo de paisagem (land) e classe de perturbação (class_pert), um spline para as coordenadas geográficas (lat,long) e um spline por inventário florestal para k. Os outros modelos são simplificações desse modelo mais complexo."
+vcap <- "Modelos estatísticos para descrever a congruência da SAD simulada com a SAD observada. O modelo mais complexo é o mais plausível com peso de evidência acima de 0.90. Esse modelo possui um spline para k (limitação de dispersão) por tipo de paisagem (land) e classe de perturbação (class_pert), um spline para as coordenadas geográficas (lat,long) e um spline por inventário florestal para k. Os outros modelos são simplificações desse modelo mais complexo."
 vnumericcols <- names(df_tabsel_minimo)[sapply(df_tabsel_minimo,is.numeric)]
 ```
 ```{r tabcong,tab.width=12,tab.caption=vcap,results='asis',eval=TRUE,include=TRUE}
@@ -532,7 +529,7 @@ ft <- df_tabsel_minimo %>%
   set_formatter(dAICc = f_format,df = f_format) %>%
   autofit() %>%
   set_header_labels(
-    modelo = "HGAM",
+    modelo = "MAGH",
     dAICc = "ΔAICc",
     df = "est. coef.",
     weight = "peso",
@@ -568,7 +565,7 @@ gt_tbl <- df_tabsel_minimo |>
   ) |>
   fmt(columns = c(dAICc, df), fns = f_format) |>
   cols_label(
-    modelo = "HGAM",
+    modelo = "MAGH",
     dAICc = "ΔAICc",
     df = "est. coef.",
     weight = "peso",
@@ -590,7 +587,7 @@ gt_tbl
 
 
 ```{r legenda figura ranqueamento,echo=FALSE,eval=TRUE}
-vcap <- "Predito pelo modelo mais plausível (HGAM) para descrever a congruência da SAD simulada nas paisagens hipotéticas   com a SAD empírica nos mesmos sítios, em função da limitação à dispersão (eixo x), do grau de perturbação observado nas parcelas (linhas de painéis) e da paisagem hipotética usada em cada simulação (fragmentada, aglomerada, e prístina, colunas dos painéis) . Os pontos são o número de SADs simuladas com boa congruência com a SAD observada segundo o teste de Kolmogorov-Smirnov. As linhas transparentes em cinza são a predição do modelo para cada inventário florestal. Em vermelho escuro o valor médio predito pelo modelo mais plausível. Em azul claro o intervalo de predição de 95% ao redor da média."
+vcap <- "Predito pelo modelo mais plausível (MAGH) para descrever a congruência da SAD simulada nas paisagens hipotéticas   com a SAD empírica nos mesmos sítios, em função da limitação à dispersão (eixo x), do grau de perturbação observado nas parcelas (linhas de painéis) e da paisagem hipotética usada em cada simulação (fragmentada, aglomerada, e prístina, colunas dos painéis) . Os pontos são o número de SADs simuladas com boa congruência com a SAD observada segundo o teste de Kolmogorov-Smirnov. As linhas transparentes em cinza são a predição do modelo para cada inventário florestal. Em vermelho escuro o valor médio predito pelo modelo mais plausível. Em azul claro o intervalo de predição de 95% ao redor da média."
 ```
 ```{r p-cong,fig.cap=vcap,echo=FALSE,eval=TRUE,fig.width=14,fig.height=8,cache=FALSE}
 p <- readRDS(file="~/Documentos/mestrado_Ecologia/artigo_principal/0_apendices/EfeitoEscala/figuras/p_cong.rds")
@@ -598,11 +595,7 @@ p
 ```
 
 <p>
-Na figura \@ref(fig:p-cong) há o número de SADs simuladas para cada inventário florestal com boa congruência observada e o predito pelo modelo mais plausível. A maior parte dos valores observados está próximo dos 100% (ou seja, todas as 100 repetições da simulação resultaram em SADs congruentes com a empírica, para um dado sítio, valor de k e paisagem). Parece existir muita variabilidade de tendências desta congruência em função da limitação à dispersão entre sítios, que resulta na predição por inventário florestal com diferentes curvas, alguns com pouca sensibilidade a k outros com padrões não lineares (fig. \@ref(fig:p-cong)). Existe pouca diferença no valor médio (em vermelho escuro) para diferentes paisagens hipotéticas e classes de perturbação (fig. \@ref(fig:p-cong)). A maior diferença média entre paisagens hipotéticas ocorre quando a limitação de dispersão é branda ( k < 0.25, fig. \@ref(fig:p-cong)). Nessa faixa de limitação de dispersão branda, simulações usando a paisagem hipotética fragmentada têm maior probabilidade média de gerar uma SAD com boa congruência com a empírica, seguido da paisagem prístina. Porém, essa faixa de valores apresenta a maior variabilidade entre sítios e entre classes de perturbação. Os sítios de baixa perturbação tendem a apresentar congruência média mais elevada (fig. \@ref(fig:p-cong)). Os valores de congruência média tendem a ser menores no nível mediano de perturbação do sítio de amostragem (fig. \@ref(fig:p-cong)). Contudo, em média tanto as paisagens hipotéticas quanto as classes de perturbação apresentam boa congruência (fig. \@ref(fig:p-cong)).
-</p>
-
-<p>
-Assim, concluímos que a simulação MNEE nas três paisagens hipotéticas pode apresentar boa congruência com a SAD observada, uma vez que a taxa U é ajustada pela riqueza observada. Em média a predição de MNEE é boa para todas as paisagem hipotética e classe de perturbação da parcela, exceto em cenários de limitação de dispersão muito brandos (k < 0.25), em que a média diminui. Em grande parte dos inventários, todas as SADs simuladas foram compatíveis com a SAD observada para as combinações de paisagem e limitação de dispersão. Porém, em alguns inventários as SADS simuladas por MNEE não apresentam boa congruência em algum cenário de limitação de dispersão ou paisagem hipotética.
+Na figura \@ref(fig:p-cong) há o número de SADs simuladas com boa congruência com a SAD observada (nSAD) e o predito pelo modelo mais plausível (em cinza para a predição por parcela e em vermelho para a média geral). A maior parte dos valores observados está próximo dos 100% (ou seja, todas as 100 repetições da simulação resultaram em SADs congruentes com a empírica, para um dado sítio, valor de k e paisagem). Existe muita variabilidade de tendências da congruência em função da limitação à dispersão entre parcelas, que resulta na predição por parcelas com diferentes curvas, alguns com pouca sensibilidade a k e outros com padrões não lineares (fig. \@ref(fig:p-cong)). Existe pouca diferença no valor médio (em vermelho) entre as paisagens hipotéticas e classes de perturbação (fig. \@ref(fig:p-cong)). A maior diferença média entre paisagens hipotéticas ocorre quando a limitação de dispersão é branda ( k < 0.25, fig. \@ref(fig:p-cong)). Nessa faixa de limitação de dispersão branda, simulações usando a paisagem hipotética fragmentada têm maior probabilidade média de gerar uma SAD com boa congruência com a empírica, seguido da paisagem prístina. Porém, essa faixa de valores apresenta a maior variabilidade entre sítios e entre classes de perturbação. Os sítios de baixa perturbação tendem a apresentar congruência média mais elevada (fig. \@ref(fig:p-cong)). Os valores de congruência média tendem a ser menores no nível mediano de perturbação do sítio de amostragem (fig. \@ref(fig:p-cong)). Assim, a simulação MNEE nas três paisagens hipotéticas pode apresentar boa congruência com a SAD observada, uma vez que a taxa U é ajustada pela riqueza observada (fig. \@ref(fig:p-cong)). A predição de MNEE é boa, exceto em cenários de limitação de dispersão muito brandos (k < 0.25), em que a média diminui em todos os cenários e contextos. Em grande parte dos inventários, todas as SADs simuladas foram compatíveis com a SAD observada para as combinações de paisagem e limitação de dispersão. Porém, em alguns inventários as SADS simuladas por MNEE não apresentam boa congruência em algum cenário de limitação de dispersão ou paisagem hipotética.
 </p>
 
 ##  Estimativa da taxa U nas paisagens hipotéticas {#taxaU}
@@ -692,7 +685,7 @@ ft <- df_tabsel %>%
   set_formatter(dAICc = f_format,df = f_format) %>%
   autofit() %>%
   set_header_labels(
-    modelo = "HGAM",
+    modelo = "MAGH",
     dAICc = "ΔAICc",
     df = "est. coef.",
     weight = "peso",
