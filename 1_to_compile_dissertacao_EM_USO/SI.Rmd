@@ -54,10 +54,12 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 A delimitação política da Floresta Atlântica foi obtida do IBGE 2021 (@IBGE), acessado em março de 2025.
 
 ## Função de dispersão {.unnumbered}
-
+<p>
 No código a seguir há a inversa da Função de Distribuição Cumulativa (CDF) da distribuição de Laplace, que foi usada para gerar números aleatórios (em nosso caso, as distâncias de dispersão).
+</p>
 
-```{r codigo funcao de dispersao, echo=TRUE,include=FALSE}
+
+```{r codigo funcao de dispersao, echo=TRUE,include=FALSE,eval=FALSE}
 # código em C++
 int laplace(double sigma){
     double u;
@@ -66,7 +68,10 @@ int laplace(double sigma){
  }
 ```
 
+<p>
 A distribuição de Laplace tem função de densidade descrita por:
+</p>
+
 
 $$ f(x) = \frac{1}{2b} \exp\left(-\frac{|x|}{b}\right) $$
 
