@@ -4,6 +4,7 @@ author: ""
 output:
   bookdown::pdf_document2:
     latex_engine: lualatex
+    pandoc_args: ["--variable", "geometry=a4paper"]
     # citation_package: citeproc
   bookdown::word_document2: default
   pdf_document: default
@@ -12,6 +13,7 @@ output:
 bibliography: resources/citations2.bib
 csl: "resources/ecology-letters.csl"
 header-includes:
+- \PassOptionsToPackage{a4paper}{geometry}
 - \usepackage[brazil]{babel}
 - \usepackage{lmodern}
 - \usepackage{fontspec}
@@ -239,7 +241,7 @@ Para o grupo que pressupõe a independência entre os efeitos da perda de habita
 Contudo, experimentos em escala de paisagem são inviáveis para ecossistemas florestais como a Floresta Atlântica. Nessa região, grande parte da cobertura original foi reduzida a pequenos fragmentos isolados, com poucas grandes áreas preservadas (@vancine2024atlantic). Dada a inviabilidade de experimentos na escala da paisagem, os efeitos da paisagem são estimados a partir de dados observacionais (@fahrig_ecological_2017; @fahrig_SLOSS2020; @puttker2020indirect). No entanto, essa abordagem depende da validade do modelo causal e da escolha de métricas que representem os efeitos causais pressupostos (@pearl2016causal). Como não há consenso sobre a conceituação do problema, também não há acordo sobre quais métricas devem ser usadas (@fletcher2018habitat; @fahrig2019habitatA; @valente2023toward). Empiricamente, as métricas de configuração espacial não são independentes da proporção de cobertura florestal (@villard_beyond_2014), tornando o debate ainda mais polarizado. Cada grupo tende a adotar métricas e métodos que refletem suas concepções sobre a conversão de habitat, sem que haja consenso sobre a adequação das estimativas ou sobre a escala espacial da análise dos dados (@fletcher2018habitat, @fahrig2019habitatA, @valente2023toward).
 </p>
 
-## Simulação de efeitos explicativos a partir de dados observacionais
+## Simulação de efeitos funcionais a partir de dados observacionais
 
 <p>
 Diante dessa polarização, modelos mecanísticos que simulam processos-chave (como conectividade) emergem como ferramentas promissoras para testar empiricamente as previsões conflitantes dos dois grupos. Há consenso sobre o papel central da conectividade — a movimentação de indivíduos entre o habitat remanescente — como mecanismo explicativo mínimo dos efeitos da paisagem (@riva_banskleite2024). Isso abre espaço para o uso de modelos mecanísticos capazes de simular a conectividade em diferentes cenários hipotéticos de paisagem. Se esse modelo for capaz de reproduzir a conectividade nos três tipos de paisagens hipotéticas, então é possível estimar os efeitos propostos (@Marshall2014; @DAGinf_epi_2019). Os efeitos são obtidos pelo contraste da simulação desse modelo nas paisagens hipotéticas (@Marshall2014; @DAGinf_epi_2019), com os parâmetros livres necessários para predizer o padrão de biodiversidade em investigação. Uma vez que o modelo tenha uma boa aproximação do observado, então é possível interpretar o contraste de seus parâmetros, tal como, em um modelo de regressão (@gianluca_ch5_2022). Assim, nesta abordagem, o mesmo tipo de dado empírico, usado na análise estatística de dados observacionais, é usado para calibrar, validar e interpretar o modelo mecanístico. 

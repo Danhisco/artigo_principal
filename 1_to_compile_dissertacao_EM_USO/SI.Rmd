@@ -59,7 +59,7 @@ No código a seguir há a inversa da Função de Distribuição Cumulativa (CDF)
 </p>
 
 
-```{r codigo funcao de dispersao, echo=TRUE,include=FALSE,eval=FALSE}
+```{r codigo funcao de dispersao, echo=TRUE,include=TRUE,eval=FALSE}
 # código em C++
 int laplace(double sigma){
     double u;
