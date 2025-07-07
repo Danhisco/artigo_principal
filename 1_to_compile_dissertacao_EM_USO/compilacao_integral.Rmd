@@ -4,8 +4,14 @@ author: ""
 output:
   bookdown::pdf_document2:
     latex_engine: lualatex
-    pandoc_args: ["--variable", "geometry=a4paper"]
-    # citation_package: citeproc
+    pandoc_args: [
+    "--variable", "geometry=a4paper",
+    "--variable", "geometry=twoside",
+    "--variable", "geometry=top=3cm",
+    "--variable", "geometry=bottom=2cm",
+    "--variable", "geometry=inner=3cm",
+    "--variable", "geometry=outer=2cm"
+    ]
   bookdown::word_document2: default
   pdf_document: default
   html_document:
@@ -13,14 +19,20 @@ output:
 bibliography: resources/citations2.bib
 csl: "resources/ecology-letters.csl"
 header-includes:
-- \PassOptionsToPackage{a4paper}{geometry}
 - \usepackage[brazil]{babel}
 - \usepackage{lmodern}
 - \usepackage{fontspec}
 - \usepackage{threeparttable} 
+- \usepackage{caption}
+- \usepackage{setspace}
+- \usepackage{etoolbox}
 - \setmainfont{Times New Roman}
 - \fontsize{12}{22}
-- \usepackage{caption}
+- \setlength{\parindent}{1.5cm}
+- \onehalfspacing
+- \makeatletter
+- \patchcmd{\@startsection}{\@afterindentfalse}{\@afterindenttrue}{}{}
+- \makeatother
 - \captionsetup[figure]{font=it}
 - \captionsetup[table]{font=it}
 ---
@@ -262,19 +274,19 @@ O único parâmetro livre de MNEE é a taxa de entrada de indivíduos de novas e
 õesnas paisagens hipotéticas informam os efeitos de fragmentação total (f-p), fragmentação *per se* (f-a) e área *per se* (a-p). Para isso buscamos:
 </p>
 
-__1) Estimar a extensão espacial da paisagem__
+## Estimar a extensão espacial da paisagem
 <p>
 A extensão espacial da paisagem suficiente foi estimada pela análise de sensibilidade da taxa U ao cenário de limitação de dispersão e extensão espacial da paisagem prístina (Apêndice “Efeito de Escala”). A expectativa é que, quanto menor a limitação de dispersão, maior a extensão espacial da paisagem necessária para que a simulação não seja influenciada pelo recorte da paisagem ao redor (@rosindell2013universal). 
 </p>
   
     
-__2) Calibrar e validar empíricamente MNEE__
+## Calibrar e validar empíricamente MNEE
 <p>
 Calibrar a taxa U para reproduzir a riqueza observada em cada paisagem hipotética e cenário de limitação de dispersão. E validar empiricamente a predição a partir da congruência da SAD simulada e observada. Dessa forma, é possível selecionar apenas os sítios em que o mecanismo expresso em MNEE aproximou bem o padrão observado de biodiversidade nas três paisagens hipotéticas e cenários de limitação de dispersão.
 </p>
   
     
-__3) Descrever os efeitos da paisagem na taxa U estimada__
+## Descrever os efeitos da paisagem na taxa U estimada
 <p>  
 Os propostos efeitos da paisagem (fragmentação total, fragmentação *per se* e área *per se*) são obtidos pelo logaritmo da razão entre as taxas U (logUi/Uj) estimadas nos pares de paisagens em comparação. Com o logUi/Uj é possível expressar as expectativas derivadas das conclusões de cada grupo de pesquisa usando uma métrica funcional comum: 
 </p>
@@ -530,6 +542,7 @@ ft <- df_tabsel_minimo %>%
   colformat_double(j = vnumericcols, digits = 3) %>%
   set_formatter(dAICc = f_format,df = f_format) %>%
   autofit() %>%
+  fontsize(size = 8, part = "all") %>%  # ⬅ tamanho da fonte
   set_header_labels(
     modelo = "MAGH",
     dAICc = "ΔAICc",
@@ -554,38 +567,6 @@ ft <- df_tabsel_minimo %>%
 )
 ft
 ```
-```{r teste,tab.width=12,tab.caption=vcap,results='asis',eval=FALSE,include=FALSE}
-# função científica
-library(gt)
-f_format <- function(x) formatC(x, format = "e", digits = 2)
-
-gt_tbl <- df_tabsel_minimo |>
-  gt() |>
-  fmt_number(
-    columns = all_of(vnumericcols),
-    decimals = 3
-  ) |>
-  fmt(columns = c(dAICc, df), fns = f_format) |>
-  cols_label(
-    modelo = "MAGH",
-    dAICc = "ΔAICc",
-    df = "est. coef.",
-    weight = "peso",
-    dev.expl = "dev. expl.",
-    MoranI_stat_res = "Moran's I",
-    pvalue = "p-valor"
-  ) |>
-  tab_options(
-    table.font.size = px(10),
-    table.width = pct(100),
-    column_labels.padding = px(2),
-    data_row.padding = px(2),
-    heading.align = "left"
-  ) %>% 
-tab_caption(caption = vcap)
-gt_tbl
-```
-
 
 
 ```{r legenda figura ranqueamento,echo=FALSE,eval=TRUE}
@@ -694,6 +675,7 @@ ft <- df_tabsel %>%
   colformat_double(j = vnumericcols, digits = 3) %>%
   set_formatter(dAICc = f_format,df = f_format) %>%
   autofit() %>%
+  fontsize(size = 8, part = "all") %>%  # ⬅ tamanho da fonte
   set_header_labels(
     modelo = "MAGH",
     dAICc = "ΔAICc",
@@ -841,7 +823,7 @@ Outra forma de explorar a relação dos efeitos de fragmentação *per se* e ár
 ```{r}
 vcap="Relação entre o efeito de fragmentação \\textit{per se} e área \\textit{per se}. No quadro da esquerda há o gráfico de dispersão do valor da métrica log Ui/Uj para os efeitos da  fragmentação \\textit{per se} (y) e área \\textit{per se} (x), e os pontos estão coloridos conforme a contagem de simulações em cada combinação de x e y. Essa métrica revela efeito positivo na manutenção da biodiversidade local quando log Ui/Uj é negativo, e o oposto quando logUi/Uj é positivo. No gráfico de dispersão, além dos eixos x e y, também há as linhas 1:1 e -1:1. A sobreposição dessas 4 linhas delimita as 8 áreas dos octógonos no canto superior direito da figura. No octógono da esquerda está a porcentagem do total de  simulações dentro de cada área delimitada pelas linhas. No octógono da direita há a porcentagem de parcelas  de estudo que tiveram pelo menos 1 simulação na área do octógono (portanto estes valores não somam 100, porque um mesmo parcela pode ser contabilizado em mais de uma seção do octógono). Na parte inferior direita da figura há o histograma da diferença do módulo dos efeitos de área \\textit{per se} e fragmentação \\textit{per se}. No histograma, o eixo x (a diferença no módulo dos efeitos) está dividido em 30 espaços de mesma largura."
 ```
-```{r fragarea-todosk, fig.cap=vcap, fig.width=11,message=FALSE,warning=FALSE,include=TRUE,eval=TRUE}
+```{r fragarea-todosk, fig.cap=vcap, fig.width=11,fig.height=6,message=FALSE,warning=FALSE,include=TRUE,eval=TRUE}
 p_final <- readRDS(file="./00_Resultados/rds/comp_fragarea_todos_k.rds")
 p_final
 ```
