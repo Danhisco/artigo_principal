@@ -1,0 +1,370 @@
+---
+title: "Materais e Método"
+output:
+  bookdown::word_document2: default
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+  pdf_document: default
+  html_document:
+    df_print: paged
+bibliography: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/citations2.bib
+csl: "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/ecological-monographs.csl"
+header-includes:
+- \usepackage[brazil]{babel}
+- \usepackage{lmodern}
+- \usepackage{fontspec}
+- \setmainfont{Times New Roman}
+- \usepackage{caption}
+- \captionsetup[figure]{font=it}
+- \captionsetup[table]{font=it}
+---
+
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE,dev = 'jpeg',root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal')
+options(knitr.table.format = "simple")
+# pacotes adicionais´
+source("source/mapa_p_MNEE.R")
+library(doMC)
+library(readr)
+library(scales)
+# library(kableExtra)
+library(ggnewscale)
+library(gridExtra)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(stringr)
+library(plyr)
+library(dplyr)
+# dados disponíveis
+df_dados <- read_csv(file = "dados/df_dados_disponiveis.csv")
+df_sim <- read_csv("dados/df_simulacao.csv")
+df_plot <- read_csv("dados/csv/df_plotSoE.csv") |> 
+  mutate(k_factor=factor(round(k_factor,2)))
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+```
+
+```{r trackdown rotine, include=FALSE,eval=FALSE}
+# pacotes
+library(trackdown)
+# both overwrite: 
+# overwrite the current google drive file with the current Rmd:
+upload_file(file="secoes_texto/MeM/MaterialeMetodo.Rmd",
+            gpath="mestrado/artigo_principal/secoes_texto/",
+            hide_code=TRUE)
+update_file(file ="1_to_compile_dissertacao_EM_USO/01_MeM/MaterialeMetodo.Rmd",
+            gpath = "mestrado/artigo_principal/secoes_texto/",
+            hide_code = TRUE)
+# overwrite the current Rmd with the current google drive 
+download_file(file = "1_to_compile_dissertacao_EM_USO/01_MeM/MaterialeMetodo.Rmd",
+              gpath = "mestrado/artigo_principal/secoes_texto/")
+```
+
+```{r tabela 2, eval=FALSE,include=FALSE}
+dados_tabela <- data.frame(
+  Procedimento = c(
+    "1. Coleta de dados", "1.1 Seleção na base TreeCo", "1.2 Seleção de mapas MapBiomas",
+    "2. Preparação para simulação", "2.1 Adequação dos mapas", "2.2 Estimativa dos coeficientes de dispersão",
+    "3. Efeito escalar da dispersão no mecanismo simulado", "3.1 Sorteio de sítios", 
+    "3.2 Estimativa da taxa U", "3.3 Descrição estatística", "3.4 Definição da extensão suficiente",
+    "4. Construção de paisagens hipotéticas", "4.1 Réplicas dos mapas", "4.2 Paisagens aglomerada e prístina",
+    "5. Simulação das SADs contrafactuais", "5.1 Estimativa da taxa U", "5.2 Geração de SADs",
+    "6. Contraste de contrafactuais", "6.1 log(U/U)", "6.2 log(OR)", 
+    "7. Análise estatística", "7.1 Ajuste de modelos HGAM", "7.2 Comparação de modelos", 
+    "7.3 Inferência", "7.4 Predição a posteriori"
+  ),
+  Descricao = c(
+    #1.
+    "",
+    #1.1
+    "Seleção de dados de inventários florestais registrados na base TreeCo, abrangendo sítios amostrados ao longo de gradientes de riqueza e número de indivíduos.",
+    #1.2
+    "Escolha de mapas da Coleção 6 do MapBiomas para representar a cobertura florestal contemporânea em cada sítio amostrado.",
+    # 2.
+    "",
+    #2.1
+    "Conversão dos mapas de cobertura florestal em formato compatível com o modelo MNEE, considerando os requisitos para simulação da SAD.",
+    #2.2
+    "Cálculo dos coeficientes da função de dispersão para ajustar a proporção de propágulos atingindo a vizinhança imediata do progenitor para cada valor de k.",
+    # 3.
+    "",
+    # 3.1
+    "Sorteio aleatório de sítios ao longo do gradiente de riqueza e abundância para análise do efeito escalar.",
+    # 3.2
+    "Cálculo da taxa U nas paisagens prístinas para 20 graus de limitação de dispersão (k) em extensões espaciais variando de 0,5 a 16 km de lado.",
+    # 3.3
+    "Avaliação da relação entre U, k, e a extensão da paisagem em cada sítio, utilizando estatísticas descritivas.",
+    # 3.4
+    "Identificação da extensão em que a taxa U estabiliza para cada grau de limitação de dispersão (k).",
+    # 4.
+    "",
+    # 4.1
+    "Construção de paisagens adequadas para cada nível de dispersão simulado (segundo passo 3.4).",
+    # 4.2
+    "Construção das paisagens hipotéticas com toda a cobertura florestal agregada ou preservada conforme as condições prístinas.",
+    # 5.
+    "",
+    # 5.1
+    "Estimativa da taxa U média por sítio e grau de limitação de dispersão (k).",
+    # 5.2
+    "Simulação de 100 réplicas de SADs contrafactuais para cada combinação de sítio, k, e U.",
+    # 6.
+    "",
+    # 6.1
+    "Cálculo do logaritmo da razão entre as taxas U estimadas nos contrafactuais para cada sítio e k.",
+    # 6.2
+    "Comparação entre SADs simuladas e observadas usando o teste Kolmogorov-Smirnov bootstrap.",
+    # 7.
+    "",
+    # 7.1
+    "Ajuste de 7 HGAMs com distribuições normais e método REML, variando nas preditoras e estrutura de suavização.",
+    # 7.2
+    "Comparação dos modelos via AICc, deviance explicada, e teste de autocorrelação espacial (Moran’s I) dos resíduos.",
+    # 7.3
+    "Baseada nos modelos mais plausíveis (>95% de peso de evidência), condicionada ao diagnóstico estatístico.",
+    # 7.4
+    "Geração de 1000 amostras das distribuições multivariadas dos coeficientes para predição, com resumo via quantis (5, 50 e 95%). Caso exista mais de um modelo plausível, então será feito a média de modelos baseado no peso de evidência"
+  )
+)
+
+# Criando a tabela com flextable
+library(dplyr)
+library(flextable)
+library(officer)
+ 
+dados_tabela <- dados_tabela %>%
+  mutate(Type = ifelse(grepl("^\\d\\. ", Procedimento), "Section", "Subsection"))
+
+# Create the flextable
+tabela <- flextable(dados_tabela) %>%
+  set_header_labels(Procedimento = "Procedimento", Descricao = "Descrição") %>%
+  merge_v(j = "Procedimento", part = "body") %>%
+  width(j = c("Procedimento", "Descricao"), width = c(2, 6)) %>%
+  align(j = "Procedimento", align = "left", part = "all") %>%
+  align(j = "Descricao", align = "left", part = "all") %>%
+  theme_vanilla()
+
+# Apply distinct formatting to the sections
+tabela <- tabela %>%
+  bold(i = ~ Type == "Section", bold = TRUE, part = "body") %>%
+  bg(i = ~ Type == "Section", bg = "#f4f4f4", part = "body") %>%
+  fontsize(i = ~ Type == "Section", size = 12, part = "body") %>%
+  border(i = ~ Type == "Section", border.bottom = fp_border(color = "black", width = 1))
+
+# Remove the Type column for display
+tabela <- tabela %>% delete_columns(j = "Type")
+
+#
+# tabela <- tabela %>%
+#   bold(i = ~ Type == "Section", bold = TRUE, part = "body") %>%
+#   bg(i = ~ Type == "Section", bg = "#f4f4f4", part = "body") %>%
+#   fontsize(i = ~ Type == "Section", size = 12, part = "body") %>%
+#   border(i = ~ Type == "Section", border.bottom = fp_border(color = "black", width = 1)) %>%
+#   sjmisc::word_wrap(j = "Procedimento", i = ~ Type == "Section", part = "body", wrap = FALSE) %>%
+#   sjmisc::word_wrap(j = "Descricao", i = ~ Type == "Section", part = "body", wrap = FALSE)
+
+# Display the table
+tabela
+```
+
+```{r criacao da tabela de descricao dos modelos, eval=FALSE,include=TRUE,tab.cap="Sumário dos modelos hierarquicos aditividos generalizados usados para descrever os propostos efeitos da paisagem."}
+library(gt)
+library(webshot2)
+# Data for the table
+model_data <- data.frame(
+  HGAM = 1:7,
+  Tipo_de_Efeito = c("Tensor", "Tensor", "Spline", "Spline", "Spline", "Spline", "Intercepto"),
+  Variables = c("k, logU/U", "k, logU/U", "logU/U", "logU/U", "k", "k", "Nenhuma"),
+  Site_Specific_Effect = c("Tensor por sítio (mesma penalização)",
+                                  "Intercepto por sítio",
+                                  "Spline por sítio (mesma penalização)",
+                                  "Intercepto por sítio",
+                                  "Spline por sítio (mesma penalização)",
+                                  "Intercepto por sítio",
+                                  "Intercepto por sítio"),
+  Description = c("Tensor compartilhado para k e logU/U entre os sítios, com um tensor adicional para cada sítio (mesma penalização).",
+                "Tensor compartilhado para k e logU/U entre os sítios, com um intercepto individual por sítio.",
+                "Spline compartilhado para logU/U entre os sítios, com um spline adicional para cada sítio (mesma penalização).",
+                "Spline compartilhado para logU/U entre os sítios, com um intercepto individual por sítio.",
+                "Spline compartilhado para k entre os sítios, com um spline adicional para cada sítio (mesma penalização).",
+                "Spline compartilhado para k entre os sítios, com um intercepto individual por sítio.",
+                "Modelo simples de intercepto com intercepto comum e específico por sítio.")
+)
+# Create the table using gt
+gt_table <- gt(model_data) %>%
+  # tab_header(
+  #   title = "Summary of Models",
+  #   subtitle = "7 Generalized Additive Hierarchical Models"
+  # ) %>%
+  cols_label(
+    HGAM = "HGAM",
+    Tipo_de_Efeito = "Efeito",
+    Variables = "Preditoras",
+    Site_Specific_Effect = "Efeitos por Sítio ",
+    Description = "Descrição"
+  ) %>%
+  tab_footnote(
+    footnote = "HGAM: sigla em inglês para Hierarchical Generalized Additive Models como em Pedersen et al. (2019)."
+    )%>% 
+  cols_width(
+    HGAM ~ px(50),                      # Set specific width for the 'HGAM' column
+    Tipo_de_Efeito ~ px(75),           # Adjust width for 'Tipo de Efeito'
+    Variables ~ px(75),                # Adjust width for 'Preditoras'
+    Site_Specific_Effect ~ px(150),     # Adjust width for 'Efeitos por Sítio'
+    Description ~ px(450)               # Adjust width for 'Descrição'
+  ) %>% 
+  tab_options(
+    # table.width = px(400),
+    table.font.size = 12
+  )
+# Display the gt table
+gt_table
+# # Save the table as a PNG file
+# gtsave(gt_table, paste0(v_path,"figuras/tabela_descricao_modelos_hgam.png"))
+```
+
+# Apresentação
+
+<p>Selecionamos inventários florestais realizados na Floresta Atlântica e mapas de cobertura florestal contemporâneos aos respectivos anos de amostragem. Os mapas são centrados nas parcelas amostradas e processados de modo que a densidade de pixels corresponda à densidade de indivíduos registrada nos inventários. Em seguida, foi estimada a extensão espacial da paisagem adequada para simular diferentes graus de limitação à dispersão. Na terceira etapa, o Modelo Neutro Espacialmente Explícito (MNEE) foi calibrado: para cada paisagem hipotética e nível de limitação de dispersão simulado, a taxa de entrada de novas espécies na paisagem (U) foi ajustada para reproduzir a riqueza local observada no inventário correspondente. A validação do MNEE foi feita por meio da comparação entre a distribuição de abundância de espécies (SAD) observada e a simulada em diferentes paisagens hipotéticas e graus de limitação à dispersão. Por fim, nos sítios em que a SAD simulada reproduziu de forma satisfatória a observada, interpretamos os efeitos da paisagem com base na diferença entre os valores de log U estimados em pares de paisagens hipotéticas.</p>
+  
+  
+# Fonte de Dados
+
+## TreeCo
+
+<p>Consultamos a base de dados TreeCo, que reúne amplamente estudos fitossociológicos realizados na Floresta Atlântica (@de_lima_how_2015). A partir dessa base, selecionamos inventários florestais que: amostraram indivíduos arbóreos com diâmetro à altura do peito (DAP) ≥ 4,8 cm; utilizaram parcelas únicas com pelo menos 1 ha de floresta; apresentaram alta confiabilidade na identificação taxonômica (no nível de morfoespécie) e na precisão das coordenadas geográficas centrais da parcela. Detalhes da avaliação da qualidade dos inventários podem ser consultados em @de2020erosion.
+</p>
+
+<p>
+Em resumo, a base TreeCo classificou os inventários segundo critérios de confiabilidade taxonômica e precisão geográfica. A resolução taxonômica foi aprimorada por meio da verificação de espécimes de referência fornecidos por cerca de um terço dos inventários, com base em atualizações de identificação disponíveis na rede speciesLink (@canhos2022species). Além disso, os nomes das espécies foram padronizados conforme um catálogo taxonômico nacional (@brazil2018brazilian), corrigindo erros tipográficos, sinônimos e variantes ortográficas. Morfoespécies marcadas como ‘confer’ foram atribuídas à espécie sugerida; aquelas marcadas como ‘affinis’ foram consideradas apenas no nível de gênero. As coordenadas centrais dos inventários foram verificadas quanto à correspondência com os fragmentos florestais descritos nos estudos. Inventários com localização inconsistente foram descartados. Quando necessário, as coordenadas foram ajustadas com base em mapas, descrições dos locais originais e outras fontes disponíveis online.
+</p>
+
+## Mapbiomas
+
+<p>Para caracterizar a cobertura vegetal no entorno de cada inventário, utilizamos os mapas da coleção 6 do MapBiomas, com resolução de 30 x 30 m, cobrindo o período de 1985 a 2020 (@mapbiomas). Para cada parcela, foi selecionado o mapa de cobertura florestal correspondente ao ano mais próximo da amostragem, de forma a garantir a contemporaneidade entre os dados de vegetação e o levantamento florístico. Cada mapa foi recortado em quadrados centrados na coordenada da parcela, com extensão máxima de 16 x 16 km². A resolução dos mapas foi ajustada de modo que a densidade de pixels correspondesse à densidade de indivíduos amostrados na parcela. Este ajuste de resolução modificou os valores dos pixels. Consideramos como unidades de habitat os pixels com valor de cobertura ≥ 0,7. As parcelas foram representadas como quadrados centralizados no mapa, contendo N pixels de habitat, onde N corresponde ao número total de indivíduos registrados no inventário. Dessa forma, cada unidade de habitat é uma posição disponível para um único indivíduo adulto. Nos casos em que a configuração espacial da cobertura florestal impossibilitava a centralização exata, a parcela foi ligeiramente deslocada para uma área adjacente que permitisse a demarcação de um quadrado adequado.</p>
+
+# Modelo Neutro Espacialmente Explícito (MNEE)
+ 
+<p>No MNEE, a dinâmica das comunidades ecológicas é modelada por meio de uma abordagem coalescente, que rastreia a ancestralidade de cada indivíduo na parcela até o conjunto de indivíduos fundadores na paisagem (@rosindell_coalescence_2008; @thompson_pycoalescence_2020). A simulação inicia sem informação prévia sobre a identidade das espécies a que pertencem cada indivíduo presentes na parcela amostral. Durante a simulação, a cada passo temporal, um indivíduo da parcela é sorteado aleatoriamente para ser substituído. A substituição pode ocorrer de duas maneiras: (i) por um indivíduo de uma nova espécie que surge na paisagem com probabilidade U; ou (ii) pela prole de um adulto residente na paisagem (incluindo a parcela), com probabilidade 1−U (@rosindell_coalescence_2008; @thompson_pycoalescence_2020). Nos casos em que a substituição ocorre por meio de um propágulo residente (1−U), o evento de dispersão é modelado através de um kernel de dispersão com distribuição exponencial espelhada (distribuição de Laplace), sorteadas de forma independente e com a mesma distribuição (@rosindell_coalescence_2008; @bullock_synthesis_2017; @thompson_pycoalescence_2020). Para determinar a origem do propágulo, o modelo centraliza a função de dispersão no habitat vago e sorteia posições na paisagem até encontrar um local de habitat. O processo termina quando todos os indivíduos na parcela coalescem em um conjunto ancestral de indivíduos que são os primeiros de sua espécie na paisagem, criando uma árvore genealógica da comunidade local (@rosindell_coalescence_2008). Cada ramo dessa árvore é composto por indivíduos que compartilham um ancestral comum. Isso permite a reconstrução da distribuição de abundância de espécies (SAD) a partir da árvore genealógica. Essa abordagem pressupõe que cada morte é imediatamente compensada pelo nascimento de um novo indivíduo adulto (pressuposto de soma zero, @rosindell_coalescence_2008).</p>  
+
+<p>A taxa U, que representa a probabilidade de introdução de novas espécies por nascimento, é estimada usando um método analítico proposto por @rosindell_coalescence_2008 (Apêndice A). Essa abordagem combina a simulação da genealogia da comunidade com uma equação que relaciona a riqueza observada à taxa média de introdução de novas espécies, permitindo calibrar o MNEE com base na riqueza local observada (@rosindell_coalescence_2008, Apêndice A).</p>
+
+<p> A capacidade de dispersão é controlada variando-se um parâmetro da função de dispersão que determina a proporção de propágulos que permanecem próximos à planta progenitora (i.e., distância até o vizinho imediato).  Esta  proporção de propágulos que permanecem na vizinhança imediata (aqui denominada k) foi estimada por simulação, considerando a distância entre vizinhos imediatos. O objetivo foi determinar o parâmetro de escala (d) da distribuição de Laplace em duas dimensões, de forma que k propágulos fossem alocados entre a origem e o centro do vizinho imediato. Como a densidade de indivíduos pode variar entre inventários e paisagens, o valor de d foi calculado individualmente para cada inventário florestal e cenário de limitação de dispersão. Foram simulados 20 cenários de limitação de dispersão, com k variando de 0.99 (limitação muito severa) a 0.05 (limitação muito branda).</p>
+        
+# Estimativa da extensão espacial controlado pelo grau de limitação de dispersão simulado
+
+<p>
+Em nossa abordagem, levamos em consideração o efeito da escala espacial sobre a limitação de dispersão no mecanismo demográfico simulado. Buscamos determinar a extensão espacial mais adequada da paisagem para cada grau de limitação de dispersão, avaliando a sensibilidade da estimativa da taxa U em função da escala espacial simulada. Essa estimativa foi realizada em paisagens sem perda de cobertura, de modo que a única influência sobre U foi a capacidade de dispersão e a extensão da paisagem, para um mesmo inventário. A expectativa é que o aumento da extensão espacial resultasse na redução da taxa U, até um ponto em que aumento da área da paisagem  não alterasse significativamente essa estimativa. Isso é esperado, pois, em paisagens pequenas há poucos progenitores fora da parcela capazes de introduzir novas espécies. Com o aumento da extensão da paisagem, mais progenitores podem contribuir com a parcela. Com o aumento de progenitores há aumento na chance de reposição de espécies perdidas localmente por deriva (@may_dispersal_2012). No entanto, dada a limitação de dispersão, a influência de progenitores muito distantes tende a se estabilizar (@rosindell2013universal).
+</p>
+
+<p>
+Para avaliar a sensibilidade da extensão espacial em relação à limitação de dispersão, sorteamos 36 parcelas, entre as pré-selecionadas, e simulamos a taxa U em paisagens prístinas com 6 diferentes tamanhos (de 0.5, 1, 2, 4, 8 e 16 km de lado, L), sob 20 níveis de limitação de dispersão (valores de k). Para determinar o valor de L suficiente para simular cada k, aplicamos um método heurístico, que se baseou na expectativa teórica de redução monotônica da taxa U média em função do aumento de L. O objetivo do método heurístico é de determinar o L, mais próximo dos 6 valores iniciais de L, que acumula pelo menos 75% da redução total esperada (ponto de saturação). Esse método pode ser resumido em uma sequência de etapas:
+</p>
+
+  1) descrever a média da taxa U para cada combinação de k e L, a partir de um modelo linear misto.
+      
+          
+  2) a partir da predição do modelo linear misto, calcular a amplitude da média da taxa U para cada cenário de limitação de dispersão - considerando todos os L.
+      
+      
+  3) calcular a diferença na taxa U entre L consecutivos e dividir pela amplitude, calculada no passo 2.
+      
+          
+  4) Somar os valores obtidos no passo 3 em ordem, respeitando a sequência de L. 
+
+
+<p>
+O método pressupõe que ao final do último passo, o valor obtido será 1, correspondendo à redução total esperada do menor L até o maior L. Então é aplicado uma interpolação linear para estimar o L mais próximo do limiar de 75% da redução total, considerando os 6 valores de L iniciais testados. Detalhes da estimativa da escala estão descritos no apêndice "Efeito de Escala".
+</p>
+
+# Calibração de MNEE nas paisagens hipotéticas
+
+<p>As paisagens hipotéticas têm forma quadrada, possuem a mesma densidade de pixels e área da parcela amostrada. Denominaremos paisagem fragmentada o mapa de cobertura florestal no ano mais próximo ao da amostragem do inventário florestal selecionado. Denominaremos paisagem prístina um mapa gerado convertendo todas as unidades de não-habitat da paisagem fragmentada em unidades de habitat. Assim, ela mantém as mesmas características da paisagem fragmentada, exceto pela perda de habitat e sua configuração espacial. Em outras palavras, as paisagens pristinas são mapas com 100% de cobertura florestal. Denominaremos de paisagem aglomerada a paisagem em que todo o habitat remanescente na paisagem fragmentada é aglomerado ao redor da parcela em forma de quadrado. Dessa forma, a paisagem aglomerada possui a mesma proporção de cobertura florestal da paisagem fragmentada e a mesma configuração espacial da paisagem prístina.</p> 
+
+<p> A extensão espacial da construção das paisagens hipotéticas variou entre graus de limitação de dispersão conforme a extensão espacial suficiente estimada, conforme descrito na seção anterior. Para cada parcela amostrada, paisagem hipotética (land) e grau de limitação de dispersão (k) foi estimada uma taxa U média a partir de 20 réplicas. Então, dado a média das estimativas da taxa U, são simuladas 100 SADs réplicas para cada k e land.</p>
+
+# Validação do predito por MNEE
+
+## Comparação com a SAD observada
+
+
+<p>Para cada bateria de simulação (combinação de parcela amostrada, cenário de limitação de dispersão e paisagem hipotética) são feitas 100 simulações réplicas. Cada uma dessas réplicas resulta em uma SAD simulada. Cada SAD simulada é comparada com a SAD observada na parcela amostrada usando o teste de hipótese de Kolmogorov-Smirnov bootstrap (@dowd_twosamples_2023). Esse teste pressupõe a hipótese nula de que os dois vetores em comparação (SAD observada e SAD simulada) são amostras de uma mesma distribuição teórica; a estatística de interesse do teste é a maior diferença entre as curvas acumuladas das SAD (@dowd_twosamples_2023). Para cada bateria de simulação, contabilizamos o número de SADs simuladas que não difereriam significativamente (P>0,05) da SAD empírica correspondente.
+</p>
+
+## Descrição estatística da congruência com a SAD observada
+
+<p>
+A descrição estatística da probabilidade de uma SAD simulada ter boa congruência com a SAD observada por paisagem hipotética (fragmentada - f, aglomerada - a, prístina - p) foi obtida por um modelo aditivo generalizado hierárquico (MAGH, @wood2017, @Pedersen2019). Esses modelos estatísticos permite expressar a estrutura dos dados agregada por parcela de amostragem (@Pedersen2019)) e descrever efeitos descritivos não lineares por splines e tensores de suas preditoras (@wood2017). Splines são funções polinomiais por partes, conectadas em pontos chamados nós. Agem como "curvas ajustáveis" que se adaptam aos dados, controlando o grau de suavização para evitar sobreajuste através da penalização pela máxima verossimilhança restrita (REML). O objetivo de splines e tensores é a descrição de qualquer relação contínua (@wood2017). Todas as análises estatísticas foram feitas usando linguagem R (@Rlang).
+</p>
+
+<p>
+Para a descrição da congruência com a SAD observada, a variável-resposta foi a proporçãos das 100 SADs simuladas que não diferiram significativamente. A estrutura hierarquica do MGAH é divida em duas: a variabilidade agrupada pela parcela amostrada que contem os splines do cenários de limitação de dispersão (k) por paisagens hipotéticas (land), considerada aleatória; e a variabilidade relacionada com a população de todos os sítios, que contem os splines dos efeitos médio de k por land, considerada fixa. Entre as preditoras da estrutura fixa também incluímos as coordenadas geográficas das parcelas amostradas, que possuem um spline para descrever a possível autocorrelação espacial entre as parcelas, e a classe de perturbação da parcela amostrada.
+</p>
+
+<p>
+O nível de perturbação da parcela segue a classificação da base TreeCo (@de2020erosion). Essa classe é construída conforme a informação disponível sobre o tipo, intensidade e tempo da perturbação antrópica na área da parcela (@de2020erosion). Foram consideradas 3 classes de perturbação: alta, com florestas severamente ou cronicamente perturbadas há até 50 anos antes do inventário; mediana, com florestas pouco ou esporadicamente perturbadas e/ou perturbada entre 50 e 80 anos; e baixa, com florestas não perturbadas por pelo menos 80 anos (@de2020erosion). Existe grande variabilidade intra classe de perturbação, porém essa é a informação disponível nos trabalhos originais (@de2020erosion).
+</p>
+
+<p>A probabilidade de uma distribuição de abundância de espécies (SAD) simulada apresentar boa congruência com a SAD observada foi modelada utilizando seis MAGH com diferentes níveis de complexidade.</p>
+O modelo mais completo (modelo cheio) inclui:
+  
+    
++ Um intercepto por tipo de paisagem hipotética (comum aos sítios) e por sítio de amostragem;
+  
+    
++ Um termo de suavização (spline) para o parâmetro k (grau de limitação de dispersão), também especificado por tipo de paisagem hipotética (fixo) e por sítio de amostragem (aleatório);
+  
+    
++ Um spline bidimensional para as coordenadas centrais do sítio.
+
+  
+    
+Os cinco modelos restantes representam simplificações progressivas do modelo cheio, obtidas pela exclusão de uma ou mais covariáveis:
+  
+    
++ Dois modelos mantêm apenas uma das duas covariáveis: classe de perturbação ou coordenadas;
+  
+    
+    
++ Um modelo possui apenas o spline de k por tipo de paisagem e por sítio, sem as covariáveis adicionais;
+  
+    
++ Um modelo ainda mais simples inclui apenas o spline de k por tipo de paisagem (e apenas um intercepto por sítio);
+  
+    
+    
++ O modelo mais simples inclui apenas interceptos por tipo de paisagem e por sítio, sem spline para k.  
+  
+
+<p>Os MAGH foram comparados usando métricas derivadas do ‘Akaike Information Criteria’ para amostras pequenas (AICc), o delta AICc, o peso de evidência (@burnham1998practical). Também incluímos o ‘deviance explained’ que pode ser interpretado de forma análoga ao coeficiente de determinação (R2), como forma de descrever a variabilidade explicada pelo modelo estatístico. Para essas tarefas foram utilizadas funções dos pacotes mgcv (@wood2011) e bblme (@bbmle_package).</p>
+
+<p>Uma vez que os splines são ideais para descrever relações contínuas, a autocorrelação espacial negativa pode não ser bem descrita pelo modelo estatístico, assim, incluímos um teste de autocorrelação espacial dos resíduos dos modelos estatísticos. Se houver autocorrelação espacial que não foi bem descrita pelo modelo estatístico, esperamos que a média, por sítio de amostragem, dos resíduos do modelo apresentem a estatística I de Moran diferente de zero. A estatística I de Moran varia entre -1 e 1, ou seja, entre a autocorrelação espacial negativa e positiva, respectivamente. E possui um teste de hipótese associado que avalia se o valor é significativamente diferente de zero, se o p valor for próximo de zero então a hipótese de ausência de autocorrelação espacial possui pouco suporte. A estatística I de Moran requer que um parâmetro livre seja escolhido. Determinamos esse valor por uma analise de sensibilidade dos resíduos dos modelos ajustados. Para obter a estatística I de Moran e seu p valor associado utilizamos funções do pacote spdep (@bivand2020).</p> 
+
+
+# Interpretação do logU/U como métrica funcional dos efeitos da paisagem
+
+<p>
+Realizei a calibração e validação de MNEE numa ampla faixa de valores de limitações de dispersão (de 0.05 a 0.99 dos propágulos até a vizinhança imediata). No entanto, para árvores em florestas tropicaisa maior parte dos propágulos permanece até a vizinhança imediata do progenitor (Bullock et al. 2017). Para interpretarmos os efeitos da paisagem sobre a taxa U, selecionamos graus de limitação de dispersão entre acima de 0.50 (brando) até 0.99 (severo) dos propágulos na vizinhança imediata do progenitor.
+</p>
+<p>
+A taxa U calibrada para aproximar a riqueza de espécies reflete indiretamente a perda local de espécies por deriva ecológica que não é compensada pela imigração da paisagem ao redor e precisa ser compensada por uma fonte de espécies externa ao conjunto de adultos na paisagem (especiação verdadeira, dispersão de longa distância de fora da paisagem ou reposição do banco de propágulos). Ao manter todos os outros parâmetros da simulação constantes, e alterando apenas a paisagem hipotética, o logaritmo da razão da taxa U estimada nas paisagens em comparação informa o efeito da paisagem nos processos que determinam a manutenção da biodiversidade local: conectividade, substituição de indivíduos no espaço e entrada aleatória de novas espécies na paisagem (@azaele_statistical_2016; @thompson_pycoalescence_2020).
+</p>
+<p>
+Para ter boa confiabilidade da estimativa do modelo, selecionamos apenas inventários florestais em que todos os graus de limitação de dispersão e as paisagens hipotéticas tiveram boa congruência com a SAD observada. Consideramos parcelas com boa congruência quando pelo menos 75% das SADs simuladas em todas as paisagens hipotéticas e graus de limitação de dispersão apresentaram boa congruência (não diferiram dignificativamente da SAD empírica).
+</p>
+
+## Descrição estatística da métrica funcional dos propostos efeitos da paisagem
+
+<p>
+Aqui buscamos descrever a variabilidade de logUi/Uj para os três propostos efeitos da paisagem em função da proporção de cobertura florestal (%CF) na paisagem e do grau de limitação de dispersão (@villard_beyond_2014). A %CF não distingue entre a paisagem fragmentada e aglomerada, apenas a paisagem prístina. Contudo, existe uma relação não linear entre a variabilidade na configuração espacial e a %CF (@villard_beyond_2014). Existe maior variabilidade de configurações espaciais quando a %CF é intermediária (@villard_beyond_2014). Por isso fizemos uma descrição estatística de logU/U em função do grau de limitação de dispersão (k) e %CF onde há um spline para k por sítio que pode variar de forma independente. Com isso foi possível avaliar a coerência da nossa métrica funcional baseada na taxa U (logU/U) em função da %CF, métrica comum da paisagem usada no contexto do debate sobre fragmentação de habitat (@fahrig_rethinking_2013; @villard_beyond_2014; @puttker_indirect_2020; Watling et al. 2020). A partir desse modelo em que a %CF é uma variável contínua, a predição foi agrupada em classes de %CF: abaixo de 30%, entre 30% e 60%, entre 60% e 80%, entre 80% e 100% e igual a 100%.
+</p>
+
+<p>
+Para descrever a variação de logUi/Uj utilizamos MAGH (@wood2017, @Pedersen2019), mantendo os mesmos critérios e métodos de ajuste usados nos MAGH anteriores. Agora o MAGH modela a interação entre entre cobertura florestal (%CF) e cenário de limitação de dispersão (k) por um produto tensorial (tensor) com splines cúbicas. Variações entre parcelas foram controladas por um termo aleatório aninhado de um spline para k (@Pedersen2019).
+</p>
+
+<p>
+As covariáveis ambientais usadas no modelo estatístico anterior, usado para descrever a congruência da SAD simulada, não foram usadas nessa análise. A taxa U estimada pelo MNEE é intrinsecamente independente de coordenadas geográficas ou classes de perturbação, pois deriva exclusivamente dos parâmetros de MNEE que governam a dinâmica ecológica simulada além dos cenários de dispersão e das paisagens hipotéticas explorados: Riqueza de espécies observada (S), Número e densidade de indivíduos, Área de amostragem. Como U é calibrada para cada sítio com base nesses parâmetros explícitos – e não em variáveis ambientais externas ou localização geográfica –, sua estimativa não carrega dependência espacial implícita entre parcelas.
+</p>
+
+# Referências

@@ -1,0 +1,1060 @@
+---
+title: ""
+author: ""
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+    pandoc_args: [
+    "--variable", "geometry=a4paper",
+    "--variable", "geometry=twoside",
+    "--variable", "geometry=top=3cm",
+    "--variable", "geometry=bottom=2cm",
+    "--variable", "geometry=inner=3cm",
+    "--variable", "geometry=outer=2cm"
+    ]
+  bookdown::word_document2: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+bibliography: resources/citations2.bib
+csl: "resources/ecology-letters.csl"
+header-includes:
+- \usepackage[brazil]{babel}
+- \usepackage{lmodern}
+- \usepackage{fontspec}
+- \usepackage{threeparttable} 
+- \usepackage{caption}
+- \usepackage{setspace}
+- \usepackage{etoolbox}
+- \setmainfont{Times New Roman}
+- \fontsize{12}{22}
+- \setlength{\parindent}{1.5cm}
+- \onehalfspacing
+- \makeatletter
+- \patchcmd{\@startsection}{\@afterindentfalse}{\@afterindenttrue}{}{}
+- \makeatother
+- \captionsetup[figure]{font=it}
+- \captionsetup[table]{font=it}
+---
+
+```{r setup resultados,include=FALSE}
+options(tinytex.verbose = TRUE)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,fig.align='center',tab.align='center',
+                      fig.pos = "H", fig.show = "hold",
+                      #root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal',
+                      dev = "png",
+                      dpi = 100)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(plyr)
+library(flextable)
+library(officer)
+library(magick)
+f_tabsel_display_PDF <- \(dfi,
+                      vfsize=14,
+                      vbold=TRUE,
+                      vw=1,
+                      logical_contraste=TRUE,
+                      vffamily="Arial"){
+  title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
+  dfi %>% 
+    {if(logical_contraste) select(.,-contraste) else .}%>%
+    flextable() %>%
+    bg(bg = "white",part = "all") %>%
+    theme_vanilla() %>% 
+    set_header_labels(
+      modelo = "MAGH",
+      dAICc = "ΔAICc",
+      df = "est. coef.",
+      weight = "weight",
+      dev.expl = "Dev. Exp.",
+      `Moran I statistic (res)` = "Moran's I",
+      `p-value` = "p-value") %>%
+    bold(part = "header") %>%
+    colformat_num(digits = 2) %>% 
+    width(j="Moran I statistic (res)",width = 1.25) %>% 
+    width(j="modelo",width = 1.75) %>% 
+    {if(logical_contraste) add_header_row(.,values=dfi$contraste[1],colwidths = ncol(dfi)-1) else .}%>%
+    align(align = "center", part = "all") %>% 
+    set_table_properties(layout = "autofit")  
+}
+f_tabsel_display_word <- \(dfi,
+                      vfsize=14,
+                      vbold=TRUE,
+                      vw=1,
+                      logical_contraste=TRUE,
+                      vffamily="Arial"){
+  title_fp <- fp_text(font.size = vfsize, bold = vbold, font.family = vffamily)
+  dfi %>% 
+    {if(logical_contraste) select(.,-contraste) else .}%>% 
+    flextable() %>%
+    bg(bg = "white",part = "all") %>%
+    theme_vanilla() %>% 
+    set_header_labels(
+      modelo = "MAGH",
+      dAICc = "ΔAICc",
+      df = "est. coef.",
+      weight = "weight",
+      dev.expl = "Dev. Exp.",
+      `Moran I statistic (res)` = "Moran's I",
+      `p-value` = "p-value") %>%
+    bold(part = "header") %>%
+    colformat_num(digits = 2) %>% 
+    # width(j="Moran I statistic (res)",width = 1.25) %>% 
+    # width(j="modelo",width = 1.75) %>% 
+    {if(logical_contraste) add_header_row(.,values=dfi$contraste[1],colwidths = ncol(dfi)-1) else .}%>%
+    align(align = "center", part = "all") %>% 
+    # set_table_properties(layout = "autofit")  
+    autofit()
+}
+f_flextable <- \(dfi){
+  dfi %>% 
+    flextable() %>%
+    bg(bg = "white",part = "all") %>%
+    theme_vanilla() %>% 
+    set_header_labels(
+      modelo = "MAGH",
+      dAICc = "ΔAICc",
+      df = "est. coef.",
+      weight = "weight",
+      dev.expl = "Dev. Exp.",
+      `Moran I statistic (res)` = "Moran's I",
+      `p-value` = "p-value") %>%
+    bold(part = "header") %>%
+    colformat_num(digits = 2) %>% 
+    align(align = "center", part = "all") %>% 
+    autofit()
+}
+
+###### dados
+df_tabsel_minimo <- 
+  read_csv("00_Resultados/tabelas/tabselecao_sumario_minimo_paisagens.csv") %>% 
+  mutate(modelo = gsub("\\*","\\+",modelo))
+df_tabsel <- readRDS(file="~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/rds/df_tabsel_logUU_pk.rds") %>% 
+  relocate(efeito)
+# v_path <- "1_to_compile_dissertacao_EM_USO/00_Resultados/"
+# df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv")) %>% 
+#   as.data.frame() %>% 
+#   mutate(across(where(is.numeric),~round(x = .x,digits = 2)))
+# for(i in names(df_tabsel)[sapply(df_tabsel,is.numeric)]){
+#   df_tabsel[,i] <- round(df_tabsel[,i],2)
+# }
+vfw=8
+vfh=4
+#
+# f_tabsel_display(filter(df_tabsel,contraste=="Frag. per se") %>% select(-contraste))
+# l_ft_PDF <- dlply(df_tabsel,"contraste",f_tabsel_display_PDF)
+# l_ft_word <- dlply(df_tabsel,"contraste",f_tabsel_display_word)
+# l_path <- lapply(names(l_ft),\(li){
+#   fx <- l_ft[[li]] %>% 
+    # add_header_row(values=li,colwidths = ncol(df_tabsel)-1) %>%
+    # align(align = "center", part = "all")
+#   save_as_image(fx,path = tempfile(fileext = ".png"))
+# })
+# names(l_path) <- names(l_ft)
+# l_ft <- lapply(l_path,image_read)
+# img_final <- image_append(do.call("c",l_ft[c("Frag. total", "Frag. per se" ,"Área per se" )]))
+# df_tabsel_sumario <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
+# for(i in names(df_tabsel_sumario)[sapply(df_tabsel_sumario,is.numeric)]){
+#   df_tabsel_sumario[,i] <- round(df_tabsel_sumario[,i],2)
+# }
+
+```
+
+```{r trackdown compilacao integral, eval=FALSE, include=FALSE}
+library(trackdown)
+# both overwrite: 
+# overwrite the current google drive file with the current Rmd:
+upload_file(file="compilacao_integral.Rmd",
+            gpath="mestrado/artigo_principal/secoes_texto/",
+            hide_code=TRUE)
+update_file(file="compilacao_integral.Rmd",
+            gpath = "mestrado/artigo_principal/secoes_texto/",
+            hide_code = TRUE)
+# overwrite the current Rmd with the current google drive 
+download_file(file="compilacao_integral.Rmd",
+              gpath = "mestrado/artigo_principal/secoes_texto/")
+```
+
+
+# Resumo {-}
+
+<p>
+Não há consenso sobre os efeitos da fragmentação de habitat. Um grupo defende a existência de dois efeitos independentes: a perda de habitat (efeito de área *per se* APS) e a fragmentação *per se* (FPS). Outro grupo argumenta que perda e fragmentação de habitat constituem um processo comum e interdependente, resultando em um "efeito total de fragmentação" (FT). A divergência entre esses grupos se reflete também nos métodos, dificultando uma conciliação empírica.
+</p>
+
+<p>
+Nosso objetivo é estimar os propostos efeitos da paisagem a partir de um modelo mecanístico que aproxima a conectividade e a dinâmica de indivíduos, o Modelo Neutro Espacialmente Explícito (MNEE), e dados observacionais de comunidades arbóreas da Floresta Atlântica. Esses efeitos são obtidos por uma nova métrica funcional (logUi/Uj). Esta métrica permite interpretar a vulnerabilidade da biodiversidade local em termos de conectividade funcional e resiliência demográfica.
+</p>
+
+<p>
+Simulamos 105 inventários florestais, que foram aproximados por paisagens quadradas com uma parcela quadrada no centro. A taxa U, de entrada de indivíduos de novas espécies, foi ajustada para aproximar a riqueza observada, pressupondo três cenários de paisagem (Fragmentada (f); Aglomerada (a); Prístina (p)) e cenários de limitação de dispersão. Para cada cenário de limitação de dispersão foi escolhido a escala da paisagem suficiente para a simulação. Os efeitos são contraste entre pares de paisagens. FT : logUf/Up, APS : logUa/Up, FPS : logUf/Ua. Assim, FT = FPS + APS. 
+</p>
+
+<p>
+O MNEE demonstrou alta congruência com a distribuição de abundância de espécies empírica em 64% das parcelas e boa congruência na média, mesmo em gradientes extremos de cobertura florestal e de dispersão. Os efeitos da paisagem em logUi/Uj variaram em função da cobertura florestal e da capacidade de dispersão. APS: de modo geral negativo, intensificando-se em paisagens com baixa cobertura florestal e atenuando-se em limitação de dispersão intermediária. FPS: exibiu um padrão bifásico — positivo sob limitação de dispersão severa e negativo sob branda — consistente em paisagens com baixa cobertura e geralmente nulo em paisagens com alta cobertura, embora com algumas parcelas com padrão bifásico acentuado. FT: de modo geral negativo, mais intenso em paisagens com baixa cobertura florestal e sob branda limitação de dispersão - é o efeito com maior variabilidade entre parcelas. Com a redução da cobertura florestal, o componente mais relevante da FT desloca-se da FPS para a APS.
+</p>
+
+<p>
+Nossos achados, baseados em uma métrica funcional unificada e escalonada, mostram que a interação entre a limitação de dispersão e a cobertura florestal tem um importante papel na estimativa dos propostos efeitos da paisagem, dessa forma, se alinhando parcialmente às conclusões de ambos grupos de pesquisa.
+</p>
+
+<p>
+Embora o MNEE apresente limitações (como o pressuposto de soma-zero e a equivalência funcional), sua capacidade de reproduzir padrões empíricos da SAD na Floresta Atlântica sugere seu potencial como ferramenta de inferência para a conservação. Seu potencial pode ser expandido em estudos futuros, incorporando efeitos de borda e testando o modelo em outros ecossistemas tropicais.
+</p>
+
+# Abstract {-}
+
+<p>
+There is no consensus on the effects of habitat fragmentation. One group argues for the existence of two independent effects: habitat loss (area *per se* effect, APS) and fragmentation *per se* (FPS). Another group contends that habitat loss and fragmentation constitute a single, interdependent process, resulting in a "total fragmentation effect" (FT). This theoretical divergence is also reflected in methodological approaches, making empirical reconciliation a challenge.
+</p>
+
+<p>
+Our objective is to estimate the proposed landscape effects using a mechanistic model that approximates connectivity and individual-level dynamics — the Spatially Explicit Neutral Model (SENM) — combined with observational data from tree communities in the Atlantic Forest. These effects are derived from a novel functional metric (logUi/Uj), which allows interpreting the vulnerability of local biodiversity in terms of functional connectivity and demographic resilience.
+</p>
+
+<p>
+We simulated 105 forest inventories, each represented as a square landscape with a central square plot. The species input rate (U), representing the arrival of individuals from new species, was calibrated to match observed species richness under three landscape scenarios (Fragmented (f), Aggregated (a), and Pristine (p)) and different levels of dispersal limitation. For each dispersal scenario, we selected an adequate landscape scale for the simulations. The landscape effects were calculated as pairwise contrasts between scenarios: FT = logUf/Up, APS = logUa/Up, FPS = logUf/Ua, such that FT = FPS + APS.
+</p>
+
+<p>
+The SENM showed strong agreement with the empirical species abundance distributions (SADs) in 64% of the plots and good overall fit, even across extreme gradients of forest cover and dispersal. Landscape effects (logUi/Uj) varied with both forest cover and dispersal capacity. APS was generally negative, increasing in magnitude in low-coverage landscapes and weakening under intermediate dispersal limitation. FPS exhibited a biphasic pattern — positive under severe dispersal limitation and negative under weak dispersal limitation — consistent in low-coverage landscapes and generally negligible in high-coverage ones, although some sites exhibited a pronounced biphasic behavior. FT was generally negative, most intense in low-coverage landscapes under weak dispersal, and showed the greatest variability across plots. As forest cover declined, the most relevant component of FT shifted from FPS to APS.
+</p>
+
+<p>
+Our findings, based on a unified and scalable functional metric, suggest that the interaction between dispersal limitation and forest cover plays a key role in estimating the proposed landscape effects. In doing so, our results partially align with the conclusions of both research traditions.
+</p>
+
+<p>
+Despite its limitations — such as the zero-sum assumption and functional equivalence among species — the SENM successfully reproduced empirical SAD patterns in the Atlantic Forest, indicating its potential as an inferential tool for conservation. This potential could be expanded in future studies by incorporating edge effects and applying the model to other tropical forest ecosystems.
+</p>
+
+
+# Introdução
+
+
+## O debate sobre o efeito causal da fragmentação de habitat na biodiversidade remanescente
+
+<p>
+Não há consenso sobre o impacto da conversão de habitat sobre a biodiversidade remanescente nos ecossistemas terrestres (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Um grupo de pesquisa defende que existem dois efeitos independentes: efeito de perda *per se* de área e efeito de fragmentação *per se* - que é o efeito da mudança da configuração espacial, independente do efeito da perda de área (@fahrig_effects_2003, @fahrig_ecological_2017, @fahrig_SLOSS2020, @fahrig_habitat_2019; @fahrig2019habitatA). Outro grupo de pesquisa defende que existe um processo comum de perda e fragmentação de habitat (@didham_rethinking_2012, @haddad_habitat_2015, @fletcher2018habitat), que pode ser descrito como um efeito total de fragmentação.
+</p>
+
+<p>
+Esses propostos efeitos da paisagem poderiam ser idealmente estimados em experimentos (@haddad_habitat_2015 e @fahrig_SLOSS2020). O efeito total da fragmentação pode ser estimado pelo contraste entre o observado em uma paisagem prístina, sem perda de cobertura florestal, com o observado em uma paisagem fragmentada ao longo de um gradiente de cobertura florestal, tal como observado nas paisagens empíricas (@didham_rethinking_2012; @haddad_habitat_2015; @valente2023toward; @gonccalves2025species). Como essas paisagens difeririam tanto na perda quanto na fragmentação de habitat, e assumindo que todas as demais características sejam mantidas constantes, esse contraste revelaria o efeito combinado da mudança na configuração espacial e na cobertura florestal (@didham_rethinking_2012; @valente2023toward).
+</p>
+
+<p>
+Para o grupo que pressupõe a independência entre os efeitos da perda de habitat e da alteração na configuração espacial, a estimativa experimental desses efeitos requer a adição de um novo contraste: paisagens com a mesma cobertura florestal, mas com diferentes configurações espaciais (@fahrig_SLOSS2020). Um exemplo seria comparar uma paisagem com algum grau de fragmentação com uma paisagem de igual proporção de habitat remanescente, mas com o habitat remanescente todo aglomerado ao redor da parcela amostrada, minimizando a complexidade espacial (@valente2023toward). Dessa forma, nesse tipo de experimento seria possível distinguir dois efeitos da paisagem: o efeito de área *per se* e o efeito de fragmentação *per se*. O efeito de área *per se* seria então o  contraste entre a paisagem prístina com a paisagem aglomerada, pois ambas possuem a mesma configuração espacial, diferindo apenas na cobertura florestal (@fahrig_SLOSS2020; @valente2023toward). O efeito da fragmentação *per se* seria o contraste entre a paisagem fragmentada e a paisagem aglomerada, pois a única diferença entre elas é a configuração espacial do habitat remanescente – a quantidade total de habitat permanece constante (@fahrig_SLOSS2020; @valente2023toward).
+</p>
+
+<p>
+Contudo, experimentos em escala de paisagem são inviáveis para ecossistemas florestais como a Floresta Atlântica. Nessa região, grande parte da cobertura original foi reduzida a pequenos fragmentos isolados, com poucas grandes áreas preservadas (@vancine2024atlantic). Dada a inviabilidade de experimentos na escala da paisagem, os efeitos da paisagem são estimados a partir de dados observacionais (@fahrig_ecological_2017; @fahrig_SLOSS2020; @puttker2020indirect). No entanto, essa abordagem depende da validade do modelo causal e da escolha de métricas que representem os efeitos causais pressupostos (@pearl2016causal). Como não há consenso sobre a conceituação do problema, também não há acordo sobre quais métricas devem ser usadas (@fletcher2018habitat; @fahrig2019habitatA; @valente2023toward). Empiricamente, as métricas de configuração espacial não são independentes da proporção de cobertura florestal (@villard_beyond_2014), tornando o debate ainda mais polarizado. Cada grupo tende a adotar métricas e métodos que refletem suas concepções sobre a conversão de habitat, sem que haja consenso sobre a adequação das estimativas ou sobre a escala espacial da análise dos dados (@fletcher2018habitat, @fahrig2019habitatA, @valente2023toward).
+</p>
+
+## Simulação de efeitos funcionais a partir de dados observacionais
+
+<p>
+Diante dessa polarização, modelos mecanísticos que simulam processos-chave (como conectividade) emergem como ferramentas promissoras para testar empiricamente as previsões conflitantes dos dois grupos. Há consenso sobre o papel central da conectividade — a movimentação de indivíduos entre o habitat remanescente — como mecanismo explicativo mínimo dos efeitos da paisagem (@riva_banskleite2024). Isso abre espaço para o uso de modelos mecanísticos capazes de simular a conectividade em diferentes cenários hipotéticos de paisagem. Se esse modelo for capaz de reproduzir a conectividade nos três tipos de paisagens hipotéticas, então é possível estimar os efeitos propostos (@Marshall2014; @DAGinf_epi_2019). Os efeitos são obtidos pelo contraste da simulação desse modelo nas paisagens hipotéticas (@Marshall2014; @DAGinf_epi_2019), com os parâmetros livres necessários para predizer o padrão de biodiversidade em investigação. Uma vez que o modelo tenha uma boa aproximação do observado, então é possível interpretar o contraste de seus parâmetros, tal como, em um modelo de regressão (@gianluca_ch5_2022). Assim, nesta abordagem, o mesmo tipo de dado empírico, usado na análise estatística de dados observacionais, é usado para calibrar, validar e interpretar o modelo mecanístico. 
+</p>
+
+<p>
+Uma classe de modelos usados como primeira aproximação para descrever a dinâmica que mantém uma comunidade arbórea são os modelos neutros (@leibold2018metacommunity; @chase_biodiversity_2020). Entre esses, destaca-se o modelo neutro espacialmente explícito (MNEE), que foi validado em paisagens simuladas (@campos_neutral_2012; @campos_effect_2013; @claudino_extinction_2015). Em MNEE todos os indivíduos da paisagem são simulados, tanto dentro da parcela amostrada quanto na paisagem ao redor, nos possíveis fragmentos remanescentes (@campos_neutral_2012; @campos_effect_2013; @claudino_extinction_2015). Esses indivíduos têm igual chance de morrer ou de produzir propágulos que podem dispersar com a mesma capacidade (@azaele_statistical_2016; @rosindell_coalescence_2008; @thompson_pycoalescence_2020). Por conta do pressuposto de soma zero, todas as mortes são compensadas pelo nascimento de um novo indivíduo que pode ser de uma nova espécie na paisagem com probabilidade U ou de dispersão de dentro da paisagem de uma espécie já presente na paisagem com probabilidade 1-U (@azaele_statistical_2016; @rosindell_coalescence_2008; @thompson_pycoalescence_2020). O MNEE reproduz a distribuição espacial estocástica dos indivíduos, na qual a dispersão é probabilística e limitada, e influenciada pela configuração da paisagem (@McGill2010; @May2015, @may_abundance_2016). No MNEE, a ocupação de um sítio é determinada tanto pela capacidade de dispersão dos propágulos quanto pela distância entre a fonte de propágulo e os habitats disponíveis (@rosindell_coalescence_2008). Ao replicar essa distribuição espacial estocástica de forma dinâmica, o MNEE assegura que a simulação expressa a conectividade entre a parcela amostrada e a paisagem circundante, refletindo a interação do espaço na competição entre indivíduos (@campos_neutral_2012; @campos_effect_2013).
+</p>
+
+<p>
+O único parâmetro livre de MNEE é a taxa de entrada de indivíduos de novas espécies na paisagem (aqui denominada taxa U). Esse parâmetro pode ser calibrado para que MNEE reproduza a riqueza observada de espécies em uma parcela, dado um grau de limitação à dispersão e uma paisagem hipotética (@rosindell_coalescence_2008; @thompson_pycoalescence_2020). Quanto maior a taxa U estimada para manter uma certa riqueza em uma paisagem em relação a outra, maior a perda local de espécies na comunidade por deriva que não é compensada pela imigração de novas espécies vindas da paisagem (@may_dispersal_2012). Assim, a taxa U ajustada para manter a riqueza observada permite a comparação das paisagens quanto à promoção da manutenção da biodiversidade local. Além disso, o parâmetro U ajustado pela riqueza também pode ser usado para estimar a extensão espacial da paisagem adequada para a simulação, controlado pelo grau de limitação de dispersão (Apêndice "Efeito de Escala" \@ref(apendSoE)).
+</p>
+
+
+# Objetivo
+
+<p>Nosso objetivo é estimar os propostos efeitos da paisagem a partir de um modelo mecanístico de primeira aproximação da conectividade nas paisagens fragmentadas (MNEE) e de dados observacionais de comunidades arbóreas da Floresta Atlântica. Nós cruzamos uma base de dados, que compilou os últimos 70 anos de pesquisa fitossociológica na Floresta Atlântica e fez a curadoria fina (@de_lima_how_2015), e uma coleção de mapas de cobertura florestal da Floresta Atlântica, que classificou os padrões de ocupação do solo nos últimos 40 anos (@mapbiomas), obtendo 105 sítios, que refletem a diversidade de paisagens na Floresta Atlântica. Com esses dados e o MNEE pudemos reconstruir a biodiversidade local de árvores - riqueza de espécies e distribuição de abundância de espécies (em inglês, species abundance distribution, SAD) - simulando a dinâmica demográfica das espécies em três cenários hipotéticos de paisagem: fragmentada (f), tal como no momento mais próximo da amostragem do sítio; aglomerada (a), com o habitat remanescente na paisagem fragmentada aglomerado ao redor da parcela; prístina (p), com toda a paisagem preenchida com habitat. Os contrastes entre as simulaç
+õesnas paisagens hipotéticas informam os efeitos de fragmentação total (f-p), fragmentação *per se* (f-a) e área *per se* (a-p). Para isso buscamos:
+</p>
+
+## Estimar a extensão espacial da paisagem
+<p>
+A extensão espacial da paisagem suficiente foi estimada pela análise de sensibilidade da taxa U ao cenário de limitação de dispersão e extensão espacial da paisagem prístina (Apêndice “Efeito de Escala”). A expectativa é que, quanto menor a limitação de dispersão, maior a extensão espacial da paisagem necessária para que a simulação não seja influenciada pelo recorte da paisagem ao redor (@rosindell2013universal). 
+</p>
+  
+    
+## Calibrar e validar empíricamente MNEE
+<p>
+Calibrar a taxa U para reproduzir a riqueza observada em cada paisagem hipotética e cenário de limitação de dispersão. E validar empiricamente a predição a partir da congruência da SAD simulada e observada. Dessa forma, é possível selecionar apenas os sítios em que o mecanismo expresso em MNEE aproximou bem o padrão observado de biodiversidade nas três paisagens hipotéticas e cenários de limitação de dispersão.
+</p>
+  
+    
+## Descrever os efeitos da paisagem na taxa U estimada
+<p>  
+Os propostos efeitos da paisagem (fragmentação total, fragmentação *per se* e área *per se*) são obtidos pelo logaritmo da razão entre as taxas U (logUi/Uj) estimadas nos pares de paisagens em comparação. Com o logUi/Uj é possível expressar as expectativas derivadas das conclusões de cada grupo de pesquisa usando uma métrica funcional comum: 
+</p>
+  
+    
++ O grupo que defende um efeito combinado de perda e fragmentação de habitat, pode esperar que quanto maior a perda e fragmentação de habitat maior deve ser o efeito negativo na manutenção da biodiversidade local (@didham_rethinking_2012; @haddad_habitat_2015; @fletcher2018habitat; @puttker2020indirect). Resultando em um esperado aumento do logUf/Up em paisagens com baixa cobertura florestal.   
+ 
+    
++ O grupo que defende dois efeitos independentes, de área *per se* e de fragmentação *per se*, pode esperar que o efeito negativo de área *per se* tenha magnitude muito maior do que o efeito marginal e idiossincrático da fragmentação *per se* (@fahrig_effects_2003; @fahrig_ecological_2017; @fahrig2019habitatA). Resultando em um esperado aumento do logUa/Up em paisagens com pouca cobertura florestal e pouca variação de logUf/Ua que deve se manter próximo de zero. 
+
+
+# Materiais e Método
+
+## Apresentação
+
+<p>Foram selecionados inventários florestais da Floresta Atlântica e mapas de cobertura florestal correspondentes ao ano de amostragem de cada inventário. Os mapas são centrados nas parcelas amostradas e processados de modo que a densidade de pixels corresponda à densidade de indivíduos registrada nos inventários. Em seguida, foi estimada a extensão espacial da paisagem adequada para simular diferentes graus de limitação à dispersão. Na terceira etapa, o Modelo Neutro Espacialmente Explícito (MNEE) foi calibrado: para cada paisagem hipotética e nível de limitação de dispersão simulado, a taxa de entrada de novas espécies na paisagem (U) foi ajustada para reproduzir a riqueza local observada no inventário correspondente. A validação do MNEE foi feita por meio da comparação entre a distribuição de abundância de espécies (SAD) observada e a simulada em diferentes paisagens hipotéticas e graus de limitação à dispersão. Por fim, nos sítios em que a SAD simulada reproduziu de forma satisfatória a observada, interpretamos os efeitos da paisagem com base na diferença entre os valores de log U estimados em pares de paisagens hipotéticas.</p>
+  
+  
+## Fonte de Dados
+
+### TreeCo
+
+<p>Consultamos a base de dados TreeCo, que reúne amplamente estudos fitossociológicos realizados na Floresta Atlântica (@de_lima_how_2015). A partir dessa base, selecionamos inventários florestais que: amostraram indivíduos arbóreos com diâmetro à altura do peito (DAP) ≥ 4,8 cm; utilizaram parcelas únicas com pelo menos 1 ha de floresta; apresentaram alta confiabilidade na identificação taxonômica (no nível de morfoespécie) e na precisão das coordenadas geográficas centrais da parcela. Detalhes da avaliação da qualidade dos inventários podem ser consultados em @de2020erosion.
+</p>
+
+<p>
+Em resumo, a base TreeCo classificou os inventários segundo critérios de confiabilidade taxonômica e precisão geográfica. A resolução taxonômica foi aprimorada por meio da verificação de espécimes de referência fornecidos por cerca de um terço dos inventários, com base em atualizações de identificação disponíveis na rede speciesLink (@canhos2022species). Além disso, os nomes das espécies foram padronizados conforme um catálogo taxonômico nacional (@brazil2018brazilian), corrigindo erros tipográficos, sinônimos e variantes ortográficas. Morfoespécies marcadas como ‘confer’ foram atribuídas à espécie sugerida; aquelas marcadas como ‘affinis’ foram consideradas apenas no nível de gênero. As coordenadas centrais dos inventários foram verificadas quanto à correspondência com os fragmentos florestais descritos nos estudos. Inventários com localização inconsistente foram descartados. Quando necessário, as coordenadas foram ajustadas com base em mapas, descrições dos locais originais e outras fontes disponíveis online.
+</p>
+
+### Mapbiomas
+
+<p>Para caracterizar a cobertura vegetal no entorno de cada inventário, utilizamos os mapas da coleção 6 do MapBiomas, com resolução de 30 x 30 m, cobrindo o período de 1985 a 2020 (@mapbiomas). Para cada parcela, foi selecionado o mapa de cobertura florestal correspondente ao ano mais próximo da amostragem, de forma a garantir a contemporaneidade entre os dados de vegetação e o levantamento florístico. Cada mapa foi recortado em quadrados centrados na coordenada da parcela, com extensão máxima de 16 x 16 km². A resolução dos mapas foi ajustada de modo que a densidade de pixels correspondesse à densidade de indivíduos amostrados na parcela. Este ajuste de resolução modificou os valores dos pixels. Consideramos como unidades de habitat os pixels com valor de cobertura ≥ 0,7. As parcelas foram representadas como quadrados centralizados no mapa, contendo N pixels de habitat, onde N corresponde ao número total de indivíduos registrados no inventário. Dessa forma, cada unidade de habitat é uma posição disponível para um único indivíduo adulto. Nos casos em que a configuração espacial da cobertura florestal impossibilitava a centralização exata, a parcela foi ligeiramente deslocada para uma área adjacente que permitisse a demarcação de um quadrado adequado (exemplo na figura \@ref(fig:desloc-parcela)).</p>
+
+## Modelo Neutro Espacialmente Explícito (MNEE)
+ 
+<p>No MNEE, a dinâmica das comunidades ecológicas é modelada por meio de uma abordagem coalescente, que rastreia a ancestralidade de cada indivíduo na parcela até o conjunto de indivíduos fundadores na paisagem (@rosindell_coalescence_2008; @thompson_pycoalescence_2020). A simulação inicia sem informação prévia sobre a identidade das espécies a que pertencem cada indivíduo presentes na parcela amostrada. Durante a simulação, a cada passo temporal, um indivíduo da parcela é sorteado aleatoriamente para ser substituído. A substituição pode ocorrer de duas maneiras: (i) por um indivíduo de uma nova espécie que surge na paisagem com probabilidade U; ou (ii) pela prole de um adulto residente na paisagem (incluindo a parcela), com probabilidade 1−U (@rosindell_coalescence_2008; @thompson_pycoalescence_2020). Nos casos em que a substituição ocorre por meio de um propágulo residente (1−U), o evento de dispersão é modelado através de um kernel de dispersão com distribuição exponencial espelhada (distribuição de Laplace), sorteadas de forma independente e com a mesma distribuição (@rosindell_coalescence_2008; @bullock_synthesis_2017; @thompson_pycoalescence_2020). Para determinar a origem do propágulo, o modelo centraliza a função de dispersão no habitat vago e sorteia posições na paisagem até encontrar um local de habitat. O processo termina quando todos os indivíduos na parcela coalescem em um conjunto ancestral de indivíduos que são os primeiros de sua espécie na paisagem, criando uma árvore genealógica da comunidade local (@rosindell_coalescence_2008). Cada ramo dessa árvore é composto por indivíduos que compartilham um ancestral comum. Isso permite a reconstrução da distribuição de abundância de espécies (SAD) a partir da árvore genealógica. Essa abordagem pressupõe que cada morte é imediatamente compensada pelo nascimento de um novo indivíduo adulto (pressuposto de soma zero, @rosindell_coalescence_2008).</p>  
+
+<p>A taxa U, que representa a probabilidade de introdução de novas espécies por nascimento, é estimada usando um método analítico proposto por @rosindell_coalescence_2008 em seu apêndice A. Essa abordagem combina a simulação da genealogia da comunidade com uma equação que relaciona a riqueza observada à taxa média de introdução de novas espécies, permitindo calibrar o MNEE com base na riqueza local observada (@rosindell_coalescence_2008, Apêndice A).</p>
+
+<p> A capacidade de dispersão é explorada variando-se o desvio-padrão da distribuição de probabilidade de Laplace (detalhes da função de dispersão no material de suporte) para determinar a proporção de propágulos que permanecem próximos à planta progenitora (i.e., distância até o vizinho imediato).  Esta  proporção de propágulos que permanecem na vizinhança imediata (aqui denominada k) foi estimada por simulação, considerando a distância entre vizinhos imediatos. O objetivo foi determinar o parâmetro de escala (d) da distribuição de Laplace em duas dimensões, de forma que k propágulos fossem alocados entre a origem e o centro do vizinho imediato. Como a densidade de indivíduos pode variar entre inventários e paisagens, o valor de d foi calculado individualmente para cada inventário florestal e cenário de limitação de dispersão. Foram simulados 20 cenários de limitação de dispersão, com k variando de 0.99 (limitação muito severa) a 0.05 (limitação muito branda).</p>
+        
+## Estimativa da extensão espacial controlado pelo grau de limitação de dispersão simulado
+
+<p>
+Em nossa abordagem, levamos em consideração o efeito da escala espacial sobre a limitação de dispersão no mecanismo demográfico simulado. Buscamos determinar a extensão espacial mais adequada da paisagem para cada grau de limitação de dispersão, avaliando a sensibilidade da estimativa da taxa U em função da escala espacial simulada. Essa estimativa foi realizada em paisagens sem perda de cobertura, de modo que a única influência sobre U foi a capacidade de dispersão e a extensão da paisagem, para um mesmo inventário. A expectativa é que o aumento da extensão espacial resultasse na redução da taxa U, até um ponto em que aumento da área da paisagem  não alterasse significativamente essa estimativa. Isso é esperado, pois, em paisagens pequenas há poucos progenitores fora da parcela capazes de introduzir novas espécies. Com o aumento da extensão da paisagem, mais progenitores podem contribuir com a parcela. Com o aumento de progenitores há aumento na chance de reposição de espécies perdidas localmente por deriva (@may_dispersal_2012). No entanto, dada a limitação de dispersão, a influência de progenitores muito distantes tende a se estabilizar (@rosindell2013universal).
+</p>
+
+<p>
+Para avaliar a sensibilidade da extensão espacial em relação à limitação de dispersão, sorteamos 36 parcelas, entre as pré-selecionadas, e simulamos a taxa U em paisagens prístinas com 6 diferentes tamanhos (de 0.5, 1, 2, 4, 8 e 16 km de lado, L), sob 20 níveis de limitação de dispersão (valores de k). Para determinar o valor de L suficiente para simular cada k, aplicamos um método heurístico, que se baseou na expectativa teórica de redução monotônica da taxa U média em função do aumento de L. O objetivo do método heurístico é de determinar o L, mais próximo dos 6 valores iniciais de L, que acumula pelo menos 75% da redução total esperada (ponto de saturação). Esse método heurístico pode ser resumido em uma sequência de etapas:
+</p>
+
+  1) descrever a média da taxa U para cada combinação de k e L, a partir de um modelo linear misto.
+      
+          
+  2) a partir da predição do modelo linear misto, calcular a amplitude da média da taxa U para cada cenário de limitação de dispersão - considerando todos os L.
+      
+      
+  3) calcular a diferença na taxa U entre L consecutivos e dividir pela amplitude, calculada no passo 2.
+      
+          
+  4) Somar os valores obtidos no passo 3 em ordem, respeitando a sequência de L. 
+
+
+<p>
+O método pressupõe que ao final do último passo, o valor obtido será 1, correspondendo à redução total esperada do menor L até o maior L. Então, é aplicada uma interpolação linear para estimar o L mais próximo do limiar de 75% da redução total, considerando os 6 valores de L iniciais testados. Detalhes da estimativa da escala estão descritos no apêndice "Efeito de Escala" (\@ref(apendSoE)).
+</p>
+
+## Calibração de MNEE nas paisagens hipotéticas
+
+<p>As paisagens hipotéticas têm forma quadrada, possuem a mesma densidade de pixels e área da parcela amostrada. Denominaremos paisagem fragmentada o mapa de cobertura florestal no ano mais próximo ao da amostragem do inventário florestal selecionado. Denominaremos paisagem prístina um mapa gerado convertendo todas as unidades de não-habitat da paisagem fragmentada em unidades de habitat. Assim, ela mantém as mesmas características da paisagem fragmentada, exceto pela perda de habitat e sua configuração espacial. Em outras palavras, as paisagens prístinas são mapas com 100% de cobertura florestal. Denominaremos de paisagem aglomerada a paisagem em que todo o habitat remanescente na paisagem fragmentada é aglomerado ao redor da parcela em forma de quadrado. Dessa forma, a paisagem aglomerada possui a mesma proporção de cobertura florestal da paisagem fragmentada e a mesma configuração espacial da paisagem prístina. Na figura \@ref(fig:paisagens-hipoteticas) há um exemplo das três paisagens hipotéticas para uma mesma parcela </p> 
+
+<p> A extensão espacial da construção das paisagens hipotéticas variou entre graus de limitação de dispersão conforme a extensão espacial suficiente estimada, conforme descrito na seção anterior. Para cada parcela amostrada, paisagem hipotética (land) e grau de limitação de dispersão (k) foi estimada uma taxa U média a partir de 20 réplicas. Então, dada a média das estimativas da taxa U, são simuladas 100 SADs réplicas para cada k e land.</p>
+
+## Validação do predito por MNEE
+
+### Comparação com a SAD observada
+
+
+<p>Para cada bateria de simulação (combinação de parcela amostrada, cenário de limitação de dispersão e paisagem hipotética) são feitas 100 simulações réplicas. Cada uma dessas réplicas resulta em uma SAD simulada. Cada SAD simulada é comparada com a SAD observada na parcela amostrada usando o teste de hipótese de Kolmogorov-Smirnov bootstrap (@dowd_twosamples_2023). Esse teste pressupõe a hipótese nula de que os dois vetores em comparação (SAD observada e SAD simulada) são amostras de uma mesma distribuição teórica; a estatística de interesse do teste é a maior diferença entre as curvas acumuladas das SAD (@dowd_twosamples_2023). Para cada bateria de simulação, contabilizamos o número de SADs simuladas que não difereriam significativamente (P>0,05) da SAD empírica correspondente.
+</p>
+
+### Descrição estatística da congruência com a SAD observada
+
+<p>
+A descrição estatística da probabilidade de uma SAD simulada ter boa congruência com a SAD observada por paisagem hipotética (fragmentada - f, aglomerada - a, prístina - p) foi obtida por um modelo aditivo generalizado hierárquico (MAGH, @wood2017, @Pedersen2019). Esses modelos estatísticos permitem expressar a estrutura dos dados agregada por parcela de amostragem (@Pedersen2019) e descrever efeitos descritivos não lineares por splines e tensores de suas preditoras (@wood2017). Splines são funções polinomiais por partes, conectadas em pontos chamados nós (@wood2017). Agem como "curvas ajustáveis" que se adaptam aos dados, controlando o grau de suavização para evitar sobreajuste através da penalização pela máxima verossimilhança restrita (REML). O objetivo de splines e tensores é a descrição de qualquer relação contínua (@wood2017). Todas as análises estatísticas foram feitas usando linguagem R (@Rlang).
+</p>
+
+<p>
+Para a descrição da congruência com a SAD observada, a variável-resposta foi a proporções das 100 SADs simuladas que não diferiram significativamente. A estrutura hierárquica do MGAH é dividida em duas: a variabilidade agrupada pela parcela amostrada que contém os splines do cenários de limitação de dispersão (k) por paisagens hipotéticas (land), considerada aleatória; e a variabilidade relacionada com a população de todos os sítios, que contem os splines dos efeitos médios de k por land, considerada fixa. Entre as preditoras da estrutura fixa também incluímos as coordenadas geográficas das parcelas amostradas, que possuem um spline para descrever a possível autocorrelação espacial entre as parcelas, e a classe de perturbação da parcela amostrada, possibilitando diferentes splines de k para a combinação entre land e classe de perturbação.
+</p>
+
+<p>
+O nível de perturbação da parcela segue a classificação da base TreeCo (@de2020erosion). Essa classe é construída conforme a informação disponível sobre o tipo, intensidade e tempo da perturbação antrópica na área da parcela (@de2020erosion). Foram consideradas 4 classes de perturbação: altissíma, com florestas severamente ou cronicamente perturbadas há até 20 anos antes do inventário; alta, com florestas severamente ou cronicamente perturbadas há até 50 anos antes do inventário; mediana, com florestas pouco ou esporadicamente perturbadas e/ou perturbada entre 50 e 80 anos; e baixa, com florestas não perturbadas por pelo menos 80 anos (@de2020erosion). Existe grande variabilidade intra classe de perturbação, porém essa é a informação disponível nos trabalhos originais (@de2020erosion).
+</p>
+
+<p>A probabilidade de uma distribuição de abundância de espécies (SAD) simulada apresentar boa congruência com a SAD observada foi modelada utilizando seis MAGH com diferentes níveis de complexidade.</p>
+O modelo mais completo (modelo cheio) inclui:
+  
+    
++ Um intercepto por tipo de paisagem hipotética (comum aos sítios) e por sítio de amostragem;
+  
+    
++ Um termo de suavização (spline) para o parâmetro k (grau de limitação de dispersão), também especificado por tipo de paisagem hipotética (fixo) e por sítio de amostragem (aleatório);
+  
+    
++ Um spline bidimensional para as coordenadas centrais do sítio.
+
+  
+    
+Os cinco modelos restantes representam simplificações progressivas do modelo cheio, obtidas pela exclusão de uma ou mais covariáveis:
+  
+    
++ Dois modelos mantêm apenas uma das duas covariáveis: classe de perturbação ou coordenadas;
+  
+    
+    
++ Um modelo possui apenas o spline de k por tipo de paisagem e por sítio, sem as covariáveis adicionais;
+  
+    
++ Um modelo ainda mais simples inclui apenas o spline de k por tipo de paisagem (e apenas um intercepto por sítio);
+  
+    
+    
++ O modelo mais simples inclui apenas interceptos por tipo de paisagem e por sítio, sem spline para k.  
+  
+
+<p> As formulas usadas para ajustar esses modelo estatísticos está disponível no material de suporte. Os MAGH foram comparados usando métricas derivadas do ‘Akaike Information Criteria’ para amostras pequenas (AICc), o delta AICc, o peso de evidência (@burnham1998practical). Também incluímos o ‘deviance explained’ que pode ser interpretado de forma análoga ao coeficiente de determinação (R2), como forma de descrever a variabilidade explicada pelo modelo estatístico. Para essas tarefas foram utilizadas funções dos pacotes 'mgcv' (@wood2011) e 'bblme' (@bbmle_package).</p>
+
+<p>Uma vez que os splines são ideais para descrever relações contínuas, a autocorrelação espacial negativa pode não ser bem descrita pelo modelo estatístico, assim, incluímos um teste de autocorrelação espacial dos resíduos dos modelos estatísticos. Se houver autocorrelação espacial que não foi bem descrita pelo modelo estatístico, esperamos que a média, por sítio de amostragem, dos resíduos do modelo apresentem a estatística I de Moran diferente de zero. A estatística I de Moran varia entre -1 e 1, ou seja, entre a autocorrelação espacial negativa e positiva, respectivamente. E possui um teste de hipótese associado que avalia se o valor é significativamente diferente de zero, se o p valor for próximo de zero então a hipótese de ausência de autocorrelação espacial possui pouco suporte. A estatística I de Moran requer que um parâmetro livre seja escolhido. Determinamos esse valor por uma análise de sensibilidade dos resíduos dos modelos ajustados. Para obter a estatística I de Moran e seu p valor associado utilizamos funções do pacote spdep (@bivand2020). A avaliação da sensibilidade desse parâmetro está no material de suporte (fig. \@ref(fig:MoranI)).</p> 
+
+
+## Interpretação do logUi/Uj como métrica funcional dos efeitos da paisagem
+
+<p>
+Realizei a calibração e validação de MNEE numa ampla faixa de valores de limitações de dispersão (de 0.05 a 0.99 dos propágulos na vizinhança imediata). No entanto, para árvores em florestas tropicais, a maior parte dos propágulos permanece até a vizinhança imediata do progenitor (@bullock_synthesis_2017). Para interpretarmos os efeitos da paisagem sobre a taxa U, selecionamos graus de limitação de dispersão acima de 0.50 (brando) até 0.99 (severo) dos propágulos na vizinhança imediata do progenitor.
+</p>
+<p>
+A taxa U, calibrada para aproximar a riqueza de espécies, reflete indiretamente a perda local por deriva ecológica — uma perda que não é compensada pela imigração da paisagem ao redor e que precisa ser suprida por uma fonte externa de espécies (especiação verdadeira, dispersão de longa distância de fora da paisagem ou reposição do banco de propágulos). Ao manter todos os outros parâmetros da simulação constantes, e alterando apenas a paisagem hipotética, o logaritmo da razão da taxa U estimada nas paisagens em comparação informa o efeito da paisagem nos processos que determinam a manutenção da biodiversidade local: conectividade, substituição de indivíduos no espaço e entrada aleatória de novas espécies na paisagem (@azaele_statistical_2016; @thompson_pycoalescence_2020).
+</p>
+
+<p>
+Para ter boa confiabilidade da estimativa do modelo, selecionamos apenas inventários florestais em que todos os graus de limitação de dispersão e as paisagens hipotéticas tiveram boa congruência com a SAD observada. Consideramos parcelas com boa congruência quando pelo menos 75% das SADs simuladas em todas as paisagens hipotéticas e graus de limitação de dispersão apresentaram boa congruência (não diferiram s
+ignificativamente da SAD empírica).
+</p>
+
+### Descrição estatística da métrica funcional dos propostos efeitos da paisagem
+
+<p>
+Nesta seção, descrevemos a variabilidade da métrica logUi/Uj associada aos três efeitos propostos da paisagem, em função da proporção de cobertura florestal (%CF) e do grau de limitação de dispersão (@villard_beyond_2014). A %CF não contém informação suficiente para distinguir entre as paisagens fragmentada e aglomerada, apenas entre essas duas e a paisagem prístina. Para diferenciar as configurações fragmentada e aglomerada, é necessário considerar a limitação de dispersão, pois ela permite modelar explicitamente a conectividade funcional. Entendemos conectividade funcional como a interação entre a configuração espacial do habitat e a capacidade de dispersão dos indivíduos, resultando em sua movimentação pelo habitat remanescente (@villard_beyond_2014). Como a capacidade real de dispersão é desconhecida, nossos resultados exploram a sensibilidade da métrica à variação do parâmetro de limitação de dispersão (k). Enquanto a %CF é fixa para uma dada parcela e escala da paisagem, diversos valores de k podem ser considerados para a mesma parcela. Por isso, utilizamos um modelo com splines para k, específicos por parcela, permitindo variação independente entre elas. Essa abordagem nos permitiu avaliar a coerência da métrica funcional logUi/Uj em relação à %CF, uma métrica amplamente usada no debate sobre fragmentação de habitat (@fahrig_rethinking_2013; @puttker2020indirect; @watling2020support), ao mesmo tempo em que analisamos variações na conectividade funcional (@villard_beyond_2014). A partir desse modelo, em que a %CF foi tratada como variável contínua, organizamos as predições em cinco classes: abaixo de 30%, entre 30% e 60%, entre 60% e 80%, entre 80% e 100%, e igual a 100%.
+</p>
+
+<p>
+Para descrever a variação de logUi/Uj utilizamos MAGH (@wood2017, @Pedersen2019), mantendo os mesmos critérios e métodos de ajuste usados nos MAGH anteriores. Agora o MAGH modela a interação entre entre cobertura florestal (%CF) e cenário de limitação de dispersão (k) por um produto tensorial (tensor) com splines cúbicas. Variações entre parcelas foram controladas por um termo aleatório aninhado de um spline para k (@Pedersen2019). As formulas desses MAGH estão no material de suporte.
+</p>
+
+<p>
+As covariáveis ambientais usadas no modelo estatístico anterior, usado para descrever a congruência da SAD simulada, não foram usadas nessa análise. A taxa U estimada pelo MNEE é intrinsecamente independente de coordenadas geográficas ou classes de perturbação, pois deriva exclusivamente dos parâmetros de MNEE que governam a dinâmica ecológica simulada além dos cenários de dispersão e das paisagens hipotéticas explorados: Riqueza de espécies observada (S), Número e densidade de indivíduos, Área de amostragem. Como U é calibrada para cada sítio com base nesses parâmetros explícitos – e não em variáveis ambientais externas ou localização geográfica –, sua estimativa não carrega dependência espacial implícita entre parcelas.
+</p>
+
+
+# Resultados
+
+## Apresentação dos resultados
+  
+    
+<p>
+A seção de resultados está organizada conforme as etapas necessárias para estimar os efeitos funcionais da paisagem na predição da biodiversidade arbórea local com o MNEE. Começamos apresentando os inventários florestais simulados (seção \@ref(dadosEmp)), que servem de base empírica para as análises subsequentes. Em seguida, duas seções são dedicadas à calibração e validação do modelo: a seção \@ref(efeito-escala) avalia a sensibilidade da taxa U à escala espacial da paisagem, definindo o tamanho adequado para simular diferentes cenários de limitação de dispersão; e a seção \@ref(congSAD) compara a distribuição de abundância de espécies (SAD) simulada com a observada, identificando os inventários para os quais o modelo reproduz adequadamente os padrões empíricos.
+</p>  
+  
+    
+<p>
+A partir dessas condições validadas, a seção \@ref(taxaU) apresenta a taxa U estimada para cada cenário, estabelecendo a referência necessária para interpretar a métrica funcional (logUi/Uj), que é relativa por definição. Na seção \@ref(criterios), aplicamos critérios para selecionar os inventários e cenários realistas de dispersão nos quais a métrica pode ser interpretada com maior confiabilidade. Por fim, a seção \@ref(metrica-funcional) descreve como a métrica funcional varia em função da cobertura florestal e da limitação de dispersão, avaliando diretamente as predições teóricas sobre os propostos efeitos da paisagem na biodiversidade arbórea local.
+</p>
+  
+    
+## Dados empíricos: inventários florestais simulados {#dadosEmp}
+
+<p>
+Dos inventários florestais presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção (tab. \@ref(tab:dados-disponiveis)). As coordenadas das parcelas amostradas variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig. \@ref(fig:GE-sitios) a). A maioria dos trabalhos foi realizada em áreas de florestas classificadas como primárias no TreeCo (@de_lima_how_2015). Apenas duas parcelas são classificadas como perturbação altíssima e foram removidas (fig. \@ref(fig:GE-sitios) c), resultando em 107 inventários. A área amostrada mediana foi de 1 ha; o número mediano de indivíduos registrados foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. \@ref(fig:GE-sitios) b). Portanto, todos os 107 inventários possuem mapa de cobertura florestal na base de mapas de cobertura florestal do Mapbiomas 6 (@mapbiomas). Desses 107 inventários, dois não foram usados para simulações, pois não foi possível desenhar a parcela quadrada no centro da paisagem devido à configuração espacial da paisagem fragmentada (fig. \@ref(fig:sitios-removidos)). Assim, as análises do efeito explicativo da paisagem na predição da biodiversidade local são desenvolvidas a partir de 105 sítios, mapas no material de suporte (fig. \@ref(fig:mapas-sitios)).
+</p>
+
+```{r caption GE dados disponiveis,eval=TRUE,include=TRUE}
+cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográficas e proporção de cobertura florestal nas paisagens contemporâneas aos eventos de amostragem com extensão espacial de 4 x 4 $km^{2}$. A área em verde marca a delimitação política da Floresta Atlântica (IBGE 2021). b) Distribuição das características quantitativas dos inventários, de cima para baixo: número de indivíduos amostrados, área da parcela amostrada, número de espécies observado e ano de amostragem. c) Contagem do número de sítios pelas classes de perturbação simulados. Essas classes de perturbação que consideram tanto o tempo desde a última grande perturbação quanto o grau de perturbação: baixa, sem perturbação conhecida nos últimos 80 anos; mediana, perturbação moderada entre 80 e 50 anos atrás; alta, perturbação mediana ou elevada nos últimos 50 anos; altíssima, perturbação mediana ou elevada nos últimos 20 anos."
+```
+```{r GE-sitios,eval=TRUE,include=TRUE,fig.cap=cap,fig.width=12}
+l_p <- readRDS(file="./00_Resultados/figuras/fig1dados_disponiveis.rds")
+grid.arrange(grobs=l_p,
+             widths = c(6, 4, 1.75),
+             layout_matrix = rbind(c(1, 2, 3))
+             )
+```
+  
+
+## A sensibilidade da taxa U à extensão espacial da paisagem ao redor: efeito de escala  {#efeito-escala}
+
+<p>
+Nesta seção apresentamos os resultados principais da análise de efeito de escala, que são complementados no apêndice “Efeito de Escala”. Esta análise teve como objetivo determinar a extensão espacial da paisagem (L, lado da paisagem) suficiente para simular diferentes graus de limitação de dispersão. A extensão L determina a área de cobertura florestal ao redor da parcela do inventário (fig. \@ref(fig:sitios-SoE)). Consequentemente, a escolha de L é fundamental para a construção da paisagem hipotética aglomerada, pois determina a quantidade de cobertura florestal que será agregado ao redor da parcela. 
+</p>
+
+<p>
+Verificamos um decaimento monotônico na média da taxa U com o aumento da extensão espacial para a maioria dos cenários de limitação de dispersão (fig. \@ref(fig:SoE) a). Em cenários de limitação de dispersão intermediários (k entre 0.75 e 0.60) não se observa esse padrão geral de decaimento monotônico. Nesses cenários de limitação de dispersão, houve picos locais da taxa U. E em um caso a taxa U média máxima não foi no menor valor de L. 
+</p>
+
+<p>
+Nos demais cenários, o valor de L correspondente ao limiar de escolha variou de forma não linear com o grau de limitação de dispersão. Nos cenários mais brandos de limitação de dispersão (k abaixo de 0.65) se observa uma tendência de aumento de L com a redução da limitação de dispersão (fig. \@ref(fig:SoE)). Para k abaixo de 0.65 o valor de L escolhido varia entre 1 km até 3 km com a redução da limitação de dispersão (fig. \@ref(fig:SoE) b). Nos cenários de limitação de dispersão mais severos (k acima de 0.65) não se observa uma tendência clara na escolha de L (fig. \@ref(fig:SoE)). Para k = 0.70 não foi possível aplicar o algoritmo de escolha, pois o máximo não era no menor L (fig. \@ref(fig:SoE)). Nos cenários de limitação de dispersão intermediários e severos (k acima de 0.70) houve incerteza entre 1km e 2km de L (fig. \@ref(fig:SoE)). 
+</p>
+
+<p>
+Para a escolha de L, considerei que essa incerteza para valores de k acima de 0.65 pode ser explicada por fatores como: a estocasticidade do MNEE; o número limitado de níveis de L testados; a interpolação linear; e da particular escolha do limiar de 75%. Assim, decidi assumir que todos os k acima de 0.50 são bem aproximados pelo L = 1km. Essa escolha é coerente com a expectativa de que L aumenta com o relaxamento da limitação de dispersão, padrão que foi observado para k abaixo de 0.60 (fig. \@ref(fig:SoE)). Além disso, como L = 3 km não estava entre os valores testados (L = 0.5, 1, 2, 4, 8, 16 km), optei por L = 4 km — o valor disponível imediatamente superior. Essa escolha conservadora garante que a extensão espacial selecionada não subestime o limiar de 75% de redução acumulada. Portanto, para k acima de 0.50, L = 1 km; para k entre 0.45 e 0.2, L = 2 km; e k abaixo de 0.15, L = 4 km. Esses valores de L serão usados para definir a extensão espacial das paisagens hipotéticas nas próximas análises. No material de suporte há os lados escolhidos considerando os limiares de 90% e 95% (fig. \@ref(fig:comparacao-limiares)).
+</p>
+
+
+```{r capsitiosSoE, eval=TRUE}
+vcap <- "Estudo de efeito de escala na taxa U simulada nos cenários de limitação de dispersão explorados. a) Mudança na proporção de cobertura vegetal em função da extensão espacial da paisagem (comprimento do lado da paisagem quadrada). Cada ponto representa a proporção de cobertura vegetal (eixo y) para aquela determinada extensão espacial da paisagem ao redor (eixo x), as linhas ligam pontos de um sítio de amostragem. b) Riqueza de espécies (eixo y) em função da densidade de indivíduos nas parcelas (eixo x) dos 108 sítios pré-selecionados. Em vermelho os pontos amostrados e selecionados para investigar os efeitos do tamanho da paisagem na taxa U. c) Relação entre o parâmetro d do kernel de dispersão e a proporção de propágulos que na  vizinhança imediata da árvore-mãe ; d = desvio padrão da função de dispersão com distribuição de Laplace. Para detalhes sobre a seleção dos sítios na base TreeCo e sobre os cenários de limitação à dispersão veja o texto principal."
+```
+```{r sitios-SoE, fig.cap=vcap, fig.width=12, eval=TRUE, cache=FALSE}
+l_p <- readRDS(file="~/Documentos/mestrado_Ecologia/artigo_principal/0_apendices/EfeitoEscala/Rdata/fig1_grobs.rds")
+grid.arrange(grobs=l_p,nrow=1)
+```
+
+```{r LEGENDA EM USO cap fig5_SoE}
+cap <- "Avaliação da sensibilidade da taxa U em relação a extensão espacial da paisagem (eixo x) para cada cenário de limitação de dispersão simulado (título dos quadros = k, a proporção de propágulos na vizinhança imediata). Para fazer essa avaliação de sensibilidade foram selecionados 36 inventários florestais dentro do conjunto total de inventários (fig. 2). Para cada inventário e cenário de limitação de dispersão, a taxa U foi estimada na paisagem prístina variando o lado da paisagem ao redor, L, em 6 valores (0.5 km, 1 km, 2 km, 4 km, 8 km e 16 km, eixo x). Esses dados foram descritos por um modelo estatístico que estimou a média para todas combinações de lado da paisagem e cenário de limitação de dispersão. A predição desse modelo estatístico está no gráfico da esquerda (a), em que o eixo y é a taxa U média e cada ponto representa a média dos inventários para a combinação de L e k. Para determinar a extensão espacial suficiente para simular cada k, aplicamos um método heurístico, que se baseou na expectativa teórica de redução monotônica da taxa U média em função do aumento de L. O objetivo do método heurístico é de determinar o L mais próximo dos 6 valores iniciais de L que acumula pelo menos 75% da redução total observada (ponto de saturação). O gráfico da direita (b) apresenta o resultado desse método heurístico, no eixo y há a diferença acumulada entre lados consecutivos. No cenário de limitação de dispersão de k igual a 0.70 não foi possível aplicar o método heurístico, pois a taxa U máxima não foi no menor L (figura a). Os valores no texto do gráfico (b) informam L mais próxima do limiar de 75% segundo uma interpolação linear entre as escalas espaciais. Quando L = 3 km, nós assumimos L = 4 km, pois, entre os 6 valores iniciais de L, é o mais próximo do L escolhido que não está abaixo do limiar de 75%. Os resultados complementadores da análise de efeito de escala estão disponíveis no apêndice 'Efeito de Escala'."
+```
+```{r SoE, eval=TRUE,include=TRUE,fig.cap=cap,fig.width=12,fig.height=6,warning=FALSE,message=FALSE,cache=FALSE}
+# knitr::include_graphics(path = "./figuras/fig5_SoE.png")
+vxout <- 0.75
+l_p <- readRDS(file="~/Documentos/mestrado_Ecologia/artigo_principal/0_apendices/EfeitoEscala/figuras/l_p_efeito_escala.rds")
+grid.arrange(grobs=l_p,ncol=2)
+```
+  
+## Congruência entre a SAD observada e predita por MNEE nas paisagens hipotéticas {#congSAD}
+<p>
+O objetivo dessa seção é descrever a variabilidade na congruência da predição do MNEE e, dessa forma, avaliar se esse modelo é adequado para ter a taxa U interpretada. A SAD é a predição de MNEE que é obtida uma vez estimada a taxa U nas paisagens hipotéticas, conforme a escala adequada para cada cenário de limitação de dispersão (fig. \@ref(fig:SoE)). Usados modelos estatísticos para descrever a probabilidade de uma SAD simulada ser congruente com a SAD observada em função da capacidade de dispersão e da paisagem hipotética usadas nas simulações em cada parcela. O modelo mais complexo inclui efeitos específicos por tipo de paisagem e por inventário florestal. Também incorpora splines para o parâmetro k (limitação de dispersão), variando entre classes de perturbação da parcela e por inventário florestal. E também possui um spline para as coordenadas geográficas das parcelas, para descrever a possível autocorrelação espacial entre inventários florestais próximos (@wood2017). Modelos mais simples foram obtidos pela remoção progressiva de termos.
+</p>
+
+<p>
+Na tabela \@ref(tab:tabcong) há a comparação desses modelos estatísticos. O modelo cheio foi o mais plausível. Esse modelo soma a maior parte do peso de evidência (>0.90) e não apresenta evidência de autocorrelação espacial dos resíduos (tab. \@ref(tab:tabcong)). Os únicos modelos que apresentam evidência de autocorrelação espacial são aqueles sem um spline de k por inventário florestal (tab. \@ref(tab:tabcong)). Entre os 4 primeiros modelos mais plausíveis a deviance explicada é similar, próxima de 0.94 (tab. \@ref(tab:tabcong)). O modelo mais plausível apresenta bom ajuste com o observado (gráficos diagnóstico no material suplementar).
+</p>
+
+
+```{r tabela congruencia SAD}
+vcap <- "Modelos estatísticos para descrever a congruência da SAD simulada com a SAD observada. O modelo mais complexo é o mais plausível com peso de evidência acima de 0.90. Esse modelo possui um spline para k (limitação de dispersão) por tipo de paisagem (land) e classe de perturbação (class_pert), um spline para as coordenadas geográficas (lat,long) e um spline por inventário florestal para k. Os outros modelos são simplificações desse modelo mais complexo."
+vnumericcols <- names(df_tabsel_minimo)[sapply(df_tabsel_minimo,is.numeric)]
+```
+```{r tabcong,tab.width=12,tab.caption=vcap,results='asis',eval=TRUE,include=TRUE}
+vnumericcols <- names(df_tabsel_minimo)[sapply(df_tabsel_minimo,is.numeric)]
+f_format <- \(x){
+    formatC(x, format = "e", digits = 2)
+  }
+ft <- df_tabsel_minimo %>%
+  flextable() %>%
+  set_caption(vcap) %>%
+  colformat_double(j = vnumericcols, digits = 3) %>%
+  set_formatter(dAICc = f_format,df = f_format) %>%
+  autofit() %>%
+  fontsize(size = 8, part = "all") %>%  # ⬅ tamanho da fonte
+  set_header_labels(
+    modelo = "MAGH",
+    dAICc = "ΔAICc",
+    df = "est. coef.",
+    weight = "peso",
+    dev.expl = "dev. expl.",
+    MoranI_stat_res = "Moran's I",
+    pvalue = "p-valor"
+  ) %>% 
+  set_table_properties(
+  layout = "autofit",
+  opts_pdf = list(caption_repeat = FALSE)
+  # ,
+  # width = 12
+  # ,
+  # align = NULL,
+  # opts_html = list(),
+  # opts_word = list(),
+  # opts_pdf = list(),
+  # word_title = NULL,
+  # word_description = NULL
+)
+ft
+```
+
+
+```{r legenda figura ranqueamento,echo=FALSE,eval=TRUE}
+vcap <- "Predito pelo modelo mais plausível (MAGH) para descrever a congruência da SAD simulada nas paisagens hipotéticas com a SAD empírica nos mesmos sítios, em função da limitação à dispersão (eixo x), do grau de perturbação observado nas parcelas (linhas de painéis) e da paisagem hipotética usada em cada simulação (fragmentada, aglomerada, e prístina, colunas dos painéis) . Os pontos são o número de SADs simuladas com boa congruência com a SAD observada segundo o teste de Kolmogorov-Smirnov. Os pontos são coloridos conforme o número de sobreposições (legenda 'contagem'). As linhas semitransparentes em cinza são a predição do modelo para cada inventário florestal. Em vermelho escuro o valor médio predito pelo modelo mais plausível. Em azul claro o intervalo de predição de 95% ao redor da média."
+```
+```{r p-cong,fig.cap=vcap,echo=FALSE,eval=TRUE,fig.width=14,fig.height=8,cache=FALSE}
+p <- readRDS(file="~/Documentos/mestrado_Ecologia/artigo_principal/0_apendices/EfeitoEscala/figuras/p_cong.rds")
+p
+```
+
+<p>
+Na figura \@ref(fig:p-cong) há o número de SADs simuladas com boa congruência com a SAD observada (nSAD) e o predito pelo modelo mais plausível (em cinza para a predição por parcela e em vermelho para a média geral). A maior parte dos valores observados está próximo dos 100% (ou seja, todas as 100 repetições da simulação resultaram em SADs congruentes com a empírica, para uma dada parcela, valor de k e paisagem). Existe muita variabilidade de tendências da congruência em função da limitação à dispersão entre parcelas, que resulta na predição por parcelas com diferentes curvas, alguns com pouca sensibilidade a k e outros com padrões não lineares (fig. \@ref(fig:p-cong)). Existe pouca diferença no valor médio (em vermelho) entre as paisagens hipotéticas e classes de perturbação (fig. \@ref(fig:p-cong)). A maior diferença média entre paisagens hipotéticas ocorre quando a limitação de dispersão é branda ( k < 0.25, fig. \@ref(fig:p-cong)). 
+</p>
+
+<p>
+Nessa faixa de limitação de dispersão branda, simulações usando a paisagem fragmentada têm maior probabilidade média de gerar uma SAD com boa congruência com a empírica, seguido da paisagem prístina (fig. \@ref(fig:p-cong)). No entanto, essa faixa de valores apresenta a maior variabilidade entre parcelas e entre classes de perturbação. As parcelas de baixa perturbação tendem a apresentar congruência média mais elevada (fig. \@ref(fig:p-cong)). Os valores de congruência média tendem a ser menores no nível mediano de perturbação do sítio de amostragem (fig. \@ref(fig:p-cong)). 
+</p>
+
+<p>
+Em resumo, a simulação MNEE nas três paisagens hipotéticas pode apresentar boa congruência com a SAD observada, uma vez que a taxa U é ajustada pela riqueza observada (fig. \@ref(fig:p-cong)). A predição de MNEE é boa, exceto em cenários de limitação de dispersão muito brandos (k < 0.25), em que a média diminui em todos os cenários e classes de perturbação. Em grande parte dos inventários, todas as SADs simuladas foram compatíveis com a SAD observada para as combinações de paisagem e limitação de dispersão (fig. \@ref(fig:p-cong)). Porém, em alguns inventários as SADS simuladas por MNEE não apresentam boa congruência em algum cenário de limitação de dispersão ou paisagem hipotética (fig. \@ref(fig:p-cong)).
+</p>
+
+##  Estimativa da taxa U nas paisagens hipotéticas {#taxaU}
+
+```{r}
+cap="A média da taxa U estimada (eixo y) em função da paisagem hipotética (cores) e limitação de dispersão (eixo y). Os pontos indicam a média de 10 réplicas para uma mesma bateria de simulações - a combinação de inventário florestal, paisagem hipotética e limitação de dispersão (para clareza, os pontos são omitidos). Cada boxplot sumariza os pontos obtidos para uma mesma paisagem hipotética e limitação de dispersão. Os boxplots descrevem três quantis (Q1 = 0.25, Q2 = 0.50 e Q3 = 0.75) e as linhas verticais o ponto mais próximo dos valores extremos, definidos como: Q1 - 1.5 * IQR (menor valor) e Q3 + 1.5 * IQR (maior valor), onde IQR = Q3 - Q1 é o intervalo interquartil. Os pontos que vão alem dos limites inferiores são marcados individualmente no boxplot. A tabela inserida contém um resumo estatístico da taxa U média por paisagem hipotética (os valores máximos, os quantis de 95% e 5%, e os mínimos). Cerca de 90% das simulações estimam taxa U entre $1 \\times 10^{-3}$ e $1 \\times 10^{-2}$, no limite o modelo variou entre ~$4 \\times 10^{-2}$ e ~$4 \\times 10^{-4}$."
+```
+```{r taxaU-lands, fig.cap=cap,fig.width=14,fig.height=8, cache=FALSE}
+p <- readRDS("./00_Resultados/rds/plot_taxaU_paisagens.rds")
+p
+```
+
+<p>
+Esta seção descreve a variabilidade da taxa U calibrada empiricamente para aproximar a riqueza observada. A taxa U é a base da métrica funcional da paisagem logUi/Uj, que compara a estimativa entre duas paisagens hipotéticas (Ui e Uj) para um mesmo inventário florestal e cenário de limitação de dispersão. A taxa U média revela a amplitude de valores na escala original. A métrica logUi/Uj quantifica a variação relativa (aumento ou diminuição) da taxa U da paisagem do numerador (Ui) em relação à do denominador (Uj). 
+</p>
+
+<p>
+Para as três paisagens hipotéticas observamos uma tendência a valor máximo da taxa U quando a limitação de dispersão é intermediária (principalmente em 0.65 < k < 0.75) e valores reduzidos quando a limitação de dispersão é muito branda (k<0.50, com mais consistência para a paisagem prístina), mas principalmente quando é severa (k>0.80, fig. \@ref(fig:taxaU-lands)). A maior parte das taxas U estimadas teve ordem de grandeza entre $10^{-3}$  e $10^{-2}$ (fig. \@ref(fig:taxaU-lands)). Ou seja, para cada nascimento na paisagem, 1 entre 100 até 1 entre 1 mil são de novas espécies. Nos trabalhos que investigam os padrões de biodiversidade usando MNEE em paisagens fragmentadas (simuladas ou empíricas), mas sem calibração empírica da taxa U, utilizou-se uma taxa U entre $10^{-8}$ e $10^{-4}$ (@campos_neutral_2012; @campos_effect_2013; @thompson2019characterising). Nesses trabalhos a única interpretação da taxa U era como taxa de especiação, o que justifica fixá-la em ordens de magnitude inferior nas simulações.
+</p>
+
+<p>
+Em nosso trabalho, a taxa U foi um parâmetro livre para que as simulações resultassem em uma riqueza igual à riqueza observada, para cada nível de limitação à dispersão (valor de k) e  paisagem hipotética na qual a simulação foi realizada (isto é os 3 tipos de paisagens utilizados). Assim, uma interpretação mais apropriada para a taxa U em nosso estudo deve incluir o efeito da dispersão de longa de fora da paisagem (@nathan2008mechanisms; @wu2023establishment). Outro processo que pode afetar a taxa U é o ingresso de indivíduos de espécies que estavam antes apenas no banco de propágulos (@etienne2007zero, @jabot2008reconciling, @condit_thirty_2012). Assim, uma vez que apenas indivíduos com DAP maior ou igual a 5 cm são inventariados (e portanto simulados), é possível interpretar parte da reposição de espécies perdidas pela taxa U como ingresso a partir do reservatório de espécies ausentes entre os adultos na paisagem, mas já presentes como propágulos ou jovens.
+</p>
+
+## Critérios de interpretação dos efeitos simulados da paisagem {#criterios}
+
+<p>
+Nesta seção iremos separar as simulações que serão usadas para interpretar os efeitos propostos da paisagem. Apesar da boa congruência de MNEE em média, iremos utilizar apenas um subconjunto das simulações realizadas. Primeiro, focamos nos cenários de limitação de dispersão mais realistas para árvores em florestas tropicais, em que a maior parte dos propágulos se dispersa para a vizinhança imediata da progenitora (@bullock_synthesis_2017; @clark1999seed). Iremos considerar apenas as simulações em que a proporção de propágulos na vizinhança imediata de cada adulto (k) é maior ou igual a 0.50. Ou seja, simulações em que pelo menos metade dos propágulos caem até a árvore-mãe e a árvore vizinha imediata. Nesses cenários de limitação de dispersão, a SAD simulada por MNEE apresentou boa congruência média para todas as paisagens hipotéticas. 
+</p>
+
+<p>
+Segundo, aplicamos um filtro de congruência com a SAD observada para selecionar inventários onde o MNEE apresentou bom desempenho (fig. \@ref(fig:p-cong)). Consideramos como congruentes os inventários que, para cada combinação individual de limitação de dispersão (k) e paisagem hipotética, apresentaram SADs compatíveis com a observada em pelo menos 75% das réplicas. Dos 105 sítios iniciais, 67 atenderam a esse critério em todas as combinações de k e paisagem hipotética. Os 38 demais foram excluídos por apresentarem baixa congruência em pelo menos uma combinação (figs. \@ref(fig:sitioscong)). A distribuição de porcentagem de cobertura florestal foi similar entre sítios congruentes e não congruentes (figs. \@ref(fig:sitioscong)).
+</p>
+
+
+```{r}
+cap="Os inventários florestais, conforme a classificação de congruência da SAD simulada com a SAD observada, distribuídos ao longo da porcentagem de cobertura florestal na paisagem ao redor (eixo x). Os inventários com boa congruência são aqueles em que pelo menos 75% das SAD simuladas foram congruentes com a SAD observada, considerando todos os cenários de limitação de dispersão e paisagens hipotéticas (em vermelho). Os inventários com alguma simulação com congruência abaixo de 75% (em azul). Cada barra contabiliza o número de inventários por classe de congruência (eixo y). Existem 60 barras com igual comprimento da base (eixo x) para cada classe de congruência. As parcelas em azul e vermelho estão distribuídos conforme a proporção de cobertura florestal (eixo x, %CF)."
+```
+```{r sitioscong, fig.cap=cap,fig.width=3,fig.height=2}
+p_boasempre_ounao <- readRDS(file="./00_Resultados/figuras/p_boasempre_ounao.rds")
+p_boasempre_ounao
+```
+
+## A métrica funcional da influência da paisagem na biodiversidade local {#metrica-funcional}
+
+### Apresentação 
+
+<p>
+Nesta seção descrevemos como a métrica de efeito da paisagem, logUi/Uj, variou em função do tipo de efeito da paisagem, da porcentagem de cobertura florestal (%CF) e limitação à dispersão (k). Com esta métrica (logUi/Uj) avaliamos 3 efeitos da paisagem: o efeito de fragmentação total, dado pela razão entre as taxas U obtidas para a paisagem fragmentada e a prístina; o efeito de fragmentação *per se*, a razão entre a taxa U estimada para a paisagem fragmentada e aglomerada; e o efeito de área *per se*, pela razão das taxas U da paisagem aglomerada e prístina. O contraste logUi/Uj entre paisagens busca revelar diferentes efeitos da paisagem na manutenção da biodiversidade local. Primeiro, a conectividade funcional, a movimentação dos indivíduos no habitat remanescente. Segundo, a dinâmica de substituição de indivíduos na paisagem, resultando em variações no número de espécies locais perdidas por deriva ecológica. Dessa forma, a métrica de efeito da paisagem proposta, logUi/Uj, busca descrever a vulnerabilidade da biodiversidade local, definida pelo grau em que a paisagem ao redor exige fontes externas de biodiversidade arbórea.
+</p>
+
+<p>
+Na figura \@ref(fig:logUU-sitios) há a métrica de efeito da paisagem na vulnerabilidade local (logUi/Uj) para os propostos efeitos da paisagem para os inventários florestais classificados como congruentes (isto é, para os quais o MNEE aproximou bem as SADs empíricas, seção \@ref(criterios)). Também há os mesmos resultados para os inventários classificados como incongruentes, para avaliar algum eventual viés devido a este critério de seleção (fig. \@ref(fig:sitioscong)). Na maior parte das simulações, a métrica funcional logUi/Uj esteve próxima de zero, com exceção principalmente de algumas parcelas em paisagem com menor cobertura florestal (%CF)  (fig. \@ref(fig:logUU-sitios)). Os valores da métrica funcional variaram entre cerca de -0.25 e 0.50 nos sítios selecionados para análise e nos excluídos, com variação similar entre os efeitos (fig. \@ref(fig:logUU-sitios)). Assim, é possível concluir que os inventários da classe ‘alta congruência sempre’ apresentam perfil similar de variação de cobertura florestal (fig. \@ref(fig:sitioscong)) e de métrica funcional da paisagem (fig. \@ref(fig:logUU-sitios)) com os inventários da outra classe de congruência. Nas próximas análises apenas as estimativas para os inventários que MNEE teve boa congruência serão considerados. Dessa forma, aumentando a confiabilidade das interpretações subsequentes.
+</p>
+
+```{r}
+  cap = "A métrica funcional logUi/Uj em função da limitação de dispersão (eixo x), colorido pela porcentagem de cobertura florestal na paisagem de 1 km de lado (%CF) e agrupado pela classe de congruência de MNEE com o observado em inventários florestais. A classificação de congruência segue a definição: os inventários da classe ‘alta congruência sempre’ são aqueles em que pelo menos 75% das SAD simuladas foram congruentes com a SAD observada, considerando todos os cenários de limitação de dispersão e paisagens hipotéticas. Os outros inventários apresentam congruência baixa (menor do que 75%) em alguma simulação. Cada ponto representa o contraste entre baterias de simulações de MNEE para um mesmo inventário mas variando a paisagem hipotética, pontos de um mesmo inventário estão conectados por uma linha. Frag. total é o contraste entre paisagem fragmentada, tal como no ano mais próximo ao inventário florestal, e prístina, sem perda de cobertura florestal. Frag. \\textit{per se} é o contraste entre a paisagem fragmentada e a paisagem com a cobertura remanescente aglomerada ao redor da parcela tal como a forma do recorte de paisagem (paisagem aglomerada). Área \\textit{per se} é o contraste entre paisagem aglomerada e prístina. Uma vez que o logUi/Uj = logUi - logUj, então Frag. total = Frag. \\textit{per se} + Área \\textit{per se}. Concluímos com essa figura que a métrica funcional varia em função da capacidade de dispersão e %CF de forma similar entre os grupos de inventários classificados conforme a congruência da predição de MNEE."
+```
+```{r logUU-sitios, fig.cap=cap,fig.width=10,eval=TRUE,include=TRUE,message=FALSE,warning=FALSE,fig.height=7}
+p <- readRDS("./00_Resultados/figuras/logUU_comparacaositios.rds")
+p
+```
+
+### Descrição estatística da métrica funcional da paisagem de cada proposto efeito da paisagem
+
+<p> O objetivo dessa seção é descrever, para cada proposto efeito da paisagem, o modelo estatístico mais plausível para a resposta da métrica funcional da paisagem (logUi/Uj) em função da porcentagem de cobertura florestal (%CF) e cenário de limitação de dispersão (k, proporção de propágulos na vizinhança imediata). Os efeitos da paisagem em logUi/Uj foram descritos por dois modelos estatísticos cada, que diferem quanto ao spline de k (parâmetro de limitação à dispersão) por parcela (tab. \@ref(tab:tabsel-efeitos)). Para todos os contrastes, o modelo estatístico mais plausível descreve o logUi/Uj em função de um tensor entre proporção de habitat remanescente na paisagem empírica (%CF) e k como efeito fixo e um spline de k por parcela (Tab. \@ref(fig:logUU-sitios)). Isso significa que a razão logUi/Uj é modelada por uma interação multidimensional entre %CF e k (via tensor), que captura efeitos conjuntos não lineares entre essas variáveis. O modelo também inclui efeitos aleatórios que expressam as variações do efeito de k em cada parcela, ajustadas por um spline, permitindo padrões distintos e não-lineares. Os modelos mais plausíveis explicam mais de 90% da ‘deviance’ (Tab. \@ref(fig:logUU-sitios)) e apresentam bom ajuste, conforme evidenciado nos gráficos de diagnóstico do pacote Gratia (@gratia) no material de suporte (seção \@ref(SI)).
+</p>
+
+
+```{r}
+vcap="Modelos estatísticos para descrever os efeitos da paisagem em logUi/Uj. te(p,k) = tensor entre porcentagem de cobertura florestal na paisagem (p) e grau de limitação de dispersão (k); s(k)|Site = spline para k por sítio; 1|Site = apenas 1 intercepto por sítio. Sítio = parcela."
+```
+```{r tabsel-efeitos, include=TRUE,eval=TRUE}
+vnumericcols <- names(df_tabsel)[sapply(df_tabsel,is.numeric)]
+f_format <- \(x){
+    formatC(x, format = "e", digits = 2)
+  }
+ft <- df_tabsel %>%
+  mutate(modelo = gsub(" - te\\(logU\\/U"," - te\\(Sítio)",modelo),
+         efeito = gsub("areaperse","Área per se",efeito) %>%
+           gsub("fragperse","Frag. per se",.) %>%
+           gsub("fragtotal","Frag. total",.)) %>%
+  as_grouped_data(groups = "efeito") %>%
+  as_flextable(hide_grouplabel = TRUE) %>%
+  set_caption(vcap) %>%
+  colformat_double(j = vnumericcols, digits = 3) %>%
+  set_formatter(dAICc = f_format,df = f_format) %>%
+  autofit() %>%
+  fontsize(size = 8, part = "all") %>%  # ⬅ tamanho da fonte
+  set_header_labels(
+    modelo = "MAGH",
+    dAICc = "ΔAICc",
+    df = "est. coef.",
+    weight = "peso",
+    dev.expl = "dev. expl.",
+    MoranI_stat_res = "Moran's I",
+    pvalue = "p-valor"
+  ) %>%
+  set_table_properties(opts_pdf = list(caption_repeat = FALSE)) %>% 
+  align(i = ~ !is.na(efeito), align = "center") %>%
+  bold(i = ~ !is.na(efeito))
+ft
+```
+
+### A influência da cobertura florestal e da limitação de dispersão na métrica funcional dos efeitos da paisagem {#CFeK-efeitos}
+
+<p>
+Nesta seção iremos interpretar a predição do modelo estatístico mais plausível para descrever a métrica funcional (logUi/Uj) de cada proposto efeito da paisagem. Quanto menor a taxa U estimada, menor a necessidade da entrada de novas espécies na paisagem para manter a riqueza local observada de acordo com MNEE, ou seja, menor a dependência de processos locais de reposição como especiação verdadeira, reposição do banco de propágulos de espécies ausentes entre os adultos e dispersão de longa distância de fora da paisagem. Assim, quando o logUi/Uj é negativo, então o efeito da paisagem é positivo na manutenção da biodiversidade local, pois isso significa que na paisagem do numerador a taxa U é menor do que a taxa U no denominador. O contrário acontece quando o logUi/Uj é positivo, que indica que a taxa U na paisagem do numerador é maior.
+</p>
+
+<p>
+Para facilitar a interpretação, o predito pelo modelo mais plausível será analisado conforme a porcentagem de cobertura florestal observada nas paisagens (%CF). Para isso, os inventários estão divididos em 5 classes: cobertura menor do que 30%; entre 30% e 60%; entre 60% e 80%; entre 80% e 100%; e igual a 100% (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)). Os valores de logUi/Uj obtidos nas simulações em paisagens de %CF igual a 100% foram usados como referência de ausência de efeito, uma vez que, nestes casos, todas as paisagens hipotéticas simuladas são iguais. Assim, os valores máximo, mínimo e quantis de 95% e 5% da taxa logUi/Uj foram adicionados aos gráficos em todos os painéis (linhas pontilhadas, máximo e mínimo, e tracejadas, quantis), para referência. Adicionalmente, incluímos um boxplot que sumariza os valores do logUi/Uj para cada combinação de classe de cobertura florestal, tipo de efeito da paisagem e grau de limitação de dispersão (valor de k no eixo x, na fig. \@ref(fig:p-efeitos)). Para auxiliar a interpretação da fig. \@ref(fig:p-efeitos), as figs. \@ref(fig:bp-efeitos-pclass) e \@ref(fig:propsitio-efeito) sumarizam os efeitos agregando os resultados por classe de cobertura florestal e tipo de efeito da paisagem. Na fig. \@ref(fig:bp-efeitos-pclass) há o histograma de logUi/Uj em função da classe de cobertura florestal e efeito da paisagem. Na fig. \@ref(fig:propsitio-efeito) há a porcentagem de inventários em que a magnitude de valores de logUi/Uj ultrapassou os valores de referência de ausência de efeito.
+</p>
+
+<p>
+Os valores de logUi/Uj da referência de ausência de efeito (%CF=100%) variaram entre -0.13 e 0.10 (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)). Se considerarmos a exponenciação do módulo desses valores, então as razões de Ui/Uj (1.14 e 1.10, respectivamente) informam que a variação na taxa U entre simulações foi de até cerca de 12%. Esta variação observada na métrica funcional de paisagens sem perda de cobertura florestal (%CF=100) pode ser explicada em função da estocasticidade demográfica simulada em MNEE. A maior magnitude de logUi/Uj foi observada nos extremos de cobertura florestal (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)), variando entre -0.33 e 0.56, o que corresponde a decremento de 39% até incremento de 75% na taxa U da paisagem no numerador em relação a do denominador.
+</p>
+  
+<p> 
+__Efeito de área *per se*__
+</p>
+    
+<p>
+Nessa seção avaliamos a variação na métrica funcional (logUi/Uj) obtida pela comparação entre paisagens aglomerada e prístina. A comparação entre essas duas paisagens permite avaliar o efeito isolado da perda de área, independente da mudança na configuração espacial (chamado aqui de área *per se*). O padrão geral da área *per se* é de efeito negativo para a manutenção da biodiversidade local, que é acentuado em paisagens com pouca cobertura florestal (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito))). Em paisagens com cobertura florestal acima de 60% o efeito de área *per se* é nulo. O efeito de área *per se* apresenta menor magnitude em cenários de limitação de dispersão intermediários (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito))). Nesses cenários de limitação de dispersão intermediários, se observa os valores máximos de taxa U nas três paisagens hipotéticas (fig. \@ref(fig:taxaU-lands)). 
+</p>
+
+<p>
+Esse padrão geral é consistente entre inventários. Isso significa que a taxa U estimada na paisagem aglomerada é superior ou igual à taxa U estimada na paisagem prístina. Em paisagens com pouca cobertura florestal (<30%) observamos a maior amplitude de valores da métrica funcional (logUi/Uj) do efeito de área *per se*, variando entre -0.12 e 0.41. Esses valores indicam que a taxa U estimada na paisagem aglomerada foi até 50% maior do que a taxa U estimada na paisagem prístina.
+</p>
+
+
+__Efeito de fragmentação *per se*__
+
+
+<p>
+Nessa seção avaliamos a variação na métrica funcional (logUi/Uj) obtida pela comparação entre paisagens fragmentada e aglomerada. A comparação entre essas duas paisagens permite avaliar o efeito isolado da fragmentação, independente da quantidade de habitat remanescente (chamado de fragmentação *per se*). O padrão geral do efeito de fragmentação *per se* é de efeito positivo quando a limitação de dispersão é severa e negativo quando a limitação de dispersão é branda, que se intensifica em paisagens com baixa cobertura florestal em comparação com paisagens com alta cobertura florestal onde a tendência é nula (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)). Esse padrão geral indica que, quando a limitação de dispersão é severa, a taxa U estimada na paisagem fragmentada é menor do que a taxa U estimada na paisagem aglomerada. E o oposto quando a limitação de dispersão é branda. O ponto de virada no sinal do efeito de fragmentação *per se* em função da capacidade de dispersão ocorre em cenários de limitação intermediários (k em cerca de 0.70, fig. \@ref(fig:p-efeitos)). 
+</p>
+
+<p>
+Alguns inventários florestais em paisagens com alta cobertura florestal destoam do padrão geral, principalmente com cobertura entre 80% e 100% . Os efeitos estimados nesses poucos inventários (cerca de até 35% dos inventários com cobertura florestal entre 80% e 100%) não são próximos do nulo, pelo contrário, alguns inventários (cerca de 18%) apresentam as estimativas mais acentuadas em todo gradiente de cobertura florestal (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)). Nesses poucos inventários que destoam, o efeito de fragmentação *per se* é positivo sob limitação de dispersão severa e negativa quando a limitação de dispersão é branda (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)), seguindo o padrão geral de modulação do efeito de fragmentação *per se* pela variação na capacidade de dispersão em paisagens com pouca cobertura florestal. Contudo, nos inventários em paisagens com alta cobertura florestal (acima de 60%) o padrão geral é efeito de fragmentação *per se* nulo (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass))
+</p>
+
+<p>
+Assim, a amplitude dos valores de fragmentação *per se* não segue necessariamente a tendência geral. Em paisagens com alta cobertura florestal existem alguns inventários que destoam do padrão de efeito nulo, apresentando a maior amplitude observada: logUi/Uj variou entre -0.34 e 0.57 (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)), destoando do padrão geral de efeito nulo. A segunda maior amplitude observada no efeito de fragmentação *per se* foi em paisagens com pouca cobertura florestal, com a métrica funcional variando entre -0.26 e 0.27 (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)), porém sendo coerente com a tendência geral de efeito positivo sob severa limitação de dispersão e negativo sob limitação de dispersão branda. Em termos de variação na taxa U, esses valores indicam que a taxa U estimada na paisagem fragmentada foi até 76% maior quando a limitação de dispersão é branda. E sob limitação de dispersão severa, a taxa U estimada na paisagem fragmentada foi até 40% menor. 
+</p>
+
+
+__Efeito de fragmentação total__
+
+<p>
+Nessa seção avaliamos a variação na métrica funcional (logUi/Uj) obtida pela comparação entre paisagens fragmentada e prístina. A comparação entre essas duas paisagens permite avaliar o efeito combinado da perda e fragmentação de cobertura florestal (aqui chamado de fragmentação total). O padrão geral do efeito de fragmentação total é de maior efeito negativo em paisagens com baixa cobertura, principalmente sob limitação de dispersão branda (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito))). Esse padrão geral indica que a taxa U estimada na paisagem fragmentada é igual ou maior do que a taxa U estimada na paisagem prístina. Contudo, o efeito de fragmentação total apresenta a maior variabilidade de padrões por parcela entre os efeitos da paisagem (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito)). Essa maior variabilidade entre parcelas pode ser explicado pelo fato do efeito de fragmentação total ser definido como a soma dos efeitos de área  e fragmentação , e dessa forma resultando na combinação da variabilidade dos dois.
+</p>
+
+<p>
+Em paisagens com cobertura superior a 60%, o efeito de fragmentação total pode ser positivo sob severa limitação de dispersão, em alguns poucos inventários (cerca de 18% dos sítios), esse padrão resulta principalmente do efeito de fragmentação , umas vez que o efeito de área total apresenta variação nula (figs. \@ref(fig:p-efeitos), \@ref(fig:propsitio-efeito))). Nessa faixa de cobertura florestal também é possível observar inventários com o efeito da fragmentação total negativo, isso aconteceu em cerca de 30% dos sítios quando a limitação de dispersão é branda (figs. \@ref(fig:p-efeitos), \@ref(fig:propsitio-efeito))), também sendo mais influenciado pelo efeito de fragmentação. Contudo, em paisagens com cobertura florestal acima de 60% a maioria dos inventários possui efeito de fragmentação total dentro da faixa de valores de referência de ausência de efeito (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)).
+</p>
+
+<p>
+Em paisagens com cobertura florestal abaixo de 60% se observa uma tendência, robusta entre os inventários, de efeitos negativos da fragmentação total (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito))). Os efeitos negativos ocorrem com maior intensidade quando a limitação de dispersão é branda, padrão que se torna mais claro em paisagens com pouca cobertura florestal (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito))). Por outro lado, nos inventários em paisagens com cobertura florestal abaixo de 30%, mesmo cenários de limitação de dispersão intermediários ou severos apresentam efeito negativo de fragmentação total superiores à faixa de referência de ausência de efeito (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito))).
+</p>
+
+<p>
+Assim, a amplitude do efeito de fragmentação total não segue necessariamente a tendência geral. A maior amplitude é observada em paisagens com cobertura florestal extrema (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)). Quando a cobertura florestal é alta, existem parcelas que destoam do padrão geral de efeito nulo, resultando na maior amplitude observada (entre -0.31 e 0.56 no valor de logUi/Uj, figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)). Nos inventários em paisagens com baixa cobertura florestal a amplitude observada é a segunda maior (entre -0.03 e 0.52 no valor de logUi/Uj), mas ela acompanha a tendência geral de aumento do efeito negativo (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)). Ou seja, em geral a taxa U estimada na paisagem fragmentada é maior do que a taxa U estimada na paisagem prístina, chegando até 75% maior em cenários de limitação de dispersão branda. Em poucos inventários e sob severa limitação de dispersão, a taxa U estimada na paisagem fragmentada foi inferior, chegando a ser até 36% menor - destoando do padrão geral e ocorrendo apenas em paisagens com muita cobertura florestal, onde o efeito de fragmentação *per se* predomina.
+</p>
+
+
+
+```{r include=FALSE,eval=FALSE}
+ p <- df_real %>% 
+   group_by(efeito,p_class) %>% 
+   reframe(quantils=c("min",0.05,0.95,"max"),
+           values=c(min(Uefeito),quantile(Uefeito,probs = c(0.05,0.95)),max(Uefeito))) %>% 
+  mutate(quantils=factor(quantils,
+                         levels=c("min",0.05,0.95,"max"))) %>% 
+  filter(p_class!="%CF = 100") %>% 
+  ggplot(aes(x=p_class,y=quantils,fill=values)) +
+  geom_tile(color="white") +
+  geom_label(aes(label=round(values,2)),fill="white") +
+  facet_wrap(~efeito,ncol=1)
+```
+
+```{r}
+vcap="Os efeitos da paisagem em logUi/Uj observado e previsto pelo ajuste de um modelo aditivo generalizado hierárquico. Cada ponto resulta da comparação de duas simulações, que mudam conforme o efeito da paisagem (título nos quadros por linha). O efeito de fragmentação total é a comparação entre os valores de U estimados usando o modelo neutro espacialmente explícito (MNEE) na paisagem fragmentada (empírica) e em uma paisagem hipotética com 100% de cobertura florestal (“prístina”); o efeito de fragmentação \\textit{per se} é o contraste entre simulações feitas com a paisagem fragmentada e a paisagem hipotética “aglomerada” (com a cobertura remanescente da paisagem fragmentada aglomerada ao redor da parcela); o efeito de área \\textit{per se} compara os valores de U obtidos das simulações nas paisagens hipotéticas “aglomerada” e “prístina”. Uma vez que o logUi/Uj = logUi - logUj, então Frag. total = Frag. \\textit{per se} + Área \\textit{per se}. No eixo x está o grau de limitação de dispersão (k, proporção dos propágulos que permanecem na vizinhança imediata da árvore-mãe). Os pontos estão coloridos pela percentagem de cobertura florestal observada na paisagem de lado 1km na qual está a parcela simulado (sítio). Os quadros estão divididos em colunas correspondendo a classes de cobertura florestal observada nas paisagens de cada parcela (título das colunas). Os parcelas com %CF=100 foram removidos do gráfico e apenas a amplitude (mínimo = -0.133 e máximo = 0.104) e o intervalo interquartil de 90% (quantil de 5% = -0.060 e de 95% = 0.048) da métrica logUi/Uj foram marcados no eixo y. Os boxplots sumarizam valores para um mesmo k. O eixo y é livre para variar entre quadros de linhas diferentes (ou seja, de diferentes efeitos da paisagem). Ao exponencializar o logUi/Uj é possível obter a razão entre as taxas U, informando a variação na taxa U entre paisagens hipotéticas em comparação. Por exemplo, o maior valor positivo de logUi/Uj observado em paisagens sem perda de cobertura florestal foi 0.104, exponencializando isso resulta em 1.109, indicando que a taxa U estimada na paisagem do numerador foi cerca de até 12% maior do que a taxa U estimada na paisagem do denominador - essa variação decorre da estocasticidade representada por MNEE. Nessa figura há os resultados dos inventários considerados congruentes, detalhes no texto."
+```
+```{r p-efeitos, fig.cap=vcap,fig.width=14,fig.height=10,cache=TRUE}
+p_efeitos <- readRDS("./00_Resultados/figuras/p_efeitos_porclasseCF.rds")
+p_efeitos
+```
+
+```{r}
+vcap="Frequência dos valores  de logUi/Uj nas simulações, por tipo de efeito da paisagem (títulos nas linhas) e por classes de cobertura florestal da paisagem dos inventários florestais (título nas colunas). O eixo x está dividido 30 barras com igual comprimento de logUi/Uj. Cada barra contabiliza o número de simulações que possuem logUi/Uj dentro do intervalo no eixo x. A amplitude de variação de logUi/Uj para a classe de parcelas com %CF=100% foi considerada como referência de ausência de efeito de mudanças nas paisagens, uma vez que toda variabilidade que existe aqui é resultado na estocasticidade demográfica intrínseca ao modelo neutro simulado. Por isso são representados como linhas verticais que marcam a amplitude (máximo e mínimo) e os quantis de 5% e 95% destes valores de referência em todos os painéis. Nessa figura há os resultados dos inventários considerados congruentes, detalhes no texto. Sítio=parcela."
+```
+```{r bp-efeitos-pclass,fig.cap=vcap,fig.width=12}
+p <- readRDS(file = "./00_Resultados/figuras/boxplot_efeitos_pclass.rds")
+p
+```
+
+
+```{r}
+vcap="Porcentagem das parcelas (cor e valores em cada rótulo) que divergem dos valores de referência de ausência de efeito (eixo x) na métrica funcional da paisagem (logUi/Uj) em função da classe de cobertura florestal (título nas colunas dos quadros) e do tipo de efeito da paisagem (títulos das linhas dos quadros). No eixo x a comparação com o sumário das estimativas observadas nas paisagens com cobertura florestal contínua (%CF=100): menor do que o mínimo (<min), menor do que o quantil de 5% (<Q5%), maior do que o quantil de 95% (>Q95%) e maior do que o máximo (>max). Os valores mostrados representam o número de inventários que possuem pelo menos uma simulação em que a condição no eixo x é observada. Esses valores variam entre 0% e 100%, sendo 100% o número total de parcelas na classe de cobertura florestal (indicado como n sítios). Por exemplo, para o efeito de fragmentação total (FT) nas parcelas em paisagens com cobertura entre 80% e 100%, houveram 5 parcelas (de 17) em que pelo menos um cenário de limitação de dispersão foi superior ao valor máximo da referência de ausência de efeito. Nessa figura há os resultados dos inventários considerados congruentes, detalhes no texto."
+```
+```{r propsitio-efeito,fig.cap=vcap,fig.width=10,fig.height=3}
+p <- readRDS(file = "./00_Resultados/figuras/propSitios_ultrapassam_efeitoCF100.rds")
+p
+```
+
+
+### Resumo da variação dos efeitos da paisagem na métrica funcional logUi/Uj
+
+<p>
+Os efeitos da paisagem sobre a métrica funcional logUi/Uj variam em função da cobertura florestal e da capacidade de dispersão das espécies. Os principais padrões observados foram para o efeito de __Área *per se*__: efeito nulo ou consistentemente negativo, com aumento médio em paisagens com pouca cobertura florestal. Este efeito foi menor sob limitação de dispersão intermediária. Para o efeito de __Fragmentação *per se*__: efeito nulo ou positivo sob limitação severa e negativo sob limitação de dispersão branda (padrão bifásico), de forma consistente em paisagens com pouca cobertura florestal e em geral nulo em paisagens com alta cobertura florestal. Este efeito apresenta alguns inventários em paisagens com alta cobertura florestal em que o padrão bifásico é o mais acentuado, com o efeito negativo mais saliente. Para o efeito de __Fragmentação total__: predominantemente negativo, com efeito acentuado em paisagens com pouca cobertura florestal e cenários de limitação de dispersão branda. Esse efeito apresenta alguns inventários em paisagens com alta cobertura florestal que apresentam o padrão bifásico, resultado da predominância do efeito de fragmentação *per se* nesses inventários.
+</p>
+
+
+### Relação entre os efeitos de fragmentação *per se* e área *per se*
+
+<p>
+Essa seção tem como objetivo comparar diretamente os efeitos de fragmentação *per se* e área *per se*. Um tema central no debate sobre fragmentação de habitat é sobre o tamanho e sinal dos efeitos de fragmentação *per se* e área *per se* (@fahrig_ecological_2017; @fletcher2018habitat; @fahrig2019habitatA). Fahrig (@fahrig_effects_2003, @fahrig_ecological_2017) concluiu que o efeito de fragmentação *per se* é variável, podendo ser positivo ou negativo, mas sempre menor do que o efeito de área *per se*. Assim, para avaliar essa predição de Fahrig (@fahrig_effects_2003, @fahrig_ecological_2017) preparamos análises exploratórias que comparam os efeitos de fragmentação *per se* e área *per se* sobre a métrica funcional da paisagem (log da razão das taxas U, logUi/Uj). Na figura \@ref(fig:fragarea-todosk) há a comparação entre os efeitos de fragmentação *per se* e área *per se* considerando todas as simulações da figura \@ref(fig:p-efeitos). Na figura \@ref(fig:fraarea-expfinal) há a comparação entre os dois efeitos agrupados por classe de cobertura florestal e 3 cenários de limitação de dispersão: k = 0.50, limitação branda; k = 0.75, limitação intermediária; e k = 0.99, limitação severa. Quando a métrica funcional (logUi/Uj) é negativa, então o efeito da paisagem é positivo na manutenção da biodiversidade, e quando a métrica é positiva, então o efeito é negativo (ver seção \@ref(CFeK-efeitos)).
+</p>
+
+<p>
+Na conclusão de @fahrig_ecological_2017 sobre os efeitos de fragmentação *per se* e área *per se* não há influência da cobertura florestal e da capacidade de dispersão nesses efeitos, assim, uma forma direta de explorar a relação entre esses efeitos é agregando todas as simulações (fig. \@ref(fig:fragarea-todosk)). Com os resultados agregados, os valores do efeito de fragmentação *per se* se distribuem ao redor do zero com certa simetria, enquanto os de área *per se* tendem a ser mais negativos e mais assimétricos para efeito negativo (fig. \@ref(fig:fragarea-todosk, gráfico de dispersão na esquerda). Contudo, quando avaliamos a diferença na magnitude absoluta entre a métrica funcional dos dois efeitos da paisagem (fragmentação *per se* e área *per se*), desconsiderando o sinal do efeito, observamos que os valores se distribuem ao redor do zero, de forma simétrica, com alguns poucos casos em que o efeito de fragmentação *per se* é maior em magnitude (fig. \@ref(fig:fragarea-todosk), histograma na direita inferior). 
+</p>
+
+<p>
+Entre todas as predições estimadas, observamos que a situação mais frequente foi de efeito de fragmentação *per se* positivo e efeito de área *per se* negativo com maior magnitude; seguido da situação em que o efeito de fragmentação *per se* é negativo e o de área *per se* positivo (fig. \@ref(fig:fragarea-todosk), octógono da esquerda). As situações mais raras ocorrem quando tanto o efeito de fragmentação *per se* quanto o de área *per se* são positivos (fig. \@ref(fig:fragarea-todosk), octógono da esquerda). A maior parte dos inventários apresenta simulações que se enquadram nas duas situações mais frequentes, em que ou o efeito de área *per se* ou o efeito de fragmentação *per se* predominam (fig. \@ref(fig:fragarea-todosk), octógonos na direita superior). Enquanto metade dos inventários possuem alguma simulação que se enquadra nas situações mais raras, em que ambos os efeitos são positivos (fig. \@ref(fig:fragarea-todosk), octógonos na direita superior).
+</p>
+
+<p>
+Outra forma de explorar a relação dos efeitos de fragmentação *per se* e área *per se* na métrica funcional (logUi/Uj) é agregando as estimativas em função da cobertura florestal e capacidade de dispersão (fig. \@ref(fig:fraarea-expfinal)). Com isso é possível comparar as estimativas de inventários em paisagens sem perda de cobertura florestal, a situação de referência de ausência de diferença (polígono em cinza na fig. \@ref(fig:fraarea-expfinal)) com as outras classes de cobertura florestal. Ao considerar a influência da limitação de dispersão e cobertura florestal, observamos um padrão geral. A predominância de cada efeito da paisagem ocorre em extremos opostos do gradiente de cobertura florestal (fig. \@ref(fig:fraarea-expfinal)). A amplitude do efeito de fragmentação *per se* é máxima em paisagens com alta cobertura florestal, enquanto a amplitude do efeito de área *per se* é máxima em paisagens com baixa cobertura florestal (fig. \@ref(fig:fraarea-expfinal)). A limitação de dispersão modula o sinal do efeito de fragmentação *per se* e a intensidade do efeito negativo de área *per se* (fig. \@ref(fig:fraarea-expfinal)). O efeito de fragmentação *per se* é mais inconsistente entre inventários e o de área *per se* é mais consistente entre inventários (fig. \@ref(fig:fraarea-expfinal)).
+</p>
+
+
+```{r}
+vcap="Relação entre o efeito de fragmentação \\textit{per se} e área \\textit{per se}. No quadro da esquerda há o gráfico de dispersão do valor da métrica log Ui/Uj para os efeitos da  fragmentação \\textit{per se} (y) e área \\textit{per se} (x), e os pontos estão coloridos conforme a contagem de simulações em cada combinação de x e y. Essa métrica revela efeito positivo na manutenção da biodiversidade local quando log Ui/Uj é negativo, e o oposto quando logUi/Uj é positivo. No gráfico de dispersão, além dos eixos x e y, também há as linhas 1:1 e -1:1. A sobreposição dessas 4 linhas delimita as 8 áreas dos octógonos no canto superior direito da figura. No octógono da esquerda está a porcentagem do total de  simulações dentro de cada área delimitada pelas linhas. No octógono da direita há a porcentagem de parcelas  de estudo que tiveram pelo menos 1 simulação na área do octógono (portanto estes valores não somam 100, porque um mesmo parcela pode ser contabilizado em mais de uma seção do octógono). Na parte inferior direita da figura há o histograma da diferença do módulo dos efeitos de área \\textit{per se} e fragmentação \\textit{per se}. No histograma, o eixo x (a diferença no módulo dos efeitos) está dividido em 30 espaços de mesma largura."
+```
+```{r fragarea-todosk, fig.cap=vcap, fig.width=11,fig.height=6,message=FALSE,warning=FALSE,include=TRUE,eval=TRUE}
+p_final <- readRDS(file="./00_Resultados/rds/comp_fragarea_todos_k.rds")
+p_final
+```
+
+
+```{r}
+vcap="Comparação dos efeitos de fragmentação \\textit{per se} e área \\textit{per se} agrupado pelas classes de cobertura florestal (divisão das colunas) e da capacidade de dispersão (divisão das linhas). Os pontos representam os valores de logUi/Uj obtidos das simulações para cada parcela, para cada cenário de limitação de dispersão (k). Nos quadros além dos eixos x e y, há as retas 1:1 e -1:1, e as linhas que marcam o valor de zero nos dois eixos. O menor polígono que envolve todos os pontos está em verde. O menor polígono que envolve todos os pontos com %CF=100 está em cinza no centro da figura. Esse polígono em cinza informa as situações em que a métrica logUi/Uj é similar ao observado nas situações de ausência de efeito. Os valores em cada eixo são resumidos por boxplots nas margens dos gráficos."
+```
+```{r fraarea-expfinal, fig.cap=vcap, fig.width=12, fig.height= 8}
+p <- readRDS("./00_Resultados/figuras/fragperse_e_areaperse_exploracaofinal.rds")
+grid::grid.draw(p)
+```
+
+
+
+
+# Discussão
+
+
+## O significado dos achados no contexto do debate sobre fragmentação de habitat
+
+<p>
+Neste trabalho, buscamos desenvolver uma reconciliação empírica no debate sobre fragmentação de habitat por meio de três avanços interligados. 
+</p>
+
+<p>
+Primeiro, observamos que o modelo mecanístico de primeira aproximação da conectividade (@riva_banskleite2024), o modelo neutro espacialmente explícito (MNEE), apresentou boa congruência com os padrões observados em paisagens reais (fig. \@ref(fig:p-cong)), sendo, portanto, válido como ferramenta de inferência. O MNEE teve boa previsão da distribuição de abundância de espécies (SAD) em 67 parcelas da Floresta Atlântica (~64%), com bom desempenho na média entre todas as parcelas. A boa congruência foi observada mesmo sob gradientes extremos de cobertura florestal (~3–100%) e de dispersão (k = 0,5–0,99), demonstrando que processos neutros espacialmente condicionados podem explicar padrões de biodiversidade em paisagens reais (@etienne_spatial_2011; @McGill2010; @rosindell_case_2012; @May2015; @may_abundance_2016; @leroi_neutral_2020).
+</p>
+
+<p>
+Segundo, apresentamos estimativas mecanísticas e escalonadas dos propostos efeitos da paisagem (área *per se*, fragmentação *per se*, fragmentação total) usando o MNEE calibrado para reproduzir a riqueza observada, com a extensão espacial da paisagem ajustada à capacidade de dispersão (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:fragarea-todosk), \@ref(fig:fraarea-expfinal)). Para fins analíticos, esses efeitos foram definidos como o contraste entre resultados da simulação com diferentes paisagens hipotéticas: o efeito da fragmentação total corresponde à diferença obtida entre a paisagem  fragmentada e a pristina; o efeito de fragmentação *per se* à  diferença entre fragmentada – aglomerada; e área *per se*, à diferença aglomerada – pristina. Diferentemente de estudos correlacionais, nossa abordagem simula contrastes experimentais entre essas paisagens, controlando a escala espacial a cada cenário de dispersão (@jackson_are_2015,  @fahrig_ecological_2017, @fletcher2018habitat, @fahrig2019habitatA, @fletcher_jr_addressing_2023)).</p>
+
+<p>
+Terceiro, utilizamos uma métrica funcional unificadora (logUi/Uj) para expressar os propostos efeitos da paisagem. A taxa U, tradicionalmente interpretada como ‘taxa de especiação’ em modelos neutros, ganha aqui um significado expandido. Proponho que ela encapsule a dependência da comunidade a processos de reposição de espécies (dispersão de longa distância, banco de propágulos ou especiação) e a capacidade da configuração espacial da paisagem em mitigar perdas locais por deriva ecológica. O contraste logUi/Uj entre as paisagens simuladas revelou diferentes efeitos da paisagem. Um deles está na conectividade funcional, que diz respeito a como a configuração espacial do habitat afeta a movimentação de indivíduos. Outro efeito se observa na dinâmica de substituição, isto é, como a configuração espacial do habitat altera a probabilidade de reposição por coespecíficos.
+</p>
+
+## Resumo dos achados
+
+<p>
+Em resumo, encontramos que os propostos efeitos da paisagem sobre a métrica funcional (expressa pelo log da razão entre taxas U) variam em função da cobertura florestal e da capacidade de dispersão das espécies (@swift2010critical, @villard_beyond_2014), com implicações diretas para a manutenção da biodiversidade local através da modificação da conectividade funcional e resiliência demográfica da paisagem. Os três efeitos propostos (área *per se*, fragmentação *per se* e fragmentação total) apresentam um padrão geral de intensificação em paisagens com cobertura florestal, tornando-se mais consistente entre parcelas, com forma distinta em função da capacidade de dispersão (figs. \@ref(fig:p-efeitos), \@ref(fig:fraarea-expfinal)). O efeito de área *per se* apresenta o padrão mais consistente entre parcelas, com efeito negativo acentuado exceto em cenários intermediários de limitação de dispersão. Os efeitos de fragmentação *per se* e de fragmentação total apresentam mais parcelas que destoam do padrão de cada efeito. O padrão geral do efeito de fragmentação *per se* é bifásico: positivo quando a limitação é severa e negativo quando branda. O efeito de fragmentação total tende a ser negativo, mas se atenua conforme aumenta a limitação à dispersão. Os inventários que destoam ocorrem em paisagens com alta cobertura florestal, onde os efeitos de fragmentação *per se* e total seguem o padrão bifásico da fragmentação *per se*. Em nossos métodos, uma vez que a métrica funcional é definida como logUi/Uj, então, fragmentação total = área *per se* + fragmentação *per se*. Observamos que com a redução da cobertura florestal o componente mais relevante do efeito da fragmentação total muda da fragmentação *per se* para a área *per se*. De tal forma que, no agregado de todas as simulações (inventários florestais e cenários de limitação de dispersão), a diferença entre o módulo desses dois efeitos apresenta distribuição simétrica e centrada no zero. Porém, vale salientar, que nenhum dos efeitos propostos apresenta tamanho de efeito elevado, uma vez que a taxa U variou em 76%, no máximo.
+</p>
+
+## Relação com os outros trabalhos que estimam os efeitos da paisagem na biodiversidade remanescente {#interpretacao-hipland}
+
+<p>
+Nossos resultados diferem dos estudos observacionais comparativos em um aspecto fundamental. Os estudos observacionais comparativos obtém estimativas de efeito pela comparação de diferentes parcelas (e.g. @fahrig_ecological_2017;  @puttker2020indirect; @watling2020support; e @gonccalves2025species). Em nossos resultados os efeitos são obtidos para uma mesma parcela pela comparação de diferentes simulações de como o dado observado foi gerado. 
+</p>
+
+<p>
+As simulações nas paisagens hipotéticas podem ser interpretadas em termos de atraso na resposta ecológica. Aqui defino atraso na resposta ecológica como toda mudança na composição (número de espécies e abundância relativa das espécies), que ainda não aconteceu, e é influenciada pela mudança na paisagem (@kuussaari_extinction_2009; @lira_temporal_2019; @figueiredo_understanding_2019). Apesar da definição de atraso na resposta ecológica não depender necessariamente do pressuposto de equilíbrio (@kuussaari_extinction_2009; @lira_temporal_2019; @figueiredo_understanding_2019), em nossas simulações ela depende (@azaele_statistical_2016; @thompson_pycoalescence_2020). Esse atraso pode ser decomposto em dois componentes: débito e crédito de biodiversidade (@kuussaari_extinction_2009; @lira_temporal_2019; @figueiredo_understanding_2019). O débito é a redução no número de espécies e o crédito o aumento no número de espécies, comparando o equilíbrio antes e depois da mudança na paisagem ao redor (@kuussaari_extinction_2009; @lira_temporal_2019; @figueiredo_understanding_2019; @thompson2019characterising). Adicionalmente, esse definição pressupõe um evento único de mudança na paisagem (@kuussaari_extinction_2009; @claudino_extinction_2015; @lira_temporal_2019; @figueiredo_understanding_2019). O pressuposto de equilíbrio é mais discutido na seção \@ref(assumpCont). 
+</p>
+
+<p>
+Assim as simulações na paisagem fragmentada representam a situação de ausência de atraso na resposta da riqueza local em relação à configuração espacial da paisagem contemporânea ao inventário, pois a dinâmica que resultou na comunidade observada na parcela transcorre toda na paisagem observada na data mais próxima da data do inventário (@campos_neutral_2012, @campos_effect_2013, @claudino_extinction_2015, @thompson2019characterising). De maneira análoga, proponho que a simulação na paisagem hipotética aglomerada representa a situação em que a ausência de atraso na resposta ecológica é melhor aproximada quando todo o habitat remanescente na paisagem fragmentada está o mais próximo da parcela. Essa hipótese é similar à hipótese da quantidade de habitat (@fahrig_rethinking_2013), em que as distâncias impostas pela criação da matriz não interferem na movimentação dos indivíduos no habitat remanescente na paisagem. A simulação na paisagem pristina representaria a situação de total atraso na resposta ecológica em relação a perda e fragmentação de cobertura florestal contemporânea, uma vez que supõe que a dinâmica que resultou na comunidade observada transcorreu na paisagem sem perda de habitat (@chisholm_speciesarea_2018; @thompson2019characterising, @fahrig_resolving_2022). Portanto, em nossos resultados o efeito da paisagem descreve o quanto a biodiversidade remanescente se torna mais ou menos vulnerável ao mudar de uma paisagem para a outra - essa característica é expressa na métrica funcional logUi/Uj. O efeito de fragmentação total é o efeito de mudar da paisagem pristina para a paisagem fragmentada. O efeito de área *per se* é o de mudar da paisagem pristina para a aglomerada; e o de fragmentação *per se*, da aglomerada para a fragmentada.
+</p>
+
+
+<p>
+Dessa forma, os efeitos que obtemos representam como a paisagem influencia a manutenção da biodiversidade local em termos de conectividade e resiliência demográfica sob diferentes cenários, dado a observação de uma única parcela E então fazemos um sumário descritivo, agregando os efeitos para o conjunto de parcelas selecionadas, em função da porcentagem de cobertura florestal e capacidade de dispersão dos indivíduos investigados (@villard_beyond_2014; @fahrig_ecological_2017). Nesse aspecto, nossos resultados tem a vantagem de controlar por características que variam entre inventários (@feller2015hierarchical), uma vez que para um mesmo inventário apenas a paisagem hipotética é modificada; o número de indivíduo, a área amostrada, o número de espécies e a quantidade de cobertura remanescente se mantém. Por outro lado, introduzimos o viés do modelo mecanístico, enquanto tornamos explícita a incerteza em torno  da capacidade de dispersão dos indivíduos em paisagens reais (seção \@ref(assumpMNEE)). Já um aspecto comum de nossos resultados com os de trabalhos observacionais comparativos é o pressuposto de contemporaneidade, que  associa as características contemporâneas da paisagem com o padrão de biodiversidade remanescente observado (seção \@ref(assumpCont)). A seguir iremos discutir nossos achados com os de trabalhos observacionais comparativos que aplicam diferentes metodologias, mas são comparáveis uma vez que exploram os efeitos da paisagem na flora de ecossistemas florestais: @fahrig_ecological_2017;  @puttker2020indirect; e @watling2020support.
+</p>
+
+### @fahrig_ecological_2017
+
+<p>
+Em revisão de evidências, @fahrig_ecological_2017 observou que a fragmentação *per se* tem efeitos majoritariamente positivos (76%) quando significativos, sendo muito menos impactante que a perda de habitat. Segundo @fahrig_ecological_2017, os efeitos positivos da fragmentação *per se* foram observados em uma ampla gama de contextos, incluindo aqueles com baixa quantidade de habitat remanescente e sob limitação de dispersão branda.
+</p>
+
+<p>
+Nossos resultados são diretamente comparáveis com os de @fahrig_ecological_2017 uma vez que aplicamos a lógica de estimar efeitos independentes de fragmentação *per se* e área *per se* (@fahrig_effects_2003; @fahrig2019habitatA). Para isso usamos os contrastes com o simulado na paisagem aglomerada (@fahrig_resolving_2022). A paisagem aglomerada possui a mesma quantidade de cobertura florestal que a paisagem fragmentada e a mesma configuração espacial da paisagem pristina (@valente2023toward). Dessa forma, ao comparar a paisagem fragmentada com a paisagem aglomerada, a única diferença entre as paisagens é a configuração espacial. E ao comparar a paisagem aglomerada e pristina, a única diferença é a quantidade de habitat  (@fahrig_resolving_2022).
+</p>
+
+<p>
+Nossos resultados convergem parcialmente com os achados por @fahrig_ecological_2017. Convergem, uma vez que encontramos efeitos positivos e negativos da fragmentação *per se*, em concordância com os achados de @fahrig_ecological_2017. Parcialmente, uma vez que observamos um padrão bifásico consistente do efeito de fragmentação *per se*. Esse padrão bifásico é caracterizado por efeito positivo sob severa limitação de dispersão e negativo sob limitação de dispersão branda. Esse padrão se torna mais consistente em paisagens com pouca cobertura florestal, porém, em algumas poucas parcelas em paisagens com alta cobertura florestal (acima de 60%) também se observou esse padrão bifásico - inclusive mais acentuado. Portanto, a cobertura florestal e capacidade de dispersão são fundamentais para compreender a variação no efeito de fragmentação *per se* (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito), \@ref(fig:fraarea-expfinal)), contrariando o observado por @fahrig_ecological_2017.
+</p>
+
+<p>
+Segundo, em relação à diferença na magnitude absoluta dos efeitos de fragmentação *per se* e área *per se*, observamos que na maioria das parcelas analisadas, há situações em que um efeito predomina sobre o outro. Se considerarmos todo o gradiente de cobertura florestal e cenários de limitação de dispersão, observamos que a diferença na magnitude dos efeitos é simétrica em torno do zero (fig. \@ref(fig:fragarea-todosk)). Ao comparar parcelas em paisagens com alta cobertura florestal e baixa cobertura florestal, ou seja, avaliando a redução na cobertura florestal, a maior magnitude dos efeitos tende a se deslocar da fragmentação *per se* para a área *per se*, independentemente do grau de limitação de dispersão (fig. \@ref(fig:fraarea-expfinal)). Portanto, a partir de nossos achados é possível concluir que os efeitos de fragmentação *per se* e área *per se* podem variar em sua importância relativa para o efeito de fragmentação total em função da cobertura florestal e capacidade de dispersão.
+</p>
+
+<p>
+As discrepâncias entre nossos achados podem ser explicadas por alguns fatores. Aqui utilizamos uma métrica funcional unificada de efeito da paisagem que tem interpretação mecanística e é escalonada para a capacidade de dispersão simulada; enquanto que na revisão de @fahrig_ecological_2017 os trabalhos apresentam diversas métricas e escalas de paisagens. Outro ponto é que nossa análise descreve a variação dessa métrica funcional em função da cobertura florestal e capacidade de dispersão simultaneamente. Enquanto em @fahrig_ecological_2017 as paisagens eram agrupadas e comparadas em relação à diferença na mediana, e não houve avaliação da interação entre cobertura florestal (quantidade e configuração) e capacidade de dispersão.
+</p>
+
+### @puttker2020indirect
+
+<p>
+No trabalho de @puttker2020indirect um modelo de equações estruturais foi usado para estimar os efeitos diretos da perda de cobertura florestal e indiretos via mudança na configuração espacial na riqueza local de parcelas na (@didham_rethinking_2012). As principais conclusões de @puttker2020indirect para a flora foram três. A primeira é que o efeito direto de perda de habitat é o principal fator para riqueza de espécies quando a paisagem apresenta pouca cobertura florestal (<30%). A segunda é que quando a cobertura florestal é elevada (>60%) os principais fatores relevantes para a riqueza local estão relacionados com a fragmentação: o efeito direto da fragmentação é negativo e o efeito indireto da área é positivo, pela redução da densidade de área de borda com o aumento da área de cobertura. A terceira foi de menor relevância dos propostos efeitos da paisagem quando a cobertura florestal é intermediária (entre 30% e 60%).
+</p>
+
+<p>
+Nossos resultados convergem parcialmente com os resultados de @puttker2020indirect. Primeiro, também observamos que a magnitude e relevância do efeito de área *per se* é maior em paisagens com baixa cobertura florestal, esse padrão é mais claro sob severa limitação de dispersão, onde os efeitos de fragmentação *per se* e área *per se* apresentam sinais opostos. Nessas situações de severa limitação de dispersão em paisagens com pouca cobertura florestal, o efeito positivo de fragmentação *per se* atenua o efeito negativo da área *per se*, resultando em um efeito de fragmentação total negativo com menor magnitude (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:propsitio-efeito), \@ref(fig:fraarea-expfinal)). Segundo, também observamos inventários em paisagens com cobertura florestal elevada em que o efeito de fragmentação *per se* é o componente mais relevante. Nessas situações, observamos efeito positivo da fragmentação *per se* sob severa limitação de dispersão e efeito nulo da área *per se*. Nos achados de @puttker2020indirect não há efeito positivo da fragmentação *per se*.
+</p>
+
+<p>
+As discrepâncias entre nossos resultados pode ser explicado pelas diferenças metodológicas. Primeiro, a métrica de efeito explorada no trabalho de @puttker2020indirect se distingue da nossa por focar no número de espécies classificadas como especialistas. Enquanto nossos resultados abordam todos os indivíduos arbóreos na área da parcela, independente da espécie. Para nossos resultados, pressupor todos os indivíduos arbóreos é fundamental, uma vez que modelamos explicitamente o efeito da competição por espaço (@azaele_statistical_2016).
+</p>
+
+<p>
+Segundo, o modelo usado por @puttker2020indirect é desenhado para distribuir a variância intercorrelacionada entre a perda de cobertura florestal e a métrica de fragmentação conforme a estrutura hierárquica pressuposto: a perda de cobertura florestal altera tanto a riqueza de espécies quanto a configuração espacial do habitat, assim como a configuração espacial altera a riqueza de espécies. Enquanto, que as nossas estimativas pressupõe independência dos efeitos (@fahrig_effects_2003, @fahrig_ecological_2017; @fahrig2019habitatA): a perda de habitat (a mudança da paisagem pristina para a aglomerada) ocorre de forma independente da fragmentação *per se* (a mudança da paisagem aglomerada para a fragmentada). Para representar a situação de variância intercorrelacionada entre o efeito de área *per se* e fragmentação *per se*, nosso modelo mecanístico baseado em indivíduos precisaria ser mais específico e simular as mudanças na paisagem pristina que resultaram na paisagem fragmentada (ver. @Marshall2014; @gianluca_ch4_2022;  @magliocca2023review). Nesse aspecto, nossos resultados se assemelham na estimativa de efeito de fragmentação total, que no caso do @puttker2020indirect é obtido pela soma do efeito direto da cobertura florestal e do efeito indireto via mudança na densidade de borda.
+</p>
+
+<p>
+Terceiro, nossos resultados não explicitam o efeito de borda, apontado por @puttker2020indirect como o principal fator associado com a fragmentação. Em uma futura formulação de MNEE é possível incluir o efeito de borda, enquanto uma região do habitat onde todos os indivíduos apresentam maior chance de morte e menor de reprodução (@thompson_pycoalescence_2020). Com a inclusão dessa nova paisagem hipotética seria possível avaliar o efeito da influência da matriz no habitat remanescente (efeito de borda), contrastando a paisagem fragmentada ou a paisagem pristina com a paisagem fragmentada com esse efeito de proximidade com a matriz. Contudo, tal como a capacidade de dispersão que não é conhecida a priori para cada situação, seria necessário investigar a sensibilidade da influência dos tipos de matriz no habitat remanescente em função de sua distância com o habitat remanescente. É preciso avaliar se a paisagem fragmentada com efeito de borda apresenta melhor congruência nos parcelas em que MNEE nunca teve bom desempenho ou ampliar os cenários de limitação de dispersão com boa congruência (fig. \@ref(fig:p-cong)).
+</p>
+
+### @watling2020support
+
+<p>
+O trabalho de @watling2020support testou a hipótese da quantidade de habitat (@fahrig_rethinking_2013), em que se pressupõe dispersão ilimitada dentro da paisagem, de forma que a parcela é a uma amostra bem misturada dos indivíduos presentes na paisagem. Esse tipo de hipótese pode ser representada por um modelo neutro espacialmente implícito que pressupõe probabilidade de imigração da paisagem para a parcela igual a 1 (@etienne2005new). Essa hipótese prediz que a principal preditora da riqueza local é a quantidade de habitat na escala da paisagem, enquanto métricas associadas com fragmentação *per se* ou medidas na escala do fragmento florestal (e.g. tamanho e isolamento do fragmento) não são relevantes (@fahrig_rethinking_2013). A análise de @watling2020support se baseia na comparação de modelos estatísticos que diferem em seu conjunto de variáveis. Se a predição da hipótese de quantidade de habitat estiver correta, então o modelo mais plausível devo apresentar a quantidade de habitat como única preditora da riqueza local de espécies  (@fahrig_rethinking_2013). Métricas de fragmentação *per se* (e.g. densidade de fragmentos na paisagem) não devem ser relevantes (@fahrig_rethinking_2013). Assim, o trabalho de @watling2020support descreve os efeitos da paisagem, área *per se* e fragmentação *per se*, através da comparação da verossimilhança de modelos estatísticos.
+</p>
+
+<p>
+@watling2020support observou que um modelo que incluía apenas a quantidade de habitat para descrever a riqueza local apresentou, em média, peso de evidência 40 vezes maior do que um modelo que incluía métrica de fragmentação *per se*. Nas raras vezes em que o efeito de fragmentação *per se* foi relevante, o efeito estimado foi positivo - essas situações foram observadas para a flora da Floresta Atlântica (@watling2020support).
+</p>
+
+<p>
+Nossos resultados convergem parcialmente com os resultados de @watling2020support para a flora da Floresta Atlântica. Também observamos relevância de ambos os efeitos de fragmentação *per se* e área *per se*, principalmente em paisagens com baixa cobertura florestal para os inventários florestais da Floresta Atlântica. Mas também observamos alguns casos em paisagens com cobertura florestal elevada. Esses resultados se alinham com o observado para @watling2020support para o conjunto de dados da Floresta Atlântica, e dessa forma contrariam a predição central da hipótese de quantidade de habitat, de que apenas a quantidade de habitat é relevante para compreender a biodiversidade local (@fahrig_rethinking_2013; @watling2020support). Por outro lado, observamos efeitos negativos da fragmentação *per se* nos cenários de limitação de dispersão branda (fig. \@ref(fig:p-efeitos), \@ref(fig:fraarea-expfinal)), contrariando os achados de @watling2020support, que haviam observado apenas efeitos positivos. Se formos considerar todo o conjunto de dados, o efeito de fragmentação *per se* apresenta distribuição assimétrica ao redor do zero (fig. \@ref(fig:fragarea-todosk)) - contrariando o observado por @watling2020support.
+</p>
+
+<p>
+As discrepâncias em relação aos resultados de @watling2020support podem ser atribuídas a diferenças metodológicas. A estimativa desses efeitos por meio da interpretação direta dos coeficientes de modelos estatísticos que incluem métricas de quantidade de habitat e densidade de fragmentos - como feito por @watling2020support - e é alvo de debate pelo tipo de modelo usado e pela comparação métrica de fragmentação *per se* (@fletcher2018habitat; @fahrig2019habitatA; @valente2023toward). Nossos métodos não dependem especificamente de alguma métrica de fragmentação *per se* (e.g. número de fragmentos ou densidade de borda) mas sim do contraste com uma paisagem alternativa considera sem efeito de fragmentação *per se*, a paisagem aglomerada.
+</p>
+
+## Limiar de cobertura florestal e os propostos efeitos da paisagem na predição da biodiversidade arbórea local
+
+<p>
+Os nossos achados revelam um padrão não linear dos propostos efeitos da paisagem ao longo do gradiente de cobertura florestal, modulados pela capacidade de dispersão (@swift2010critical; @villard_beyond_2014; @puttker2020indirect; @arroyo-rodriguez_designing_2020; @banks-leite_suggestion_2021; @arroyo-rodriguez_preserving_2021). Identificamos aumento da relevância dos três propostos efeitos da paisagem (fragmentação total, fragmentação *per se* e área *per se*) em paisagens com cobertura florestal abaixo de 60%. Nessas paisagens com baixa cobertura florestal, o efeito negativo de área *per se* domina. Principalmente sob severa limitação de dispersão, quando o efeito de fragmentação *per se* se mostra positivo, mas o efeito de fragmentação total é negativo (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass)). Em paisagens com alta cobertura florestal, há alguns poucos inventários em que a estimativa dos efeitos foge do padrão de baixa relevância, onde prevalece o padrão bifásico característico do efeito de fragmentação per se: positivo sob severa limitação de dispersão e negativo com o relaxamento da dispersão (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:fraarea-expfinal)).
+</p>
+
+
+## Diferentes culturas de pesquisa e modelos ecológicos para a conservação
+
+<p>
+Outro ponto em debate é sobre como estratégias de conservação devem incorporar a ideia de limiar de cobertura florestal e outros fatores que determinam o sucesso das estratégias de conservação da biodiversidade remanescente (@arroyo-rodriguez_designing_2020; @banks-leite_suggestion_2021; @arroyo-rodriguez_preserving_2021). De um lado, @arroyo-rodriguez_designing_2020 defenderam diretrizes gerais de conservação, baseadas em extensa revisão de análises na escala da paisagem, inclusive das conclusões de @fahrig_ecological_2017;  @puttker2020indirect; e @watling2020support. Segundo esses autores, as mínimas características da paisagem para a conservação são pelo menos 40% de cobertura florestal, dividida 10% em um fragmento grande e o restante em elementos menores de conexão (corredores, pequenos fragmentos, etc) em uma matriz de alta qualidade. Essa proposta representa uma heurística aplicável em larga escala, com foco na quantidade total de habitat e em maximizar a fragmentação *per se*, tendo como base a ideia de limiar de cobertura florestal.
+</p>
+
+<p>
+Por outro lado, @banks-leite_suggestion_2021 criticaram essa abordagem, argumentando que a atual capacidade técnica e científica permite o ajuste das diretrizes de conservação às especificidades ecológicas e às práticas de conservação de cada região. Para sustentar essa posição, os autores citaram o trabalho de @strassburg2019strategic, que utilizou um modelo ecológico espacialmente implícito para incorporar a relação espécie-área a práticas de restauração e conservação.
+</p>
+
+<p>
+A resposta de @arroyo-rodriguez_preserving_2021 a essa crítica foi centrada na viabilidade prática: apontaram que, embora modelos mais específicos possam oferecer cenários mais otimizados, em grande parte das regiões tropicais - onde se concentram os maiores desafios da conservação - não há dados disponíveis ou poder computacional suficiente para aplicar tais abordagens de forma ampla e sistemática. Recentemente os dois grupos de pesquisa escreveram um artigo em conjunto que reconhecem que todo habitat natural remanescente tem algum valor para a conversação tal como a melhora da qualidade da matriz (@riva_banskleite2024).
+</p>
+
+<p>
+Os resultados aqui apresentados foram obtidos com um modelo de dinâmica ecológica  que pode investigar a influência da dispersão, configuração espacial de habitat e efeito de borda (@thompson_pycoalescence_2020), e portanto, ainda mais complexo do que o utilizado por @strassburg2019strategic, e a partir do mesmo tipo de dado utilizado nas abordagens generalistas, como @watling2020support. A abordagem de @strassburg2019strategic se baseia em uma análise de risco de extinção para cada espécie (r): $r = 1 - (x/A_0)^z$; onde $A_0$ é a área de habitat contemporâneo, x é a área de habitat para ser restaurada e z é um parâmetro ajustável. Ou seja, não considera explicitamente o efeito da competição entre espécies, da capacidade de dispersão ou da mudança na configuração espacial pela adição de habitat (@strassburg2019strategic), como avaliamos aqui com MNEE.
+</p>
+
+<p>
+Assim, entendemos que o MNEE tem potencial como ferramenta de inferência em situações reais de conservação, conciliando demandas de ambos os grupos de pesquisa por modelos simples, que possam ser ajustados com os dados disponíveis, e incluídos em análises de multiplos critérios. Para consolidar essa proposta, futuros estudos poderiam avaliar a capacidade do MNEE em descrever múltiplos padrões simultaneamente, como alfa, beta e gama diversidade (@campos_neutral_2012; @campos_effect_2013; @fahrig_resolving_2022; @gonccalves2025species). Além disso, novas simulações poderiam incorporar a influência da matriz e explorar cenários contrafactuais, como a melhoria da permeabilidade da matriz ou o aumento da cobertura florestal total (@thompson_pycoalescence_2020). A partir de um modelo mecanístico suficiente e comum pode ser possível avaliar a existência de heurísticas aplicáveis em larga escala e explorar cenários multicritérios específicos (@metzger2017best; @pereira2020developing; @bull2021).
+</p>
+
+## Ressalvas
+
+### Pressuposto de contemporaneidade {#assumpCont}
+
+<p>
+Todas as análise discutidas até agora (@fahrig_ecological_2017; @puttker2020indirect; @watling2020support; @strassburg2019strategic ; @gonccalves2025species; e o nosso trabalho), correlacionam padrões de biodiversidade com as características da paisagem amostrada, assumindo que tais características influenciaram os padrões de biodiversidade observados (@frazier_landscape_2017). Esse pressuposto de contemporaneidade implica a constância das características da paisagem relevantes para gerar os padrões de biodiversidade e a ausência de atrasos na resposta da biodiversidade remanescente, sendo adotado quando os dados disponíveis são escassos e estáticos (@frazier_landscape_2017). Em geral, bases de dados que compilam estudos observacionais contêm apenas uma classificação genérica do grau de preservação da parcela amostrada, sem informações detalhadas sobre a paisagem ao redor (@de_lima_how_2015; @chase2019fragsad). Dessa forma, alguns estudos optam por estratificar os parcelas com base no grau de preservação informado na base de dados (e.g., @fahrig_ecological_2017; @fahrig_SLOSS2020; @riva_disproportionately_2022; nosso trabalho). Em nossos achados a classe de perturbação da parcela e as coordenadas geográficas foram covariáveis do modelo mais plausível para descrever a congruência da distribuição de abundância de espécies (tab. \@ref(tab:tabcong)). Apesar da média da congruência ser similar tanto entre paisagens hipotéticas quanto entre classes de perturbação (fig. \@ref(fig:p-cong)). Assim, um dos motivos para a baixa congruência em algumas parcelas pode ser a forma com que o atraso na resposta ecológica é aproximado, uma vez que MNEE pressupõe a situação de equilíbrio e dessa forma simula ou a ausência de atraso ou o total atraso (seção \@ref(interpretacao-hipland)).
+</p>
+
+<p>
+O pressuposto de equilíbrio garante que o pressuposto de contemporaneidade é válido na simulação, uma vez que corresponde à situação de manutenção da configuração espacial do habitat, capacidade de dispersão e taxa de introdução de novas espécies por tempo suficiente tal que todo os padrões de biodiversidade se estabilizam (@kuussaari_extinction_2009; @lira_temporal_2019; @figueiredo_understanding_2019; @thompson2019characterising; @fahrig_resolving_2022). Um exemplo de análise que usa esse pressuposto de contemporaneidade é a análise de escala de efeito (@jackson_are_2015). Nessa análise o objetivo é determinar a escala espacial de análise como aquela que maximiza o poder explicativo da métrica de paisagem na resposta ecológica usada (@jackson_are_2015; @fletcher_jr_addressing_2023). Assim, nessa análise há um vínculo forte entre a extensão espacial da paisagem estimada e o pressupostos de contemporaneidade, pois víncula tanto o padrão de biodiversidade amostrado com a configuração espacial contemporânea à amostragem. Em nossa análise da sensibilidade da extensão espacial da paisagem em função da capacidade de dispersão (fig. \@ref(fig:SoE)), o pressuposto de equilíbrio não possui um vínculo tão forte com o pressuposto de contemporaneidade, uma vez que a estimativa é feita na paisagem pristina, por outro lado utiliza a riqueza observada - tal como a análise de escala de efeito.
+</p>
+
+<p>
+Dado o conhecido atraso ecológico, uma forma de relaxar o pressuposto de contemporaneidade em nosso anaĺise é interpretar o efeito de fragmentação total como uma estimativa de débito de extinção da biodiversidade local (@thompson2019characterising). Então seria possível usar a congruência com a SAD para determinar se MNEE aproxima melhor pressupondo equilíbrio na paisagem fragmentada (com débito de extinção negligenciável) ou na paisagem pristina (com todo débito de extinção). Contudo, uma forma mais direta de relaxar o pressuposto de contemporaneidade é possibilitar que a quantidade habitat e sua configuração espacial na paisagem mudem ao longo do tempo, dessa forma, expressando a conectividade espaço-temporal (@martensen2017). Esse tipo de modelo de conectividade espaço-temporal pode ser usado junto com modelos que descrevem explicitamente os processos de mudança da cobertura do solo por um sistema socioecológico (@metzger2017best; @pereira2020developing; @bull2021; @magliocca2023review). No caso da Floresta Atlântica, por exemplo, em diversas paisagem podem ter sofrido mudança na quantidade de habitat e conectividade estrutural (@rosa2021hidden, @chaves2022welcome). Com a inclusão da mudança na quantidade de habitat e conectividade se torna possível explorar cenários mais específicos de efeitos da paisagem, que incluem a perturbação antrópica e a regeneração natural (@metzger2017best; @pereira2020developing; @bull2021; @magliocca2023review).
+</p>
+
+
+
+### Efeito de escala
+
+<p>
+Nossa estimativa de escala foi baseada em um algoritmo que pressupõe a expectativa teórica de aumento da extensão espacial da paisagem com o aumento da capacidade de dispersão (@rosindell2013universal). É possível calcular um parâmetro composto que combina a taxa U, a área da parcela (A) e a capacidade de dispersão média (L), $AU/L^{2}$ (@rosindell2013universal). Esse parâmetro composto se baseia na área da paisagem ao redor da parcela que contem todas as espécies com representantes na parcela, a área média das espécies (@rosindell2013universal). Assim, esse parâmetro composto informa a razão entre a área da parcela e a área média das espécies em uma paisagem pristina (@rosindell2013universal). Dado uma área da parcela e uma taxa U fixas, quanto maior a capacidade de dispersão, menor $AU/L^{2}$. Assim, a expectativa era que quanto menor a capacidade de dispersão menor a extensão da paisagem ao redor suficiente para simular MNEE sem que a extensão espacial interferisse na simulação. Porém, observamos divergências com essa expectativa, devido ao fato de que a taxa U livre para aproximar a riqueza de espécies varia com a capacidade de dispersão (figs. \@ref(fig:SoE), \@ref(fig:taxaU-lands) e apêndice "Efeito de Escala").
+</p>
+
+<p>
+Em cenários de limitação de dispersão intermediários, não foi possível observar um padrão de redução da taxa U com o aumento da extensão espacial. O que foi observado foram padrões não-monotônicos de variação na taxa U com o aumento da extensão espacial. Nesse cenários de limitação de dispersão a taxa U é pouco sensível a variação na extensão espacial e apresenta um máximo na taxa U estimada em paisagens pristinas com 16 km de lado (figs. \@ref(fig:Unull16), \@ref(fig:fig2a) do apêndice de 'Efeito de Escala'), a maior extensão considerada em nosso trabalho. Quando a taxa U é muito elevada, a particular configuração espacial da paisagem se torna menos relevantes para a manutenção da biodiversidade local (@campos_neutral_2012, @campos_effect_2013). Isso ocorre uma vez que quanto maior a importância da entrada de novas espécies na paisagem, menor a relevância dos indivíduos adultos na paisagem. Nesses cenários de limitação de dispersão observamos a menor magnitude do efeito de área *per se* em paisagens com baixa cobertura florestal (figs. \@ref(fig:p-efeitos), \@ref(fig:bp-efeitos-pclass), \@ref(fig:fraarea-expfinal)). Os outros cenários de limitação de dispersão apresentaram o padrão monotônico decrescente, de redução da taxa U com o aumento da extensão espacial.
+</p>
+
+<p>
+Outro fato inesperado com relação à estimativa de escala, foi a possível relação não linear entre a capacidade de dispersão e a extensão espacial suficiente para a simulação de MNEE (figs. \@ref(fig:SoE) e apêndice "Efeito de Escala"). Nossos resultados sugerem que em cenários de severa limitação de dispersão a extensão espacial que acumula a maior redução na taxa U é superior a extensão espacial quando a limitação de dispersão é pouco branda (comparar k>0.80 e 0.50<k<0.60 na figs. \@ref(fig:SoE) e ver no apêndice 'Efeito de Escala' as figs. \@ref(fig:Uk-ladokm), \@ref(fig:comparacao-limiares)). Quando a limitação de dispersão é muito branda (k<0.45), observamos um padrão mais consistente de aumento da escala que acumula a maior parte da redução na taxa U com a redução da limitação de dispersão. Trabalhos que investigam a escala espacial usando a análise de escala de efeito, também não encontraram um padrão claro de aumento da extensão espacial com o aumento da capacidade de dispersão (@miguet2016determines).
+</p>
+
+<p>
+A definição da escala espacial é um passo essencial para a construção da paisagem aglomerada, pois determina a quantidade do habitat remanescente que será aglomerado ao redor da parcela, e portanto, a estimativa dos efeitos de fragmentação *per se* e área *per se* dependem fundamentalmente da escala de análise (@fahrig_effects_2003, @fahrig_ecological_2017; @fletcher2018habitat; @fletcher_jr_addressing_2023; @fahrig2019habitatA). Diferente do efeito de fragmentação total que pode ser obtido escolhendo uma escala que seja suficiente para simular a maior capacidade de dispersão. A dependência que a escala de análise impõe na determinação dos efeitos de fragmentação *per se* e área *per se* é um ponto central do debate entre @fletcher2018habitat e @fahrig2019habitatA.
+</p>
+
+
+### Pressupostos de MNEE {#assumpMNEE}
+
+__Soma-zero__
+
+<p>
+No contexto de paisagens fragmentadas, dois pressupostos do MNEE são potencialmente problemáticos: soma-zero e equivalência funcional. O pressuposto de soma-zero impõe na simulação que cada adulto morto é reposto por um novo adulto, seja descendente dos adultos da paisagem ou de indivíduo de uma nova espécie que ingressou na paisagem. Esse pressuposto é justificável em paisagens totalmente preenchidas de habitat, com ecossistemas funcionais, porém em paisagens fragmentadas a maioria das espécies arbóreas especialistas de ambiente florestal apresentam redução na produção de propágulos (@aguilar2019habitat). Assim, o pressuposto de soma-zero pode estar subestimando os propostos efeitos da paisagem principalmente em paisagens com pouca cobertura florestal, uma vez que o sistema não deve estar saturado de propágulos para repor todas as mortes na paisagem. Se relaxado o pressuposto de soma-zero, uma expectativa é de aumento da taxa U necessária para manter a riqueza local, pois a redução na produção de propágulos na paisagem deve reduzir os 1-U nascimento na paisagem que são por propágulos dos adultos presentes na paisagem. Nesse contexto, poderia ser adequado decompor a taxa U na contribuição de indivíduos de fora da paisagem, que deve decair com a distância do limite da paisagem, da contribuição de especiação verdadeira e do banco de propágulos. 
+</p>
+
+__Função de dispersão__
+
+<p>
+O MNEE pressupõe que todos os indivíduos apresentam a mesma função de dispersão, enquanto que nos sistemas naturais há grande variabilidade entre espécies, com diversos modos de dispersão que podem depender de espécies de outros níveis tróficos e variar entre indivíduos de uma mesma espécie (@clark1999seed; @bullock_synthesis_2017; @snell2019consequences). Em paisagens com perda e fragmentação de cobertura florestal, uma expectativa é a diminuição da capacidade de dispersão de espécies especialistas de ecossistemas florestais, pela remoção de dispersores, e o aumento da capacidade de dispersão de espécies generalistas (@bello2015defaunation; @emer2020seed; @hatfield2024constraints). Uma vez que as informações sobre a capacidade de dispersão são escassos, a primeira aproximação de considerar uma mesma função de dispersão é justificada. A sensibilidade de nossos achados em relação ao tipo de distribuição de probabilidade usada na função de dispersão é um aspecto que precisa ser avaliado em futuros trabalhos. Aqui utilizamos uma função de dispersão com distribuição Laplace, uma exponencial espelhada. Em comparação de uma distribuição gaussiana e *fat-tailed*, @rosindell2013universal encontraram que quanto menor $AU/L^{2}$, métrica composta que depende da área da parcela e da capacidade dispersão dos indivíduos, menor a diferença entre o tipo de função de dispersão. Em nossos resultados, exploramos parcelas com cerca de 1 ha de área e cenários de dispersão em que a maior dos propágulos permanece na vizinhança imediata da progenitora (fig. \@ref(fig:sitios-SoE)).
+</p>
+
+__Equivalência funcional__
+
+<p>
+Um outro pressuposto potencialmente problemático é a equivalência funcional, que impõe na simulação que todos as espécies têm as mesmas taxas *per capita* de nascimento, morte e especiação. Uma expectativa em relação à congruência geral do MNEE era de baixa congruência com a SAD observada em paisagens fragmentadas. Porque, neste contexto, um modelo neutro espacialmente implícito (MNEI) de dinâmica temporal não apresentou boa congruência com a trajetória da abundância relativa de espécies em fragmentos experimentais, previu que as mudanças nas abundâncias relativas seriam mais lentas do que as observadas (@Gilbert2006). Nesses fragmentos experimentais foi observado que algumas espécies tendem ao aumento da abundância enquanto outras à redução, o que contraria o pressuposto de equivalência funcional (@Gilbert2006; @laurance2008theory). Assim, a baixa congruência de MNEI foi atribuída ao pressuposto de equivalência funcional (@Gilbert2006; @laurance2008theory), que é compartilhado com MNEE. Esses dois modelos neutros diferem em como o espaço se relaciona com a dinâmica demográfica das espécies: em MNEI a limitação de dispersão existe apenas entre a parcela e a paisagem ao redor, enquanto em MNEE ela é expresa em todo nascimento de um propágulo da paisagem (@etienne_spatial_2011; @azaele_statistical_2016).
+</p>
+
+<p>
+Por outro lado, a SAD é um padrão de biodiversidade que contém menos informação em relação à série histórica, uma vez que é um retrato momentâneo da biodiversidade remanescente. Para descrever a SAD, um MNEI é preferido em relação a um modelo com os mesmo pressupostos auxiliares mas com hierarquia competitiva entre espécies, uma vez que pode aproximar a SAD tão bem quanto, mas com menos parâmetros (@chisholm_niche_2010; @hammal_when_2015). O MNEI apresenta boa congruência com a SAD observada, uma vez que os parâmetros desse modelo sejam livres para ajustar a SAD observada (@gotelli_null_2006; @rosindell_case_2012). Uma comparação de MNEE com MNEI havia concluído que dificilmente MNEE iria ter boa congruência com a SAD observada, pois o campo de parâmetros em que MNEE simulava a SAD era pouco coerente com o campo de parâmetros de MNEI que apresentava boa congruência com a SAD (@etienne_spatial_2011). Aqui em nossos resultados com um MNEE para descrever a SAD, apenas a taxa U foi livre para aproximar a riqueza observada, enquanto exploramos a sensibilidade da escala espacial quanto a variação na limitação de dispersão (fig. \@ref(fig:SoE) e apêndice "Efeito de Escala"). E observamos boa congruência sempre (variando a paisagem hipotética e a capacidade de dispersão) em mais da metade das parcelas e boa congruência em média para todos os sítios (fig. \@ref(fig:p-cong)).
+</p>
+
+<p>
+O relaxamento do pressuposto de equivalência funcional pode ter resultados não óbvios na taxa U e portanto em nossa estimativa de efeito funcionais da paisagem. Pode ser que ocorra redução na taxa U necessária para manter a riqueza, uma vez que processos estabilizadores podem sustentar uma população de uma espécie por tempo indeterminado, desde que o ambiente mude pouco (@adler2007niche; @hart2017spatial). Por outro lado, a exclusão competitiva pode remover espécies que seriam mantidas no sistema caso a estocasticidade demográfica fosse mais relevante do que a hierarquia competitiva (@tilman2004niche; @rosindell_case_2012). Uma expectativa é que a diferença entre espécies seja maior quando há efeito de borda mais extremo, uma vez que isso criaria novos gradientes ambientais possivelmente favorecendo algumas espécie e prejudicando outras (@laurance2008theory; @schwartz2019fragmentation; @melito2018landscape)). Tal como a capacidade de dispersão das espécies e o efeito de borda, a particular hierarquia competitiva de uma paisagem em geral não é conhecido, e poderia ser explorada multiplos cenários no qual a equivalência funcional é um deles (e.g. @tilman2004niche; @adler2007niche).
+</p>
+
+<p>
+O pressuposto de equivalência funcional é central dentro do programa de pesquisa da da Teoria Neutra da Biodiversidade (TNB, @rosindell_case_2012; @bausman_aims_2019; @leroi_neutral_2020). É possível dizer que TNB opera sob dois eixos conceituais no qual a construção de modelos é feita: a manutenção ou não do pressuposto de equivalência funcional ou dos pressupostos auxiliaires (e.g. soma-zero, a função de disperão e a paisagem). Quando um modelo neutro falha em predizer padrões observados de biodiversidade, é possível revisitar os pressupostos auxiliares ou o próprio pressuposto de equivalência funcional, aproximando-se de modelos de nicho que consideram hierarquias competitivas entre indivíduos de uma mesma guilda (@rosindell_case_2012; @bausman_aims_2019; @leroi_neutral_2020). No entanto, não é raro que modelos neutros apresentem boa congruência com padrões empíricos amplamente utilizados no debate sobre fragmentação de habitat, como riqueza local e a distribuição de abundância de espécies (SAD), especialmente quando o mesmo padrão é usado tanto para calibrar quanto para validar a prediçao do modelo (@gotelli_null_2006; @rosindell_case_2012; @leroi_neutral_2020). Essa congruência pode ser interpretada como ponto de partida para expandir a capacidade preditiva do modelo: por exemplo, incluindo novos padrões, como a distribuição de biomassa, ou explorando cenários hipotéticos mais detalhados, como o efeito de borda e a variação na qualidade da matriz (@mcgill2007species; @metzger2017best; @thompson_pycoalescence_2020).
+</p>
+
+# Conclusão
+
+<p>
+Nossas estimativas mecanicistas dos efeitos propostos da paisagem sugerem que a discrepância entre as conclusões dos grupos de pesquisa em debate pode decorrer da ausência de considerações sobre a influência da capacidade de dispersão das espécies e da variabilidade inerente a cada parcela analisada. Em estudos observacionais comparativos, as estimativas dos efeitos da paisagem são feitas a partir do conjunto de parcelas selecionadas, enquanto, em nosso conjunto de dados elas são obtidas para cada parcela enquanto avaliamos a sensibilidade dos resultados à incerteza na capacidade de dispersão dos indivíduos em paisagens reais.
+</p>
+
+<p>
+Por um lado, é possível interpretar o debate sobre fragmentação de habitat como a defesa da hipótese da decomposição ortogonal do efeito de fragmentação total em efeito de fragmentação *per se* e área *per se* (@fahrig_effects_2003, @fahrig_habitat_2019; @didham_rethinking_2012; @fletcher2018habitat; @fahrig2019habitatA). Nosso método não tem a capacidade de avaliar essa hipótese, ver @puttker2020indirect para um método que pode fazer isso a partir de um conjunto de pressupostos auxiliares. O argumento por trás desse método que testa essa hipótese é de que uma vez que o habitat está distribuído no espaço, ao passo que se remove habitat, o espaço é modificado - um aspecto reconhecido por ambos os grupos em debate (@fahrig_effects_2003, @fahrig_habitat_2019; @didham_rethinking_2012; @fletcher2018habitat; @fahrig2019habitatA). Dentro desse método, a hipótese de independência dos efeitos de fragmentação *per se* e área *per se* é um caso particular da situação geral de interdependência dos efeitos (@pearl2016causal). Por outro lado, a validade das estimativas de efeitos de todos os trabalhos discutidos aqui dependem de que não existam efeitos da biodiversidade remanescente na estrutura da paisagem  (@didham_rethinking_2012; @pearl2016causal). Esses pressupostos não devem ser válidos para sistemas florestais em que a restauração natural modifica a cobertura florestal e sua configuração espacial (@crouzeilles2020achieving; @williams2024global). Nesse contexto, uma forma de encaminhar o debate sobre os efeitos da fragmentação de habitat pode ser a exploração de cenários de mudanças da paisagem ao longo da história profunda e recente dos ecossistemas florestais. Um modelo mecanístico consensual e suficiente, capaz de explicar a trajetória desses ecossistemas florestais, poderia ser utilizado para construir cenários contrafactuais para comparação de diferentes cenários de restauração e conservação e para criação de heurísticas gerais ((@metzger2017best; @pereira2020developing; @bull2021; @arroyo-rodriguez_designing_2020; @banks-leite_suggestion_2021; @arroyo-rodriguez_preserving_2021).
+</p>
+
+
+# Referências {-}
+<div id="refs"></div>

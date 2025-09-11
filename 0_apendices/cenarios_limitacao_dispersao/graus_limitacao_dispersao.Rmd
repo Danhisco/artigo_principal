@@ -1,0 +1,105 @@
+---
+title: "Cenários de limitação à dispersão per capita"
+author: "Danilo Pereira Mori"
+date: "2022-10-17"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE,echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=FALSE)
+# pacotes adicionais´
+library(doMC)
+library(readr)
+library(ggplot2)
+library(readr)
+library(stringr)
+library(plyr)
+library(dplyr)
+# dados disponíveis
+df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv")
+df_dados <- df_dados_disponiveis |> 
+  select(SiteCode, effort_ha, Ntotal, S_obs) |> 
+  inner_join(
+    mutate(
+      data.frame(
+        tif.path = list.files(path="dados/paisagens/paisagens_mapbiomas6_padronizadas",
+                              pattern=".tif",full.names=T)),
+      SiteCode = str_extract(tif.path,"(?<=as\\/).*?(?=.tif)")),
+             by="SiteCode")
+# sources
+source("source/qkernel_e_sigkernel.R")
+```
+
+
+### Protocolo para obter o desvio padrão da função de dispersão
+
+<p>1) função que retorna o quantil para um determinado percentil, pressuposto a função de dispersão parametrizada de uma determinada forma e que os sorteios são feitos de forma independentes em eixos ortogonais.</p> 
+
+<p>2) função que retorna o desvio padrão adequado para que um determinado percentil (k) seja observado, uma vez que uma distância padronizada é informada.</p>
+
+<p>3) para cada sítio, obter o desvio padrão adequado para aquele cenário de limitação de dispersão, k = proporção de propágulos que permanece até a vizinhança imediata (100 / sqrt(DA), a distância entre indivíduos no mapa de cobertura vegetal usado em MNEE)<p/>
+
+<p> __Janela de Código 1__: funções usadas para obter o desvio padrão da função de dispersão (distribuição de Laplace) no qual k propágulos permanece até a distância imediata da planta progenitora (dist_0 = 100 / sqrt(densidade),  densidade = indivíduos / ha), k = proporção de propágulos que permanece até a vizinhança imediata c(0.99, seq(0.95,0.05,-0.05)). Na janela código apenas para a situação que pressupõe a distribuição de probabilidade de Laplace, em 'source/qkernel_e_sigkernel.R' o código completo. Funções de autoria de PI Prado, R M Coutinho e D P Mori.</p>
+
+```{r exibicao das funcoes usadas, echo=TRUE}
+library(rmutil)
+library(lamW)
+qkernel<- function(sigma, kernel, p, density=20852/50, npoints){
+    kernel <- match.arg(kernel, choices=c("normal","gaussian","laplace","uniform"))
+    d_ind_MA  <- 100/sqrt(density)
+    if(kernel=="laplace"){
+        b_laplace <- sigma / sqrt(2)
+        X_laplace <- d_ind_MA * round(rlaplace(npoints, s=b_laplace) / d_ind_MA)
+        Y_laplace <- d_ind_MA * round(rlaplace(npoints, s=b_laplace) / d_ind_MA)
+        dist_laplace <- sqrt(X_laplace^2+Y_laplace^2)
+        result <- quantile(dist_laplace, p)
+    }
+    return(unname(result))
+}
+sigkernel <- function(kernel = "laplace", p, density,
+                      npoints =1e5, sigma.min = 1e-6, sigma.max= 1e6){
+    distance <- 100/sqrt(density)
+    f1 <- function(x) distance - qkernel(x, kernel, p, density, npoints)
+    v_ <- uniroot( f1 , lower = sigma.min, upper = sigma.max)
+    return(v_$root)
+}
+```
+
+<p> __Janela de Código 2__: rotina para obter df_simulacao.csv </p>
+
+```{r SD funcao de dispersao por sitio nos 20 cenarios de limitacao a dispersao, echo=TRUE}
+f_dfSimulacao <- function(df, k = c(0.99,seq(0.95,0.05,-0.05))){
+  f_sd.kernel <- function(proportion) sigkernel(p=proportion, density = df$Ntotal/df$effort_ha)
+  df_sd <- cbind(df,k)
+  df_sd$d <- sapply(k,f_sd.kernel)
+  return(df_sd)
+}
+registerDoMC(2)
+df_sim <- adply(df_dados,1,f_dfSimulacao,.parallel = TRUE)
+write_csv(df_sim,file = "dados/df_simulacao.csv")
+```
+
+
+```{r grafico 1 - d por k colorido por DA,eval=TRUE,fig.height=6}
+df_sim <- read_csv("dados/df_simulacao.csv")
+df_sim |> 
+  mutate(DA = Ntotal / effort_ha) |> 
+  ggplot(aes(x=k,y=d,color=DA,group=k)) +
+  geom_jitter() +
+  geom_boxplot() +
+  labs(title = "20 cenários de limitação à dispersão simulados",
+       y = "SD da dist. de Laplace usada na função de dispersão",
+       x = "proporção de propágulos até a vizinhança imediata do progenitor") +
+  theme_light() 
+```
+
+
+########## REMOVER:: quais as características dos sítios??
+
+```{r}
+df_dados_disponiveis |> 
+  count(Unidade_de_conservacao,forest_succession)
+```
+

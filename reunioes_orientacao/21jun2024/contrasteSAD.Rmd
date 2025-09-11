@@ -1,0 +1,660 @@
+---
+title: "Contraste entre contrafactuais: congruência com a SAD observada"
+author: "Mori, Danilo"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+editor_options: 
+  chunk_output_type: console
+---
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE)
+# pacotes
+library(twosamples)
+library(sads)
+library(doMC)
+library(ggpmisc)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(insight)
+library(bbmle)
+library(DHARMa)
+library(lme4)
+library(mgcv)
+library(plyr)
+library(dplyr)
+# funções
+source("source/dinamica_coalescente.R")
+source("source/2samples_testes.R")
+f_z <- function(x) (x-mean(x))/sd(x)
+# obj comum
+v_pares <- c("cont-ideal","non_frag-ideal","cont-non_frag")
+names(v_pares) <- c("frag.total","area","frag.perse")
+# dados
+df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+  select(SiteCode,year_bestProxy,forest_succession,matches("(lat|long)")) %>% 
+  mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+         long = ifelse(is.na(long_correct),long,long_correct),
+         data_year = as.numeric(year_bestProxy),
+         data_year = ifelse(is.na(data_year),2012.5,data_year)) %>% 
+  select(-contains("correct"),-year_bestProxy)
+# Resultados
+## congruência 
+# df_adSAD <- readRDS("5_resultados/df_adSAD.rds")
+
+## efeito U
+df_contrastes <- read_csv(file="dados/csv_SoE/taxaU/df_contrastes.csv")
+# dados para modelos
+# df_md0 <- df_adSAD %>%
+#   filter(taxaU=="contemp",land_type=="contemp") %>%
+#   select(SiteCode,k,nCongKS) %>%
+#   inner_join(df_contrastes %>% select(SiteCode:k,frag.total_logratio)) # versão do
+df_contrastes <- df_contrastes %>%
+  select(SiteCode:p, contains("_logratio")) %>% 
+  mutate(across(-SiteCode,f_z,.names = "{.col}_z"))
+saveRDS(df_contrastes,file="dados/csv_SoE/df_contrastes_z_e_padraor.rds")
+df_contrastes <- df_contrastes %>%
+  select(SiteCode,k,k_z,area_logratio_z:frag.total_logratio_z) %>% 
+  rename_with(~str_remove(.,"_logratio_z")) %>% 
+  pivot_longer(cols = c("area","frag.perse","frag.total"),
+               values_to = "Uefeito",
+               names_to = "contraste") %>% 
+  mutate(contraste = case_when(contraste=="area" ~ "non_frag-ideal",
+                               contraste=="frag.total" ~ "cont-ideal",
+                               contraste=="frag.perse" ~ "cont-non_frag"),
+         k = factor(round(k,2)))
+# df SADs congruentes
+# df_adSADifself <- adply(c("contemp","ideal","non_frag"),1,\(i){
+#   df_return <- df_adSAD %>% filter(taxaU==i & land_type==i) %>% 
+#     select(-land_type,-c(Smed:Smax)) %>% 
+#     rename("contrafactual"="taxaU",
+#            "nCong"="nCongKS")
+#   inner_join(df_return,
+#              df_contrastes %>% 
+#                filter(contraste=="non_frag-ideal") %>% 
+#                select(SiteCode:p,ends_with("_z")),
+#              by=c("SiteCode","k"))
+# },.id=NULL)
+# df_logOR para modelar
+
+# df_mdsumar:
+#@ com o logito estimado pelo modelo sumário, contem os logitos empiricos
+df_mdsumar <- readRDS(file="./dados/csv_SoE/df_mdsumar.rds")
+df_logOR <- df_mdsumar %>% 
+  rename(logitoKS = logito) %>% 
+  select(-c(nSAD,forest_succession,lat,long)) %>% 
+  f_contrasteSAD(.,pares=v_pares) %>% 
+  mutate(k = factor(round(k,2))) %>% 
+  inner_join(y=df_contrastes,by=c("contraste","SiteCode","k")) %>% 
+  inner_join(y=df_dados_disponiveis,by="SiteCode")
+write_csv(df_logOR,file="dados/csv_SoE/df_logOR.csv")
+saveRDS(df_logOR,file="dados/csv_SoE/df_logOR.rds")
+```
+
+# Número de SADs congruentes 
+
+```{r ajuste do número de SADs congruentes,eval=FALSE,echo=FALSE}
+f_gam <- function(df){
+  l_md <- list()
+  # 1) gi
+  l_md$gi <- gam(cbind(nCong,100-nCong) ~
+                   s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(p_z,k_z) +
+                   s(k_z, by=SiteCode, bs="cr") +
+                   s(SiteCode,bs="re"),
+                 data=df,method = "REML",family="binomial")
+  # 2) gs
+  l_md$gs <- gam(cbind(nCong,100-nCong) ~
+                   s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                   ti(p_z,k_z) +
+                   s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                   s(SiteCode,bs="re"),
+                 data=df,method = "REML",family="binomial")
+  # 3) gi - p*k
+  l_md$gi_s_pk <- gam(cbind(nCong,100-nCong) ~
+                        s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                        s(k_z, by=SiteCode, bs="cr") +
+                        s(SiteCode,bs="re"),
+                      data=df,method = "REML",family="binomial")
+  # 4) gs - p * k 
+  l_md$gs_s_pk <- gam(cbind(nCong,100-nCong) ~
+                     s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
+                   data=df,method = "REML",family="binomial")
+  # 5) gi - p
+  l_md$gi_s_p <- gam(cbind(nCong,100-nCong) ~
+                        s(k_z,bs = "cr") +
+                        s(k_z, by=SiteCode, bs="cr") +
+                        s(SiteCode,bs="re"),
+                      data=df,method = "REML",family="binomial")
+  # 6) gs - p
+  l_md$gs_s_p <- gam(cbind(nCong,100-nCong) ~
+                     s(k_z,bs = "cr") + 
+                     s(k_z, SiteCode, bs="fs",xt=list(bs="cr")) +
+                     s(SiteCode,bs="re"),
+                   data=df,method = "REML",family="binomial")
+  # 7) p*k + 1|Site
+  l_md$pk_1site <- gam(cbind(nCong,100-nCong) ~
+                       s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                       ti(p_z,k_z) +
+                       s(SiteCode,bs="re"),
+                     data=df,method = "REML",family="binomial")
+  # 8) p+k + 1|Site
+  l_md$p_k_1site <- gam(cbind(nCong,100-nCong) ~
+                         s(k_z,bs = "cr") + s(p_z,bs = "cr") +
+                         s(SiteCode,bs="re"),
+                       data=df,method = "REML",family="binomial")
+  # 9) k + 1|Site
+  l_md$k_1site <- gam(cbind(nCong,100-nCong) ~
+                         s(k_z,bs = "cr") +
+                         s(SiteCode,bs="re"),
+                       data=df,method = "REML",family="binomial")
+  return(l_md)
+}
+# registerDoMC(3)
+# df <- df_adSADifself %>% 
+#   mutate(SiteCode=factor(SiteCode)) %>% 
+#   filter(contrafactual=="contemp")
+l_md <- df_adSADifself %>% 
+  mutate(SiteCode=factor(SiteCode)) %>% 
+  split(.,df_md$contrafactual) %>% 
+  lapply(.,f_gam)
+saveRDS(l_md,file="dados/Rdata/l_md_nSAD_descricaos.rds")
+```
+```{r graficos exploratorios SAD congruentes}
+df_adSADifself %>% 
+  ggplot(aes(x=k,y=nCong,color=p,group=SiteCode)) +
+  geom_line(alpha=0.2) +
+  geom_point(alpha=0.2) +
+  scale_colour_gradient2("% CF",midpoint=0.5,
+                         low="darkred",
+                         mid = "blue",
+                         high = "darkgreen") +
+  facet_wrap(~contrafactual,ncol=3)
+  
+```
+
+
+# Contraste entre contrafactuais
+
+Para cada contraste existem até 4 pontos de referência da taxa U: i) o correspondente, quando a taxa U e a paisagem contrafactual coincidem; ii) numerador, taxa U da paisagem contrafactual no numerador do contraste; iii) denominador, taxa U do contrafactual no denominador; e iv) prístino, a taxa U da respectiva paisagem contrafactual sem perda de .
+
+
+```{r fig 1 cap}
+cap = ""
+```
+```{r figura 1 - GE logOR em funcao da taxa}
+# vai para SI
+theme_set(theme_bw())
+df_logOR %>% 
+  select(-matches("^k|^p(!pristine)")) %>% 
+  pivot_longer(cols = c("itself","pristine","numerator","denominator"),
+               values_to="logOR",
+               names_to="taxaU") %>% 
+  mutate(taxaU = factor(taxaU,
+                        levels=c("itself","pristine","numerator","denominator"))) %>% 
+  ggplot(aes(x=Uefeito,y=logOR,color=taxaU,group=SiteCode)) +
+  geom_hline(yintercept = 0,color="gray") +
+  geom_vline(xintercept = 0,color="gray") +
+  geom_line(alpha=0.2) +
+  geom_point(alpha=0.2) +
+  labs(x="respectivo efeito em U (z transformado)",
+       y="log( Odds SAD / Odds SAD )",
+       title="Congruência relativa da SAD simulada em relação ao respectivo efeito na taxa U") +
+  scale_color_manual("Parâmetro usado:",values=c("darkred","darkgreen","darkblue","darkorange")) +
+  facet_grid(taxaU~contraste)
+```
+
+## Conclusão 4 pontos de referência
+
+Concluímos que o principal ponto de referência é o correspondente, pois é o mais coerente com a prática ontológica, enquanto a referência do numerador e denominador tem um caráter mais de análise de sensibilidade. O ponto de referência prístino pode ter valor para TNB uma vez que é proposto como referência de ausência de débito de extinção. Nesse sentido, uma oportunidade é relacionar a referência de correspondência, alinhada com as práticas ontológicas das ecológia de paisagens e a TNB, com a prístina, alinhada com a ontologia independente e da TNB. Assim, iremos prosseguir na seção dos resultados com a análise dos dados da referência correspondente.
+
+# Análise
+
+Primeiro utilizo um glmer padrão para obter o range de valores de logito adequado para esse conjunto de dados. Antes de discutirmos os 4 pontos de referência a ideia era analisar os 4, o código beta dessa abordagem está oculto nesse documento. <!-- (no próximo segundo chunk)  -->
+Então segui ajustando para cada contraste de contrafactuais 3 GAMM:
+
+```{r tabelas dos modelos da 1a fase }
+library(knitr)
+df <- data.frame(
+  modelo = c("com efeito por paisagem", "com efeito de paisagem", "sem efeito de paisagem","mgcv::s"),
+  `efeito em U` = c("1", "1", "0","s(bs='cr')"),
+  `ano dados` = c("1", "1", "1","s(bs='cr')"),
+  `coord. geo.` = c("1", "1", "1","s(bs='tp')"),
+  `intecep. por sítio` = c("1", "1", "1","s(bs='re')"),
+  `efeito em U por sítio` = c("1", "0", "0","s(bs='fs',xt=list(bs='cr'))")
+)
+knitr::kable(df, 
+             caption = "Características dos GAMM na 1a fase de comparações\n method='REML'")
+```
+
+O gamm com efeito por paisagem pelo método GI não foi feito pois levava muito tempo em meu computador pessoal. *
+
+```{r 1a parte - ajuste de um GLMM para avaliação do range de logito,eval=FALSE,echo=FALSE}
+# 1a parte: ajuste de um GLMM para avaliaçã do range de logito necessário para descrição 
+md <- glmer(cbind(nCongKS,100-nCongKS) ~ 
+              frag.total_logratio + (1|SiteCode),
+            data = df_md0, family = "binomial")
+df_md0$pred <- predict(md,df_md0,type="response")*100
+v_pred <- df_md0 %>% filter(pred %in% range(df_md0$pred)) %>% 
+  pull(pred) %>% round(.,digits = 2)
+boxplot(df_md0$nCongKS)
+```
+```{r 1a parte: contrafactuais da paisagem e taxa U correspondentes, echo=FALSE,eval=FALSE}
+df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
+  rename(logOR = itself) %>% 
+  filter(forest_succession!="capoeira") %>% 
+  mutate(Sitecode = factor(SiteCode),
+         forest_succession = factor(forest_succession))
+f_gam <- \(dfi){
+  l_md <- list()
+  l_md$`com efeito por paisagem` <- gam(logOR ~
+        forest_succession +
+        s(Uefeito,by=forest_succession,bs="cr") +
+        s(data_year,bs="cr") +
+        s(lat,long,bs="tp") +
+        s(SiteCode,bs="re") + s(Uefeito, SiteCode, bs="fs",xt=list(bs="cr")),
+      data=dfi,method = "REML")
+  l_md$`com efeito de paisagem` <- gam(logOR ~
+        forest_succession +
+        s(Uefeito,by=forest_succession,bs="cr") +
+        s(data_year,bs="cr") +
+        s(lat,long,bs="tp") +
+        s(SiteCode,bs="re"),
+      data=dfi,method = "REML")
+  l_md$`sem efeito de paisagem` <- gam(logOR ~
+        forest_succession +
+        s(data_year,bs="cr") +
+        s(lat,long,bs="tp") +
+        s(SiteCode,bs="re"),
+      data=dfi,method = "REML")
+  return(l_md)
+}
+l_md_logOR <- df_md %>% 
+  mutate(SiteCode=factor(SiteCode)) %>% 
+  split(.,df_md$contraste) %>% 
+  lapply(.,f_gam)
+saveRDS(l_md_logOR,file="dados/Rdata/l_md_logOR_itself_c_perturbacao.rds")
+```
+```{r inclusão de GAMM GI sensu Peterson et al. 2019}
+df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
+  rename(logOR = itself) %>% 
+  filter(forest_succession!="capoeira")
+f_gam <- \(dfi){
+ gam(logOR ~
+       forest_succession +
+       s(Uefeito,by=forest_succession,bs="cr") +
+       s(data_year,bs="cr") +
+       s(lat,long,bs="tp") +
+       s(SiteCode,bs="re") + s(Uefeito, by=SiteCode, bs="cr"),
+     data=dfi,method = "REML")
+}
+l_md_logOR_gi <- df_md %>% 
+  mutate(SiteCode = factor(SiteCode),
+         forest_succession = factor(forest_succession)) %>% 
+  split(.,df_md$contraste) %>% 
+  lapply(.,f_gam)
+saveRDS(l_md_logOR_gi,file="dados/Rdata/l_md_logOR_itself_gi_perturbacao.rds")
+```
+```{r}
+l_md_logOR <- readRDS(file="dados/Rdata/l_md_logOR_itself_c_perturbacao.rds")
+l_md_logOR_gi <- readRDS(file="dados/Rdata/l_md_logOR_itself_gi_perturbacao.rds")
+l_md_logOR_cgi <- lapply(names(l_md_logOR),\(li){
+  l_md <- l_md_logOR[[li]]
+  l_md$`com efeito por paisagem 2` <- l_md_logOR_gi[[li]]
+  return(l_md)
+})
+names(l_md_logOR_cgi) <- names(l_md_logOR)
+saveRDS(l_md_logOR_cgi,file="dados/Rdata/l_md_logOR_cgi_c_perturbacao.rds")
+```
+
+
+
+## 1a fase de comparações: qual estrutura aleatória usar? e é necessário considerar a paisagem?
+
+Para todos os contrastes, o GAMM mais plausível era aquele 'com efeito por paisagem' (tabela anterior). Todos eles apresentam o p-valor no teste de Moran muito maior do que 0·05% e a estatística de Moran I não é maior do que 0.15 em módulo. A deviance explicada dos modelos mais plausíveis varia entre 0.41 e 0.69. A seguir o diagnóstico dos modelos mais plausíveis.
+
+```{r 1a tabela de selacao, eval=TRUE}
+# l_md.logOR <- readRDS("dados/Rdata/l_md_logOR_itself.rds")
+# l_md_logOR <- readRDS(file="./dados/Rdata/l_md_logOR_cgi.rds")
+l_md_logOR <- readRDS(file="./dados/Rdata/l_md_logOR_cgi_c_perturbacao.rds")
+#
+source("source/2samples_testes.R")
+source("source/general_tools.R")
+source("source/GAMMtools.R")
+source("source/fig_tools.R")
+df_tabsel_logOR <- ldply(l_md_logOR,f_TabSelGAMM,.id="pair")
+write_csv(df_tabsel_logOR,file="dados/csv/df_tabelaSelecao_logOR_cgi_cperturbacao.csv")
+#
+df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_cgi_cperturbacao.csv")
+# write_csv(df_tabelaSelecao,
+#           file=paste0(v_path,"tabelas/df_tabelaSelecaologOR_cgi.csv"))
+
+f_SML.gamm <- \(df){md <- l_md_logOR[[df$pair[1]]][[df$modelo[[1]]]]}
+l_md_1alike <- dlply(df_tabelaSelecao,"pair",f_SML.gamm)
+saveRDS(l_md_1alike,file="dados/Rdata/l_md_logOR_itself_1alike_cperturbacao.rds")
+######
+knitr::kable(
+  df_tabelaSelecao,
+  caption="Tabela de seleção dos GAMMs da 1a fase de comparações"
+  )
+```
+
+### Diagnóstico dos modelos mais plausíveis
+
+#### Contemp-ideal
+
+```{r diagnostico contemp-ideal,eval=TRUE}
+l_md_1alike <- readRDS(file="dados/Rdata/l_md_logOR_itself_1alike.rds")
+v_pattern_gi <- " \\+ s\\(SiteCode, bs \\= \"re\"\\) \\+ s\\(Uefeito, by \\= SiteCode\\)"
+md <- l_md_1alike[["contemp-ideal"]]
+print(k.check(md))
+print(summary(md))
+formals(f_extract_smoothers_f_formula)$pregex_rm <- v_pattern_gi
+v_draw <- formula(md)[3] %>% f_extract_smoothers_f_formula %>% 
+  gsub(", l",",l",.)
+print("k.check:")
+print(k.check(md))
+print("summary:")
+print(summary(md))
+print(gratia::appraise(md))
+print(gratia::draw(md,select = v_draw,residuals=TRUE))
+```
+
+1] "s(Uefeito)"   "s(data_year)" "s(lat, long)"
+#### Contemp-Non frag.
+
+```{r diagnostico non-frag,eval=TRUE}
+md <- l_md_1alike[["contemp-non_frag"]]
+print(k.check(md))
+print(summary(md))
+p <- gratia::appraise(md)
+print(p)
+p <- gratia::draw(md)
+print(p)
+```
+
+#### Non frag. - prístino
+
+```{r diagnostico non frag- prístino,eval=TRUE}
+md <- l_md_1alike[["non_frag-ideal"]]
+print(k.check(md))
+print(summary(md))
+p <- gratia::appraise(md)
+print(p)
+p <- gratia::draw(md)
+print(p)
+```
+
+
+
+## 2a fase de comparações: 
+
+a) qual o modelo cheio adequado?
+
+```{r}
+df_md <- df_logOR %>% filter(forest_succession!="capoeira")
+l_md_1alike <- readRDS(file="dados/Rdata/l_md_logOR_itself_1alike_cperturbacao.rds")
+#
+f_gam_update <- \(gamm){
+  # setup
+  f_ref <- formula(gamm)
+  original_data <- gamm$model
+  f_gam <- \(fi){
+    gam(formula=fi,data=original_data,method = "REML")
+  }
+  # formula 
+  l_md <- list()
+  l_md$`-Uefeito*perturb` <- update.formula(
+    f_ref, . ~ . - s(Uefeito, by = forest_succession, bs = "cr") + s(Uefeito, bs = "cr"))
+    # ajuste das formulas
+  l_md <- lapply(l_md,f_gam)
+  # inclusão do modelo cheio
+  l_md$cheio <- gamm
+  return(l_md)
+}
+l_md_cheios <-lapply(l_md_1alike,f_gam_update) 
+saveRDS(l_md_cheios,"dados/Rdata/l_md_cheios_cperturbacao.rds")
+```
+```{r}
+l_md_logOR_aud <- readRDS(file="dados/Rdata/l_md_cheios_cperturbacao.rds")
+if(!file.exists("dados/csv/df_tabelaSelecao_logOR_cpert.csv")){
+  df_tabsel_logOR_aud <- ldply(l_md_logOR_aud,f_TabSelGAMM,.id="pair")
+  write_csv(df_tabsel_logOR_aud,
+            file="dados/csv/df_tabelaSelecao_logOR_cpert.csv")
+}else{
+  df_tabsel_logOR_aud <- 
+    read_csv(file="dados/csv/df_tabelaSelecao_logOR_cpert.csv")
+  # write_csv(df_tabsel_logOR_aud,
+  #           file=paste0(v_path,"tabelas/df_tabsel_logOR_aud.csv"))
+}
+```
+```{r}
+f_SML.gamm <- \(df){md <- l_md_logOR_aud[[df$pair[1]]][[df$modelo[[1]]]]}
+l_md_1alike <- dlply(df_tabsel_logOR_aud,"pair",f_SML.gamm)
+#
+f_gam_update <- \(mdname){
+  mdgam <- l_md_1alike[[mdname]]
+  f_ref <- formula(mdgam)
+  original_data <- mdgam$model
+  f_gam <- \(fi){
+    gam(formula=fi,data=original_data,method = "REML")
+  }
+  l_md <- list()
+  l_md$`- ano` <- update.formula(f_ref, . ~ . - s(data_year, bs = "cr"))
+  l_md$`- coord` <- update.formula(f_ref, . ~ . - s(lat, long, bs = "tp"))
+  if(!grepl("by = forest_succession",as.character(f_ref)[3])){
+    l_md$`- pert` <- update.formula(f_ref, . ~ . - forest_succession)
+    l_md$`- pert e ano` <- update.formula(l_md$`- ano`, . ~ . - forest_succession)
+    l_md$`- pert e coord` <- update.formula(l_md$`- coord`, . ~ . - forest_succession)
+    l_md$`- ano e coord` <- update.formula(l_md$`- coord`, . ~ . - s(data_year, bs = "cr"))
+    l_md$`- cov` <- update.formula(l_md$`- ano e coord`, . ~ . - forest_succession)
+  }else{
+    l_md$`- cov` <- update.formula(l_md$`- coord`, . ~ . - s(data_year, bs = "cr"))
+  }
+  l_md <- lapply(l_md,f_gam)
+  l_md$cheio <- mdgam
+  saveRDS(l_md,
+          file=paste0("dados/Rdata/l_md_logOR_2a_cpert_",mdname,".rds"))
+  rm(l_md);gc()
+  # return(l_md)
+}
+lapply(names(l_md_1alike),f_gam_update)
+# l_md_logOR_2a_cpert <- lapply(names(l_md_1alike),f_gam_update)
+# saveRDS(l_md_logOR_aud,file="dados/Rdata/l_md_logOR_2a_cpert.rds")
+```
+
+```{r}
+paths_lmd <- list.files("dados/Rdata","l_md_logOR_2a_cpert_",full.names = T)
+names(paths_lmd) <- str_extract(paths_lmd,"(?<=cpert\\_)(.*?)(?=\\.rds)") %>% 
+  gsub("contemp-ideal","fragtotal",.) %>% 
+  gsub("contemp-non_frag","fragperse",.) %>% 
+  gsub("non_frag-ideal","areaperse",.)
+l_df <- lapply(paths_lmd,\(li){
+  li <- readRDS(li)
+  f_TabSelGAMM(li)
+})
+f_gsub <- \(vchar){
+  gsub("rank","Rank",vchar) %>% 
+    gsub("modelo","GAHM",.) %>% 
+    gsub("df","est. coef.",.) %>% 
+    gsub("dAICc","ΔAICc",.) %>% 
+    gsub("weight" , "Weight (ΔAICc)",.) %>% 
+    gsub("dev.expl" , "Deviance Explained",.) %>% 
+    gsub("Moran I statistic (res)", "Moran's I",.) %>% 
+    gsub("p-value" , "p-value",.)
+}
+v_title <- dfi$pair[1] %>% 
+  gsub("contemp-ideal","Frag. total",.) %>%
+  gsub("contemp-non_frag","Frag. per se",.) %>%
+  gsub("non_frag-ideal","Área per se",.)
+dfi <- dfi %>% select(-pair) %>%
+  mutate(rank = 1:n()) %>% 
+  select(rank,modelo,df,dAICc)
+v_name <- gsub("Frag. total","fragtotal",v_title) %>% 
+    gsub("Frag. per se","frag_perse",.) %>% 
+    gsub("Área per se","area_perse",.)
+#
+lapply(names(l_df),\(v_){
+  table <- f_gt_table(dfi = l_df[[v_]] %>% mutate(rank = 1:n()),
+                    v_title = gsub("fragtotal","Frag. total",v_) %>% 
+                      gsub("fragperse","Frag. per se",.) %>%
+                      gsub("areaperse","Área per se",.),
+                    v_name = v_,
+                    f_cols_label_with = "f_gsub")
+  
+})
+f_gt_table_final <- \(lpath){
+  
+}
+
+
+
+gtsave(table, paste0(v_path,"tabelas/table_reciclagem_",v_title,".png"),
+         vwidth = 800, vheight = 200)
+```
+
+
+
+
+<!-- ```{r tabelas dos modelos da 2a fase,eval=TRUE} -->
+<!-- library(knitr) -->
+<!-- df <- data.frame( -->
+<!--   modelo = c("mais plausível 1a fase", "sem ano", "sem coord", "sem cov","mgcv::s"), -->
+<!--   `efeito em U` = c("1", "1", "1","1","s(bs='cr')"), -->
+<!--   `ano dados` = c("1","0", "1", "0","s(bs='cr')"), -->
+<!--   `coord. geo.` = c("1", "1", "0","0","s(bs='tp')"), -->
+<!--   `intecep. por sítio` = c("1", "1", "1","1","s(bs='re')"), -->
+<!--   `efeito em U por sítio` = c("1", "1","1","1","s(bs='fs',xt=list(bs='cr'))") -->
+<!-- ) -->
+<!-- knitr::kable(df,  -->
+<!--              caption = "Características dos GAMM na 2a fase de comparações\n method='REML'") -->
+<!-- ``` -->
+
+###################### 
+
+
+
+
+
+
+
+#######################
+
+
+```{r ajuste dos modelos da 2a fase de comparações,eval=FALSE}
+# df_md <- df_logOR %>% select(-(pristine:denominator),-matches("(^k|^p)")) %>% 
+#   rename(logOR = itself)
+l_md_1alike <- readRDS(file="dados/Rdata/l_md_logOR_itself_1alike_cperturbacao.rds")
+# l_md_1alike %>% names
+f_gam_update <- \(mdgam){
+  f_ref <- formula(mdgam)
+  original_data <- mdgam$model
+  f_gam <- \(fi){
+    gam(formula=fi,data=original_data,method = "REML")
+  }
+  l_md <- list()
+  l_md$`sem ano` <- update.formula(f_ref, . ~ . - s(data_year, bs = "cr"))
+  l_md$`sem coord` <- update.formula(f_ref, . ~ . - s(lat, long, bs = "tp"))
+  l_md$`sem cov` <- update.formula(l_md$`sem coord`, . ~ . - s(data_year, bs = "cr"))
+  l_md <- lapply(l_md,f_gam)
+  l_md$cheio <- mdgam
+  return(l_md)
+}
+l_md_logOR_aud <- lapply(l_md_1alike,f_gam_update)
+saveRDS(l_md_logOR_aud,file="dados/Rdata/l_md_logOR_aud.rds")
+```
+
+```{r tabela de selecao 2a fase de comparacoes,eval=TRUE}
+l_md_logOR_aud <- readRDS(file="dados/Rdata/l_md_logOR_aud.rds")
+if(!file.exists("dados/csv/df_tabelaSelecao_logOR_aud.csv")){
+  df_tabsel_logOR_aud <- ldply(l_md_logOR_aud,f_TabSelGAMM,.id="pair")
+  write_csv(df_tabsel_logOR_aud,
+            file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
+}else{
+  df_tabsel_logOR_aud <- 
+    read_csv(file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
+  # write_csv(df_tabsel_logOR_aud,
+  #           file=paste0(v_path,"tabelas/df_tabsel_logOR_aud.csv"))
+}
+# df_tabelaSelecao <- read_csv(file="dados/csv/df_tabelaSelecao_logOR_aud.csv")
+knitr::kable(df_tabsel_logOR_aud, 
+             caption = "Tabela de seleção da 2a fase de comparações")
+```
+
+# Model averaging da predição a posteriori 
+
+__1o predição para cada modelo__
+
+```{r predicao a posteriori para cada gamm candidato por contraste}
+l_md_logOR_aud <- readRDS(file="dados/Rdata/l_md_logOR_aud.rds")
+# ldf <- l_md_logOR_aud[[1]]
+f_lapply <- \(ldf){
+  f_PI <- \(gamm){
+    lpi <- list(
+      with_random = list("apenas fixo" = FALSE,
+                         "aleatório e fixo" = TRUE),
+      to_exclude = list("apenas fixo"= c("s(Uefeito,SiteCode)",
+                                         "s(SiteCode)",
+                                         "s(lat,long)",
+                                         "s(data_year)"),
+                        "aleatório e fixo" = c("s(lat,long)",
+                                               "s(data_year)"))
+    )
+    teste <- adply(c("apenas fixo","aleatório e fixo"),1,\(i){
+      f_calcPI2(gamm=gamm,
+                with_random = lpi$with_random[[i]],
+                to_exclude = lpi$to_exclude[[i]])
+    },.id = NULL)
+  }
+  registerDoMC(3)
+  ldply(ldf,f_PI,.id="gamm",.parallel = TRUE)
+}
+l_df <- lapply(l_md_logOR_aud,f_lapply)
+saveRDS(l_df,file="./dados/Rdata/rds/l_df_pred_logORfinal.rds")
+```
+```{r model averaging}
+# tabela de seleção: peso de evidência baseado em AICc 
+df_tabsel <- 
+    read_csv(file="dados/csv/df_tabelaSelecao_logOR_aud.csv") %>% 
+  select(pair,modelo,weight)
+# inner_join para cada contraste
+l_df <- readRDS(file="./dados/Rdata/rds/l_df_pred_logORfinal.rds")
+v_names <- names(l_df)
+# inner_join
+f_ldply <- \(vstring){
+  dfmd <- l_df[[vstring]]
+  dftabsel <- df_tabsel %>% filter(pair==vstring)
+  teste <- inner_join(
+    dftabsel,
+    dfmd,
+    by=c("modelo"="gamm")
+  ) %>% mutate(
+    across(contains("%"),~.x * weight)
+  )
+}
+df_pred <- adply(v_names,1,f_ldply,.id = NULL) %>%
+  group_by(pair,Uefeito,SiteCode,tipo) %>% 
+  summarise(across(starts_with("Q_"),sum)) %>% 
+  arrange(pair,tipo,SiteCode)
+```
+
+
+
+
+
+<!-- # Apêndice -->
+
+<!-- ## Congruência com a SAD observada nos contrafactuais de paisagens e taxa U -->
+
+```{r}
+# df_adSAD
+```
+
+

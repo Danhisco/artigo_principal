@@ -1,0 +1,44 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+```{r trackdown chunk}
+library(trackdown)
+# both overwrite: 
+# overwrite the current google drive file with the current Rmd:
+upload_file(file="./reunioes_orientacao/outlines/outlines.Rmd",
+            gpath="mestrado/reunioes_orientacao/",
+            hide_code=TRUE)
+update_file(file ="secoes_texto/Resultados/Resultados.Rmd",
+            gpath = "mestrado/artigo_principal/secoes_texto/",
+            hide_code = TRUE)
+# overwrite the current Rmd with the current google drive 
+download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
+              gpath = "mestrado/artigo_principal/secoes_texto/")
+```
+
+
+# Outlines da Introdução
+
+## Propostas
+
+### Reunião 22/fev/2024
+
+#### Proposta enviada 
+
+1) Debate entre programas de pesquisa:
+  a) apresentação geral
+  b) pattern-oriented program
+  c) process-oriented program
+2) Dos pontos sensíveis do debate, aqueles que podemos contribuir:
+  a) problema de escala
+  b) problema de métrica
+3) Abordagem proposta
+  a) características comuns das hipóteses mínimas de cada programa de pesquisa que serão consideradas na transposição das hipóteses mínimas para um modelo neutro espacialmente explícito.
+  b) interpretação dos parâmetros do modelo neutro: escala de análise e métrica de efeito da paisagem ao redor.
+4) Expectativas gerais
+5) Objetivo
+  
+
+#### Proposta recebida

@@ -1,0 +1,2484 @@
+---
+title: "Trabalho em Andamento"
+author: "Danilo Pereira Mori"
+date: "2024-02-26"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 28 abril 2025
+
+```{r}
+rmarkdown::render("1_to_compile_dissertacao_EM_USO/00_Resultados/Resultados.Rmd", 
+                  output_format = "bookdown::pdf_document2")
+df_files <- data.frame(
+  paths = list.files(path="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras",
+                     pattern=".png",
+                     full.names = T)
+)
+df_files$tamanho = lapply(df_files$paths,\(li){
+  if(file.info(li)$size/(10^6)>1){
+    return("grande")
+  }else{
+    return("pequena")
+  }
+})
+library(magick)
+a_ply(filter(df_files,tamanho=="grande"),1,\(dfi){
+  img <- image_read(dfi$paths) %>% 
+    image_trim() %>% 
+    image_resize("50%")
+  image_write(img,path=dfi$paths)
+})
+
+```
+
+
+
+17 abril 
+
+```{r}
+dfpred <- adply(l_path$te,1,\(i){
+    hgam <- readRDS(i)
+    hgam <- hgam[[ unique( df_tabsel$modelo ) ]]
+    f_dfmd2(hgam$model) %>% 
+      mutate(efeito = str_extract(i,"(?<=md\\_)(.*?)(?=\\.rds)"))
+  },.id=NULL)
+dfpred %>% head()
+dfpred$predicao <- rnorm(nrow(dfpred))
+#
+dfpred %>% 
+  mutate(pert_class = factor(forest_succession,
+                                 levels=c("primary",
+                                          "primary/secondary",
+                                          "secondary"),
+                                 labels=c("baixa",
+                                          "mediana",
+                                          "alta")),
+         efeito = factor(efeito,
+                         levels=c("fragtotal",
+                                  "fragperse",
+                                  "areaperse"),
+                         labels=c("Frag. total",
+                                  "Frag. per se",
+                                  "Área per se"))) %>% 
+  select(-forest_succession) %>% 
+  ggplot(aes(x=k_z,y=Uefeito,z=predicao)) +
+  geom_raster(aes(fill=predicao),interpolate = TRUE) +
+  # geom_contour(color = "black",
+  #              linewidth=lwidth) +
+  # geom_text_contour(size=textsize,
+  #                   color="black",
+  #                   breaks=c(-2,-1,0,1,2),
+  #                   check_overlap = FALSE, stroke=0.1) +
+  scale_fill_gradient2("logOR",
+                       midpoint=0,
+                       low="red",
+                       mid = "#EEDC82",
+                       high = "darkblue") +
+  labs(y="logU/U",
+       x="grau de limitação de dispersão (k)") +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0)) +
+  facet_grid(pert_class~efeito,scales = "fixed") +
+  theme_classic()
+
+```
+
+
+
+16 abril 2025
+
+```{r}
+#
+l_dfpred <- lapply(l_rds,readRDS) %>% 
+  lapply(.,"[[","apenas fixo")
+lapply(l_dfpred,\(dfi){
+  dlply(dfi,"forest_succession",\(x) identical(unique(df_pred_comum$k),unique(x$k)))
+})
+teste <- rbindlist(l_dfpred)
+dlply(teste,c("efeito","forest_succession"),\(dfi){
+  identical(unique(df_pred_comum$k),unique(dfi$k))
+})
+
+
+lp <- lapply(l_dfpred,\(dfi){
+  dfi %>% 
+     ggplot(aes(x=k,y=Uref,fill=Q_0.5)) + geom_raster() + facet_grid(forest_succession~efeito,scales="free")
+})
+grid.arrange(grobs=lp,ncol=3)
+
+dfpred %>% 
+  filter(quantil=="50") %>%
+  ggplot(aes(x=k,y=Uref,fill=predicao)) + 
+  geom_raster() + 
+  facet_grid(forest_succession~efeito,scales="free")
+names(l_dfpred) <- str_extract(l_rds,"(?<=pred\\_)(.*?)(?=\\.rds)")
+dfpred <- rbindlist(l_dfpred) %>% 
+  pivot_longer(starts_with("Q_"),values_to = "predicao", names_to = "quantil") %>% 
+  mutate(quantil = gsub("Q_0\\.","",quantil) %>% gsub("^5","50",.)) %>% 
+  select(efeito,quantil,predicao,Uref,k,forest_succession)
+#
+library(tidyverse)
+saveRDS(dfpred,file = "dados/csv_SoE/rds/dfpred_p_plot_figfinal.rds")
+dfpred <- readRDS(file = "dados/csv_SoE/rds/dfpred_p_plot_figfinal.rds")
+f_ggplot <- \(dff,
+              vscales="fixed",
+              lwidth=0.3,
+              textsize=3.5
+              ){
+  library(metR)
+  dff %>% 
+  mutate(pert_class = factor(forest_succession,
+                                 levels=c("primary",
+                                          "primary/secondary",
+                                          "secondary"),
+                                 labels=c("baixa",
+                                          "mediana",
+                                          "alta")),
+         efeito = factor(efeito,
+                         levels=c("fragtotal",
+                                  "fragperse",
+                                  "area"),
+                         labels=c("Frag. total",
+                                  "Frag. per se",
+                                  "Área per se"))) %>% 
+  select(-forest_succession) %>% 
+  ggplot(aes(x=k,y=Uref,z=predicao)) +
+  geom_raster(aes(fill=predicao),interpolate = TRUE) +
+  geom_contour(color = "black",
+               linewidth=lwidth) +
+  geom_text_contour(size=textsize,
+                    color="black",
+                    breaks=c(-2,-1,-0.5,0,0.5,1,2),
+                    check_overlap = FALSE, stroke=0.1) +
+  scale_fill_gradient2("logOR",
+                       midpoint=0,
+                       low="red",
+                       mid = "#EEDC82",
+                       high = "darkblue") +
+  labs(y="logU/U",
+       x="grau de limitação de dispersão (k)") +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0)) +
+  facet_grid(pert_class~efeito,scales = vscales) +
+  theme_classic()
+}
+p <- f_ggplot(filter(dfpred,quantil=="50"),vscales = "fixed")
+p2 <- f_ggplot(dfpred,vscales = "free")
+p_ate1km <- f_ggplot(filter(dfpred,quantil=="50",k>=0.35),vscales = "fixed")
+ggsave(filename="figuras/temp_figfinal/comparacao_efeitos_scalefixed.png",
+       plot = p,width=14,height = 12)
+ggsave(filename="figuras/temp_figfinal/comparacao_efeitos_scalefree.png",
+       plot = p2,width=14,height = 12)
+ggsave(filename="figuras/temp_figfinal/comparacao_efeitos_scalefixed_ate1km.png",
+       plot = p_ate1km,width=14,height = 12)
+library(magick)
+vpath <- "figuras/temp_figfinal/comparacao_efeitos_scalefixed_ate1km.png"
+img <- image_read(vpath) %>% 
+  image_trim() %>% 
+  image_resize("75%")
+image_write(img,gsub("png","jpeg",vpath))
+file.remove(vpath)
+```
+
+
+
+# 15 abril 2025
+
+```{r}
+f_boxplot <- \(dfixo,dfixoealeat,vefeito){
+  dfp1 <- dfixo %>%
+    select(SiteCode, k, logOR,Q_0.5,pert_class) %>% 
+    rename("fixo e aleat."="Q_0.5") %>% 
+    pivot_longer(cols = c("logOR","fixo e aleat."),values_to = "logOR") %>% 
+    mutate(name=gsub("logOR","obs",name))
+  dfp0 <- dfixoealeat %>% 
+    filter(quantiles=="50") %>% 
+    select(SiteCode,k,pert_class,logOR) %>% 
+    mutate(name="fixo")
+  dfp <- rbind(dfp1,dfp0) %>% 
+    mutate(name = factor(name,
+                         levels=c("obs","fixo e aleat.","fixo")),
+           label = vefeito)
+  dfp %>% 
+    ggplot(aes(x=name,y=logOR)) +
+    geom_jitter(alpha=0.1) +
+    geom_boxplot() +
+    labs(x="") +
+    scale_y_continuous(limits=vrangelogOR,expand=c(0,0)) +
+    facet_grid(pert_class~label)
+}
+```
+
+
+
+# 14 de abril 2025
+
+```{r}
+#
+#
+############## plot do modelo mais plausível para área per se:
+f_plotPI_shgam <- \(nefeito,
+                    stripspace=0.5,
+                    striptextsize=10,
+                    textsize=15){
+  # objeto para o gráfico
+  v_range_x <- range(l_df$`apenas fixo`$Uefeito)
+  v_range_y <- range(select(l_df[["apenas fixo"]],starts_with("Q_")))
+  f_geom_legend <- list(
+    # guide name
+    annotate("text", x = 0.01, y =-5.5, 
+             label = "Posterior Prediction Interval", hjust = 0) ,
+    # mediana
+    annotate("segment", x = 0.01, xend = 0.06, y = -6, yend = -6, 
+             color = "black", linewidth = 1),
+    annotate("text", x = 0.08, y =-6, 
+             label = "median", hjust = 0) ,
+    # quantile range
+    annotate("rect", xmin = 0.01, xmax = 0.06, ymin = -6.75, ymax = -6.25,
+             fill = "gray", alpha = 0.7),
+    annotate("text", x = 0.08, y = -6.5,
+             label = "90% quant. range", hjust = 0),
+    # Site
+    annotate("rect", xmin = 0.01, xmax = 0.06, ymin = -7.5, ymax = -7,
+             fill = "#986868", alpha = 0.7),
+    annotate("text", x = 0.08, y = -7.25,
+             label = "s(log(U/U)) + s(log(U/U))|Site", hjust = 0),
+    # overall
+    annotate("rect", xmin = 0.01, xmax = 0.06, ymin = -8.25, ymax = -7.75,
+             fill = "darkgreen", alpha = 0.7),
+    annotate("text", x = 0.08, y = -8,
+             label = "s(log(U/U)) + 0|Site", hjust = 0)
+  )
+  # padronização dos dados
+  l_df[["apenas fixo"]]$SiteCode <- "apenas fixo"
+  ldfi <- lapply(l_df,mutate,
+                 contraste = nefeito,
+                 SiteCode = factor(SiteCode)) %>% 
+    lapply(.,select,-any_of("logOR"))
+  # gráfico
+  p <- ldfi[["fixo e aleat"]] %>% 
+    mutate(label=nefeito) %>% 
+    ggplot(aes(x = Uefeito, group = SiteCode)) +
+    # fixo e aleat
+    geom_ribbon(aes(ymin = Q_0.05, ymax = Q_0.95, 
+                    fill = "Quantile range", group = SiteCode), 
+                alpha = 0.2) +
+    geom_line(aes(y = Q_0.5, color = "Median", group = SiteCode), 
+              alpha = 0.5) +
+    scale_fill_manual(values = c("Quantile range" = "#986868")) +
+    scale_color_manual(values = c("Median" = "#C04000")) +
+    # apenas fixo
+    ggnewscale::new_scale_color() +
+    ggnewscale::new_scale_fill() +
+    geom_ribbon(data=ldfi[["apenas fixo"]],
+                aes(ymin = Q_0.05, ymax = Q_0.95, 
+                    fill = "Quantile range", group = SiteCode), 
+                alpha = 0.3) +
+    geom_line(data=ldfi[["apenas fixo"]],
+              aes(y = Q_0.5, color = "Median", group = SiteCode), 
+              alpha = 0.7) +
+    scale_fill_manual(values = c("Quantile range" = "darkgreen")) +
+    scale_color_manual(values = c("Median" = "black")) +
+    # 0 x 0 
+    geom_hline(yintercept = 0,color="darkgray",alpha=0.75) +
+    geom_vline(xintercept = 0,color="darkgray",alpha=0.75) +
+    # ajustes
+    scale_x_continuous(expand = expansion(add = c(0,0))) +
+    scale_y_continuous(expand = expansion(add = c(0,0))) +
+    labs(x="logU/U",y="log OR") +
+    facet_wrap(~label) +
+    theme_classic() +
+    theme(
+      axis.title.x = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -2.5)),
+      axis.title.y = element_text(hjust = 0.5, vjust = 0.5,margin = margin(t = -30)),
+      legend.position = "none",
+      aspect.ratio = 1,
+      axis.text = element_text(size=textsize),
+      axis.title = element_text(size=textsize),
+      strip.text = element_text(size=striptextsize,
+                                margin=margin(t=stripspace,
+                                              b=stripspace))
+    )
+  if(nefeito=="Área per se"){
+    p <- p + f_geom_legend
+  }
+  return(p)
+}
+f_plot_shgam <- \(efeito="Área per se",
+                  vpath="figuras/figfinal_areaperse_shgam.png",
+                  vw=6,vh=8,
+                  vstripspace=0.5,
+                  vstriptextsize=10,
+                  vtextsize=15){
+  # bases com a predição a posteriori para os modelos com spline simples
+  path_ldf = "rds/l_dfpred_areaperse_Ugs.rds"
+  l_df <- readRDS(path_ldf)
+  # criação dos gráficos de PI
+  p <- f_plotPI_shgam(efeito,
+                      stripspace = vstripspace,
+                      striptextsize=vstriptextsize,
+                      textsize=vtextsize)
+  ggsave(vpath, p, width = vw, height = vh)
+  # padronização
+  img_p <- image_trim(image_read(vpath))
+  image_write(img_p,path = vpath)
+  return(vpath)
+}
+```
+
+
+
+# 7abril2025
+
+Elementos para apresentar ao PI:
+a) tabelas de seleção
+b) gráficos de predição dos modelos mais plausíveis
+
+```{r tabelas de selecao}
+df_tabsel <- readRDS("./5_resultados/df_tabsel_tehgam_efeitos.rds") %>% 
+  relocate(efeito)
+library(gt)
+tb_save <- gt(df_tabsel) %>% 
+  fmt_number(decimals=3)
+gtsave(tb_save, "./figuras/tabsel_efeitos.png")
+#
+df_tabsel <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_paisagens.csv")
+tb_save <- gt(df_tabsel) %>% 
+  fmt_number(decimals=3)
+#
+df_tabsel_minimo <- read_csv("1_to_compile_dissertacao_EM_USO/00_Resultados/tabelas/tabselecao_sumario_minimo_paisagens.csv")  
+tb_save <- gt(df_tabsel_minimo) %>% 
+  fmt_number(decimals=3)
+```
+
+```{r graficos exploratorios de logUU}
+p <- df_logUU %>% 
+  ggplot(aes(x=k,y=Uefeito,color=p,group=SiteCode)) +
+  geom_hline(yintercept = 0,color="black",linetype=3) +
+  geom_point(alpha=0.75) +
+  geom_line(alpha=0.75) +
+  scale_colour_gradient2("%CF",midpoint=0.5,
+                         low="red",
+                         mid = "yellow",
+                         high = "darkgreen") +
+  labs(x="k (prop. de propágulos até a vizinhança imediata)",
+       y="log(U/U)") +
+  scale_y_continuous(expand=c(0.01,0.01)) +
+  theme_classic() +
+  theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
+        legend.position = "inside",
+        legend.position.inside = c(0.49,0.9),
+        legend.direction="horizontal") +
+  facet_grid(forest_succession ~ contraste)
+ggsave(filename="./figuras/GE_efeitos_logUU_k_p_forest_succession.png",
+       width = 12, height = 10)
+```
+
+
+```{r}
+library(metR)
+l_df_pred_simples <-
+  readRDS("./dados/csv_SoE/rds/l_df_predict_gam_simples.rds")
+vnames <- names(l_df_pred_simples)
+l_df_pred_simples <- lapply(names(l_df_pred_simples),\(li){
+  mutate(l_df_pred_simples[[li]],efeito=li)
+})
+names(l_df_pred_simples) <- vnames 
+f_plot <- \(dfi,linew=1,ctextsize=4,textsize=4){
+  vtitle <- dfi$efeito[1]
+  dfi %>% 
+    ggplot(aes(x=k_z,y=Uefeito,z=pred)) +
+    geom_raster(aes(fill=pred)) +
+    geom_contour(color = "black",linewidth=linew) +
+    geom_text_contour(size=ctextsize,color="black") +
+    scale_fill_viridis_c(name = "logOR",
+                         option = "magma") +
+    labs(y="z(logU/U)",x="z(k)",
+         title=vtitle) +
+    scale_x_continuous(expand = c(0,0)) +
+    scale_y_continuous(expand = c(0,0)) +
+    facet_wrap(~forest_succession,ncol=1) +
+    theme(legend.position="bottom",
+          legend.direction = "horizontal",
+          legend.background = element_rect(
+            fill = "transparent",          
+            color = NA                     
+            ),
+          legend.key = element_rect(
+            fill = "transparent",
+            color = NA
+            ),
+          legend.text = element_text(size = 8),
+          legend.title = element_text(size = 10),
+          legend.key.size = unit(0.5, "cm"),     
+          legend.spacing = unit(0.2, "cm"),      
+          legend.margin = margin(2, 2, 2, 2),
+          strip.text = element_text(size=textsize),
+          aspect.ratio=1,
+          axis.text = element_text(size=textsize),
+          axis.title = element_text(size=textsize))
+}
+lp <- lapply(l_df_pred_simples,f_plot)
+p <- arrangeGrob(grobs=lp,ncol=3)
+grid.arrange(grobs=lp,ncol=3)
+ggsave(filename="./figuras/efeitos_pred_simples.png",
+       plot = p,
+       width = 12, height = 10)
+```
+
+
+# 5abril25
+
+diagnostico dos modelos ajustados
+
+```{r}
+df_md
+```
+
+
+
+
+# 14/fev/2025
+
+```{r}
+library(plyr)
+library(dplyr)
+df_expostos <- plyr::rdply(.n=33,{
+  data.frame(expostos=rpois(1,lambda = 10))
+},.id = "locais") %>% 
+  adply(.,1,\(dfi){
+    data.frame(infectados=rbinom(1,dfi$expostos,prob=0.5)  )
+  })
+```
+
+
+
+```{r}
+f_sig <- \(x,beta=10,S0=0.4) 1 / (1 + exp(-beta*(x-S0)))
+x <- seq(0,1,by=0.01)
+y <- f_sig(x)
+plot(y~x)
+
+f_logito <- \(x,beta=10,S0=0.4) beta*x - beta*S0
+y_logito <- f_logito(x)
+plot(y_logito~x)
+
+plot(y_logito~y)
+```
+
+
+
+# 24jan2025
+
+```{r}
+library(pROC)
+library(ROCR)
+
+# Simulando dados
+set.seed(123)
+n <- 1000
+classe <- factor(sample(c(0, 1), n, replace = TRUE))
+preditor <- rnorm(n, mean = ifelse(classe == 1, 1, -1), sd = 1)
+
+# Criando um objeto de predição
+pred <- prediction(preditor, classe)
+
+# Calculando a performance
+perf <- performance(pred, measure = "tpr", x.measure = "fpr")
+
+# Plotando a curva ROC
+plot(perf, colorize = TRUE, main = "Curva ROC")
+abline(a = 0, b = 1, lty = 2)
+
+# Calculando a AUC
+auc <- performance(pred, measure = "auc")
+auc <- auc@y.values[[1]]
+cat("AUC =", auc)
+
+# Escolhendo um limiar (exemplo)
+limiar <- 0.5
+pred_class <- ifelse(preditor > limiar, 1, 0)
+
+# Tabela de classificação
+table(pred_class, classe)
+```
+
+
+
+```{r}
+library(doMC)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+library(plyr)
+library(dplyr)
+f_sig <- \(x) 1 / (1 + exp(-x))
+dfdata <- data.frame(x = seq(-10,10,by=0.01))
+dfdata$y <- f_sig(dfdata$x)
+dfdata$x <- dfdata$x+10
+lp <- list()
+f_ggplot <- \(dff){
+  ggplot(dff,aes(x=x,y=y)) +
+  geom_point() +
+  theme_bw()
+}
+lp$severidade_dias <- f_ggplot(dfdata)  +
+  geom_hline(yintercept = 0.6,color="darkred",alpha=0.75,linetype = 2) +
+  labs(x="dias desde infecção",
+       y="severidade dos sintomas",
+       subtitle = "proposta de valor contínuo de severidade:\nfunção sigmoide de até 2o grau (oligossintomáticos)",
+       caption = "algum limiar de testagem obrigatória dado a visita hospitalar (em vermelho)",
+       title = "Como modelar a severidade dos sintomas?")
+dfdata$x <- dfdata$x / 20
+lp$hosp_severidade <- f_ggplot(dfdata)  +
+  labs(x="severidade dos sintomas",
+       y="Probabilidade de visita hospitalar")
+dfdata$y <- dfdata$y[nrow(dfdata):1]
+lp$comunitario_severidade <- f_ggplot(dfdata)  +
+  labs(x="severidade dos sintomas",
+       y="Probabilidade de visita comunitária")
+p <- arrangeGrob(grobs=lp,
+                 layout_matrix = rbind(c(1,1),
+                                       c(1,1),
+                                       c(1,1),
+                                       c(2,3),
+                                       c(2,3)))
+ggsave(filename = "./modelo_severidade_visitas_hosp_e_comunitaria.jpeg",p,
+       width=6,height=8)
+```
+
+
+
+
+
+# 7jan2025
+
+olhar sítios:
+MGlavr3: pq o número de SADs está como zero enquanto o logOR varia?
+
+
+```{r}
+# l27 figcomp_resultados.R
+l0 <- list()
+l0[[1]] <- l_df$contraste %>% 
+  filter(SiteCode=="MGipia1",name=="logOR") %>% 
+  mutate(k=as.numeric(as.character(k))) %>% 
+  ggplot(aes(x=k,y=value,color=contraste)) +
+  geom_line() +
+  geom_point() +
+  f_geom_final(vdf="contraste")
+l0[[2]] <- l_df$paisagem %>% 
+  filter(SiteCode=="MGipia1",name=="n SAD") %>% 
+  # mutate(k=as.numeric(as.character(k))) %>% 
+  ggplot(aes(x=k,y=value,color=paisagem)) +
+  geom_line() +
+  geom_point() +
+  f_geom_final(vdf="paisagem")
+grid.arrange(grobs=l0,ncol=2)
+grid.arrange(grobs=lp,ncol=1)
+
+dfa <- inner_join(
+  l_df$contraste %>% 
+    filter(SiteCode=="MGipia1",name=="logOR") %>%
+    select(SiteCode:k,contraste,value) %>% 
+    mutate(k = factor(round(k,2))) %>% 
+    pivot_wider(names_from=contraste,values_from=value),
+  l_df$paisagem %>% 
+    filter(SiteCode=="MGipia1",name=="n SAD") %>% 
+    select(-name) %>% 
+    mutate(k = factor(round(k,2))) %>% 
+    pivot_wider(names_from=paisagem,values_from=value)
+)
+
+```
+
+
+
+```{r}
+df_U <- read_csv("dados/csv_SoE/taxaU/df_U.csv") %>% 
+  select(-Usd) %>% 
+  pivot_wider(.,names_from="land_type",values_from="Umed")
+df_logOR <- readRDS(file="dados/csv_SoE/df_logOR.rds")
+df_aud <- inner_join(
+  mutate(df_U,k=factor(round(k,2))),
+  select(df_logOR,SiteCode,k,contraste,Uefeito) %>% 
+    pivot_wider(names_from="contraste",values_from="Uefeito")
+)
+dfi <- inner_join(
+  df_logOR %>% 
+    filter(SiteCode=="MGipia1") %>% 
+    select(SiteCode,k,contraste,Uefeito) %>% 
+    pivot_wider(names_from="contraste",values_from="Uefeito") %>% 
+    rename(fragtotal=3,area=4,fraperse=5),
+  df_U %>% 
+    filter(SiteCode=="MGipia1") %>% 
+    select(-non_frag) %>% 
+    mutate(k_cont=k,
+           k=factor(round(k,2)))
+) %>% mutate(teste = log(cont/ideal),
+             diff = fragtotal-teste)
+vsite <- sample(unique(df_logOR$SiteCode),1,replace = FALSE)
+
+lp <- list()
+lp[[1]] <- df_logOR %>% 
+  filter(SiteCode==vsite) %>% 
+  mutate(k_cont = as.numeric(as.character(k))) %>% 
+  ggplot(aes(x=k_cont,y=Uefeito,color=contraste)) +
+  geom_point() +
+  geom_line()
+lp[[2]] <- df_U %>% 
+  filter(SiteCode==vsite) %>% 
+  pivot_longer(-c(SiteCode:k)) %>% 
+  ggplot(aes(x=k,y=value,color=name)) +
+  geom_point() +
+  geom_line()
+grid.arrange(grobs=lp,ncol=2)
+
+lp <- list()
+lp[[1]] <- dfi %>% 
+  ggplot(aes(x=k_cont,y=fragtotal)) +
+  geom_point() +
+  geom_line()
+lp[[2]] <- dfi %>% 
+  pivot_longer(c(cont,ideal)) %>% 
+  ggplot(aes(x=k_cont,y=value,color=name)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~name)
+grid.arrange(grobs=lp,ncol=1)
+
+df1 <- df_aud %>% 
+  filter(SiteCode=="MGipia1")
+dfi <- df1[20,]
+with(dfi,{
+  v1 <- log(cont/ideal)
+  `Frag. total` - v1
+})
+dfi %>% 
+  ggplot(aes(x=k,))
+
+
+```
+
+
+
+######
+
+
+```{r}
+df_aud <- df_plot %>% select(SiteCode,S_obs,Ntotal,S.N) %>% distinct() %>% inner_join(select(df_sim,SiteCode,effort_ha)) %>% mutate(DA=Ntotal/effort_ha)
+p <- df_aud %>% 
+  ggplot(aes(x=log(Ntotal),y=S_obs,size=DA,fill=S.N)) +
+  geom_point(shape=21) +
+  scale_fill_distiller("S/N",palette = "Spectral") +
+  labs(x="log(N)",y="S") +
+  theme_bw()
+ggsave()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+# 28/10/2024
+
+Bora finalizar aquelas figuras de deviance e ficar livre disso
+
+```{r deviance e diagnósticos 2}
+setwd(v_path)
+l_md <- readRDS("rds/l_md_fragtotal.rds")
+# 1) Pq usar a deviance?
+## para avaliar o deviance em função das i) preditoras, ii) MORAN I se for te
+l_dev <- lapply(l_md,\(md){
+  df_return <- md$model
+  df_return$deviance <- residuals.gam(md)
+  df_return$pred <- predict.gam(md)
+  return(df_return)
+})
+rm(l_md);gc()
+f_ggplot <- \(veffect){
+  dff <- l_dev[[veffect]]
+  l_p <- list()
+  # deviance em função das preditoras
+  l_p$dev_preditoras <- dff %>% 
+    ggplot(aes(x=k_cont,y=Uefeito,fill=deviance)) +
+    geom_line(aes(group=SiteCode),alpha=0.2) +
+    geom_point(shape=21,color="black",size=4,
+               position = position_jitter(width = 0.009, height = 0.009)) +
+    scale_fill_gradient2("Deviance",midpoint=0,
+                         low="red",
+                         mid = "yellow",
+                         high = "darkgreen") +
+    labs(x="k",y="logU/U") +
+    theme(legend.position="inside",
+          legend.position.inside = c(0.85,0.85))
+  # distribuição das inclinações
+  l_p$dist_slope <- ddply(dff,"SiteCode",\(dfi){
+    l_md <- list()
+    l_md$lm <- summary(lm(pred ~ logOR,dfi))
+    # l_md$gam <- try(summary(gam(pred ~ s(logOR,bs="cr",k=5),data=dfi,method="REML")))
+    data.frame(SiteCode=dfi$SiteCode[1],
+               slope=l_md$lm$coefficients[,"Estimate"]["logOR"],
+               # edf=l_md$gam$edf,
+               r2adj=l_md$lm$adj.r.squared)
+  }) %>% ggplot(aes(x=slope)) + 
+    geom_vline(xintercept = 1,color="black",linetype="dashed") +
+    geom_histogram(aes(y = ..density..),
+                   colour = 1, fill = "darkgray") +
+    geom_density() +
+    scale_x_continuous(expand=c(0.01,0.01)) +
+    scale_y_continuous(expand=c(0,0)) +
+    labs(subtitle="slopes: lm(pred~obs,by=Site)",y="")
+  p_distslope <- ggplotGrob(l_p$dist_slope)
+  # gráfico do lm do predito e esperado
+  l_p$predito_obs_plot <- ggplot(dff,aes(x=logOR,y=pred,group = SiteCode)) +
+    geom_abline(intercept=0,slope=1)+
+    geom_smooth(method="lm",se=FALSE,color="red",size=1) +
+    geom_line(alpha=0.2) +
+    geom_point() +
+    labs(x="observado",y="predito") +
+    theme(aspect.ratio = 1,
+          plot.margin=unit(c(0,0.2,0,0), "cm"))
+  #
+  library(grid)
+  library(ragg)
+  # Save combined plot as PNG
+  output_file <- tempfile(fileext = ".png")
+  agg_png(filename = output_file, width = 1000, height = 800, res = 144)
+  grid.newpage()
+  grid.draw(ggplotGrob(l_p$predito_obs_plot))
+  vp <- viewport(x = 0.42, y = 0.875, width = 0.4, height = 0.25)
+  pushViewport(vp)
+  grid.draw(p_distslope)
+  # Close device
+  dev.off()
+  # Read and trim image
+  trimmed_image <- image_read(output_file) %>% image_trim()
+  image_write(trimmed_image,output_file)
+  l_p$path_fig_slopes <- output_file
+  #
+  return(l_p)
+}
+l_p_dev <- lapply(names(l_dev),f_ggplot)
+names(l_p_dev) <- names(l_dev)
+
+# 2) Pq usar o lm e gam( predito ~ observado, data=by SiteCode )?
+```
+
+
+# 27/10/2024
+
+Atualização da figura final
+
+Descrição da ideia:
+
+3 colunas, uma para cada efeito da paisagem.
+1a linha: OBSERVADO logU/U ~ k, color=p, + marcação do smooth de extremos PRÓXIMO
+
+```{r}
+v_path
+#
+l_paths <- paste0(v_path,"rds/l_dfpred_",c("fragtotal","fragperse","areaperse"),".rds")
+l_df_pred <- lapply(l_paths,readRDS) %>% 
+  lapply(.,"[[","apenas fixo")
+names(l_df_pred) <- c("Frag. total","Frag. per se","Área per se")
+# ii) filtrar os valores únicos de k em um novo data frame
+# df_ref <- lapply(l_df_pred,select,k_cont,SiteCode) %>% lapply(.,distinct)
+# df_ref <- df_ref[[1]]
+l_md <- readRDS(file=paste0(v_path,"rds/l_md_refU.rds"))
+l_df_ref <- lapply(names(l_df_pred),\(li){
+  lmd <- l_md[grep(li,names(l_md))]
+  names(lmd) <- gsub(paste0(li,"."),"",names(lmd)) 
+  df_ref <- lapply(names(lmd),\(i){
+    md <- lmd[[i]]
+    dfr <- l_df_pred[[li]]  
+    dfr[[i]] <- predict.gam(md,dfr)
+    return(dfr)
+  }) %>% Reduce("inner_join",.)
+})
+names(l_df_ref) <- names(l_df_pred)
+df_ref <- lapply(names(l_df_ref),\(li){
+  mutate(l_df_ref[[li]],
+         name=gsub("Área per se","area",li) %>% 
+           gsub("Frag. total","frag.total",.) %>% 
+           gsub("Frag. per se","frag.perse",.))
+}) %>% rbindlist() %>% rename(k=k_cont) %>% 
+  mutate(label=case_when(
+    grepl("area",name) ~ "Área per se",
+    grepl("total",name) ~ "Frag. Total",
+    grepl("perse",name) ~ "Frag. per se"),
+    label=factor(label,levels=c("Frag. Total","Frag. per se","Área per se"))
+  )
+write_csv(df_ref,paste0(v_path,"rds/df_limites_predicao_aposteriori_logOR.csv"))
+
+#####################################
+l_figfinal <- list()
+l_figfinal$`1alinha` <- df_md %>% 
+  mutate(label=case_when(
+    grepl("area",name) ~ "Área per se",
+    grepl("total",name) ~ "Frag. Total",
+    grepl("perse",name) ~ "Frag. per se"),
+    label=factor(label,levels=c("Frag. Total","Frag. per se","Área per se"))
+  ) %>% 
+  ggplot(aes(x=k,y=value,group=SiteCode,color=p)) +
+  geom_boxplot(inherit.aes = FALSE,
+               aes(x=k,y=value,group=k)) +
+  geom_hline(yintercept = 0,color="black",linetype=3) +
+  geom_hline(yintercept = v_hline,color="darkred") + 
+  geom_line(alpha=0.75) +
+  geom_point(alpha=0.75) +
+  geom_line(data=df_ref,aes(y=max,x=k),color="black") +
+  geom_line(data=df_ref,aes(y=min,x=k),color="black") +
+  scale_colour_gradient2("% CF",midpoint=0.5,
+                         low="red",
+                         mid = "yellow",
+                         high = "darkgreen") +
+  labs(x="k (prop. de propágulos até a vizinhança imediata)",
+       y="log(U/U)") +
+  scale_y_continuous(expand=c(0.01,0.01)) +
+  theme_classic() +
+  theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
+        legend.position = "inside",
+        legend.position.inside = c(0.49,0.9),
+        legend.direction="horizontal") +
+  # guides(color=guide_legend(direction='horizontal')) +
+  facet_wrap(~label,ncol=3)
+ggsave(paste0(v_path,"figuras/pedacofigfinal_1alinha.png"),
+       l_figfinal$`1alinha`,
+       width = 12,
+       height = 5)
+img_obj <- image_read(paste0(v_path,"figuras/pedacofigfinal_1alinha.png")) %>% 
+  image_trim() %>% 
+  image_resize("50%")
+image_write(img_obj,paste0(v_path,"figuras/pedacofigfinal_1alinha.png"))
+```
+
+
+2a linha: PREDITO logOR (z) ~ logU/U(y) * k(x) apenas das áreas entre extremos ou logOR (y) ~ logU/U (x) FEITO
+3a linha: PREDITO logOR(y) ~ logOR(x) dos modelos de tensores considerando o efeito fixo e por sítio. PRÓXIMO2
+
+
+
+# 19/10/2024
+
+Criação da região de buffer na figura final
+
+```{r}
+library(gridExtra)
+library(ggplot2)
+theme_set(theme_bw())
+library(readr)
+library(stringr)
+library(tidyr)
+library(tidyselect)
+library(bbmle)
+library(DHARMa)
+library(mgcv)
+library(plyr)
+library(dplyr)
+library(mgcv)
+## funções de ajuste e de plot
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
+# objetos comuns
+df_logOR <- read_csv(file="dados/csv/df_logOR.csv")
+df_md <- df_logOR %>% 
+  select(-Uefeito,-(pristine:denominator),-matches("(k_z|^p)")) %>% 
+  rename(logOR = itself) %>% 
+  filter(forest_succession!="capoeira") %>% 
+  mutate(contraste =  gsub("non_frag.ideal","Área per se",contraste) %>% 
+           gsub("contemp-non_frag","Frag. per se",.) %>% 
+           gsub("contemp-ideal","Frag. total",.),
+         across(c(contraste:SiteCode,forest_succession,k),factor))
+df_contrastes <- read_csv("dados/csv/taxaU/df_contrastes.csv") %>% 
+  select(SiteCode,k,ends_with("logratio")) %>% 
+  pivot_longer(cols = ends_with("logratio"),
+               names_to = "contraste",
+               values_to = "Uefeito") %>% 
+  mutate(contraste = gsub("area_logratio","Área per se",contraste) %>% 
+           gsub("frag.perse_logratio","Frag. per se",.) %>% 
+           gsub("frag.total_logratio","Frag. total",.),
+         across(SiteCode:contraste,factor))
+df_md <- inner_join(df_md,df_contrastes,by=c("SiteCode","contraste","k")) %>% 
+  relocate(Uefeito,.after="logOR") %>% 
+  mutate(k_cont = as.numeric(as.character(k)))
+#
+df_buf <- ddply(df_md,c("contraste","k"),\(dfi){
+  v_range <- range(dfi$Uefeito)
+  v_quant <- quantile(dfi$Uefeito,probs=c(0.01,0.99))
+  filter(dfi,Uefeito%in%v_range) %>% 
+    select(-logOR,-c(forest_succession:data_year),-SiteCode) %>% 
+    mutate(ext_class=ifelse(Uefeito==v_range[1],"min","max"),
+           Uefeito_quant=ifelse(ext_class=="min",v_quant[1],v_quant[2])) %>% 
+    relocate(ext_class,.after=contraste) %>% 
+    relocate(Uefeito_quant,.after=Uefeito)
+}) %>% select(-k)
+df_buf %>% 
+  pivot_longer(starts_with("Uefeito")) %>% 
+  filter(name=="Uefeito") %>% 
+  ggplot(aes(x=k_cont,y=value,color=ext_class)) +
+  geom_point() +
+  geom_line() +
+  geom_smooth(method="gam",se=FALSE) +
+  scale_color_manual(values=c("darkred","darkgreen")) +
+  facet_wrap(~contraste,ncol=3)
+#
+f_gam <- \(dfi){
+  gam(Uefeito~s(k_cont,bs="cr"),data=dfi)
+}
+l_md <- dlply(df_buf,c("contraste","ext_class"),f_gam)
+for(i in names(l_md)){
+  p <- gratia::draw(l_md[[i]],residuals = TRUE) + labs(title=i)
+  print(p)
+  if(!isTRUE(askYesNo("Do you want to see the residuals?"))) break
+  p <- gratia::appraise(l_md[[i]])
+  print(p)
+  if(!isTRUE(askYesNo("next model?"))) break
+}
+```
+
+Esses modelos serão usados para:
+1) remover os pontos da figura final FALTA REFAZER A FIGURA FINAL
+2) sobrepor ao gráfico de logU/U ~ k (color=p)
+
+```{r}
+# i) carregar os dados de l_df_pred
+l_paths <- paste0(v_path,"rds/l_dfpred_",c("fragtotal","fragperse","areaperse"),".rds")
+l_df_pred <- lapply(l_paths,readRDS) %>% 
+  lapply(.,"[[","apenas fixo")
+names(l_df_pred) <- c("Frag. total","Frag. per se","Área per se")
+# ii) filtrar os valores únicos de k em um novo data frame
+l_df_ref <- lapply(l_df_pred,select,k_cont,SiteCode) %>% lapply(.,distinct)
+# iii) fazer a predição média do modelo para cada ponto e guardar em um dataframe
+l_df_ref <- lapply(names(l_df_ref),\(li){
+  lmd <- l_md[grep(li,names(l_md))]
+  names(lmd) <- gsub(paste0(li,"."),"",names(lmd)) 
+  df_ref <- lapply(names(lmd),\(i){
+    md <- lmd[[i]]
+    dfr <- l_df_ref[[li]]  
+    dfr[[i]] <- predict.gam(md,dfr)
+    return(dfr)
+  }) %>% Reduce("inner_join",.)
+})
+names(l_df_ref) <- c("Frag. total","Frag. per se","Área per se")
+# iv) filtrar para cada k os valores entre as predições
+library(data.table)
+l_df_new <- lapply(names(l_df_ref),\(li){
+  df_pred <- l_df_pred[[li]]
+  df_ref <- l_df_ref[[li]]
+  setDT(df_pred)
+  alply(df_ref,1,\(dfi){
+    maxv <- dfi[["max"]]
+    minv <- dfi[["min"]]
+    kv <- dfi[["k_cont"]]
+    df_pred[k_cont==kv & between(Uefeito,minv,maxv),]
+  }) %>% rbindlist
+})
+names(l_df_new) <- names(l_df_ref)
+# salvamento
+l_paths <- gsub("dfpred","dfnew",l_paths)
+names(l_paths) <- names(l_df_ref)
+lapply(names(l_df_ref),\(i){
+  dfrds <- l_df_new[[i]]
+  vpath <- l_paths[i]
+  saveRDS(dfrds,file=vpath)
+})
+```
+
+
+
+# 15out2024
+
+```{r predito e observado}
+library(magick)
+l_df_pred <- readRDS(paste0(v_path,"rds/l_dfpred_simples_apudPedersen2019.rds"))
+l_df_pred <- lapply(l_df_pred,"[[","fixo e aleat")
+df_pred <- lapply(names(l_df_pred),\(li){
+  mutate(l_df_pred[[li]],efeito=li)
+}) %>% do.call("rbind",.)
+# df_p <- read_csv("../../dados/df_p.csv")
+dff <- df_pred %>% filter(SiteCode=="BAjuss")
+f_plot_PIeOBS2 <- \(dff){
+  #
+  f_ggplot <- \(dfi){
+   dfi %>% 
+    ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
+      geom_abline(intercept = 0,slope=1) +
+      geom_point() +
+      geom_smooth(method="lm",se=FALSE) +
+      scale_color_manual(
+        "%",values=c("50"="darkgreen","5"="darkred","95"="darkred")
+        ) +
+      labs(x="logOR observado",y="logOR predito",
+           title=dfi$efeito[1]) +
+      theme(legend.position = "top",
+            legend.margin = margin(t = 0, b = 0, l = 0, r = 0),
+            plot.margin = margin(t = 10, b = 0, l = 1, r = 0),
+            legend.box.margin=margin(-10,-10,-10,-10),
+            aspect.ratio = 1) +
+      facet_wrap(~SiteCode)   
+  }
+  #
+  l_p <- dff %>% 
+    pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR_pred") %>% 
+    mutate(quantile=gsub("Q_","",quantile) %>% as.numeric(),
+           quantile=as.character(quantile*100)) %>% 
+    dlply(.,"efeito",f_ggplot)
+  p <- arrangeGrob(grobs=l_p,ncol=3)
+  vsite <- dff$SiteCode[1] %>% as.character()
+  #
+  l_img <- list()
+  l_img$slogUU <- f_imagefunc(p) %>% image_read() %>% image_resize("50%")
+  l_img$tensor <- image_read(paste0(v_path,"figuras/PIeOBS_sites/",vsite,".png"))
+  l_img <- lapply(names(l_img),\(li){
+    l_img[[li]] %>% 
+      image_title(vtitle=li,
+                  vheight = 75,
+                  vsize = 35,
+                  bgcolor="darkgray",
+                  vcolor="darkblue")
+    })
+  l_img[[1]] <- f_resize_2rectangle(ref_img = l_img[[2]],
+                                    toresize_img = l_img[[1]],
+                                    ref_side = "width",
+                                    tore_side = "width")
+  img_final <- image_append(do.call("c",l_img),stack = TRUE) %>% 
+    image_resize("40%")
+  #
+  image_write(img_final,
+              path=paste0(v_path,"figuras/PIeOBS_sites2/",
+                          vsite,".png"))
+  rm(img_final);gc()
+}
+vlog <- df_pred %>% 
+  split(.,df_pred$SiteCode) %>% 
+  lapply(.,f_plot_PIeOBS2)
+```
+
+
+
+# 6out2024
+redução do tamanho das figuras
+
+```{r}
+l_png <- paste0("figuras/figfinal_te_",
+                c("fragtotal","fragperse","areaperse"),
+                ".png")
+l_img <- lapply(l_png,image_read)
+l_img <- lapply(l_img,image_resize,geometry="50%")
+names(l_img) <- l_png
+lapply(names(l_img),\(li){
+  image_write(l_img[[li]],path=li)
+})
+
+```
+
+
+# 5out2024
+
+SCORE
+Coisas Feitas:
+1) densitys plots
+2) gráfico final de te: mapas de alturas do logOR para todos os efeitos
+3) predito a posteriori para área per se em função de logU/U (modelo mais plausível)
+
+PRÓXIMO:
+I) a figura 3 para os outros dois efeitos por nível de k: dessa forma podemos ver todos os efeitos de logU/U por sítio em contexto ao efeito comum. 
+R:
+pegar 'p <- f_plotPI_shgam("Área per se")' e aplicar em cada nível de k do predito.
+Para isso talvez seja necessário mudar especificar a origem do dado ao inves de informar apenas o nome do efeito. 
+
+
+II) (também para te dos efeitos de fragmentação epr se e total) uma figura apenas dos efeitos fixos em que há todos os níveis de k 
+R:
+simples ou já feito,
+acredito que é possível criar as duas figuras ao mesmo tempo.
+
+```{r}
+library(metR)
+f_plot_te2 <- \(l_df){
+  dfi <- lapply(l_df,mutate,SiteCode = factor(SiteCode)) %>% 
+    lapply(.,select,-any_of("logOR"))
+  dfi <- dfi$`fixo e aleat`
+  
+}
+f_plot_te2 <- \(veffect,
+                pattern_extract="(?<=l_dfpred_)(.*?)(?=\\.rds)"){
+  #
+  vname <- str_extract(veffect,pattern_extract) %>% 
+    gsub("areaperse","Área per se",.) %>% 
+    gsub("fragperse","Frag. per se",.) %>% 
+    gsub("fragtotal","Frag. total",.)
+  #
+  dfpred <- readRDS(paste0(v_path,veffect))$`fixo e aleat` %>% 
+    mutate(SiteCode=factor(SiteCode)) %>% select(-any_of("logOR"))
+  dfpred <- pivot_longer(dfpred,starts_with("Q_"),
+                         names_to="quantiles",
+                         values_to="logOR") %>% 
+    mutate(quantiles=factor(100 * as.numeric(gsub("Q_","",quantiles)),
+                            levels=c(5,50,95)) ) %>% 
+    rename(k = k_cont)
+  #
+  d_ply(dfpred,"SiteCode",\(dff){
+    l_p <- dlply(dff,"quantiles",\(dfi){
+      dfi %>% 
+        ggplot(aes(x=k,y=Uefeito,fill=logOR)) +
+        geom_point(shape=21,size=15) +
+        scale_fill_viridis_c(name = "logOR",
+                             option = "magma") +
+        labs(y="logU/U") +
+        facet_wrap(~quantiles) +
+        theme_classic() +
+        theme(legend.position="top",
+              aspect.ratio=1,
+              legend.text = element_text(angle=90,size = 15),
+              legend.title = element_text(size = 16,vjust = 0.75),
+              legend.key.size = unit(1.0, 'cm'),
+              )
+      })
+    l_p <- lapply(l_p,\(li) ggsave(tempfile(fileext = ".png"),plot = li,
+                                   width = 5, height = 7))
+    l_p <- lapply(l_p,\(li) image_read(li) %>% image_trim)
+    # base
+    img_final <- image_append(do.call("c",l_p[c("5","95")]))
+    # padronizacao da mediana
+    rect_info <- image_info(img_final)
+    rect_width <- rect_info$width
+    rect_height <- rect_info$height
+    longest_side <- max(rect_width, rect_height)
+    l_p[["50"]] <- image_resize(l_p[["50"]], geometry_size_pixels(longest_side))
+    img_final <- image_append(c(l_p[["50"]],img_final),stack = TRUE)
+    img_final <- image_annotate(
+      img_final,
+      text = dff$SiteCode[1],
+      location = "-1000+300",
+      gravity = "north",
+      size=180,
+      boxcolor="lightblue",
+      color = "black")
+    img_final <- image_resize(img_final,"50%")
+    img_final <- image_annotate(
+      img_final,
+      text = vname,
+      location = "-525+15",
+      gravity = "north",
+      size=80,
+      boxcolor="lightgreen",
+      color = "black")
+    image_write(
+      img_final,
+      path=paste0("figuras/predito_te_sites/",
+                  str_extract(veffect,pattern_extract),
+                  "_",
+                  dff$SiteCode[1],
+                  ".png")
+      )
+    rm(img_final);gc()
+    })
+}
+```
+
+
+```{r}
+ldfi$`fixo e aleat` %>% 
+  ggplot(aes(x=k_cont,y=Uefeito,group=k_cont)) +
+  geom_jitter() +
+  geom_boxplot()
+```
+
+
+# 3/10/2024
+
+```{r}
+rect_info <- image_info(l_png$ft_md)
+rect_width <- rect_info$width
+rect_height <- rect_info$height
+longest_side <- max(rect_width, rect_height)
+l_png$appraise <- image_resize(l_png$appraise, geometry_size_pixels(longest_side))
+
+# Step 5: Combine the images (side by side or one on top of the other)
+# You can align them side by side using image_append() for horizontal or vertically using image_append(..., stack = TRUE)
+combined_img <- image_append(c(rectangle_img, square_resized)) # Combine side by side
+
+```
+
+
+# 1out2024
+
+```{r flextable dos 7 modelos estatísticos hgam }
+# Load necessary libraries
+library(gt)
+library(webshot2)
+
+# Data for the table
+model_data <- data.frame(
+  Model = c("i", "ii", "iii", "iv", "v", "vi", "vii"),
+  Effect_Type = c("Tensor", "Tensor", "Spline", "Spline", "Spline", "Spline", "Intercept"),
+  Variables = c("k, logU/U", "k, logU/U", "logU/U", "logU/U", "k", "k", "None"),
+  Site_Specific_Effect = c("Tensor by site (same penalty)",
+                           "Intercept by site",
+                           "Spline by site (same penalty)",
+                           "Intercept by site",
+                           "Spline by site (same penalty)",
+                           "Intercept by site",
+                           "Intercept by site"),
+  Description = c("Shared tensor for k and logU/U across sites, with an additional tensor for each site (same penalization).",
+                  "Shared tensor for k and logU/U across sites, with an individual intercept per site.",
+                  "Shared spline for logU/U across sites, with an additional spline for each site (same penalization).",
+                  "Shared spline for logU/U across sites, with an individual intercept per site.",
+                  "Shared spline for k across sites, with an additional spline for each site (same penalization).",
+                  "Shared spline for k across sites, with an individual intercept per site.",
+                  "Simple intercept model with both a common and site-specific intercept.")
+)
+
+# Create the table using gt
+gt_table <- gt(model_data) %>%
+  tab_header(
+    title = "Summary of Models",
+    subtitle = "7 Generalized Additive Hierarchical Models"
+  ) %>%
+  cols_label(
+    Model = "Model",
+    Effect_Type = "Effect Type",
+    Variables = "Variables",
+    Site_Specific_Effect = "Site-Specific Effect",
+    Description = "Description"
+  ) %>%
+  tab_options(
+    table.width = px(800),
+    table.font.size = 12
+  )
+# Display the gt table
+gt_table
+# Save the table as a PNG file
+gtsave(gt_table, paste0(v_path,"figuras/tabela_descricao_modelos_hgam.png"))
+```
+
+
+
+# 30set2024
+
+hoje: descrição das tabelas, leitura dos diagnósticos e da figura beta0
+
+```{r diagnósticos por sítio}
+library(gratia)
+library(doMC)
+library(gridExtra)
+library(ggplot2)
+theme_set(theme_bw())
+library(readr)
+library(stringr)
+library(tidyr)
+library(bbmle)
+library(DHARMa)
+# library(lme4)
+library(mgcv)
+library(plyr)
+library(dplyr)
+## funções de ajuste e de plot
+# source("source/2samples_testes.R")
+# source("source/general_tools.R")
+# source("source/GAMMtools.R")
+# source("source/fig_tools.R")
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
+library(magick)
+l_path <- list.files(paste0(v_path,"figuras/PIeOBS_sites"),".png",full.names = T)
+names(l_path) <- l_path
+f_lapply <- \(li){
+  imgi <- image_trim( image_read(li) )
+  image_write(imgi,path=li)
+  rm(imgi,li);gc()
+}
+lapply(l_path,f_lapply)
+```
+
+
+# 28set2024
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(viridis)
+
+# Example data generation
+set.seed(123)
+n <- 100
+x <- seq(0, 1, length.out = n)
+y <- seq(-3, 3, length.out = n)
+data <- expand.grid(x = x, y = y)
+data$z <- with(data, sin(2 * pi * x) * y)  # Example function for z
+
+# Create the plot
+p <- ggplot(data, aes(x = x, y = y, fill = z)) +
+  geom_tile() +  # Use geom_tile for filling
+  scale_fill_viridis_c(option = "magma", limits = c(min(data$z), max(data$z)), 
+                       breaks = c(-2, 0, 2), labels = c("Low", "Middle", "High")) +
+  labs(title = "Surface Plot of z values", x = "X variable", y = "Y variable", fill = "Z values") +
+  theme_minimal()
+
+# Add contours and labels
+contour_layer <- ggplot(data, aes(x = x, y = y, z = z)) +
+  geom_contour(color = "white", size = 0.5) #+
+  # geom_text(stat = "contour", aes(label = ..level..), color = "black", size = 3, vjust = -0.5)
+
+# Combine both plots
+p + contour_layer
+
+```
+
+
+```{r}
+l_dfplot <- lapply(l_df,"[[","apenas fixo")
+dfi <- l_dfplot[["Frag. total"]]
+k_pred <- dfi$k_cont %>% unique
+k_sim <- sapply(c(seq(0.05,0.95,by=0.05),0.99),\(x){
+  k_pred[which.min(abs(k_pred - x))]
+})
+f_ggplot <- \(dfi){
+  dfi %>% 
+    filter(k_cont%in%k_sim) %>% 
+    pivot_longer(starts_with("Q_"),
+                 names_to = "quantiles",
+                 values_to = "logOR") %>% 
+    mutate(quantiles = 100*as.numeric(gsub("Q_0","",quantiles))) %>% 
+    ggplot(aes(x=Uefeito,y=logOR,color=k_cont,group=k_cont)) +
+      geom_line() +
+      facet_wrap(~quantiles,ncol=3,scales="free")
+}
+l_p <- lapply(l_dfplot,f_ggplot)
+p <- arrangeGrob(grobs=lapply(names(l_p),\(li) l_p[[li]] + labs(title=li)),
+                 ncol=1)
+ggsave(paste0(v_path,"figuras/beta0_figura_final_logOR.png"),p,
+       width = 8,height = 7.75)
+```
+
+
+
+```{r}
+data <- data.frame(
+Uefeito = rep(rnorm(2),each=3),
+SiteCode = "character",
+quantile = paste0(rep(1:3,2),"c"),
+logOR_te = rnorm(6),
+logOR_s = rnorm(6),
+logOR = rep(rnorm(2),each=3)
+)
+wider_data <- data %>%
+  pivot_wider(
+    names_from = c("quantile"),
+    values_from = c("logOR_te", "logOR_s"),
+    names_sep = "_"
+  )
+```
+
+# 26/09/2024
+
+Avaliação da comparação entre te e s
+
+```{r gráficos para diagnóstico por sítio}
+f_dfplot <- \(dff,dataset){
+  vcols <- c("logOR","k_cont")
+  dff %>% 
+    select(-any_of(vcols)) %>% 
+    pivot_longer(starts_with("Q_"),names_to="quantile",
+                 values_to=paste0("logOR_",dataset)) %>% 
+      mutate(quantile=gsub("Q_","",quantile) %>% 
+               as.numeric(),
+             quantile=as.character(quantile*100))
+}
+df_te <- lapply(l_df,"[[","fixo e aleat")[["Área per se"]] %>% f_dfplot(dataset="te")
+df_s <- readRDS(paste0(v_path,"rds/l_dfpred_areaperse_Ugs.rds"))[["fixo e aleat"]] %>% 
+  f_dfplot(dataset="s")
+df_plot <- inner_join(df_te,df_s) %>% 
+  inner_join(lapply(l_df,"[[","fixo e aleat")[["Área per se"]] %>% 
+               select(logOR,Uefeito,SiteCode))
+f_ggplot <- \(dfi){
+  l_p <- list()
+  l_p$predpred <- dfi %>% 
+    ggplot(aes(x=logOR_te,y=logOR_s,color=quantile)) +
+    geom_abline(intercept = 0,slope=1) +
+    geom_point() +
+    geom_smooth(method="lm",se=FALSE) +
+    scale_color_manual("%",
+                       values=c("50"="darkgreen",
+                                "5"="darkred",
+                                "95"="darkred")) +
+    labs(title="predito X predito") +
+    theme(legend.position = "top",
+          aspect.ratio = 1) +
+    facet_wrap(~SiteCode) 
+  l_p$obs_uefeito_predicoes <- dfi %>% 
+    # preparação dos dados
+    pivot_longer(matches("_te|_s"),
+                 names_to = "hgam",
+                 values_to = "logOR_pred") %>% 
+    mutate(hgam=gsub("logOR_","",hgam)) %>% 
+    ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
+    geom_abline(intercept = 0,slope=1) +
+    geom_point() +
+    geom_smooth(method="lm",se=FALSE) +
+    scale_color_manual("%",
+                       values=c("50"="darkgreen",
+                                "5"="darkred",
+                                "95"="darkred")) +
+    labs(x="logOR observado",y="logOR predito",
+         title=dfi$SiteCode[1]) +
+    theme(legend.position = "top",
+          aspect.ratio = 1) +
+    facet_wrap(~hgam) 
+  l_p <- lapply(l_p,\(li) ggsave(tempfile(fileext = ".png"),plot = li))
+  l_p <- lapply(l_p,\(li) image_read(li) %>% image_trim)
+  img_final <- image_append(do.call("c",l_p),stack = FALSE)
+  image_write(
+    img_final,
+    path=paste0(v_path,
+                "figuras/PIeOBS_sites/compara_areaperse/",
+                dfi$SiteCode[1],
+                ".png")
+    )
+}
+lapply(levels(df_s$SiteCode),\(i){
+  filter(df_plot,SiteCode==i) %>% f_ggplot()
+})
+
+```
+
+
+
+# 24set2024
+
+```{r density plot}
+library(gratia)
+library(doMC)
+library(gridExtra)
+library(ggplot2)
+theme_set(theme_bw())
+library(readr)
+library(stringr)
+library(tidyr)
+library(bbmle)
+library(DHARMa)
+# library(lme4)
+library(magick)
+library(mgcv)
+library(plyr)
+library(dplyr)
+## funções de ajuste e de plot
+source("source/2samples_testes.R")
+source("source/general_tools.R")
+source("source/GAMMtools.R")
+source("source/fig_tools.R")
+library(mgcv)
+v_path <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/00_Resultados/"
+l_path <- paste0(v_path,"rds/l_dfpred_",
+                 c("areaperse",
+                  "fragperse",
+                  "fragtotal"),
+                 ".rds")
+l_df <- lapply(l_path,readRDS)
+names(l_df) <- gsub("areaperse","Área per se",
+                    str_extract(l_path,"(?<=dfpred_)(.*?)(?=\\.rds)")) %>% 
+  gsub("fragperse","Frag. per se",.) %>% 
+  gsub("fragtotal","Frag. total",.)
+l_df_densityplot <- lapply(l_df,rbind.fill) %>% 
+  lapply(.,mutate,predicao=ifelse(is.na(logOR),"somente fixo","fixo e aleat."))
+f_ggplot <- \(dfi,vncol=3){
+  dflabel <- ddply(dfi,"predicao",\(dfr){
+    data.frame(
+      predicao = dfr$predicao[1],
+      v_acima0 = sum(dfr$logOR_pred>0)/nrow(dfr),
+      v_igual0 = sum(dfr$logOR_pred==0)/nrow(dfr),
+      v_abaixo0 = sum(dfr$logOR_pred<0)/nrow(dfr)) %>% 
+      mutate(across(starts_with("v_"),~round(.x,2)*100),
+             label = paste0("%logOR > 0 = ",v_acima0,
+                            "\n%logOR = 0 = ",v_igual0,
+                            "\n%logOR < 0 = ",v_abaixo0))
+  })
+  inner_join(dfi,dflabel) %>% 
+    ggplot(aes(x=logOR_pred,fill=predicao)) +
+    geom_vline(xintercept = 0,color="gray") +
+    geom_density(alpha = 0.5) +
+    # geom_text(aes(label=label),x=1,y=2) +
+    scale_fill_manual("",values=c("fixo e aleat."="#C04000",
+                               "somente fixo"="darkgreen",
+                               "observado"="black"),
+                      breaks = c("somente fixo", 
+                                 "fixo e aleat.", 
+                                 "observado")) +
+    theme_minimal() +
+    labs(x="log odds ratio",
+         y="density") +
+    theme(legend.position = "none",
+          aspect.ratio=1) +
+    facet_wrap(~predicao,ncol=vncol,scales="free")
+}
+
+f_plotdensityplot <- \(vstring,hgamtype="te"){
+  dfi <- l_df_densityplot[[vstring]]
+  p <- dfi %>% 
+    pivot_longer(starts_with("Q_"),
+                 names_to="quantile",
+                 values_to="logOR_pred") %>% 
+    select(-logOR) %>% 
+    rbind(.,
+          select(filter(dfi,!is.na(logOR)),
+                 Uefeito:SiteCode,logOR) %>% 
+            rename(logOR_pred=logOR) %>% 
+            mutate(quantile="Q_0.5",
+                   predicao="observado")) %>% 
+    mutate(predicao = factor(predicao,
+                             levels=c("somente fixo",
+                                      "fixo e aleat.",
+                                      "observado"))) %>% 
+    filter(quantile=="Q_0.5") %>% 
+    f_ggplot() +
+    labs(title=paste(vstring,"-",hgamtype))
+  vstring <- gsub("Área per se","areaperse",
+                  paste0(vstring,"_",hgamtype)) %>% 
+    gsub("Frag. per se","fragperse",.) %>% 
+    gsub("Frag. total","fragtotal",.)
+  vpath <- ggsave(paste0(v_path,"figuras/density_",vstring,".png"),
+                  plot=p,bg = "white")
+  img <- image_trim( image_read(vpath))
+  image_write(img,vpath)
+}
+lapply(names(l_df_densityplot),f_plotdensityplot)
+rm(l_df_densityplot)
+# 
+l_df <- readRDS(paste0(v_path,"rds/l_dfpred_areaperse_Ugs.rds"))
+df_densityplot <- rbind.fill(l_df) %>% 
+  mutate(predicao=ifelse(is.na(logOR),"somente fixo","fixo e aleat."))
+p <- df_densityplot %>% 
+  pivot_longer(starts_with("Q_"),
+               names_to="quantile",
+               values_to="logOR_pred") %>% 
+  select(-logOR) %>% 
+  rbind(.,
+        select(filter(dfi,!is.na(logOR)),Uefeito:SiteCode,logOR) %>% 
+            rename(logOR_pred=logOR) %>% 
+            mutate(quantile="Q_0.5",
+                   predicao="observado")) %>% 
+    mutate(predicao = factor(predicao,
+                             levels=c("somente fixo",
+                                      "fixo e aleat.",
+                                      "observado"))) %>% 
+    filter(quantile=="Q_0.5") %>% 
+    f_ggplot() +
+    labs(title="Área per se - s(logU/U)")
+vstring <- "areaperse_s"
+vpath <- ggsave(paste0(v_path,"figuras/density_",vstring,".png"),
+                plot=p,bg = "white")
+img <- image_trim( image_read(vpath))
+image_write(img,vpath)
+# densitys plots FEITOS!
+#
+# e agora avaliação por sítio
+l_df_obspred_sitio <- lapply(l_df,"[[","fixo e aleat")
+f_ggplot <- \(dfi){
+  dfi %>% 
+    ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
+    geom_abline(intercept = 0,slope=1) +
+    geom_point() +
+    geom_smooth(method="lm",se=FALSE) +
+    scale_color_manual("%",values=c("50"="darkgreen","5"="darkred","95"="darkred")) +
+    labs(x="logOR observado",y="logOR predito") +
+    theme(legend.position = "top",
+          legend.margin = margin(t = 0, b = 0, l = 0, r = 0),
+          plot.margin = margin(t = 10, b = 0, l = 1, r = 0),
+          legend.box.margin=margin(-10,-10,-10,-10),
+          aspect.ratio = 1) +
+    facet_wrap(~SiteCode) 
+}
+l_p <- lapply(l_df_obspred_sitio,\(li){
+  li %>% 
+    pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR_pred") %>% 
+    mutate(quantile=gsub("Q_","",quantile) %>% 
+             as.numeric(),
+           quantile=as.character(quantile*100)) %>% 
+    dlply(.,"SiteCode",f_ggplot)  
+})
+lapply(levels(l_df_obspred_sitio$`Frag. per se`$SiteCode),\(i){
+  lp <- lapply(l_p,"[[",i)
+  lp <- lapply(names(lp),\(p){
+    lp[[p]] + labs(title=p)
+  })
+  p <- arrangeGrob(grobs=lp,nrow=1)
+  ggsave(paste0(v_path,"figuras/PIeOBS_sites/",i,".png"),p)
+})
+
+
+
+
+
+```
+
+```{r}
+l_df_obspred_sitio <- lapply(l_df,\(li) li$`fixo e aleat`)
+f_ggplot <- \(dfi){
+  dfi %>% 
+    ggplot(aes(x=logOR,y=logOR_pred,color=quantile)) +
+    geom_abline(intercept = 0,slope=1) +
+    geom_point() +
+    geom_smooth(method="lm",se=FALSE) +
+    scale_color_manual("%",values=c("50"="darkgreen","5"="darkred","95"="darkred")) +
+    labs(x="logOR observado",y="logOR predito") +
+    theme(legend.position = "top",
+          legend.margin = margin(t = 0, b = 0, l = 0, r = 0),
+          plot.margin = margin(t = 10, b = 0, l = 1, r = 0),
+          legend.box.margin=margin(-10,-10,-10,-10),
+          aspect.ratio = 1) +
+    facet_wrap(~SiteCode) 
+}
+l_p <- lapply(l_df_obspred_sitio,\(li){
+  li %>% 
+    pivot_longer(starts_with("Q_"),names_to="quantile",values_to="logOR_pred") %>% 
+    mutate(quantile=gsub("Q_","",quantile) %>% 
+             as.numeric(),
+           quantile=as.character(quantile*100)) %>% 
+    dlply(.,"SiteCode",f_ggplot)  
+})
+lapply(levels(l_df_obspred_sitio$`Frag. per se`$SiteCode),\(i){
+  lp <- lapply(l_p,"[[",i)
+  lp <- lapply(names(lp),\(p){
+    lp[[p]] + labs(title=p)
+  })
+  p <- arrangeGrob(grobs=lp,nrow=1)
+  ggsave(paste0(v_path,"figuras/PIeOBS_sites/",i,".png"),p)
+})
+```
+
+
+# para 24set2024
+
+objetivo montar a figura final:
+para cada efeito iremos plotar
+aes(x=k,y=logU/U,fill=logOR) +
+geom_tile()
+
+
+# 23set2024
+
+tabela de seleção com os hgam com tensor e spline (7 ao todo) por efeito da paisagem
+
+```{r}
+df_tabsel <- read_csv(paste0(v_path,"rds/df_tabsel_geral.csv"))
+library(flextable)
+library(officer)
+library(magick)
+l_fx <- dlply(df_tabsel,"contraste",\(dfi){
+  title_fp <- fp_text(font.size = 14, bold = TRUE, font.family = "Arial")
+  ft <- relocate(dfi,contraste) %>% 
+    mutate(across(where(is.numeric),~round(.x,2))) %>% 
+    flextable() %>%
+    bg(bg = "white",part = "all") %>%
+    theme_vanilla() %>% 
+    set_header_labels(
+      modelo = "HGAM",
+      dAICc = "ΔAICc",
+      df = "est. coef.",
+      weight = "weight",
+      dev.expl = "Dev. Exp.",
+      `Moran I statistic (res)` = "Moran's I",
+      `p-value` = "p-value") %>%
+    bold(part = "header") %>%
+    autofit() 
+  # %>% 
+  #   set_caption(captio=dfi$contraste[1],fp_p=title_fp)
+  vpath <- paste0(v_path,"figuras/tabsel_",
+                  gsub("Área per se","areaperse",dfi$contraste[1]) %>% 
+                    gsub("Frag. per se","fragperse",.) %>% 
+                    gsub("Frag. total","fragtotal",.),".png")
+  save_as_image(ft, path = vpath)
+  img_ft <- image_read(vpath) %>% 
+    image_trim()
+  image_write(img_ft,vpath)
+})
+
+```
+
+
+# 6set2024  
+
+figura da tabela simples
+
+
+# 29 agosto 
+
+```{r}
+
+```
+
+
+
+
+# 26 agosto
+
+Como é calculado os edf? usando a função trace em cada spline....
+
+Como 
+
+Influencia do ID na inferência causal
+
+```{r}
+library(mgcv)
+library(ggplot2)
+
+# Data setup
+set.seed(123)
+n <- 100
+x <- seq(0, 1, length.out = n)
+z <- rnorm(n)
+y <- sin(2 * pi * x) + z + rnorm(n) * 0.1
+data <- data.frame(x = x, z = z, y = y)
+
+# Model without id
+gam_model_no_id <- gam(y ~ s(x,bs="cr") + 
+                         s(z,bs="cr") +
+                         ti(x,z), data = data,
+                       method="REML")
+gam_model_no_id <- gam(y ~ s(x,bs="cr",id="x") + 
+                         s(z,bs="cr",id="z") +
+                         ti(x,z,id="ti"), data = data,
+                       method="REML")
+# Predictions
+data$pred_no_id <- predict(gam_model_no_id)
+data$pred_with_id <- predict(gam_model_with_id)
+# Plot
+ggplot(data, aes(x = x, y = y)) +
+  geom_point(color = "black", alpha = 0.6, size = 2) +  # Observed data
+  geom_line(aes(y = pred_no_id), color = "blue", linetype = "dashed", size = 1.2) +  # Prediction from model without id
+  geom_line(aes(y = pred_with_id), color = "red", size = 1.2) +  # Prediction from model with id
+  labs(title = "Observed Data vs. Predictions from GAM Models",
+       x = "x",
+       y = "y",
+       caption = "Blue (dashed): Model without 'id' | Red: Model with 'id'") +
+  theme_minimal()
+plot(gam_model_no_id, main = "gam_model_no_id")
+plot(gam_model_with_id, main = "gam_model_with_id")
+
+```
+
+
+influencia dos knots: 
+```{r}
+library(mgcv)
+
+# Example data
+set.seed(123)
+n <- 100
+x <- seq(0, 1, length.out = n)
+y <- sin(2 * pi * x) + rnorm(n) * 0.1
+data <- data.frame(x = x, y = y)
+
+# Fit the model using cubic regression spline
+gam_model <- gam(y ~ s(x, bs = "cr", k = 10), 
+                 data = data,
+                 method="REML")
+# Extract the design matrix for the spline
+X <- gam_model$model.matrix
+
+# Plot the design matrix to visualize the basis functions
+matplot(x, X[, 2:ncol(X)], type = "l", lty = 1, col = rainbow(ncol(X) - 1),
+        xlab = "x", ylab = "Basis functions")
+
+
+# Extract the knots
+knots <- gam_model$smooth[[1]]$knots
+
+# Print the knots
+print(knots)
+
+# Compare knots with quantiles
+quantiles <- quantile(data$x, probs = seq(0, 1, length.out = length(knots)))
+
+# Compare knots with quantiles
+data.frame(Knots = knots, Quantiles = quantiles)
+```
+
+
+
+Exemplo de mudança do parâmetro sp na função s() 
+
+```{r}
+library(mgcv)
+# Set seed for reproducibility
+set.seed(123)
+# Generate toy data
+n <- 200
+x <- seq(0, 10, length.out = n)
+y <- sin(x) + rnorm(n, sd = 0.3)
+# Plot the data
+plot(x, y, main = "Toy Data: y = sin(x) + noise", xlab = "x", ylab = "y")
+# Fit a GAM model with a smooth term for x
+gam_model <- gam(y ~ s(x), method = "REML")
+# Summary of the model
+summary(gam_model)
+# Extract the edf from the model summary
+summary_gam <- summary(gam_model)
+edf_values <- summary_gam$s.table[, "edf"]
+edf_values
+# Fit models with different smoothing parameters
+gam_model_1 <- gam(y ~ s(x, sp = 0.1), method = "REML")  # Less smooth (higher edf)
+gam_model_2 <- gam(y ~ s(x, sp = 1), method = "REML")    # More smooth (lower edf)
+# Summary of models
+summary(gam_model_1)$s.table[, "edf"]
+mgcv::k.check(gam_model_1)
+summary(gam_model_2)$s.table[, "edf"]
+mgcv::k.check(gam_model_2)
+# Compare smooth functions
+plot(gam_model_1, main = "Less Smooth (sp = 0.1)")
+plot(gam_model_2, main = "More Smooth (sp = 1)")
+# Generate predictions from both models
+predictions_1 <- predict(gam_model_1, newdata = data.frame(x = x))
+predictions_2 <- predict(gam_model_2, newdata = data.frame(x = x))
+# Plot the observed data
+plot(x, y, main = "Observed Data and Model Predictions", xlab = "x", ylab = "y", pch = 16, col = "blue")
+# Add predictions from the first model (less smooth, higher edf)
+lines(x, predictions_1, col = "red", lwd = 2, lty = 2)  # Red dashed line
+# Add predictions from the second model (more smooth, lower edf)
+lines(x, predictions_2, col = "green", lwd = 2, lty = 1)  # Green solid line
+# Add a legend
+legend("topright", legend = c("Observed Data", "Model 1 (sp = 0.1)", "Model 2 (sp = 1)"),
+       col = c("blue", "red", "green"), lty = c(NA, 2, 1), lwd = c(NA, 2, 2), pch = c(16, NA, NA))
+
+
+```
+
+
+
+
+
+modelos usados para responder a última pergunta
+
+
+
+
+```{r}
+l_md <- readRDS(paths_lmd[1])
+summary(l_md[[1]])
+```
+
+
+
+
+# 25 agosto
+
+| Frag. total | Frag. per se | Área per se |
+| :---------- | :----------: | ----------: |
+|        "Qual o efeito aleatório?"        |
+| :---------- | :----------: | ----------: |
+| rank | dAIC |  rank | dAIC | rank | dAIC |
+|  1   | 0    |   1   | 0    |  1   | 0    |
+|  2   | 1    |   2   | 1    |  2   | 1    |
+| :---------- | :----------: | ----------: |
+|          "Qual o modelo cheio"           |
+| :---------- | :----------: | ----------: |
+| rank | dAIC |  rank | dAIC | rank | dAIC |
+|  1   | 0    |   1   | 0    |  1   | 0    |
+|  2   | 1    |   2   | 1    |  2   | 1    |
+| :---------- | :----------: | ----------: |
+|          "Qual o conj. de cov?"          |
+| :---------- | :----------: | ----------: |
+| rank | dAIC |  rank | dAIC | rank | dAIC |
+|  1   | 0    |   1   | 0    |  1   | 0    |
+|  2   | 1    |   2   | 1    |  2   | 1    |
+|  3   | 2    |   3   | 2    |      |      |
+
+| Python Hat        |   True   | 23.99 |
+| SQL Hat           |   True   | 23.99 |
+| Codecademy Tee    |  False   | 19.99 |
+| Codecademy Hoodie |  False   | 42.99 |
+
+
+
+
+```{r}
+df_exemplo <- lapply(c("Frag. total","Área per se"),\(vi){
+  data.frame(
+  pergunta = c(rep("Qual o efeito aleatório?",2),
+               rep("Qual o modelo cheio?",2),
+               rep("Qual o conj. de cov?",3)),
+  rank =  c(1:2,1:2,1:3),
+  dAICc = c(0:1,0:1,0:2)) %>% 
+    mutate(efeito = vi) %>% relocate(efeito)
+}) %>% do.call("rbind",.) %>%
+  filter(!(efeito == "Área per se" & pergunta == "Qual o conj. de cov?" & rank == 3) )
+install.packages("flextable")
+library(flextable)
+# Reshape the data frame to wide format
+df_wide <- df_exemplo %>%
+  pivot_wider(names_from = efeito, values_from = c(rank, dAICc)) %>%
+  arrange(pergunta)
+# Create the table using flextable
+ft <- flextable(df_wide) %>%
+  merge_v(j = "pergunta") %>%
+  theme_box() %>%
+  align(align = "center", part = "all")
+
+# Display the flextable
+ft
+
+ft <- as_flextable(
+  x = df_exemplo, separate_with = "",
+  label_rows = c(LBTEST = "Lab Test", VISIT = "Visit",
+                 BASELINE = "Reference Range Indicator")) |>
+  width(j = 3, width = 0.9)
+
+ft
+
+```
+
+
+
+#21/08/2024
+
+```{r}
+p <- ggplot() +
+  # Add text for footnotes
+  annotate("text", x = 0.5, y = 1.05, label = "Footnote 1: AICc = Akaike Information Criterion corrected for small sample sizes.", size = 4, hjust = 0) +
+  annotate("text", x = 0.5, y = 0.95, label = "Footnote 2: ΔAICc values < 2 indicate models with substantial support.", size = 4, hjust = 0) +
+  # Set limits and theme to create space for the text
+  xlim(0, 1) +
+  ylim(0, 1) +
+  theme_void() +   # Remove axes and grid
+  theme(plot.margin = margin(1, 1, 2, 1, "cm"))  # Increase bottom margin for footnotes
+
+# Save the plot as a PNG
+ggsave("footnotes_plot.png", plot = p, width = 8, height = 4, dpi = 300)
+```
+
+
+
+# dia 20ago2024
+
+```{r}
+dfi <- df_tabelaSelecao %>% 
+  select(-1) %>% 
+  filter(Contraste == "Frag. total")
+v_title <- dfi$Contraste[1] %>% 
+  gsub("Frag. total","Frag. Total: contemporâneo / prístino",.) %>% 
+  gsub("Frag. per se","Frag. per se: contemporâneo / aglomerado",.) %>% 
+  gsub("Área per se","Área per se: aglomerado / prístino",.)
+v_names <- names(dfi)[-1]
+dfi <- dfi %>% select(-Contraste) %>%
+  mutate(rank = 1:n())
+table <- dfi %>%
+  relocate(rank) %>% 
+  gt() %>%
+  tab_header(title = md(v_title)) %>%
+  fmt_number(
+    columns = v_names[-grep("modelo",v_names)],decimals = 2
+  ) %>%
+  tab_options(
+    table.font.size = "small",
+    table.align = "left"
+  ) %>% 
+  cols_label(
+    rank = "Rank",
+    modelo = "GAHM",
+    df = "approx. parameters",
+    dAICc = "ΔAICc",
+    weight = "Weight (ΔAICc)",
+    `Dev. explained` = "Deviance Explained",
+    `Moran I statistic (res)` = "Moran's I",
+    `p-value` = "p-value"
+  )
+plot <- dfi %>% 
+  ggplot(aes(x = rank)) +
+  geom_bar(aes(y = weight), stat = "identity", fill = "gray") +
+  geom_point(aes(y = `p-value`, fill = `Moran I statistic (res)`), shape = 22, size = 5) +
+  geom_segment(
+    aes(x = rank - 0.4, xend = rank + 0.4, 
+        y = `Dev. explained`, yend = `Dev. explained`,
+        color="Deviance\nExplained"), 
+    size = 1.5) +
+  geom_hline(yintercept = 0.05,alpha=0.2,color="darkgreen") +
+  scale_y_continuous("p-value (square), Weight (bar)",
+                     limits = c(0, 1)) + # , sec.axis = dup_axis()
+  scale_fill_gradientn(colours = c("cyan", "black", "red"),
+                       values = c(-1,0,1),
+                       name = "Moran's I\nStatistics") +
+  scale_color_manual(values = c("Deviance\nExplained" = "blue"), name = "") +
+  ## deixar para uma próxima:
+  # new_scale_fill() +
+  # scale_fill_manual(values = c("Weight (AICc)" = "gray"), name = "") +
+  labs(x = "", fill = "Moran I statistic",) +
+  theme_minimal() +
+  theme(
+    # axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right"
+  )
+# saving the objects
+gtsave(table, paste0(v_path,"tabelas/table_reciclagem.png"),
+       vwidth = 800, vheight = 200)
+ggsave(paste0(v_path,"figuras/plot_reciclagem.png"),plot = plot,bg = "white",
+       width = 3, height = 3, units = "in", dpi = 300)
+img <- image_read(paste0(v_path,"figuras/plot_reciclagem.png"))
+trimmed_img <- image_trim(img)
+image_write(trimmed_img, path = paste0(v_path,"figuras/plot_reciclagem.png"))
+# combinação dos dois:
+library(magick)
+# Load the images
+table_img <- image_read(paste0(v_path,"tabelas/table_reciclagem.png"))
+plot_img <- image_read(paste0(v_path,"figuras/plot_reciclagem.png"))
+plot_img <- image_resize(plot_img, geometry = paste0(image_info(table_img)$height, "x"))
+# Combine the images vertically
+combined_img <- image_append(c(table_img,plot_img), stack = FALSE)
+# Save the combined image
+v_name <- case_when(
+  grepl("Total",v_title) ~ "fragtotal.png",
+  grepl("Frag. per",v_title) ~ "fragperse.png",
+  grepl("Área",v_title) ~ "areaperse.png",
+)
+image_write(combined_img, 
+            path = paste0(v_path,folder_pattern,v_name), format = "png")
+```
+
+
+# antes do dia 20
+
+```{r}
+library(dagitty)
+library(ggdag)
+library(ggplot2)
+library(dplyr)
+
+# Define the DAG
+cov_dag <- dagify(
+  local ~ paisagem + biogeo + preservacao_local,
+  paisagem ~ biogeo + U,
+  preservacao_local ~ U,
+  labels = c(
+    "local" = "biodiv. local",
+    "paisagem" = "efeito paisagem",
+    "preservacao_local" = "preserv. local",
+    "biogeo" = "Reg. biogeo.",
+    "U" =  "unobs. cov."
+  ),
+  latent = "U",
+  exposure = "paisagem",
+  outcome = "local",
+  coords = list(
+    x = c(paisagem = 2.5, biogeo = 7.5, preservacao_local = 9, local = 5, U = 9),
+    y = c(paisagem = 5, biogeo = 3.5, preservacao_local = 2.5, local = 1, U = 5.5)
+  )
+)
+
+# Tidy the DAG and set the node class
+tidy_cov_dag <- tidy_dagitty(cov_dag) %>%
+  mutate(node_class = case_when(
+    name == "paisagem" ~ "exposure",
+    name == "local" ~ "outcome",
+    name == "U" ~ "latent",
+    TRUE ~ "adjusted"
+  ))
+
+# Split edge data based on parent node for custom coloring
+edges_closed_path <- filter(tidy_cov_dag$data, name %in% c("biogeo", "preservacao_local"))
+edges_open_path <- filter(tidy_cov_dag$data, !name %in% c("biogeo", "preservacao_local"))
+
+# Create dummy data for the legend
+legend_data <- data.frame(
+  x = c(0, 0),
+  y = c(1, 2),
+  xend = c(1, 1),
+  yend = c(1, 2),
+  edge_type = c("closed path", "open path")
+)
+
+# Plot the DAG with custom arrow colors and manually created legends
+ggplot() +
+  geom_dag_edges_arc(data = edges_closed_path, 
+                     aes(x = x, y = y, xend = xend, yend = yend), 
+                     curvature = 0, color = "gray", show.legend = FALSE) +
+  geom_dag_edges_arc(data = edges_open_path, 
+                     aes(x = x, y = y, xend = xend, yend = yend), 
+                     curvature = 0, color = "blue", show.legend = FALSE) +
+  geom_dag_point(data = tidy_cov_dag, 
+                 aes(x = x, y = y, fill = node_class, size = node_class), 
+                 shape = 21) +
+  geom_dag_label_repel(data = tidy_cov_dag, 
+                       aes(x = x, y = y, label = label), 
+                       colour = "black", show.legend = FALSE) +
+  # Add dummy geom_segment for the legend
+  geom_segment(data = legend_data,
+               aes(x = x, y = y, xend = xend, yend = yend, color = edge_type),
+               arrow = arrow(length = unit(0.2, "inches"), type = "closed"),
+               size = 1.2) +
+  scale_color_manual("Edge Type", values = c(
+    "closed path" = "gray", 
+    "open path" = "blue")) +
+  scale_fill_manual("", values = c(
+    "exposure" = "darkblue", 
+    "outcome" = "darkgreen", 
+    "latent" = "black", 
+    "adjusted" = "darkred")) +
+  scale_size_manual("", values = c(
+    "exposure" = 10, 
+    "outcome" = 10, 
+    "latent" = 7, 
+    "adjusted" = 7)) +
+  theme_dag() +
+  theme(legend.position = "right")
+
+```
+
+
+
+# 13ago2024
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Define the points
+point1 <- c(x = 2, y = 5.8)  # Midpoint of one shorter side
+point2 <- c(x = 0.2, y = 5.5)  # Midpoint of the other shorter side
+
+# Calculate the distance between the points
+distance <- sqrt((point2['x'] - point1['x'])^2 + (point2['y'] - point1['y'])^2)
+
+# Define rectangle dimensions
+short_side <- 3
+long_side <- 7
+
+# Calculate unit vector for the direction of the line
+direction <- c(point2['x'] - point1['x'], point2['y'] - point1['y'])
+direction <- direction / sqrt(sum(direction^2))  # Normalize
+
+# Calculate the perpendicular direction
+perpendicular <- c(-direction[2], direction[1])
+
+# Calculate the offset to determine the other corners
+half_short_side <- short_side / 2
+half_long_side <- long_side / 2
+
+# Coordinates of the corners
+corner1 <- point1 + half_short_side * perpendicular - (distance / 2) * direction
+corner2 <- point1 - half_short_side * perpendicular - (distance / 2) * direction
+corner3 <- point2 - half_short_side * perpendicular + (distance / 2) * direction
+corner4 <- point2 + half_short_side * perpendicular + (distance / 2) * direction
+
+# Create a data frame for the rectangle
+rect_df <- data.frame(
+  x = c(corner1[1], corner2[1], corner3[1], corner4[1], corner1[1]),
+  y = c(corner1[2], corner2[2], corner3[2], corner4[2], corner1[2])
+)
+
+# Example data
+data <- data.frame(
+  x = c(1, 2, 0.2, 3),
+  y = c(3, 5.8, 5.5, 4)
+)
+
+# Plot the data with the rectangle
+ggplot(data, aes(x = x, y = y)) +
+  geom_point() +
+  geom_polygon(data = rect_df, aes(x = x, y = y), fill = "blue", alpha = 0.2) +
+  theme_minimal()
+
+```
+
+
+
+# 9ago2024
+
+SCORE:
+-> BUROCRACIAS MESTRADO
+- agilização do 3o comitê: o que apresentar?
+Entendo que podemos dividir o argumento em duas partes: da introdução até os resultados e da discussão até a conclusão. Então gostaria de que o terceiro comitê fosse sobre esse ponto de contato entre essas duas partes.
+Me proponho a apresentar o suficiente da introdução para que os resultados sejam compreendidos e então gostaria de conversar sobre os caminhos que penso para a discussão. 
+
+
+
+-> TRABALHO DE VERDADE NA DISSERTAÇÃO
+- finalização dos resultados: 
+a) criação de figuras e tabelas
+1) Qual o status dos resultados?
+2) 
+
+b) texto explicando os resultados
+
+
+
+
+# 1ago2024
+
+Apresentação das tabelas:
+Esquema proposto
+
+
+
+# 31/07/2024
+
+Por algum motivo não foi possível utilizar o output de predict.gam informando novos coeficientes, vou tentar utilizar
+
+
+# 27 jul 2024
+
+```{r}
+coef_samples <- MASS::mvrnorm(n=nsim, mu=coef(gamm), Sigma=vcov(gamm))
+predictions <- matrix(NA, nrow=nsim, ncol=nrow(data))
+f_adply <- \(i){
+  coef_i <- coef_samples[i,]
+  predictions[i,] <- 
+    predict(gamm, newdata=data, type="link", se.fit=FALSE, new.coef=coef_i,exclude=v_exclude)
+  return(predictions)
+}
+predictions <- adply(1:nrow(predictions),1,f_adply,.parallel = TRUE)
+
+df_pred <- apply(predictions,2,\(X) quantile(X,probs = quantiles)) %>% 
+    as.data.frame()
+  names(df_pred) <- paste0("Q_",quantiles)
+  cbind(data,df_pred)
+# exemplo do chatgpt
+prediction_median <- apply(predictions, 2, median)
+prediction_lower <- apply(predictions, 2, function(x) quantile(x, 0.025))
+prediction_upper <- apply(predictions, 2, function(x) quantile(x, 0.975))
+
+to_exclude = c("s(lat,long)",
+               "s(data_year)")
+
+nsim <- 100
+for (i in 1:nsim) {
+    coef_i <- coef_samples[i,]
+    predictions[i,] <- predict(gamm, newdata=data, type="link", se.fit=FALSE, new.coef=coef_i)
+}
+
+
+dfmd <- gamm$model
+dfmd$lat <- 0
+dfmd$long <- 0
+
+# Predict using the modified data frame
+predictions <- predict.gam(gamm,
+                           newdata = dfmd,
+                           type = "link",
+                           se.fit = TRUE)
+
+# Check the predictions
+print(predictions)
+```
+```{r}
+df_newpred$pred <- 
+      predict.gam(gamm, 
+              newdata=df_newpred, 
+              type="link", se.fit=FALSE, exclude=to_exclude)
+
+
+matrix_lprediction <- predict(gamm,
+                              type="lpmatrix",
+                              exclude = to_exclude,
+                              newdata= df_newpred,
+                              newdata.guaranteed=TRUE)   
+predict_link <- matrix_lprediction %*% t(coef_samples)
+  df_pred <- t(apply(predict_link,1,\(X) quantile(X,probs = quantiles))) %>% 
+    as.data.frame()
+  names(df_pred) <- paste0("Q_",quantiles)
+  cbind(data,df_pred)
+```
+
+
+
+# 25 jul 2024
+
+Como plotar os efeitos parciais aleatórios? Melhor forma acredito que é fazer a predição a posteriori. Dúvida,
+É possível fazer a predição a posterior dos efeitos aleatórios da paisagem? Acredito que se for pelo método gi certamente, agora se for pelo método gs eu já não sei dizer mesmo.
+
+Quais são as CPF?
+- fazer a tabela de seleção da 2a parte da análise de dados 
+
+
+
+# 14 jul 2024
+
+Moran test for spatial autocorrelation
+
+
+```{r}
+library(spdep)
+
+# Example data
+set.seed(123)
+data <- data.frame(
+  latitude = runif(100, -90, 90),
+  longitude = runif(100, -180, 180),
+  residuals = rnorm(100)
+)
+
+# Create coordinates matrix
+coordinates <- as.matrix(data[, c("latitude", "longitude")])
+
+# Define a range of k values (must be positive integers)
+k_values <- 1:50
+moran_results <- data.frame(k = k_values, Moran_I = NA, p_value = NA)
+
+# Loop through k values and compute Moran's I
+for (i in seq_along(k_values)) {
+  k <- k_values[i]
+  nb <- knn2nb(knearneigh(coordinates, k = k))
+  listw <- nb2listw(nb)
+  moran_test <- moran.test(data$residuals, listw)
+  moran_results$Moran_I[i] <- moran_test$estimate[["Moran I statistic"]]
+  moran_results$p_value[i] <- moran_test$p.value
+}
+
+# Plot the results
+library(ggplot2)
+ggplot(moran_results, aes(x = p_value, y = Moran_I,color=k)) +
+  geom_line() +
+  geom_point() +
+  # labs(title = "Moran's I vs. k", x = "Number of Nearest Neighbors (k)", y = "Moran's I") +
+  theme_minimal()
+
+```
+
+```{r}
+library(spdep)
+dfmd <- md$model
+dfmd$residuals <- residuals(md)
+dfmd_avgbySite <- dfmd %>% 
+  group_by(SiteCode) %>% 
+  summarise(mean_res = mean(residuals),
+            lat = first(lat),
+            long = first(long)) %>% 
+  ungroup()
+# Prepare spatial data
+coordinates <- dfmd_avgbySite[, c("lat","long")]
+coordinates <- as.matrix(coordinates)
+nb <- knn2nb(knearneigh(coordinates, k=4))  
+listw <- nb2listw(nb)
+# Calculate Moran's I for residuals
+moran_output <- moran.test(dfmd_avgbySite$mean_res, listw)
+data.frame(
+  Statistic = c(
+    "Moran I statistic", 
+    "Expectation", 
+    "Variance", 
+    "Standard Deviate", 
+    "p-value"
+    ),
+  Value = c(
+    moran_output$estimate[["Moran I statistic"]], 
+    moran_output$estimate[["Expectation"]], 
+    moran_output$estimate[["Variance"]], 
+    moran_output$statistic, 
+    moran_output$p.value
+    )
+) %>% pivot_wider(names_from=Statistic,values_from = Value)
+```
+
+
+
+
+# 21jun2024
+
+```{r}
+df_aud <- df_contrastes %>%
+  select(SiteCode:p, contains("_logratio")) %>% 
+  mutate(across(-SiteCode,f_z,.names = "{.col}_z"))
+l_p <- list()
+l_p$padrao <- 
+  df_aud %>% 
+  ggplot(aes(x=area_logratio_z,y=frag.total_logratio_z)) +
+  geom_point() +
+  labs(title="Escala Padrão") +
+  geom_abline(slope=1,intercept = 0,color="darkred") +
+  theme(aspect.ratio = 1)
+l_p$z <- 
+  df_aud %>% 
+  ggplot(aes(x=area_logratio_z,y=frag.total_logratio_z)) +
+  geom_point() +
+  labs(title="z transformada") +
+  geom_abline(slope=1,intercept = 0,color="darkred") +
+  theme(aspect.ratio = 1)
+grid.arrange(grobs=l_p,nrow=1)
+df_aud %>% 
+  select(area_logratio,frag.total_logratio) %>% 
+  pivot_longer(cols = everything()) %>% 
+  ggplot(aes(x=name,y=value)) +
+  geom_boxplot() +
+  geom_jitter()
+
+```
+
+
+
+# 20jun2024
+
+```{r}
+df_logOR %>% 
+  select(-matches("^k|^p(!pristine)")) %>% 
+  pivot_longer(cols = c("itself","pristine","numerator","denominator"),
+               values_to="logOR",
+               names_to="taxaU") %>% 
+  mutate(taxaU = factor(taxaU,
+                        levels=c("itself","pristine","numerator","denominator"))) %>% 
+  ggplot(aes(x=Uefeito,y=logOR,color=taxaU,group=SiteCode)) +
+  geom_hline(yintercept = 0,color="gray") +
+  geom_vline(xintercept = 0,color="gray") +
+  geom_line(alpha=0.2) +
+  geom_point(alpha=0.2) +
+  scale_color_manual(values=c("darkred","darkgreen","darkblue","darkorange")) +
+  facet_grid(taxaU~contraste)
+```
+
+
+
+# 17/jun/2024
+
+Os modelos para descrever os GAMMS pareciam precisar de maior grau de liberdade para descrever os padrões por sítios de amostragem. Interpretei que os dados sugerem que no caso 
+
+
+
+
+# 15/06/2024
+
+```{r}
+v_num_itself <- dfi[dfi$taxaU==unname(cpair["numerador"]),
+    c("SiteCode","k",cpair["numerador"],"taxaU")] %>% pull(contemp)
+v_deno_itself <- dfi[dfi$taxaU==unname(cpair["denominador"]),
+    c("SiteCode","k",cpair["denominador"],"taxaU")] %>% pull(ideal)
+v_itself <- v_num_itself - v_deno_itself
+
+
+dfi %>% head
+dfi %>% filter(taxaU==uname(cpair["ideal"])) %>% pull(contemp)
+
+
+```
+
+
+
+
+# 4 mar 2024
+
+Revisão dos resultados para avaliação da adequação
+
+
+# 27fev2024
+
+
+
+
+# 26fev2024
+
+Anteriormente, 
+simulei as SADs preditas nas paisagens contemporâneas e aglomeradas. Agora irei continuar as análises das SADs preditas nas paisagens contemporânea e aglomerada com o U prístino. 
+
+Ontem fiz o pedido de prorrogação por conta da influência da pandemia.

@@ -1,0 +1,650 @@
+---
+title: "Escala de Efeito"
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+  bookdown::word_document2: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+bibliography: /home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/citations2.bib
+csl: "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/1_to_compile_dissertacao_EM_USO/resources/ecological-monographs.csl"
+header-includes:
+- \usepackage[brazil]{babel}
+- \usepackage{lmodern}
+- \usepackage{fontspec}
+- \setmainfont{Times New Roman}
+- \usepackage{caption}
+- \captionsetup[figure]{font=it}
+- \captionsetup[table]{font=it}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,fig.align='center',tab.align='center',
+                      # fig.pos = "H", 
+                      fig.show = "hold",
+                      root.dir = '/home/danilo/Documentos/mestrado_Ecologia/artigo_principal',
+                      dev = "png",
+                      dpi = 72)
+# pacotes
+library(lubridate)
+library(doMC)
+library(raster)
+library(insight)
+library(DHARMa)
+library(bbmle)
+library(broom.mixed)
+library(lme4)
+library(scales)
+library(ggnewscale)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr) 
+library(tidyr)
+library(plyr)
+library(dplyr)
+# funções
+source("source/dinamica_coalescente.R")
+source("source/SoE_MNEE.R")
+source("source/f_z.R")
+source("source/nameModel.R")
+f_lag.U <- function(df){
+  v_Udiff <- diff(range(df$Umed))
+  df$Ulag <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
+  df <- df |> mutate(Ulag0 = ifelse(Ulag<0,0,Ulag))
+  df$Ucsum <- cumsum(df$Ulag)
+  df$Ucsum0 <- cumsum(df$Ulag0)
+  df <- df |> mutate(Ucsum0 = ifelse(Ucsum0>1,1,Ucsum0))
+  return(df)
+}
+f_k.SoE <- \(df,limiar=0.95){
+  if(max(df$Ucsum,na.rm = T)<limiar){
+    df |> head(n=1) |> mutate("SoE_{limiar}":=NA)
+  }else{
+    df |> filter(Ucsum>=limiar) |> head(n=1) |> 
+      mutate("SoE_{limiar}":=as.numeric(as.character(lado_factor)))
+  }
+}
+# df p extensões
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+saveRDS(df_p_extensoes,file="./0_apendices/analise_dados/rar/df_p_extensoes.rds")
+# df dados da proporção de cobertura vegetal
+df_p <- read_csv("dados/df_p.csv")
+# df dados para simulação
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  inner_join(x=df_p,by="SiteCode")
+# df_sorteio_sitios
+df_sorteio_sitios <- read_csv(file="dados/csv/df_sorteio_sitios.csv") |> 
+  select(-d) |> 
+  inner_join(x=select(df_sim,SiteCode,d,k),by="SiteCode")
+# v_sim_sites: se precisar é só mover as paisagens de volta ou incluir um programa coalescente na outra pasta
+## acabei perdendo a mão e deletei as paisagens nulas de ambas situações, mas tudo bem faz mais em mapas_...Rmd
+# v_sim_sites <- list.files(path="dados/simulacao",pattern = "_null.txt")
+# file.copy(from=paste0("dados/simulacao/",v_sim_sites),
+#           to=paste0("dados/paisagens/paisagens_SoE_MNEE/",v_sim_sites))
+# file.remove(paste0("dados/simulacao/",v_sim_sites))
+# df_SoE
+df_Usoe.rep <- read_csv("dados/csv/df_Usoe.csv") |> 
+  pivot_longer(cols=`1`:`10`, names_to = "n", values_to = "U") |> 
+  inner_join(x=distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
+  arrange(S_obs,k)
+# df_Unull
+df_Unull <- df_Usoe.rep |> filter(round(lado_km) == 16) 
+# df_Usoe
+df_Usoe <- df_Usoe.rep |> 
+  arrange(lado_km) |> 
+  group_by(SiteCode,k,lado_km) |> 
+  summarise(Umed = mean(U),
+            Umedian = median(U),
+            Usd = sd(U)) |> 
+  mutate(diffU = Umed - Umedian)
+registerDoMC(2)
+df_Usoe <- ddply(df_Usoe,c("SiteCode","k"),f_lag.U,.parallel = TRUE)
+df_Usoe$Schange <- factor(df_Usoe$lado_km,labels=c(paste(16/(2^(5:1)),"->",16/(2^(4:0))),NA))
+df_Usoe$Schange_cumulative <- factor(df_Usoe$lado_km,labels=c(paste(0.5,"->",16/(2^(4:0))),NA))
+df_Usoe$k_factor <- factor(round(df_Usoe$k,2),levels = sort(unique(round(df_Usoe$k,2)),decreasing = T))
+df_Usoe <- df_Usoe |> 
+  group_by(SiteCode,k) |> 
+  summarise(Ucv = sd(Umed)*100/mean(Umed),
+            Ulag_f = ifelse(any(Ulag < -0.1,na.rm = T),"neg_v","pos_v")) |> 
+  mutate(Ucv_f = ifelse(Ucv>10,"top90","low10")) |> 
+  # select(-Ucv) |> 
+  inner_join(x=df_Usoe,by=c("SiteCode","k"))
+# df_md
+df_md <- df_Usoe |> 
+  inner_join(distinct(select(df_sim,SiteCode,effort_ha:S_obs)),by="SiteCode") |> 
+  mutate(logit_Umed = log(Umed/(1-Umed)),
+         DA = Ntotal / effort_ha,
+         S.DA = S_obs / Ntotal,
+         log2_lado.km = log2(round(lado_km,1)),
+         lado_factor = factor(round(lado_km,1)) ) |> 
+  select(SiteCode,Umed,logit_Umed,k,k_factor,lado_factor,lado_km,log2_lado.km,S_obs,Ntotal,DA,S.DA) |> 
+  mutate(across(S_obs:S.DA,log,.names="log_{.col}"),
+         across(c(k,log2_lado.km,S_obs:log_S.DA),f_z,.names="{.col}_z"),
+         SiteCode=factor(SiteCode))
+# dados usados na simulação com os valores preditos e os residuos z transformados
+## códigos para gerar df_plot
+saveRDS(df_md,"0_apendices/EfeitoEscala/figuras/df_md.rds")
+
+
+if(FALSE){
+  df_md <- readRDS("0_apendices/EfeitoEscala/figuras/df_md.rds")
+  # versão para obter os dados antigos de df_plotSoE
+  md_SoE <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+# dados usados na simulação com os valores preditos e os residuos z transformados
+df_plot <- df_md |> 
+  select(SiteCode, logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
+df_plot$deviance <- residuals(md_SoE,scale=T)
+df_plot$predict <- predict(md_SoE)
+df_plot <- df_plot |> 
+  mutate(Umed = exp(logit_Umed) / exp(1-logit_Umed),
+         Pre_Umed = exp(predict) / exp(1-predict),
+         lado_numeric = as.numeric(as.character(lado_factor)),
+         S.N = S_obs / Ntotal)
+df_plot <- df_plot |>
+  group_by(k_factor,lado_factor) |> 
+  summarise(Umed = mean(Pre_Umed)) |>
+  ddply("k_factor",f_lag.U) |>
+  ddply("k_factor",f_k.SoE) |> 
+  select(k_factor,matches("SoE")) |> 
+  inner_join(x=df_plot,by="k_factor")
+write_csv(df_plot,"dados/csv/df_plotSoE.csv")
+}
+
+
+if(TRUE){
+  l_md <- readRDS("0_apendices/EfeitoEscala/figuras/l_md.rds")
+  md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |>
+  (\(.) l_md[[.]])()
+  ####
+  if(FALSE){
+    library(mgcv)
+    md_SoE <- gam(logit_Umed ~ te())
+  }
+  ###s
+df_plot <- df_md |> 
+  select(SiteCode, Umed,logit_Umed:lado_factor, S_obs,Ntotal,log_S_obs_z:log_Ntotal_z)
+df_plot$deviance <- residuals(md_SoE,scale=T)
+df_plot$predict <- predict(md_SoE)
+df_plot0 <- df_plot |> 
+  mutate(
+    #Umed = 1/(1+exp(logit_Umed)),
+     #    Pre_Umed = 1/(1+exp(predict)),
+         lado_numeric = as.numeric(as.character(lado_factor)),
+         S.N = S_obs / Ntotal)
+df_plot1 <- df_plot0 |>
+  group_by(k_factor,lado_factor) |> 
+  # summarise(Umed = mean(predict)) |> 
+  summarise(Umed = mean(Umed)) |> 
+  ddply("k_factor",f_lag.U)
+df_plot <- df_plot1 |>
+  ddply("k_factor",f_k.SoE,limiar=0.9) |> 
+  select(k_factor,matches("SoE")) |> 
+  inner_join(x=df_plot0,by="k_factor")
+write_csv(df_plot,"dados/csv/df_plotSoE.csv")
+dfp <- df_plot1 %>% 
+  mutate(lado = as.numeric(as.character(lado_factor)))
+}else{
+  df_plot <- read_csv("dados/csv/df_plotSoE.csv")
+}
+```
+
+```{r trackdown,eval=FALSE}
+library(trackdown)
+# 1a vez:
+upload_file(file="apendices/EfeitoEscala/EfeitoEscala.Rmd",
+            gpath = "mestrado/DaniloPMori-artigo_mestrado/",
+            hide_code = TRUE)
+# both overwrite: 
+# overwrite the current google drive file with the current Rmd:
+update_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
+            gpath = "mestrado/DaniloPMori-artigo_mestrado/",
+            hide_code = TRUE)
+# overwrite the current Rmd with the current google drive 
+download_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
+              gpath = "mestrado/DaniloPMori-artigo_mestrado/")
+```
+
+# Objetivo
+ 
+Buscamos descrever qual escala mínima suficiente para simular os 20 graus de limitação de dispersão inicialmente propostos (texto principal). As simulações ocorrerm em 6 paisagens que diferem em sua extensão espacial com o lado variando entre 0.5 km e 16 km de lado (0.5, 1, 2,4 ,8,16). Sorteamos e selecionamos 36 sítios da base de dados completo (109 sítios). Esses 36 sítios incluem os extremos da riqueza de espécies e número de indivíduos observado e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (texto principal). 
+
+  
+<!-- A expecativa é que a redução da limitação de dispersão aumente a extensão da paisagem ao redor mínima para simular a árvore genealógica da comunidade sem que esta seja limitada pela extensão espacial. Para cada combinação de grau de limitação de dispersão e extensão espacial iremos estimar a taxa U de colonização de novas espécies na paisagem por nascimento necessária para obter a riqueza observada, pressuposto equilíbrio. A taxa U compensa o número de espécies perdidas por deriva ecológica e que não são repostas por subpopulações na paisagem. Então quando a paisagem é pequena a taxa U deve ser elevada para compensar a ausência da chuva de propágulos esperada para aquele grau de limitação de dispersão em uma paisagem sem perda de habitat. Com o aumento da extensão da paisagem a taxa U pode diminuir, caso exista aumento dos indivíduos que podem contribuir com propágulos para aquele grau de limitação de dispersão. Esperamos descrever a escala que acumula a maior parte da variação da média geral associada com o aumento da escala por grau de limitação de dispersão. -->
+
+
+<!-- No apêndice ‘Efeito de Escalar’, mostramos os resultados que sustentam que, na paisagem pristina de 16 km de lado, a taxa U atinge seu máximo em níveis moderados de limitação de dispersão, padrão semelhante ao esperado em paisagens infinitas (May et al. 2012). Na figura 2b do apêndice há a taxa U estimada em cada sítio em função do grau de limitação de dispersão, e em cada painel há o estimado em um mesmo sítio. Existe um padrão geral de taxa U baixa quando a limitação de dispersão é severa. Com um pouco de relaxamento da limitação, há uma mudança brusca para um patamar superior que se sustenta até a situação de que a maioria dos propágulos permanece na vizinhança imediata. Quando menos da maioriada metade dos propágulos permanece na vizinhança imediata há uma redução gradual da taxa U. Assim, embora existação variação entre sítios principalmente vínculado ao valor médio, foi identificado um padrão recorrente nas simulações em todas as paisagens pristinas: a taxa U se mantém baixa sob forte limitação à dispersão, salta para um patamar alto em graus moderados de limitação à dispersão e decresce gradualmente sob baixa limitação à dispersão. Também é possível observar esse padrão na figura 2.2 b, em que todos os sítios compartilham o mesmo eixo y. Na figura 2.2 está o recorte da figura 1 de May et al. (2012) na esquerda (a) e na direita há a média da taxa U estimada na paisagem prístinca de 16km de lado. -->
+<!-- Em nossa avaliação a taxa U é livredeixada como um parâmetro livre, para estimarajustar a riqueza final simulada à observada na parcela. , enquanto que naNa análise de May et al. (2012) a taxa U é fixa (1e-5) e, por consequência a riqueza varia em função da limitação à dispersão utilizada nas simulações. , porPor isso, no painel daa esquerda da figura 2.2 há um mínimo, enquanto na direita há um máximo. Os cenários de limitação de dispersão em que os valores extremos ocorrem nestes dois painési são semelhantes. O máximo da taxa U média ocorre quando k varia entre 0.75 e 0.50 dos propáagulos na vizinhança imediata (fig. 2.2). Nesses cenários de limitação de dispersão o desvio padrão da função de dispersão variou entre cerca de 1.51 e 2.85, quantils de 5% e 95% (fig. sitios-SoE). Para obter os valores médios da distribuição de Laplace, usada na função de dispersão, basta multiplicar por 2, resultando em cerca de 2.14 e 4.04, respectivamente. Nesses valores de dispersão média, May et al. (2012) observou seus valores de mínimo de riqueza observada. Além disso, considerando o fato de que eles são espelhados e são variáveis com natureza distinta (há uma relação matemática a riqueza observa resultante das simulações e taxa U), concluímos que os padrões são qualitativamente similares. Assim, a extensão de 16x16 km foi adotada como referência de ausência de efeito da extensão espacial na simulação dos cenários de limitação de dispersão, por permitir estimativas de U consistentes com aquelas esperadas em paisagens sem restrição espacial. -->
+
+
+A expectativa teórica é de redução do lado da paisagem suficiente (Lk) com o relaxamento da limitação de dispersão, k. Uma vez que quanto maior a capacidade de dispersão das espécies, maior é área ao redor da parcela que contém todas as espécies observadas na parcela (@rosindell2013universal). Ao reduzir a área de paisagem ao redor reduzimos o número de progenitores que podem fornecer propágulos para repor as espécies perdidas localmente. Assim, a expectativa é que a taxa U estimada para aproximar a riqueza local aumente com a redução da extensão espacial da paisagem ao redor, para compensar a redução no número de progenitores repondo espécies perdidas localmente. Ou seja, espera-se que a taxa U estimada reduza com o aumento do lado da paisagem ao redor da parcela (L). Nesse contexto, desenvolvemos um algoritmo heurístico que busca a extensão espacial que acumula a maior parte da redução esperada na taxa U com o aumento de L e aplicamos-o a cada cenário de limitação de dispersão para obter Lk.
+
+Nas próximas seções iremos avaliar se as simulações na maior extensão espacial são qualitativamente semelhantes ao simulado em paisagens infinitas. Dessa forma, avaliamos se as paisagens na maior extensão podem ser usadas como referência de ausência de efeito da extensão espacial. Na seção seguinte, exploramos como a taxa U varia em função da extensão espacial e fazemos a descrição estatística (no anexo no final há os gráficos diagnóstico). A última seção apresenta os L escolhidos pelo metódo heurístico de escolha da extensão com o limiar de acúmulo de 90% e 95%. 
+
+# Taxa U estimada na maior extensão espacial da paisagem (16x16km2)
+
+```{r REMOVERcomparacao-May,fig.height=3.5,fig.width=10,eval=FALSE,include=FALSE,fig.cap="Comparação entre simulações em paisagens infinitas (a) e em paisagens finitas de 16x16km2 (b). Em (a) há o recorte",eval=FALSE}
+if(FALSE){
+  df_p <- df_sim |>
+    filter(k==0.05) |> 
+    mutate(sorteio_site = ifelse(SiteCode %in% unique(df_Unull$SiteCode),"SoE","non SoE"),
+           DA = Ntotal / effort_ha)
+  l_p <- list()
+  l_p[[1]] <- df_p_extensoes |> filter(lado_km<=16.02) |> 
+    ggplot(aes(x=lado_km,y=p)) + 
+    geom_point(alpha=0.2,size=0.2) +
+    geom_line(aes(group=SiteCode),linewidth=0.2,alpha=0.2) +
+    labs(x="lado da paisagem quadrada (km)",y="proporção de cobertura vegetal",
+         title="a) %CV ~ scale") +
+    scale_y_continuous(breaks = seq(0,1,by=0.1)) +
+    coord_cartesian(expand = F) +
+    theme_light()
+  l_p[[2]] <- df_p |> 
+    ggplot(aes(x=DA,y=S_obs,color=sorteio_site)) +
+    geom_point(alpha=0.8) +
+    scale_color_manual(values=c("black","red"),name="SoE: 36 sites") +
+    labs(x="density (individuals / ha)", 
+         y="spp richness",
+         title="b) 109 sítios totais, 36 para estudo") +
+    theme(legend.position = "bottom")
+  l_p[[3]] <- df_sim |> 
+    ggplot(aes(x=k,y=d,group=k)) +
+    scale_x_reverse(expand = c(0.01,0),breaks = c(seq(0.05,0.95,0.05),0.99)) +
+    scale_y_continuous(expand = c(0.01,0),breaks = seq(0,20,2)) +
+    geom_jitter() +
+    geom_boxplot() +
+    labs(x = "prop. de propágulos na vizinhança imediata\n(k - eixo reverso)",
+         y = "d",
+         title = "c) 20 graus de dispersão")
+  grid.arrange(grobs=l_p,nrow=1)
+  saveRDS(l_p,file="./0_apendices/EfeitoEscala/Rdata/fig1_grobs.rds")
+}else{
+  l_p <- readRDS(file="./0_apendices/EfeitoEscala/Rdata/fig1_grobs.rds")
+  grid.arrange(grobs=l_p,nrow=1)
+}
+```
+
+
+<p>Quando o MNEE é simulado em paisagens prístina infinitas, a taxa U necessária para manter a riqueza local apresenta um máximo global sob um grau intermediário de limitação de dispersão (@may_dispersal_2012). Isso reflete o balanço entre deriva ecológica e dispersão. Neste caso, em cenários de dispersão muito limitada, a substituição de um indivíduo morto por um nascimento  tende a ocorrer entre coespecíficos, reduzindo a perda de espécies e, consequentemente, a necessidade de introdução de novas espécies (baixa U), para manter um certo número de espécies na parcela. À medida que a dispersão se torna menos restrita, aumenta a substituição por  indivíduos de espécies diferentes, elevando a perda de espécies locais e exigindo maior U. Quando a dispersão é ampla demais, há maior contribuição de subpopulações mais distantes da parcela, o que reduz novamente a estimativa da taxa U (May et al. (2012)), porém à custa de uma maior homogeneização na escala da paisagem (@Mouquet2003Community).
+</p>
+
+<p>
+A taxa U estimada na extensão de 16x16 km2 apresenta padrão não linear com máximo em graus pouco severos de limitação de dispersão, qualitativamente é semelhante ao esperado em paisagens infinitas (fig. \@ref(fig:Unull16)). Há muita variação entre os sítios (\@ref(fig:fig2a)). A variação das réplicas em torno da média também pode ser elevada (fig. \@ref(fig:Unull16), \@ref(fig:fig2a)). Os valores médios sugerem um padrão de patamares, com valores baixos de U quando a limitação de dispersão é severa e em graus pouco severos um aumento brusco que suavemente diminui com o relaxamento da limitação de dispersão (fig. \@ref(fig:Unull16), \@ref(fig:fig2a)). Uma vez que observamos um padrão qualitativamente similar ao esperado em paisagens infinitas, iremos considerar a extensão espacial de 16x16 km2 como apropriada para servir como referência de ausência de efeito da extensão espacial na estimativa da taxa U.
+</p>
+
+```{r figura comparacao com May criacao, eval=FALSE, include=FALSE}
+my_summary_fun <- function(x) {
+  data.frame(
+    y = median(x),
+    ymin = quantile(x, 0.025),
+    ymax = quantile(x, 0.975)
+  )
+}
+df_median <- group_by(df_Unull,SiteCode,k) %>% 
+  summarise(y=median(U))
+p <- df_Unull |> 
+  ggplot(aes(x=k,y=U)) +
+  geom_line(data=df_median,aes(x=k,y=y,group=SiteCode),alpha=0.4,color="darkorange") +
+  stat_summary(aes(group=interaction(SiteCode,k)),fun.data = my_summary_fun, geom = "pointrange",alpha=0.5) +
+  geom_smooth(se=F,method = "gam") +
+  scale_x_reverse(expand = c(0.01,0),breaks = c(seq(0.05,0.95,0.05),0.99)) +
+  scale_y_continuous(expand = c(0.01,0)) +
+  theme_bw() +
+  labs(x="proporção de propágulos na vizinhança imediata (k - eixo reverso)",
+       y="taxa U") +
+  ggtitle("b) Estimativa em paisagens\nprístinas com 16 km de lado") +
+  theme(plot.title = element_text(hjust = 0.5, size = 13))
+ggsave(filename = "0_apendices/EfeitoEscala/figuras/fig2a_tendencia_media.png",plot = p)
+saveRDS(object = p,file = "0_apendices/EfeitoEscala/figuras/fig2a_tendencia_media.rds")
+# p
+```
+```{r criacao dde Unull16, eval=FALSE, include=FALSE}
+library(magick)
+library(patchwork)
+library(cowplot)
+img <- image_read("./0_apendices/EfeitoEscala/figuras/may2012_fi1a.png") %>% 
+  image_trim()
+combined_plot <- ggdraw() +
+  draw_image(img, x = 0, y = 0, width = 0.5, height = 1) +  # Metade esquerda
+  draw_plot(p, x = 0.5, y = 0, width = 0.5, height = 1)   # Metade direita
+saveRDS(object = combined_plot,file = "0_apendices/EfeitoEscala/figuras/fig2comparacao_resultados.rds")
+```
+
+```{r cap Unull16, eval=TRUE, include=TRUE}
+cap <- "\\footnotesize Comparação entre resultados da simulação do modelo neutro espacialmente explícito (MNEE) em paisagens infinitas (a) e em paisagens de lado 16 km (b). Em (a) há um recorte da figura 1 de May et al. 2012, na qual o eixo x corresponde à média da função de dispersão usada neste trabalho e o eixo y ao número de espécies obtidas pela simulação para uma taxa U com valor fixo (1e-5). Os pontos tem diferentes formatos baseado no tipo de função de dispersão usados (exponencial negativa (ponto preenchido) e lognormal com diferentes coeficientes de variação (símbolos sem preenchimento de 0.5 até 2)). Em b há as estimativas da taxa U obtidas nas simulações e no eixo y e a capacidade de dispersão no eixo x (para comparação nessa figura o eixo x está reverso, dessa forma a capacidade de dispersão é crescente para a direita - tal como na figura a). Na figura b cada ponto representa a mediana de 10 réplicas de uma bateria de simulação (para um mesmo sítio e k) as linhas verticais são o intervalo interquantil de 95%, as linhas em laranja claro ligam pontos de um mesmo sítio. Na figura b a linha azul representa um modelo de suavização com um spline gaussiano considerando todos os pontos simulados. Diferenta da figura a que fixaa taxa U e avalia a variação da riqueza, na figura b a riqueza de espécies é fixa no valor observado na parcela e a taxa U é uma parâmetro livre que varia para que a simulação aproxime a riqueza observada."
+```
+```{r Unull16, fig.cap=cap,fig.width=12,cache=TRUE,eval=TRUE,include=TRUE}
+combined_plot <- readRDS(file = "0_apendices/EfeitoEscala/figuras/fig2comparacao_resultados.rds")
+combined_plot
+```
+
+
+```{r figura 2b U para todo k em paisagens nulas na maior escala investigada,fig.width=13,fig.height=8,eval=FALSE,include=FALSE}
+df_p <- df_Unull |> 
+  arrange(S_obs) |> 
+  mutate(label = paste(SiteCode,S_obs,Ntotal,effort_ha,sep = ", "))
+df_p$label <- factor(df_p$label,levels = unique(df_p$label))
+p <- df_p |> 
+  ggplot(aes(x=k,y=U)) +
+  geom_point(alpha=0.4,size=1) +
+  stat_summary(geom = "line",fun.data = mean_se,size=0.1) +
+  stat_summary(geom = "pointrange",fun.data = mean_se, color="red",size=0.1) +
+  stat_summary(geom = "errorbar",fun.data = mean_se, color="red",linewidth=0.5) +
+  labs(title = "Estimado em paisagens prístina de lado 16 km") + #,subtitle = "label = SiteCode, S, N, plot area(ha); free y axis"
+  facet_wrap(~SiteCode, ncol=6,scales="free_y") +
+  scale_y_continuous(labels = scales::scientific_format(digits = 2)) +
+  theme_classic() +
+  theme(strip.text = element_text(size = 10,margin = margin()),
+        panel.spacing = unit(3, "pt"),
+        text=element_text(size=10))
+# ggsave("0_apendices/EfeitoEscala/figuras/fig2_U16_k.png",plot = p,
+#        width = 14,
+#        height = 6.7)
+saveRDS(p,"0_apendices/EfeitoEscala/figuras/fig2_U16_k.rds")
+# p
+```
+
+```{r cap fig2a, eval=TRUE}
+vcap <- "U estimado (eixo y) por cenário de limitação de dispersão (eixo x) em paisagens sem perda de cobertura vegetal (nulas) na maior extensão espacial (lado de 16 km) - Média por sítio de amostragem e grau de limitação de dispersão. Os pontos são as estimativas réplicas de U, os pontos vermelhos marcam o valor médio e a linha une os valores médios entre cenários de limitação de dispersão. Eixo y varia entre paineis e eixo x está reverso. Quanto menor k, maior a capacidade de dispersão, simulada com um kernel de dispersão com decaimento exponencial da probabilidade de colonização com o aumento da distância. S = riqueza da espécie, N = número de indivíduos."
+```
+```{r fig2a, fig.cap=vcap,fig.width=15, fig.height=10}
+p <- readRDS("0_apendices/EfeitoEscala/figuras/fig2_U16_k.rds")
+p
+```
+
+
+# Efeito da escala na estimativa média da taxa U por grau de limitação de dispersão
+
+```{r figura 3 Umed por lado da paisagem,fig.width=14,fig.height=8.5,eval=FALSE,include=FALSE}
+df_p <- df_Usoe.rep |> 
+  mutate(DA = Ntotal / effort_ha,
+         label = paste(SiteCode,S_obs,Ntotal,round(DA,1),sep = ", "),
+         k = round(k,2)) 
+df_p$label <- factor(df_p$label,levels = unique(df_p$label))
+p <- df_p |>
+  ggplot(aes(x=lado_km,y=U,color=k,group=factor(k))) +
+  geom_point(alpha=0.7) +
+  stat_summary(geom = "line",fun.data = mean_se) +
+  stat_summary(geom = "pointrange",fun.data = mean_se, color="black",size=0.1) +
+  scale_x_continuous(trans='log2',breaks = c(0,round(16.02/2^(5:0),1))) +
+  scale_y_continuous(labels = scales::scientific_format(digits = 2)) +
+  scale_color_gradient2(low="#f6511d",mid = "#ffb400",high = "#00a6ed", midpoint = 0.5) +
+  # scale_color_distiller(palette = "Spectral") +
+  labs(title = "Estimativa da taxa U com o aumento da extensão espacial da paisagem",
+       x = "lado da paisagem (km)",
+       y = "U") +
+  theme_classic() +
+  theme(legend.position= "right",
+        # legend.direction = "horizontal",
+        # legend.justification='left',
+        legend.background = element_rect(fill=alpha('white', 0.1)),
+        strip.text = element_text(size = 10,margin = margin()),
+        panel.spacing = unit(3, "pt")) +
+  facet_wrap(~SiteCode,ncol = 6,scales="free_y")
+ggsave("0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM.png",
+       width = 14,
+       height = 6.7)
+f_img_trim_resize <- \(vpath){
+  img <- image_trim(image_read(path = vpath)) %>% image_resize("50%")
+  image_write(img,path=vpath)
+}
+f_img_trim_resize("0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM.png")
+saveRDS(p,"0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM.rds")
+```
+
+
+```{r legenda de Uk-ladokm}
+cap <- "Taxa U estimada em paisagens pristinas com variação na extensão espacial da paisagem ao redor da parcela de inventário florestal de 0.5 km até 16 km de lado. A taxa U é obtida simulando-se a dinâmica neutra espacialmente explícita em paisagens com 100% de cobertura de floresta,  para aproximar a riqueza observada de 36 inventários florestais. As linhas estão coloridas pelo grau de limitação de dispersão (k, proporção de propágulos que caem na vizinhança imediata da árvore-mãe). A escala do eixo y varia entre paineis."
+```
+```{r Uk-ladokm,fig.cap=cap,fig.width=12,fig.height=8,cache=TRUE}
+p <- readRDS("0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM.rds")
+p
+```
+
+Ao considerar o efeito da escala na taxa U estimada agregado por parcela amostrada (fig. \@ref(fig:Uk-ladokm)), é possível observar um padrão de decaimento da taxa U com o aumento da escala espacial da paisagem, de forma mais consistente em cenários de limitação de dispersão branda e severa. Nos cenários de limitação de dispersão mais severos e mais brandos a influência da escala na taxa U é maior e existe menos variação entre réplicas (\@ref(fig:Uk-ladokm-complemento)). Nos cenários de limitação de dispersão intermediário a taxa U estimada é menos sensível a variação na escala (figs. \@ref(fig:Uk-ladokm), \@ref(fig:Uk-ladokm-complemento)).
+
+
+```{r figura 4 Ucv por k,fig.width=8,fig.height=4, eval=FALSE, include=FALSE}
+l_p <- list()
+l_p[[1]] <- df_Usoe |>
+  group_by(SiteCode,k) |>
+  summarise(Ucv = sd(Umed)*100/mean(Umed)) |>
+  ggplot(aes(x=k,y=Ucv, group=k)) +
+  geom_jitter() +
+  geom_boxplot() +
+  scale_x_continuous(breaks=c(seq(0.05,0.95,0.05),0.99))
+  labs(x="k",
+       y="Coef. Var. de Umed (%)",
+       title="a) variação da média entre escalas")
+l_p[[2]] <- df_Usoe |>
+  ggplot(aes(x=k,y=Usd,group=k)) +
+  geom_jitter() +
+  geom_boxplot() +
+  scale_x_continuous(breaks=c(seq(0.05,0.95,0.05),0.99))
+  labs(y="desvio padrão taxas U réplicas",
+       title="b) variabilidade entre réplicas")
+#grid.arrange(grobs=l_p,ncol=2)
+saveRDS(l_p,"0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM_complementos.rds")
+```
+
+```{r cap Uk-ladokm-complemento}
+cap <- "\\footnotesize Variação na estimativa U entre réplicas e na média entre escalas. a) Coeficiente de variação (desvio padrão/média) de Umed (eixo y) para um mesmo grau de limitação de dispersão (eixo x) e sítio, considerando todas as escalas. b) Desvio padrão entre réplicas de taxa U para uma mesma bateria de simulação (sítio de amostragem e grau de limitação de dispersão)."
+```
+```{r Uk-ladokm-complemento,fig.cap=cap,fig.width=12}
+l_p <- readRDS("0_apendices/EfeitoEscala/figuras/fig3_Uk_ladoKM_complementos.rds")
+grid.arrange(grobs=l_p,ncol=2)
+```
+
+
+## Descrição estatística
+
+<p>
+Para descrever a média da estimativa da taxa U usamos um modelo linear misto. O número de indivíduos e riqueza foram modelados na escala log e z (transformação z). As variáveis graus de limitação de dispersão (k) e extensão espacial da paisagem ao redor (scale) foram interpretados como fatores, então cada combinação de k e scale possui um intercepto. Os dados foram agrupados por sítio, então cada sítio possui um intercepto comum. 
+</p>
+
+<p>
+A estimativa de U depende da arvóre genalógica da comunidade simulada pelo MNEE. O número de indivíduos (N) determina o número inicial de linhagens que são monitoradas e o número de espécies (S) determina o número final de linhagens monitoradas. A árvore genealógica da comunidade também é influenciada pelo grau de limitação de dispersão (k) e da extensão espacial (scale), pois em alguns graus de limitação de dispersão a árvore genealógica pode ser restringida pela extensão da paisagem e não pela limitação de dispersão. 
+</p>
+
+
+__tabela 1__ Seleção das variáveis de controle. S_obs = riqueza observada, N = número de indivíduos, DA = densidade de indivíduos;  Funções lmer do pacote lme4 (@lme4), AICctab do pacote bblme (@bbmle_package). 
+
+```{r GLMM selecao de variaveis para fixar no GLMM final,eval=T,cache=T,echo=TRUE}
+l_md <- list()
+l_md[[1]] <- lmer(Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[2]] <- lmer(Umed ~ log_S_obs_z * k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[3]] <- lmer(Umed ~ S_obs_z * Ntotal_z * k_factor * lado_factor  + (1|SiteCode),
+                  data=df_md)
+l_md[[4]] <- lmer(Umed ~ S_obs_z * k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+```
+
+__Tabela 2__ Coeficientes de determinal (R2) do modelo mais plausível: marginal(m, desconsiderando o efeito aleatório) e condicional(c, considerando o efeito aleatório) do pacote (@mumin):
+
+```{r R2 marginal e condicional do modelo mais plausível para descrever SoE}
+# print("R2 marginal e condicional, respectivamente:")
+l_md <- readRDS("0_apendices/EfeitoEscala/figuras/l_md.rds")
+md_SoE <- AICctab(l_md,weights=T) |> as.data.frame() |> head(n=1) |> row.names() |>
+  (\(.) l_md[[.]])()
+md_SoE |> (\(.) MuMIn::r.squaredGLMM(.))()
+```
+
+O modelo mais plausível considera os logs da riqueza observada e número de indivíduos na parcela (tabela 1). Os coeficientes de determinação marginal e condional do modelo são 0.50 e 0.87, respectivamente. No final do apêndice há os gráficos diagnósticos do modelo. Apesar dos resíduos quantilícos (@dharma) apresentarem algum desvio (fig. \@ref(fig:diagnostico-parametros)), o modelo faz uma boa predição do observado (fig. \@ref(fig:diagnostico-parametros)). No texto principal há a média predita pelo modelo mais plausível. A seguir os lados escolhidos caso tivessemos optados por um limiar de redução de 90% e 95%. O algoritmo de escolha de lado foi descrito na seção dos materiais e método.
+
+
+```{r criacao de figura fsoe, include=FALSE,eval=FALSE}
+f_soe <- \(vlimiar){
+  l_df <- list()
+  vxout <- vlimiar
+  for(i in 1:length(levels(dfp$k_factor))){
+    dfi <- filter(dfp,k_factor==levels(dfp$k_factor)[i])
+    dfi$Ucsum <- c(NA,dfi$Ucsum[1:(nrow(dfi)-1)])
+    df0 <- filter(dfi,!is.na(Ucsum))
+    vaprox <- sapply(1:(nrow(df0)-1),\(x){
+      dados <- df0[x:(x+1),]
+      approx(dados$Ucsum, dados$lado, xout = vxout)$y
+    })
+    dfi$vapprox <- ifelse(length(vaprox[!is.na(vaprox)])==0,
+                          NA,
+                          round(vaprox[!is.na(vaprox)],0))
+    l_df[[i]] <- dfi
+  }
+  do.call("rbind",l_df)  
+}
+l_df <- lapply(c(0.75,0.90,0.95),f_soe)
+names(l_df) <- c(0.75,0.90,0.95)
+# df_SoE <- l_df[["0.9"]] %>% 
+#   mutate(k = as.numeric(as.character(k_factor))) %>% 
+#   select(k,vapprox) %>% distinct()
+# write_csv(df_SoE,file="./dados/csv_SoE/df_plotSoE.csv")
+f_ggplot <- \(vtitle){
+  dfi <- l_df[[vtitle]]
+  dfi %>% 
+    ggplot(aes(x=lado_factor,y=Ucsum)) +
+    geom_point() +
+    geom_line(group=1) +
+    geom_hline(yintercept = as.numeric(vtitle),color="red") +
+    geom_label(aes(label=paste0("aprox: ",vapprox),x=5,y=0.5)) +
+    labs(x="lado da paisagem (km)",y="diferença acumulada entre lados da paisagem",
+         title=paste0("critério: ",vtitle)) +
+    # scale_y_continuous(labels = scales::scientific_format(digits = 2)) +
+    facet_wrap(~k_factor,ncol=4) +
+    theme_classic()
+}
+lp <- lapply(names(l_df),f_ggplot)
+p <- arrangeGrob(grobs=lp,ncol=1)
+# ggsave(plot=p,filename = "0_apendices/EfeitoEscala/figuras/lp_pPI.png",
+#        dpi=200,width = 8,height = 21)
+saveRDS(lp,"0_apendices/EfeitoEscala/figuras/lp_pPI.rds")
+```
+
+```{r}
+vcap <- "Comparação entre os limiares de acúmulo 0.90 e 0.95. Para detalhes olhar seção no texto principal."
+```
+```{r comparacao-limiares,fig.cap=vcap,fig.width=15,fig.height=10}
+lp <- readRDS("0_apendices/EfeitoEscala/figuras/lp_pPI.rds")
+grid.arrange(grobs=lp[2:3],ncol=2)
+```
+
+
+# Anexo do apêndice
+
+
+```{r diagnostico modelo mais plausivel GLMM efeito de escala}
+df_AICctab <- AICctab(l_md,weights=T) |> as.data.frame()
+md_SoE <- l_md[[row.names(df_AICctab[1,])]]
+p_plot <- simulateResiduals(md_SoE,n=1000)
+plot(p_plot)
+```
+
+```{r diagnostico-parametros,fig.cap="Resíduos quantilícos do LMM mais plausível: logit(Umed) ~ log(S) + log(N). Umed = média da bateria de simulações (# réplicas = 10), S = riqueza de espécies, N = número de indivíduos.",cache=FALSE,dpi=72}
+df_ranef <- ranef(md_SoE)$SiteCode 
+df_ranef$SiteCode <- row.names(df_ranef)
+row.names(df_ranef) <- NULL
+# df_ranef <- df_ranef %>% 
+#   gather(key = parameter_class,value = parameter_value, -SiteCode) %>% 
+#   inner_join(y=distinct(select(df_sim,SiteCode, Ntotal, S_obs)),"SiteCode") 
+l_p <- list()
+l_p[[1]] <- df_ranef |> 
+  pivot_longer(-SiteCode) |>
+  ggplot(aes(sample=value)) + 
+  stat_qq(alpha=0.3) + stat_qq_line(alpha=0.3,col="red") + theme_classic() +
+  facet_wrap(~name) +
+  labs(title="qqnorm: interceptos por sítios")
+l_p[[2]] <- df_plot |> 
+  ggplot(aes(x=Umed,y=predict)) +
+  geom_point() +
+  geom_smooth(aes(group=SiteCode),se = F,method = "lm") +
+  geom_abline(slope = 1,intercept = 0,color="red")
+l_p[[3]] <- df_plot |> 
+  pivot_longer(log_S_obs_z:log_Ntotal_z) |> 
+  ggplot(aes(x=value,y=deviance)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~name,ncol=2)
+grid.arrange(grobs=l_p,
+                     layout_matrix = rbind(c(1,2),
+                                           c(3,3)))
+
+# ggsave("apendices/EfeitoEscala/figuras/figSI_diagnostico_md_SoE.png",grob,
+#        width = 8.5,
+#        height = 6.7)
+```
+
+
+<!-- ##### Códigos para rodar as simulações -->
+
+<!-- <p>Olhar source/SoE_MNEE.R para os códigos que estimam U para diferentes extensões espaciais.</p> -->
+
+```{r codigos para estimar U para uma mesma extensao espacial e diferentes k,eval=FALSE}
+# usado para estimar o U para uma determinada
+setwd("dados/simulacao")
+f_siteU <- function(df,replicas=4,csv.repo="../csv/U_nullLand_16km/"){
+  l_dfU <- list()
+  for(i in 1:nrow(df)){
+    v_U <- replicate(n=replicas,f_simU(df = df[i,]))
+    l_dfU[[i]] <- cbind(select(df[i,],-(txt.file:DA)),matrix(v_U,nrow = 1))
+  }
+  df_write <- rbind.fill(l_dfU)
+  write_csv(df_write,file = paste0(csv.repo,df$SiteCode[1],".csv"))
+}
+registerDoMC(2)
+df_sorteio_sitios$txt.file <- gsub(".txt","_null.txt",df_sorteio_sitios$txt.file)
+d_ply(df_sorteio_sitios,"SiteCode",f_siteU,.parallel = TRUE)
+```
+
+```{r codigos para estimar U SoE, eval=FALSE}
+setwd("dados/simulacao")
+df_sorteio_sitios$txt.file <- gsub(".txt","_null.txt",df_sorteio_sitios$txt.file)
+df_se <- df_sorteio_sitios # |> filter(k %in% unique(df_sim$k)[c(16,19)]) # para seleção de alguns cenários
+registerDoMC(3)
+a_ply(df_se[-1,],1,f_SoE_MNEE_null,.parallel = TRUE)
+##
+df_sitios_2lote <- data.frame(path.file = list.files("../csv/SoE",".csv",full.names = T)) |>
+  mutate(ctime = as.Date(file.info(path.file)$ctime),
+         SiteCode = str_extract(path.file,"(?<=E\\/).*?(?=\\_k)"),
+         k = as.numeric(str_extract(path.file,"(?<=\\_k).*?(?=\\.csv)")),
+         label = paste(SiteCode, k/100)) |>
+  filter(ctime>"2023-01-02")
+df_se2 <- df_sorteio_sitios |> 
+  mutate(label = paste(SiteCode, round(k,2))) |>
+  anti_join(select(df_sitios_2lote,SiteCode:label),by="label") |> 
+  select(-label)
+registerDoMC(2)
+a_ply(df_se2,1,f_SoE_MNEE_null,.parallel = TRUE)
+#
+df <- df_se |> filter(SiteCode == "PRrico3",k==unique(df_se$k)[3])
+```
+
+<!-- Em alguns sítios não foi possível simular a extensão de 0.5 km para nenhum cenário de dispersão. Nesse extensão espacial, a parcela corresponde à 0.64 da área da parcela, ta certo isso? -->
+
+<!-- o erro informado é: -->
+<!-- A practical cause to "corrupted size vs. prev_size" is quite simple - memory chunk control structure fields in the adjacent following chunk are being overwritten due to out-of-bounds access by the code. if you allocate x bytes for pointer p but wind up writing beyond x in regards to the same pointer, you might get this error, indicating the current memory allocation (chunk) size is not the same as what's found in the next chunk control structure (due to it being overwritten). -->
+
+```{r arrumando os dados do SoE para k05,eval=FALSE}
+v_csv.path <- list.files(path = "dados/csv/SoE", pattern = "_null.csv",full.names = T)
+v_k <- unique(df_sim$k)
+f_csv <- function(path.csv){
+  df <- read_csv(path.csv)
+  df$k <- v_k[20]
+  df <- cbind(df[,c(1:2,7)],df[,3:6])
+  file.remove(path.csv)
+  write_csv(df,file = gsub("null",paste0("k",v_k[20]*100),path.csv))
+}
+v_logical <- sapply(v_csv.path[-1],f_csv)
+system("du -s dados/csv/SoE/")
+```
+
+```{r df sorteios sitios, eval=FALSE}
+df_sorteio_sitios <- df |> 
+  filter(S_obs %in% sample(size = 15,df$S_obs) | DA %in% sample(size = 15,df$DA)) |> 
+  rbind(filter(df,S_obs %in% range(df$S_obs) | DA %in% range(df$DA))) |>  distinct()
+write_csv(df_sorteio_sitios,file = "dados/csv/df_sorteio_sitios.csv")
+```
+
+# Referências

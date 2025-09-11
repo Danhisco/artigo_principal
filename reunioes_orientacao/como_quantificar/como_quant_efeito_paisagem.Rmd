@@ -1,0 +1,287 @@
+---
+title: "Como quantificar o efeito causal médio da paisagem na descrição da biodiversidade local?"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+## 1) Contexto
+
+DAG consensual determina as possíveis covariáveis: contexto biogeográfico e classe de preservação
+
+```{r v_path,echo=FALSE,include=TRUE,eval=FALSE}
+v_path <- file.path(getwd(), "reunioes_orientacao", "como_quantificar")
+file.exists(file.path(v_path, "tabsel_1aperg.png"))
+```
+
+
+## 2) Como expressar a estrutura hierarquica dos dados por sítio de amostragem?
+
+```{r formulas perg 1,echo=TRUE,eval=FALSE}
+f_gam <- \(dfi){
+  l_md <- list()
+  l_md$`s(Uefeito)|Site : gi` <- gam(
+    logOR ~
+        forest_succession +
+        s(Uefeito,by=forest_succession,bs="cr",id="effect_forest") +
+        s(data_year,bs="cr") +
+        s(lat,long,bs="tp") +
+        s(SiteCode,bs="re") + 
+        s(Uefeito, by=SiteCode, bs="cr",id="effet_site"),
+      data=dfi,method = "REML")
+  l_md$`s(Uefeito)|Site : gs` <- gam(
+    logOR ~
+      forest_succession +
+      s(Uefeito, by = forest_succession, bs = "cr", id = "effect_forest") +
+      s(data_year, bs = "cr") +
+      s(lat, long, bs = "tp") +
+      s(SiteCode, bs = "re") +
+      s(Uefeito, SiteCode, bs = "fs", xt = list(bs = "cr"), id = "effect_site"),
+    data = dfi, method = "REML")
+  l_md$`1|Site` <- gam(
+    logOR ~
+      forest_succession +
+      s(Uefeito, by = forest_succession, bs = "cr", id = "effect_forest") +
+      s(data_year,bs="cr") +
+      s(lat,long,bs="tp") +
+      s(SiteCode,bs="re"),
+    data=dfi,method = "REML")
+  l_md$`0|Site+1|Site` <- gam(
+    logOR ~
+      forest_succession +
+      s(data_year,bs="cr") +
+      s(lat,long,bs="tp") +
+      s(SiteCode,bs="re"),
+    data=dfi,method = "REML")
+  return(l_md)
+}
+```
+
+```{r trabalho de manejo das figuras,echo=FALSE,eval=FALSE,include=FALSE}
+l_files <- list.files(path=paste0(v_path0,"figuras"),
+                      pattern="tabsel|diag",full.names = TRUE)
+new_folder <- "/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/reunioes_orientacao/Como quantificar o efeito causal médio da paisagem?"
+lapply(l_files,file.copy,to=new_folder)
+```
+
+
+__Tabela de seleção__
+
+![Tabela de seleção 1a pergunta: Como expressar o efeito da paisagem por sítio de amostragem?](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/reunioes_orientacao/como_quantificar/tabsel_1aperg.png)
+
+
+```{r tab sel perg 1,eval=TRUE,include=FALSE,echo=FALSE}
+# library(here)
+# image_path <- here(
+#   "reunioes_orientacao",
+#   "como_quantificar",
+#   "tabsel_1aperg.png"
+# )
+# knitr::include_graphics(path=image_path)
+knitr::include_graphics(path="./reunioes_orientacao/como_quantificar/tabsel_1aperg.png")
+```
+
+## 3) Qual o modelo cheio adequado para ser referência dos outros candidatos?
+
+__Tabela de seleção__
+
+![Tabela de seleção 2a pergunta: Qual o modelo cheio adequado?](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/reunioes_orientacao/como_quantificar/tabsel_2aperg.png)
+
+
+```{r tab sel perg 2,echo=FALSE,eval=FALSE,include=FALSE}
+knitr::include_graphics(path=paste0(v_path,"tabsel_2aperg.png"))
+```
+  
+__gráficos diagnósticos modelos cheios adequados__  
+
+### Área per se  
+
+![Diagmósticos modelo cheio mais plausível: Área per se](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/reunioes_orientacao/como_quantificar/diag_areaperse.png)
+  
+
+```{r area diag, echo=FALSE,eval=FALSE,include=FALSE}
+knitr::include_graphics(path=paste0(v_path,"diag_areaperse.png"))
+```
+
+### Frag. per se  
+
+![Diagmósticos modelo cheio mais plausível: Frag. per se](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/reunioes_orientacao/como_quantificar/diag_fragperse.png)
+
+
+  
+```{r frag per se, warning=FALSE,message=FALSE,echo=FALSE,eval=FALSE,include=FALSE}
+knitr::include_graphics(path=paste0(v_path,"diag_fragperse.png"))
+```
+
+### Frag. total
+
+![Diagmósticos modelo cheio mais plausível: Frag. total](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/reunioes_orientacao/como_quantificar/diag_fratotal.png)
+
+
+  
+```{r frag. total, warning=FALSE,message=FALSE,echo=FALSE,eval=FALSE,include=FALSE}
+knitr::include_graphics(path=paste0(v_path,"diag_fratotal.png"))
+```
+
+
+## 4) Qual o conjunto de covariáveis adequadas para descrever o efeito médio da paisagem?
+
+![Tabela de seleção 3a perg: Quais as covariáveis adequadas?](/home/danilo/Documentos/mestrado_Ecologia/artigo_principal/reunioes_orientacao/como_quantificar/tabsel_3aperg.png)
+
+
+```{r tabela selecao perg 3,include=FALSE,eval=FALSE}
+knitr::include_graphics(path=paste0(v_path,"tabsel_3aperg.png"))
+```
+
+## 5) Predição a posteriori do modelo médio 
+
+A predição a posteriori é feita em dois modos: apenas o efeito fixo da paisagem, e o efeito fixo e por sítio da paisagem. No primeiro caso, interpolamos os valores extremos da métrica da paisagem; no segundo caso utilizamos os próprios dados observados. A ideia da predição a posteriori é avaliar apenas os efeitos da paisagem e condicionar, zerar, os efeitos das outras covariáveis. O modelo médio é obtido pela soma das predição do log odds ratio em função da métrica da paisagem de todos os modelos candidatos múltiplicado pelo peso de evidência desses modelos. 
+
+A função 'f_dfmd' cria o data frame com o novo conjunto de dados interpolado, usado para criar a predição a posteriori média do efeito fixo. Esse conjunto de dados pode ser categorizado por classe de preservação, no caso do efeito de área per se em que o modelo cheio mais adequado considerava essa fatoração, ou não, no caso dos outros dois efeitos. A interpolação pressupõe intervalos iguais de valores, aqui usamos 150 valores. O novo conjunto de dados deve conter as mesmas colunas usadas para ajustar o modelo. 
+
+```{r função que cria o new data, echo=TRUE,eval=FALSE,include=TRUE}
+f_dfmd <- \(dff,byforest,length_pred = 150){
+  fdfmd <- \(dff){
+    v_range <- range(dff$Uefeito)
+    df_newpred <- select(dff,-logOR,-Uefeito) %>% 
+      mutate(SiteCode="SPigua1") %>% head(n=1)
+    try({
+      df_newpred <- cbind(
+        data.frame(Uefeito = seq(v_range[1],v_range[2],length.out=length_pred)),
+        df_newpred)
+    },silent = TRUE)
+    return(df_newpred)
+  }
+  if(byforest){
+    df_return <- ddply(dff,"forest_succession",fdfmd)
+  }else{
+    df_return <- fdfmd(dff)
+  }
+  return(df_return)
+}
+```
+
+A ideia da predição a posteriori é pressupor que os coeficientes estimados do GAHM são amostras de uma distribuição normal multivariada e fazer diversar amostragens e para cada uma estimar a predição para o novo conjunto de dados (REF). Para isso utilizamos as função mgcv::vcov que obtem a matrix de variância e covariância dos coeficientes estimados para informar o parâmetro 'Sigma' da função MASS::mvnorm, que espera uma matrix de mesma natureza. A função mgcv::coef foi usada para informar o parâmetro mu da função MASS::mvnorm, que espera os valores médios. Os coeficientes estimados são multiplicados pela matrix do modelo, que mapeia quais componentes do modelo devem ser usados ou ser excluídos, um parâmetro importante de mgcv::predict é 'exclude' que recebe um vetor de caracteres informando os componentes que serão excluídos da predição. A predição é obtida pela múltiplicação de matrixes da amostragem dos coeficientes e da matrix do modelo com os componentes excluídos. A partir dessa distribuição de predições é possível calcular os quantis. Essas operações estão codificadas na função 'f_predictions':
+
+```{r f_predictions, echo=TRUE,eval=FALSE,include=TRUE}
+# função que realiza a predição a posteriori dado o modelo, new data e o vetor de exclusão de componentes
+f_predictions <- \(gamm,nsim,to_exclude,df_newpred){
+  coef_samples <- MASS::mvrnorm(n=nsim, mu=coef(gamm), Sigma=vcov(gamm))
+  matrix_lprediction <- predict(gamm,
+                                type ="lpmatrix",
+                                exclude = to_exclude,
+                                newdata = df_newpred,
+                                newdata.guaranteed = TRUE)
+  df_pred <- matrix_lprediction %*% t(coef_samples)
+  df_pred <- t(apply(df_pred,1,\(X) quantile(X,probs = quants))) %>% 
+    as.data.frame()
+  names(df_pred) <- paste0("Q_",quants)
+  return(df_pred)
+}
+```
+
+
+Para cada modelo candidato (gamm) foram feitas mil amostragens de coeficientes e os quantis de 5, 50 e 95 % foram calculados. Hà dois tipos de exclusão de componentes, para obter a predição do efeito fixo, e para obter a predição do efeito fixo e por sítio. No primeiro caso apenas o spline do efeito fixo da paisagem será incluído na construção da predição e todos os outros efeitos serão zerados. No segundo caso o spline do efeito da paisagem por sítio também será incluído. Essas operações estão codificadas na função 'f_calcPI':
+
+
+```{r f_calcPI, echo=TRUE,eval=FALSE,include=TRUE}
+f_calcPI <- \(gamm,
+              nsim = 1000,
+              to_exclude,
+              quants=c(0.05,0.5,0.95)){
+  #### 1a parte: somente efeito fixo ####
+  # create the new data 
+  df_newpred <- f_dfmd(
+    gamm$model,
+    grepl("by = fore",as.character(formula(gamm)[[3]])[2]))
+  # quais componentes serão zerados?
+  to_exclude <- to_exclude[
+    grep(pattern = paste(c("(Intercept)",names(df_newpred)),collapse = "|"),
+         to_exclude)]
+  # obtain the predictions
+  df_pred <- f_predictions(gamm,nsim,to_exclude,df_newpred)
+  # save the data frame
+  l_df <- list()
+  l_df$`apenas fixo` <- cbind(df_newpred,df_pred)
+  #### 2a parte: efeito fixo e aleatório ####
+  # take the original data
+  df_newpred <- gamm$model
+  # quais componentes serão zerados?
+  to_exclude <- to_exclude[-grep("Uefeito,SiteCode",to_exclude)]
+  # obtain the predictions
+  df_pred <- f_predictions(gamm,nsim,to_exclude,df_newpred)
+  # save the data frame
+  l_df$`fixo e aleat` <- cbind(df_newpred,df_pred)
+  # return
+  return(l_df)
+}
+```
+
+Usando 'f_calcPI' basta informar os componentes a serem zerados na predição do efeito fixo:
+
+```{r f_df_pred, echo=TRUE,eval=FALSE,include=TRUE}
+f_df_pred <- \(vpath){
+  l_md <- readRDS(vpath)
+  # esses serão os splines desconsiderados para construir o fixo, e depois com o aleat
+  formals(f_calcPI2)$to_exclude = c("s(Uefeito,SiteCode)",
+                                    "(Intercept)",
+                                    "forest_successionprimary/secondary",
+                                    "forest_successionsecondary",
+                                    "s(SiteCode)",
+                                    "s(lat,long)",
+                                    "s(data_year)")
+  # rotina; detalhes em source/GAMMtools.R
+  lapply(l_md,f_calcPI2)
+}
+```
+
+Uma vez que as predições estão calculadas basta multiplicas pelo peso de evidência e somar. Na rotina a seguir, as predições estão na lista 'l_df_pred', com a seguinte estrutura: para cada efeito da paisagem (e.g. frag. total) existem diversos modelos candidatos (e.g. cheio, sem o componente de ano) e para cada modelo candidatos há dois tipos de predição, efeito fixo e efeito fixo com efeito por sítio. A tabela de seleção com a informação de peso de evidência está no data frame 'df_tabsel'. Além das funções do R core, funções dos pacotes magritr(REF), readr (REF), tibble (REF), dplyr (REF) e plyr (REF) são usadas nessa rotina.
+
+```{r rotina de calculo de modelo médio,echo=TRUE,eval=FALSE,include=TRUE}
+l_df_pred <- readRDS(paste0(v_path,"rds/l_dfpredictions_fromfixedrandom_landeffect.rds"))
+## tabela de seleção da pergunta: "Quais as covariáveis adequadas?"
+df_tabsel <- read_csv(paste0(v_path,"rds/tabsel_3aperg_quais_cov.csv")) %>% 
+  relocate(contraste) %>% select(contraste:modelo,weight) %>% 
+  mutate(nome = gsub("Área per se","areaperse",contraste) %>% 
+           gsub("Frag. per se","fragperse",.) %>% 
+           gsub("Frag. total","fragtotal",.))
+# rotina de calculo da predição média dos quantis 
+l_df_avgpred <- dlply(df_tabsel,"contraste",\(dff){
+  ## multiplicação pelo peso de evidência 
+  l_df <- alply(dff,1,\(dfi){
+    with(dfi,{
+      l_fixrand <- l_df_pred[[nome]][[modelo]]
+      l_fixrand <- lapply(l_fixrand,\(li){
+        mutate(li,
+               across(starts_with("Q_"),~.x*weight))
+      })
+      return(l_fixrand)})
+    })
+  names(l_df) <- names(l_df_pred[[dff$nome[1]]])
+  ## soma para obter a média
+  l_df_return <- lapply(sapply(l_df,names)[,1],\(li){ # os datasets 'apenas fixo' e 'fixo e aleatório'
+    ldf <- lapply(l_df,\(i) i[[li]]) # os datasets de um único tipo (apenas fixo ou ambos)
+    vquantil <- select(ldf[[1]],starts_with("Q_")) %>% names # colunas que serão somadas
+    names(vquantil) <- vquantil
+    # soma per se e retorno
+    lapply(vquantil,\(vq){
+      Reduce("+",lapply(ldf,\(x) x[[vq]]))
+    }) %>% do.call("cbind",.) %>% 
+      cbind(select(ldf[[1]],-all_of(vquantil)),.)
+  })
+  names(l_df_return) <- sapply(l_df,names)[,1]
+  return(l_df_return)
+})
+# em forma de tabela única
+df_avgpred <- lapply(l_df_avgpred,\(li){
+  lapply(li,\(i) select(i,Uefeito,starts_with("Q_"))) %>% 
+    do.call("rbind",.)
+}) %>% do.call("rbind",.) %>% 
+  tibble::rownames_to_column(.,"dataset") %>% 
+  mutate(dataset = gsub("Frag. total","fragtotal",dataset) %>% 
+           gsub("Frag. per se","fragperse",.)) %>% 
+  separate_wider_delim(dataset,delim = ".",
+                       # names_sep = " ",
+                       names=c("contraste","tipo","n")) %>% 
+  select(-n)
+write_csv(df_avgpred,file=paste0(v_path,"rds/df_avgpred.csv"))
+```

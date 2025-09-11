@@ -1,0 +1,124 @@
+
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE)
+# pacotes adicionais´
+source("source/mapa_p_MNEE.R")
+library(doMC)
+library(readr)
+library(scales)
+# library(kableExtra)
+library(ggnewscale)
+library(gridExtra)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(stringr)
+library(plyr)
+library(dplyr)
+# dados disponíveis
+df_dados <- read_csv(file = "dados/df_dados_disponiveis.csv")
+df_sim <- read_csv("dados/df_simulacao.csv")
+df_plot <- read_csv("dados/csv/df_plotSoE.csv") |> 
+  mutate(k_factor=factor(round(k_factor,2)))
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+```
+
+```{r trackdown rotine, include=FALSE,eval=FALSE}
+# pacotes
+library(trackdown)
+# both overwrite: 
+# overwrite the current google drive file with the current Rmd:
+upload_file(file="secoes_texto/MeM/MaterialeMetodo.Rmd",
+            gpath="mestrado/artigo_principal/secoes_texto/",
+            hide_code=TRUE)
+update_file(file ="secoes_texto/MeM/MaterialeMetodo.Rmd",
+            gpath = "mestrado/artigo_principal/secoes_texto/",
+            hide_code = TRUE)
+# overwrite the current Rmd with the current google drive 
+download_file(file = "secoes_texto/MeM/MaterialeMetodo.Rmd",
+              gpath = "mestrado/artigo_principal/secoes_texto/")
+```
+
+# Materiais
+
+
+Nosso objetivo é aproximar as hipóteses mínimas de cada programa de pesquisa no arcabouço teórico comum da teoria neutra da biodiversidade usando um modelo neutro espacialmente explícito. Para isso selecionamos, de uma base de dados com características similares às utilizadas em revisões de ambos programas de pesquisa, inventários florestais realizados na Floresta Atlântica adequados para serem aproximados pelo modelo neutro espacialmente explícito. Determinarmos a extensão da paisagem ao redor investigando a situação de ausência de perda de cobertura florestal a fim de encontrar aquela extensão espacial que é suficiente para que a simulação da diversidade local seja restringida apenas pela limitação de dispersão simulada (apêndice Efeito de Escalar). Simulamos graus de limitação de dispersão dos indivíduos em três tipos de paisagens hipotéticas: contemporânea, com a configuração espacial observada no mesmo ano do inventário florestal; aglomerada, com a proporção de cobertura florestal contemporânea aglomerada ao redor da parcela amostrada; prístina, situação idealizada em que toda a paisagem está preenchida com cobertura florestal. Estimamos as taxas U necessárias para aproximar a riqueza de espécies local observada em cada paisagem hipotética e graus de limitação de dispersão. Simulamos a distribuição de abundância de espécies (SAD) a partir da taxa U livre para aproximar a riqueza local observada em cada respectiva paisagem hipotética e a partir da taxa U livre na paisagem prístina. Avaliamos a congruência entre as SADs simuladas e a SAD empírica. Os contrastes entre as taxas U estimadas entre pares de paisagens hipotéticas foram utilizados como métrica de efeito da paisagem ao redor (de perda de cobertura florestal, de fragmentação per se, e de fragmentação total). 
+
+
+
+
+
+
+Selecionamos na base de dados TreeCo inventários florestais que amostraram indivíduos arbóreos com DBH>=4.8 cm em parcela única de pelo menos 1ha de floresta, com alta confiabilidade taxonômica no nível de morfoespécie e da coordenada central da parcela. A base de dados TreeCo compilou amplamente trabalhos fitossociológicos realizados na Floresta Atlântica (@de2015much). Utilizamos mapas de cobertura vegetal da coleção 6 do mapbiomas com resolução de 30x30 m2, que compilam mapas de 1985 até 2020 (@mapbiomas).  Os mapas de cobertura vegetal distinguem as áreas de cobertura vegetal nativa das áreas de outros tipos de cobertura (@mapbiomas). Classificamos as áreas de cobertura vegetal como áreas de habitat e as restantes como áreas de não habitat. Os mapas de cobertura vegetal foram recortados em quadrados centrados na coordenada central da parcela. A resolução dos mapas foi ajustada para que a densidade de pixels seja igual a densidade de indivíduos na parcela do respectivo inventário florestal. Aproximamos a área da parcela por um quadrado. Em uma paisagem não foi possível desenhar uma área quadrada devido à configuração espacial do habitat e foi descartada.
+
+# Método
+
+Para comparar os dois programas de pesquisa da ecologia de paisagens (@fahrig2019habitat e @fletcher2018habitat) em um arcabouço teórico comum e independente desses dois programas de pesquisa utilizamos o programa de pesquisa da Teoria Neutra da Biodiversidade (@rosindell2012case^[artigo em que ele explica o programa de pesquisa da teoria neutra como aquele que procura explorar até onde é razoável pressupor equivalência funcional. Dentro da proposta original de Lakatos isso seria o mesmo que ser um programa de pesquisa degenerado a priori: explorar ao máximo os pressupostos auxiliares ao pressuposto central com intenção de manter o pressuposto central. Ver mais em @bausman2019aims, @leroi2020neutral). O programa de pesquisa da Teoria Neutra se propõe a investigar os pressupostos auxiliares ao pressuposto de equivalência funcional na construção de modelos de dinâmica ecológica idealizada, que não consideram diferença entre as espécies no nível dos indivíduos (@rosindell2012case, @leroi2020neutral). Ao pressupor equivalência funcional se torna possível modelar a dinâmica ecológica, que resulta no padrão de diversidade local observado, utilizando um único parâmetro livre enquanto é explorado a relação de escala entre parcela e paisagem ao redor, variando a capacidade de dispersão dos indivíduos (@munoz2016neutral). O parâmetro livre controla a taxa de colonização de uma nova espécie no sistema por evento de nascimento (taxa U), o input de novas espécies pode ser interpretado como especiação, reposição do banco de propágulos ou dispersão de longa distância de fora da paisagem ao redor da parcela amostrada (@condit2012thirty; @azaele2016statistical; @munoz2016neutral). Utilizamos um modelo neutro espacialmente explícito onde todos os indivíduos na paisagem são modelados e as posições e distâncias no espaço em 2D são explicitamente considerados (@campos2012neutral, @campos2013effect). Nos modelos neutros a única interação entre indivíduos é de competição neutra por espaço, resultando em flutuações estocásticas nos tamanhos populacionais das espécies, chamado de deriva ecológica (@azaele2016statistical). Aqui usamos um modelo que pressupõe equilíbrio dinâmico, situação onde a perda de espécies por deriva é compensada pelo constante input de espećies (descrito pela taxa U). Comparamos 3 tipos de paisagens hipotéticas em que o modelo simula a situação de equilíbrio dinâmico: a paisagem contemporânea, com a configuração espacial do habitat remanescente observada no ano que melhor aproxima o ano de amostragem do inventário florestal; a paisagem sem isolamento estrutural, com o habitat remanescente contemporâneo aglomerado ao redor da parcela (em forma de quadrado); e a paisagem idealizada, sem perda de habitat - situação proposta como referência de efeito nulo da perda de habitat na manutenção da diversidade local (@fahrig2022resolving). Essa abordagem só é possível pois os 3 programas de pesquisa trabalham com o conceito de paisagem local. 
+
+O contraste na taxa U estimado entre paisagens hipotéticas pode informar o efeito da perda de habitat per se (contraste entre paisagem ideal e sem isolamento estrutural) e o efeito da fragmentação per se (contraste entre paisagem contemporânea e sem isolamento estrutural) na manutenção da riqueza local. Esses contrastes informam a dependência de propágulos vindos da paisagem ao redor para repor espécies perdidas localmente. Outro possível contraste é entre a SAD predita nas paisagens hipotéticas. A congruência entre SADs informa a semelhança na distribuição de abundância de espécies. A congruência entre SADs preditas e observada foi analisada.
+
+```{r ,cache=FALSE}
+cap <- "Exemplo de paisagens hipotéticas usadas pelo modelo neutro espacialmene explício na escala de 4x4km2. Paisagem contemporânea: paisagem com a configuração espacial espacial do habitat remanescente do mesmo ano que a amostragem da SAD empírica. Paisagem sem isolamento estrutural: paisagem com o habitat remanescente na paisagem contemporânea todo aglomerado ao redor do sítio de amostragem. Paisagem idealizada:paisagem sem perda de habitat."
+# df_glossario
+  # gt::gt(caption="Paisagens Hipotéticas") %>% 
+  # gt::as_latex()
+  # knitr::kable(x=.,caption = "Paisagens Hipotéticas")
+# kableExtra::kbl(df_glossario,format = "latex",
+#   caption = "Paisagens Hipotéticas",
+#   booktabs = TRUE, linesep = "", align = "c")  %>%
+#   kableExtra::kable_styling(latex_options = c("striped", "HOLD_position")) %>% 
+#   kableExtra::column_spec(2, width = "10cm")
+```
+```{r exemplo-paisagens-hipotetica,fig.cap=cap,fig.height=3,fig.width=8,fig.pos="H"}
+f_image <- \(mat,title){
+  image(mat,
+        main=title,
+        zlim=c(0,2),
+        axes=FALSE,
+        col=terrain.colors(12,rev = TRUE))
+}
+#
+par(mfrow=c(1,3))
+#
+path_name <- "dados/simulacao/MGipia1.txt"
+m <- read_table(file = path_name) |> as.matrix()
+f_image(mat=m,title="Contemporânea")
+# sem frag
+m_sem_frag <- f_nonFragLand(m)
+f_image(mat=m_sem_frag,title="Sem Isolamento Estrutural")
+# idealizado
+m_ideal <- m
+m_ideal[m_ideal==0] <- 1
+f_image(mat=m_ideal,title="Idealizada")
+```
+
+## Paisagem local: relação entre extensão espacial e grau de limitação de dispersão
+  
+    
+O conceito de paisagem local é aceito em ambos programas de pesquisa como a paisagem ao redor que pode prover a maior parte da chuva de propágulos que chega na parcela amostrada (@Wwatling2020support,@puttker2020indirect). Esse conceito coincide com o conceito de metacomunidade usado no contexto da Teoria Neutra (@munoz2016neutral; @chase2020biodiversity). Em ambos os programas de pesquisa de ecologia de paisagens a extensão espacial da paisagem ao redor pode ser obtida usando a chamada análise de escala de efeito (@jackson2015ecologists; @puttker2020indirect). A análise de escala de efeito (@jackson2015ecologists) propõe que a extensão espacial adequada é aquela que maximiza o peso de evidência da associação estatística entre o padrão de biodiversidade local estudado e a variável de interesse, por exemplo, a proporção de cobertura vegetal na paisagem. A extensão espacial da paisagem determina a quantidade máxima de habitat disponível ao redor dos sítios de estudo (figura 3). A análise de escala de efeito tem sido adotada em diversos trabalhos (@crouzeilles2016landscape, @stuber2020recent). Optamos por não utilizar a análise de escala de efeito, pois ela pressupõe que existe equilíbrio da resposta ecológica à heterogeneidade contemporânea da paisagem. Alternativamente, vamos investigar a extensão mínima da paisagem ao redor para que a simulação da diversidade local pelo modelo neutro espacialmene explícito não seja restringida pela extensão espacial da paisagem, mas sim pela limitação de dispersão e configuração espacial do habitat remanescente (Apêndice: Efeito de Escalar). 
+
+  
+    
+## Modelo Neutro Espacialmente Explícito
+
+O modelo neutro espacialmente explícito utiliza uma abordagem coalescente (@rosindell2008coalescence; @thompson2020pycoalescence). A simulação termina quando todos os indivíduos da área amostral coalescem para o conjunto dos primeiros indivíduos ancestrais que originaram às populações na  paisagem local (@rosindell2008coalescence), criando uma árvore genealógica da comunidade local. Cada ramo da árvore genealógica da comunidade local é constituida por indivíduos que compartilham um único ancestral comum, o indivíduo que primeiro surgiu na paisagem, descrito pela taxa U, detalhes do algoritmo em @rosindell2008coalescence. A abordagem pressupõe que apenas um indivíduo pode colonizar uma unidade de habitat por vez e toda morte é reposta pelo nascimento de um indivíduo adulto (pressuposto de soma zero). Na simulação coalescente a cada momento simulado, um indivíduo é sorteado para ser substituído. Há duas possibilidades de substituição: por um singleton de uma nova espécie na paisagem (probabilidade U) ou pela prole de uma árvore residente na paisagem (1-U). Nos 1-U casos em que a substituição é por um propágulo vindo da paisagem local, a simulação centra a função de dispersão no habitat vago e sortea posições na paisagem até que uma unidade de habitat seja sorteada, determinando a origem do propágulo que colonizou o habitat disponível (@rosindell2008coalescence; @thompson2020pycoalescence). A função de dispersão é simulada como um kernel de dispersão com distribuição exponencial espelhada (@bullock2017synthesis), i.i.d. em duas dimensões (@thompson2020pycoalescence). Controlamos a capacidade de dispersão dos indivíduos variando a proporção de propágulos que permanecem até a vizinhança imediata da planta progenitora (distância até o vizinho imediato). A taxa U é estimada usando a abordagem analítica proposta por @rosindell2008coalescence no apêndice A. 
+  
+    
+### Avaliação do Efeito de Escalar
+  
+    
+Uma forma de avaliar se a árvore genealógica da comunidade está sendo restringida pela extensão espacial da paisagem é investigar a taxa U. Para isso, consideramos paisagens sem perda de habitat, para desconsiderar a limitação da árvore genealógica pelo isolamento estrutural da parcela na paisagem (@thompson2019characterising). Exploramos uma amostra dos inventários florestais selecionados, incluindo os valores extremos de número de indivíduos e de riqueza de espécies. variando o lado da paisagem local em 6 escalas: 0.5, 1, 2, 4, 8  e 16 km. Buscamos a escala que estabiliza a estimativa da taxa U. Aquele subescala que acumula pelo menos 95% do efeito de aumentar a escala foi considerada adequada para a simulação daquele grau de limitação de dispersão (Apêndice 1: Efeito de Escalar). 
+  
+    
+### Simulação do Modelo Neutro Espacialmente Explícito
+  
+    
+Para cada sítio de amostragem e tipo de paisagem hipotética foram simuladas 20 graus de limitação de dispersão, com a proporção de propágulos permanecendo até a vizinhança imediata da planta progenitora variando entre 0.99, severa limitação de dispersão, até 0.05, limitação de dispersão branda. Para cada bateria de simulação (sítio de amostragem, paisagem hipotética e grau de limitação de dispersão) são estimadas 10 réplicas da taxa U necessária para manter a riqueza observada. A taxa U média é usada para parametrizar as 100 simulações réplicas usadas para predizer a distribuição de abundância de espécies, SAD.
+  
+    
+## Análise Estatística
+  
+    
+Avaliamos a congruência na forma das SADs simuladas em relação à SAD empírica usando um teste de Kolmogorov-Smirnov bootstrap (@2samples), cuja hipotese nula asserta que as duas SADs comparadas são amostras de uma mesma distribuição de abundância de espécies. As SADs simuladas foram classificadas como congruentes se o p-valor do teste for maior ou igual a 5%. Contabilizamos o número de SADs congruêntes. Usamos um modelo misto generalizado binomial para descrever a probabilidade de congruência da SAD neutra simulada. 
+
+\newpage

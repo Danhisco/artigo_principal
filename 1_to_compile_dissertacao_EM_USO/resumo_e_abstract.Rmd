@@ -1,0 +1,80 @@
+---
+title: ""
+author: ""
+output:
+  bookdown::word_document2: default
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+    pandoc_args: ["--variable", "geometry=a4paper"]
+    # citation_package: citeproc
+  pdf_document: default
+  html_document:
+    df_print: paged
+bibliography: resources/citations2.bib
+csl: "resources/ecology-letters.csl"
+header-includes:
+- \PassOptionsToPackage{a4paper}{geometry}
+- \usepackage[brazil]{babel}
+- \usepackage{lmodern}
+- \usepackage{fontspec}
+- \usepackage{threeparttable} 
+- \setmainfont{Times New Roman}
+- \fontsize{12}{22}
+- \usepackage{caption}
+- \captionsetup[figure]{font=it}
+- \captionsetup[table]{font=it}
+---
+
+
+
+# Resumo {-}
+
+<p>
+Não há consenso sobre os efeitos da fragmentação de habitat. Um grupo defende a existência de dois efeitos independentes: a perda de habitat (efeito de área *per se* APS) e a fragmentação *per se* (FPS). Outro grupo argumenta que perda e fragmentação de habitat constituem um processo comum e interdependente, resultando em um "efeito total de fragmentação" (FT). A divergência entre esses grupos se reflete também nos métodos, dificultando uma conciliação empírica.
+</p>
+
+<p>
+Nosso objetivo é estimar os propostos efeitos da paisagem a partir de um modelo mecanístico que aproxima a conectividade e a dinâmica de indivíduos, o Modelo Neutro Espacialmente Explícito (MNEE), e dados observacionais de comunidades arbóreas da Floresta Atlântica. Esses efeitos são obtidos por uma nova métrica funcional (logUi/Uj). Esta métrica permite interpretar a vulnerabilidade da biodiversidade local em termos de conectividade funcional e resiliência demográfica.
+</p>
+
+<p>
+Simulamos 105 inventários florestais, que foram aproximados por paisagens quadradas com uma parcela quadrada no centro. A taxa U, de entrada de indivíduos de novas espécies, foi ajustada para aproximar a riqueza observada, pressupondo três cenários de paisagem (Fragmentada (f); Aglomerada (a); Prístina (p)) e cenários de limitação de dispersão. Para cada cenário de limitação de dispersão foi escolhido a escala da paisagem suficiente para a simulação. Os efeitos são contraste entre pares de paisagens. FT : logUf/Up, APS : logUa/Up, FPS : logUf/Ua. Assim, FT = FPS + APS. 
+</p>
+
+<p>
+O MNEE demonstrou alta congruência com a distribuição de abundância de espécies empírica em 64% das parcelas e boa congruência na média, mesmo em gradientes extremos de cobertura florestal e de dispersão. Os efeitos da paisagem em logUi/Uj variaram em função da cobertura florestal e da capacidade de dispersão. APS: de modo geral negativo, intensificando-se em paisagens com baixa cobertura florestal e atenuando-se em limitação de dispersão intermediária. FPS: exibiu um padrão bifásico — positivo sob limitação de dispersão severa e negativo sob branda — consistente em paisagens com baixa cobertura e geralmente nulo em paisagens com alta cobertura, embora com algumas parcelas com padrão bifásico acentuado. FT: de modo geral negativo, mais intenso em paisagens com baixa cobertura florestal e sob branda limitação de dispersão - é o efeito com maior variabilidade entre parcelas. Com a redução da cobertura florestal, o componente mais relevante da FT desloca-se da FPS para a APS.
+</p>
+
+<p>
+Nossos achados, baseados em uma métrica funcional unificada e escalonada, mostram que a interação entre a limitação de dispersão e a cobertura florestal tem um importante papel na estimativa dos propostos efeitos da paisagem, dessa forma, se alinhando parcialmente às conclusões de ambos grupos de pesquisa.
+</p>
+
+<p>
+Embora o MNEE apresente limitações (como o pressuposto de soma-zero e a equivalência funcional), sua capacidade de reproduzir padrões empíricos da SAD na Floresta Atlântica sugere seu potencial como ferramenta de inferência para a conservação. Seu potencial pode ser expandido em estudos futuros, incorporando efeitos de borda e testando o modelo em outros ecossistemas tropicais.
+</p>
+
+# Abstract {-}
+
+<p>
+There is no consensus on the effects of habitat fragmentation. One group argues for the existence of two independent effects: habitat loss (area *per se* effect, APS) and fragmentation *per se* (FPS). Another group contends that habitat loss and fragmentation constitute a single, interdependent process, resulting in a "total fragmentation effect" (FT). This theoretical divergence is also reflected in methodological approaches, making empirical reconciliation a challenge.
+</p>
+
+<p>
+Our objective is to estimate the proposed landscape effects using a mechanistic model that approximates connectivity and individual-level dynamics — the Spatially Explicit Neutral Model (SENM) — combined with observational data from tree communities in the Atlantic Forest. These effects are derived from a novel functional metric (logUi/Uj), which allows interpreting the vulnerability of local biodiversity in terms of functional connectivity and demographic resilience.
+</p>
+
+<p>
+We simulated 105 forest inventories, each represented as a square landscape with a central square plot. The species input rate (U), representing the arrival of individuals from new species, was calibrated to match observed species richness under three landscape scenarios (Fragmented (f), Aggregated (a), and Pristine (p)) and different levels of dispersal limitation. For each dispersal scenario, we selected an adequate landscape scale for the simulations. The landscape effects were calculated as pairwise contrasts between scenarios: FT = logUf/Up, APS = logUa/Up, FPS = logUf/Ua, such that FT = FPS + APS.
+</p>
+
+<p>
+The SENM showed strong agreement with the empirical species abundance distributions (SADs) in 64% of the plots and good overall fit, even across extreme gradients of forest cover and dispersal. Landscape effects (logUi/Uj) varied with both forest cover and dispersal capacity. APS was generally negative, increasing in magnitude in low-coverage landscapes and weakening under intermediate dispersal limitation. FPS exhibited a biphasic pattern — positive under severe dispersal limitation and negative under weak dispersal limitation — consistent in low-coverage landscapes and generally negligible in high-coverage ones, although some sites exhibited a pronounced biphasic behavior. FT was generally negative, most intense in low-coverage landscapes under weak dispersal, and showed the greatest variability across plots. As forest cover declined, the most relevant component of FT shifted from FPS to APS.
+</p>
+
+<p>
+Our findings, based on a unified and scalable functional metric, suggest that the interaction between dispersal limitation and forest cover plays a key role in estimating the proposed landscape effects. In doing so, our results partially align with the conclusions of both research traditions.
+</p>
+
+<p>
+Despite its limitations — such as the zero-sum assumption and functional equivalence among species — the SENM successfully reproduced empirical SAD patterns in the Atlantic Forest, indicating its potential as an inferential tool for conservation. This potential could be expanded in future studies by incorporating edge effects and applying the model to other tropical forest ecosystems.
+</p>

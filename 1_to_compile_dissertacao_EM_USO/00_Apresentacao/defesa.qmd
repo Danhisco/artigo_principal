@@ -1,0 +1,30 @@
+---
+title: "Defesa"
+author: "Danilo Pereira Mori"
+format: revealjs
+editor: visual
+---
+
+## Introdução
+
+TESTE TESTE TESTE TESTE TESTE TESTE TESTE
+
+## Objetivo
+
+TESTE TESTE TESTE TESTE TESTE TESTE TESTE
+
+## Materiais e Método
+
+TESTE TESTE TESTE TESTE TESTE TESTE TESTE
+
+## Resultados
+
+TESTE TESTE TESTE TESTE TESTE TESTE TESTE
+
+## Discussão
+
+TESTE TESTE TESTE TESTE TESTE TESTE TESTE
+
+## Conclusão
+
+TESTE TESTE TESTE TESTE TESTE TESTE TESTE
