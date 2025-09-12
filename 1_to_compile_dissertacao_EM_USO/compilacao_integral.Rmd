@@ -1,3 +1,8 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 # ---
 title: ""
 author: ""
@@ -234,15 +239,177 @@ Despite its limitations — such as the zero-sum assumption and functional equiv
 
 
 # Introdução
-
-
 ## O debate sobre o efeito causal da fragmentação de habitat na biodiversidade remanescente
 
 <p>
-Não há consenso sobre o impacto da conversão de habitat sobre a biodiversidade remanescente nos ecossistemas terrestres (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Um grupo de pesquisa defende que existem dois efeitos independentes: efeito de perda *per se* de área e efeito de fragmentação *per se* - que é o efeito da mudança da configuração espacial, independente do efeito da perda de área (@fahrig_effects_2003, @fahrig_ecological_2017, @fahrig_SLOSS2020, @fahrig_habitat_2019; @fahrig2019habitatA). Outro grupo de pesquisa defende que existe um processo comum de perda e fragmentação de habitat (@didham_rethinking_2012, @haddad_habitat_2015, @fletcher2018habitat), que pode ser descrito como um efeito total de fragmentação.
+O debate sobre fragmentação de habitat é caracterizado por uma diversidade de conceitualizações acerca dos efeitos da mudança na paisagem sobre a biodiversidade remanescente (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Essa diversidade conceitual, por sua vez, leva a uma proliferação de métodos para estimar tais efeitos (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Como resultado dessa falta de consenso, as estimativas dos efeitos da configuração espacial permanecem incertas e amplamente contraditórias, variando de positivas a negativas para a biodiversidade remanescente (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Essa incerteza é agravada pela falta de padronização em outros pontos críticos, como a escala espacial de análise e a escolha das métricas da paisagem (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward).
 </p>
 
 <p>
+Aqui adotamos uma abordagem em que o efeito total de perda e fragmentação da cobertura na paisagem (PFC) é composto pelo efeito da perda de habitat (PDC) e pelo efeito da fragmentação per se (FPS), tal que PFC = PDC + FPS. Estes três termos (o total e seus dois componentes) são quantificados pelo contraste experimental de três tipos de paisagens (Fig. X). O efeito de PFC, é obtido pelo contraste da alfa em paisagens fragmentadas (tal como nos sistemas reais) com a alfa em paisagens prístinas, sem perda de cobertura florestal (@didham_rethinking_2012, @haddad_habitat_2015, @fletcher2018habitat, @valente2023toward). Já o efeito de FPS corresponde ao contraste entre paisagens fragmentadas e paisagens aglomeradas, com a cobertura remanescente agregada ao redor da parcela amostrada (@fahrig_effects_2003, @fahrig_ecological_2017, @fahrig_SLOSS2020, @fahrig_habitat_2019; @fahrig2019habitatA; @valente2023toward). E o efeito de PDC é isolado pelo contraste entre paisagens agregadas e prístinas (@fahrig_effects_2003, @fahrig_ecological_2017, @fahrig_SLOSS2020, @fahrig_habitat_2019, @fahrig2019habitatA, @valente2023toward). 
+</p>
+
+```{r cap fig1}
+vcap <- "A abordagem considerada ideal para avaliação de efeito, são os experimentos, onde se criam grupos experimentais bem definidos, cujo contraste informa o efeito médio em investigação (REF). Assim, seria possível comparar a biodiversidade arbórea local (α) entre grupos experimentais (ou seja, em diferentes paisagens) para estimar o efeito médio de interesse. O efeito de perda e fragmenação de cobertura (PFC) poderia ser obtido pelo contraste entre a α em paisagens fragmentadas, tal como observado nos ecossistemas florestais, com um paisagem prístina, sem perda de cobertura florestal, dessa forma, informando o efeito combinado da perda e fragmentação. Já o efeito de fragmentação per se (FPS) pode ser obtido pelo contraste entre a paisagem fragmentada e a paisagem aglomerada, onde todo a cobertura remanescente está agregada ao redor da parcela amostrada, minimizando a complexidade espacial da paisagem. E por fim, o efeito isolado de perda de cobertura (PDC) pode ser obtido pelo contraste entre a paisagem aglomerada e a paisagem prístina."
+```
+```{r fig1,fig.cap=vcap}
+library(ggplot2)
+library(dplyr)
+
+f_grafico <- \(h_caixas=2,
+               h_sinais=1,
+               w_alfa=2,
+               w_efeitos=3,
+               x13=-2.5,
+               x4=2.5,
+               x27=5,
+               x5=7.5,
+               yalfa=11.5,
+               yefeitos=3,
+               setabase_ajuste=7/6,
+               setafinal_ajuste=9/10,
+               ajustex_seta=0.96,
+               textsize=15){
+  # Criar dataframe com as caixas
+  caixas <- data.frame(
+    id = c(1, 2, 3, 4, 5, 7, 8),
+    x = c(x13, x27, x13, x4, x5, 0, x27),
+    y = c(yalfa, yalfa, yefeitos, yefeitos, yefeitos, yefeitos, yefeitos),
+    texto = c("α", "α", "PFC", "FPS", "PDC", "=", "+"),
+    width = c(w_alfa, w_alfa, 
+              w_efeitos, w_efeitos, w_efeitos, 
+              h_sinais, h_sinais),
+    height = c(h_caixas, h_caixas, h_caixas, h_caixas, h_caixas, 
+               h_sinais, h_sinais),
+    tipo = c("caixa", "caixa", "caixa", "caixa", "caixa", "sinal", "sinal")
+  )
+  # Criar dataframe com as setas
+  setas <- data.frame(
+    x = c(x13, x4, x5),
+    y = yefeitos*setabase_ajuste,
+    xend = c(x13, x27*ajustex_seta, x27*(ajustex_seta^(-1)) ),
+    yend = yalfa*setafinal_ajuste,
+    tipo = "seta"
+  )
+  #ggplo2
+  ggplot() +
+    # Adicionar caixas (retângulos)
+    geom_rect(data = caixas,
+              aes(xmin = x - width/2, xmax = x + width/2,
+                  ymin = y - height/2, ymax = y + height/2),
+              fill = "lightblue", color = "black", linewidth = 0.8) +
+    # Adicionar texto dentro das caixas
+    geom_text(data = caixas,
+              aes(x = x, y = y, label = texto),
+              size = textsize, color = "black", fontface = "bold") +
+    # Adicionar setas
+    geom_segment(data = setas,
+                 aes(x = x, y = y, xend = xend, yend = yend),
+                 arrow = arrow(type = "closed", length = unit(0.3, "inches")),
+                 color = "black", linewidth = 1.2) +
+    # Ajustar escala e tema
+    scale_x_continuous(limits = c(-8, 13)) +
+    scale_y_continuous(limits = c(0, 14)) +
+    theme_void() +
+    theme(panel.background = element_rect(fill = "white"))
+}
+p <- f_grafico(setabase_ajuste = 8/6)
+```
+
+<p>
+Para estimar esses efeitos utilizamos uma métrica funcional da paisagem. Essa métrica considera a dinâmica demográfica espacial dos indivíduos arbóreos e a escala espacial suficiente para simular a capacidade de dispersão. Para isso, utilizamos um modelo neutro espacialmente explícito (MNEE), um modelo mecanístico de primeira aproximação da conectividade – o mecanismo fundamental consensual no debate (REFS) – que funciona como um ponto de partida parcimonioso (justificativas de sua escolha na caixa 1). Dentro deste modelo, a métrica funcional informa o efeito da mudança na paisagem na vulnerabilidade da biodiversidade remanescente.  
+</p>
+
+
+BOX 1 - Justificativas para o uso do Modelo Neutro Espacialmente Explícito (MNEE) no debate sobre fragmentação de habitat.
+
+SLIDE 6 – Modelos Mecanísticos
+
+Uma vez que
+Há consenso em apontar a conectividade como mecanismo
+há espaço para o uso de
+um modelo mecanístico
+capaz de simular a conectividade
+nas paisagens hipotéticas experimentais.
+
+SUBSLIDE 1
+
+aqui, modelo mecanístico, é
+a simulação da dinâmica demográfica espacial 
+de morte,
+nascimento, dispersão,
+e colonização,
+dos indivíduos de diferentes espécies
+que explica como
+os padrões de biodiversidade observados
+são gerados
+
+Por exemplo, 
+Um dado disponível em inventários florestais de parcela única,
+é a distribuição de abundância de espécies (SAD na sigla em inglês) e a riqueza de espécies,
+Assim,
+precisamos de um modelo que simule a SAD local influenciada pela conectividade com a paisagem
+
+Esse tipo de abordagem faz pressupostos mais abrangentes, 
+pois insere o viés de um particular modelo mecanístico, 
+assim, sua escolha tem que ser bem justificada.
+
+
+SLIDE 7: Justificativas 1
+As principais justificas para o modelo neutro espacialmente explícito (MNEE) são:
+1) modelo demográfico de ponto de partida,
+pode ser usado para pensar futuros modelos mais complexos
+que incluam a diferença competitiva entre as espécies,
+uma vez que - MNEE pressupõe equivalência funcional;
+
+2)  simula estocasticidade demográfica resultante da dispersão de indivíduos no espaço 
+e da competição neutra pelo habitat, 
+Essa é uma propriedade validada teoricamente em paisagens fragmentadas via simulação
+Dessa forma, MNEE faz uma primeira aproximação da conectividade entre 
+a parcela e a paisagem ao redor - mecanismo acordado entre os grupos em disputa.
+
+SLIDE 8: Justificativas 2
+3) MNEE possui poucos parâmetros –
+uma vez que a dispersão é incerta,
+iremos explorar cenários de limitação de dispersão,
+
+
+Assim,
+sobra um parâmetro livre: 
+a taxa de entrada de novas espécies no sistema (que chamarei de U), 
+Aqui interpretamos essa taxa U como
+reposição pelo banco de propágulos de espécies ausentes entre os adultos,
+dispersão de longa distância de fora da paisagem,
+especiação verdadeira,
+4) a taxa U pode ser calibrada para que MNEE aproxime a riqueza observada
+. 
+5) mostramos que é possível utilizar a taxa U livre para estimar a escala espacial suficiente para simular cada cenário de dispersão
+6) e também usamos a taxa U como base de uma métrica funcional da paisagem ( log da razão U ) que pode ser usada para comparar a simulação de MNEE nas paisagem hipotéticas experimentais
+
+SUBSLIDE 1
+
+7) pressuposto de equilíbrio na paisagem hipotética
+(uma vez que MNEE é coalescente, 
+ele reconstroi uma amostra da parcela,
+no equilíbrio, 
+- esse pressuposto é similar ao pressuposto de contemporaneidade.
+
+
+############## PAREI AQUI
+
+
+
+
+
+
+<p>
+Nosso objetivo é estimar os propostos efeitos da paisagem (PFC, PDC e FPS)  na biodiversidade arbórea local (alfa) a partir de uma métrica funcional, baseada na simulação da dinâmica demográfica em diferentes paisagens experimentais. Essas estimativas são obtidas individualmente para cada parcela, capturando a heterogeneidade entre elas. Além disso, exploramos sistematicamente a incerteza associada à capacidade de dispersão e à escala espacial.
+</p>
+
+
+ (@fahrig_effects_2003, @fahrig_ecological_2017, @fahrig_SLOSS2020, @fahrig_habitat_2019; @fahrig2019habitatA). Outro grupo de pesquisa defende que existe um processo comum de perda e fragmentação de habitat (@didham_rethinking_2012, @haddad_habitat_2015, @fletcher2018habitat), que pode ser descrito como um efeito total de fragmentação.
+</p>
+
 Esses propostos efeitos da paisagem poderiam ser idealmente estimados em experimentos (@haddad_habitat_2015 e @fahrig_SLOSS2020). O efeito total da fragmentação pode ser estimado pelo contraste entre o observado em uma paisagem prístina, sem perda de cobertura florestal, com o observado em uma paisagem fragmentada ao longo de um gradiente de cobertura florestal, tal como observado nas paisagens empíricas (@didham_rethinking_2012; @haddad_habitat_2015; @valente2023toward; @gonccalves2025species). Como essas paisagens difeririam tanto na perda quanto na fragmentação de habitat, e assumindo que todas as demais características sejam mantidas constantes, esse contraste revelaria o efeito combinado da mudança na configuração espacial e na cobertura florestal (@didham_rethinking_2012; @valente2023toward).
 </p>
 
