@@ -1,6 +1,8 @@
 ---
-output: html_document
-editor_options: 
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
   chunk_output_type: console
 ---
 # ---
@@ -317,82 +319,42 @@ p <- f_grafico(setabase_ajuste = 8/6)
 ```
 
 <p>
-Para estimar esses efeitos utilizamos uma métrica funcional da paisagem. Essa métrica considera a dinâmica demográfica espacial dos indivíduos arbóreos e a escala espacial suficiente para simular a capacidade de dispersão. Para isso, utilizamos um modelo neutro espacialmente explícito (MNEE), um modelo mecanístico de primeira aproximação da conectividade – o mecanismo fundamental consensual no debate (REFS) – que funciona como um ponto de partida parcimonioso (justificativas de sua escolha na caixa 1). Dentro deste modelo, a métrica funcional informa o efeito da mudança na paisagem na vulnerabilidade da biodiversidade remanescente.  
+Para estimar esses efeitos utilizamos uma métrica funcional da paisagem. Essa métrica considera a dinâmica demográfica espacial dos indivíduos arbóreos e a escala espacial suficiente para simular a capacidade de dispersão. Para isso, utilizamos um modelo neutro espacialmente explícito (MNEE), um modelo mecanístico de primeira aproximação da conectividade – o mecanismo fundamental consensual no debate (REFS) – que funciona como um ponto de partida parcimonioso (justificativas de sua escolha no quadro 1). Dentro deste modelo, a métrica funcional informa o efeito da mudança na paisagem na vulnerabilidade da biodiversidade remanescente.  
 </p>
 
 
-BOX 1 - Justificativas para o uso do Modelo Neutro Espacialmente Explícito (MNEE) no debate sobre fragmentação de habitat.
+\begin{tcolorbox}[
+    colback=white,           % Fundo branco para melhor contraste
+    colframe=blue!75!black,  % Borda azul
+    title=\textbf{Quadro 1:} Justificativa para o uso do Modelo Neutro Espacialmente Explícito (MNEE) no debate sobre fragmentação de habitat,
+    fonttitle=\bfseries      % Título em negrito
+]
 
-SLIDE 6 – Modelos Mecanísticos
+<p>
+Uma vez que há consenso em apontar a conectividade como mecanismo necessário (@riva_banskleite2024), há espaço para o uso de um modelo mecanístico (@Marshall2014; @DAGinf_epi_2019; @gianluca_ch5_2022), capaz de simular a conectividade nas paisagens hipotéticas experimentais (\@ref(fig:fig1)). Aqui, modelo mecanístico, é a simulação da dinâmica demográfica espacial de morte, nascimento, dispersão e colonização, dos indivíduos de diferentes espécies que explica como os padrões de biodiversidade observados são gerados (@rosindell_case_2012). Esse tipo de abordagem faz pressupostos mais abrangentes (mas veja @gianluca_ch5_2022), pois insere o viés de um particular modelo mecanístico, assim, sua escolha tem que ser bem justificada (@gianluca_ch4_2022).
+</p>
 
-Uma vez que
-Há consenso em apontar a conectividade como mecanismo
-há espaço para o uso de
-um modelo mecanístico
-capaz de simular a conectividade
-nas paisagens hipotéticas experimentais.
+<p>
+No contexto do debate sobre fragmentação de habitat, as justificativas para o modelo neutro espacialmente explícito (MNEE) são:
+</p>
 
-SUBSLIDE 1
+__1) Modelo demográfico de ponto de partida__ para elaboração de modelos mais complexos que incluam a diferença competitiva entre as espécies, uma vez que, MNEE pressupõe equivalência funcional (@rosindell_case_2012; @azaele_statistical_2016; @leroi_neutral_2020). 
 
-aqui, modelo mecanístico, é
-a simulação da dinâmica demográfica espacial 
-de morte,
-nascimento, dispersão,
-e colonização,
-dos indivíduos de diferentes espécies
-que explica como
-os padrões de biodiversidade observados
-são gerados
+_2) MNEE simula estocasticidade demográfica espacial_, ao simular a dispersão e a competição neutra por espaço (@rosindell_case_2012; @azaele_statistical_2016). Essa propriedade foi validada teoricamente em paisagens fragmentadas via simulação (@campos_neutral_2012; @campos_effect_2013). Assim, MNEE reproduz a distribuição espacial estocástica dos indivíduos, na qual a dispersão é probabilística e limitada, e influenciada pela configuração da paisagem (@McGill2010; @May2015, @may_abundance_2016). No MNEE, a ocupação de um sítio é determinada pela capacidade de dispersão e distância entre a fonte de propágulo e o habitat disponível (@rosindell_coalescence_2008; @thompson_pycoalescence_2020). Ao replicar essa distribuição espacial estocástica de forma dinâmica, o MNEE assegura que a simulação expressa a conectividade entre a parcela amostrada e a paisagem circundante, refletindo a interação do espaço na competição entre indivíduos (@campos_neutral_2012; @campos_effect_2013). Dessa forma, MNEE faz uma primeira aproximação da conectividade entre a parcela e a paisagem ao redor em paisagens com perda e fragmentação de cobertura florestal.
 
-Por exemplo, 
-Um dado disponível em inventários florestais de parcela única,
-é a distribuição de abundância de espécies (SAD na sigla em inglês) e a riqueza de espécies,
-Assim,
-precisamos de um modelo que simule a SAD local influenciada pela conectividade com a paisagem
+__3) MNEE possui poucos parâmetros (@rosindell_case_2012; @azaele_statistical_2016; @leroi_neutral_2020).__ Uma vez que a dispersão é desconhecida nos sistemas naturais amostrados, iremos explorar cenários de limitação de dispersão, Assim, resta um parâmetro livre: a taxa de entrada de novas espécies no sistema (U @rosindell_coalescence_2008; @thompson_pycoalescence_2020). A taxa U pode ser interpretada como reposição pelo banco de propágulos de espécies ausentes entre os adultos, dispersão de longa distância de fora da paisagem e especiação verdadeira (@etienne2007zero; @nathan2008mechanisms; @jabot2008reconciling; @condit_thirty_2012; @wu2023establishment).
 
-Esse tipo de abordagem faz pressupostos mais abrangentes, 
-pois insere o viés de um particular modelo mecanístico, 
-assim, sua escolha tem que ser bem justificada.
+__4) A taxa U pode ser calibrada com a riqueza observada (@rosindell_coalescence_2008).__ Dessa forma, é possível calibrar o modelo usando a riqueza de espécies e valida-lo usando a distribuição de abundância de espécies (SAD). Assim, a informação usada para ajustar os parâmetros é uma fração da informação total disponível, uma vez que para um mesmo número de indivíduos e riqueza de espécies, ainda existem diversas formas em que a SAD pode ser reconstruída (@locey_how_2013). Dessa forma, é possível avaliar as parcelas em que o mecanísmo simulado, que explica como o padrão de biodiversidade emerge, faz uma boa aproximação do observado (@gianluca_ch4_2022). 
+
+__5) Métrica Funcional da Paisagem__ Com base na taxa U calibrada em cada paisagem experimental, criamos a métrica funcional da paisagem (logUi/Uj). Essa métrica funcional informa diretamente o efeito da mudança na paisagem na variação na entrada de novas espécies na paisagem, necessária para manter a biodiversidade local. Se a mudança na paisagem aumenta a taxa U necessária, então há um aumento na vulnerabilidade da biodiversidade remanescente, pelo aumento da demanda por fontes externas de biodiversidade.
+
+__6) Efeito de Escala__ Mostramos que é possível utilizar a taxa U livre para estimar a escala espacial suficiente para simular cada cenário de dispersão (apêndice \@ref(apendSoE))
+
+__7) Equilíbrio na paisagem experimental__ Uma vez que MNEE é coalescente, ele reconstrói uma amostra da parcela, no equilíbrio na paisagem experimental (@rosindell_coalescence_2008; @thompson_pycoalescence_2020). Esse pressuposto garante que a paisagem está influenciando a dinâmica demográfica. Esse tipo de pressuposto é usado na análise de dados observacionais no debate sobre fragmentação de habitat (@frazier_landscape_2017).
+
+\end{tcolorbox}
 
 
-SLIDE 7: Justificativas 1
-As principais justificas para o modelo neutro espacialmente explícito (MNEE) são:
-1) modelo demográfico de ponto de partida,
-pode ser usado para pensar futuros modelos mais complexos
-que incluam a diferença competitiva entre as espécies,
-uma vez que - MNEE pressupõe equivalência funcional;
-
-2)  simula estocasticidade demográfica resultante da dispersão de indivíduos no espaço 
-e da competição neutra pelo habitat, 
-Essa é uma propriedade validada teoricamente em paisagens fragmentadas via simulação
-Dessa forma, MNEE faz uma primeira aproximação da conectividade entre 
-a parcela e a paisagem ao redor - mecanismo acordado entre os grupos em disputa.
-
-SLIDE 8: Justificativas 2
-3) MNEE possui poucos parâmetros –
-uma vez que a dispersão é incerta,
-iremos explorar cenários de limitação de dispersão,
-
-
-Assim,
-sobra um parâmetro livre: 
-a taxa de entrada de novas espécies no sistema (que chamarei de U), 
-Aqui interpretamos essa taxa U como
-reposição pelo banco de propágulos de espécies ausentes entre os adultos,
-dispersão de longa distância de fora da paisagem,
-especiação verdadeira,
-4) a taxa U pode ser calibrada para que MNEE aproxime a riqueza observada
-. 
-5) mostramos que é possível utilizar a taxa U livre para estimar a escala espacial suficiente para simular cada cenário de dispersão
-6) e também usamos a taxa U como base de uma métrica funcional da paisagem ( log da razão U ) que pode ser usada para comparar a simulação de MNEE nas paisagem hipotéticas experimentais
-
-SUBSLIDE 1
-
-7) pressuposto de equilíbrio na paisagem hipotética
-(uma vez que MNEE é coalescente, 
-ele reconstroi uma amostra da parcela,
-no equilíbrio, 
-- esse pressuposto é similar ao pressuposto de contemporaneidade.
 
 
 ############## PAREI AQUI
