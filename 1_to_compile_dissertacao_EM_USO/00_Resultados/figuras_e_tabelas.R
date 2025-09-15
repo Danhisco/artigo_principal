@@ -130,7 +130,6 @@ l_p[[3]] <- df_plot |>
 # grid.arrange(grobs=l_p,nrow=2)
 saveRDS(l_p,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fig1dados_disponiveis.rds")
 p <- arrangeGrob(grobs=l_p,nrow=1)
-
 ggsave(
   filename="figuras/GE_dados_disponiveis.png",
   plot = p,
@@ -1182,9 +1181,6 @@ f_scatterplot <- \(dfp,xrange,yrange,axislabs=TRUE,df_ref,
 
 library(cowplot)
 library(patchwork)
-
-
-
 ####### versão mais simples 
 df_real <- readRDS("dados/csv_SoE/rds/df_obs_pred_plot_logUU_pk.rds") %>% 
   do.call("rbind",.) %>% 
@@ -1391,6 +1387,9 @@ p <- ggdraw() +
 saveRDS(p,"1_to_compile_dissertacao_EM_USO/00_Resultados/rds/plot_taxaU_paisagens.rds")
 #######
 #### tabela de seleção 
+if(is.list(df_real)){
+  df_real <- do.call("rbind",df_real)
+}
 p <- df_real %>% 
   group_by(efeito,p_class) %>% 
   reframe(quantils=c("min",0.05,0.25,0.50,0.75,,0.95,"max"),
