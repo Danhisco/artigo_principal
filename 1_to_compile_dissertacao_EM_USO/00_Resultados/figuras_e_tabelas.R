@@ -191,7 +191,7 @@ v_threshold <- paste0("SoE >= ",
 cols <- c("blue","red") # "#f04546","3 quant"=
 names(cols) <- c("avg+-sd",v_threshold )
 a <- 0.5
-df_SoE_k <- df_plot %>% select(k,SoE_0.95) %>% distinct()
+df_SoE_k <- df_plot %>% select(k,SoE_0.9) %>% distinct()
 df_p <- read_csv("dados/df_p.csv")
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   inner_join(x=df_p,by="SiteCode")
@@ -220,7 +220,7 @@ df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>%
                                       "mediana",
                                       "alta"))) %>% 
   select(-forest_succession)
-df_SoE_k <- mutate(df_SoE_k,SoE_0.95 = ifelse(is.na(SoE_0.95),1,SoE_0.95))
+df_SoE_k <- mutate(df_SoE_k,SoE_0.95 = ifelse(is.na(SoE_0.9),1,SoE_0.9))
 df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
 df_pk <- ddply(df_SoE_k,"SoE_0.95",\(dfi){
   vref <- unique(dfi$SoE_0.95)
@@ -597,8 +597,7 @@ f_plots <- \(comp_efeitos=c("fragperse ~ area",
                            xlab = l_s$labels["x"],
                            ylab = l_s$labels["y"])
   l_p[[2]] <- l_fplot[[2]](l_df[[2]])
-  l_p[[3]] <- l_fplot[[3]](l_df[[2]],
-                           xlabel = paste0("logU/U: ",l_s$levels["x"]," - ",l_s$levels["y"]))
+  l_p[[3]] <- l_fplot[[3]](l_df[[2]],xlabel = paste0("logU/U: ",l_s$levels["x"]," - ",l_s$levels["y"]))
   #
   names(l_p) <- names(l_fplot)
   return(l_p)
@@ -606,12 +605,13 @@ f_plots <- \(comp_efeitos=c("fragperse ~ area",
 v_comparacao_efeitos <- c("fragperse ~ area",
             "fragtotal ~ fragperse",
             "fragtotal ~ area")
-l_p <- lapply(v_comparacao_efeitos,f_plots)
-names(l_p) <- v_comparacao_efeitos
-saveRDS(l_p,file="./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/l_p_comparacao_empirica_efeitos_diferenca_entre_pares.rds")
+# l_p <- lapply(v_comparacao_efeitos,f_plots)
+# names(l_p) <- v_comparacao_efeitos
+# saveRDS(l_p,file="./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/l_p_comparacao_empirica_efeitos_diferenca_entre_pares.rds")
 #####################################################################
 ################# objetos criados em 'ajuste_GAMM.R"
 ###################################################################
+library(metR)
 l_p_apenas_fixo <- readRDS(file="./figuras/logUU_construcao/l_p_apenas_fixo.rds")
 l_p_fixo_e_aleat <- readRDS(file="./figuras/logUU_construcao/l_p_fixo_e_aleat.rds")
 ###
@@ -1294,9 +1294,9 @@ ggsave(filename="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fragperse
        dpi=200)
 ############################### 1a versão
 f_finalNAOUSADA <- \(dfdados){
-  df_plot <- dfdados %>% 
+  df_plot <- df_real %>% 
     filter(efeito!="Frag. total") %>% 
-    select(-fit,-se.fit,-lower,-upper) %>% 
+    select(-fit,-se.fit) %>% #,-lower,-upper
     pivot_wider(names_from = "efeito",values_from="Uefeito") %>% 
     mutate(A_maior0 = ifelse(`Área per se`>=0,"Área per se>=0","Área per se<0"),
            A_maior0 = factor(A_maior0,levels=c("Área per se<0","Área per se>=0")),
@@ -1388,14 +1388,27 @@ saveRDS(p,"1_to_compile_dissertacao_EM_USO/00_Resultados/rds/plot_taxaU_paisagen
 #######
 #### tabela de seleção 
 if(is.list(df_real)){
-  df_real <- do.call("rbind",df_real)
+  df_real <- do.call("rbind",df_real) %>% 
+    mutate(
+      p_class = case_when(
+        p==1 ~ "%CF = 100",
+        p<1 & p>=0.80 ~ "80 ≤ %CF < 100",
+        p<0.80 & p>=0.60 ~ "60 ≤ %CF < 80",
+        p<0.60 & p>=0.30 ~ "30 ≤ %CF < 60",
+        p<0.30 ~ "%CF < 30"),
+      p_class = factor(p_class,levels=c("%CF < 30",
+                                        "30 ≤ %CF < 60",
+                                        "60 ≤ %CF < 80",
+                                        "80 ≤ %CF < 100",
+                                        "%CF = 100"))
+    )
 }
 p <- df_real %>% 
   group_by(efeito,p_class) %>% 
-  reframe(quantils=c("min",0.05,0.25,0.50,0.75,,0.95,"max"),
+  reframe(quantils=c("min",0.05,0.25,0.50,0.75,0.95,"max"),
           values=c(min(Uefeito),quantile(Uefeito,probs = c(0.05,0.25,0.50,0.75,0.95)),max(Uefeito))) %>% 
   mutate(quantils=factor(quantils,
-                         levels=c("min",0.05,0.25,0.50,0.75,,0.95,"max"))) %>% 
+                         levels=c("min",0.05,0.25,0.50,0.75,0.95,"max"))) %>% 
   filter(p_class!="%CF = 100") %>% 
   ggplot(aes(x=p_class,y=quantils,fill=values)) +
   geom_tile(color="white") +
@@ -1551,7 +1564,7 @@ p <- df_plot %>%
 p_reg <- ggExtra::ggMarginal(p, type = "boxplot",
                              fill = "steelblue", col = "darkblue",size=17)
 library(cowplot)
-p_circ <- f_circle_plot(dfp,boxlabelsize=3.5,tsize=6,lsize = 8)
+p_circ <- f_circle_plot(df_plot,boxlabelsize=3.5,tsize=6,lsize = 8)
 p_hist <- f_hist_ggplot(tsize = 15)
 # p <- ggdraw() +
 #   draw_plot(p_reg) +
@@ -1566,4 +1579,3 @@ design <- "AB
 library(patchwork)
 p_final <- wrap_plots(A=p_reg,B=p_circ,C=p_hist,design = design,widths = c(2,1.5))
 saveRDS(p_final,file="1_to_compile_dissertacao_EM_USO/00_Resultados/rds/comp_fragarea_todos_k.rds")
-
