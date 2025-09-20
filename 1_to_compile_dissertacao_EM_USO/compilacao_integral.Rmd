@@ -259,7 +259,7 @@ Aqui adotamos uma abordagem em que o efeito total de perda e fragmentação da c
 </p>
 
 ```{r cap fig1}
-vcap <- "Uma abordagem tradicional de avaliação de efeito são os experimentos, onde se criam grupos experimentais bem definidos, cujo contraste informa o efeito médio em investigação. Assim, para estimar os efeitos da paisagem propostos no debate, seria possível comparar a biodiversidade arbórea local (α) entre grupos experimentais (ou seja, em diferentes paisagens) para estimar o efeito médio de interesse. O efeito de perda e fragmenação de cobertura (PFC) poderia ser obtido pelo contraste entre a α em paisagens fragmentadas, tal como observado nos ecossistemas florestais, com um paisagem prístina, sem perda de cobertura florestal, dessa forma, informando o efeito combinado da perda e fragmentação. Já o efeito de fragmentação per se (FPS) pode ser obtido pelo contraste entre a paisagem fragmentada e a paisagem aglomerada, onde todo a cobertura remanescente está agregada ao redor da parcela amostrada, minimizando a complexidade espacial da paisagem. E por fim, o efeito isolado de perda de cobertura (PDC) pode ser obtido pelo contraste entre a paisagem aglomerada e a paisagem prístina. Como experimentos na escala da paisagem não tem viabilidade prática e ética, estimamos esses efeitos pelo contraste de simulações de um modelo mecanístico, que é uma primeira aproximação da conectividade - o mecanismo consensual para compreender os efeitos da paisagem. Nas parcelas florestais em que esse modelo mecanístico aproximou bem a α, foi possível calcular uma métrica funcional que descreve a mudança na vulnerabilidade da biodiversidade remanescente pela influência da mudança na paisagem (PFC, FPS e PDC). Essas métricas tiveram a escala espacial ajustada para cada cenário de limitação de dispersão explorado e são obtidas por parcela individual."
+vcap <- "Efeitos da paisagem na biodiversidade remanescente. Uma abordagem tradicional de avaliação de efeito são os experimentos, onde se criam grupos experimentais bem definidos, cujo contraste informa o efeito médio em investigação. Assim, para estimar os efeitos da paisagem propostos no debate, seria possível comparar a biodiversidade arbórea local (α) entre grupos experimentais (ou seja, em diferentes paisagens) para estimar o efeito médio de interesse. O efeito de perda e fragmenação de cobertura (PFC) poderia ser obtido pelo contraste entre a α em paisagens fragmentadas, tal como observado nos ecossistemas florestais, com um paisagem prístina, sem perda de cobertura florestal, dessa forma, informando o efeito combinado da perda e fragmentação. Já o efeito de fragmentação per se (FPS) pode ser obtido pelo contraste entre a paisagem fragmentada e a paisagem aglomerada, onde todo a cobertura remanescente está agregada ao redor da parcela amostrada, minimizando a complexidade espacial da paisagem. E por fim, o efeito isolado de perda de cobertura (PDC) pode ser obtido pelo contraste entre a paisagem aglomerada e a paisagem prístina. Como experimentos na escala da paisagem não tem viabilidade prática e ética, estimamos esses efeitos pelo contraste de simulações de um modelo mecanístico, que é uma primeira aproximação da conectividade - o mecanismo consensual para compreender os efeitos da paisagem. Nas parcelas florestais em que esse modelo mecanístico aproximou bem a α, foi possível calcular uma métrica funcional que descreve a mudança na vulnerabilidade da biodiversidade remanescente pela influência da mudança na paisagem (PFC, FPS e PDC). Essas métricas tiveram a escala espacial ajustada para cada cenário de limitação de dispersão explorado e são obtidas por parcela individual."
 ```
 ```{r fig1,fig.cap=vcap,eval=TRUE}
 library(ggplot2)
@@ -399,19 +399,34 @@ __Estimativa da escala espacial suficiente para simular os cenários de limitaç
 Segundo, estimamos a escala espacial adequada para os 20 cenários de limitação de dispersão. Para avaliar a influência da escala espacial na limitação de dispersão, simulamos a taxa U em paisagens prístinas sob diferentes tamanhos de área (0,5 a 16 km de lado) e graus de limitação de dispersão (valores de k). O objetivo foi determinar, para cada nível de limitação, a extensão espacial mínima necessária para que a estimativa de U não fosse mais sensível ao aumento da paisagem. A análise se baseou em um método heurístico que identifica o ponto de saturação da redução de U em função da escala (detalhes no Apêndice “Efeito de Escala”, @ref(apendSoE), e no Materais e Método detalhado).
 </p>
 
-__Calibração empírica de MNEE__
+__Calibração empírica da taxa U__
 
 <p>
 Terceiro, para cada batreia de simulação (a combinação de parcela selecionada, paisagem experimental e cenário de dispersão) é estimado a taxa U necessário para obter a riqueza de espécies observada. A taxa U, que representa a probabilidade de introdução de novas espécies por nascimento, é estimada usando um método analítico proposto por @rosindell2008 em seu apêndice A. Essa abordagem combina a simulação da genealogia da comunidade, sob hipótese de ausência de  com uma equação que relaciona a riqueza observada à taxa média de introdução de novas espécies, permitindo calibrar o MNEE com base na riqueza local observada (@rosindell2008, Apêndice A). Para cada betaria de simulação são feitas 10 réplicas e calculado a média</p>
 </p>
 
-__Validação empírica de MNEE__
+__Validação empírica da SAD simulada__
 
 <p>
-Cada cenário de simulação foi replicado 100 vezes, gerando distribuições de abundância de espécies (SADs) simuladas. Essas SADs foram comparadas com as observadas nas parcelas por meio de testes de Kolmogorov-Smirnov com reamostragem bootstrap. Consideramos que uma bateria de simulação foi bem aproximada quando pelo menos 75% das réplicas não diferiram significativamente da SAD empírica (P>0,05). Para as análises subsequentes, selecionamos apenas as parcelas em que o modelo neutro espacialmente explícito (MNEE) apresentou boa aproximação em todos os cenários com limitação de dispersão acima de 0,50 — condição considerada mais realista para espécies arbóreas (REF).
+Para cada bateria de simulação e taxa U média, a simulação de MNEE foi replicado 100 vezes, gerando distribuições de abundância de espécies (SADs) simuladas. Essas SADs foram comparadas com as observadas nas parcelas por meio de testes de Kolmogorov-Smirnov. Consideramos que uma bateria de simulação foi bem aproximada quando pelo menos 75% das réplicas não diferiram significativamente da SAD empírica (P>0,05). Para as análises subsequentes, selecionamos apenas as parcelas em que o modelo neutro espacialmente explícito (MNEE) apresentou boa aproximação em todos os cenários com limitação de dispersão acima de 0,50 — condição considerada mais realista para espécies arbóreas (REF). Uma análise complementar da congruência média foi feita no apêndice "Descrição da congruência de MNEE" (REF).
 </p>
 
 # Resultados
+<p>
+Obtivemos 105 parcelas florestais distribuídas ao longo da Floresta Atlântica, cobrindo um amplo gradiente geográfico e de configurações espaciais da paisagem (REF para "Resultados Suplementares"). Esses sítios foram selecionados a partir da base TreeCo e associados a mapas de cobertura florestal do MapBiomas (REF para "Resultados Suplementares"). Após exclusões pontuais, cada sítio serviu como unidade empírica para as simulações, representando uma diversidade de condições de paisagem adequadas para investigar os efeitos da fragmentação sobre a biodiversidade local (REF para "Resultados Suplementares").
+</p>
+
+<p>
+A análise de efeito de escala mostrou que a extensão espacial necessária para as simulações variou de acordo com o grau de limitação de dispersão. Para cenários mais severos (k entre 0,99 e 0,50), 1 km de lado foi suficiente; para cenários intermediários (k entre 0,45 e 0,20), 2 km de lado; e para cenários muito brandos (k abaixo de 0,15), 4 km de lado. Esses valores foram adotados como referência nas análises subsequentes.
+</p>
+
+<p> 
+A calibração empírica da taxa U, ajustada para reproduzir a riqueza observada em cada cenário, resultou em valores entre $10^{-3}$ e $10^{-2}$ (fig. \@ref(fig:taxaU-lands)). Isso significa que, em média, de cada 100 a 1000 nascimentos, um corresponde a uma nova espécie. Diferentemente de trabalhos anteriores que interpretaram U apenas como especiação (e.g. REF), aqui a taxa calibrada reflete um processo composto que inclui imigração de longa distância e recrutamento a partir de bancos de propágulos (REF). 
+</p>
+
+<p> 
+Das 105 parcelas simuladas, 67 atenderam ao critério de boa congruência entre a distribuição de abundância de espécies (SAD) simulada e a observada, e seguiram para as análises subsequentes. As 38 parcelas restantes foram excluídas (fig. \@ref(fig:p-cong)). Essas parcelas congruentes estão distribuídas ao longo do gradiente de cobertura florestal, com leve tendência a ocorrer em paisagens com maior cobertura, padrão semelhante ao observado para as parcelas não congruentes (REF para os resultados suplementares). Em média, a congruência entre SADs simuladas e observadas foi alta para cenários realistas de limitação de dispersão, decaindo apenas sob condições de dispersão muito ampla. 
+</p>
 
 ## Métrica funcional da paisagem
 
@@ -486,6 +501,9 @@ O método pressupõe que ao final do último passo, o valor obtido será 1, corr
 
 ### Comparação com a SAD observada
 
+Para cada bateria de simulação (combinação de parcela amostrada, cenário de limitação de dispersão e paisagem hipotética), realizamos 100 réplicas. Cada réplica resultou em uma SAD simulada. Essas SADs simuladas foram comparadas com a SAD observada na parcela correspondente por meio do teste de Kolmogorov-Smirnov com bootstrap (@dowd_twosamples_2023). O teste parte da hipótese nula de que os dois vetores em comparação (SAD observada e SAD simulada) representam amostras de uma mesma distribuição teórica; a estatística de interesse é a maior diferença entre as funções de distribuição acumulada das SADs (@dowd_twosamples_2023).
+
+Para cada bateria, contabilizamos o número de réplicas em que a SAD simulada não diferiu significativamente da SAD empírica (P>0,05). Consideramos que uma bateria de simulação foi bem aproximada quando pelo menos 75% das réplicas foram congruentes. Em seguida, selecionamos apenas as parcelas em que o MNEE apresentou boa aproximação em todas as baterias de simulação com limitação de dispersão superior a 0,50. Essa condição reflete situações em que a maior parte dos propágulos permanece na vizinhança imediata da fonte, o que julgamos realista para espécies arbóreas (literatura de apoio citada).
 
 
 ### Descrição estatística da congruência com a SAD observada
@@ -567,7 +585,7 @@ As covariáveis ambientais usadas no modelo estatístico anterior, usado para de
 </p>
 
 
-# Resultados
+# Resultados Suplementares
 
 ## Apresentação dos resultados
   
@@ -585,8 +603,13 @@ A partir dessas condições validadas, a seção \@ref(taxaU) apresenta a taxa U
 ## Dados empíricos: inventários florestais simulados {#dadosEmp}
 
 <p>
-Dos inventários florestais presentes na base de dados TreeCo, 109 estavam dentro dos critérios de seleção (tab. \@ref(tab:dados-disponiveis)). As coordenadas das parcelas amostradas variaram entre -31° e -7° de latitude e entre -55° e -35° de longitude (fig. \@ref(fig:GE-sitios) a). A maioria dos trabalhos foi realizada em áreas de florestas classificadas como primárias no TreeCo (@de_lima_how_2015). Apenas duas parcelas são classificadas como perturbação altíssima e foram removidas (fig. \@ref(fig:GE-sitios) c), resultando em 107 inventários. A área amostrada mediana foi de 1 ha; o número mediano de indivíduos registrados foi de 1540 indivíduos; a riqueza observada mediana foi de 107 espécies; e o ano de amostragem ou publicação variou entre 1986 e 2016 (fig. \@ref(fig:GE-sitios) b). Portanto, todos os 107 inventários possuem mapa de cobertura florestal na base de mapas de cobertura florestal do Mapbiomas 6 (@mapbiomas). Desses 107 inventários, dois não foram usados para simulações, pois não foi possível desenhar a parcela quadrada no centro da paisagem devido à configuração espacial da paisagem fragmentada (fig. \@ref(fig:sitios-removidos)). Assim, as análises do efeito explicativo da paisagem na predição da biodiversidade local são desenvolvidas a partir de 105 sítios, mapas no material de suporte (fig. \@ref(fig:mapas-sitios)).
+Dos inventários florestais disponíveis na base TreeCo, 109 atenderam aos critérios de seleção iniciais (tab. @ref(tab:dados-disponiveis)). As parcelas amostradas estavam distribuídas entre -31° e -7° de latitude e -55° e -35° de longitude (fig. @ref(fig:GE-sitios)a). A maioria foi conduzida em áreas classificadas como florestas primárias, segundo o TreeCo (@de_lima_how_2015). Apenas duas parcelas, identificadas como de perturbação altíssima, foram removidas da análise (fig. @ref(fig:GE-sitios)c), resultando em 107 inventários válidos.
 </p>
+
+<p>
+Essas parcelas apresentam uma área amostrada mediana de 1 ha, com mediana de 1540 indivíduos e 107 espécies registradas. Os anos de amostragem variaram entre 1986 e 2016 (fig. @ref(fig:GE-sitios)b). Todos as 107 parcelas foram associados a mapas de cobertura florestal derivados da coleção 6 do MapBiomas (@mapbiomas). Entretanto, em dois casos não foi possível desenhar a parcela quadrada no centro da paisagem devido à configuração espacial da cobertura, o que reduziu o conjunto final de sítios utilizados para 105 parcelas (fig. @ref(fig:sitios-removidos)). Os mapas detalhados de cada sítio estão disponíveis na Informação de Suporte (fig. @ref(fig:mapas-sitios)).
+</p>
+
 
 ```{r caption GE dados disponiveis,eval=TRUE,include=TRUE}
 cap <- "Sítios selecionados na base de dados TreeCo. a) Coordenadas geográficas e proporção de cobertura florestal nas paisagens contemporâneas aos eventos de amostragem com extensão espacial de 4 x 4 $km^{2}$. A área em verde marca a delimitação política da Floresta Atlântica (IBGE 2021). b) Distribuição das características quantitativas dos inventários, de cima para baixo: número de indivíduos amostrados, área da parcela amostrada, número de espécies observado e ano de amostragem. c) Contagem do número de sítios pelas classes de perturbação simulados. Essas classes de perturbação que consideram tanto o tempo desde a última grande perturbação quanto o grau de perturbação: baixa, sem perturbação conhecida nos últimos 80 anos; mediana, perturbação moderada entre 80 e 50 anos atrás; alta, perturbação mediana ou elevada nos últimos 50 anos; altíssima, perturbação mediana ou elevada nos últimos 20 anos."
@@ -603,19 +626,20 @@ grid.arrange(grobs=l_p,
 ## A sensibilidade da taxa U à extensão espacial da paisagem ao redor: efeito de escala  {#efeito-escala}
 
 <p>
-Nesta seção apresentamos os resultados principais da análise de efeito de escala, que são complementados no apêndice “Efeito de Escala”. Esta análise teve como objetivo determinar a extensão espacial da paisagem (L, lado da paisagem) suficiente para simular diferentes graus de limitação de dispersão. A extensão L determina a área de cobertura florestal ao redor da parcela do inventário (fig. \@ref(fig:sitios-SoE)). Consequentemente, a escolha de L é fundamental para a construção da paisagem hipotética aglomerada, pois determina a quantidade de cobertura florestal que será agregado ao redor da parcela. 
+Nesta seção apresentamos os resultados principais da análise de efeito de escala, detalhados no apêndice Efeito de Escala. O objetivo foi determinar a extensão espacial da paisagem (L, lado em km) suficiente para representar diferentes graus de limitação de dispersão. A escolha de L é crítica, pois define a quantidade de cobertura florestal incorporada ao redor da parcela e, portanto, influencia diretamente a construção da paisagem hipotética aglomerada (fig. @ref(fig:sitios-SoE)).
 </p>
 
 <p>
-Verificamos um decaimento monotônico na média da taxa U com o aumento da extensão espacial para a maioria dos cenários de limitação de dispersão (fig. \@ref(fig:SoE) a). Em cenários de limitação de dispersão intermediários (k entre 0.75 e 0.60) não se observa esse padrão geral de decaimento monotônico. Nesses cenários de limitação de dispersão, houve picos locais da taxa U. E em um caso a taxa U média máxima não foi no menor valor de L. 
+Observamos um padrão geral de decaimento monotônico da taxa U média com o aumento da extensão espacial em boa parte dos cenários (fig. @ref(fig:SoE)a). No entanto, em cenários de limitação de dispersão intermediária (k entre 0,75 e 0,60) surgiram picos locais na taxa U, e em um caso o valor máximo ocorreu em um L maior do que o mínimo testado, o que inviabilizou a aplicação direta do algoritmo de escolha.
+</p>
+
+
+<p>
+Para os demais cenários, a relação entre L e o grau de limitação de dispersão foi não linear. Nos cenários mais brandos (k abaixo de 0,65), houve uma tendência clara de aumento de L conforme a dispersão se tornava menos restrita, com valores variando entre 1 km e 3 km (fig. @ref(fig:SoE)b). Já nos cenários mais severos (k acima de 0,65), a escolha de L mostrou maior incerteza entre 1 km e 2 km, reflexo da estocasticidade do MNEE, do número limitado de níveis de L testados, da interpolação linear e do uso do limiar de 75%.
 </p>
 
 <p>
-Nos demais cenários, o valor de L correspondente ao limiar de escolha variou de forma não linear com o grau de limitação de dispersão. Nos cenários mais brandos de limitação de dispersão (k abaixo de 0.65) se observa uma tendência de aumento de L com a redução da limitação de dispersão (fig. \@ref(fig:SoE)). Para k abaixo de 0.65 o valor de L escolhido varia entre 1 km até 3 km com a redução da limitação de dispersão (fig. \@ref(fig:SoE) b). Nos cenários de limitação de dispersão mais severos (k acima de 0.65) não se observa uma tendência clara na escolha de L (fig. \@ref(fig:SoE)). Para k = 0.70 não foi possível aplicar o algoritmo de escolha, pois o máximo não era no menor L (fig. \@ref(fig:SoE)). Nos cenários de limitação de dispersão intermediários e severos (k acima de 0.70) houve incerteza entre 1km e 2km de L (fig. \@ref(fig:SoE)). 
-</p>
-
-<p>
-Para a escolha de L, considerei que essa incerteza para valores de k acima de 0.65 pode ser explicada por fatores como: a estocasticidade do MNEE; o número limitado de níveis de L testados; a interpolação linear; e da particular escolha do limiar de 75%. Assim, decidi assumir que todos os k acima de 0.50 são bem aproximados pelo L = 1km. Essa escolha é coerente com a expectativa de que L aumenta com o relaxamento da limitação de dispersão, padrão que foi observado para k abaixo de 0.60 (fig. \@ref(fig:SoE)). Além disso, como L = 3 km não estava entre os valores testados (L = 0.5, 1, 2, 4, 8, 16 km), optei por L = 4 km — o valor disponível imediatamente superior. Essa escolha conservadora garante que a extensão espacial selecionada não subestime o limiar de 75% de redução acumulada. Portanto, para k acima de 0.50, L = 1 km; para k entre 0.45 e 0.2, L = 2 km; e k abaixo de 0.15, L = 4 km. Esses valores de L serão usados para definir a extensão espacial das paisagens hipotéticas nas próximas análises. No material de suporte há os lados escolhidos considerando os limiares de 90% e 95% (fig. \@ref(fig:comparacao-limiares)).
+Diante disso, adotei uma decisão conservadora: considerar L = 1 km para k acima de 0,50, L = 2 km para k entre 0,45 e 0,20 e L = 4 km para k abaixo de 0,15 (já que L = 3 km não estava disponível entre os valores testados). Esses valores foram assumidos como a extensão espacial de referência para as análises principais, garantindo que não haja subestimação do ponto de saturação da taxa U. No Apêndice de 'Escala de Efeito' estão disponíveis comparações com limiares mais amplos (90% e 95%, fig. @ref(fig:comparacao-limiares)).
 </p>
 
 
@@ -636,7 +660,38 @@ vxout <- 0.75
 l_p <- readRDS(file="~/Documentos/mestrado_Ecologia/artigo_principal/0_apendices/EfeitoEscala/figuras/l_p_efeito_escala.rds")
 grid.arrange(grobs=l_p,ncol=2)
 ```
-  
+
+
+##  Estimativa da taxa U nas paisagens hipotéticas {#taxaU}
+
+<p> A variabilidade da taxa U calibrada empiricamente revelou padrões consistentes em função da intensidade da limitação à dispersão. Para as três paisagens hipotéticas, observamos valores máximos em níveis intermediários de limitação (aprox. 0.65 < k < 0.75), enquanto valores reduzidos ocorreram sob limitação muito branda (k < 0.50, mais evidente na paisagem prístina) e, de forma mais marcada, sob limitação severa (k > 0.80) (fig. \@ref(fig:taxaU-lands)). A maior parte das estimativas situou-se entre $10^{-3}$ e $10^{-2}$, indicando que, em média, 1 em cada 100 a 1000 nascimentos representa uma nova espécie. Esses valores contrastam fortemente com os intervalos de $10^{-8}$ a $10^{-4}$ adotados em trabalhos anteriores sem calibração empírica (@campos2012; @campos2013; @thompson2019characterising), nos quais U era interpretada exclusivamente como taxa de especiação. </p> 
+
+<p> No presente estudo, a calibração tratou U como um parâmetro livre para aproximar a riqueza observada em cada combinação de paisagem e nível de k. Assim, a interpretação mais adequada é considerar U como um processo composto, que integra tanto a imigração de longa distância a partir da matriz (@nathan2008mechanisms; @wu2023establishment) quanto o ingresso de indivíduos provenientes de bancos de propágulos ou jovens não amostrados (@etienne2007zero; @jabot2008reconciling; @condit2012). Essa interpretação é consistente com o fato de que apenas indivíduos com DAP ≥ 5 cm foram inventariados, de modo que parte da reposição registrada nas simulações pode corresponder à emergência de espécies já presentes em estágios iniciais de desenvolvimento. </p> <p> Portanto, a taxa U calibrada não deve ser entendida apenas como especiação, mas como uma métrica sintética que integra múltiplos mecanismos de renovação da diversidade local. Essa abordagem reforça a utilidade de U como base da métrica log(U<sub>i</sub>/U<sub>j</sub>) para comparar cenários de paisagem de forma funcionalmente informada. </p>
+
+
+
+```{r}
+cap="A média da taxa U estimada (eixo y) em função da paisagem hipotética (cores) e limitação de dispersão (eixo y). Os pontos indicam a média de 10 réplicas para uma mesma bateria de simulações - a combinação de inventário florestal, paisagem hipotética e limitação de dispersão (para clareza, os pontos são omitidos). Cada boxplot sumariza os pontos obtidos para uma mesma paisagem hipotética e limitação de dispersão. Os boxplots descrevem três quantis (Q1 = 0.25, Q2 = 0.50 e Q3 = 0.75) e as linhas verticais o ponto mais próximo dos valores extremos, definidos como: Q1 - 1.5 * IQR (menor valor) e Q3 + 1.5 * IQR (maior valor), onde IQR = Q3 - Q1 é o intervalo interquartil. Os pontos que vão alem dos limites inferiores são marcados individualmente no boxplot. A tabela inserida contém um resumo estatístico da taxa U média por paisagem hipotética (os valores máximos, os quantis de 95% e 5%, e os mínimos). Cerca de 90% das simulações estimam taxa U entre $1 \\times 10^{-3}$ e $1 \\times 10^{-2}$, no limite o modelo variou entre ~$4 \\times 10^{-2}$ e ~$4 \\times 10^{-4}$."
+```
+```{r taxaU-lands, fig.cap=cap,fig.width=14,fig.height=8, cache=FALSE}
+p <- readRDS("./00_Resultados/rds/plot_taxaU_paisagens.rds")
+p
+```
+
+
+
+<!-- <p> -->
+<!-- Esta seção descreve a variabilidade da taxa U calibrada empiricamente para aproximar a riqueza observada. A taxa U é a base da métrica funcional da paisagem logUi/Uj, que compara a estimativa entre duas paisagens hipotéticas (Ui e Uj) para um mesmo inventário florestal e cenário de limitação de dispersão. A taxa U média revela a amplitude de valores na escala original. A métrica logUi/Uj quantifica a variação relativa (aumento ou diminuição) da taxa U da paisagem do numerador (Ui) em relação à do denominador (Uj).  -->
+<!-- </p> -->
+
+<!-- <p> -->
+<!-- Para as três paisagens hipotéticas observamos uma tendência a valor máximo da taxa U quando a limitação de dispersão é intermediária (principalmente em 0.65 < k < 0.75) e valores reduzidos quando a limitação de dispersão é muito branda (k<0.50, com mais consistência para a paisagem prístina), mas principalmente quando é severa (k>0.80, fig. \@ref(fig:taxaU-lands)). A maior parte das taxas U estimadas teve ordem de grandeza entre $10^{-3}$  e $10^{-2}$ (fig. \@ref(fig:taxaU-lands)). Ou seja, para cada nascimento na paisagem, 1 entre 100 até 1 entre 1 mil são de novas espécies. Nos trabalhos que investigam os padrões de biodiversidade usando MNEE em paisagens fragmentadas (simuladas ou empíricas), mas sem calibração empírica da taxa U, utilizou-se uma taxa U entre $10^{-8}$ e $10^{-4}$ (@campos2012; @campos2013; @thompson2019characterising). Nesses trabalhos a única interpretação da taxa U era como taxa de especiação, o que justifica fixá-la em ordens de magnitude inferior nas simulações. -->
+<!-- </p> -->
+
+<!-- <p> -->
+<!-- Em nosso trabalho, a taxa U foi um parâmetro livre para que as simulações resultassem em uma riqueza igual à riqueza observada, para cada nível de limitação à dispersão (valor de k) e  paisagem hipotética na qual a simulação foi realizada (isto é os 3 tipos de paisagens utilizados). Assim, uma interpretação mais apropriada para a taxa U em nosso estudo deve incluir o efeito da dispersão de longa de fora da paisagem (@nathan2008mechanisms; @wu2023establishment). Outro processo que pode afetar a taxa U é o ingresso de indivíduos de espécies que estavam antes apenas no banco de propágulos (@etienne2007zero, @jabot2008reconciling, @condit2012). Assim, uma vez que apenas indivíduos com DAP maior ou igual a 5 cm são inventariados (e portanto simulados), é possível interpretar parte da reposição de espécies perdidas pela taxa U como ingresso a partir do reservatório de espécies ausentes entre os adultos na paisagem, mas já presentes como propágulos ou jovens. -->
+<!-- </p> -->
+
 ## Congruência entre a SAD observada e predita por MNEE nas paisagens hipotéticas {#congSAD}
 <p>
 O objetivo dessa seção é descrever a variabilidade na congruência da predição do MNEE e, dessa forma, avaliar se esse modelo é adequado para ter a taxa U interpretada. A SAD é a predição de MNEE que é obtida uma vez estimada a taxa U nas paisagens hipotéticas, conforme a escala adequada para cada cenário de limitação de dispersão (fig. \@ref(fig:SoE)). Usados modelos estatísticos para descrever a probabilidade de uma SAD simulada ser congruente com a SAD observada em função da capacidade de dispersão e da paisagem hipotética usadas nas simulações em cada parcela. O modelo mais complexo inclui efeitos específicos por tipo de paisagem e por inventário florestal. Também incorpora splines para o parâmetro k (limitação de dispersão), variando entre classes de perturbação da parcela e por inventário florestal. E também possui um spline para as coordenadas geográficas das parcelas, para descrever a possível autocorrelação espacial entre inventários florestais próximos (@wood2017). Modelos mais simples foram obtidos pela remoção progressiva de termos.
@@ -709,36 +764,19 @@ Nessa faixa de limitação de dispersão branda, simulações usando a paisagem 
 Em resumo, a simulação MNEE nas três paisagens hipotéticas pode apresentar boa congruência com a SAD observada, uma vez que a taxa U é ajustada pela riqueza observada (fig. \@ref(fig:p-cong)). A predição de MNEE é boa, exceto em cenários de limitação de dispersão muito brandos (k < 0.25), em que a média diminui em todos os cenários e classes de perturbação. Em grande parte dos inventários, todas as SADs simuladas foram compatíveis com a SAD observada para as combinações de paisagem e limitação de dispersão (fig. \@ref(fig:p-cong)). Porém, em alguns inventários as SADS simuladas por MNEE não apresentam boa congruência em algum cenário de limitação de dispersão ou paisagem hipotética (fig. \@ref(fig:p-cong)).
 </p>
 
-##  Estimativa da taxa U nas paisagens hipotéticas {#taxaU}
-
-```{r}
-cap="A média da taxa U estimada (eixo y) em função da paisagem hipotética (cores) e limitação de dispersão (eixo y). Os pontos indicam a média de 10 réplicas para uma mesma bateria de simulações - a combinação de inventário florestal, paisagem hipotética e limitação de dispersão (para clareza, os pontos são omitidos). Cada boxplot sumariza os pontos obtidos para uma mesma paisagem hipotética e limitação de dispersão. Os boxplots descrevem três quantis (Q1 = 0.25, Q2 = 0.50 e Q3 = 0.75) e as linhas verticais o ponto mais próximo dos valores extremos, definidos como: Q1 - 1.5 * IQR (menor valor) e Q3 + 1.5 * IQR (maior valor), onde IQR = Q3 - Q1 é o intervalo interquartil. Os pontos que vão alem dos limites inferiores são marcados individualmente no boxplot. A tabela inserida contém um resumo estatístico da taxa U média por paisagem hipotética (os valores máximos, os quantis de 95% e 5%, e os mínimos). Cerca de 90% das simulações estimam taxa U entre $1 \\times 10^{-3}$ e $1 \\times 10^{-2}$, no limite o modelo variou entre ~$4 \\times 10^{-2}$ e ~$4 \\times 10^{-4}$."
-```
-```{r taxaU-lands, fig.cap=cap,fig.width=14,fig.height=8, cache=FALSE}
-p <- readRDS("./00_Resultados/rds/plot_taxaU_paisagens.rds")
-p
-```
-
-<p>
-Esta seção descreve a variabilidade da taxa U calibrada empiricamente para aproximar a riqueza observada. A taxa U é a base da métrica funcional da paisagem logUi/Uj, que compara a estimativa entre duas paisagens hipotéticas (Ui e Uj) para um mesmo inventário florestal e cenário de limitação de dispersão. A taxa U média revela a amplitude de valores na escala original. A métrica logUi/Uj quantifica a variação relativa (aumento ou diminuição) da taxa U da paisagem do numerador (Ui) em relação à do denominador (Uj). 
-</p>
-
-<p>
-Para as três paisagens hipotéticas observamos uma tendência a valor máximo da taxa U quando a limitação de dispersão é intermediária (principalmente em 0.65 < k < 0.75) e valores reduzidos quando a limitação de dispersão é muito branda (k<0.50, com mais consistência para a paisagem prístina), mas principalmente quando é severa (k>0.80, fig. \@ref(fig:taxaU-lands)). A maior parte das taxas U estimadas teve ordem de grandeza entre $10^{-3}$  e $10^{-2}$ (fig. \@ref(fig:taxaU-lands)). Ou seja, para cada nascimento na paisagem, 1 entre 100 até 1 entre 1 mil são de novas espécies. Nos trabalhos que investigam os padrões de biodiversidade usando MNEE em paisagens fragmentadas (simuladas ou empíricas), mas sem calibração empírica da taxa U, utilizou-se uma taxa U entre $10^{-8}$ e $10^{-4}$ (@campos2012; @campos2013; @thompson2019characterising). Nesses trabalhos a única interpretação da taxa U era como taxa de especiação, o que justifica fixá-la em ordens de magnitude inferior nas simulações.
-</p>
-
-<p>
-Em nosso trabalho, a taxa U foi um parâmetro livre para que as simulações resultassem em uma riqueza igual à riqueza observada, para cada nível de limitação à dispersão (valor de k) e  paisagem hipotética na qual a simulação foi realizada (isto é os 3 tipos de paisagens utilizados). Assim, uma interpretação mais apropriada para a taxa U em nosso estudo deve incluir o efeito da dispersão de longa de fora da paisagem (@nathan2008mechanisms; @wu2023establishment). Outro processo que pode afetar a taxa U é o ingresso de indivíduos de espécies que estavam antes apenas no banco de propágulos (@etienne2007zero, @jabot2008reconciling, @condit2012). Assim, uma vez que apenas indivíduos com DAP maior ou igual a 5 cm são inventariados (e portanto simulados), é possível interpretar parte da reposição de espécies perdidas pela taxa U como ingresso a partir do reservatório de espécies ausentes entre os adultos na paisagem, mas já presentes como propágulos ou jovens.
-</p>
 
 ## Critérios de interpretação dos efeitos simulados da paisagem {#criterios}
 
-<p>
-Nesta seção iremos separar as simulações que serão usadas para interpretar os efeitos propostos da paisagem. Apesar da boa congruência de MNEE em média, iremos utilizar apenas um subconjunto das simulações realizadas. Primeiro, focamos nos cenários de limitação de dispersão mais realistas para árvores em florestas tropicais, em que a maior parte dos propágulos se dispersa para a vizinhança imediata da progenitora (@bullock_synthesis_2017; @clark1999seed). Iremos considerar apenas as simulações em que a proporção de propágulos na vizinhança imediata de cada adulto (k) é maior ou igual a 0.50. Ou seja, simulações em que pelo menos metade dos propágulos caem até a árvore-mãe e a árvore vizinha imediata. Nesses cenários de limitação de dispersão, a SAD simulada por MNEE apresentou boa congruência média para todas as paisagens hipotéticas. 
-</p>
+<p> 
+Para selecionar as simulações utilizadas na análise dos efeitos funcionais da paisagem, aplicamos dois filtros sucessivos. Primeiro, restringimos os cenários de limitação de dispersão a valores mais realistas para árvores tropicais (k ≥ 0.50), correspondentes a situações em que pelo menos metade dos propágulos permanece na vizinhança imediata da árvore-mãe e de sua vizinha (@bullock_synthesis_2017; @clark1999seed). Nesses cenários, o MNEE apresentou boa congruência média entre SADs simuladas e observadas para as três paisagens experimentais (fig. \@ref(fig:p-cong)). 
+</p> 
 
-<p>
-Segundo, aplicamos um filtro de congruência com a SAD observada para selecionar inventários onde o MNEE apresentou bom desempenho (fig. \@ref(fig:p-cong)). Consideramos como congruentes os inventários que, para cada combinação individual de limitação de dispersão (k) e paisagem hipotética, apresentaram SADs compatíveis com a observada em pelo menos 75% das réplicas. Dos 105 sítios iniciais, 67 atenderam a esse critério em todas as combinações de k e paisagem hipotética. Os 38 demais foram excluídos por apresentarem baixa congruência em pelo menos uma combinação (figs. \@ref(fig:sitioscong)). A distribuição de porcentagem de cobertura florestal foi similar entre sítios congruentes e não congruentes (figs. \@ref(fig:sitioscong)).
+<p> 
+Em seguida, aplicamos um filtro de congruência em nível de inventário. Foram considerados congruentes aqueles sítios em que, para todas as combinações de k e paisagem hipotética, pelo menos 75% das réplicas geraram SADs compatíveis com a observada. Dos 105 sítios iniciais, 67 atenderam a esse critério e foram mantidos para as análises posteriores, enquanto os outros 38 foram descartados por apresentarem baixo desempenho em pelo menos uma combinação (figs. \@ref(fig:sitioscong)). 
+</p> 
+
+<p> 
+As parcelas congruentes apresentaram distribuição ao longo de todo o gradiente de cobertura florestal, com tendência a maior frequência em áreas mais preservadas. Esse padrão, no entanto, também foi observado entre as parcelas não congruentes, sugerindo que a congruência da SAD não dependeu diretamente do contexto de cobertura florestal (fig. \@ref(fig:sitioscong)). No apêndice, apresentamos estatísticas complementares mostrando que, em média, a congruência da SAD simulada foi satisfatória em ampla faixa de limitação de dispersão, mas piorou de maneira consistente em cenários de alta capacidade de dispersão, reforçando que esses cenários não são adequados para representar populações de árvores tropicais. 
 </p>
 
 
