@@ -810,7 +810,7 @@ df_real %>%
 
 
 ######### obs X predito (fixo + aleatório)
-f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE){
+f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE,vpos=c(0.72,0.25),vt=15,vts=0.90){
   dfpred <- dff %>% 
     mutate(
       p_class = case_when(
@@ -832,7 +832,7 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE){
     distinct() %>% 
     group_by(p_class) %>% 
     tally() %>% 
-    mutate(label = paste0(p_class,", n =",n)) %>% 
+    mutate(label = paste0(p_class,", n = ",n)) %>% 
     select(-n)
   df_ij$label <- factor(df_ij$label,
                         levels=unique(df_ij$label))
@@ -843,22 +843,32 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE){
       names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
       value = c(min(Uefeito), max(Uefeito),quantile(Uefeito,probs=0.05),quantile(Uefeito,probs=0.95))
     )
-  # across(Uefeito,
-  #            .fns = list(min=min,max=max),
-  #            .names = "{.fn}")
-  # 
+  ##########################################################################
+  ####################### pós defesa do mestrado \o/ ####################### # Início
+  ##########################################################################
+  dfp <- mutate(dfp,
+                across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
+                  matches("Uefeito|fit|er$"),~.x * (-1)
+                  ),
+                efeito = gsub("Frag. total","Perda e Frag. Cob. (PFC)",efeito) %>% 
+                  gsub("Frag. per se","Frag. per se (FPS)",.) %>% 
+                  gsub("Área per se","Perda De Cob. (PDC)",.)
+                )
+  ##########################################################################
+  ####################### pós defesa do mestrado \o/ ####################### # Fim
+  ##########################################################################
   dfp <- filter(dfp,p_class!="%CF = 100")
   dfp %>% 
     mutate(efeito = factor(efeito,
-                           levels=c("Frag. total",
-                                    "Frag. per se",
-                                    "Área per se"))) %>% 
+                           levels=c("Perda e Frag. Cob. (PFC)",
+                                    "Frag. per se (FPS)",
+                                    "Perda De Cob. (PDC)"))) %>% 
     ggplot(aes(x=k,y=Uefeito)) +
     geom_boxplot(aes(group=k),alpha=0.6) +
     geom_hline(yintercept = 0,color="black") +
     geom_hline(data = dfrange, aes(yintercept = value,linetype=names),
                color="black",linewidth=0.5) +
-    scale_linetype_manual(name = paste0("logU/U %CF=100",", n =",nsites),
+    scale_linetype_manual(name = paste0("%CF=100",", n =",nsites),
                           values=c("dotted","dashed")) +
     {if(logic_ribbon)geom_ribbon(aes(x=k,y=fit,ymin=lower,ymax=upper,group = SiteCode),
                                  fill="lightblue",
@@ -873,17 +883,20 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE){
     facet_grid(efeito~label,scales="free") +
     theme_classic() +
     theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
+          text=element_text(size=vt,face="bold"),
           legend.position = "inside",
-          legend.position.inside = c(0.72,0.25),
-          legend.direction="horizontal") 
+          legend.position.inside = vpos,
+          legend.direction="horizontal") +
+    guides(linetype = guide_legend(
+      title.theme = element_text(size = vt*vts, face = "bold")
+      )
+    )
 }
-p_efeitos <- f_obs_predito_bysite(df_real,logic_ribbon = TRUE)
-saveRDS(p_efeitos,"1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.rds")
-
+p_efeitos <- f_obs_predito_bysite(df_real,logic_ribbon = TRUE, vpos=c(0.72,0.10),vt = 12.5)
 ggsave(filename = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.png",
        dpi=200,
        plot=p_efeitos,
-       width=12,height=8)
+       width=12,height=9)
 saveRDS(p_efeitos,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.rds")
 ###############
 #
@@ -1292,6 +1305,72 @@ ggsave(filename="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fragperse
        plot=p,
        width = 12,
        dpi=200)
+##########################################
+dfp <- df_plot %>% 
+  select(-`Frag. total`) %>% 
+  mutate(diffE = abs(`Área per se`) - abs(`Frag. per se`))
+dfrange <- filter(dfp,p_class=="%CF = 100") %>% 
+  reframe(
+    names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
+    value = c(min(diffE), max(diffE),quantile(diffE,probs=0.05),quantile(diffE,probs=0.95))
+  )
+f_ggplot <- \(dfp=dfp,dfrange=dfrange,vt=15,v_scl_facet="free_y"){
+  p <- dfp %>% 
+    group_by(p_class) %>% 
+    mutate(nsites = length(unique(SiteCode)),
+           label = paste0(p_class,", n = ",nsites),
+           klabel = paste0("k = ",round(k,2)) 
+    ) %>% 
+    filter(p_class!="%CF = 100",
+           round(k,2) %in% c(0.99,0.70,0.50)) %>% 
+    ggplot(aes(x=diffE)) +
+    geom_histogram() +
+    geom_vline(xintercept = 0,color="red",linetype=1) +
+    geom_vline(data = dfrange, aes(xintercept = value,linetype=names),
+               color="black",linewidth=0.5) +
+    scale_linetype_manual("%CF = 100%",
+                          breaks = unique(dfrange$names),
+                          values = c("dotted","dashed")) +
+    scale_x_continuous(expand=c(0,0)) +
+    scale_y_continuous(expand=c(0,0),
+                       breaks = 1:9) +
+    labs(x="|PDC| - |FPS|",y="") +
+    facet_grid(klabel~label,scales=v_scl_facet) +
+    theme(text=element_text(size=vt,face="bold"),
+          legend.position = "bottom",
+          plot.margin = margin(0,0,0,0))
+  return(p)
+}
+p <- f_ggplot(dfp,dfrange,vt)
+ggsave(filename = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/diff_modulo_PDC_FPS.png",
+       dpi=200,
+       plot=p,
+       width=12,height=6)
+
+
+
+
+
+
+
+
+
+
+
+##########################################
+
+
+
+
+
+
+
+
+
+
+
+
+
 ############################### 1a versão
 f_finalNAOUSADA <- \(dfdados){
   df_plot <- df_real %>% 

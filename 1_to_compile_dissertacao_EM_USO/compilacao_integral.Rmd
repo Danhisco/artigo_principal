@@ -381,7 +381,7 @@ Consultamos a base de dados TreeCo, que reúne amplamente estudos fitossociológ
 </p>
 
 <p>
-Para caracterizar a cobertura vegetal no entorno de cada inventário, utilizamos os mapas da coleção 6 do MapBiomas (1985–2020; resolução de 30 m). Para cada parcela, foi selecionado o mapa de cobertura florestal correspondente ao ano mais próximo da amostragem, e a área de análise foi definida a partir de um recorte centrado na localização da parcela (até 16 km²). As unidades de habitat foram derivadas da proporção de cobertura florestal nos pixels, permitindo relacionar a configuração da paisagem com os indivíduos amostrados.
+Para caracterizar a cobertura vegetal no entorno de cada inventário, utilizamos os mapas da coleção 6 do MapBiomas (1985–2020, resolução de 30 m; REF). Para cada parcela, foi selecionado o mapa de cobertura florestal correspondente ao ano mais próximo da amostragem, e a área de análise foi definida a partir de um recorte centrado na localização da parcela (até 16 km²). As unidades de habitat foram derivadas da proporção de cobertura florestal nos pixels, permitindo relacionar a configuração da paisagem com os indivíduos amostrados.
 </p>
 
 
@@ -390,45 +390,61 @@ Para caracterizar a cobertura vegetal no entorno de cada inventário, utilizamos
 __Calibração dos cenários de limitação de dispersão por parcela__
 
 <p>
-O procedimento de simulações é composta de diferentes etapas. Primeiro, é feito a calibração da função de dispersão dos indivíduos. A função de dispersão foi parametrizada com  uma distribuição de Laplace, essa função de dispersão descreve a probabilidade de um propágulo colonizar um habitat vago. A probabilidade diminui exponencialmente com a distância até o habitat vago. Controlamos a limitação de dispersão, regulando a proporção de propágulos que permanece até a vizinhança imediata da fonte, variável k. Uma vez que as parcelas diferem na densidade de indivíduos, a distância média entre indivíduos muda entre parcelas, por conta disso, a função de dispersão é parametrizada para cada parcela.
+O procedimento de simulações é composta de diferentes etapas. Primeiro, é feito a calibração da função de dispersão dos indivíduos. A função de dispersão foi parametrizada com  uma distribuição de Laplace, essa função de dispersão descreve a redução na probabilidade de um propágulo colonizar um habitat vago com o aumento da distância até o habitat vago (REF). Controlamos a limitação de dispersão regulando a proporção de propágulos que permanece até a vizinhança imediata da fonte, variável k (20 valores, de 0.99 - situação de extrema limitação de dispersão, até 0.05 - situação de alta capacidade de dispersão). Uma vez que as parcelas diferem na densidade de indivíduos, a distância média entre indivíduos muda entre parcelas, por conta disso, a função de dispersão é parametrizada para cada parcela.
 </p>
 
 __Estimativa da escala espacial suficiente para simular os cenários de limitação de dispersão__
 
 <p>
-Segundo, estimamos a escala espacial adequada para os 20 cenários de limitação de dispersão. Para avaliar a influência da escala espacial na limitação de dispersão, simulamos a taxa U em paisagens prístinas sob diferentes tamanhos de área (0,5 a 16 km de lado) e graus de limitação de dispersão (valores de k). O objetivo foi determinar, para cada nível de limitação, a extensão espacial mínima necessária para que a estimativa de U não fosse mais sensível ao aumento da paisagem. A análise se baseou em um método heurístico que identifica o ponto de saturação da redução de U em função da escala (detalhes no Apêndice “Efeito de Escala”, @ref(apendSoE), e no Materais e Método detalhado).
+Segundo, estimamos a escala espacial adequada para os cenários de limitação de dispersão simulados. Para avaliar a influência da escala espacial na limitação de dispersão, simulamos a taxa U em paisagens prístinas sob diferentes tamanhos de área (0,5 a 16 km de lado) e graus de limitação de dispersão (valores de k). Em estudo com uma amostra das parcelas selecionadas, o objetivo foi determinar, para cada nível de dispersão, a extensão espacial mínima necessária para que a estimativa de U não fosse mais sensível ao aumento da paisagem. A análise se baseou em um método heurístico que identifica o ponto de saturação da redução de U em função da escala (detalhes no Apêndice “Efeito de Escala”, @ref(apendSoE), e no Materais e Método detalhado).
 </p>
 
 __Calibração empírica da taxa U__
 
 <p>
-Terceiro, para cada batreia de simulação (a combinação de parcela selecionada, paisagem experimental e cenário de dispersão) é estimado a taxa U necessário para obter a riqueza de espécies observada. A taxa U, que representa a probabilidade de introdução de novas espécies por nascimento, é estimada usando um método analítico proposto por @rosindell2008 em seu apêndice A. Essa abordagem combina a simulação da genealogia da comunidade, sob hipótese de ausência de  com uma equação que relaciona a riqueza observada à taxa média de introdução de novas espécies, permitindo calibrar o MNEE com base na riqueza local observada (@rosindell2008, Apêndice A). Para cada betaria de simulação são feitas 10 réplicas e calculado a média</p>
+Terceiro, para cada bateria de simulação (a combinação de parcela selecionada, paisagem experimental e cenário de dispersão) é estimado a taxa U necessário para obter a riqueza de espécies observada. A taxa U, que representa a probabilidade de introdução de novas espécies por nascimento, é estimada usando um método analítico proposto por @rosindell2008 em seu apêndice A. Essa abordagem combina a simulação da genealogia da comunidade com uma equação que relaciona a riqueza observada à taxa U média de introdução de novas espécies, permitindo calibrar o MNEE com base na riqueza local observada (@rosindell2008, Apêndice A). Para cada betaria de simulação são óbtidas 10 réplicas da taxa U e calculado a média.</p>
 </p>
 
 __Validação empírica da SAD simulada__
 
 <p>
-Para cada bateria de simulação e taxa U média, a simulação de MNEE foi replicado 100 vezes, gerando distribuições de abundância de espécies (SADs) simuladas. Essas SADs foram comparadas com as observadas nas parcelas por meio de testes de Kolmogorov-Smirnov. Consideramos que uma bateria de simulação foi bem aproximada quando pelo menos 75% das réplicas não diferiram significativamente da SAD empírica (P>0,05). Para as análises subsequentes, selecionamos apenas as parcelas em que o modelo neutro espacialmente explícito (MNEE) apresentou boa aproximação em todos os cenários com limitação de dispersão acima de 0,50 — condição considerada mais realista para espécies arbóreas (REF). Uma análise complementar da congruência média foi feita no apêndice "Descrição da congruência de MNEE" (REF).
+Para cada bateria de simulação e taxa U média, a simulação de MNEE foi replicado 100 vezes, gerando distribuições de abundância de espécies (SADs) simuladas. Essas SADs foram comparadas com as observadas nas parcelas por meio de testes de Kolmogorov-Smirnov. Consideramos que uma bateria de simulação foi bem aproximada quando pelo menos 75% das réplicas não diferiram significativamente da SAD empírica (P>0,05). Para as análises subsequentes, selecionamos apenas as parcelas em que MNEE apresentou boa aproximação da SAD observada em todos os cenários com limitação de dispersão acima de 0,50 — condição considerada mais realista para espécies arbóreas (REF). Uma análise complementar da congruência média também foi feita.
 </p>
 
 # Resultados
-<p>
-Obtivemos 105 parcelas florestais distribuídas ao longo da Floresta Atlântica, cobrindo um amplo gradiente geográfico e de configurações espaciais da paisagem (REF para "Resultados Suplementares"). Esses sítios foram selecionados a partir da base TreeCo e associados a mapas de cobertura florestal do MapBiomas (REF para "Resultados Suplementares"). Após exclusões pontuais, cada sítio serviu como unidade empírica para as simulações, representando uma diversidade de condições de paisagem adequadas para investigar os efeitos da fragmentação sobre a biodiversidade local (REF para "Resultados Suplementares").
-</p>
-
-<p>
-A análise de efeito de escala mostrou que a extensão espacial necessária para as simulações variou de acordo com o grau de limitação de dispersão. Para cenários mais severos (k entre 0,99 e 0,50), 1 km de lado foi suficiente; para cenários intermediários (k entre 0,45 e 0,20), 2 km de lado; e para cenários muito brandos (k abaixo de 0,15), 4 km de lado. Esses valores foram adotados como referência nas análises subsequentes.
-</p>
-
 <p> 
-A calibração empírica da taxa U, ajustada para reproduzir a riqueza observada em cada cenário, resultou em valores entre $10^{-3}$ e $10^{-2}$ (fig. \@ref(fig:taxaU-lands)). Isso significa que, em média, de cada 100 a 1000 nascimentos, um corresponde a uma nova espécie. Diferentemente de trabalhos anteriores que interpretaram U apenas como especiação (e.g. REF), aqui a taxa calibrada reflete um processo composto que inclui imigração de longa distância e recrutamento a partir de bancos de propágulos (REF). 
+Simulamos 105 parcelas florestais cobrindo um amplo gradiente de riqueza de espécies, número de indivíduos e de configurações espaciais da paisagem (REF para "Resultados Suplementares"). As escalas espaciais estimadas como suficientes variaram conforme a dispersão: 1 km de lado quando a maior parte dos propágulos permanece até a vizinhança imediata (k = 0,50–0,99), 2 km para cenários de limitação de dispersão pouco severos (k = 0,20–0,45) e 4 km quando a dispersão é mais ampla simulada (k < 0,15). Em média, a congruência entre SADs simuladas e observadas foi alta para os cenários de dispersão em que a maior parte dos propágulos permanece até a vizinhança imediata, reduzindo-se apenas em cenários da maior dispersão simulado (REF para os resultados suplementares). Das 105 parcelas, 67 atenderam ao critério de boa congruência entre a distribuição de abundância de espécies (SAD) simulada e a observada, enquanto as 38 restantes foram excluídas (REF para "Resultados Suplementares"). As parcelas congruentes estão distribuídas ao longo do gradiente de cobertura florestal, com tendência a ocorrer em paisagens com maior cobertura, padrão semelhante ao observado para as não congruentes (REF para os resultados suplementares). As análises subsequentes consideram apenas as 67 parcelas congruentes, garantindo que a interpretação da métrica funcional log(Ui/Uj) reflita a resposta da biodiversidade local aos efeitos da paisagem. 
 </p>
 
-<p> 
-Das 105 parcelas simuladas, 67 atenderam ao critério de boa congruência entre a distribuição de abundância de espécies (SAD) simulada e a observada, e seguiram para as análises subsequentes. As 38 parcelas restantes foram excluídas (fig. \@ref(fig:p-cong)). Essas parcelas congruentes estão distribuídas ao longo do gradiente de cobertura florestal, com leve tendência a ocorrer em paisagens com maior cobertura, padrão semelhante ao observado para as parcelas não congruentes (REF para os resultados suplementares). Em média, a congruência entre SADs simuladas e observadas foi alta para cenários realistas de limitação de dispersão, decaindo apenas sob condições de dispersão muito ampla. 
-</p>
+
+<!-- A calibração empírica da taxa U, ajustada para reproduzir a riqueza observada em cada cenário, resultou em valores entre $10^{-3}$ e $10^{-2}$ (fig. \@ref(fig:taxaU-lands)). Isso significa que, em média, de cada 100 a 1000 nascimentos, um corresponde a uma nova espécie. Diferentemente de trabalhos anteriores que interpretaram U apenas como especiação (e.g. REF), aqui a taxa calibrada reflete um processo composto que inclui imigração de longa distância e recrutamento a partir de bancos de propágulos (REF).  # COMENTÁRIO: ainda não sei se vou deixar nos resultaod suplementares ou na legenda da figura 2. acho que o primeiro.--> 
+<!-- </p> --> 
 
 ## Métrica funcional da paisagem
+
+<p>
+A métrica funcional log(Ui/Uj) revelou padrões distintos para os três efeitos propostos da paisagem — perda de cobertura (PDC), fragmentação per se (FPS) e perda associada à fragmentação de cobertura (PFC) — modulados pela porcentagem de cobertura florestal (%CF) e pela limitação de dispersão (k, Fig. 2). Essa métrica quantifica a variação da vulnerabilidade da biodiversidade remanescente em resposta a cada efeito da paisagem (ver Fig. 1 e Quadro 1).
+</p>
+
+<p>
+O efeito de PDC foi consistentemente negativo em parcelas com paisagens com baixa cobertura florestal (<60%), mas nulo parcelas com maior cobertura (Fig. 2). A intensidade do efeito de PDC foi menor sob limitação de dispersão intermediária, com pouca variabilidade entre parcelas (Fig. 2).
+</p>
+
+<p>
+O efeito de FPS apresentou padrão bifásico - positivo sob limitação de dispersão severa e negativo sob limitação branda - e padrão nulo (Fig. 2). Esse efeito de FPS foi geralmente nulo em paisagens com cobertura acima de 60%, mas em algumas poucas parcelas nessa faixa de cobertura observou-se a expressão mais acentuada do padrão bifásico (Fig. 2). Enquanto em parcelas com paisagens com baixa cobertura florestal (principalmente abaixo de 30%), houve de forma consistente entre parcelas o padrão bifásico (Fig. 2).
+</p>
+
+<p>
+O efeito de PFC foi predominantemente negativo em paisagens com baixa cobertura florestal, sobretudo sob limitação de dispersão mais branda (Fig. 2). Em coberturas acima de 60% o efeito foi em geral nulo (Fig. 2). Mas alguns inventários foi observado o padrão bifásico, característico do efeito de FPS que nessas poucas parcelas dominou o efeito de PFC (Fig. 2).
+</p>
+
+<p>
+Na comparação direta, observou-se de forma consistente que ambos os efeitos de PDC e FPS aumentam em magnitude em paisagem com pouca cobertura florestal (Fig. 2 e REF resultados comlementares). O padrão geral do efeito de PDC foi mais consistente e com maior magniutde, enquanto o padrão do efeito de FPS apresentou mais parcelas que distoam mais do padrão geral (Fig. 2 e REF resultados complementares). Houveram poucas parcelas que 
+
+Assim, apesar de existir uma uniformidade de padrão entre a maioria das parcelas, conforme a capacidade de dispersão e a cobertura florestal, existe parcelas que podem apresentar padrões
+
+a vulnerabilidade da biodiversidade local à paisagem é principalmente explicada pela PDC, enquanto a FPS introduz modulações contextuais, dependentes da escala de dispersão.
+</p>
 
 # Discussão
 
@@ -789,6 +805,28 @@ p_boasempre_ounao
 ```
 
 ## A métrica funcional da influência da paisagem na biodiversidade local {#metrica-funcional}
+
+Detalhamento da variação dos efeitos da paisagem na métrica funcional log(Ui/Uj)
+
+Os valores da métrica log(Ui/Uj) oscilaram em torno de zero em grande parte das simulações, com amplitude entre -0.33 e 0.56 nos inventários analisados. Mesmo nos casos de %CF=100%, quando não há contraste real entre paisagens, houve pequena variação (-0.13 a 0.10), atribuída à estocasticidade demográfica do MNEE.
+
+Área per se
+
+O efeito de área per se apresentou padrão negativo em paisagens com cobertura inferior a 60%, sendo mais intenso em <30% de cobertura, onde log(Ui/Uj) variou entre -0.12 e 0.41, indicando que a taxa U na paisagem aglomerada foi até 50% maior do que na prístina. Em paisagens acima de 60% o efeito foi nulo. Sob limitação intermediária de dispersão, esse efeito foi atenuado.
+
+Fragmentação per se
+
+O efeito de fragmentação per se foi positivo sob severa limitação de dispersão e negativo sob dispersão branda, com ponto de virada próximo a k≈0.70. Embora em geral nulo em paisagens com cobertura superior a 60%, cerca de 18–35% dos inventários nessa faixa exibiram valores extremos (entre -0.34 e 0.57). Isso significa que, em alguns poucos casos de alta cobertura, o padrão bifásico se expressou de forma ainda mais acentuada do que em paisagens abertas.
+
+Fragmentação total
+
+O efeito de fragmentação total mostrou maior variabilidade entre inventários, refletindo a combinação dos efeitos de área e fragmentação. Em paisagens com baixa cobertura (<60%), predominou o padrão negativo, sobretudo sob dispersão branda. Em alta cobertura, prevaleceram efeitos nulos, mas cerca de 18% dos inventários apresentaram efeito positivo e 30% efeito negativo. A amplitude máxima variou entre -0.31 e 0.56.
+
+Comparação entre fragmentação per se e área per se
+
+De forma agregada, o efeito de área per se foi mais consistente e negativo, enquanto o de fragmentação per se variou simetricamente em torno de zero. Nos inventários, as situações mais frequentes foram: (i) fragmentação per se positiva e área per se negativa de maior magnitude; e (ii) fragmentação per se negativa e área per se positiva. A predominância de cada efeito ocorreu em extremos opostos do gradiente de cobertura: fragmentação per se mais forte em alta cobertura, área per se em baixa.
+
+#################################### antigo
 
 ### Apresentação 
 
