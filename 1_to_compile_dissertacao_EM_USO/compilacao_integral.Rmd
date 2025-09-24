@@ -435,16 +435,15 @@ O efeito de FPS apresentou padrão bifásico - positivo sob limitação de dispe
 </p>
 
 <p>
-O efeito de PFC foi predominantemente negativo em paisagens com baixa cobertura florestal, sobretudo sob limitação de dispersão mais branda (Fig. 2). Em coberturas acima de 60% o efeito foi em geral nulo (Fig. 2). Mas alguns inventários foi observado o padrão bifásico, característico do efeito de FPS que nessas poucas parcelas dominou o efeito de PFC (Fig. 2).
+O efeito de PFC foi predominantemente negativo em paisagens com baixa cobertura florestal, sobretudo sob limitação de dispersão mais branda (Fig. 2). Em coberturas acima de 60% o efeito foi em geral nulo (Fig. 2). Mas alguns inventários foi observado o padrão bifásico, característico do efeito de FPS que nessas poucas parcelas dominou o efeito de PFC (Fig. 2 e REF resultados suplementares).
 </p>
 
 <p>
-Na comparação direta, observou-se de forma consistente que ambos os efeitos de PDC e FPS aumentam em magnitude em paisagem com pouca cobertura florestal (Fig. 2 e REF resultados comlementares). O padrão geral do efeito de PDC foi mais consistente e com maior magniutde, enquanto o padrão do efeito de FPS apresentou mais parcelas que distoam mais do padrão geral (Fig. 2 e REF resultados complementares). Houveram poucas parcelas que 
-
-Assim, apesar de existir uma uniformidade de padrão entre a maioria das parcelas, conforme a capacidade de dispersão e a cobertura florestal, existe parcelas que podem apresentar padrões
-
-a vulnerabilidade da biodiversidade local à paisagem é principalmente explicada pela PDC, enquanto a FPS introduz modulações contextuais, dependentes da escala de dispersão.
+Na comparação direta da magnitude dos efeitos de PDC e FPS, entre a maioria das parcelas avaliadas observou-se que o efeito de PDC apresenta maior magnitude do que o efeito de FPS ou eles são equivalentes (Fig 2 e REF resultados suplementares). Apenas em algumas poucas parcelas em paisagens com alta cobertura florestal o efeito de FPS foi maior (Fig 2 e REF resultados suplementares).
 </p>
+
+
+
 
 # Discussão
 

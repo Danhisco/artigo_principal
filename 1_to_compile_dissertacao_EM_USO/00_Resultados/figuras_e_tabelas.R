@@ -1121,13 +1121,13 @@ f_hist_ggplot <- \(dff=df_real,tsize=10,diffrange){
 }
 f_polig_ref <- \(df_ref,df_analise){
   ## 1. Calcular o polígono convexo do grupo de referência
-  hull <- df_ref[chull(df_ref[["Área per se"]], df_ref[["Frag. per se"]]), ]
-  hull_analise <- df_analise[chull(df_analise[["Área per se"]], df_analise[["Frag. per se"]]), ]
+  hull <- df_ref[chull(df_ref[["PDC"]], df_ref[["FPS"]]), ]
+  hull_analise <- df_analise[chull(df_analise[["PDC"]], df_analise[["FPS"]]), ]
   ## 2. Converter para objeto sf (simple features) para análise espacial
-  polygon <- st_as_sf(hull, coords = c("Área per se", "Frag. per se")) %>% 
+  polygon <- st_as_sf(hull, coords = c("PDC", "FPS")) %>% 
     summarise(geometry = st_combine(geometry)) %>% 
     st_cast("POLYGON")
-  points <- st_as_sf(df_analise, coords = c("Área per se", "Frag. per se"))
+  points <- st_as_sf(pivot_wider(df_analise,names_from = efeito,values_from = Uefeito), coords = c("PDC", "FPS"))
   ## 3. Verificar quais pontos estão dentro do polígono
   inside <- st_contains(polygon, points, sparse = FALSE)[1,]
   ## 4. Calcular a porcentagem
@@ -1145,13 +1145,13 @@ f_polig_ref <- \(df_ref,df_analise){
 }
 f_scatterplot <- \(dfp,xrange,yrange,axislabs=TRUE,df_ref,
                    tsize=15){
-  label_efeitos="fragmentação per se ~ área per se"
-  xlab="Área per se"
-  ylab="Frag. per se"
+  label_efeitos="FPS ~ PDC"
+  xlab="PDC"
+  ylab="FPS"
   f_gsub <- \(xlab){
-    gsub("area","APS",xlab) %>% 
+    gsub("area","PDC",xlab) %>% 
       gsub("fragperse","FPS",.) %>% 
-      gsub("fragtotal","Frag. total",.)
+      gsub("fragtotal","PFC",.)
   }
   geom_list1 <- list(
     geom_hline(yintercept = 0,color="black"),
@@ -1177,6 +1177,7 @@ f_scatterplot <- \(dfp,xrange,yrange,axislabs=TRUE,df_ref,
   l_poligons <- f_polig_ref(df_ref=df_ref,df_analise=dfp)
   #
   p <- dfp %>% 
+    pivot_wider(names_from=efeito,values_from=Uefeito) %>% 
     ggplot(aes(x=.data[[xlab]],y=.data[[ylab]])) +
     geom_polygon(data=l_poligons[["pontos_hull"]],
                  aes(x=.data[[xlab]],y=.data[[ylab]]),
@@ -1208,38 +1209,45 @@ df_real <- readRDS("dados/csv_SoE/rds/df_obs_pred_plot_logUU_pk.rds") %>%
                                       "30 ≤ %CF < 60",
                                       "60 ≤ %CF < 80",
                                       "80 ≤ %CF < 100",
-                                      "%CF = 100"))
+                                      "%CF = 100")),
+    across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
+      matches("Uefeito|fit|er$"),~.x * (-1)
+    ),
+    efeito = gsub("Frag. total","Perda e Frag. Cob. (PFC)",efeito) %>% 
+      gsub("Frag. per se","Frag. per se (FPS)",.) %>% 
+      gsub("Área per se","Perda De Cob. (PDC)",.)
   )
 vcolunas <- levels(df_real$p_class)[1:4]
 vlinhas <- c("0.5","0.75","0.99")
 f_figgeral <- \(df_plot){
-  dfp0 <- df_plot %>% 
-    select(-`Frag. total`) %>% 
-    mutate(k=factor(round(k,2)),
-           A_maior0 = ifelse(`Área per se`>=0,"Área per se>=0","Área per se<0"),
-           A_maior0 = factor(A_maior0,levels=c("Área per se<0","Área per se>=0")),
-           F_maior0 = ifelse(`Frag. per se`>=0,"Frag per se>=0","Frag per se<0"),
-           F_maior0 = factor(F_maior0,levels=c("Frag per se>=0","Frag per se<0")),
-           abs_AmaiorF = case_when(
-             abs(`Área per se`) > abs(`Frag. per se`) ~ "|Área per se|>|Frag per se|",
-             abs(`Área per se`) < abs(`Frag. per se`) ~ "|Frag per se|>|Área per se|",
-             abs(`Área per se`) == abs(`Frag. per se`) ~ "|frag|=|area|"))
-  df_ref <- dfp0 %>% filter(p_class=="%CF = 100")
-  df_pclass <-  dfp0 %>% 
+  #   mutate(k=factor(round(k,2)),
+  #          A_maior0 = ifelse(`Área per se`>=0,"Área per se>=0","Área per se<0"),
+  #          A_maior0 = factor(A_maior0,levels=c("Área per se<0","Área per se>=0")),
+  #          F_maior0 = ifelse(`Frag. per se`>=0,"Frag per se>=0","Frag per se<0"),
+  #          F_maior0 = factor(F_maior0,levels=c("Frag per se>=0","Frag per se<0")),
+  #          abs_AmaiorF = case_when(
+  #            abs(`Área per se`) > abs(`Frag. per se`) ~ "|Área per se|>|Frag per se|",
+  #            abs(`Área per se`) < abs(`Frag. per se`) ~ "|Frag per se|>|Área per se|",
+  #            abs(`Área per se`) == abs(`Frag. per se`) ~ "|frag|=|area|"))
+  df_ref <- df_plot %>% filter(p_class=="%CF = 100")
+  df_pclass <-  df_plot %>% 
     filter(p_class!="%CF = 100",
            k%in%c("0.99","0.75","0.5"))
-  xrange <- range(df_pclass$`Área per se`)
-  yrange <- range(df_pclass$`Frag. per se`)
+  dfrange <- df_pclass %>% 
+    group_by(efeito) %>% 
+    reframe(
+      names = c("min","max"),
+      vrange = range(Uefeito),
+    )
+  xrange <- filter(dfrange,grepl("PDC",efeito)) %>% pull(vrange)
+  names(xrange) <- c("min","max")
+  yrange <- filter(dfrange,grepl("FPS",efeito)) %>% pull(vrange)
+  names(yrange) <- c("min","max")
   diffrange <- df_pclass %>% 
-    select(SiteCode,`Área per se`,`Frag. per se`) %>% 
-    pivot_longer(-SiteCode) %>% 
-    pull(value) %>% range()
+    pull(Uefeito) %>% range()
   diffrange[2] <- 0.4
   lp <- dlply(df_pclass,c("p_class","k"),\(dfi){
     # 
-    dfp <- dfi %>% 
-      select(SiteCode,`Área per se`,`Frag. per se`) %>% 
-      pivot_longer(-SiteCode,names_to="efeito",values_to="Uefeito")
     p_reg <- f_scatterplot(dfp = dfi,
                            xrange = xrange, yrange = yrange,
                            df_ref=df_ref,
@@ -1297,8 +1305,9 @@ f_figgeral <- \(df_plot){
   return(p)
 }
 df_plot <- df_real %>% 
-  select(efeito,Uefeito,k,SiteCode,p_class) %>%
-  pivot_wider(names_from="efeito",values_from="Uefeito")
+  select(efeito,Uefeito,k,SiteCode,p_class) %>% 
+  filter(!grepl("PFC",efeito))
+  # pivot_wider(names_from="efeito",values_from="Uefeito")
 p <- f_figgeral(df_plot)
 saveRDS(p,"1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fragperse_e_areaperse_exploracaofinal.rds")
 ggsave(filename="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fragperse_e_areaperse_exploracaofinal.png",
@@ -1314,7 +1323,7 @@ dfrange <- filter(dfp,p_class=="%CF = 100") %>%
     names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
     value = c(min(diffE), max(diffE),quantile(diffE,probs=0.05),quantile(diffE,probs=0.95))
   )
-f_ggplot <- \(dfp=dfp,dfrange=dfrange,vt=15,v_scl_facet="free_y"){
+f_ggplot <- \(dfp=dfp,dfrange=dfrange,vt=15,v_scl_facet="free_y",vm1=-10){
   p <- dfp %>% 
     group_by(p_class) %>% 
     mutate(nsites = length(unique(SiteCode)),
@@ -1322,7 +1331,7 @@ f_ggplot <- \(dfp=dfp,dfrange=dfrange,vt=15,v_scl_facet="free_y"){
            klabel = paste0("k = ",round(k,2)) 
     ) %>% 
     filter(p_class!="%CF = 100",
-           round(k,2) %in% c(0.99,0.70,0.50)) %>% 
+           round(k,2) %in% c(0.99,0.75,0.50)) %>% 
     ggplot(aes(x=diffE)) +
     geom_histogram() +
     geom_vline(xintercept = 0,color="red",linetype=1) +
@@ -1334,29 +1343,19 @@ f_ggplot <- \(dfp=dfp,dfrange=dfrange,vt=15,v_scl_facet="free_y"){
     scale_x_continuous(expand=c(0,0)) +
     scale_y_continuous(expand=c(0,0),
                        breaks = 1:9) +
-    labs(x="|PDC| - |FPS|",y="") +
+    labs(x="|PDC| - |FPS|",y="contagem") +
     facet_grid(klabel~label,scales=v_scl_facet) +
     theme(text=element_text(size=vt,face="bold"),
           legend.position = "bottom",
-          plot.margin = margin(0,0,0,0))
+          plot.margin = margin(0,0,0,0),
+          legend.margin = margin(t = vm1, r = 0, b = 0, l = 0))
   return(p)
 }
-p <- f_ggplot(dfp,dfrange,vt)
+p <- f_ggplot(dfp,dfrange,vt = 10,vm1 = -5)
 ggsave(filename = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/diff_modulo_PDC_FPS.png",
        dpi=200,
        plot=p,
-       width=12,height=6)
-
-
-
-
-
-
-
-
-
-
-
+       width=12,height=5)
 ##########################################
 
 
