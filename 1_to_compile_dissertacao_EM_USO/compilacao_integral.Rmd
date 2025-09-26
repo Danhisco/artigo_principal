@@ -351,17 +351,17 @@ No contexto do debate sobre fragmentação de habitat, as justificativas para o 
 
 \textbf{1) Modelo demográfico de ponto de partida} para elaboração de modelos mais complexos que incluam a diferença competitiva entre as espécies, uma vez que, MNEE pressupõe equivalência funcional (@rosindell2012case; @azaele2016; @leroi2020). 
 
-\textbf{2) MNEE simula estocasticidade demográfica espacial}, ao simular a dispersão e a competição neutra por espaço (@rosindell2012case; @azaele2016). Essa propriedade foi validada teoricamente em paisagens fragmentadas via simulação (@campos2012; @campos2013). Assim, MNEE reproduz a distribuição espacial estocástica dos indivíduos, na qual a dispersão é probabilística e limitada, e influenciada pela configuração espacial da paisagem (@McGill2010; @May2015, @may2016). No MNEE, a colonização de uma unidade de habitat é determinada pela capacidade de dispersão e distância entre a fonte de propágulo e o habitat disponível (@rosindell2008; @thompsonPycoalescence2020). Ao replicar essa distribuição espacial estocástica de forma dinâmica, o MNEE assegura que a simulação expressa a conectividade entre a parcela amostrada e a paisagem circundante, refletindo a interação do espaço na competição entre indivíduos (@campos2012; @campos2013).
+\textbf{2) MNEE simula estocasticidade demográfica espacial}, ao simular a dispersão e a competição neutra por espaço (@rosindell2012case; @azaele2016). Essa propriedade foi validada teoricamente em paisagens fragmentadas via simulação (@campos2012; @campos2013). No MNEE, a colonização de uma unidade de habitat é determinada pela capacidade de dispersão e distância entre a fonte de propágulo e o habitat disponível (@rosindell2008; @thompsonPycoalescence2020). Assim, MNEE reproduz a distribuição espacial estocástica dos indivíduos, na qual a dispersão é probabilística e influenciada pela configuração espacial da paisagem (@McGill2010; @May2015, @may2016). Ao replicar essa distribuição espacial estocástica de forma dinâmica, o MNEE assegura que a simulação expressa a conectividade entre a parcela amostrada e a paisagem circundante, refletindo a interação do espaço na competição entre indivíduos (@campos2012; @campos2013).
 
-\textbf{3) MNEE possui poucos parâmetros (@rosindell2012case; @azaele2016; @leroi2020)}. Uma vez que a dispersão é desconhecida nos sistemas naturais amostrados, iremos explorar cenários de limitação de dispersão, Assim, resta um parâmetro livre: a taxa de entrada de novas espécies no sistema (chamada de U, @rosindell2008; @thompsonPycoalescence2020). A taxa U pode ser interpretada como reposição pelo banco de propágulos de espécies ausentes entre os adultos, dispersão de longa distância de fora da paisagem e especiação verdadeira (@etienne2007zero; @nathan2008mechanisms; @jabot2008reconciling; @condit2012; @wu2023establishment).
+\textbf{3) MNEE possui poucos parâmetros (@rosindell2012case; @azaele2016; @leroi2020)}. Uma vez que a dispersão é desconhecida nos sistemas naturais amostrados, iremos explorar cenários de limitação de dispersão. Assim, resta um parâmetro livre: a taxa de entrada de novas espécies no sistema (chamada de U, @rosindell2008; @thompsonPycoalescence2020). A taxa U pode ser interpretada como reposição pelo banco de propágulos de espécies ausentes entre os adultos, dispersão de longa distância de fora da paisagem e especiação verdadeira (@etienne2007zero; @nathan2008mechanisms; @jabot2008reconciling; @condit2012; @wu2023establishment).
 
-\textbf{4) A taxa U pode ser calibrada com a riqueza observada (@rosindell2008)}. Dessa forma, é possível calibrar o modelo usando a riqueza de espécies e valida-lo usando a distribuição de abundância de espécies (SAD). Assim, a informação usada para ajustar os parâmetros é uma fração da informação total disponível, uma vez que para um mesmo número de indivíduos e riqueza de espécies, ainda existem diversas formas em que a SAD pode ser reconstruída (@locey2013). Dessa forma, é possível avaliar as parcelas em que o mecanísmo simulado, que explica como o padrão de biodiversidade emerge, faz uma boa aproximação do observado (@gianluca2022ch4). 
+\textbf{4) A taxa U pode ser calibrada com a riqueza observada (@rosindell2008)}. Dessa forma, é possível calibrar o modelo usando a riqueza de espécies e valida-lo usando a distribuição de abundância de espécies (SAD). Assim, a informação usada para ajustar os parâmetros é uma fração da informação total disponível, uma vez que para um mesmo número de indivíduos e riqueza de espécies, ainda existem diversas formas em que a SAD pode ser reconstruída (@locey2013). Dessa forma, é possível interpretar as parcelas em que o mecanísmo simulado, que explica como o padrão de biodiversidade emerge, faz uma boa aproximação do observado (@gianluca2022ch4). 
 
-\textbf{5) Métrica Funcional da Paisagem}. Com base na taxa U calibrada em cada paisagem experimental, criamos a métrica funcional da paisagem (logUi/Uj). Essa métrica funcional informa diretamente o efeito da mudança na paisagem na variação da entrada de novas espécies na paisagem necessária para manter a biodiversidade local. Se a mudança na paisagem aumenta a taxa U necessária, então há um aumento na vulnerabilidade da biodiversidade remanescente, pelo aumento da demanda por fontes externas de biodiversidade.
+\textbf{5) Métrica Funcional da Paisagem}. Com base na taxa U calibrada em cada paisagem experimental, criamos a métrica funcional da paisagem (logUi/Uj). Essa métrica funcional informa diretamente o efeito da mudança na paisagem na variação da taxa U necessária para manter a biodiversidade local. Se a mudança na paisagem aumenta a taxa U necessária, então há um aumento na vulnerabilidade da biodiversidade remanescente, pelo aumento da demanda por fontes externas de biodiversidade.
 
 \textbf{6) Escala espacial da paisagem}. Mostramos que é possível utilizar a taxa U livre para estimar a escala espacial suficiente para simular cada cenário de dispersão (apêndice \@ref(apendSoE))
 
-\textbf{7) Equilíbrio na paisagem experimental}. Uma vez que MNEE é coalescente, ele reconstrói uma amostra da parcela no equilíbrio na paisagem experimental (@rosindell2008; @thompsonPycoalescence2020). Esse pressuposto garante que a paisagem está influenciando a dinâmica demográfica. Esse tipo de pressuposto é usado na análise de dados observacionais no debate sobre fragmentação de habitat (@frazier2017). Isso torna nossas estimativas comparáveis com as de outros trabalhos que estimam os efeitos causais a partir de dados observacionais (e.g. @puttker2020indirect; @fahrig_ecological_2017).
+\textbf{7) Equilíbrio na paisagem experimental}. Uma vez que MNEE é coalescente, ele reconstrói uma amostra da parcela no equilíbrio na paisagem experimental (@rosindell2008; @thompsonPycoalescence2020). Esse pressuposto garante que a paisagem está influenciando a dinâmica demográfica. Esse tipo de pressuposto é usado na análise de dados observacionais dento do debate sobre fragmentação de habitat (@frazier2017; @puttker2020indirect; @fahrig_ecological_2017). Isso torna nossas estimativas comparáveis com as de outros trabalhos que estimam os efeitos causais a partir de dados observacionais (e.g. @puttker2020indirect; @fahrig_ecological_2017).
 
 \end{tcolorbox}
 
@@ -447,7 +447,19 @@ Na comparação direta da magnitude dos efeitos de PDC e FPS, entre a maioria da
 
 # Discussão
 
+\begin{tcolorbox}[
+    colback=white,           % Fundo branco para melhor contraste
+    colframe=blue!75!black,  % Borda azul
+    title=\textbf{Quadro 2:} Um programa de modelagem para a conservação de ecossistemas florestais
+    breakable,                    % Permite quebra
+    before skip=10pt,             % Espaço antes
+    after skip=10pt,              % Espaço depois
+    enhanced,                     % Melhor renderização
+    fonttitle=\bfseries,          % Título em negrito
+    fonttitle=\bfseries      % Título em negrito
+]
 
+\end{tcolorbox}
 
 ############## ANTERIOR
 
