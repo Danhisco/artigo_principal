@@ -1,0 +1,101 @@
+
+# Apêndice: Cong SAD (SI)  {-#CongSAD}
+
+```{r setup4,include=FALSE,eval=FALSE}
+# knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
+#                       fig.pos = "H", fig.show = "hold",dpi = 72)
+# # pacotes
+# # library(dagitty)
+# # library(ggdag)
+# library(gt)
+# library(gratia)
+# library(sads)
+# library(doMC)
+# # library(metR)
+# library(gridExtra)
+# library(ggplot2)
+# library(readr)
+# library(purrr)
+# library(stringr)
+# library(tidyr)
+# # library(MuMIn)
+# # library(AICcmodavg)
+# # library(insight)
+# library(bbmle)
+# library(DHARMa)
+# library(mgcv)
+# library(lme4)
+# library(data.table)
+# library(plyr)
+# library(dplyr)
+# library(flextable)
+# source("source/nameModel.R")
+# source("source/GAMMtools.R")
+# source("source/general_tools.R")
+# f_z <- function(x) (x-mean(x))/sd(x)
+```
+
+```{r trackdown chunk SI, include=FALSE,eval=FALSE}
+# pacotes
+library(trackdown)
+# both overwrite: 
+# overwrite the current google drive file with the current Rmd:
+# upload_file(file ="apendices/A2_figuras_tabelas/A2_figuras_tabelas.Rmd",
+#             gpath = "mestrado/artigo_principal/apendices/",
+#             hide_code = TRUE)
+update_file(file ="apendices/A2_figuras_tabelas/A2_figuras_tabelas.Rmd",
+            gpath = "mestrado/artigo_principal/apendices/",
+            hide_code = TRUE)
+# overwrite the current Rmd with the current google drive 
+download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
+              gpath = "mestrado/artigo_principal/secoes_texto/")
+```
+
+### Descrição estatística da congruência com a SAD observada
+
+<p>
+A descrição estatística da probabilidade de uma SAD simulada ter boa congruência com a SAD observada por paisagem hipotética (fragmentada - f, aglomerada - a, prístina - p) foi obtida por um modelo aditivo generalizado hierárquico (MAGH, @wood2017, @Pedersen2019). Esses modelos estatísticos permitem expressar a estrutura dos dados agregada por parcela de amostragem (@Pedersen2019) e descrever efeitos descritivos não lineares por splines e tensores de suas preditoras (@wood2017). Splines são funções polinomiais por partes, conectadas em pontos chamados nós (@wood2017). Agem como "curvas ajustáveis" que se adaptam aos dados, controlando o grau de suavização para evitar sobreajuste através da penalização pela máxima verossimilhança restrita (REML). O objetivo de splines e tensores é a descrição de qualquer relação contínua (@wood2017). Todas as análises estatísticas foram feitas usando linguagem R (@Rlang).
+</p>
+
+<p>
+Para a descrição da congruência com a SAD observada, a variável-resposta foi a proporções das 100 SADs simuladas que não diferiram significativamente. A estrutura hierárquica do MGAH é dividida em duas: a variabilidade agrupada pela parcela amostrada que contém os splines do cenários de limitação de dispersão (k) por paisagens hipotéticas (land), considerada aleatória; e a variabilidade relacionada com a população de todos os sítios, que contem os splines dos efeitos médios de k por land, considerada fixa. Entre as preditoras da estrutura fixa também incluímos as coordenadas geográficas das parcelas amostradas, que possuem um spline para descrever a possível autocorrelação espacial entre as parcelas, e a classe de perturbação da parcela amostrada, possibilitando diferentes splines de k para a combinação entre land e classe de perturbação.
+</p>
+
+<p>
+O nível de perturbação da parcela segue a classificação da base TreeCo (@de2020erosion). Essa classe é construída conforme a informação disponível sobre o tipo, intensidade e tempo da perturbação antrópica na área da parcela (@de2020erosion). Foram consideradas 4 classes de perturbação: altissíma, com florestas severamente ou cronicamente perturbadas há até 20 anos antes do inventário; alta, com florestas severamente ou cronicamente perturbadas há até 50 anos antes do inventário; mediana, com florestas pouco ou esporadicamente perturbadas e/ou perturbada entre 50 e 80 anos; e baixa, com florestas não perturbadas por pelo menos 80 anos (@de2020erosion). Existe grande variabilidade intra classe de perturbação, porém essa é a informação disponível nos trabalhos originais (@de2020erosion).
+</p>
+
+<p>A probabilidade de uma distribuição de abundância de espécies (SAD) simulada apresentar boa congruência com a SAD observada foi modelada utilizando seis MAGH com diferentes níveis de complexidade.</p>
+O modelo mais completo (modelo cheio) inclui:
+  
+    
++ Um intercepto por tipo de paisagem hipotética (comum aos sítios) e por sítio de amostragem;
+  
+    
++ Um termo de suavização (spline) para o parâmetro k (grau de limitação de dispersão), também especificado por tipo de paisagem hipotética (fixo) e por sítio de amostragem (aleatório);
+  
+    
++ Um spline bidimensional para as coordenadas centrais do sítio.
+
+  
+    
+Os cinco modelos restantes representam simplificações progressivas do modelo cheio, obtidas pela exclusão de uma ou mais covariáveis:
+  
+    
++ Dois modelos mantêm apenas uma das duas covariáveis: classe de perturbação ou coordenadas;
+  
+    
+    
++ Um modelo possui apenas o spline de k por tipo de paisagem e por sítio, sem as covariáveis adicionais;
+  
+    
++ Um modelo ainda mais simples inclui apenas o spline de k por tipo de paisagem (e apenas um intercepto por sítio);
+  
+    
+    
++ O modelo mais simples inclui apenas interceptos por tipo de paisagem e por sítio, sem spline para k.  
+  
+
+<p> As formulas usadas para ajustar esses modelo estatísticos está disponível no material de suporte. Os MAGH foram comparados usando métricas derivadas do ‘Akaike Information Criteria’ para amostras pequenas (AICc), o delta AICc, o peso de evidência (@burnham1998practical). Também incluímos o ‘deviance explained’ que pode ser interpretado de forma análoga ao coeficiente de determinação (R2), como forma de descrever a variabilidade explicada pelo modelo estatístico. Para essas tarefas foram utilizadas funções dos pacotes 'mgcv' (@wood2011) e 'bblme' (@bbmle_package).</p>
+
+<p>Uma vez que os splines são ideais para descrever relações contínuas, a autocorrelação espacial negativa pode não ser bem descrita pelo modelo estatístico, assim, incluímos um teste de autocorrelação espacial dos resíduos dos modelos estatísticos. Se houver autocorrelação espacial que não foi bem descrita pelo modelo estatístico, esperamos que a média, por sítio de amostragem, dos resíduos do modelo apresentem a estatística I de Moran diferente de zero. A estatística I de Moran varia entre -1 e 1, ou seja, entre a autocorrelação espacial negativa e positiva, respectivamente. E possui um teste de hipótese associado que avalia se o valor é significativamente diferente de zero, se o p valor for próximo de zero então a hipótese de ausência de autocorrelação espacial possui pouco suporte. A estatística I de Moran requer que um parâmetro livre seja escolhido. Determinamos esse valor por uma análise de sensibilidade dos resíduos dos modelos ajustados. Para obter a estatística I de Moran e seu p valor associado utilizamos funções do pacote spdep (@bivand2020). A avaliação da sensibilidade desse parâmetro está no material de suporte (fig. \@ref(fig:MoranI)).</p> 

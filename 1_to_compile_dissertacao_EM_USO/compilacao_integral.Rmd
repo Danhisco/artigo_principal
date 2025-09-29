@@ -177,12 +177,12 @@ vfh=4
 library(trackdown)
 # both overwrite: 
 # overwrite the current google drive file with the current Rmd:
-upload_file(file="compilacao_integral.Rmd",
+upload_file(file="./1_to_compile_dissertacao_EM_USO/compilacao_integral.Rmd",
             gpath="mestrado/artigo_principal/secoes_texto/",
             hide_code=TRUE)
-update_file(file="compilacao_integral.Rmd",
+update_file(file="./1_to_compile_dissertacao_EM_USO/compilacao_integral.Rmd",
             gpath = "mestrado/artigo_principal/secoes_texto/",
-            hide_code = TRUE)
+            hide_code = FALSE)
 # overwrite the current Rmd with the current google drive 
 download_file(file="compilacao_integral.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")

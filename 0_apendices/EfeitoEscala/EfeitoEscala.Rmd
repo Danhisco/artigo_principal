@@ -208,6 +208,36 @@ download_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
               gpath = "mestrado/DaniloPMori-artigo_mestrado/")
 ```
 
+
+## Estimativa da extensão espacial controlado pelo grau de limitação de dispersão simulado
+
+<p>
+Em nossa abordagem, levamos em consideração o efeito da escala espacial sobre a limitação de dispersão no mecanismo demográfico simulado. Buscamos determinar a extensão espacial mais adequada da paisagem para cada grau de limitação de dispersão, avaliando a sensibilidade da estimativa da taxa U em função da escala espacial simulada. Essa estimativa foi realizada em paisagens sem perda de cobertura, de modo que a única influência sobre U foi a capacidade de dispersão e a extensão da paisagem, para um mesmo inventário. A expectativa é que o aumento da extensão espacial resultasse na redução da taxa U, até um ponto em que aumento da área da paisagem  não alterasse significativamente essa estimativa. Isso é esperado, pois, em paisagens pequenas há poucos progenitores fora da parcela capazes de introduzir novas espécies. Com o aumento da extensão da paisagem, mais progenitores podem contribuir com a parcela. Com o aumento de progenitores há aumento na chance de reposição de espécies perdidas localmente por deriva (@may_dispersal_2012). No entanto, dada a limitação de dispersão, a influência de progenitores muito distantes tende a se estabilizar (@rosindell2013universal).
+</p>
+
+<p>
+Para avaliar a sensibilidade da extensão espacial em relação à limitação de dispersão, sorteamos 36 parcelas, entre as pré-selecionadas, e simulamos a taxa U em paisagens prístinas com 6 diferentes tamanhos (de 0.5, 1, 2, 4, 8 e 16 km de lado, L), sob 20 níveis de limitação de dispersão (valores de k). Para determinar o valor de L suficiente para simular cada k, aplicamos um método heurístico, que se baseou na expectativa teórica de redução monotônica da taxa U média em função do aumento de L. O objetivo do método heurístico é de determinar o L, mais próximo dos 6 valores iniciais de L, que acumula pelo menos 75% da redução total esperada (ponto de saturação). Esse método heurístico pode ser resumido em uma sequência de etapas:
+</p>
+
+  1) descrever a média da taxa U para cada combinação de k e L, a partir de um modelo linear misto.
+      
+          
+  2) a partir da predição do modelo linear misto, calcular a amplitude da média da taxa U para cada cenário de limitação de dispersão - considerando todos os L.
+      
+      
+  3) calcular a diferença na taxa U entre L consecutivos e dividir pela amplitude, calculada no passo 2.
+      
+          
+  4) Somar os valores obtidos no passo 3 em ordem, respeitando a sequência de L. 
+
+<p>
+O método pressupõe que ao final do último passo, o valor obtido será 1, correspondendo à redução total esperada do menor L até o maior L. Então, é aplicada uma interpolação linear para estimar o L mais próximo do limiar de 75% da redução total, considerando os 6 valores de L iniciais testados. Detalhes da estimativa da escala estão descritos no apêndice "Efeito de Escala" (\@ref(apendSoE)).
+</p>
+
+
+
+
+
 # Objetivo
  
 Buscamos descrever qual escala mínima suficiente para simular os 20 graus de limitação de dispersão inicialmente propostos (texto principal). As simulações ocorrerm em 6 paisagens que diferem em sua extensão espacial com o lado variando entre 0.5 km e 16 km de lado (0.5, 1, 2,4 ,8,16). Sorteamos e selecionamos 36 sítios da base de dados completo (109 sítios). Esses 36 sítios incluem os extremos da riqueza de espécies e número de indivíduos observado e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (texto principal). 
