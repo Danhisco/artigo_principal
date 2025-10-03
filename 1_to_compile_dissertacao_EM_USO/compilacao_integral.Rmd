@@ -380,24 +380,6 @@ O efeito de PFC foi predominantemente negativo em paisagens com baixa cobertura 
 Na comparação direta da magnitude dos efeitos de PDC e FPS, entre a maioria das parcelas avaliadas observou-se que o efeito de PDC apresenta maior magnitude do que o efeito de FPS ou eles são equivalentes (Fig 2 e REF resultados suplementares). Apenas em algumas poucas parcelas em paisagens com alta cobertura florestal o efeito de FPS foi maior (Fig 2 e REF resultados suplementares).
 </p>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ```{r}
 vcap="Os propostos efeitos da paisagem descritos pela métrica funcioanl logUi/Uj: observado e previsto pelo ajuste de um modelo aditivo generalizado hierárquico. Cada ponto resulta da comparação de duas simulações, que mudam conforme o efeito da paisagem (título nos quadros por linha). Para uma descrição dos efeitos estimados ver figura 1 e para uma explicação da métrica funcional ver o quadro 1. No eixo x está o grau de limitação de dispersão (k, proporção dos propágulos que permanecem na vizinhança imediata do adulto progenitor). Os pontos estão coloridos pela percentagem de cobertura florestal observada na paisagem de lado 1km, na qual a parcela simulado está situada. Os quadros estão divididos em colunas correspondendo a classes de cobertura florestal observada nas paisagens de cada parcela (título das colunas). Os parcelas com %CF=100 foram removidos do gráfico e apenas a amplitude (máximo = 0.133 e mínimo= -0.104) e o intervalo interquartil de 90% (quantil de 95% = 0.060 e de 5% = -0.048) da métrica logUi/Uj foram marcados no eixo y. Essa variação decorre da estocasticidade representada por MNEE. Os boxplots sumarizam valores para um mesmo k. O eixo y é livre para variar entre quadros de linhas diferentes (ou seja, entre efeitos da paisagem). Nessa figura há os resultados dos inventários considerados congruentes, detalhes no texto."
 ```
@@ -420,7 +402,7 @@ Nosso trabalho traz três contribuições principais ao debate sobre fragmentaç
 Nossos resultados mostram que os propostos efeitos da paisagem (Fig. 1) dependem tanto da cobertura florestal quanto da limitação de dispersão (Fig. 2). Enquanto a perda de habitat leva consistentemente ao aumento da vulnerabilidade da biodiversidade (@fahrig_ecological_2017;  @puttker2020indirect; @watling2020support; @gonccalves2025species), a influência da configuração espacial varia: sob forte limitação de dispersão pode reduzir a vulnerabilidade, ou seja, positiva, mas torna-se negativa quando a dispersão é maior. Esse padrão ajuda a explicar por que estudos anteriores relataram efeitos divergentes da configuração espacial — eles não consideravam a interação com a capacidade de dispersão (@fahrig_ecological_2017;  @puttker2020indirect; @watling2020support; @gonccalves2025species).
 </p>
 
-<p> <!--  Ressalvas 1: DAG da figura 1 →
+<p> <!--  Ressalvas 1: DAG da figura 1 -->
 Uma fonte importante de divergência no debate sobre fragmentação é o próprio modelo causal assumido para representar os efeitos que serão estimados (@pearl2016causal). O DAG da direita na Fig. 1 reflete a concepção de que perda de cobertura (PDC) e fragmentação per se (FPS) constituem efeitos independentes sobre a biodiversidade (@fahrig_effects_2003; @fahrig_habitat_2019; @fletcher2018habitat). Já outra tradição entende que a perda de cobertura modifica a própria expressão da fragmentação (PDC → FPS), de modo que a decomposição ortogonal é apenas um caso particular dentro de uma estrutura mais ampla (@didham_rethinking_2012; @puttker2020indirect). Para estimar esse tipo de relação hierárquica entre os efeitos de PDC e FPS seria necessário simular o processo em si de perda e fragmentação de habitat, tal como nos sistemas naturais (@magliocca2023review). Contudo, os dados necessários para esse tipo de simulação são escassos, uma vez que a maior parte da série histórica de mudanças na configuração espacial da cobertura florestal é recente (a partir de 1985 para a Floresta Atlântica @mapbiomas). Por outro lado, essa perspectiva abre espaço para modelar os ecossistemas florestais como sistemas socioecológicos com conectividade espaço-temporal influenciada pela regeneração natural e ciclos econômicos (@martensen2017; @rosa2021hidden; @chaves2022welcome; @magliocca2023review; @ekstrom2024modelling). E uma vez que existe regeneração natural, pode ser necessário migrar de um DAG para um diagrama direcionado cíclico, uma vez que agora a variável resposta passa a influenciar as mudanças na paisagem (@pearl2016causal).
 
 OU
@@ -446,14 +428,6 @@ O MNEE (Modelo Neutro Espacialmente Explícito) pode ocupar uma posição interm
 
 
 
-
-
-
-
-##
-
-
-
 \begin{tcolorbox}[
     colback=white,           % Fundo branco para melhor contraste
     colframe=blue!75!black,  % Borda azul
@@ -467,6 +441,21 @@ O MNEE (Modelo Neutro Espacialmente Explícito) pode ocupar uma posição interm
 ]
 
 \end{tcolorbox}
+
+
+# Conclusão
+
+Nossas análises mostram que os efeitos da paisagem sobre a biodiversidade local não podem ser compreendidos sem considerar conjuntamente a cobertura florestal, a configuração espacial e a capacidade de dispersão das espécies (Fig. 2). Essa interação ajuda a explicar por que estudos anteriores chegaram a conclusões divergentes sobre o papel da configuração espacial: sob forte limitação de dispersão, a fragmentação pode reduzir a vulnerabilidade, mas o efeito se inverte quando a dispersão é maior. Ao evidenciar esse padrão, o Modelo Neutro Espacialmente Explícito (MNEE) se mostra capaz de gerar inferências mecanísticas diretamente comparáveis a dados observacionais, ampliando seu escopo de aplicação.
+
+Do ponto de vista conceitual, mostramos que parte da divergência no debate decorre do próprio enquadramento causal assumido (Fig. 1). Enquanto uma tradição trata perda de cobertura (PDC) e fragmentação *per se* (FPS) como efeitos independentes, outra entende FPS como consequência da PDC. 
+
+Esse movimento também abre caminho para compreender ecossistemas florestais como sistemas dinâmicos, onde a regeneração natural e as ações humanas podem retroagir sobre a estrutura da paisagem.
+
+Do ponto de vista epistemológico, o uso do MNEE levanta a questão de qual é o papel heurístico da neutralidade no avanço da conservação. Propusemos organizá-la como parte de um programa de pesquisa em modelagem demográfica (Fig. 3, Quadro 2), estruturado em dois eixos epistemológicos (pressupostos centrais e auxiliares) e dois eixos pragmáticos (informação empírica e capacidade computacional). Esse esquema permite visualizar como diferentes culturas de pesquisa — de heurísticas generalistas a modelos específicos — podem ser situadas em um mesmo espaço conceitual, e como o MNEE pode ocupar uma posição intermediária, capaz de gerar heurísticas aplicáveis em larga escala e, ao mesmo tempo, informar cenários multicritério de conservação e restauração.
+
+Assim, nossas contribuições são duplas: empíricas, ao estimar efeitos mecanísticos da paisagem em florestas tropicais, e conceituais, ao propor um enquadramento capaz de reconciliar divergências históricas no debate sobre fragmentação de habitat. Ao conectar inferências estatísticas, modelos mecanísticos e programas de pesquisa, sugerimos que futuros avanços podem consolidar a modelagem neutra como uma ferramenta de integração entre abordagens comparativas, simulações demográficas e práticas de conservação. A longo prazo, esse enquadramento pode também servir de base para expandir os modelos ecológicos em direção a sistemas socioecológicos, reconhecendo o papel dos processos humanos e naturais na configuração das paisagens.
+
+
 
 ############## ANTERIOR
 
