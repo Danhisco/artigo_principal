@@ -426,6 +426,166 @@ O cruzamento desses eixos mostra que a TNB funciona como um ponto de partida est
 Esse enquadramento também ajuda a situar diferentes culturas de pesquisa na conservação. Por um lado, abordagens generalistas defendem heurísticas aplicáveis em larga escala, como limiares de cobertura florestal e maximização da conectividade (@arroyo-rodriguez_designing_2020; @watling2020support). Por outro, abordagens específicas argumentam pela possibilidade de ajustes locais a partir de modelos ecológicos espacialmente explícitos (@banks-leite_suggestion_2021; @strassburg2019strategic). O debate recente entre esses grupos converge para reconhecer que todo habitat natural remanescente tem valor e que a qualidade da matriz é crucial (@rivaEbanskleite2024).
 O MNEE (Modelo Neutro Espacialmente Explícito) pode ocupar uma posição intermediária e conciliatória nesse espectro: suficientemente mecanístico para representar dispersão, configuração espacial e efeitos de borda, mas ainda compatível com os dados disponíveis em larga escala. Assim, pode servir tanto para gerar heurísticas gerais quanto para informar cenários multicritério específicos de conservação e restauração.
 
+```{r cap fig 3}
+vcap <- ""
+```
+```{r fig3, fig.cap=vcap}
+f_ggplot <- \(reldist_points = 0.25,
+              size_points,
+              reltam_prag = 2/3,
+              alpha_eixos_epist = 0.25,
+              reltam_epist = 1,
+              leg_top=-200,
+              legtexts=10,
+              relpos_legprag = 0.9,
+              vstext=10){
+  library(ggplot2)
+  # pontos de referência do programa de pesquisa
+  df_points <- data.frame(
+    x = c(0, 0, 0),
+    y = c(0, -1.5, 1.5) * reldist_points,
+    tipo = factor(c("origem", "validacao", "invalidacao"),
+                  levels=c("origem", "validacao", "invalidacao"))
+  )
+  # Eixos pragmáticos
+  eixo_prag <- data.frame(
+    x = c(-3, -3),
+    y = c(-1, 1),
+    xend = c(3, 3),
+    yend = c(1, -1)
+  ) * reltam_prag
+  eixo_prag_lab <- data.frame(
+    x = eixo_prag$xend * relpos_legprag,
+    y = eixo_prag$yend,
+    label = c("informação", "computações")
+  )
+  eixo_prag_lab[2,c("x","y")] <- eixo_prag_lab[2,c("x","y")]*(-1)
+  # Eixos epistemológicos
+  eixo_epist <- data.frame(
+    x = c(0, 0),
+    y = c(1.5, 1.5),
+    xend = c(1.5 * cos(pi/6), -1.5 * cos(pi/6)),  # 30° e 150°
+    yend = c(1.5 + 1.5 * sin(pi/6), 1.5 + 1.5 * sin(pi/6))
+  ) * reltam_epist
+  eixo_epist$y <- df_points$y[df_points$tipo=="invalidacao"]
+  eixo_epist_lab <- data.frame(
+    x = eixo_epist$xend,
+    y = eixo_epist$yend,
+    label = c("equivalência\nfuncional", "pressupostos\nauxiliares")
+  )
+  # ggplot2
+  ggplot() +
+    # padronizações
+    geom_segment(aes(x = 0, y = 0, xend = 0, yend = df_points$y[df_points$tipo=="validacao"]), color = "darkgrey", linewidth = 0.5) +
+    geom_segment(aes(x = 0, y = 0, xend = 0, yend = df_points$y[df_points$tipo=="invalidacao"]), color = "darkgrey", linewidth = 0.5) +
+    coord_fixed(xlim = c(-3.5, 3.5), ylim = c(-2.5, 3)) +
+    labs(x = NULL, y = NULL, color = NULL, shape = NULL) +
+    theme_void() +
+    guides(
+      fill = guide_legend(order = 1, ncol = 1),
+      ) +
+    # espaço pragmático - setas contínuas 
+    geom_segment(
+      data = eixo_prag,
+      aes(x = x, y = y, xend = xend, yend = yend),
+      arrow = arrow(length = unit(0.25, "cm")),
+      color = "black", size = 1.5
+    ) +
+    geom_text(
+      data = eixo_prag_lab,
+      aes(x = x, y = y, label = label),
+      hjust = 0.5, vjust = -0.5,
+      size = vstext
+    ) +
+    # espaço epistemológico - setas tracejadas
+    geom_segment(
+      data = eixo_epist,
+      aes(x = x, y = y, xend = xend, yend = yend),
+      arrow = arrow(length = unit(0.25, "cm")),
+      color = "black", size = 1, linetype = "dashed"
+    ) +
+    geom_segment(
+      data = eixo_epist,
+      aes(x = x, y = y, xend = xend, yend = yend),
+      arrow = arrow(length = unit(0.25, "cm")),
+      color = "black", size = 1, alpha=alpha_eixos_epist
+    ) +
+    geom_text(
+      data = eixo_epist_lab,
+      aes(x = x, y = y, label = label),
+      hjust = 0.5, vjust = -0.5,
+      size = vstext
+    ) +
+    # referências do programa - pontos
+    geom_point(
+      data = df_points,
+      aes(x = x, y = y, shape = tipo, fill = tipo),
+      color = "gray", 
+      size = rep(size_points,3)
+    ) +
+    # Escalas e temas
+    scale_shape_manual(
+      name = NULL,
+      values = c("invalidacao" = 25, "origem" = 21, "validacao" = 24),
+      labels = c(
+        "invalidacao" = "Invalidado empiricamente: modificar o modelo",
+        "origem" = "MNEE",
+        "validacao" = "Validado empiricamente: permite estimar efeitos")
+      ) +
+    scale_fill_manual(
+      name = NULL,
+      values = c("invalidacao" = "red", "origem" = "black", "validacao" = "green3"),
+      labels = c(
+        "invalidacao" = "Invalidado empiricamente: modificar o modelo",
+        "origem" = "MNEE",
+        "validacao" = "Validado empiricamente: permite estimar efeitos")
+      ) +
+    guides(
+      fill = guide_legend(order = 1, ncol = 1, override.aes = list(size = 6)),
+      shape = guide_legend(order = 1, ncol = 1, override.aes = list(size = 6))
+      ) + 
+    # tema
+    theme(
+      text = element_text(face="bold"),
+      legend.position = "bottom",
+      legend.text = element_text(size = legtexts,face="bold"),
+      legend.box = "vertical",   # garante empilhamento vertical
+      legend.title = element_blank(),
+      legend.margin = margin(t = leg_top, unit = "pt"),
+      plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt")
+    )
+}
+p <- f_ggplot(
+  reldist_points=0.25,
+  size_points=15,
+  reltam_epist = 0.75,
+  reltam_prag = 3/5,
+  alpha_eixos_epist = 0.50,
+  vstext = 6.5,
+  legtexts = 12,
+  leg_top=-225,
+  relpos_legprag=0.9
+  )
+vs <- 0.675
+rect_grob <- rectGrob(
+  x = 0.5-0.005, y = 0.5+0.025, width = vs*(8.25/10), height = vs*(10/11),
+  gp = gpar(col = "black", fill = NA, lwd = 5)
+)
+p_boxed <- p + 
+  annotation_custom(rect_grob,
+                    xmin = -Inf, xmax = Inf,
+                    ymin = -Inf, ymax = Inf)
+ggsave(filename="./1_to_compile_dissertacao_EM_USO/05_Discussao/esquema_final.png",
+       plot=p_boxed,
+       dpi=200,
+       width = 12,
+       height = 10,
+       bg = "white")
+img_obj <- image_read("./1_to_compile_dissertacao_EM_USO/05_Discussao/esquema_final.png") %>% 
+  image_trim
+image_write(image = img_obj,path = "./1_to_compile_dissertacao_EM_USO/05_Discussao/esquema_final.png")
+```
+
 
 
 \begin{tcolorbox}[

@@ -75,6 +75,49 @@ l_p[[1]] <- ggplot() +
   guides(color=guide_colourbar(position="inside")) +
   theme(legend.position.inside = c(0.9,0.35)) +
   labs(subtitle = "a)")
+###################################################################################
+# library(ggspatial)
+df_p_sf <- sf_plot %>% 
+  mutate(tipo_parcela = ifelse(SiteCode %in% unique(df_real$SiteCode),"validado","invalidado"),
+         tipo_parcela = factor(tipo_parcela,levels=c("validado","invalidado")))
+p <- ggplot() +
+  geom_sf(data=shp_FA,fill="darkgray",color="darkgreen") +
+  geom_sf(data=df_p_sf,aes(fill=tipo_parcela,shape=tipo_parcela),size=5,alpha=0.75) +
+  coord_sf(ylim = c(-32,-5),xlim = c(-56,-34),expand = FALSE) +
+  scale_shape_manual(
+    name = NULL,
+    values = c("invalidado" = 25, "validado" = 24)
+    ) +
+  scale_fill_manual(
+    name = NULL,
+    values = c("invalidado" = "red", "validado" = "green3")
+    ) +
+  theme(
+    legend.position = "none"
+  ) +
+  ggspatial::annotation_north_arrow(
+    location = "br",                   # bottom right
+    which_north = "true",
+    height = unit(1.2, "cm"),
+    width = unit(1.2, "cm"),
+    pad_x = unit(0.5, "cm"),
+    pad_y = unit(0.5, "cm")
+  )
+logo <- png::readPNG("./1_to_compile_dissertacao_EM_USO/05_Discussao/esquema_final.png")
+vs <- 0.425
+p_final <- ggdraw(p) + 
+  draw_image(logo, x = 0.165, y = 0.97, width = vs, height = vs, hjust = 0, vjust = 1)
+vpath <- "./1_to_compile_dissertacao_EM_USO/05_Discussao/fig3_completa.png"
+ggsave(plot = p_final,
+       filename = vpath,
+       dpi=200,
+       bg="white",
+       width = 12,
+       height = 10)
+img_obj <- image_read(vpath) %>% 
+  image_trim
+image_write(image = img_obj,path = vpath)
+###################################################################################
 v_labels <- c("effort_ha" = "plot area (ha)",
               "Ntotal" = "# ind",
               "S_obs" = "riqueza",
@@ -1657,3 +1700,95 @@ design <- "AB
 library(patchwork)
 p_final <- wrap_plots(A=p_reg,B=p_circ,C=p_hist,design = design,widths = c(2,1.5))
 saveRDS(p_final,file="1_to_compile_dissertacao_EM_USO/00_Resultados/rds/comp_fragarea_todos_k.rds")
+
+#################################################
+
+# Figura conceitual final
+
+library(ggplot2)
+
+# Base do gráfico
+df_points <- data.frame(
+  x = c(0, 0, 0),
+  y = c(0, -1.5, 1.5),
+  tipo = c("origem", "validacao", "invalidacao")
+)
+
+# Dados das setas principais (10°)
+arrows_main <- data.frame(
+  x = c(-3, -3),
+  y = c(-1, 1),
+  xend = c(3, 3),
+  yend = c(1, -1)
+)
+
+# Dados das setas tracejadas que saem do ponto superior
+arrows_dashed <- data.frame(
+  x = c(0, 0),
+  y = c(1.5, 1.5),
+  xend = c(1.5 * cos(pi/6), -1.5 * cos(pi/6)),  # 30° e 150°
+  yend = c(1.5 + 1.5 * sin(pi/6), 1.5 + 1.5 * sin(pi/6))
+)
+
+# Rótulos dos eixos das setas tracejadas
+labels_dashed <- data.frame(
+  x = arrows_dashed$xend,
+  y = arrows_dashed$yend,
+  label = c("Eixo 30°", "Eixo 150°")
+)
+
+# Gráfico
+ggplot() +
+  # Setas principais
+  geom_segment(
+    data = arrows_main,
+    aes(x = x, y = y, xend = xend, yend = yend),
+    arrow = arrow(length = unit(0.25, "cm")),
+    color = "black", size = 0.5
+  ) +
+  # Setas tracejadas
+  geom_segment(
+    data = arrows_dashed,
+    aes(x = x, y = y, xend = xend, yend = yend),
+    arrow = arrow(length = unit(0.25, "cm")),
+    color = "black", size = 1, linetype = "dashed"
+  ) +
+  # Pontos
+  geom_point(
+    data = df_points,
+    aes(x = x, y = y, shape = tipo, color = tipo),
+    size = c(11, 5, 5)
+  ) +
+  # Conexões cinza claro
+  geom_segment(aes(x = 0, y = 0, xend = 0, yend = -1.5), color = "grey80", linewidth = 0.5) +
+  geom_segment(aes(x = 0, y = 0, xend = 0, yend = 1.5), color = "grey80", linewidth = 0.5) +
+  # Rótulos das setas tracejadas
+  geom_text(
+    data = labels_dashed,
+    aes(x = x, y = y, label = label),
+    hjust = 0.5, vjust = -0.5, size = 3.5
+  ) +
+  # Escalas e temas
+  scale_color_manual(
+    values = c("origem" = "black", "validacao" = "green3", "invalidacao" = "green3"),
+    labels = c(
+      "origem" = "Presente dispositivo de mimese:\nMNEE + inventários florestais + sensoriamento remoto (habitat × não-habitat)",
+      "validacao" = "Validação empírica:\npermite a comparação de contrafactuais para estimativa de efeito",
+      "invalidacao" = "Invalidação empírica:\nmodificar o modelo para melhor aproximar a informação observada"
+    )
+  ) +
+  scale_shape_manual(
+    values = c("origem" = 16, "validacao" = 24, "invalidacao" = 25),
+    labels = c(
+      "origem" = "Presente dispositivo de mimese:\nMNEE + inventários florestais + sensoriamento remoto (habitat × não-habitat)",
+      "validacao" = "Validação empírica:\npermite a comparação de contrafactuais para estimativa de efeito",
+      "invalidacao" = "Invalidação empírica:\nmodificar o modelo para melhor aproximar a informação observada"
+    )
+  ) +
+  coord_fixed(xlim = c(-3.5, 3.5), ylim = c(-2.5, 3)) +
+  labs(x = NULL, y = NULL, color = NULL, shape = NULL) +
+  theme_void() +
+  theme(
+    legend.position = "bottom",
+    legend.text = element_text(size = 10)
+  )
