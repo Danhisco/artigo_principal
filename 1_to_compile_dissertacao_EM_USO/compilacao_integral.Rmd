@@ -230,7 +230,8 @@ f_grafico <- \(h_caixas=2,
                setabase_ajuste=7/6,
                setafinal_ajuste=9/10,
                ajustex_seta=0.96,
-               textsize=15){
+               textsize=15,
+               signajust=0.1){
   # Criar dataframe com as caixas
   caixas <- data.frame(
     id = c(1, 2, 3, 4, 5, 7, 8),
@@ -261,7 +262,7 @@ f_grafico <- \(h_caixas=2,
               fill = "lightblue", color = "black", linewidth = 0.8) +
     # Adicionar texto dentro das caixas
     geom_text(data = caixas,
-              aes(x = x, y = y, label = texto),
+              aes(x = x, y = y + signajust, label = texto),
               size = textsize, color = "black", fontface = "bold") +
     # Adicionar setas
     geom_segment(data = setas,
@@ -274,7 +275,18 @@ f_grafico <- \(h_caixas=2,
     theme_void() +
     theme(panel.background = element_rect(fill = "white"))
 }
-f_grafico(setabase_ajuste = 8/6)
+p <- f_grafico(setabase_ajuste = 8/6,signajust = 0.075,h_sinais=1.2)
+vpath <- "./1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fig1_esquema_efeitos.png"
+ggsave(filename=vpath,
+       plot=p,
+       dpi=200,
+       width = 12,
+       height = 6,
+       bg = "white")
+img_obj <- image_read(vpath) %>% 
+  image_trim
+image_write(image = img_obj,
+            path = vpath)
 ```
 
 <p>
@@ -297,13 +309,13 @@ A conectividade é amplamente reconhecida como um mecanismo necessário para exp
 
 No contexto da estimativa de efeitos da paisagem na biodiversidade remanescente, o MNEE é justificado por três propriedades fundamentais:
 
-\textbf{(i) Modelo de referência programático (ver quadro 2).} O MNEE parte do pressuposto de equivalência funcional entre espécies, o que permite destacar como a conectividade espacial, a dispersão probabilística e a estocasticidade demográfica moldam comunidades locais. Isso o torna um modelo de referência para investigações que posteriormente incorporem diferenças competitivas ou traços funcionais (\cite{rosindell2012case}; \cite{azaele2016} ; \cite{leroi2020}).
+\textbf{(i) Modelo de referência programático (ver quadro 2).} O MNEE parte do pressuposto de equivalência funcional entre espécies, o que permite destacar como a movimentação dos indivíduos no habitat remanescente (conectividade), a dispersão probabilística e a estocasticidade demográfica moldam comunidades locais. Isso o torna um modelo de referência para investigações que posteriormente incorporem diferenças competitivas ou traços funcionais (\cite{rosindell2012case}; \cite{azaele2016} ; \cite{leroi2020}).
 
 \textbf{(ii) Conectividade demográfica explícita.} Ao simular a colonização de unidades de habitat como função da distância e da capacidade de dispersão, o MNEE gera distribuições espaciais estocásticas de indivíduos, refletindo a interação entre configuração da paisagem e competição neutra por espaço (\cite{rosindell2008}; \cite{campos2012}; \cite{campos2013}; \cite{thompsonPycoalescence2020}). Assim, cada simulação reconstrói um equilíbrio em que a conectividade é um resultado emergente do processo demográfico espacial. Na situação de equilíbrio, a taxa de entrada de novas espécies (U) é igual à taxa de perda de espécies por deriva, a variação aleatória nas abundância das espécies devido à dinâmica neutra (\cite{rosindell2012case}; \cite{azaele2016} ; \cite{leroi2020}).
 
-\textbf{(iii) Parcimônia e calibragem empírica.} O MNEE concentra a incerteza em torno da dispersão (explorada via um único parâmetro, k, a proporção de propágulos até a vizinhança imediata) e da taxa U, que pode ser calibrada pela riqueza local observada (\cite{rosindell2008}). Dessa forma, MNEE é validado pela distribuição de abundâncias de espécies (SAD de ‘species abundance distribution’), que adiciona graus de informação para avaliar o mecanismo simulado (\cite{gianluca2022CH5}), uma vez que para um valor de riqueza de espécies e número de indivíduos existem diversas formas de reconstruir a SAD (\cite{locey2013}[a]). A taxa U integra processos distintos — reposição pelo banco de plântulas, dispersão de longa distância ou especiação — e funciona como elo entre dinâmica interna da paisagem e fluxos externos de biodiversidade (\cite{etienne2007zero}; \cite{nathan2008mechanisms}; \cite{wu2023establishment}).
+\textbf{(iii) Parcimônia e calibragem empírica.} O MNEE concentra a incerteza em torno da dispersão (explorada via um único parâmetro, k, a proporção de propágulos até a vizinhança imediata) e da taxa U, que pode ser calibrada pela riqueza local observada (\cite{rosindell2008}). Dessa forma, MNEE é validado pela distribuição de abundâncias de espécies (SAD de ‘species abundance distribution’), que adiciona graus de informação para avaliar o mecanismo simulado (\cite{gianluca2022CH5}), uma vez que para um valor de riqueza de espécies e número de indivíduos existem diversas formas de reconstruir a SAD (\cite{locey2013}[a]). A taxa U integra processos distintos — reposição pelo banco de proágulos, dispersão de longa distância de fora da paisagem ou especiação — e funciona como elo entre dinâmica interna dos adultos da paisagem e fluxos externos de biodiversidade (\cite{etienne2007zero}; \cite{nathan2008mechanisms}; \cite{wu2023establishment}).
 
-A partir dessa estrutura, definimos a métrica funcional da paisagem, log(Uᵢ/Uⱼ), que expressa quanto é necessário alterar a taxa U necessária para aproximar bem a biodiversidade local em função da mudança na paisagem experimental (de i para j, figura 1). Assim, cada simulação corresponde a uma hipótese alternativa de processo gerador: na paisagem fragmentada representa o equilíbrio contemporâneo (\cite{villard_beyond_2014}; \cite{kuussaari_extinction_2009}; \cite{lira_temporal_2019}; \cite{figueiredo_understanding_2019}); na paisagem aglomerada, o equilíbrio sob máxima conectividade, como se a matriz não impusesse barreiras (\cite{etienne2005new}; \cite{fahrig_rethinking_2013}); na paisagem prístina, o equilíbrio anterior à perda e fragmentação da cobertura (\cite{kuussaari_extinction_2009}; \cite{lira_temporal_2019}; \cite{figueiredo_understanding_2019}; \cite{fahrig_resolving_2022}).
+A partir dessa estrutura, definimos a métrica funcional da paisagem, log(Uᵢ/Uⱼ), que expressa quanto é necessário alterar a taxa U necessária para aproximar bem a biodiversidade local em função da mudança na paisagem experimental (de i para j, figura 1). Assim, cada simulação corresponde a uma hipótese alternativa de processo gerador: na paisagem fragmentada representa o equilíbrio contemporâneo (\cite{kuussaari_extinction_2009}; \cite{lira_temporal_2019}; \cite{figueiredo_understanding_2019}; \cite{thompson2019characterising}); na paisagem aglomerada, o equilíbrio sob máxima conectividade, como se a matriz não impusesse barreiras (\cite{etienne2005new}; \cite{fahrig_rethinking_2013}); na paisagem prístina, o equilíbrio anterior à perda e fragmentação da cobertura (\cite{kuussaari_extinction_2009}; \cite{lira_temporal_2019}; \cite{figueiredo_understanding_2019}; \cite{fahrig_resolving_2022}).
 
 Portanto, o MNEE não é apenas um instrumento de aproximação, mas uma plataforma experimental para testar hipóteses com interpretação mecanísticas sobre a influência da paisagem na biodiversidade (\cite{metzger2017best}; \cite{pereira2020developing}; \cite{bull2021}). Ao explicitar como equilíbrios alternativos podem gerar as comunidades observadas, ele contribui para situar o debate sobre fragmentação de habitat em um quadro comparativo unificado, alinhado com práticas observacionais e, ao mesmo tempo, capaz de revelar limites e implicações de modelos mecanísticos (\cite{pereira2020developing}; \cite{bull2021}; \cite{grace2025causal}). Esse enquadramento exemplifica uma via de integração entre estatísticas de efeito e investigações mecanísticas de processos causais em ecossistemas florestais (\cite{grace2025causal}).
 
@@ -324,7 +336,7 @@ Consultamos a base de dados TreeCo, que reúne amplamente estudos fitossociológ
 </p>
 
 <p>
-Para caracterizar a cobertura vegetal no entorno de cada inventário, utilizamos os mapas da coleção 6 do MapBiomas (1985–2020, resolução de 30 m; REF). Para cada parcela, foi selecionado o mapa de cobertura florestal correspondente ao ano mais próximo da amostragem, e a área de análise foi definida a partir de um recorte centrado na localização da parcela (até 16 km²). As unidades de habitat foram derivadas da proporção de cobertura florestal nos pixels, permitindo relacionar a configuração da paisagem com os indivíduos amostrados.
+Para caracterizar a cobertura florestal no entorno de cada parcela, utilizamos os mapas da coleção 6 do MapBiomas (1985–2020, resolução de 30 m; @mapbiomas). Para cada parcela, foi selecionado o mapa de cobertura florestal correspondente ao ano mais próximo da amostragem, e a área de análise foi definida a partir de um recorte centrado na localização da parcela (até 16 km de lado). As unidades de habitat foram derivadas da proporção de cobertura florestal nos pixels, permitindo relacionar a configuração da paisagem com os indivíduos amostrados.
 </p>
 
 ## Procedimenos das Simulações
@@ -332,25 +344,25 @@ Para caracterizar a cobertura vegetal no entorno de cada inventário, utilizamos
 __Calibração dos cenários de limitação de dispersão por parcela__
 
 <p>
-O procedimento de simulações é composta de diferentes etapas. Primeiro, é feito a calibração da função de dispersão dos indivíduos. A função de dispersão foi parametrizada com  uma distribuição de Laplace, essa função de dispersão descreve a redução exponencial na probabilidade de um propágulo colonizar um habitat vago com o aumento da distância até o habitat vago (REF). Controlamos a limitação de dispersão regulando a proporção de propágulos que permanece até a vizinhança imediata da fonte, variável k (20 valores, de 0.99 - situação de extrema limitação de dispersão, até 0.05 - situação de alta capacidade de dispersão). Uma vez que as parcelas diferem na densidade de indivíduos, a distância média entre indivíduos muda entre parcelas, por conta disso, a função de dispersão é parametrizada para cada parcela.
+O procedimento de simulações é composta de diferentes etapas. Primeiro, é feito a calibração da função de dispersão dos indivíduos. A função de dispersão foi parametrizada com uma distribuição de Laplace, essa função de dispersão descreve a redução exponencial na probabilidade de um propágulo colonizar um habitat vago com o aumento da distância até o habitat vago. Controlamos a limitação de dispersão regulando a proporção de propágulos que permanece até a vizinhança imediata da fonte, variável k (20 valores, de 0.99 - situação de extrema limitação de dispersão, até 0.05 - situação de alta capacidade de dispersão). Uma vez que as parcelas diferem na densidade de indivíduos, a distância média entre indivíduos muda entre parcelas, por conta disso, a função de dispersão é parametrizada para cada parcela.
 </p>
 
 __Estimativa da escala espacial suficiente para simular os cenários de limitação de dispersão__
 
 <p>
-Segundo, estimamos a escala espacial adequada para os cenários de limitação de dispersão simulados. Para avaliar a influência da escala espacial na limitação de dispersão, simulamos a taxa U em paisagens prístinas sob diferentes tamanhos de área (0,5 a 16 km de lado) e graus de limitação de dispersão (valores de k). Em estudo com uma amostra das parcelas selecionadas, o objetivo foi determinar, para cada nível de dispersão, a extensão espacial mínima necessária para que a estimativa de U não fosse mais sensível ao aumento da paisagem. A análise se baseou em um método heurístico que identifica o ponto de saturação da redução de U em função da escala (detalhes no Apêndice “Efeito de Escala”, @ref(apendSoE), e no Materais e Método detalhado).
+Segundo, estimamos a escala espacial adequada para os cenários de limitação de dispersão. Para essa avaliação, simulamos a taxa U em paisagens prístinas sob diferentes tamanhos de paisagem (0,5 a 16 km de lado) para cada cenário de dispersão. O objetivo dessa avaliação foi determinar, a extensão espacial suficiente para que a estimativa de U não fosse mais sensível ao aumento da paisagem. A análise se baseou em um método heurístico que identifica o ponto de saturação da redução de U em função da escala (detalhes no Apêndice “Efeito de Escala”, @ref(apendSoE), e no Materais e Método detalhado).
 </p>
 
 __Calibração empírica da taxa U__
 
 <p>
-Terceiro, para cada bateria de simulação (a combinação de parcela selecionada, paisagem experimental e cenário de dispersão) é estimado a taxa U necessário para obter a riqueza de espécies observada. A taxa U, que representa a probabilidade de introdução de novas espécies por nascimento, é estimada usando um método proposto por @rosindell2008 em seu apêndice A. Essa abordagem combina a simulação da genealogia da comunidade com uma equação que relaciona a riqueza observada à taxa U média de introdução de novas espécies, permitindo calibrar o MNEE com base na riqueza local observada (@rosindell2008, Apêndice A). Para cada bateria de simulação são óbtidas 10 réplicas da taxa U e calculado a média.</p>
+Terceiro, para cada bateria de simulação (a combinação de parcela selecionada, paisagem experimental e cenário de dispersão) é estimado a taxa U necessário para obter a riqueza de espécies observada. A taxa U, que representa a probabilidade de introdução de novas espécies por nascimento, é estimada usando um método proposto por @rosindell2008 em seu apêndice A. Essa abordagem combina a simulação da genealogia da comunidade com uma equação que relaciona a riqueza observada à taxa U média, permitindo calibrar o MNEE com base na riqueza (@rosindell2008, Apêndice A). Para cada bateria de simulação são óbtidas 10 réplicas da taxa U e calculado a média.</p>
 </p>
 
 __Validação empírica da SAD simulada__
 
 <p>
-Por fim, para cada bateria de simulação e taxa U média, a simulação de MNEE foi replicado 100 vezes, gerando distribuições de abundância de espécies (SADs) simuladas. Essas SADs foram comparadas com as observadas nas parcelas por meio de testes de Kolmogorov-Smirnov. Consideramos que uma bateria de simulação foi bem aproximada quando pelo menos 75% das réplicas não diferiram significativamente da SAD empírica (P>0,05). Para as análises subsequentes, selecionamos apenas as parcelas em que MNEE apresentou boa aproximação da SAD observada em todos os cenários com limitação de dispersão acima de 0,50 — condição considerada mais realista para espécies arbóreas (REF).
+Por fim, para cada bateria de simulação e taxa U média, a simulação de MNEE foi replicado 100 vezes, gerando distribuições de abundância de espécies (SADs) simuladas. Essas SADs foram comparadas com as observadas nas parcelas por meio de testes de Kolmogorov-Smirnov. Consideramos que uma bateria de simulação foi bem aproximada quando pelo menos 75% das réplicas não diferiram significativamente da SAD empírica (p>0,05). Para as análises subsequentes, selecionamos apenas as parcelas em que MNEE apresentou boa aproximação da SAD em nos cenários com limitação de dispersão acima de 0,50 — condição considerada mais realista para espécies arbóreas, uma vez que a maior parte dos propágulos permanece na próximo da origem (@clark1999seed; @bullock_synthesis_2017).
 </p>
 
 # Resultados

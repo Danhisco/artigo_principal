@@ -1,3 +1,8 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 
 # Apêndice: Informação de Suporte (SI)  {-#SI}
 
@@ -213,6 +218,9 @@ img_cropped <- image_crop(img, paste0("2723x", nova_altura, "+0+", porcao_remove
 plot <- img_to_gg(img_cropped)
 saveRDS(plot,"09_SI/RDS/3paisagenship.rds")
 ```
+
+
+
 
 ```{r paisagens-hipoteticas, fig.cap="As 3 paisagem hipotéticas em paisagens com lado de 4 km: na esquerda, paisagem fragmentada; no centro, paisagem aglomerada; na direita paisagem prístina. Detalhes no texto principal",dpi=200}
 plot <- readRDS("09_SI/RDS/3paisagenship.rds")

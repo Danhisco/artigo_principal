@@ -1792,3 +1792,25 @@ ggplot() +
     legend.position = "bottom",
     legend.text = element_text(size = 10)
   )
+##########################
+library(purrr)
+library(magick)
+library(cowplot)
+library(ggplot2)
+img_to_gg <- function(img) {
+  ggdraw() + 
+    draw_image(img) +  # Scale de 0.9 para margens
+    theme_void()
+}
+img <- image_read("./figuras/exemplo paisagens hipoteticas-1.png") %>% 
+  image_trim() 
+altura_original <- 790
+porcao_remover <- round(altura_original * 0.10)  # 20% de 790 = 158
+nova_altura <- altura_original - porcao_remover
+img_cropped <- image_crop(img, paste0("2723x", nova_altura, "+0+", porcao_remover))
+
+
+
+plot <- img_to_gg(img_cropped)
+saveRDS(plot,"09_SI/RDS/3paisagenship.rds")
+
