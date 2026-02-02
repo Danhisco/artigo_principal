@@ -1,39 +1,89 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 
 # Apêndice: Cong SAD (SI)  {-#CongSAD}
 
 ```{r setup4,include=FALSE,eval=FALSE}
-# knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
-#                       fig.pos = "H", fig.show = "hold",dpi = 72)
-# # pacotes
-# # library(dagitty)
-# # library(ggdag)
-# library(gt)
-# library(gratia)
-# library(sads)
-# library(doMC)
-# # library(metR)
-# library(gridExtra)
-# library(ggplot2)
-# library(readr)
-# library(purrr)
-# library(stringr)
-# library(tidyr)
-# # library(MuMIn)
-# # library(AICcmodavg)
-# # library(insight)
-# library(bbmle)
-# library(DHARMa)
-# library(mgcv)
-# library(lme4)
-# library(data.table)
-# library(plyr)
-# library(dplyr)
-# library(flextable)
-# source("source/nameModel.R")
-# source("source/GAMMtools.R")
-# source("source/general_tools.R")
-# f_z <- function(x) (x-mean(x))/sd(x)
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
+                      fig.pos = "H", fig.show = "hold",dpi = 72)
+# pacotes
+# library(dagitty)
+# library(ggdag)
+library(gt)
+library(gratia)
+library(sads)
+library(doMC)
+# library(metR)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+# library(MuMIn)
+# library(AICcmodavg)
+# library(insight)
+library(bbmle)
+library(DHARMa)
+library(mgcv)
+library(lme4)
+library(data.table)
+library(plyr)
+library(dplyr)
+library(flextable)
+source("source/nameModel.R")
+source("source/GAMMtools.R")
+source("source/general_tools.R")
+f_z <- function(x) (x-mean(x))/sd(x)
+#
+l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
+vsites105 <- l_dfpred$fixo_e_aleat$SiteCode %>% unique
+#
+df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+  mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+         long = ifelse(is.na(long_correct),long,long_correct),
+         Sitecode = factor(SiteCode)) %>% 
+  select(SiteCode,lat,long, forest_succession) %>% 
+  filter(forest_succession!="capoeira",
+         SiteCode %in% vsites105)
 ```
+
+
+```{r sumarização dos resultados do teste KS, echo=TRUE,eval=FALSE}
+f_summarise_SAD_MNEE <- \(df){
+#@ df: df por site, k, e  land_type
+#@ e.g. ddply(.,c("SiteCode","k","land_type"))
+ cbind(df[1,c("SiteCode","k","land_type")],with(df,data.frame(
+   nSAD = sum(p.KS>0.05),
+   Smed = mean(S),
+   Ssd = sd(S),
+   Smin = min(S),
+   Smax = max(S) )  )
+  )
+}
+df_KSrep <- read_csv(file="dados/csv_SoE/df_KSrep.csv")
+library(future.apply)  
+library(parallel)      
+plan(multisession, workers = 3)
+groups <- do.call(paste, c(df_KSrep[c("SiteCode", "k", "land_type")], sep = "|"))
+df_split <- split(df_KSrep, groups)
+ldf <- future_lapply(df_split, \(subset_df){
+  f_summarise_SAD_MNEE(subset_df)
+  }, future.seed = TRUE)
+df_ad <- data.table::rbindlist(ldf)
+# inclusão das covariáveis
+df_ad <- inner_join(df_ad,df_dados_disponiveis)
+#
+# write_csv(df_ad,file="dados/csv_SoE/df_congruencia_simulacao.csv")
+```
+
+```{r leitura de df_ad,echo=FALSE,include=TRUE,eval=TRUE}
+df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv")
+```
+
 
 ```{r trackdown chunk SI, include=FALSE,eval=FALSE}
 # pacotes
@@ -51,14 +101,14 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
-### Descrição estatística da congruência com a SAD observada
+## Descrição estatística da congruência com a SAD observada
 
 <p>
-A descrição estatística da probabilidade de uma SAD simulada ter boa congruência com a SAD observada por paisagem hipotética (fragmentada - f, aglomerada - a, prístina - p) foi obtida por um modelo aditivo generalizado hierárquico (MAGH, @wood2017, @Pedersen2019). Esses modelos estatísticos permitem expressar a estrutura dos dados agregada por parcela de amostragem (@Pedersen2019) e descrever efeitos descritivos não lineares por splines e tensores de suas preditoras (@wood2017). Splines são funções polinomiais por partes, conectadas em pontos chamados nós (@wood2017). Agem como "curvas ajustáveis" que se adaptam aos dados, controlando o grau de suavização para evitar sobreajuste através da penalização pela máxima verossimilhança restrita (REML). O objetivo de splines e tensores é a descrição de qualquer relação contínua (@wood2017). Todas as análises estatísticas foram feitas usando linguagem R (@Rlang).
+A descrição estatística da probabilidade de uma SAD simulada ter boa congruência com a SAD observada por paisagem hipotética (fragmentada - f, aglomerada - a, prístina - p) foi obtida por um modelo aditivo generalizado hierárquico (HGAM, @wood2017, @Pedersen2019). Esses modelos estatísticos permitem expressar a estrutura dos dados agregada por parcela de amostragem (@Pedersen2019) e descrever efeitos descritivos não lineares por splines e tensores de suas preditoras (@wood2017). Splines agem como "curvas ajustáveis" que se adaptam aos dados, controlando o grau de suavização para evitar sobreajuste através da penalização pela máxima verossimilhança restrita (@wood2017). O objetivo de splines e tensores é a descrição de qualquer relação contínua (@wood2017). Todas as análises estatísticas foram feitas usando linguagem R (@Rlang).
 </p>
 
 <p>
-Para a descrição da congruência com a SAD observada, a variável-resposta foi a proporções das 100 SADs simuladas que não diferiram significativamente. A estrutura hierárquica do MGAH é dividida em duas: a variabilidade agrupada pela parcela amostrada que contém os splines do cenários de limitação de dispersão (k) por paisagens hipotéticas (land), considerada aleatória; e a variabilidade relacionada com a população de todos os sítios, que contem os splines dos efeitos médios de k por land, considerada fixa. Entre as preditoras da estrutura fixa também incluímos as coordenadas geográficas das parcelas amostradas, que possuem um spline para descrever a possível autocorrelação espacial entre as parcelas, e a classe de perturbação da parcela amostrada, possibilitando diferentes splines de k para a combinação entre land e classe de perturbação.
+Para a descrição da congruência com a SAD observada, a variável-resposta foi a proporções das 100 SADs simuladas classificadas como congruentes. A estrutura hierárquica do HGAM é dividida em duas: a variabilidade agrupada pela parcela amostrada que contém os splines do cenários de limitação de dispersão (k) por paisagens experimental (land), considerada aleatória; e a variabilidade relacionada com a população de todas as parcelas, que contem os splines dos efeitos médios de k por land, considerada fixa. Entre as preditoras da estrutura fixa também incluímos as coordenadas geográficas das parcelas amostradas, que possuem um spline para descrever a possível autocorrelação espacial entre as parcelas, e a classe de perturbação da parcela amostrada, possibilitando diferentes splines de k para a combinação entre land e classe de perturbação.
 </p>
 
 <p>
@@ -69,10 +119,10 @@ O nível de perturbação da parcela segue a classificação da base TreeCo (@de
 O modelo mais completo (modelo cheio) inclui:
   
     
-+ Um intercepto por tipo de paisagem hipotética (comum aos sítios) e por sítio de amostragem;
++ Um intercepto por tipo de paisagem experimental (comum às parcelas) e por parcela;
   
     
-+ Um termo de suavização (spline) para o parâmetro k (grau de limitação de dispersão), também especificado por tipo de paisagem hipotética (fixo) e por sítio de amostragem (aleatório);
++ Um termo de suavização (spline) para o parâmetro k (grau de limitação de dispersão), também especificado por tipo de paisagem hipotética (fixo) e por parcela (aleatório);
   
     
 + Um spline bidimensional para as coordenadas centrais do sítio.
@@ -96,6 +146,54 @@ Os cinco modelos restantes representam simplificações progressivas do modelo c
 + O modelo mais simples inclui apenas interceptos por tipo de paisagem e por sítio, sem spline para k.  
   
 
-<p> As formulas usadas para ajustar esses modelo estatísticos está disponível no material de suporte. Os MAGH foram comparados usando métricas derivadas do ‘Akaike Information Criteria’ para amostras pequenas (AICc), o delta AICc, o peso de evidência (@burnham1998practical). Também incluímos o ‘deviance explained’ que pode ser interpretado de forma análoga ao coeficiente de determinação (R2), como forma de descrever a variabilidade explicada pelo modelo estatístico. Para essas tarefas foram utilizadas funções dos pacotes 'mgcv' (@wood2011) e 'bblme' (@bbmle_package).</p>
+<p> As formulas usadas para ajustar esses modelo estatísticos foram:
 
-<p>Uma vez que os splines são ideais para descrever relações contínuas, a autocorrelação espacial negativa pode não ser bem descrita pelo modelo estatístico, assim, incluímos um teste de autocorrelação espacial dos resíduos dos modelos estatísticos. Se houver autocorrelação espacial que não foi bem descrita pelo modelo estatístico, esperamos que a média, por sítio de amostragem, dos resíduos do modelo apresentem a estatística I de Moran diferente de zero. A estatística I de Moran varia entre -1 e 1, ou seja, entre a autocorrelação espacial negativa e positiva, respectivamente. E possui um teste de hipótese associado que avalia se o valor é significativamente diferente de zero, se o p valor for próximo de zero então a hipótese de ausência de autocorrelação espacial possui pouco suporte. A estatística I de Moran requer que um parâmetro livre seja escolhido. Determinamos esse valor por uma análise de sensibilidade dos resíduos dos modelos ajustados. Para obter a estatística I de Moran e seu p valor associado utilizamos funções do pacote spdep (@bivand2020). A avaliação da sensibilidade desse parâmetro está no material de suporte (fig. \@ref(fig:MoranI)).</p> 
+```{r modelos usados na descrição, eval=FALSE, echo=TRUE}
+library(mgcv)
+f_gam <- \(vf,dfi){
+  gam(formula=vf,
+      family='binomial',
+      data=dfi,
+      method="REML")
+}
+l_f <- list()
+# modelo cheio
+l_f$`s(k,by=land + class_pert) + (lat,long)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=interaction(land,forest_succession),bs="cr",id="fixo") +
+  s(lat,long) + 
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+# modelo sem classe de perturbação
+l_f$`s(k,by=land) + (lat,long)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=land,bs="cr",id="fixo") +
+  s(lat,long) + 
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+# modelo sem coordenadas
+l_f$`s(k,by=land * class_pert)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=interaction(land,forest_succession),bs="cr",id="fixo") +
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+# modelo sem cov
+l_f$`s(k,by=land)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  s(k,by=land,bs="cr",id="fixo") +
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+#
+l_md <- lapply(l_f,f_gam,dfi=df_ad)
+```
+
+Os MAGH foram comparados usando métricas derivadas do ‘Akaike Information Criteria’ para amostras pequenas (AICc), o delta AICc e o peso de evidência (@burnham1998practical). Também incluímos o ‘deviance explained’ que pode ser interpretado de forma análoga ao coeficiente de determinação (R2), como forma de descrever a variabilidade explicada pelo modelo estatístico. Para essas tarefas foram utilizadas funções dos pacotes 'mgcv' (@wood2011) e 'bblme' (@bbmle_package).</p>
+
+<p>Uma vez que os splines são ideais para descrever relações contínuas, a autocorrelação espacial negativa pode não ser bem descrita pelo modelo estatístico, assim, incluímos um teste de autocorrelação espacial dos resíduos dos modelos estatísticos. Se houver autocorrelação espacial que não foi bem descrita pelo modelo estatístico, esperamos que a média, por parcela, dos resíduos do modelo apresentem a estatística I de Moran diferente de zero. A estatística I de Moran varia entre -1 e 1, ou seja, entre a autocorrelação espacial negativa e positiva, respectivamente. E possui um teste de hipótese associado que avalia se o valor é significativamente diferente de zero, se o p valor for próximo de zero então a hipótese de ausência de autocorrelação espacial possui pouco suporte. A estatística I de Moran requer que um parâmetro livre seja escolhido. Determinamos esse valor por uma análise de sensibilidade dos resíduos dos modelos ajustados. Para obter a estatística I de Moran e seu p valor associado utilizamos funções do pacote spdep (@bivand2020). A avaliação da sensibilidade desse parâmetro está no material de suporte (fig. \@ref(fig:MoranI)).</p> 
+
+## Tabela de comparação dos HGAM
+
+## Diagnostico HGAM mais plausivel
+
+## Interpretação pelo HGAM mais plausivel
+
+## Diagnostico HGAM mais simples
+
+
+
