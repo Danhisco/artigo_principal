@@ -81,7 +81,11 @@ df_ad <- inner_join(df_ad,df_dados_disponiveis)
 ```
 
 ```{r leitura de df_ad,echo=FALSE,include=TRUE,eval=TRUE}
-df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv")
+df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
+  select(-(Smed:Smax)) %>%
+  mutate(across(where(is.character), factor))
+names(df_ad) <- gsub("\\_type","",names(df_ad)) %>% 
+  gsub("forest\\_succession","class_pert",.)
 ```
 
 
@@ -115,37 +119,9 @@ Para a descrição da congruência com a SAD observada, a variável-resposta foi
 O nível de perturbação da parcela segue a classificação da base TreeCo (@de2020erosion). Essa classe é construída conforme a informação disponível sobre o tipo, intensidade e tempo da perturbação antrópica na área da parcela (@de2020erosion). Foram consideradas 4 classes de perturbação: altissíma, com florestas severamente ou cronicamente perturbadas há até 20 anos antes do inventário; alta, com florestas severamente ou cronicamente perturbadas há até 50 anos antes do inventário; mediana, com florestas pouco ou esporadicamente perturbadas e/ou perturbada entre 50 e 80 anos; e baixa, com florestas não perturbadas por pelo menos 80 anos (@de2020erosion). Existe grande variabilidade intra classe de perturbação, porém essa é a informação disponível nos trabalhos originais (@de2020erosion).
 </p>
 
-<p>A probabilidade de uma distribuição de abundância de espécies (SAD) simulada apresentar boa congruência com a SAD observada foi modelada utilizando seis MAGH com diferentes níveis de complexidade.</p>
-O modelo mais completo (modelo cheio) inclui:
+<p>A probabilidade de uma distribuição de abundância de espécies (SAD) simulada apresentar boa congruência com a SAD observada foi modelada utilizando 2 HGAM com diferentes níveis de complexidade.</p>
+O modelo mais completo (modelo cheio) inclui: um intercepto por tipo de paisagem experimental (comum às parcelas) e por parcela; um termo de suavização (spline) para o parâmetro k (grau de limitação de dispersão), também especificado por tipo de paisagem hipotética (fixo) e por parcela (aleatório); um spline bidimensional para as coordenadas centrais do sítio. O modelo mais simples inclui apenas interceptos por tipo de paisagem e por sítio, sem spline para k.  
   
-    
-+ Um intercepto por tipo de paisagem experimental (comum às parcelas) e por parcela;
-  
-    
-+ Um termo de suavização (spline) para o parâmetro k (grau de limitação de dispersão), também especificado por tipo de paisagem hipotética (fixo) e por parcela (aleatório);
-  
-    
-+ Um spline bidimensional para as coordenadas centrais do sítio.
-
-  
-    
-Os cinco modelos restantes representam simplificações progressivas do modelo cheio, obtidas pela exclusão de uma ou mais covariáveis:
-  
-    
-+ Dois modelos mantêm apenas uma das duas covariáveis: classe de perturbação ou coordenadas;
-  
-    
-    
-+ Um modelo possui apenas o spline de k por tipo de paisagem e por sítio, sem as covariáveis adicionais;
-  
-    
-+ Um modelo ainda mais simples inclui apenas o spline de k por tipo de paisagem (e apenas um intercepto por sítio);
-  
-    
-    
-+ O modelo mais simples inclui apenas interceptos por tipo de paisagem e por sítio, sem spline para k.  
-  
-
 <p> As formulas usadas para ajustar esses modelo estatísticos foram:
 
 ```{r modelos usados na descrição, eval=FALSE, echo=TRUE}
@@ -158,36 +134,77 @@ f_gam <- \(vf,dfi){
 }
 l_f <- list()
 # modelo cheio
-l_f$`s(k,by=land + class_pert) + (lat,long)` <- 
-  cbind(nSAD,100-nSAD) ~ 
-  s(k,by=interaction(land,forest_succession),bs="cr",id="fixo") +
-  s(lat,long) + 
-  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
-# modelo sem classe de perturbação
 l_f$`s(k,by=land) + (lat,long)` <- 
   cbind(nSAD,100-nSAD) ~ 
+  land +
   s(k,by=land,bs="cr",id="fixo") +
   s(lat,long) + 
   te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
 # modelo sem coordenadas
-l_f$`s(k,by=land * class_pert)` <- 
-  cbind(nSAD,100-nSAD) ~ 
-  s(k,by=interaction(land,forest_succession),bs="cr",id="fixo") +
-  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
-# modelo sem cov
 l_f$`s(k,by=land)` <- 
   cbind(nSAD,100-nSAD) ~ 
+  land +
   s(k,by=land,bs="cr",id="fixo") +
   te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
-#
 l_md <- lapply(l_f,f_gam,dfi=df_ad)
 ```
 
-Os MAGH foram comparados usando métricas derivadas do ‘Akaike Information Criteria’ para amostras pequenas (AICc), o delta AICc e o peso de evidência (@burnham1998practical). Também incluímos o ‘deviance explained’ que pode ser interpretado de forma análoga ao coeficiente de determinação (R2), como forma de descrever a variabilidade explicada pelo modelo estatístico. Para essas tarefas foram utilizadas funções dos pacotes 'mgcv' (@wood2011) e 'bblme' (@bbmle_package).</p>
+```{r salvamento de lmd, echo=FALSE,include=FALSE,eval=FALSE}
+saveRDS(l_md,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/lmd_cong.rds")
+```
 
-<p>Uma vez que os splines são ideais para descrever relações contínuas, a autocorrelação espacial negativa pode não ser bem descrita pelo modelo estatístico, assim, incluímos um teste de autocorrelação espacial dos resíduos dos modelos estatísticos. Se houver autocorrelação espacial que não foi bem descrita pelo modelo estatístico, esperamos que a média, por parcela, dos resíduos do modelo apresentem a estatística I de Moran diferente de zero. A estatística I de Moran varia entre -1 e 1, ou seja, entre a autocorrelação espacial negativa e positiva, respectivamente. E possui um teste de hipótese associado que avalia se o valor é significativamente diferente de zero, se o p valor for próximo de zero então a hipótese de ausência de autocorrelação espacial possui pouco suporte. A estatística I de Moran requer que um parâmetro livre seja escolhido. Determinamos esse valor por uma análise de sensibilidade dos resíduos dos modelos ajustados. Para obter a estatística I de Moran e seu p valor associado utilizamos funções do pacote spdep (@bivand2020). A avaliação da sensibilidade desse parâmetro está no material de suporte (fig. \@ref(fig:MoranI)).</p> 
+Os HGAM foram comparados usando métricas derivadas do ‘Akaike Information Criteria’ para amostras pequenas (AICc), o delta AICc e o peso de evidência (@burnham1998practical). Também incluímos o ‘deviance explained’ que pode ser interpretado de forma análoga ao coeficiente de determinação (R2), como forma de descrever a variabilidade explicada pelo modelo estatístico. Para essas tarefas foram utilizadas funções dos pacotes 'mgcv' (@wood2011) e 'bblme' (@bbmle_package).</p>
+
+
+## Teste de autocorrelação espacial global I de Moran
+
+<p>Uma vez que os splines são ideais para descrever relações contínuas, a autocorrelação espacial negativa pode não ser bem descrita pelo modelo estatístico, assim, incluímos um teste bicaudal de autocorrelação espacial dos resíduos dos modelos estatísticos. Se houver autocorrelação espacial que não foi bem descrita pelo modelo estatístico, esperamos que a média, por parcela, dos resíduos do modelo apresentem a estatística I de Moran diferente de zero. A estatística I de Moran varia entre -1 e 1, ou seja, entre a autocorrelação espacial negativa e positiva, respectivamente. E possui um teste de hipótese associado que avalia se o valor é significativamente diferente de zero, se o p valor for próximo de zero então a hipótese de ausência de autocorrelação espacial possui pouco suporte. A estatística I de Moran requer que um parâmetro livre seja escolhido. Determinamos esse valor por uma análise de sensibilidade dos resíduos dos modelos ajustados. Para obter a estatística I de Moran e seu p valor associado utilizamos funções do pacote spdep (@bivand2020). A avaliação da sensibilidade desse parâmetro está no material de suporte (fig. \@ref(fig:MoranI)).</p> 
+
+
+```{r criacao da analise de sensibilidade de lmoranI,echo=FALSE,include=FALSE,eval=FALSE}
+l_md <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/lmd_cong.rds")
+lmoranI <- lapply(l_md,f_MoranTest_GAMM_severalK)
+# saveRDS(lmoranI,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/lmd_cong_lMoranI.rds")
+f_ggplot <- \(vname){
+  dfi <- lmoranI[[vname]]
+  dfi %>% 
+    mutate(k=as.numeric(k),
+           label=vname) %>% 
+    ggplot(aes(x=k,y=pvalue)) +
+    geom_hline(linetype=2,aes(color="significance threshold (0.05)",
+                              yintercept = 0.05)) +
+    scale_color_manual("",values=c("significance threshold (0.05)"="red")) +
+    geom_point() +
+    labs(x="n-nearest neighbors",y="p-value") +
+    theme_bw() +
+    facet_wrap(~label) +
+    theme(legend.position = "bottom") 
+}
+lp <- lapply(names(lmoranI),f_ggplot)
+library(patchwork)
+pfinal <- wrap_plots(lp, ncol = 2) +
+  plot_layout(guides = "collect") +
+  plot_annotation(
+    title = "Assessment of spatial autocorrelation using two-sided Moran's I"
+  ) & 
+  theme(legend.position = "bottom",
+        plot.title = element_text(size = 16, hjust = 0.5, face = "bold")) 
+saveRDS(pfinal,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_moranI_sensibilidade.rds")
+```
+
+
+```{r cap sensibilidade moran, eval=TRUE,echo=FALSE,include=TRUE}
+vcap <- "Sensitivity analysis of Moran's I test for spatial autocorrelation in model residuals. Panels show two-tailed p-values of Moran's I statistic calculated for mean residuals from two statistical models (A: [Nome do Modelo 1], B: [Nome do Modelo 2]), grouped by forest plots. The x-axis represents neighborhood size defined as the number of nearest neighbors (n), ranging from 1 to 100. The y-axis shows corresponding p-values, with a horizontal dashed line indicating the significance threshold (α = 0.05). The absence of p-values below 0.05 across the entire range of neighborhood sizes indicates no significant spatial autocorrelation in the residuals of either model, suggesting that spatial structure was adequately captured by the model formulations."
+```
+```{r fig-semsibilidadeMoranI,echo=FALSE,eval=TRUE,include=TRUE,fig.cap=vcap}
+pfinal <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_moranI_sensibilidade.rds")
+```
+
 
 ## Tabela de comparação dos HGAM
+
+
+
 
 ## Diagnostico HGAM mais plausivel
 
@@ -196,4 +213,75 @@ Os MAGH foram comparados usando métricas derivadas do ‘Akaike Information Cri
 ## Diagnostico HGAM mais simples
 
 
+## Códigos em R
+
+```{r}
+
+f_MoranTest_GAMM_severalK <- \(md){
+  # setup
+  ## functions
+  library(spdep)
+  f_applyMoranI_getStatPval <- \(vk,vcoord,vres){
+    # apply Moran I
+    nb <- knn2nb(knearneigh(vcoord, k=vk))  
+    listw <- nb2listw(nb)
+    moran_output <- moran.test(vres, listw,alternative = "two.sided")
+    # get Stat and Pval
+    data.frame(
+      Statistic = c(
+        "MoranI_stat_res", 
+        "Expectation", 
+        "Variance", 
+        "StdDev", 
+        "pvalue"
+      ),
+      Value = c(
+        moran_output$estimate[["Moran I statistic"]], 
+        moran_output$estimate[["Expectation"]], 
+        moran_output$estimate[["Variance"]], 
+        moran_output$statistic, 
+        moran_output$p.value
+      )
+    ) %>% 
+      pivot_wider(names_from = Statistic,
+                  values_from = Value)
+  }
+  ## data
+  dfmd <- md$model
+  dfmd$residuals <- residuals(md)
+  if(sum(names(dfmd)%in%c("lat","long"))<1){
+    df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+      mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+             long = ifelse(is.na(long_correct),long,long_correct),
+             Sitecode = factor(SiteCode)) %>% 
+      select(SiteCode,lat,long)
+    dfmd <- inner_join(
+      dfmd,
+      df_coord
+    )
+  }
+  dfmd_avgbySite <- dfmd %>% 
+    dplyr::group_by(SiteCode) %>% 
+    dplyr::summarise(mean_res = mean(residuals),
+              lat = first(lat),
+              long = first(long)) %>% 
+    ungroup()
+  # Prepare spatial data
+  coordinates <- dfmd_avgbySite[, c("lat","long")]
+  coordinates <- as.matrix(coordinates)
+  # Calculate Moran's I for residuals
+  doMC::registerDoMC(2)
+  df_moranI <- alply(1:100,1,f_applyMoranI_getStatPval,
+                    vcoord=coordinates,
+                    vres=dfmd_avgbySite$mean_res,
+                    .parallel = TRUE)
+  names(df_moranI) <- 1:100
+  df_moranI <- lapply(names(df_moranI),\(li){
+    mutate(df_moranI[[li]],k=li) %>% relocate(k)
+  }) %>% do.call("rbind",.)
+  #
+  return(df_moranI)
+}
+
+```
 

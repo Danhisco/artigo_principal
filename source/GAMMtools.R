@@ -15,7 +15,7 @@ f_MoranTest_GAMM_severalK <- \(md){
     # apply Moran I
     nb <- knn2nb(knearneigh(vcoord, k=vk))  
     listw <- nb2listw(nb)
-    moran_output <- moran.test(vres, listw)
+    moran_output <- moran.test(vres, listw,alternative = "two.sided")
     # get Stat and Pval
     data.frame(
       Statistic = c(
@@ -60,7 +60,7 @@ f_MoranTest_GAMM_severalK <- \(md){
   coordinates <- dfmd_avgbySite[, c("lat","long")]
   coordinates <- as.matrix(coordinates)
   # Calculate Moran's I for residuals
-  doMC::registerDoMC(3)
+  doMC::registerDoMC(2)
   df_moranI <- alply(1:100,1,f_applyMoranI_getStatPval,
                     vcoord=coordinates,
                     vres=dfmd_avgbySite$mean_res,
