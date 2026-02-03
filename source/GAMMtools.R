@@ -148,21 +148,14 @@ f_TabSelGAMM <- function(l_md,test_moranK=FALSE){
     arrange(dAICc) |> 
     select(modelo,dAICc:weight,dev.expl)
   #
-  df_moran <- ldply(l_md,f_MoranTest_GAMM,.id="modelo")
-  df_return <- inner_join(
-    df_return,
-    df_moran %>% select(modelo,2,pvalue)
-  )
   if(test_moranK){
-    lmoranI <- lapply(l_md,f_MoranTest_GAMM_severalK)
-    l_return <- list(
-      "tabsel" =  df_return,
-      "l_moranK" = lmoranI
+    df_moran <- ldply(l_md,f_MoranTest_GAMM,.id="modelo")
+    df_return <- inner_join(
+      df_return,
+      df_moran %>% select(modelo,2,pvalue)
     )
-    return(l_return)
-  }else{
-    return(df_return)
   }
+  return(df_return)
 }
 #
 # f_validaGAMM

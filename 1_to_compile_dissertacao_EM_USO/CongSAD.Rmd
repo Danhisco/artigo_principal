@@ -158,7 +158,7 @@ Os HGAM foram comparados usando métricas derivadas do ‘Akaike Information Cri
 
 ## Teste de autocorrelação espacial global I de Moran
 
-<p>Uma vez que os splines são ideais para descrever relações contínuas, a autocorrelação espacial negativa pode não ser bem descrita pelo modelo estatístico, assim, incluímos um teste bicaudal de autocorrelação espacial dos resíduos dos modelos estatísticos. Se houver autocorrelação espacial que não foi bem descrita pelo modelo estatístico, esperamos que a média, por parcela, dos resíduos do modelo apresentem a estatística I de Moran diferente de zero. A estatística I de Moran varia entre -1 e 1, ou seja, entre a autocorrelação espacial negativa e positiva, respectivamente. E possui um teste de hipótese associado que avalia se o valor é significativamente diferente de zero, se o p valor for próximo de zero então a hipótese de ausência de autocorrelação espacial possui pouco suporte. A estatística I de Moran requer que um parâmetro livre seja escolhido. Determinamos esse valor por uma análise de sensibilidade dos resíduos dos modelos ajustados. Para obter a estatística I de Moran e seu p valor associado utilizamos funções do pacote spdep (@bivand2020). A avaliação da sensibilidade desse parâmetro está no material de suporte (fig. \@ref(fig:MoranI)).</p> 
+<p>Uma vez que os splines são ideais para descrever relações contínuas, a autocorrelação espacial negativa pode não ser bem descrita pelo modelo estatístico, assim, incluímos um teste bicaudal de autocorrelação espacial dos resíduos dos modelos estatísticos. Se houver autocorrelação espacial que não foi bem descrita pelo modelo estatístico, esperamos que a média, por parcela, dos resíduos do modelo apresentem a estatística I de Moran diferente de zero. A estatística I de Moran varia entre -1 e 1, ou seja, entre a autocorrelação espacial negativa e positiva, respectivamente. E possui um teste de hipótese associado que avalia se o valor é significativamente diferente de zero, se o p valor for próximo de zero então a hipótese de ausência de autocorrelação espacial possui pouco suporte. A estatística I de Moran requer que um parâmetro livre seja escolhido. Determinamos esse valor por uma análise de sensibilidade dos resíduos dos modelos ajustados. Para obter a estatística I de Moran e seu p valor associado utilizamos funções do pacote spdep (@bivand2020). A avaliação da sensibilidade desse parâmetro está na figura \@ref(fig:fig-moranI).</p> 
 
 
 ```{r criacao da analise de sensibilidade de lmoranI,echo=FALSE,include=FALSE,eval=FALSE}
@@ -191,22 +191,67 @@ pfinal <- wrap_plots(lp, ncol = 2) +
         plot.title = element_text(size = 16, hjust = 0.5, face = "bold")) 
 saveRDS(pfinal,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_moranI_sensibilidade.rds")
 ```
-
-
 ```{r cap sensibilidade moran, eval=TRUE,echo=FALSE,include=TRUE}
 vcap <- "Sensitivity analysis of Moran's I test for spatial autocorrelation in model residuals. Panels show two-tailed p-values of Moran's I statistic calculated for mean residuals from two statistical models (A: [Nome do Modelo 1], B: [Nome do Modelo 2]), grouped by forest plots. The x-axis represents neighborhood size defined as the number of nearest neighbors (n), ranging from 1 to 100. The y-axis shows corresponding p-values, with a horizontal dashed line indicating the significance threshold (α = 0.05). The absence of p-values below 0.05 across the entire range of neighborhood sizes indicates no significant spatial autocorrelation in the residuals of either model, suggesting that spatial structure was adequately captured by the model formulations."
 ```
-```{r fig-semsibilidadeMoranI,echo=FALSE,eval=TRUE,include=TRUE,fig.cap=vcap}
+```{r fig-moranI,echo=FALSE,eval=TRUE,include=TRUE,fig.cap=vcap}
 pfinal <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_moranI_sensibilidade.rds")
+pfinal
 ```
-
 
 ## Tabela de comparação dos HGAM
 
+```{r criacao da tabela final, include=FALSE,eval=FALSE,echo=FALSE}
+l_md <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/lmd_cong.rds")
+df_tabsel <- f_TabSelGAMM(l_md,test_moranK = FALSE)
+write_csv(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv")
+```
 
-
+```{r}
+df_tabsel <- read_csv(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv") %>% 
+  mutate(across(where(is.numeric), ~round(.x,2)))
+f_flextable <- \(dfi){
+  dfi %>% 
+    flextable() %>%
+    bg(bg = "white",part = "all") %>%
+    theme_vanilla() %>% 
+    set_header_labels(
+      modelo = "HGAM",
+      dAICc = "ΔAICc",
+      df = "est. coef.",
+      weight = "weight",
+      dev.expl = "Dev. Exp.") %>%
+    bold(part = "header") %>%
+    colformat_num(digits = 2) %>% 
+    align(align = "center", part = "all") %>% 
+    autofit()
+}
+f_flextable(df_tabsel)
+```
 
 ## Diagnostico HGAM mais plausivel
+
+### Tabela do HGAM
+
+```{r criacao da tabela do modelo mais plausivel,echo=FALSE,include=FALSE,eval=FALSE}
+f_gsub <- \(vchar){
+  gsub("ideal","_pristine",vchar) %>% 
+    gsub("non_frag","_clumped",.) %>% 
+    gsub("cont","_frag",.)
+}
+hgam <- l_md[[df_tabsel$modelo[1]]]
+tab_todisp <- as_flextable(hgam) %>% bg(., bg = "white", part = "all")
+tosav <- tab_todisp %>% 
+  set_formatter(Term = f_gsub)
+saveRDS(tosav,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabmd_cong.rds")
+```
+```{r}
+tosav <- 
+  readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabmd_cong.rds")
+```
+
+
+
 
 ## Interpretação pelo HGAM mais plausivel
 
