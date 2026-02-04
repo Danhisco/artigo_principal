@@ -146,12 +146,20 @@ l_f$`s(k,by=land)` <-
   land +
   s(k,by=land,bs="cr",id="fixo") +
   te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+# modelo sem conectividade como efeito aleatório (i.e. interação entre k e land)
 l_f$`s(k,by=land) - te(k,plot,by=land)` <- 
   cbind(nSAD,100-nSAD) ~ 
   land +
   s(k,by=land,bs="cr",id="fixo") +
   s(SiteCode,bs="re")
+# modelo sem conectividade como efeito fixo
+l_f$`1` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  1 +
+  s(SiteCode,bs="re")
 l_md <- lapply(l_f,f_gam,dfi=df_ad)
+#
+l_md$`1` <- f_gam(vf = l_f$`1`,dfi = df_ad)
 ```
 
 ```{r salvamento de lmd, echo=FALSE,include=FALSE,eval=FALSE}
@@ -184,9 +192,9 @@ f_ggplot <- \(vname){
     scale_color_manual("",values=c("significance threshold (0.05)"="red",
                                    "p-value"="black",
                                    "Moran's I"="green")) +
-    scale_y_continuous(breaks=c(-0.10,0,0.05,0.25,0.50,0.75,1),
-                       limits=c(-0.07,1.001),
-                       expand = c(0,0)) +
+    scale_y_continuous(breaks=c(-0.07,0,0.05,0.25,0.50,0.75,1),
+                       limits=c(-0.08,1.001),
+                       expand = c(0,0.01)) +
     labs(x="n-nearest neighbors",y="") +
     theme_bw() +
     facet_wrap(~label) +
