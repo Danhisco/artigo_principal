@@ -1,31 +1,27 @@
 ---
-output: html_document
+title: "Validação empírica de MNEE e suas implicações para a estimatva de efeitos da paisagem"
+output: 
+  bookdown::word_document2: default
 editor_options: 
   chunk_output_type: console
 ---
 
-# Apêndice: Cong SAD (SI)  {-#CongSAD}
+<!-- # Apêndice: Cong SAD (SI)  {-#CongSAD} -->
 
-```{r setup4,include=FALSE,eval=FALSE}
+```{r setup4,include=TRUE,eval=TRUE,echo=FALSE,message = FALSE,warning = FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
                       fig.pos = "H", fig.show = "hold",dpi = 72)
 # pacotes
-# library(dagitty)
-# library(ggdag)
 library(gt)
 library(gratia)
 library(sads)
 library(doMC)
-# library(metR)
 library(gridExtra)
 library(ggplot2)
 library(readr)
 library(purrr)
 library(stringr)
 library(tidyr)
-# library(MuMIn)
-# library(AICcmodavg)
-# library(insight)
 library(bbmle)
 library(DHARMa)
 library(mgcv)
@@ -38,6 +34,13 @@ source("source/nameModel.R")
 source("source/GAMMtools.R")
 source("source/general_tools.R")
 f_z <- function(x) (x-mean(x))/sd(x)
+f_label <- \(vn){
+  gsub("1","M4",vn) %>% 
+    gsub("s\\(k,by\\=land\\) \\+ \\(lat,long\\)","M1",.) %>% 
+    gsub("s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)","M3",.) %>% 
+    gsub("s\\(k,by\\=land\\)","M2",.)
+    
+}
 #
 l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
 vsites105 <- l_dfpred$fixo_e_aleat$SiteCode %>% unique
@@ -49,10 +52,37 @@ df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>%
   select(SiteCode,lat,long, forest_succession) %>% 
   filter(forest_succession!="capoeira",
          SiteCode %in% vsites105)
+#
+l_f <- list()
+# modelo cheio: conectividade + proximidade geográfica
+l_f$`s(k,by=land) + (lat,long)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  land +
+  s(k,by=land,bs="cr",id="fixo") +
+  s(lat,long) + 
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+# modelo sem coordenadas: apenas conectividade
+l_f$`s(k,by=land)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  land +
+  s(k,by=land,bs="cr",id="fixo") +
+  te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
+# modelo sem conectividade como efeito aleatório
+l_f$`s(k,by=land) - te(k,plot,by=land)` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  land +
+  s(k,by=land,bs="cr",id="fixo") +
+  s(SiteCode,bs="re")
+# modelo sem conectividade como efeito fixo
+l_f$`1` <- 
+  cbind(nSAD,100-nSAD) ~ 
+  1 +
+  s(SiteCode,bs="re")
+
 ```
 
 
-```{r sumarização dos resultados do teste KS, echo=TRUE,eval=FALSE}
+```{r sumarização dos resultados do teste KS, echo=FALSE,eval=FALSE}
 f_summarise_SAD_MNEE <- \(df){
 #@ df: df por site, k, e  land_type
 #@ e.g. ddply(.,c("SiteCode","k","land_type"))
@@ -105,9 +135,9 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
-# Validação empírica de MNEE e suas implicações para a estimatva de efeitos da paisagem {CongSAD}
+<!-- # Validação empírica de MNEE e suas implicações para a estimatva de efeitos da paisagem {CongSAD} -->
 
-## Descrição estatística da congruência com a SAD observada
+# Descrição estatística da congruência com a SAD observada
 
 <p>
 A descrição estatística da probabilidade de uma SAD simulada ter boa congruência com a SAD observada por paisagem experimental (fragmentada - f, aglomerada - a, prístina - p) foi obtida por um modelo aditivo generalizado hierárquico (HGAM, @wood2017, @Pedersen2019). Esses modelos estatísticos permitem expressar a estrutura dos dados agregada por parcela de amostragem (@Pedersen2019) e descrever efeitos descritivos não lineares por splines e tensores de suas preditoras (@wood2017). Splines agem como "curvas ajustáveis" que se adaptam aos dados, controlando o grau de suavização para evitar sobreajuste através da penalização pela máxima verossimilhança restrita (@wood2017). O objetivo de splines e tensores é a descrição de qualquer relação contínua (@wood2017). Todas as análises estatísticas foram feitas usando linguagem R (@Rlang) e o pacote mgcv (REF).
@@ -229,7 +259,6 @@ ft_models <- ft_models |>
 
 # Visualizar
 ft_models
-
 ```
 
 
@@ -251,7 +280,7 @@ f_ggplot <- \(vname){
   dfi <- lmoranI[[vname]]
   dfi %>% 
     mutate(k=as.numeric(k),
-           label=vname) %>% 
+           label=f_label(vname)) %>% 
     ggplot(aes(x=k)) +
     geom_hline(color="darkgray",yintercept = 0) +
     geom_hline(linetype=2,aes(color="significance threshold (0.05)",
@@ -271,19 +300,22 @@ f_ggplot <- \(vname){
 }
 lp <- lapply(names(lmoranI),f_ggplot)
 library(patchwork)
-pfinal <- wrap_plots(lp, nrow = 1) +
+pfinal <- wrap_plots(lp, nrow = 2) +
   plot_layout(guides = "collect") +
   plot_annotation(
-    title = "Assessment of spatial autocorrelation using two-sided Moran's I"
+    title = "Assessment of spatial autocorrelation",
+    subtitle = "two-sided Moran's I"
   ) & 
   theme(legend.position = "top",
-        plot.title = element_text(size = 16, hjust = 0.5, face = "bold")) 
+        plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
+        plot.subtitle = element_text(size = 10, hjust = 0.5, face = "bold"),
+        plot.margin = margin(2, 0, 2, 0)) 
 saveRDS(pfinal,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_moranI_sensibilidade.rds")
 ```
 ```{r cap sensibilidade moran, eval=TRUE,echo=FALSE,include=TRUE}
-vcap <- do.call(sprintf, c(list("Sensitivity analysis of Moran's I test for spatial autocorrelation in model residuals. Panels show two-tailed p-values of Moran's I statistic calculated for mean residuals from two statistical models (left: %s, middle: %s, right: %s), grouped by forest plots. The x-axis represents neighborhood size defined as the number of nearest neighbors (n), ranging from 1 to 100. The y-axis shows corresponding p-values, with a horizontal dashed line indicating the significance threshold (α = 0.05). The absence of p-values below 0.05 across the entire range of neighborhood sizes indicates no significant spatial autocorrelation in the residuals of either model, suggesting that spatial structure was adequately captured by the model formulations."), names(l_f)[1:3]))
+vcap <- do.call(sprintf, c(list("Sensitivity analysis of Moran's I test for spatial autocorrelation in model residuals. Panels show two-tailed p-values of Moran's I statistic calculated for mean residuals from two statistical models (left: %s, middle: %s, right: %s), grouped by forest plots. The x-axis represents neighborhood size defined as the number of nearest neighbors (n), ranging from 1 to 100. The y-axis shows corresponding p-values, with a horizontal dashed line indicating the significance threshold (α = 0.05). The absence of p-values below 0.05 across the entire range of neighborhood sizes indicates no significant spatial autocorrelation in the residuals of either model, suggesting that spatial structure was adequately captured by the model formulations."), names(l_f)[1:4]))
 ```
-```{r fig-moranI,echo=FALSE,eval=TRUE,include=TRUE,fig.cap=vcap}
+```{r fig-moranI,echo=FALSE,eval=TRUE,include=TRUE,fig.cap=vcap,fig.width=6, fig.height=8}
 pfinal <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_moranI_sensibilidade.rds")
 pfinal
 ```
@@ -298,7 +330,8 @@ write_csv(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.
 
 ```{r}
 df_tabsel <- read_csv(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv") %>% 
-  mutate(across(where(is.numeric), ~round(.x,2)))
+  mutate(across(where(is.numeric), ~round(.x,2)),
+         modelo=f_label(modelo))
 f_flextable <- \(dfi){
   dfi %>% 
     flextable() %>%
@@ -328,96 +361,25 @@ f_gsub <- \(vchar){
     gsub("non_frag","_clumped",.) %>% 
     gsub("cont","_frag",.)
 }
+df_tabsel <- read_csv(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv")
 hgam <- l_md[[df_tabsel$modelo[1]]]
 tab_todisp <- as_flextable(hgam) %>% bg(., bg = "white", part = "all")
 tosav <- tab_todisp %>% 
   set_formatter(Term = f_gsub) %>% 
-  set_caption(caption = "Tabela 1: ") %>% 
+  set_caption(caption = "Summary of the Generalized Additive Model (M1) coefficients and approximate significance of smooth terms.") %>% 
   autofit()
 saveRDS(tosav,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabmd_cong.rds")
 ```
 ```{r tabsel,}
 tosav <- 
   readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabmd_cong.rds")
+tosav
 ```
 
+### Gráficos Diagnóstico do HGAM
 
+## Interpretação pelo HGAM mais plausível
 
+# Implicações para a estimativa de efeitos da paisagem
 
-## Interpretação pelo HGAM mais plausivel
-
-## Diagnostico HGAM mais simples
-
-
-## Códigos em R
-
-```{r}
-
-f_MoranTest_GAMM_severalK <- \(md){
-  # setup
-  ## functions
-  library(spdep)
-  f_applyMoranI_getStatPval <- \(vk,vcoord,vres){
-    # apply Moran I
-    nb <- knn2nb(knearneigh(vcoord, k=vk))  
-    listw <- nb2listw(nb)
-    moran_output <- moran.test(vres, listw,alternative = "two.sided")
-    # get Stat and Pval
-    data.frame(
-      Statistic = c(
-        "MoranI_stat_res", 
-        "Expectation", 
-        "Variance", 
-        "StdDev", 
-        "pvalue"
-      ),
-      Value = c(
-        moran_output$estimate[["Moran I statistic"]], 
-        moran_output$estimate[["Expectation"]], 
-        moran_output$estimate[["Variance"]], 
-        moran_output$statistic, 
-        moran_output$p.value
-      )
-    ) %>% 
-      pivot_wider(names_from = Statistic,
-                  values_from = Value)
-  }
-  ## data
-  dfmd <- md$model
-  dfmd$residuals <- residuals(md)
-  if(sum(names(dfmd)%in%c("lat","long"))<1){
-    df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
-      mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
-             long = ifelse(is.na(long_correct),long,long_correct),
-             Sitecode = factor(SiteCode)) %>% 
-      select(SiteCode,lat,long)
-    dfmd <- inner_join(
-      dfmd,
-      df_coord
-    )
-  }
-  dfmd_avgbySite <- dfmd %>% 
-    dplyr::group_by(SiteCode) %>% 
-    dplyr::summarise(mean_res = mean(residuals),
-              lat = first(lat),
-              long = first(long)) %>% 
-    ungroup()
-  # Prepare spatial data
-  coordinates <- dfmd_avgbySite[, c("lat","long")]
-  coordinates <- as.matrix(coordinates)
-  # Calculate Moran's I for residuals
-  doMC::registerDoMC(2)
-  df_moranI <- alply(1:100,1,f_applyMoranI_getStatPval,
-                    vcoord=coordinates,
-                    vres=dfmd_avgbySite$mean_res,
-                    .parallel = TRUE)
-  names(df_moranI) <- 1:100
-  df_moranI <- lapply(names(df_moranI),\(li){
-    mutate(df_moranI[[li]],k=li) %>% relocate(k)
-  }) %>% do.call("rbind",.)
-  #
-  return(df_moranI)
-}
-
-```
 
