@@ -502,6 +502,129 @@ Essa figura vai para o resultado principal
 
 -> adicionar os gráficos que mostram a diferença entre os grupos de parcelas (usados nas próximas análises X os filtrados), incluindo o mapa
 
+## As parcelas interpretadas não diferem de forma sistemática com as parcelas fora dos critérios de congruência
+
+Das 105 parcelas florestais simuladas, em 67 delas MNEE apresentou boa congruência nas três paisagens experimentais quando a limitação de dispersão era moderada até muito limitada (k>=0.50).
+
+
+```{r criacao da classificação das parcelas quanto à congruencia e suas implicacoes, echo=FALSE, eval=FALSE, include=FALSE}
+# df_p
+df_p <- read_csv("dados/df_p.csv")
+#df_sítios simuláveis em MNEE contemporâneo
+df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+  mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+         long = ifelse(is.na(long_correct),long,long_correct),
+         Sitecode = factor(SiteCode)) %>% 
+  select(SiteCode,lat,long, forest_succession) %>% 
+  filter(forest_succession!="capoeira")
+
+v_site <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
+  pull(SiteCode) |> unique()
+v_site <- intersect(df_coord$SiteCode,v_site)
+# df_sim
+df_sim <- read_csv("dados/df_simulacao.csv") %>% 
+  filter(SiteCode %in% vsites105)
+# quem são os não intepretados?
+df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") 
+df_selected <- df_ad %>% 
+  filter(k>=0.49999) %>%
+  group_by(SiteCode) %>% 
+  summarise(selecionado = all(nSAD>=75))
+#-------------------------------------------------------------
+#--------------------------- gráficos ------------------------
+#-------------------------------------------------------------
+lp <- list()
+# características das parcelas interpretadas e das outras
+dfp <- inner_join(df_selected,select(df_dados_disponiveis,-forest_succession))
+dfp <- inner_join(dfp, distinct( select(df_sim,-c(k:d)) ) )
+dfp <- inner_join(dfp, df_p)
+lp$cong_land <- select(dfp,-tif.path) %>% 
+  pivot_longer(lat:p) %>% 
+  mutate(name=factor(name,
+                     levels=c("p","effort_ha","Ntotal","S_obs","lat","long"),
+                     labels=c("%FL","plot area","N","S","lat","long")),
+         legend_label = paste0(selecionado,
+                              " (",
+                              ifelse(selecionado,67,105-67),
+                              ")")
+         ) %>% 
+  ggplot(aes(x=legend_label,y=value,color=legend_label)) +
+  geom_boxplot() +
+  geom_jitter() +
+  scale_color_manual("selected",values=c("TRUE (67)"="green3","FALSE (38)"="red")) +
+  facet_wrap(~name,nrow=2,scales="free") +
+  theme_classic() +
+  labs(x="",y="") +
+  theme(legend.position = "bottom",
+        plot.margin = margin(2, 2, 2, 2, "mm"),
+        legend.margin = margin(0, 0, 0, 0),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+# mapa que descreve a localização
+library(sf)
+shp_FA <- read_sf("dados/shapefile/biome_border.shp")
+sf_plot <- st_as_sf(dfp,coords = c("long", "lat"), crs = 4326)
+sf_plot <- st_transform(sf_plot,crs=st_crs(shp_FA))
+lp$mapa <- ggplot() +
+  geom_sf(data=shp_FA,fill="darkgray",color="darkgreen") +
+  geom_sf(data = sf_plot,aes(fill=selecionado,shape=selecionado, size=5,alpha=0.75)) +
+  coord_sf(ylim = c(-32,-5),xlim = c(-56,-34),expand = FALSE) +
+  scale_shape_manual(
+    name = NULL,
+    values = c("FALSE" = 25, "TRUE" = 24)
+    ) +
+  scale_fill_manual(
+    name = NULL,
+    values = c("FALSE" = "red", "TRUE" = "green3")
+    ) +
+  theme(
+    legend.position = "none"
+  ) +
+  ggspatial::annotation_north_arrow(
+    location = "br",                   # bottom right
+    which_north = "true",
+    height = unit(1.2, "cm"),
+    width = unit(1.2, "cm"),
+    pad_x = unit(0.5, "cm"),
+    pad_y = unit(0.5, "cm")
+  ) +
+  ggspatial::annotation_scale(
+    location = "br",                    
+    pad_x = unit(2.5, "cm"),
+    pad_y = unit(0.5, "cm"),
+    width_hint = 0.2,                   # largura relativa (20% do mapa)
+    style = "bar"                       # estilo "bar" ou "ticks"
+  ) 
+saveRDS(lp,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parcelas_selecionadas.rds")
+```
+```{r caption fig sem dif entre selecionadas e nao, echo=FALSE,eval=TRUE,include=TRUE}
+vcap <- "Environmental and spatial characterization of plot selection in Atlantic Forest surveys. (A) Comparative analysis of six key operational variables: forest cover percentage (%FL; 0-100% scale), plot area (in hectares), stem density (N; number of individuals), species richness (S; number of species), latitude, and longitude (decimal degrees). Green boxplots represent selected plots (n = 67), red boxplots represent non-selected plots (n = 38). Boxes display interquartile ranges (IQR), horizontal lines indicate medians, whiskers extend to 1.5×IQR, and points show raw values. (B) Spatial context of sampling locations within the Atlantic Forest biome. Points represent plot centroids, overlaid on the official IBGE Atlantic Forest shapefile (gray polygon), which follows a conservative biome delimitation. The consistent color coding (green = selected, red = non-selected) allows direct comparison between environmental patterns and geographic distribution."
+```
+```{r fig-implicacoes-cong,fig.cap=vcap}
+library(sf)
+library(patchwork)
+lp <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parcelas_selecionadas.rds")
+wrap_plots(plotlist=lp,ncol=2) +
+  plot_annotation(
+    title = "Operational variables show similar distributions in selected and non-selected plots",
+    tag_levels = 'a',
+    tag_prefix = '('
+  ) &
+  theme(
+    plot.tag = element_text(size = 14, face = "bold"),
+    plot.tag.position = c(0, 1),
+    plot.title = element_text(
+      size = 14,
+      face = "bold",
+      hjust = 0.5,  # centralizado
+      margin = margin(b = 8, t = 5)
+    )
+  )
+```
+
+
+
+
 # Material suplementar do apêndice
 
 ## Diagnostico HGAM mais plausivel
