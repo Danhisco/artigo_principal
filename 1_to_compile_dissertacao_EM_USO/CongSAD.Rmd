@@ -468,12 +468,12 @@ p <- l_dfpred$fixo_e_aleat %>%
             aes(x=k,y=fit),
             color="darkred") +
   geom_hex(bins = 50,alpha=0.5) + 
-  scale_fill_gradient("contagem",low = "gray", high = "black", na.value = NA) +
+  scale_fill_gradient("count",low = "gray", high = "black", na.value = NA) +
   scale_x_continuous(expand = c(0.01, 0)) +
   scale_y_continuous(expand = c(0.01, 0)) +
-  labs(x="Proporção de propágulos na vizinhança imediata (k)",
-       y="número de SAD simuladas congruentes com a SAD observada",
-       title="Descrição da congruência absoluta da SAD simulada nas paisagens hipotéticas",
+  labs(x="Fraction of propagules within the immediate neighborhood (k)",
+       y="Number of congruent simulated SADs (goodness-of-fit)",
+       title="Congruence of simulated SADs across experimental landscapes",
        subtitle="Congruence is best described by connectivity and spatial proximity among forest plots") +
   facet_wrap(~land) +
   theme_classic() +
@@ -526,10 +526,11 @@ df_sim <- read_csv("dados/df_simulacao.csv") %>%
   filter(SiteCode %in% vsites105)
 # quem são os não intepretados?
 df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") 
+summarise <- 
 df_selected <- df_ad %>% 
   filter(k>=0.49999) %>%
   group_by(SiteCode) %>% 
-  summarise(selecionado = all(nSAD>=75))
+  dplyr::summarise(selecionado = all(nSAD>=75))
 #-------------------------------------------------------------
 #--------------------------- gráficos ------------------------
 #-------------------------------------------------------------
@@ -626,6 +627,148 @@ wrap_plots(plotlist=lp,ncol=2) +
 
 
 # Material suplementar do apêndice
+
+## Mapas de cobertura florestal das parcelas selecionadas e das outras
+```{r criacao dos mapas de cobertura florestal das parcelas selecionadas e das outras, echo=FALSE, eval=FALSE, include=FALSE}
+# df_p
+df_p <- read_csv("dados/df_p.csv")
+#df_sítios simuláveis em MNEE contemporâneo
+df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+  mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+         long = ifelse(is.na(long_correct),long,long_correct),
+         Sitecode = factor(SiteCode)) %>% 
+  select(SiteCode,lat,long, forest_succession) %>% 
+  filter(forest_succession!="capoeira")
+
+v_site <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
+  pull(SiteCode) |> unique()
+v_site <- intersect(df_coord$SiteCode,v_site)
+# df_sim
+df_sim <- read_csv("dados/df_simulacao.csv") %>% 
+  filter(SiteCode %in% vsites105)
+# quem são os não intepretados?
+df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") 
+summarise <- 
+df_selected <- df_ad %>% 
+  filter(k>=0.49999) %>%
+  group_by(SiteCode) %>% 
+  dplyr::summarise(selecionado = all(nSAD>=75))
+#-------------------------------------------------------------
+#--------------------------- gráficos ------------------------
+#-------------------------------------------------------------
+# características das parcelas interpretadas e das outras
+dfp <- inner_join(df_selected,select(df_dados_disponiveis,-forest_succession))
+dfp <- inner_join(dfp, distinct( select(df_sim,-c(k:d)) ) )
+dfp <- inner_join(dfp, df_p)
+# Supondo que você tenha:
+library(raster)
+library(magick)
+library(patchwork)
+library(dplyr)
+
+# Função para carregar e plotar um mapa
+plot_tif_map <- \(dfi, fill_color = "darkgreen") {
+  # Carregar raster
+  r <- raster::raster(dfi$tif.path)
+  # Converter para data.frame para ggplot
+  r_df <- as.data.frame(r, xy = TRUE)
+  names(r_df)[3] <- "value"
+  r_df$label <- dfi$SiteCode
+  # Criar plot básico
+  p <- ggplot() +
+    geom_raster(data = r_df, aes(x = x, y = y, fill = value)) +
+    scale_x_continuous(expand = c(0,0)) +
+    scale_y_continuous(expand = c(0,0)) +
+    scale_fill_gradient(low = "lightgray", high = fill_color, na.value = NA) +
+    coord_equal() +
+    theme_classic() +
+    labs(x="",y="") +
+    theme(
+      legend.position = "none",
+      strip.text = element_text(size=14,face="bold"),
+      plot.margin = margin(2, 2, 2, 2, "mm"),
+      plot.title = element_text(size = 8, hjust = 0.5, face = "bold",
+                                margin = margin(b = 2))
+    ) +
+    facet_wrap(~label)
+  #
+  vpath <- tempfile(fileext = ".png")
+  ggsave(filename = vpath,plot = p,
+         width = ,
+         height = ,
+         dpi=200)
+  #
+  img_p <- image_read(vpath) %>% 
+    image_trim()
+  vpath <- paste0("1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/mapas_cobertura/",
+                  dfi$SiteCode,".jpeg")
+  image_write(img_p,
+              path=vpath)
+  return(vpath)
+}
+f_concatenar_img <- \(dfpi, ncol=6){
+  #
+  dfref <- dfpi %>%
+    mutate(jpeg.path = paste0(
+      "1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/mapas_cobertura/",
+      SiteCode,".jpeg")
+      ) %>% 
+    arrange(p)
+  #
+  limg <- lapply(dfref$jpeg.path,image_read)
+  limg0 <- limg
+  #
+  lfinal <- list()
+  i <- 1
+  while(length(limg)>0){
+    li <- limg[1:6]
+    f_append <- \(x,y) image_append(c(x, y), stack = TRUE)
+    pf <- Reduce(f = f_append,x = li)
+    lfinal[[i]] <- pf
+    i <- i + 1
+    limg[1:6] <- NULL
+    rm(pf);gc()
+  }
+  #
+  f_append <- \(x,y) image_append(c(x, y), stack = FALSE)
+  lfinal[[1]] <- image_append(c(lfinal[[1]], lfinal[[12]]), stack = TRUE)   
+  lfinal[[12]] <- NULL
+  pfinal <- Reduce(f=f_append,x=lfinal)
+  
+}
+#
+dfp %>% 
+  arrange(p) %>% 
+  dplyr::mutate(id = row_number()) %>% 
+  a_ply(.,1,plot_tif_map)
+# composições por tipo de paisagem (selecionada ou não)
+dfpi <- dfp %>% filter(selecionado)
+lpaths <- dlply(dfp,"selecionado",f_concatenar_img)
+
+
+```
+
+### Parcelas selecionadas
+
+```{r caption parcelas selecionadas}
+vcap <- "Mapas de cobertura florestal da paisagem ao redor das parcelas selecionadas. Esses mapas são obtidos da coleção 6 do Mapbiomas e correspondem a um recorte de 16km x 16 km. Em verde a cobertura florestal e em cinza a não-cobertura florestal."
+```
+```{r fig-mapas-selecionados, fig.cap=vcap,fig.width=12}
+p_selecionados <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_selecionadas.rds")
+p_selecionados
+
+```
+
+
+### Parcelas não selecionadas
+
+```{r caption parcelas nao selecionadas}
+vcap <- "Mapas de cobertura florestal da paisagem ao redor das parcelas não selecionadas. Esses mapas são obtidos da coleção 6 do Mapbiomas e correspondem a um recorte de 16km x 16 km. Em verde a cobertura florestal e em cinza a não-cobertura florestal."
+```
+```{r fig-mapas-naoselecionados, fig.cap=vcap,fig.width=12}
+p_naoselecionados <- readRDS(file ="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_naoselecionadas.rds")
+p_naoselecionados
+```
 
 ## Diagnostico HGAM mais plausivel
 
