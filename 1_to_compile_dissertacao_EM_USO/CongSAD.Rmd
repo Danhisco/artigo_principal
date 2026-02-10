@@ -648,7 +648,6 @@ df_sim <- read_csv("dados/df_simulacao.csv") %>%
   filter(SiteCode %in% vsites105)
 # quem são os não intepretados?
 df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") 
-summarise <- 
 df_selected <- df_ad %>% 
   filter(k>=0.49999) %>%
   group_by(SiteCode) %>% 
@@ -660,6 +659,7 @@ df_selected <- df_ad %>%
 dfp <- inner_join(df_selected,select(df_dados_disponiveis,-forest_succession))
 dfp <- inner_join(dfp, distinct( select(df_sim,-c(k:d)) ) )
 dfp <- inner_join(dfp, df_p)
+dfp <- mutate(dfp,txt.path = paste0("dados/simulacao/",SiteCode,".txt"))
 # Supondo que você tenha:
 library(raster)
 library(magick)
@@ -667,19 +667,23 @@ library(patchwork)
 library(dplyr)
 
 # Função para carregar e plotar um mapa
-plot_tif_map <- \(dfi, fill_color = "darkgreen") {
+# dfi <- dfp[1,]
+plot_tif_map <- \(dfi, colname = "txt.path",fill_color = c("0"="white","1"="lightgreen","2"="darkgreen")) {
   # Carregar raster
-  r <- raster::raster(dfi$tif.path)
+  m_land <- read.table(dfi$txt.path[1]) |> as.matrix()
+  r <- raster::raster(m_land)
   # Converter para data.frame para ggplot
   r_df <- as.data.frame(r, xy = TRUE)
   names(r_df)[3] <- "value"
   r_df$label <- dfi$SiteCode
+  r_df$value <- factor(r_df$value,
+                       levels=0:2)
   # Criar plot básico
   p <- ggplot() +
     geom_raster(data = r_df, aes(x = x, y = y, fill = value)) +
     scale_x_continuous(expand = c(0,0)) +
     scale_y_continuous(expand = c(0,0)) +
-    scale_fill_gradient(low = "lightgray", high = fill_color, na.value = NA) +
+    scale_fill_manual(values=fill_color) +
     coord_equal() +
     theme_classic() +
     labs(x="",y="") +
@@ -688,7 +692,9 @@ plot_tif_map <- \(dfi, fill_color = "darkgreen") {
       strip.text = element_text(size=14,face="bold"),
       plot.margin = margin(2, 2, 2, 2, "mm"),
       plot.title = element_text(size = 8, hjust = 0.5, face = "bold",
-                                margin = margin(b = 2))
+                                margin = margin(b = 2)),
+      axis.ticks = element_blank(),
+      axis.text =  element_blank()
     ) +
     facet_wrap(~label)
   #
@@ -696,7 +702,7 @@ plot_tif_map <- \(dfi, fill_color = "darkgreen") {
   ggsave(filename = vpath,plot = p,
          width = ,
          height = ,
-         dpi=200)
+         dpi=150)
   #
   img_p <- image_read(vpath) %>% 
     image_trim()
@@ -716,13 +722,11 @@ f_concatenar_img <- \(dfpi, ncol=6){
     arrange(p)
   #
   limg <- lapply(dfref$jpeg.path,image_read)
-  limg0 <- limg
-  #
   lfinal <- list()
   i <- 1
   while(length(limg)>0){
     li <- limg[1:6]
-    f_append <- \(x,y) image_append(c(x, y), stack = TRUE)
+    f_append <- \(x,y) image_append(c(x, y), stack = FALSE)
     pf <- Reduce(f = f_append,x = li)
     lfinal[[i]] <- pf
     i <- i + 1
@@ -730,11 +734,12 @@ f_concatenar_img <- \(dfpi, ncol=6){
     rm(pf);gc()
   }
   #
-  f_append <- \(x,y) image_append(c(x, y), stack = FALSE)
-  lfinal[[1]] <- image_append(c(lfinal[[1]], lfinal[[12]]), stack = TRUE)   
-  lfinal[[12]] <- NULL
-  pfinal <- Reduce(f=f_append,x=lfinal)
-  
+  f_append <- \(x,y){
+    ret <- image_append(c(x, y), stack = TRUE)  
+    gc()
+    return(ret)
+  }
+  Reduce(f=f_append,x=lfinal)
 }
 #
 dfp %>% 
@@ -743,9 +748,9 @@ dfp %>%
   a_ply(.,1,plot_tif_map)
 # composições por tipo de paisagem (selecionada ou não)
 dfpi <- dfp %>% filter(selecionado)
-lpaths <- dlply(dfp,"selecionado",f_concatenar_img)
-
-
+l_finais <- dlply(dfp,"selecionado",f_concatenar_img)
+saveRDS(l_finais[["TRUE"]],file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_selecionadas.rds")
+saveRDS(l_finais[["FALSE"]],file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_naoselecionadas.rds")
 ```
 
 ### Parcelas selecionadas
@@ -755,8 +760,7 @@ vcap <- "Mapas de cobertura florestal da paisagem ao redor das parcelas selecion
 ```
 ```{r fig-mapas-selecionados, fig.cap=vcap,fig.width=12}
 p_selecionados <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_selecionadas.rds")
-p_selecionados
-
+print(p_selecionados)
 ```
 
 
@@ -767,7 +771,7 @@ vcap <- "Mapas de cobertura florestal da paisagem ao redor das parcelas não sel
 ```
 ```{r fig-mapas-naoselecionados, fig.cap=vcap,fig.width=12}
 p_naoselecionados <- readRDS(file ="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_naoselecionadas.rds")
-p_naoselecionados
+print(p_naoselecionados)
 ```
 
 ## Diagnostico HGAM mais plausivel
