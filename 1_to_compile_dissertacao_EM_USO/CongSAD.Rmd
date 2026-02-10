@@ -1,9 +1,10 @@
 ---
-title: "Validação empírica de MNEE e suas implicações para a estimatva de efeitos da paisagem"
-output: 
-  bookdown::word_document2: default
-editor_options: 
-  chunk_output_type: console
+title: Validação empírica de MNEE e suas implicações para a estimatva de efeitos da
+  paisagem
+output:
+  word_document: default
+  html_document:
+    df_print: paged
 ---
 
 <!-- # Apêndice: Cong SAD (SI)  {-#CongSAD} -->
@@ -12,11 +13,7 @@ editor_options:
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
                       fig.pos = "H", fig.show = "hold",dpi = 72)
 # pacotes
-library(gt)
-library(gratia)
-library(sads)
-library(doMC)
-library(gridExtra)
+library(plyr)
 library(ggplot2)
 library(readr)
 library(purrr)
@@ -24,10 +21,7 @@ library(stringr)
 library(tidyr)
 library(bbmle)
 library(DHARMa)
-library(mgcv)
-library(lme4)
 library(data.table)
-library(plyr)
 library(dplyr)
 library(flextable)
 source("source/nameModel.R")
@@ -48,6 +42,7 @@ f_antilabel <- \(vn){
     gsub("M2","s\\(k,by\\=land\\)",.)
     
 }
+select <- dplyr::select
 #
 l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
 vsites105 <- l_dfpred$fixo_e_aleat$SiteCode %>% unique
@@ -491,7 +486,7 @@ image_write(img,path = "figuras/descricao_congruencia_absoluta.png")
 ```{r captio figCong,eval=TRUE,echo=FALSE}
 vcap <- "teste"
 ```
-```{r figCong,fig.cap=vcap}
+```{r figCong,fig.cap=vcap,fig.width=12}
 p <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_interpretacao_cong.rds")
 p
 ```
@@ -601,7 +596,7 @@ saveRDS(lp,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parc
 ```{r caption fig sem dif entre selecionadas e nao, echo=FALSE,eval=TRUE,include=TRUE}
 vcap <- "Environmental and spatial characterization of plot selection in Atlantic Forest surveys. (A) Comparative analysis of six key operational variables: forest cover percentage (%FL; 0-100% scale), plot area (in hectares), stem density (N; number of individuals), species richness (S; number of species), latitude, and longitude (decimal degrees). Green boxplots represent selected plots (n = 67), red boxplots represent non-selected plots (n = 38). Boxes display interquartile ranges (IQR), horizontal lines indicate medians, whiskers extend to 1.5×IQR, and points show raw values. (B) Spatial context of sampling locations within the Atlantic Forest biome. Points represent plot centroids, overlaid on the official IBGE Atlantic Forest shapefile (gray polygon), which follows a conservative biome delimitation. The consistent color coding (green = selected, red = non-selected) allows direct comparison between environmental patterns and geographic distribution."
 ```
-```{r fig-implicacoes-cong,fig.cap=vcap}
+```{r fig-implicacoes-cong,fig.cap=vcap,fig.width=12}
 library(sf)
 library(patchwork)
 lp <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parcelas_selecionadas.rds")
@@ -710,9 +705,10 @@ plot_tif_map <- \(dfi, colname = "txt.path",fill_color = c("0"="white","1"="ligh
                   dfi$SiteCode,".jpeg")
   image_write(img_p,
               path=vpath)
+  rm(img_p);gc()
   return(vpath)
 }
-f_concatenar_img <- \(dfpi, ncol=6){
+f_concatenar_img <- \(dfpi, ncol=10){
   #
   dfref <- dfpi %>%
     mutate(jpeg.path = paste0(
@@ -725,12 +721,12 @@ f_concatenar_img <- \(dfpi, ncol=6){
   lfinal <- list()
   i <- 1
   while(length(limg)>0){
-    li <- limg[1:6]
+    li <- limg[1:ncol]
     f_append <- \(x,y) image_append(c(x, y), stack = FALSE)
     pf <- Reduce(f = f_append,x = li)
     lfinal[[i]] <- pf
     i <- i + 1
-    limg[1:6] <- NULL
+    limg[1:ncol] <- NULL
     rm(pf);gc()
   }
   #
@@ -739,7 +735,13 @@ f_concatenar_img <- \(dfpi, ncol=6){
     gc()
     return(ret)
   }
-  Reduce(f=f_append,x=lfinal)
+  pfinal <- Reduce(f=f_append,x=lfinal)
+  image_write(pfinal,
+              path = paste0(
+      "1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/mapas_cobertura/selecionadas_",
+      dfpi$selecionado[1],".jpeg"))
+  rm(pfinal);gc()
+  return(TRUE)
 }
 #
 dfp %>% 
@@ -747,10 +749,10 @@ dfp %>%
   dplyr::mutate(id = row_number()) %>% 
   a_ply(.,1,plot_tif_map)
 # composições por tipo de paisagem (selecionada ou não)
-dfpi <- dfp %>% filter(selecionado)
+# dfpi <- dfp %>% filter(!selecionado)
 l_finais <- dlply(dfp,"selecionado",f_concatenar_img)
-saveRDS(l_finais[["TRUE"]],file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_selecionadas.rds")
-saveRDS(l_finais[["FALSE"]],file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_naoselecionadas.rds")
+# saveRDS(l_finais[["TRUE"]],file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_selecionadas.rds")
+# saveRDS(l_finais[["FALSE"]],file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_naoselecionadas.rds")
 ```
 
 ### Parcelas selecionadas
@@ -759,8 +761,7 @@ saveRDS(l_finais[["FALSE"]],file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_
 vcap <- "Mapas de cobertura florestal da paisagem ao redor das parcelas selecionadas. Esses mapas são obtidos da coleção 6 do Mapbiomas e correspondem a um recorte de 16km x 16 km. Em verde a cobertura florestal e em cinza a não-cobertura florestal."
 ```
 ```{r fig-mapas-selecionados, fig.cap=vcap,fig.width=12}
-p_selecionados <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_selecionadas.rds")
-print(p_selecionados)
+knitr::include_graphics(path="1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/mapas_cobertura/selecionadas_TRUE.jpeg")
 ```
 
 
@@ -770,8 +771,7 @@ print(p_selecionados)
 vcap <- "Mapas de cobertura florestal da paisagem ao redor das parcelas não selecionadas. Esses mapas são obtidos da coleção 6 do Mapbiomas e correspondem a um recorte de 16km x 16 km. Em verde a cobertura florestal e em cinza a não-cobertura florestal."
 ```
 ```{r fig-mapas-naoselecionados, fig.cap=vcap,fig.width=12}
-p_naoselecionados <- readRDS(file ="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_naoselecionadas.rds")
-print(p_naoselecionados)
+knitr::include_graphics(path="1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/mapas_cobertura/selecionadas_FALSE.jpeg")
 ```
 
 ## Diagnostico HGAM mais plausivel
@@ -796,13 +796,21 @@ saveRDS(tosav,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabmd_cong.rds")
 ```{r tabsel}
 tosav <- 
   readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabmd_cong.rds")
-tosav
+tosav %>% 
+  width(j = 1, width = 2.0) %>%   # Primeira coluna mais larga
+  width(j = 2:6, width = 0.9) %>% # Demais colunas mais estreitas
+  font(fontname = "Times New Roman", part = "all") %>%  # Fonte padrão
+  fontsize(size = 8, part = "body") %>% 
+  fontsize(size = 9, part = "header") %>%
+  line_spacing(space = 1.0, part = "all") %>%  # Espaçamento entre linhas
+  set_table_properties(layout = "autofit") %>%  # Layout automático do Word
+  fit_to_width(max_width = 6.5) 
 ```
 
 
 ### Gráficos Diagnóstico do HGAM
 
-```{r gráfico diagnóstico padrão, echo=FALSE,include=TRUE,eval=TRUE}
+```{r gráfico diagnóstico padrão, echo=FALSE,include=TRUE,eval=TRUE,fig.width=12}
 df_tabsel <- read_csv(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv") %>% 
   mutate(across(where(is.numeric), ~round(.x,2)),
          modelo=f_label(modelo))
