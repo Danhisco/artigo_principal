@@ -1,6 +1,5 @@
 ---
-title: Validação empírica de MNEE e suas implicações para a estimatva de efeitos da
-  paisagem
+title: Empirical validation of MNEE
 output:
   word_document: default
   html_document:
@@ -138,17 +137,15 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 <!-- # Validação empírica de MNEE e suas implicações para a estimatva de efeitos da paisagem {CongSAD} -->
 
-# Descrição estatística da congruência com a SAD observada
+# Statistical description of congruence with the observed SAD
 
 <p>
-A descrição estatística da probabilidade de uma SAD simulada ter boa congruência com a SAD observada por paisagem experimental (fragmentada - f, aglomerada - a, prístina - p) foi obtida por um modelo aditivo generalizado hierárquico (HGAM, @wood2017, @Pedersen2019). Esses modelos estatísticos permitem expressar a estrutura dos dados agregada por parcela de amostragem (@Pedersen2019) e descrever efeitos descritivos não lineares por splines e tensores de suas preditoras (@wood2017). Splines agem como "curvas ajustáveis" que se adaptam aos dados, controlando o grau de suavização para evitar sobreajuste através da penalização pela máxima verossimilhança restrita (@wood2017). O objetivo de splines e tensores é a descrição de qualquer relação contínua (@wood2017). Todas as análises estatísticas foram feitas usando linguagem R (@Rlang) e o pacote mgcv (REF).
+The probability that a simulated species abundance distribution (SAD) was classified as congruent with the observed SAD was modelled using hierarchical generalized additive models (HGAM, @wood2017, @Pedersen2019). HGAMs accommodate hierarchical data structures while allowing flexible, non-linear responses through smooth functions. Smoothness parameters were estimated via restricted maximum likelihood (REML), which penalizes excessive model complexity and reduces overfitting. All analyses were conducted in R using the mgcv package.
 </p>
 
 <p>
-Para a descrição da congruência com a SAD observada, a variável-resposta foi a proporções das 100 SADs simuladas classificadas como congruentes. A estrutura hierárquica do HGAM é dividida em duas: a variabilidade agrupada pela parcela amostrada que contém os splines do cenários de limitação de dispersão (k) por paisagens experimental (land), considerada aleatória; e a variabilidade relacionada com a população de todas as parcelas, que contem os splines dos efeitos médios de k por land, considerada fixa. Entre as preditoras da estrutura fixa também incluímos as coordenadas geográficas das parcelas amostradas, que possuem um spline para descrever a possível autocorrelação espacial entre as parcelas.
+To characterize congruence patterns, we fitted four competing HGAMs of increasing complexity to the proportion of 100 simulated SADs classified as congruent for each plot (Table 1). The most complex model comprised two hierarchical components. The first captured plot-level variability by modelling the interaction between dispersal capability (k) and experimental landscape (land) with a plot-specific smooth term (random effect). The second represented the population-level response, including a smooth term for the average k-by-land interaction (fixed effect). To account for potential spatial structure in model performance, we included plot central geographic coordinates as a bivariate smooth term. Progressively simpler models excluded either the spatial smoother, the plot-level smooth interaction, or both (Table 1). The simplest model included only a random intercept for plot identity (Table 1).
 </p>
-
-<p>Assim, a probabilidade de uma distribuição de abundância de espécies (SAD) simulada apresentar boa congruência com a SAD observada foi modelada utilizando 4 HGAM com diferentes níveis de complexidade. As formulas usadas para ajustar esses modelo estatísticos foram:
 
 ```{r modelos usados na descrição, eval=FALSE, echo=FALSE,include=FALSE}
 library(mgcv)
@@ -190,13 +187,7 @@ saveRDS(l_md,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/lmd_cong.rds")
 
 ```{r cap tab desc md,echo=FALSE,include=TRUE,eval=TRUE}
 vcap <- paste(
-      "Description of the four competing hierarchical generalized additive models (HGAMs) ",
-      "used to explain the probability of shape congruence between empirical and simulated ",
-      "species abundance distributions. In all models, k represents the smooth of dispersal ",
-      "limitation (i.e., the fraction of propagules retained in the immediate neighborhood ",
-      "of the progenitor), and land denotes the experimental landscape. Models differ in the ",
-      "inclusion of plot-level random effects, landscape-specific connectivity responses, ",
-      "and explicit geographic structure."
+      "Description of four competing hierarchical generalized additive models (HGAMs) used to describe the probability of shape congruence between empirical and simulated species abundance distributions. In all models, k denotes dispersal limitation intensity (i.e., the fraction of propagules retained in the immediate neighbourhood of the progenitor), and land denotes the experimental landscape. Models differ in the inclusion of plot-specific connectivity responses and explicit geographic structure."
     )
 ```
 ```{r tabdescmd,echo=FALSE,include=TRUE,eval=TRUE}
@@ -231,10 +222,10 @@ tab_models <- tibble::tibble(
   ),
   
   `Ecological interpretation` = c(
-    "Congruence is described by connectivity, emerging from the interaction between dispersal and the landscape configuration, and by spatial proximity among forest plots.",
-    "Congruence is described by connectivity, independent of geographic proximity",
-    "Congruence is described by average connectivity effects, ignoring plot-specific dispersal–landscape interactions",
-    "Congruence varies only among plots, without effects of dispersal or landscape"
+    "Congruence reflects connectivity arising from dispersal–landscape interactions, with additional spatial structuring among forest plots.",
+    "Congruence reflects connectivity driven by dispersal–landscape interactions, independent of geographic proximity.",
+    "Congruence reflects average connectivity effects, without plot-specific dispersal–landscape responses.",
+    "Congruence varies among plots but is unrelated to dispersal limitation or landscape configuration."
   )
 )
 
@@ -263,14 +254,15 @@ ft_models
 ```
 
 
+<p>
+Models were compared using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (@burnham1998practical). We additionally report deviance explained, representing the proportion of variation accounted for relative to a null model. Model fitting and comparison were performed using functions from the mgcv (@wood2011) and bbmle (@bbmle_package) packages .
+</p>
 
+## Spatial autocorrelation test: Moran’s I 
 
-Os HGAM foram comparados usando métricas derivadas do ‘Akaike Information Criteria’ para amostras pequenas (AICc), o delta AICc e o peso de evidência (@burnham1998practical). Também incluímos o ‘deviance explained’ que pode ser interpretado de forma análoga ao coeficiente de determinação (R2), como forma de descrever a variabilidade explicada pelo modelo estatístico. Para essas tarefas foram utilizadas funções dos pacotes 'mgcv' (@wood2011) e 'bblme' (@bbmle_package).</p>
-
-
-## Teste de autocorrelação espacial global I de Moran
-
-<p>Uma vez que os splines são ideais para descrever relações contínuas, a autocorrelação espacial negativa pode não ser bem descrita pelo modelo estatístico, assim, incluímos um teste bicaudal de autocorrelação espacial dos resíduos dos modelos estatísticos. Se houver autocorrelação espacial que não foi bem descrita pelo modelo estatístico, esperamos que a média, por parcela, dos resíduos do modelo apresentem a estatística I de Moran diferente de zero. A estatística I de Moran varia entre -1 e 1, ou seja, entre a autocorrelação espacial negativa e positiva, respectivamente. E possui um teste de hipótese associado que avalia se o valor é significativamente diferente de zero, se o p valor for próximo de zero então a hipótese de ausência de autocorrelação espacial possui pouco suporte. A estatística I de Moran requer que um parâmetro livre seja escolhido. Determinamos esse valor por uma análise de sensibilidade dos resíduos dos modelos ajustados. Para obter a estatística I de Moran e seu p valor associado utilizamos funções do pacote spdep (@bivand2020). A avaliação da sensibilidade desse parâmetro está na figura \@ref(fig:fig-moranI).</p> 
+<p>
+Because spline-based smoothers are well-suited for describing continuous functions, they may not adequately represent negative spatial dependence. To evaluate residual spatial structure, we conducted two-tailed tests of spatial autocorrelation on plot-level mean residuals using Moran’s I. Moran’s I ranges from −1 (negative autocorrelation) to +1 (positive autocorrelation), with statistical significance assessed at α = 0.05. The statistic requires specification of a spatial neighbourhood structure. We defined neighbourhoods using an n-nearest neighbours approach and performed a sensitivity analysis by varying n from 1 to 100, given the total of 105 forest plots. All analyses were conducted using the spdep package (@bivand2020).
+</p> 
 
 
 ```{r criacao da analise de sensibilidade de lmoranI,echo=FALSE,include=FALSE,eval=FALSE}
@@ -315,6 +307,7 @@ saveRDS(pfinal,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_moranI_sensibil
 ```
 ```{r cap sensibilidade moran, eval=TRUE,echo=FALSE,include=TRUE}
 vcap <- do.call(sprintf, c(list("Sensitivity analysis of Moran's I test for spatial autocorrelation in model residuals. Panels show two-tailed p-values of Moran's I statistic calculated for mean residuals from two statistical models (left: %s, middle: %s, right: %s), grouped by forest plots. The x-axis represents neighborhood size defined as the number of nearest neighbors (n), ranging from 1 to 100. The y-axis shows corresponding p-values, with a horizontal dashed line indicating the significance threshold (α = 0.05). The absence of p-values below 0.05 across the entire range of neighborhood sizes indicates no significant spatial autocorrelation in the residuals of either model, suggesting that spatial structure was adequately captured by the model formulations."), names(l_f)[1:4]))
+vcap <- "Sensitivity analysis of Moran’s I for spatial autocorrelation in model residuals. Panels show two-tailed p-values of Moran’s I calculated from plot-level mean residuals for each candidate model (Table 1). The x-axis represents neighbourhood size defined as the number of nearest neighbours (n), ranging from 1 to 100. The y-axis shows the corresponding p-values and Moran’s I, in black and green, respectively. The horizontal dashed line indicates the significance threshold (α = 0.05)."
 ```
 ```{r fig-moranI,echo=FALSE,eval=TRUE,include=TRUE,fig.cap=vcap,fig.width=6, fig.height=8}
 pfinal <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_moranI_sensibilidade.rds")
@@ -323,12 +316,8 @@ pfinal
 
 
 <p> <!-- texto explicando fig-moranI -->
-texto explicando fig-moranI
+The sensitivity analysis revealed two contrasting patterns (\@ref(fig:fig-moranI)). Models including the plot-specific smooth term for the k-by-land interaction exhibited no significant spatial autocorrelation across the full range of neighbourhood sizes tested. In contrast, models lacking this plot-level interaction displayed significant positive spatial autocorrelation across a broad range of neighbourhood definitions (\@ref(fig:fig-moranI)). These results indicate that allowing plot-specific dispersal–landscape interaction effectively accounts for spatial proximity among forest plots, removing residual spatial structure from the model.
 </p>
-
-
-
-
 
 
 ## Tabela de comparação dos HGAM
@@ -339,7 +328,11 @@ df_tabsel <- f_TabSelGAMM(l_md,test_moranK = FALSE)
 write_csv(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv")
 ```
 
-```{r}
+
+```{r caption tab-selecao,echo=FALSE,include=TRUE,eval=TRUE}
+vcap <- "Model comparison among candidate hierarchical generalized additive models (HGAMs). ΔAICc represents the difference in AICc relative to the best-supported model. est. coef. denotes the effective degrees of freedom (model complexity). weight indicates Akaike weight. Dev. Exp. represents deviance explained."
+```
+```{r tab-selecao,echo=FALSE,include=TRUE,eval=TRUE}
 df_tabsel <- read_csv(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv") %>% 
   mutate(across(where(is.numeric), ~round(.x,2)),
          modelo=f_label(modelo))
@@ -357,6 +350,9 @@ f_flextable <- \(dfi){
     bold(part = "header") %>%
     colformat_num(digits = 2) %>% 
     align(align = "center", part = "all") %>% 
+    set_caption(
+      caption = vcap
+      ) %>% 
     autofit()
 }
 f_flextable(df_tabsel)
@@ -364,9 +360,16 @@ f_flextable(df_tabsel)
 
 
 <p> <!-- texto interpretando a tabela  -->
-texto interpretando a tabela de seleção
+The full model (M1), including both the plot-specific smooth interaction between dispersal capability and landscape configuration and the bivariate spatial smoother, received overwhelming support (ΔAICc = 0; Akaike weight = 0.99; Table 2). However, the simpler model excluding spatial coordinates (M2) explained an identical proportion of deviance (94%) and differed only moderately in AICc (ΔAICc = 8.79; Table 2). Although inclusion of geographic coordinates slightly improved AICc support, it did not increase deviance explained (Table 2). This indicates that the spatial smoother refines model fit without altering the primary congruence structure driven by plot-level interaction. Detailed model coefficients and diagnostic assessments for the best-supported model are provided in the supplementary material (REF).
 </p>
 
+<p>
+In combination with the Moran’s I analysis, these results indicate that spatial proximity in congruence is effectively absorbed by the plot-specific dispersal–landscape interaction. Although inclusion of an explicit geographic smoother improves information-theoretic support, it does not increase deviance explained.
+</p>
+
+<p>
+Because spatial coordinates were not necessary to capture the data variability, we set geographic smooth terms to zero when generating predictions for Figure 1 in the main text. This allowed predictions to reflect the interaction between dispersal limitation and landscape configuration. The resulting response pattern forms the basis of the posterior criterion used to identify forest plots adequately represented by MNEE.
+</p>
 
 ```{r criação da predição do mais plausível, eval=FALSE,include=FALSE,echo=FALSE}
 # dados
@@ -446,7 +449,7 @@ l_dfpred <- lapply(l_dfpred,\(dfi){
 saveRDS(l_dfpred,file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
 ```
 
-## Interpretação pelo HGAM mais plausível
+<!-- ## Interpretação pelo HGAM mais plausível -->
 
 ```{r criação da figCong, eval=FALSE,include=FALSE,echo=FALSE}
 library(hexbin)
@@ -484,22 +487,49 @@ img <- image_read("figuras/descricao_congruencia_absoluta.png") %>%
 image_write(img,path = "figuras/descricao_congruencia_absoluta.png")
 ```
 ```{r captio figCong,eval=TRUE,echo=FALSE}
-vcap <- "teste"
+vcap <- "Figure 1. Congruence between simulated and observed SADs across dispersal and landscape gradients. Hexagonal bins show the density of plot‑level observations (lighter = fewer points, darker = up to 100 points). Gray lines: plot‑level predictions from the most plausible model with spatial coordinates set to zero. Red line: overall mean prediction; blue shading: 95% pointwise confidence interval. Mean congruence exceeded 75% in most simulations but declined under very weak dispersal limitation, especially in clumped and pristine landscapes."
 ```
 ```{r figCong,fig.cap=vcap,fig.width=12}
 p <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_interpretacao_cong.rds")
 p
 ```
 
-Essa figura vai para o resultado principal
+<!-- Essa figura vai para o resultado principal -->
 
-# Implicações para a estimativa de efeitos da paisagem
+# Implications for estimating landscape effects
 
--> adicionar os gráficos que mostram a diferença entre os grupos de parcelas (usados nas próximas análises X os filtrados), incluindo o mapa
+<p>
+A recurrent critique of Neutral Theory is that empirical evaluations often rely on the same data for model calibration and validation, effectively reducing tests to curve-fitting exercises rather than mechanistic assessments (REF). Here, instead of interpreting MNEE indiscriminately across all plots, we restricted inference to those in which the model reproduced the empirical species abundance distribution (SAD) with high fidelity.
+</p>
 
-## As parcelas interpretadas não diferem de forma sistemática com as parcelas fora dos critérios de congruência
+<p>
+To generate simulated SADs, MNEE is calibrated to approximate observed species richness under each dispersal and landscape scenario. However, for a given richness and total abundance, multiple SAD configurations are possible. Consequently, congruence between simulated and observed SADs reflects more than richness matching; it provides evidence that the internal dispersal–landscape dynamics generate realistic abundance structures (REF).
+</p>
 
-Das 105 parcelas florestais simuladas, em 67 delas MNEE apresentou boa congruência nas três paisagens experimentais quando a limitação de dispersão era moderada até muito limitada (k>=0.50).
+<p>
+Congruence declined under high dispersal scenarios (Fig. X, Appendix S1), indicating that MNEE’s mechanistic assumptions are most plausible when dispersal is locally restricted. We therefore focused on parameterizations in which most propagules remain near the parent tree (k ≥ 0.50). Applying this condition, together with a minimum threshold of 75% congruent SADs across all three experimental landscapes, we identified 67 of 105 plots in which MNEE consistently reproduced the empirical abundance structure. These plots were retained for subsequent analyses of landscape effects (see main text).
+</p>
+
+<p>
+The remaining 38 plots exhibited low congruence and were excluded from the primary inference. Rather than representing random model failure, these cases may reflect additional ecological processes not captured by MNEE, as discussed in the main text, and thus indicate directions for future model refinement (REF).
+</p>
+
+## Selected plots do not differ systematically from non-selected plots
+
+<p>
+Operational variables exhibited broadly similar distributions between selected and non-selected plots (Fig. 2). Although selected plots included a greater number of cases with extremely low landscape-level forest cover and spanned a wider geographic range (Fig. 2a–b), central tendencies were comparable. In fact, median forest cover was slightly higher among non-selected plots.
+</p>
+
+<p>
+Non-selected plots also included several outliers with high values of plot area, species richness, and number of individuals (Fig. 2a). However, for all operational variables examined, the interquartile ranges overlapped between selected and non-selected plots (Fig. 2a), indicating the absence of systematic distributional shifts.
+
+
+<p>
+Spatial configuration under the fragmented landscape scenario likewise showed comparable structural patterns for selected and non-selected plots (see supplementary material to this appendix).
+
+
+<p>
+Together, these results indicate that applying the congruence criterion did not generate a biased subset of plots with respect to environmental, demographic, or geographic attributes.
 
 
 ```{r criacao da classificação das parcelas quanto à congruencia e suas implicacoes, echo=FALSE, eval=FALSE, include=FALSE}
@@ -594,7 +624,7 @@ lp$mapa <- ggplot() +
 saveRDS(lp,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parcelas_selecionadas.rds")
 ```
 ```{r caption fig sem dif entre selecionadas e nao, echo=FALSE,eval=TRUE,include=TRUE}
-vcap <- "Environmental and spatial characterization of plot selection in Atlantic Forest surveys. (A) Comparative analysis of six key operational variables: forest cover percentage (%FL; 0-100% scale), plot area (in hectares), stem density (N; number of individuals), species richness (S; number of species), latitude, and longitude (decimal degrees). Green boxplots represent selected plots (n = 67), red boxplots represent non-selected plots (n = 38). Boxes display interquartile ranges (IQR), horizontal lines indicate medians, whiskers extend to 1.5×IQR, and points show raw values. (B) Spatial context of sampling locations within the Atlantic Forest biome. Points represent plot centroids, overlaid on the official IBGE Atlantic Forest shapefile (gray polygon), which follows a conservative biome delimitation. The consistent color coding (green = selected, red = non-selected) allows direct comparison between environmental patterns and geographic distribution."
+vcap <- "Environmental and spatial characterization of plot selection within the Atlantic Forest biome. (A) Comparison of six operational variables: landscape-level forest cover (%FL; 0–1 scale), plot area (ha), number of individuals (N), species richness (S), latitude, and longitude (decimal degrees). Green boxplots represent selected plots (n = 67) and red boxplots represent non-selected plots (n = 38). Boxes indicate interquartile ranges (IQR), horizontal lines denote medians, whiskers extend to 1.5×IQR, and points represent raw values. (B) Geographic distribution of plot centroids within the official biome delimitation (gray polygon; IBGE shapefile). Consistent color coding (green = selected; red = non-selected) enables visual comparison of environmental and spatial patterns."
 ```
 ```{r fig-implicacoes-cong,fig.cap=vcap,fig.width=12}
 library(sf)
@@ -778,7 +808,7 @@ knitr::include_graphics(path="1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/m
 
 ### Tabela do HGAM
 
-```{r criacao da tabela do modelo mais plausivel,echo=FALSE,include=FALSE,eval=FALSE}
+```{r criacao da tabela do modelo mais plausivel,echo=FALSE,include=FALSE,eval=FALSE,cache=FALSE}
 f_gsub <- \(vchar){
   gsub("ideal","_pristine",vchar) %>% 
     gsub("non_frag","_clumped",.) %>% 
@@ -810,7 +840,7 @@ tosav %>%
 
 ### Gráficos Diagnóstico do HGAM
 
-```{r gráfico diagnóstico padrão, echo=FALSE,include=TRUE,eval=TRUE,fig.width=12}
+```{r gráfico diagnóstico padrão, echo=FALSE,include=TRUE,eval=TRUE,fig.width=12, cache=TRUE}
 df_tabsel <- read_csv(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv") %>% 
   mutate(across(where(is.numeric), ~round(.x,2)),
          modelo=f_label(modelo))
