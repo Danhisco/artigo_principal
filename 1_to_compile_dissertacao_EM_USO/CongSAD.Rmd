@@ -1,11 +1,50 @@
 ---
-title: Empirical validation of MNEE
+title: "Empircal validation of MNEE"
+author: ""
 output:
-  word_document: default
   html_document:
     df_print: paged
+  bookdown::word_document2: default
+  pdf_document: default
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+    pandoc_args: [
+      "--variable", "geometry=a4paper",
+      "--variable", "geometry=twoside",
+      "--variable", "geometry=top=3cm",
+      "--variable", "geometry=bottom=2cm",
+      "--variable", "geometry=inner=3cm",
+      "--variable", "geometry=outer=2cm"
+      ]
+bibliography: resources/citations2.bib
+csl: "resources/ecology-letters.csl"
+editor_options:
+  chunk_output_type: console
+header-includes:
+  - \usepackage{polyglossia}
+  - \setdefaultlanguage{portuguese}
+  - \usepackage{tcolorbox}
+  - \usepackage{hyperref}
+  - \hypersetup{colorlinks=true, linkcolor=blue, citecolor=red, urlcolor=blue}
+  - \usepackage[brazilian,hyperpageref]{backref}
+  - \tcbuselibrary{breakable}
+  - \tcbuselibrary{skins}   
+  - \usepackage{lmodern}
+  - \usepackage{fontspec}
+  - \usepackage{threeparttable} 
+  - \usepackage{caption}
+  - \usepackage{setspace}
+  - \usepackage{etoolbox}
+  - \setmainfont{Times New Roman}
+  - \fontsize{12}{22}
+  - \setlength{\parindent}{1.5cm}
+  - \onehalfspacing
+  - \makeatletter
+  - \patchcmd{\@startsection}{\@afterindentfalse}{\@afterindenttrue}{}{}
+  - \makeatother
+  - \captionsetup[figure]{font=it}
+  - \captionsetup[table]{font=it}
 ---
-
 <!-- # Apêndice: Cong SAD (SI)  {-#CongSAD} -->
 
 ```{r setup4,include=TRUE,eval=TRUE,echo=FALSE,message = FALSE,warning = FALSE}
@@ -119,7 +158,7 @@ names(df_ad) <- gsub("\\_type","",names(df_ad)) %>%
 ```
 
 
-```{r trackdown chunk SI, include=FALSE,eval=FALSE}
+```{r trackdown chunk SI validacao, include=FALSE,eval=FALSE}
 # pacotes
 library(trackdown)
 # both overwrite: 
@@ -147,7 +186,7 @@ The probability that a simulated species abundance distribution (SAD) was classi
 To characterize congruence patterns, we fitted four competing HGAMs of increasing complexity to the proportion of 100 simulated SADs classified as congruent for each plot (Table 1). The most complex model comprised two hierarchical components. The first captured plot-level variability by modelling the interaction between dispersal capability (k) and experimental landscape (land) with a plot-specific smooth term (random effect). The second represented the population-level response, including a smooth term for the average k-by-land interaction (fixed effect). To account for potential spatial structure in model performance, we included plot central geographic coordinates as a bivariate smooth term. Progressively simpler models excluded either the spatial smoother, the plot-level smooth interaction, or both (Table 1). The simplest model included only a random intercept for plot identity (Table 1).
 </p>
 
-```{r modelos usados na descrição, eval=FALSE, echo=FALSE,include=FALSE}
+```{r modelos usados na descrição da cong, eval=FALSE, echo=FALSE,include=FALSE}
 library(mgcv)
 f_gam <- \(vf,dfi){
   gam(formula=vf,
@@ -208,8 +247,8 @@ tab_models <- tibble::tibble(
   ),
   
   `Random effects (plot-level)` = c(
-    "Plot-specific interaction of k and land",
-    "Plot-specific interaction of k and land",
+    "plot-specific interaction of k and land",
+    "plot-specific interaction of k and land",
     "Random intercept for plot",
     "Random intercept for plot"
   ),
@@ -245,6 +284,7 @@ ft_models <- ft_models |>
   align(align = "left", part = "all") |>
   bold(part = "header") |>
   valign(valign = "top", part = "body") %>% 
+  fit_to_width(max_width = 6.5) %>% 
   set_caption(
     caption = vcap
   )
@@ -320,7 +360,7 @@ The sensitivity analysis revealed two contrasting patterns (\@ref(fig:fig-moranI
 </p>
 
 
-## Tabela de comparação dos HGAM
+## Model selection
 
 ```{r criacao da tabela final, include=FALSE,eval=FALSE,echo=FALSE}
 l_md <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/lmd_cong.rds")
@@ -489,7 +529,7 @@ image_write(img,path = "figuras/descricao_congruencia_absoluta.png")
 ```{r captio figCong,eval=TRUE,echo=FALSE}
 vcap <- "Figure 1. Congruence between simulated and observed SADs across dispersal and landscape gradients. Hexagonal bins show the density of plot‑level observations (lighter = fewer points, darker = up to 100 points). Gray lines: plot‑level predictions from the most plausible model with spatial coordinates set to zero. Red line: overall mean prediction; blue shading: 95% pointwise confidence interval. Mean congruence exceeded 75% in most simulations but declined under very weak dispersal limitation, especially in clumped and pristine landscapes."
 ```
-```{r figCong,fig.cap=vcap,fig.width=12}
+```{r figCong,fig.cap=vcap,fig.width=12,eval=FALSE,include=FALSE}
 p <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_interpretacao_cong.rds")
 p
 ```
@@ -626,7 +666,7 @@ saveRDS(lp,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parc
 ```{r caption fig sem dif entre selecionadas e nao, echo=FALSE,eval=TRUE,include=TRUE}
 vcap <- "Environmental and spatial characterization of plot selection within the Atlantic Forest biome. (A) Comparison of six operational variables: landscape-level forest cover (%FL; 0–1 scale), plot area (ha), number of individuals (N), species richness (S), latitude, and longitude (decimal degrees). Green boxplots represent selected plots (n = 67) and red boxplots represent non-selected plots (n = 38). Boxes indicate interquartile ranges (IQR), horizontal lines denote medians, whiskers extend to 1.5×IQR, and points represent raw values. (B) Geographic distribution of plot centroids within the official biome delimitation (gray polygon; IBGE shapefile). Consistent color coding (green = selected; red = non-selected) enables visual comparison of environmental and spatial patterns."
 ```
-```{r fig-implicacoes-cong,fig.cap=vcap,fig.width=12}
+```{r fig-implicacoes-cong,fig.cap=vcap,fig.width=12,fig.height=8}
 library(sf)
 library(patchwork)
 lp <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parcelas_selecionadas.rds")
@@ -648,12 +688,10 @@ wrap_plots(plotlist=lp,ncol=2) +
   )
 ```
 
+# Supplementary Material
 
+## Forest cover maps of fragmented landscapes
 
-
-# Material suplementar do apêndice
-
-## Mapas de cobertura florestal das parcelas selecionadas e das outras
 ```{r criacao dos mapas de cobertura florestal das parcelas selecionadas e das outras, echo=FALSE, eval=FALSE, include=FALSE}
 # df_p
 df_p <- read_csv("dados/df_p.csv")
@@ -785,28 +823,34 @@ l_finais <- dlply(dfp,"selecionado",f_concatenar_img)
 # saveRDS(l_finais[["FALSE"]],file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_naoselecionadas.rds")
 ```
 
-### Parcelas selecionadas
+### Selected plots
 
 ```{r caption parcelas selecionadas}
-vcap <- "Mapas de cobertura florestal da paisagem ao redor das parcelas selecionadas. Esses mapas são obtidos da coleção 6 do Mapbiomas e correspondem a um recorte de 16km x 16 km. Em verde a cobertura florestal e em cinza a não-cobertura florestal."
+vcap <- "Forest cover maps of the landscapes surrounding the non-selected plots. These maps were obtained from MapBiomas (Collection 6) and represent 4 km x 4 km subsets. Forest cover is shown in green, and non-forest cover in gray"
 ```
 ```{r fig-mapas-selecionados, fig.cap=vcap,fig.width=12}
-knitr::include_graphics(path="1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/mapas_cobertura/selecionadas_TRUE.jpeg")
+caminho_imagem <- normalizePath("1_to_compile_dissertacao_EM_USO/selecionadasT.jpeg")
+caminho_imagem
+file.exists(caminho_imagem)
+#knitr::include_graphics(caminho_imagem)
+#getwd()
 ```
 
-
-### Parcelas não selecionadas
+### Non-selected plots
 
 ```{r caption parcelas nao selecionadas}
-vcap <- "Mapas de cobertura florestal da paisagem ao redor das parcelas não selecionadas. Esses mapas são obtidos da coleção 6 do Mapbiomas e correspondem a um recorte de 16km x 16 km. Em verde a cobertura florestal e em cinza a não-cobertura florestal."
+vcap <- "Forest cover maps of the landscapes surrounding the selected plots. These maps were obtained from MapBiomas (Collection 6) and represent 4 km x 4 km subsets. Forest cover is shown in green, and non-forest cover in gray."
 ```
 ```{r fig-mapas-naoselecionados, fig.cap=vcap,fig.width=12}
-knitr::include_graphics(path="1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/mapas_cobertura/selecionadas_FALSE.jpeg")
+# knitr::include_graphics(path="selecionadasFALSE.jpeg")
+#file.exists("1_to_compile_dissertacao_EM_USO/selecionadas_FALSE.jpeg")
+caminho_imagem <- normalizePath("selecionadasFALSE.jpeg")
+# knitr::include_graphics(caminho_imagem)
 ```
 
-## Diagnostico HGAM mais plausivel
+## M1 diagnostics
 
-### Tabela do HGAM
+### M1 summary table
 
 ```{r criacao da tabela do modelo mais plausivel,echo=FALSE,include=FALSE,eval=FALSE,cache=FALSE}
 f_gsub <- \(vchar){
@@ -837,10 +881,9 @@ tosav %>%
   fit_to_width(max_width = 6.5) 
 ```
 
+### M1 diagnostic plots
 
-### Gráficos Diagnóstico do HGAM
-
-```{r gráfico diagnóstico padrão, echo=FALSE,include=TRUE,eval=TRUE,fig.width=12, cache=TRUE}
+```{r gráfico diagnóstico padrão, echo=FALSE,include=TRUE,eval=TRUE,out.width="100%", cache=TRUE}
 df_tabsel <- read_csv(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv") %>% 
   mutate(across(where(is.numeric), ~round(.x,2)),
          modelo=f_label(modelo))
@@ -851,3 +894,4 @@ hgam <- l_md[[vname["M1"]]]
 appraise(hgam)
 ```
 
+# References
