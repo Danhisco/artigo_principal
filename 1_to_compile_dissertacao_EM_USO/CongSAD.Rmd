@@ -293,6 +293,38 @@ ft_models <- ft_models |>
 ft_models
 ```
 
+```{r}
+# Criar flextable
+ft_models <- flextable(tab_models)
+
+# Ajustes de formatação
+ft_models <- ft_models |>
+  set_header_labels(
+    Model = "Model",
+    `Fixed effects (connectivity)` = "Fixed effects",
+    `Random effects (plot-level)` = "Random effects",
+    `Spatial coordinates` = "Geographic space",
+    `Ecological interpretation` = "Ecological meaning"
+  ) |>
+  # 1. Travar o layout para permitir quebra de linha
+  set_table_properties(layout = "fixed") |>
+  
+  # 2. Definir a largura de cada coluna (em polegadas)
+  # A soma deve ser próxima de 6.5 (largura da sua página)
+  width(j = 1, width = 0.7)  # Model
+  width(j = 2, width = 1.0)  # Fixed effects
+  width(j = 3, width = 1.0)  # Random effects
+  width(j = 4, width = 0.8)  # Geographic space
+  width(j = 5, width = 3.0)  |> # Ecological meaning (mais espaço para o texto longo)
+
+  # 3. Manter um tamanho de fonte fixo e legível
+  fontsize(size = 10, part = "all") |>
+  
+  align(align = "left", part = "all") |>
+  bold(part = "header") |>
+  valign(valign = "top", part = "body") |>
+  set_caption(caption = vcap)
+```
 
 <p>
 Models were compared using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (@burnham1998practical). We additionally report deviance explained, representing the proportion of variation accounted for relative to a null model. Model fitting and comparison were performed using functions from the mgcv (@wood2011) and bbmle (@bbmle_package) packages .
@@ -372,7 +404,7 @@ write_csv(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.
 ```{r caption tab-selecao,echo=FALSE,include=TRUE,eval=TRUE}
 vcap <- "Model comparison among candidate hierarchical generalized additive models (HGAMs). ΔAICc represents the difference in AICc relative to the best-supported model. est. coef. denotes the effective degrees of freedom (model complexity). weight indicates Akaike weight. Dev. Exp. represents deviance explained."
 ```
-```{r tab-selecao,echo=FALSE,include=TRUE,eval=TRUE}
+```{r tab-selecaoCong,echo=FALSE,include=TRUE,eval=TRUE}
 df_tabsel <- read_csv(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv") %>% 
   mutate(across(where(is.numeric), ~round(.x,2)),
          modelo=f_label(modelo))
@@ -848,7 +880,9 @@ vcap <- "Forest cover maps of the landscapes surrounding the selected plots. The
 ```{r fig-mapas-naoselecionados, fig.cap=vcap,fig.width=12}
 # knitr::include_graphics(path="selecionadasFALSE.jpeg")
 #file.exists("1_to_compile_dissertacao_EM_USO/selecionadas_FALSE.jpeg")
-caminho_imagem <- normalizePath("selecionadasFALSE.jpeg")
+img <- image_read("1_to_compile_dissertacao_EM_USO/selecionadasF.jpeg") %>% 
+  image_trim()
+plot(img)
 # knitr::include_graphics(caminho_imagem)
 ```
 
