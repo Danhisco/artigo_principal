@@ -1,0 +1,311 @@
+---
+title: "Description of the Vulnerability Metric"
+author: ""
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+    pandoc_args: [
+      "--variable", "geometry=a4paper",
+      "--variable", "geometry=twoside",
+      "--variable", "geometry=top=3cm",
+      "--variable", "geometry=bottom=2cm",
+      "--variable", "geometry=inner=3cm",
+      "--variable", "geometry=outer=2cm"
+      ]
+  bookdown::word_document2: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+bibliography: resources/citations2.bib
+csl: "resources/ecology-letters.csl"
+editor_options:
+  chunk_output_type: console
+header-includes:
+  - \usepackage{polyglossia}
+  - \setdefaultlanguage{portuguese}
+  - \usepackage{tcolorbox}
+  - \usepackage{hyperref}
+  - \hypersetup{colorlinks=true, linkcolor=blue, citecolor=red, urlcolor=blue}
+  - \usepackage[brazilian,hyperpageref]{backref}
+  - \tcbuselibrary{breakable}
+  - \tcbuselibrary{skins}   
+  - \usepackage{lmodern}
+  - \usepackage{fontspec}
+  - \usepackage{threeparttable} 
+  - \usepackage{caption}
+  - \usepackage{setspace}
+  - \usepackage{etoolbox}
+  - \setmainfont{Times New Roman}
+  - \fontsize{12}{22}
+  - \setlength{\parindent}{1.5cm}
+  - \onehalfspacing
+  - \makeatletter
+  - \patchcmd{\@startsection}{\@afterindentfalse}{\@afterindenttrue}{}{}
+  - \makeatother
+  - \captionsetup[figure]{font=it}
+  - \captionsetup[table]{font=it}
+---
+
+# Statistical evaluation of forest cover as a predictor of biodiversity vulnerability 
+
+<p>
+In addition to landscape configuration and dispersal limitation, remaining forest cover (%FC) may influence biodiversity vulnerability.
+Because forest cover is often associated with non-linear spatial variability and potential threshold dynamics at the landscape scale (e.g. Villard & Metzger 2014), we formally evaluated whether %FC improves the statistical description of the vulnerability metric log(Ui/Uj). 
+</p>
+
+<p>
+In previous analyses of congruence (Appendix: Empirical Validation of SENM), including the interaction between dispersal limitation and landscape configuration was sufficient to account for spatial proximity among forest plots. Here, to describe variation in log(Ui/Uj), we fitted hierarchical generalized additive models (HGAMs; Wood 2017) that allow non-linear responses to dispersal limitation (k) while accounting for plot-level random effects. Models were fitted separately for each landscape effect (FLF, LFC, FPS) and assumed Gaussian errors. 
+</p>
+
+
+<p>
+We compared three alternative model structures: I) _Interaction model_, a tensor-product smooth between %FC and dispersal limitation (k); II) _Additive model_, independent smooth terms for %FC and k; III) _dispersal-only model_, a smooth term for k without %FC; IV) _dispersal with only intercept per plot__, a fixed effect smooth term for k with only intercept; V) _an intcepet per plot_.
+
+```{r tabela de descricao dos HGAMs de logUU}
+tab_models <- tibble::tibble(
+  Model = c("M1 (Interaction)", 
+            "M2 (Additive)", 
+            "M3 (Dispersal-only)", 
+            "M4 (Dispersal + Intercept)", 
+            "M5 (Null)"),
+  
+  `Fixed effects` = c(
+    "Tensor-product smooth of %FC and $k$",
+    "Independent smooths of %FC and $k$",
+    "Smooth term of $k$",
+    "Smooth term of $k$",
+    "Intercept only"
+  ),
+  
+  `Random effects` = c(
+    "Plot-specific smooths",
+    "Plot-specific smooths",
+    "Plot-specific smooths",
+    "Random intercept per plot",
+    "Random intercept per plot"
+  ),
+  
+  `Spatial coordinates` = c(
+    "Bivariate smooth (Lat/Long)",
+    "None",
+    "None",
+    "None",
+    "None"
+  ),
+  
+  `Ecological interpretation` = c(
+    "Congruence is driven by the synergistic interaction between forest cover and dispersal limitation.",
+    "Both forest cover and dispersal limitation shape congruence, but their effects are independent.",
+    "Congruence depends solely on dispersal constraints, regardless of the amount of forest cover.",
+    "Dispersal affects congruence uniformly across the landscape, with baseline variations per plot.",
+    "Congruence is unrelated to landscape structure or dispersal, reflecting only local plot variations."
+  )
+)
+2. Criação da Flextable (Com ajuste de legibilidade)
+```
+
+
+
+
+Model selection was conducted using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (Burnham & Anderson 1998). We additionally report deviance explained as a measure of relative model performance. Model fitting and comparison were performed using the mgcv (Wood 2011, 2017) and bbmle packages in R. Model selection results for each landscape effect are presented in Table Sx. Diagnostic plots for the most supported model in each case are provided in Figure Sy.
+
+```{r}
+# Criar data.frame com a descrição conceitual dos modelos
+tab_models <- tibble::tibble(
+  Model = c("M1 (full)",
+            "M2 (no spatial coords)",
+            "M3 (no plot-specific connectivity)",
+            "M4 (null)"),
+  
+  `Fixed effects (connectivity)` = c(
+    "Interaction of k and land",
+    "Interaction of k and land",
+    "Interaction of k and land",
+    "Intercept only"
+  ),
+  
+  `Random effects (plot-level)` = c(
+    "plot-specific interaction of k and land",
+    "plot-specific interaction of k and land",
+    "Random intercept for plot",
+    "Random intercept for plot"
+  ),
+  
+  `Spatial coordinates` = c(
+    "Bivariate smooth of latitude and longitude",
+    "None",
+    "None",
+    "None"
+  ),
+  
+  `Ecological interpretation` = c(
+    "Congruence reflects connectivity arising from dispersal–landscape interactions, with additional spatial structuring among forest plots.",
+    "Congruence reflects connectivity driven by dispersal–landscape interactions, independent of geographic proximity.",
+    "Congruence reflects average connectivity effects, without plot-specific dispersal–landscape responses.",
+    "Congruence varies among plots but is unrelated to dispersal limitation or landscape configuration."
+  )
+)
+
+# Criar flextable
+ft_models <- flextable(tab_models)
+
+# Ajustes de formatação
+ft_models <- ft_models |>
+  set_header_labels(
+    Model = "Model",
+    `Fixed effects (connectivity)` = "Fixed effects",
+    `Random effects (plot-level)` = "Random effects",
+    `Spatial coordinates` = "Geographic space",
+    `Ecological interpretation` = "Ecological meaning"
+  ) |>
+  autofit() |>
+  align(align = "left", part = "all") |>
+  bold(part = "header") |>
+  valign(valign = "top", part = "body") %>% 
+  fit_to_width(max_width = 6.5) %>% 
+  set_caption(
+    caption = vcap
+  )
+
+# Visualizar
+ft_models
+```
+
+
+
+
+## Model Selection
+
+```{r}
+library(mgcv)
+df_logUU_pk <- readRDS(file="dados/csv_SoE/rds/df_logUUpk.rds") %>% 
+  mutate(SiteCode=factor(SiteCode))
+f_gam <- \(dfi){
+  #
+  l_md <- list()
+  l_md[[1]] <- gam(
+    Uefeito ~ 
+      te(p,k,
+         bs=c("cr","cr"),
+         id = "fixo") +
+      te(k,SiteCode,bs=c("cr","re"),id="random"),
+    data=dfi, method = "REML")
+  l_md[[2]] <- gam(
+    Uefeito ~ 
+      s(k,bs="cr",m=2,id="fixo_k") +
+      s(p,bs="cr",m=2,id="fixo_p") +
+      te(k,SiteCode,bs=c("cr","re"),id="random"),
+    data=dfi, method = "REML")
+  l_md[[3]] <- gam(
+    Uefeito ~ 
+      s(k,bs="cr",m=2,id="fixo") +
+      te(k,SiteCode,bs=c("cr","re"),id="random"),
+    data=dfi, method = "REML")
+  l_md[[4]] <- gam(
+    Uefeito ~ 
+      s(k,bs="cr",m=2,id="fixo") +
+      s(SiteCode,bs="re"),
+    data=dfi, method = "REML")
+  l_md[[5]] <- gam(
+    Uefeito ~ 
+      1 +
+      s(SiteCode,bs="re"),
+    data=dfi, method = "REML")
+  #
+  names(l_md) <- c("~ te(p,k)",
+                   "~ s(k) + s(p)",
+                   "~ s(k)",
+                   "~ s(k) + 1|Site",
+                   "~ 1 + 1|Site")
+  return(l_md)
+}
+l_md <- dlply(df_logUU_pk,"contraste",f_gam,.parallel = FALSE)
+saveRDS(l_md,file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
+```
+```{r criacao da tabela final, include=FALSE,eval=FALSE,echo=FALSE}
+library(gratia)
+library(doMC)
+library(gridExtra)
+library(ggplot2)
+theme_set(theme_bw())
+library(readr)
+library(stringr)
+library(tidyr)
+library(bbmle)
+library(DHARMa)
+library(mgcv)
+library(plyr)
+library(dplyr)
+## funções de ajuste e de plot
+source("source/2samples_testes.R")
+source("source/general_tools.R")
+source("source/GAMMtools.R")
+source("source/fig_tools.R")
+
+l_md <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
+df_tabsel <- lapply(l_md,f_TabSelGAMM)
+df_tabsel <- lapply(names(df_tabsel),\(li){
+  mutate(df_tabsel[[li]],base=li)
+}) %>% do.call("rbind",.)
+saveRDS(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds")
+# write_csv(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv")
+```
+
+
+```{r caption tab-selecao,echo=FALSE,include=TRUE,eval=TRUE}
+vcap <- "Model comparison among candidate hierarchical generalized additive models (HGAMs). ΔAICc represents the difference in AICc relative to the best-supported model. est. coef. denotes the effective degrees of freedom (model complexity). weight indicates Akaike weight. Dev. Exp. represents deviance explained."
+```
+```{r tab-selecaoCong,echo=FALSE,include=TRUE,eval=TRUE}
+df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds") %>% 
+  mutate(across(where(is.numeric), ~round(.x,2))) # ,modelo=f_label(modelo)
+library(flextable)
+f_label <- \(vn){
+  gsub("1","M4",vn) %>% 
+    gsub("s\\(k,by\\=land\\) \\+ \\(lat,long\\)","M1",.) %>% 
+    gsub("s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)","M3",.) %>% 
+    gsub("s\\(k,by\\=land\\)","M2",.)
+    
+}
+f_flextable <- \(dfi){
+  #
+  df_grouped <- as_grouped_data(dfi, groups = "base")
+  #
+  as_flextable(df_grouped) %>%
+    # Estética geral
+    bg(bg = "white", part = "all") %>%
+    theme_vanilla() %>% 
+    
+    # Rótulos (Note que 'base' agora é o nome da linha de cabeçalho)
+    set_header_labels(
+      modelo = "HGAM",
+      dAICc = "ΔAICc",
+      df = "est. coef.", # Dica: Geralmente 'df' é 'Degrees of Freedom', verifique se é isso mesmo
+      weight = "weight",
+      dev.expl = "Dev. Exp."
+    ) %>%
+    
+    # Destacar as linhas que são os nomes dos grupos (Frag. total, etc)
+    bold(i = ~ !is.na(base), bold = TRUE, part = "body") %>%
+    #as_italic(i = ~ !is.na(base), part = "body") %>%
+    bg(i = ~ !is.na(base), bg = "#F7F7F7", part = "body") %>% # Um cinza bem claro para separar
+    
+    # Formatação de números
+    colformat_double(digits = 2) %>% 
+    colformat_double(j = "weight", digits = 4) %>% # Weight geralmente precisa de mais casas
+    
+    # Alinhamento e legenda
+    align(align = "center", part = "all") %>% 
+    align(j = 1, align = "left", part = "body") %>% # Modelo alinhado à esquerda fica melhor
+    set_caption(caption = vcap) %>% 
+    
+    # Ajuste para caber no PDF (o que discutimos antes!)
+    set_table_properties(layout = "fixed") %>%
+    flextable::width(width = 6.5/5, unit = "in")
+}
+f_flextable(df_tabsel)
+```
+
+
+## Model Diagnostics
+
+

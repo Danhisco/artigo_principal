@@ -42,6 +42,7 @@ df_logUU_pk <- readRDS(file="dados/csv_SoE/rds/df_logUUpk.rds") %>%
   mutate(SiteCode=factor(SiteCode))
 library(mgcv)
 f_gam <- \(dfi){
+  #
   l_md <- list()
   l_md[[1]] <- gam(
     Uefeito ~ 
@@ -54,19 +55,29 @@ f_gam <- \(dfi){
     data=dfi, method = "REML")
   l_md[[2]] <- gam(
     Uefeito ~ 
-      te(p,k,
-         bs=c("cr","cr"),m=2,
-         id = "fixo") +
-      s(SiteCode,bs = "re"),
+      s(k,bs="cr",m=2,id="fixo_k") +
+      s(p,bs="cr",m=2,id="fixo_p") +
+      s(k, SiteCode, 
+        bs = "fs", xt=list(bs = "cr"), m=2, 
+        id="efeito_sitio"),
     data=dfi, method = "REML")
-  names(l_md) <- c("~ te(p,k) + s(k)|Site",
-                   "~ te(p,k) + 1|Site")
+  l_md[[3]] <- gam(
+    Uefeito ~ 
+      s(k,bs="cr",m=2,id="fixo") +
+      s(k, SiteCode, 
+        bs = "fs", xt=list(bs = "cr"), m=2, 
+        id="efeito_sitio"),
+    data=dfi, method = "REML")
+  #
+  names(l_md) <- c("~ te(p,k)",
+                   "~ s(k) + s(p)",
+                   "~ s(k)")
   return(l_md)
 }
 if(FALSE){
   doMC::registerDoMC(2)
-  l_md <- dlply(df_logUU_pk,"contraste",f_gam,.parallel = TRUE)
-  saveRDS(l_md,file="dados/csv_SoE/rds/l_md_logUUpk.rds")
+  l_md <- dlply(df_logUU_pk,"contraste",f_gam,.parallel = FALSE)
+  saveRDS(l_md,file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
 }else{
   l_md_logUUpk <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk.rds")
 }

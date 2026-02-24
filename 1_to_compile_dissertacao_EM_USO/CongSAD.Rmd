@@ -1,5 +1,5 @@
 ---
-title: "Empircal validation of MNEE"
+title: "Empircal validation of SENM"
 author: ""
 output:
   bookdown::pdf_document2:
@@ -440,7 +440,7 @@ In combination with the Moran’s I analysis, these results indicate that spatia
 </p>
 
 <p>
-Because spatial coordinates were not necessary to capture the data variability, we set geographic smooth terms to zero when generating predictions for Figure 1 in the main text. This allowed predictions to reflect the interaction between dispersal limitation and landscape configuration. The resulting response pattern forms the basis of the posterior criterion used to identify forest plots adequately represented by MNEE.
+Because spatial coordinates were not necessary to capture the data variability, we set geographic smooth terms to zero when generating predictions for Figure 1 in the main text. This allowed predictions to reflect the interaction between dispersal limitation and landscape configuration. The resulting response pattern forms the basis of the posterior criterion used to identify forest plots adequately represented by SENM.
 </p>
 
 ```{r criação da predição do mais plausível, eval=FALSE,include=FALSE,echo=FALSE}
@@ -571,19 +571,19 @@ p
 # Implications for estimating landscape effects
 
 <p>
-A recurrent critique of Neutral Theory is that empirical evaluations often rely on the same data for model calibration and validation, effectively reducing tests to curve-fitting exercises rather than mechanistic assessments (REF). Here, instead of interpreting MNEE indiscriminately across all plots, we restricted inference to those in which the model reproduced the empirical species abundance distribution (SAD) with high fidelity.
+A recurrent critique of Neutral Theory is that empirical evaluations often rely on the same data for model calibration and validation, effectively reducing tests to curve-fitting exercises rather than mechanistic assessments (REF). Here, instead of interpreting SENM indiscriminately across all plots, we restricted inference to those in which the model reproduced the empirical species abundance distribution (SAD) with high fidelity.
 </p>
 
 <p>
-To generate simulated SADs, MNEE is calibrated to approximate observed species richness under each dispersal and landscape scenario. However, for a given richness and total abundance, multiple SAD configurations are possible. Consequently, congruence between simulated and observed SADs reflects more than richness matching; it provides evidence that the internal dispersal–landscape dynamics generate realistic abundance structures (REF).
+To generate simulated SADs, SENM is calibrated to approximate observed species richness under each dispersal and landscape scenario. However, for a given richness and total abundance, multiple SAD configurations are possible. Consequently, congruence between simulated and observed SADs reflects more than richness matching; it provides evidence that the internal dispersal–landscape dynamics generate realistic abundance structures (REF).
 </p>
 
 <p>
-Congruence declined under high dispersal scenarios (Fig. X, Appendix S1), indicating that MNEE’s mechanistic assumptions are most plausible when dispersal is locally restricted. We therefore focused on parameterizations in which most propagules remain near the parent tree (k ≥ 0.50). Applying this condition, together with a minimum threshold of 75% congruent SADs across all three experimental landscapes, we identified 67 of 105 plots in which MNEE consistently reproduced the empirical abundance structure. These plots were retained for subsequent analyses of landscape effects (see main text).
+Congruence declined under high dispersal scenarios (Fig. X, Appendix S1), indicating that SENM’s mechanistic assumptions are most plausible when dispersal is locally restricted. We therefore focused on parameterizations in which most propagules remain near the parent tree (k ≥ 0.50). Applying this condition, together with a minimum threshold of 75% congruent SADs across all three experimental landscapes, we identified 67 of 105 plots in which SENM consistently reproduced the empirical abundance structure. These plots were retained for subsequent analyses of landscape effects (see main text).
 </p>
 
 <p>
-The remaining 38 plots exhibited low congruence and were excluded from the primary inference. Rather than representing random model failure, these cases may reflect additional ecological processes not captured by MNEE, as discussed in the main text, and thus indicate directions for future model refinement (REF).
+The remaining 38 plots exhibited low congruence and were excluded from the primary inference. Rather than representing random model failure, these cases may reflect additional ecological processes not captured by SENM, as discussed in the main text, and thus indicate directions for future model refinement (REF).
 </p>
 
 ## Selected plots do not differ systematically from non-selected plots
@@ -607,7 +607,7 @@ Together, these results indicate that applying the congruence criterion did not 
 ```{r criacao da classificação das parcelas quanto à congruencia e suas implicacoes, echo=FALSE, eval=FALSE, include=FALSE}
 # df_p
 df_p <- read_csv("dados/df_p.csv")
-#df_sítios simuláveis em MNEE contemporâneo
+#df_sítios simuláveis em SENM contemporâneo
 df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
   mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
          long = ifelse(is.na(long_correct),long,long_correct),
@@ -727,7 +727,7 @@ wrap_plots(plotlist=lp,ncol=2) +
 ```{r criacao dos mapas de cobertura florestal das parcelas selecionadas e das outras, echo=FALSE, eval=FALSE, include=FALSE}
 # df_p
 df_p <- read_csv("dados/df_p.csv")
-#df_sítios simuláveis em MNEE contemporâneo
+#df_sítios simuláveis em SENM contemporâneo
 df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
   mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
          long = ifelse(is.na(long_correct),long,long_correct),

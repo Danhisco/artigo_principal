@@ -392,6 +392,123 @@ O efeito de PFC foi predominantemente negativo em paisagens com baixa cobertura 
 Na comparação direta da magnitude dos efeitos de PDC e FPS, entre a maioria das parcelas avaliadas observou-se que o efeito de PDC apresenta maior magnitude do que o efeito de FPS ou eles são equivalentes (Fig 2 e REF resultados suplementares). Apenas em algumas poucas parcelas em paisagens com alta cobertura florestal o efeito de FPS foi maior (Fig 2 e REF resultados suplementares).
 </p>
 
+
+
+```{r criacao de figura pefeitos,eval=FALSE,include=FALSE,echo=FALSE}
+library(metR)
+library(gridExtra)
+library(ggplot2)
+library(dplyr)
+#-----------------------------------------------------------
+#--------------------- base de dados  ----------------------
+#-----------------------------------------------------------
+df_real <- readRDS("dados/csv_SoE/rds/df_obs_pred_plot_logUU_pk.rds") %>% 
+  do.call("rbind",.) %>% 
+  mutate(
+    p_class = case_when(
+      p==1 ~ "%FC = 100",
+      p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
+      p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
+      p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
+      p<0.30 ~ "%FC < 30"),
+    p_class = factor(p_class,levels=c("%FC < 30",
+                                      "30 ≤ %FC < 60",
+                                      "60 ≤ %FC < 80",
+                                      "80 ≤ %FC < 100",
+                                      "%FC = 100")),
+    lower = fit - 1.96 * se.fit,
+    upper = fit + 1.96 * se.fit
+  )
+#-----------------------------------------------------------
+#------------------ função da figura -----------------------
+#-----------------------------------------------------------
+f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE,vpos=c(0.72,0.25),vt=15,vts=0.90){
+  dfpred <- dff %>% 
+    mutate(
+      p_class = case_when(
+        p==1 ~ "%FC = 100",
+        p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
+        p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
+        p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
+        p<0.30 ~ "%FC < 30"),
+      p_class = factor(p_class,levels=c("%FC < 30",
+                                        "30 ≤ %FC < 60",
+                                        "60 ≤ %FC < 80",
+                                        "80 ≤ %FC < 100",
+                                        "%FC = 100")),
+      lower = fit - 1.96 * se.fit,
+      upper = fit + 1.96 * se.fit
+    )
+  df_ij <- dfpred %>% 
+    select(SiteCode,p_class) %>% 
+    distinct() %>% 
+    group_by(p_class) %>% 
+    tally() %>% 
+    mutate(label = paste0(p_class,", n = ",n)) %>% 
+    select(-n)
+  df_ij$label <- factor(df_ij$label,
+                        levels=unique(df_ij$label))
+  dfp <- inner_join(dfpred,df_ij)
+  nsites <- filter(dfp,p_class=="%FC = 100") %>% pull(SiteCode) %>% unique %>% length()
+  dfrange <- filter(dfp,p_class=="%FC = 100") %>% 
+    reframe(
+      names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
+      value = c(min(Uefeito), max(Uefeito),quantile(Uefeito,probs=0.05),quantile(Uefeito,probs=0.95))
+    )
+  dfp <- mutate(dfp,
+                across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
+                  matches("Uefeito|fit|er$"),~.x * (-1)
+                  ),
+                efeito = gsub("Frag. total","Forest Loss and Frag. (FLF)",efeito) %>% 
+                  gsub("Frag. per se","Frag. per se (FPS)",.) %>% 
+                  gsub("Área per se","Loss of Forest Cover (LFC)",.)
+                )
+  dfp <- filter(dfp,p_class!="%FC = 100")
+  dfp %>% 
+    mutate(efeito = factor(efeito,
+                           levels=c("Forest Loss and Frag. (FLF)",
+                                    "Frag. per se (FPS)",
+                                    "Loss of Forest Cover (LFC)"))) %>% 
+    ggplot(aes(x=k,y=Uefeito)) +
+    geom_boxplot(aes(group=k),alpha=0.6) +
+    geom_hline(yintercept = 0,color="black") +
+    geom_hline(data = dfrange, aes(yintercept = value,linetype=names),
+               color="black",linewidth=0.5) +
+    scale_linetype_manual(name = paste0("%FC=100",", n = ",nsites),
+                          values=c("dotted","dashed")) +
+    {if(logic_ribbon)geom_ribbon(aes(x=k,y=fit,ymin=lower,ymax=upper,group = SiteCode),
+                                 fill="lightblue",
+                                 alpha=0.2)}+
+    geom_line(aes(y=fit,group = SiteCode,color=p),alpha=0.4) + #,color="darkred"
+    geom_point(aes(color=p),alpha=0.85) +
+    scale_colour_gradient2("% FC",midpoint=0.5,
+                           low="red",
+                           mid = "yellow",
+                           high = "darkgreen") +
+    labs(x="Fraction of propagules dispersing locally (k)",y="logU/U",title="") +
+    facet_grid(efeito~label,scales="free") +
+    theme_classic() +
+    theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
+          text=element_text(size=vt,face="bold"),
+          legend.position = "inside",
+          legend.position.inside = vpos,
+          legend.direction="horizontal") +
+    guides(linetype = guide_legend(
+      title.theme = element_text(size = vt*vts, face = "bold")
+      )
+    )
+}
+#
+#-----------------------------------------------------------
+#------------------ criação da figura ----------------------
+#-----------------------------------------------------------
+p_efeitos <- f_obs_predito_bysite(df_real,logic_ribbon = TRUE, vpos=c(0.72,0.10),vt = 12.5)
+ggsave(filename = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.png",
+       dpi=200,
+       plot=p_efeitos,
+       width=12,height=9)
+saveRDS(p_efeitos,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.rds")
+```
 ```{r}
 vcap="Os propostos efeitos da paisagem descritos pela métrica funcioanl logUi/Uj: observado e previsto pelo ajuste de um modelo aditivo generalizado hierárquico. Cada ponto resulta da comparação de duas simulações, que mudam conforme o efeito da paisagem (título nos quadros por linha). Para uma descrição dos efeitos estimados ver figura 1 e para uma explicação da métrica funcional ver o quadro 1. No eixo x está o grau de limitação de dispersão (k, proporção dos propágulos que permanecem na vizinhança imediata do adulto progenitor). Os pontos estão coloridos pela percentagem de cobertura florestal observada na paisagem de lado 1km, na qual a parcela simulado está situada. Os quadros estão divididos em colunas correspondendo a classes de cobertura florestal observada nas paisagens de cada parcela (título das colunas). Os parcelas com %CF=100 foram removidos do gráfico e apenas a amplitude (máximo = 0.133 e mínimo= -0.104) e o intervalo interquartil de 90% (quantil de 95% = 0.060 e de 5% = -0.048) da métrica logUi/Uj foram marcados no eixo y. Essa variação decorre da estocasticidade representada por MNEE. Os boxplots sumarizam valores para um mesmo k. O eixo y é livre para variar entre quadros de linhas diferentes (ou seja, entre efeitos da paisagem). Nessa figura há os resultados dos inventários considerados congruentes, detalhes no texto."
 ```

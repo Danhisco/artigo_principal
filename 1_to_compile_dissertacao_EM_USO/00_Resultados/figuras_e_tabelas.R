@@ -742,8 +742,6 @@ df_ij$label <- factor(df_ij$label,
                       levels=unique(df_ij$label))
 dfp <- inner_join(df_sites_summary,df_ij)
 
-
-
 # Gráficos
 p <- dfp %>% 
   ggplot(aes(x=cond_class,y=factor(1))) +
@@ -853,6 +851,7 @@ df_real %>%
 
 
 ######### obs X predito (fixo + aleatório)
+#  PAREI AQUI
 f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE,vpos=c(0.72,0.25),vt=15,vts=0.90){
   dfpred <- dff %>% 
     mutate(
