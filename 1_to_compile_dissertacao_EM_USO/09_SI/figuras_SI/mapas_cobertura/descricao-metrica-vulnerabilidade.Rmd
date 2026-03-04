@@ -264,4 +264,36 @@ f_flextable(df_tabsel)
 
 ## Model Diagnostics
 
+```{r diagnostico dos modelos, eval=FALSE, include=FALSE, echo=FALSE}
+library(data.table)
+l_md <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
+df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds")
+df_tabsel <- as.data.table(df_tabsel)
+f_select <- \(dfi){
+  l_md[[dfi$base]][[dfi$modelo]]
+}
+df_tabsel <- df_tabsel[,.SD[1],by=base]
+lmd <- split(df_tabsel,df_tabsel$base) %>% 
+  lapply(.,f_select)
+#---------------------------------
+l_tabsel <- lapply(l_md_logUUpk,f_TabSelGAMM,test_moranK=FALSE)
+```
+
+
+
+## Model Predictions
+
+```{r model predictions, eval=FALSE, include=FALSE, echo=FALSE}
+## fixo e aleatorio: variações por sítio
+df_obs_pred_plot <- lapply(names(l_md),\(li){
+  hgam <- l_md[[li]]
+  dfobs <- hgam$model %>% 
+    filter(k>=0.49999,SiteCode %in% vSites) %>% 
+    mutate(efeito=li) %>% relocate(efeito)
+  dfpred <- as.data.frame(predict.gam(hgam,newdata = dfobs,se.fit = TRUE))
+  dfpred <- cbind(dfobs,dfpred)
+})
+saveRDS(df_obs_pred_plot,"dados/csv_SoE/rds/df_obs_pred_plot_logUU_pk.rds")
+
+```
 
