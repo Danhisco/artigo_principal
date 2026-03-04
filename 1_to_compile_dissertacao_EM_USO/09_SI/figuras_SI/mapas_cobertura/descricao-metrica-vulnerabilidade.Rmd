@@ -49,74 +49,25 @@ header-includes:
 ```{r setup4,include=TRUE,eval=TRUE,echo=FALSE,message = FALSE,warning = FALSE}
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
                       fig.pos = "H", fig.show = "hold",dpi = 72)
-# pacotes
-library(plyr)
+library(gratia)
+library(doMC)
+library(gridExtra)
 library(ggplot2)
+theme_set(theme_bw())
 library(readr)
-library(purrr)
 library(stringr)
 library(tidyr)
 library(bbmle)
 library(DHARMa)
-library(data.table)
+library(mgcv)
+library(plyr)
 library(dplyr)
-library(flextable)
-source("source/nameModel.R")
-source("source/GAMMtools.R")
+library(mgcv)
+## funções de ajuste e de plot
+source("source/2samples_testes.R")
 source("source/general_tools.R")
-f_z <- function(x) (x-mean(x))/sd(x)
-f_label <- \(vn){
-  gsub("1","M4",vn) %>% 
-    gsub("s\\(k,by\\=land\\) \\+ \\(lat,long\\)","M1",.) %>% 
-    gsub("s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)","M3",.) %>% 
-    gsub("s\\(k,by\\=land\\)","M2",.)
-    
-}
-f_antilabel <- \(vn){
-  gsub("M4","1",vn) %>% 
-    gsub("M1","s\\(k,by\\=land\\) \\+ \\(lat,long\\)",.) %>% 
-    gsub("M3","s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)",.) %>% 
-    gsub("M2","s\\(k,by\\=land\\)",.)
-    
-}
-select <- dplyr::select
-#
-# l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
-# vsites105 <- l_dfpred$fixo_e_aleat$SiteCode %>% unique
-# #
-# df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
-#   mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
-#          long = ifelse(is.na(long_correct),long,long_correct),
-#          Sitecode = factor(SiteCode)) %>% 
-#   select(SiteCode,lat,long, forest_succession) %>% 
-#   filter(forest_succession!="capoeira",
-#          SiteCode %in% vsites105)
-# #
-# l_f <- list()
-# # modelo cheio: conectividade + proximidade geográfica
-# l_f$`s(k,by=land) + (lat,long)` <- 
-#   cbind(nSAD,100-nSAD) ~ 
-#   land +
-#   s(k,by=land,bs="cr",id="fixo") +
-#   s(lat,long) + 
-#   te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
-# # modelo sem coordenadas: apenas conectividade
-# l_f$`s(k,by=land)` <- 
-#   cbind(nSAD,100-nSAD) ~ 
-#   land +
-#   s(k,by=land,bs="cr",id="fixo") +
-#   te(k,SiteCode,bs=c("cr","re"),by=land,id="random")
-# # modelo sem conectividade como efeito aleatório
-# l_f$`s(k,by=land) - te(k,plot,by=land)` <- 
-#   cbind(nSAD,100-nSAD) ~ 
-#   land +
-#   s(k,by=land,bs="cr",id="fixo") +
-#   s(SiteCode,bs="re")
-# # modelo sem conectividade como efeito fixo
-# l_f$`1` <- 
-#   cbind(nSAD,100-nSAD) ~ 
-#   1 +
-#   s(SiteCode,bs="re")
+source("source/GAMMtools.R")
+source("source/fig_tools.R")
 ```
 
 # Statistical evaluation of forest cover as a predictor of biodiversity vulnerability 
@@ -127,6 +78,12 @@ Because forest cover is often associated with non-linear spatial variability and
 We compared five alternative model structures: I) _Interaction model_, a tensor-product smooth between %FC and dispersal limitation (k); II) _Additive model_, independent smooth terms for %FC and k; III) _dispersal-only model_, includes only k smoothers (random and fixed); IV) _dispersal with only intercept per plot__, a fixed effect smooth term for k with only intercept; V) _an intcepet per plot_, includes a general intercept and a intercept by plot. Models were fitted separately for each landscape effect (FLF, LFC, FPS) and assumed Gaussian errors. 
 </p>
 
+
+```{r cap tab desc md,echo=FALSE,include=TRUE,eval=TRUE}
+vcap <- paste(
+      "Description of five competing hierarchical generalized additive models (HGAMs) used to describe the vulnerability metrix, logUi/Uj, for each landscape effevt. In all models, k denotes dispersal limitation intensity (i.e., the fraction of propagules retained in the immediate neighbourhood of the progenitor), and %FC denotes remainig forest cover. Models differ in the inclusion of plot-specific k responses and the inclusion of %FC."
+    )
+```
 ```{r tabela de descricao dos HGAMs de logUU}
 tab_models <- tibble::tibble(
   Model = c("M1 (Interaction)", 
@@ -151,11 +108,11 @@ tab_models <- tibble::tibble(
     "Random intercept per plot"
   ),
   `Ecological interpretation` = c(
-    "The vulnerability related to the landscape effect is shaped by the interaction of dispersal and the remaining forest cover (%FC)",
+    "The vulnerability related to the landscape effect is shaped by the interaction of k and %FC",
     "The vulnerability is shaped by dispersal and %FC, but their effect is independent",
     "The vulnerability is shaped by idiossincratic plot-level dispersal non-linear responses, regardless of the %FC.",
-    "Once the baseline variations per plot are considered, the vulnerability is shaped by a common dispersal non-linear responses.",
-    "Vulnerability is unrelated to dispersal, reflecting only local plot variations."
+    "Once the baseline variations per plot are considered, the vulnerability is shaped by a common k non-linear responses.",
+    "Vulnerability is unrelated to k, reflecting only local plot variations."
   )
 )
 
@@ -166,9 +123,8 @@ ft_models <- flextable(tab_models)
 ft_models <- ft_models |>
   set_header_labels(
     Model = "Model",
-    `Fixed effects (connectivity)` = "Fixed effects",
+    `Fixed effects` = "Fixed effects",
     `Random effects (plot-level)` = "Random effects",
-    `Spatial coordinates` = "Geographic space",
     `Ecological interpretation` = "Ecological meaning"
   ) |>
   autofit() |>
@@ -185,80 +141,13 @@ ft_models
 
 ```
 
-
-
-
-Model selection was conducted using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (Burnham & Anderson 1998). We additionally report deviance explained as a measure of relative model performance. Model fitting and comparison were performed using the mgcv (Wood 2011, 2017) and bbmle packages in R. Model selection results for each landscape effect are presented in Table Sx. Diagnostic plots for the most supported model in each case are provided in Figure Sy.
-
-```{r}
-# Criar data.frame com a descrição conceitual dos modelos
-tab_models <- tibble::tibble(
-  Model = c("M1 (full)",
-            "M2 (no spatial coords)",
-            "M3 (no plot-specific connectivity)",
-            "M4 (null)"),
-  
-  `Fixed effects (connectivity)` = c(
-    "Interaction of k and land",
-    "Interaction of k and land",
-    "Interaction of k and land",
-    "Intercept only"
-  ),
-  
-  `Random effects (plot-level)` = c(
-    "plot-specific interaction of k and land",
-    "plot-specific interaction of k and land",
-    "Random intercept for plot",
-    "Random intercept for plot"
-  ),
-  
-  `Spatial coordinates` = c(
-    "Bivariate smooth of latitude and longitude",
-    "None",
-    "None",
-    "None"
-  ),
-  
-  `Ecological interpretation` = c(
-    "Congruence reflects connectivity arising from dispersal–landscape interactions, with additional spatial structuring among forest plots.",
-    "Congruence reflects connectivity driven by dispersal–landscape interactions, independent of geographic proximity.",
-    "Congruence reflects average connectivity effects, without plot-specific dispersal–landscape responses.",
-    "Congruence varies among plots but is unrelated to dispersal limitation or landscape configuration."
-  )
-)
-
-# Criar flextable
-ft_models <- flextable(tab_models)
-
-# Ajustes de formatação
-ft_models <- ft_models |>
-  set_header_labels(
-    Model = "Model",
-    `Fixed effects (connectivity)` = "Fixed effects",
-    `Random effects (plot-level)` = "Random effects",
-    `Spatial coordinates` = "Geographic space",
-    `Ecological interpretation` = "Ecological meaning"
-  ) |>
-  autofit() |>
-  align(align = "left", part = "all") |>
-  bold(part = "header") |>
-  valign(valign = "top", part = "body") %>% 
-  fit_to_width(max_width = 6.5) %>% 
-  set_caption(
-    caption = vcap
-  )
-
-# Visualizar
-ft_models
-```
-
-
-
+<p>
+Model selection was conducted using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (Burnham & Anderson 1998). We additionally report deviance explained as a measure of relative model performance. Model fitting and comparison were performed using the mgcv (Wood 2011, 2017) and bbmle packages in R. Model selection results for each landscape effect are presented in Table SI.4.1.
+</p>
 
 ## Model Selection
 
-```{r}
-library(mgcv)
+```{r ajuste per se dos modelos, eval=FALSE, include=FALSE, echo=FALSE}
 df_logUU_pk <- readRDS(file="dados/csv_SoE/rds/df_logUUpk.rds") %>% 
   mutate(SiteCode=factor(SiteCode))
 f_gam <- \(dfi){
@@ -304,25 +193,6 @@ l_md <- dlply(df_logUU_pk,"contraste",f_gam,.parallel = FALSE)
 saveRDS(l_md,file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
 ```
 ```{r criacao da tabela final, include=FALSE,eval=FALSE,echo=FALSE}
-library(gratia)
-library(doMC)
-library(gridExtra)
-library(ggplot2)
-theme_set(theme_bw())
-library(readr)
-library(stringr)
-library(tidyr)
-library(bbmle)
-library(DHARMa)
-library(mgcv)
-library(plyr)
-library(dplyr)
-## funções de ajuste e de plot
-source("source/2samples_testes.R")
-source("source/general_tools.R")
-source("source/GAMMtools.R")
-source("source/fig_tools.R")
-
 l_md <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
 df_tabsel <- lapply(l_md,f_TabSelGAMM)
 df_tabsel <- lapply(names(df_tabsel),\(li){
@@ -332,13 +202,18 @@ saveRDS(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_lo
 # write_csv(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv")
 ```
 
-
 ```{r caption tab-selecao,echo=FALSE,include=TRUE,eval=TRUE}
 vcap <- "Model comparison among candidate hierarchical generalized additive models (HGAMs). ΔAICc represents the difference in AICc relative to the best-supported model. est. coef. denotes the effective degrees of freedom (model complexity). weight indicates Akaike weight. Dev. Exp. represents deviance explained."
 ```
 ```{r tab-selecaoCong,echo=FALSE,include=TRUE,eval=TRUE}
 df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds") %>% 
-  mutate(across(where(is.numeric), ~round(.x,2))) # ,modelo=f_label(modelo)
+  mutate(across(where(is.numeric), ~round(.x,2)),
+         Effect = case_when(
+           grepl("total",base) ~ "FLF",
+           grepl("Frag. per se",base) ~ "FPS",
+           grepl("Área",base) ~ "LFC",
+         )) %>% # ,modelo=f_label(modelo)
+  select(-base)
 library(flextable)
 f_label <- \(vn){
   gsub("1","M4",vn) %>% 
@@ -349,7 +224,7 @@ f_label <- \(vn){
 }
 f_flextable <- \(dfi){
   #
-  df_grouped <- as_grouped_data(dfi, groups = "base")
+  df_grouped <- as_grouped_data(dfi, groups = "Effect")
   #
   as_flextable(df_grouped) %>%
     # Estética geral
@@ -366,9 +241,9 @@ f_flextable <- \(dfi){
     ) %>%
     
     # Destacar as linhas que são os nomes dos grupos (Frag. total, etc)
-    bold(i = ~ !is.na(base), bold = TRUE, part = "body") %>%
+    bold(i = ~ !is.na(Effect), bold = TRUE, part = "body") %>%
     #as_italic(i = ~ !is.na(base), part = "body") %>%
-    bg(i = ~ !is.na(base), bg = "#F7F7F7", part = "body") %>% # Um cinza bem claro para separar
+    bg(i = ~ !is.na(Effect), bg = "#F7F7F7", part = "body") %>% # Um cinza bem claro para separar
     
     # Formatação de números
     colformat_double(digits = 2) %>% 
