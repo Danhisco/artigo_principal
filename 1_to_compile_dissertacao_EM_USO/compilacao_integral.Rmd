@@ -449,11 +449,6 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE,vpos=c(0.72,0.25),vt=15,vts=0.9
                         levels=unique(df_ij$label))
   dfp <- inner_join(dfpred,df_ij)
   nsites <- filter(dfp,p_class=="%FC = 100") %>% pull(SiteCode) %>% unique %>% length()
-  dfrange <- filter(dfp,p_class=="%FC = 100") %>% 
-    reframe(
-      names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
-      value = c(min(Uefeito), max(Uefeito),quantile(Uefeito,probs=0.05),quantile(Uefeito,probs=0.95))
-    )
   dfp <- mutate(dfp,
                 across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
                   matches("Uefeito|fit|er$"),~.x * (-1)
@@ -462,6 +457,11 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE,vpos=c(0.72,0.25),vt=15,vts=0.9
                   gsub("Frag. per se","Frag. per se (FPS)",.) %>% 
                   gsub("Área per se","Loss of Forest Cover (LFC)",.)
                 )
+  dfrange <- filter(dfp,p_class=="%FC = 100") %>% 
+    reframe(
+      names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
+      value = c(min(Uefeito), max(Uefeito),quantile(Uefeito,probs=0.05),quantile(Uefeito,probs=0.95))
+    )
   dfp <- filter(dfp,p_class!="%FC = 100")
   dfp %>% 
     mutate(efeito = factor(efeito,

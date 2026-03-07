@@ -586,7 +586,7 @@ Congruence declined under high dispersal scenarios (Fig. X, Appendix S1), indica
 The remaining 38 plots exhibited low congruence and were excluded from the primary inference. Rather than representing random model failure, these cases may reflect additional ecological processes not captured by SENM, as discussed in the main text, and thus indicate directions for future model refinement (REF).
 </p>
 
-## Selected plots do not differ systematically from non-selected plots
+## Selected plots do not differ systematically from non-selected plots in environmental variables
 
 <p>
 Operational variables exhibited broadly similar distributions between selected and non-selected plots (Fig. 2). Although selected plots included a greater number of cases with extremely low landscape-level forest cover and spanned a wider geographic range (Fig. 2a–b), central tendencies were comparable. In fact, median forest cover was slightly higher among non-selected plots.
@@ -719,6 +719,15 @@ wrap_plots(plotlist=lp,ncol=2) +
     )
   )
 ```
+
+
+## Differences in the vulnerability metric
+
+
+
+
+
+
 
 # Supplementary Information
 
