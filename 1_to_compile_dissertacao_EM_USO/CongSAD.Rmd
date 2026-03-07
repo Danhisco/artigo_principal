@@ -724,6 +724,73 @@ wrap_plots(plotlist=lp,ncol=2) +
 ## Differences in the vulnerability metric
 
 
+```{r criacao da figura que compara a diferença no logUU entre as parcelas selcionadas e nao selecionadas,echo=FALSE,include=FALSE,eval=FALSE}
+df_plot <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_plot_p_diferencas_logUU_selecionado_e_nao.rds")
+dfp <- mutate(df_plot,
+                across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
+                  matches("Uefeito|fit|er$"),~.x * (-1)
+                  ),
+                efeito = gsub("Frag. total","Forest Loss and Frag. (FLF)",contraste) %>% 
+                  gsub("Frag. per se","Frag. per se (FPS)",.) %>% 
+                  gsub("Área per se","Loss of Forest Cover (LFC)",.)
+                )
+#--------------- gráficos ---------------------#
+lp <- list()
+lp$FPSeLFC <- dfp %>% 
+  filter(!grepl("total",contraste)) %>% 
+  mutate(efeito = ifelse(grepl("Frag",contraste),"FPS","LFC"),
+         p_class = case_when(
+           p==1 ~ "%FC = 100",
+           p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
+           p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
+           p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
+           p<0.30 ~ "%FC < 30"),
+         p_class = factor(p_class,levels=c("%FC < 30",
+                                           "30 ≤ %FC < 60",
+                                           "60 ≤ %FC < 80",
+                                           "80 ≤ %FC < 100",
+                                           "%FC = 100"))) %>% 
+  select(-contraste) %>% 
+  pivot_wider(names_from = "efeito",
+              values_from = "Uefeito") %>% 
+  ggplot(aes(x=LFC,y=FPS)) +
+  geom_hline(yintercept = 0,color="black") +
+  geom_vline(xintercept = 0,color="black") +
+  geom_point(aes(color=selecionado),size=2.5,alpha=0.5) +
+  scale_color_manual("congruence-based\nselection",values=c("red","green")) +
+  facet_grid(selecionado~p_class) + #,nrow=1
+  labs(title="a)") +
+  theme(legend.position = "bottom")
+lp$FLC <- dfp %>% 
+  select(-pert_class) %>% 
+  filter(grepl("total",contraste)) %>% 
+  mutate(efeito = "FLF",
+         p_class = case_when(
+           p==1 ~ "%FC = 100",
+           p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
+           p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
+           p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
+           p<0.30 ~ "%FC < 30"),
+         p_class = factor(p_class,levels=c("%FC < 30",
+                                           "30 ≤ %FC < 60",
+                                           "60 ≤ %FC < 80",
+                                           "80 ≤ %FC < 100",
+                                           "%FC = 100"))) %>% 
+  select(-contraste) %>% 
+  ggplot(aes(x=selecionado,y=Uefeito,color=selecionado)) +
+  geom_hline(color="black",yintercept = 0) +
+  geom_boxplot() +
+  geom_jitter() +
+  scale_color_manual("congruence-based\nselection",values=c("red","green")) +
+  facet_wrap(~p_class,nrow=1) +
+  labs(x="",y="FLF",title="b)") +
+  theme(legend.position = "none")
+p_final <- patchwork::wrap_plots(lp,ncol=1,heights = c(2, 1))
+vcap <- ""
+```
+```{r fig-comp-cong-e-logUU, fig.cap=vcap}
+p_final
+```
 
 
 
