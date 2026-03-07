@@ -373,58 +373,6 @@ Across all %FC classes and dispersal scenarios, the majority of |LFC| – |FPS| 
 </p>
 
 
-```{r criacao da figura de diferença na magnitude de LFC e FPS}
-df_plot <- inner_join(select(df_logUU,-p),df_selected) %>% 
-  inner_join(.,select(df_p,-lado_km))
-dfp <- df_plot[!df_plot$selecionado,] %>% 
-  filter(contraste!="Frag. total",k>=0.49999) %>% 
-  mutate(label=ifelse(contraste=="Frag. per se","FPS","LFC")) %>% 
-  select(-contraste,-selecionado) %>% 
-  pivot_wider(names_from = "label",
-              values_from = "Uefeito") %>% 
-  mutate(diffABS = abs(LFC) - abs(FPS),
-         p_class = case_when(
-      p==1 ~ "%FC = 100",
-      p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
-      p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
-      p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
-      p<0.30 ~ "%FC < 30"),
-    p_class = factor(p_class,levels=c("%FC < 30",
-                                      "30 ≤ %FC < 60",
-                                      "60 ≤ %FC < 80",
-                                      "80 ≤ %FC < 100",
-                                      "%FC = 100"))
-    )
-#--------------------- grafico -------------------#
-dfrange <- filter(dfp,
-                  p_class=="%FC = 100") %>% 
-    reframe(
-      names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
-      value = c(min(diffABS), max(diffABS),quantile(diffABS,probs=0.05),quantile(diffABS,probs=0.95))
-    )
-nsites <- filter(dfp,p_class=="%FC = 100") %>% pull(SiteCode) %>% unique() %>% length()
-p <- dfp %>% 
-  filter(p!=1,) %>% 
-  ggplot(aes(x=k,group=k,y=diffABS)) +
-  geom_hline(yintercept = 0,color="black") +
-  geom_hline(data = dfrange, aes(yintercept = value,linetype=names),
-             color="black",linewidth=0.5) +
-  scale_linetype_manual(name = paste0("%FC=100",", n = ",nsites),
-                        values=c("dotted","dashed")) +
-  geom_boxplot() +
-  geom_jitter(alpha=0.5) +
-  labs(y="|LFC| - |FPS|") +
-  facet_wrap(~p_class,nrow=1) +
-  theme(legend.position = "bottom")
-```
-```{r}
-vcap <- "Figure SI4.1. Dominance of landscape effects across forest cover classes and dispersal scenarios. Each panel corresponds to a class of percentage forest cover (%FC): <30%, 30–60%, 60–80%, and 80–<100%. The y‑axis shows the difference in absolute magnitudes of the forest loss and fragmentation‑per‑se effects (|LFC| – |FPS|). Positive values indicate dominance of the loss effect; negative values indicate dominance of fragmentation. The x‑axis represents dispersal limitation scenarios (k classes). For each k class, boxplots summarize the distribution of observed values, with points overlaid. The horizontal solid line marks zero (equal magnitude of both effects). Dashed lines indicate the 5th and 95th percentiles of the null distribution, and dotted lines show the full range (minimum–maximum) of |LFC| – |FPS| under 100% forest cover (i.e., in landscapes with no forest loss)."
-```
-```{r fig-SI41,fig.cap=vcap, fig.width=12,fig.height=5}
-p
-```
-
-
 ```{r}
 dfp <- mutate(df_plot,
                 across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
