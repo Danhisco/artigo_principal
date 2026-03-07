@@ -720,7 +720,7 @@ wrap_plots(plotlist=lp,ncol=2) +
   )
 ```
 
-# Supplementary Material
+# Supplementary Information
 
 ## Forest cover maps of fragmented landscapes
 

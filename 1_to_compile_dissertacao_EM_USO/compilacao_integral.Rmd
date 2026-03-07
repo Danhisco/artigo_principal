@@ -399,11 +399,10 @@ library(metR)
 library(gridExtra)
 library(ggplot2)
 library(dplyr)
-#-----------------------------------------------------------
+#-------------------------------------1----------------------
 #--------------------- base de dados  ----------------------
 #-----------------------------------------------------------
 df_real <- readRDS("dados/csv_SoE/rds/df_obs_pred_plot_logUU_pk.rds") %>% 
-  do.call("rbind",.) %>% 
   mutate(
     p_class = case_when(
       p==1 ~ "%FC = 100",
@@ -513,7 +512,7 @@ saveRDS(p_efeitos,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_
 vcap="Os propostos efeitos da paisagem descritos pela métrica funcioanl logUi/Uj: observado e previsto pelo ajuste de um modelo aditivo generalizado hierárquico. Cada ponto resulta da comparação de duas simulações, que mudam conforme o efeito da paisagem (título nos quadros por linha). Para uma descrição dos efeitos estimados ver figura 1 e para uma explicação da métrica funcional ver o quadro 1. No eixo x está o grau de limitação de dispersão (k, proporção dos propágulos que permanecem na vizinhança imediata do adulto progenitor). Os pontos estão coloridos pela percentagem de cobertura florestal observada na paisagem de lado 1km, na qual a parcela simulado está situada. Os quadros estão divididos em colunas correspondendo a classes de cobertura florestal observada nas paisagens de cada parcela (título das colunas). Os parcelas com %CF=100 foram removidos do gráfico e apenas a amplitude (máximo = 0.133 e mínimo= -0.104) e o intervalo interquartil de 90% (quantil de 95% = 0.060 e de 5% = -0.048) da métrica logUi/Uj foram marcados no eixo y. Essa variação decorre da estocasticidade representada por MNEE. Os boxplots sumarizam valores para um mesmo k. O eixo y é livre para variar entre quadros de linhas diferentes (ou seja, entre efeitos da paisagem). Nessa figura há os resultados dos inventários considerados congruentes, detalhes no texto."
 ```
 ```{r p-efeitos, fig.cap=vcap,fig.width=14,fig.height=10,cache=TRUE}
-p_efeitos <- readRDS("./00_Resultados/figuras/p_efeitos_porclasseCF.rds")
+p_efeitos <- readRDS("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.rds")
 p_efeitos
 ```
 

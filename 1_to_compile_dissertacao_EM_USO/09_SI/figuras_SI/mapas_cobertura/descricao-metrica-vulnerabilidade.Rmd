@@ -61,6 +61,7 @@ library(bbmle)
 library(DHARMa)
 library(mgcv)
 library(plyr)
+library(flextable)
 library(dplyr)
 library(mgcv)
 ## funções de ajuste e de plot
@@ -68,6 +69,48 @@ source("source/2samples_testes.R")
 source("source/general_tools.R")
 source("source/GAMMtools.R")
 source("source/fig_tools.R")
+## dados
+#@ dados completos de logUU
+df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>% 
+  select(-contains("_z")) %>% 
+  pivot_longer(cols=contains("logratio"),
+               values_to="Uefeito",
+               names_to = "contraste") %>% 
+  inner_join(.,
+             select(df_md,SiteCode,forest_succession) %>% distinct) %>% 
+  mutate(contraste = gsub("_logratio","",contraste) %>% 
+           gsub("\\.","",.) %>% 
+           gsub("area","Área per se",.) %>% 
+           gsub("fragtotal","Frag. total",.) %>% 
+           gsub("fragperse","Frag. per se",.),
+         contraste = factor(contraste,
+                            levels=c("Frag. total",
+                                     "Frag. per se",
+                                     "Área per se")),
+         pert_class = factor(forest_succession,
+                             levels=c("primary",
+                                      "primary/secondary",
+                                      "secondary"),
+                             labels=c("baixa",
+                                      "mediana",
+                                      "alta"))) %>% 
+  select(-forest_succession)
+#@ dados completos da congruência e os sítios selecionados para a interpretação
+df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") 
+df_selected <- df_ad %>% 
+  filter(k>=0.49999) %>%
+  group_by(SiteCode) %>% 
+  dplyr::summarise(selecionado = all(nSAD>=75))
+#@ df_p
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
+  vfilter <- dfi$lado_km[which.min(abs(1-dfi$lado_km))]
+  filter(dfi,lado_km==vfilter)
+}) %>% select(-c(Ntotal:S_obs))
+#@ df logUU apenas as parcelas selecionadas
+df_logUU_pk <- inner_join(filter(df_logUU,k>=0.499999),
+                          df_selected[df_selected$selecionado,]) %>% 
+  select(-c(pert_class:selecionado))
 ```
 
 # Statistical evaluation of forest cover as a predictor of biodiversity vulnerability 
@@ -75,7 +118,7 @@ source("source/fig_tools.R")
 <p>
 Here, to describe variation in log(Ui/Uj), we fitted hierarchical generalized additive models (HGAMs) that allow non-linear responses while accounting for plot-level random effects (Wood 2017; Pedersen et al. 2019). 
 Because forest cover is often associated with non-linear spatial variability and potential threshold dynamics at the landscape scale (e.g. Villard & Metzger 2014; Arroyo-Rodrigues et al. 2020; Puttker et al. 2020), we formally evaluated whether %FC improves the statistical description of the vulnerability metric log(Ui/Uj). 
-We compared five alternative model structures: I) _Interaction model_, a tensor-product smooth between %FC and dispersal limitation (k); II) _Additive model_, independent smooth terms for %FC and k; III) _dispersal-only model_, includes only k smoothers (random and fixed); IV) _dispersal with only intercept per plot__, a fixed effect smooth term for k with only intercept; V) _an intcepet per plot_, includes a general intercept and a intercept by plot. Models were fitted separately for each landscape effect (FLF, LFC, FPS) and assumed Gaussian errors. 
+We compared five alternative model structures: I) _Interaction model_, a tensor-product smooth between %FC and dispersal limitation (k); II) _Additive model_, independent smooth terms for %FC and k; III) _dispersal-only model_, includes only k smoothers (random and fixed); IV) _dispersal with only intercept per plot__, a fixed effect smooth term for k with only intercept; V) _an intcepet per plot_, includes a general intercept and a intercept by plot (Table 1). Models were fitted separately for each landscape effect (FLF, LFC, FPS) and assumed Gaussian errors. 
 </p>
 
 
@@ -145,11 +188,12 @@ ft_models
 Model selection was conducted using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (Burnham & Anderson 1998). We additionally report deviance explained as a measure of relative model performance. Model fitting and comparison were performed using the mgcv (Wood 2011, 2017) and bbmle packages in R. Model selection results for each landscape effect are presented in Table SI.4.1.
 </p>
 
-## Model Selection
+<!-- ## Model Selection -->
 
 ```{r ajuste per se dos modelos, eval=FALSE, include=FALSE, echo=FALSE}
 df_logUU_pk <- readRDS(file="dados/csv_SoE/rds/df_logUUpk.rds") %>% 
-  mutate(SiteCode=factor(SiteCode))
+  mutate(SiteCode=factor(SiteCode)) %>% 
+  filter(k>=0.4999999999)
 f_gam <- \(dfi){
   #
   l_md <- list()
@@ -189,7 +233,7 @@ f_gam <- \(dfi){
                    "~ 1 + 1|Site")
   return(l_md)
 }
-l_md <- dlply(df_logUU_pk,"contraste",f_gam,.parallel = FALSE)
+l_md <- dlply(df_logUU_pk,"contraste",f_gam)
 saveRDS(l_md,file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
 ```
 ```{r criacao da tabela final, include=FALSE,eval=FALSE,echo=FALSE}
@@ -262,9 +306,71 @@ f_flextable(df_tabsel)
 ```
 
 
-## Model Diagnostics
+
+# Supplementary Information
+
+## Difference in magnitude between LFC e FPS
+
+```{r criacao da figura de diferença na magnitude de LFC e FPS}
+df_plot <- inner_join(select(df_logUU,-p),df_selected) %>% 
+  inner_join(.,select(df_p,-lado_km))
+dfp <- df_plot[df_plot$selecionado,] %>% 
+  filter(contraste!="Frag. total",k>=0.49999) %>% 
+  mutate(label=ifelse(contraste=="Frag. per se","FPS","LFC")) %>% 
+  select(-contraste,-selecionado) %>% 
+  pivot_wider(names_from = "label",
+              values_from = "Uefeito") %>% 
+  mutate(diffABS = abs(LFC) - abs(FPS),
+         p_class = case_when(
+      p==1 ~ "%FC = 100",
+      p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
+      p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
+      p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
+      p<0.30 ~ "%FC < 30"),
+    p_class = factor(p_class,levels=c("%FC < 30",
+                                      "30 ≤ %FC < 60",
+                                      "60 ≤ %FC < 80",
+                                      "80 ≤ %FC < 100",
+                                      "%FC = 100"))
+    )
+#--------------------- grafico -------------------#
+dfrange <- filter(dfp,
+                  p_class=="%FC = 100") %>% 
+    reframe(
+      names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
+      value = c(min(diffABS), max(diffABS),quantile(diffABS,probs=0.05),quantile(diffABS,probs=0.95))
+    )
+nsites <- filter(dfp,p_class=="%FC = 100") %>% pull(SiteCode) %>% unique() %>% length()
+dfp %>% 
+  filter(p!=1,) %>% 
+  ggplot(aes(x=k,group=k,y=diffABS)) +
+  geom_hline(yintercept = 0,color="black") +
+  geom_hline(data = dfrange, aes(yintercept = value,linetype=names),
+             color="black",linewidth=0.5) +
+  scale_linetype_manual(name = paste0("%FC=100",", n = ",nsites),
+                        values=c("dotted","dashed")) +
+  geom_boxplot() +
+  geom_jitter(alpha=0.5) +
+  labs(y="|LFC| - |FPS|") +
+  facet_wrap(~p_class,nrow=1) +
+  theme(legend.position = "bottom")
+
+```
+
+
+
+## The non-selected plots: logU/U
+
+## Models Diagnostics
 
 ```{r diagnostico dos modelos, eval=FALSE, include=FALSE, echo=FALSE}
+#--------------------------------- VAI PARA O FINAL DESSE ARQUIVO ----------------
+
+```
+
+<!-- ## Model Predictions -->
+
+```{r model predictions, eval=FALSE, include=FALSE, echo=FALSE}
 library(data.table)
 l_md <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
 df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds")
@@ -275,25 +381,16 @@ f_select <- \(dfi){
 df_tabsel <- df_tabsel[,.SD[1],by=base]
 lmd <- split(df_tabsel,df_tabsel$base) %>% 
   lapply(.,f_select)
-#---------------------------------
-l_tabsel <- lapply(l_md_logUUpk,f_TabSelGAMM,test_moranK=FALSE)
-```
-
-
-
-## Model Predictions
-
-```{r model predictions, eval=FALSE, include=FALSE, echo=FALSE}
 ## fixo e aleatorio: variações por sítio
-df_obs_pred_plot <- lapply(names(l_md),\(li){
-  hgam <- l_md[[li]]
+df_obs_pred_plot <- lapply(names(lmd),\(li){
+  hgam <- lmd[[li]]
   dfobs <- hgam$model %>% 
-    filter(k>=0.49999,SiteCode %in% vSites) %>% 
-    mutate(efeito=li) %>% relocate(efeito)
+    mutate(efeito=li) %>% 
+    relocate(efeito)
   dfpred <- as.data.frame(predict.gam(hgam,newdata = dfobs,se.fit = TRUE))
-  dfpred <- cbind(dfobs,dfpred)
-})
+  dfres <- cbind(dfobs,dfpred)
+  if(!"p"%in%names(dfres)) dfres <- inner_join(dfres,select(df_p,p,SiteCode))
+  return(dfres)
+}) %>% rbindlist(.,use.names=TRUE)
 saveRDS(df_obs_pred_plot,"dados/csv_SoE/rds/df_obs_pred_plot_logUU_pk.rds")
-
 ```
-
