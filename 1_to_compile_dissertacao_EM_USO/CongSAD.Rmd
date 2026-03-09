@@ -1,5 +1,5 @@
 ---
-title: "Empircal validation of SENM"
+title: "Empircal validation of SENM and its implications"
 author: ""
 output:
   bookdown::pdf_document2:
@@ -22,7 +22,11 @@ editor_options:
   chunk_output_type: console
 header-includes:
   - \usepackage{polyglossia}
-  - \setdefaultlanguage{portuguese}
+  - \setmainlanguage{english}
+  - \renewcommand{\contentsname}{Table of Contents}
+  - \usepackage{caption}
+  - \captionsetup[figure]{name=Figure, font=it}
+  - \captionsetup[table]{name=Table, font=it}
   - \usepackage{tcolorbox}
   - \usepackage{hyperref}
   - \hypersetup{colorlinks=true, linkcolor=blue, citecolor=red, urlcolor=blue}
@@ -44,12 +48,22 @@ header-includes:
   - \makeatother
   - \captionsetup[figure]{font=it}
   - \captionsetup[table]{font=it}
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
 ---
 <!-- # Apêndice: Cong SAD (SI)  {-#CongSAD} -->
 
 ```{r setup4,include=TRUE,eval=TRUE,echo=FALSE,message = FALSE,warning = FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
-                      fig.pos = "H", fig.show = "hold",dpi = 72)
+knitr::opts_chunk$set(
+	eval = TRUE,
+	echo = FALSE,
+	fig.pos = "H",
+	fig.show = "hold",
+	message = FALSE,
+	warning = FALSE,
+	cache = TRUE,
+	dpi = 72
+)
 # pacotes
 library(plyr)
 library(ggplot2)
@@ -268,11 +282,31 @@ tab_models <- tibble::tibble(
   )
 )
 
-# Criar flextable
-ft_models <- flextable(tab_models)
-
-# Ajustes de formatação
-ft_models <- ft_models |>
+# # Criar flextable
+# ft_models <- flextable(tab_models)
+# 
+# # Ajustes de formatação
+# ft_models <- ft_models |>
+#   set_header_labels(
+#     Model = "Model",
+#     `Fixed effects (connectivity)` = "Fixed effects",
+#     `Random effects (plot-level)` = "Random effects",
+#     `Spatial coordinates` = "Geographic space",
+#     `Ecological interpretation` = "Ecological meaning"
+#   ) |>
+#   autofit() |>
+#   align(align = "left", part = "all") |>
+#   bold(part = "header") |>
+#   valign(valign = "top", part = "body") %>% 
+#   # fit_to_width(max_width = 6.5) %>% 
+#   set_caption(
+#     caption = vcap
+#   )
+#   
+# # Visualizar
+# ft_models
+#######################
+ft_models <- flextable(tab_models) |>
   set_header_labels(
     Model = "Model",
     `Fixed effects (connectivity)` = "Fixed effects",
@@ -280,20 +314,20 @@ ft_models <- ft_models |>
     `Spatial coordinates` = "Geographic space",
     `Ecological interpretation` = "Ecological meaning"
   ) |>
-  autofit() |>
+  # 1. Define o layout como fixo para permitir quebra de linha
+  set_table_properties(layout = "fixed") |> 
+  # 2. Ajusta a largura total para a largura da página (aprox. 6.5 polegadas)
+  width(width = c(0.8, 1.2, 1.2, 1.2, 2.1)) |> 
   align(align = "left", part = "all") |>
   bold(part = "header") |>
-  valign(valign = "top", part = "body") %>% 
-  fit_to_width(max_width = 6.5) %>% 
-  set_caption(
-    caption = vcap
-  )
+  valign(valign = "top", part = "body") |>
+  set_caption(caption = vcap)
 
-# Visualizar
 ft_models
+
 ```
 
-```{r}
+```{r tab-selection,echo=FALSE,include=TRUE,eval=TRUE}
 # Criar flextable
 ft_models <- flextable(tab_models)
 
@@ -311,11 +345,11 @@ ft_models <- ft_models |>
   
   # 2. Definir a largura de cada coluna (em polegadas)
   # A soma deve ser próxima de 6.5 (largura da sua página)
-  width(j = 1, width = 0.7)  # Model
-  width(j = 2, width = 1.0)  # Fixed effects
-  width(j = 3, width = 1.0)  # Random effects
-  width(j = 4, width = 0.8)  # Geographic space
-  width(j = 5, width = 3.0)  |> # Ecological meaning (mais espaço para o texto longo)
+  # width(j = 1, width = 0.7)  # Model
+  # width(j = 2, width = 1.0)  # Fixed effects
+  # width(j = 3, width = 1.0)  # Random effects
+  # width(j = 4, width = 0.8)  # Geographic space
+  # width(j = 5, width = 3.0)  |> # Ecological meaning (mais espaço para o texto longo)
 
   # 3. Manter um tamanho de fonte fixo e legível
   fontsize(size = 10, part = "all") |>
@@ -327,7 +361,7 @@ ft_models <- ft_models |>
 ```
 
 <p>
-Models were compared using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (@burnham1998practical). We additionally report deviance explained, representing the proportion of variation accounted for relative to a null model. Model fitting and comparison were performed using functions from the mgcv (@wood2011) and bbmle (@bbmle_package) packages .
+Models were compared using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (@burnham1998practical). We additionally report deviance explained, re  presenting the proportion of variation accounted for relative to a null model. Model fitting and comparison were performed using functions from the mgcv (@wood2011) and bbmle (@bbmle_package) packages .
 </p>
 
 ## Spatial autocorrelation test: Moran’s I 
@@ -381,7 +415,7 @@ saveRDS(pfinal,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_moranI_sensibil
 vcap <- do.call(sprintf, c(list("Sensitivity analysis of Moran's I test for spatial autocorrelation in model residuals. Panels show two-tailed p-values of Moran's I statistic calculated for mean residuals from two statistical models (left: %s, middle: %s, right: %s), grouped by forest plots. The x-axis represents neighborhood size defined as the number of nearest neighbors (n), ranging from 1 to 100. The y-axis shows corresponding p-values, with a horizontal dashed line indicating the significance threshold (α = 0.05). The absence of p-values below 0.05 across the entire range of neighborhood sizes indicates no significant spatial autocorrelation in the residuals of either model, suggesting that spatial structure was adequately captured by the model formulations."), names(l_f)[1:4]))
 vcap <- "Sensitivity analysis of Moran’s I for spatial autocorrelation in model residuals. Panels show two-tailed p-values of Moran’s I calculated from plot-level mean residuals for each candidate model (Table 1). The x-axis represents neighbourhood size defined as the number of nearest neighbours (n), ranging from 1 to 100. The y-axis shows the corresponding p-values and Moran’s I, in black and green, respectively. The horizontal dashed line indicates the significance threshold (α = 0.05)."
 ```
-```{r fig-moranI,echo=FALSE,eval=TRUE,include=TRUE,fig.cap=vcap,fig.width=6, fig.height=8}
+```{r fig-moranI,echo=FALSE,eval=TRUE,include=TRUE,fig.cap=vcap,fig.width=6, fig.height=6}
 pfinal <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_moranI_sensibilidade.rds")
 pfinal
 ```
@@ -546,7 +580,7 @@ p <- l_dfpred$fixo_e_aleat %>%
        title="Congruence of simulated SADs across experimental landscapes",
        subtitle="Congruence is best described by connectivity and spatial proximity among forest plots") +
   facet_wrap(~land) +
-  theme_classic() +
+  theme_bw() +
   theme(strip.text = element_text(size=12, #margin=margin(),
                                   face="bold"))
 saveRDS(p,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_interpretacao_cong.rds")
@@ -640,7 +674,7 @@ lp$cong_land <- select(dfp,-tif.path) %>%
   pivot_longer(lat:p) %>% 
   mutate(name=factor(name,
                      levels=c("p","effort_ha","Ntotal","S_obs","lat","long"),
-                     labels=c("%FL","plot area","N","S","lat","long")),
+                     labels=c("%FC","plot area","N","S","lat","long")),
          legend_label = paste0(selecionado,
                               " (",
                               ifelse(selecionado,67,105-67),
@@ -651,7 +685,7 @@ lp$cong_land <- select(dfp,-tif.path) %>%
   geom_jitter() +
   scale_color_manual("selected",values=c("TRUE (67)"="green3","FALSE (38)"="red")) +
   facet_wrap(~name,nrow=2,scales="free") +
-  theme_classic() +
+  theme_bw() +
   labs(x="",y="") +
   theme(legend.position = "bottom",
         plot.margin = margin(2, 2, 2, 2, "mm"),
@@ -724,8 +758,10 @@ wrap_plots(plotlist=lp,ncol=2) +
 ## Differences in the vulnerability metric
 
 
-```{r criacao da figura que compara a diferença no logUU entre as parcelas selcionadas e nao selecionadas,echo=FALSE,include=FALSE,eval=FALSE}
+```{r criacao da figura que compara a diferença no logUU entre as parcelas selcionadas e nao selecionadas,echo=FALSE,include=TRUE,eval=TRUE}
+mutate <- dplyr::mutate
 df_plot <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_plot_p_diferencas_logUU_selecionado_e_nao.rds")
+dfo <- df_plot
 dfp <- mutate(df_plot,
                 across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
                   matches("Uefeito|fit|er$"),~.x * (-1)
@@ -735,6 +771,7 @@ dfp <- mutate(df_plot,
                   gsub("Área per se","Loss of Forest Cover (LFC)",.)
                 )
 #--------------- gráficos ---------------------#
+ggplot2::theme_set(theme_bw())
 lp <- list()
 lp$FPSeLFC <- dfp %>% 
   filter(!grepl("total",contraste)) %>% 
@@ -749,7 +786,13 @@ lp$FPSeLFC <- dfp %>%
                                            "30 ≤ %FC < 60",
                                            "60 ≤ %FC < 80",
                                            "80 ≤ %FC < 100",
-                                           "%FC = 100"))) %>% 
+                                           "%FC = 100"),
+                          labels = c(" '%FC < 30' ",
+                                     " 30 <= '%FC < 60' ",
+                                     " 60 <= '%FC < 80' ",
+                                     " 80 <= '%FC < 100' ",
+                                     " '%FC = 100' ")
+                          )) %>% 
   select(-contraste) %>% 
   pivot_wider(names_from = "efeito",
               values_from = "Uefeito") %>% 
@@ -758,7 +801,8 @@ lp$FPSeLFC <- dfp %>%
   geom_vline(xintercept = 0,color="black") +
   geom_point(aes(color=selecionado),size=2.5,alpha=0.5) +
   scale_color_manual("congruence-based\nselection",values=c("red","green")) +
-  facet_grid(selecionado~p_class) + #,nrow=1
+  facet_grid(selecionado~p_class,
+             labeller = labeller(p_class = label_parsed)) + #,nrow=1
   labs(title="a)") +
   theme(legend.position = "bottom")
 lp$FLC <- dfp %>% 
@@ -775,20 +819,26 @@ lp$FLC <- dfp %>%
                                            "30 ≤ %FC < 60",
                                            "60 ≤ %FC < 80",
                                            "80 ≤ %FC < 100",
-                                           "%FC = 100"))) %>% 
+                                           "%FC = 100"),
+                          labels = c(" '%FC < 30' ",
+                                     " 30 <= '%FC < 60' ",
+                                     " 60 <= '%FC < 80' ",
+                                     " 80 <= '%FC < 100' ",
+                                     " '%FC = 100' ")
+                          )) %>% 
   select(-contraste) %>% 
   ggplot(aes(x=selecionado,y=Uefeito,color=selecionado)) +
   geom_hline(color="black",yintercept = 0) +
   geom_boxplot() +
   geom_jitter() +
   scale_color_manual("congruence-based\nselection",values=c("red","green")) +
-  facet_wrap(~p_class,nrow=1) +
+  facet_wrap(~p_class,nrow=1,labeller = label_parsed) +
   labs(x="",y="FLF",title="b)") +
   theme(legend.position = "none")
 p_final <- patchwork::wrap_plots(lp,ncol=1,heights = c(2, 1))
-vcap <- ""
+vcap <- "Comparison of vulnerability metrics for landscape effects across forest-cover classes and congruence-based plot selection. (a) Relationship between vulnerability to forest cover loss (LFC) and fragmentation per se (FPS) across forest plots. Each panel shows a scatterplot of log(U/U) for LFC (x-axis) against log(U/U) for FPS (y-axis). Columns correspond to classes of remaining forest cover (%FC = 100; 80 ≤ %FC < 100; 60 ≤ %FC < 80; 30 ≤ %FC < 60; %FC < 30), and rows separate plots according to whether the spatially explicit neutral model was supported by the congruence-based selection criterion (upper row: FALSE; lower row: TRUE). Points are coloured according to this selection (green = selected plots; red = non-selected plots). (b) Distribution of the total vulnerability to forest loss and fragmentation (FLF) across the same forest-cover classes. The y-axis shows log(U/U) for the FLF effect, while the x-axis separates plots according to congruence-based selection (TRUE vs FALSE). Points represent individual vulnerability estimates and boxplots summarize their distribution within each group. For each forest plot, ten values of log(U/U) were estimated corresponding to alternative dispersal scenarios explored in the spatially explicit neutral simulations. Across panels, the distribution of landscape-effect vulnerability is broadly similar between selected and non-selected plots, suggesting that non-selected plots represent a subsample of the same underlying distribution, although the number of plots differs between groups (67 selected vs. 38 non-selected)."
 ```
-```{r fig-comp-cong-e-logUU, fig.cap=vcap}
+```{r fig-comp-cong-e-logUU, fig.cap=vcap,eval=TRUE,include=TRUE,fig.width=12,fig.height=10}
 p_final
 ```
 
@@ -856,7 +906,7 @@ plot_tif_map <- \(dfi, colname = "txt.path",fill_color = c("0"="white","1"="ligh
     scale_y_continuous(expand = c(0,0)) +
     scale_fill_manual(values=fill_color) +
     coord_equal() +
-    theme_classic() +
+    theme_bw() +
     labs(x="",y="") +
     theme(
       legend.position = "none",
@@ -985,14 +1035,15 @@ saveRDS(tosav,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabmd_cong.rds")
 tosav <- 
   readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabmd_cong.rds")
 tosav %>% 
-  width(j = 1, width = 2.0) %>%   # Primeira coluna mais larga
-  width(j = 2:6, width = 0.9) %>% # Demais colunas mais estreitas
+  autofit() %>% 
+  # width(j = 1, width = 2.0) %>%   # Primeira coluna mais larga
+  # width(j = 2:6, width = 0.9) %>% # Demais colunas mais estreitas
   font(fontname = "Times New Roman", part = "all") %>%  # Fonte padrão
-  fontsize(size = 8, part = "body") %>% 
-  fontsize(size = 9, part = "header") %>%
-  line_spacing(space = 1.0, part = "all") %>%  # Espaçamento entre linhas
-  set_table_properties(layout = "autofit") %>%  # Layout automático do Word
-  fit_to_width(max_width = 6.5) 
+  # fontsize(size = 8, part = "body") %>% 
+  # fontsize(size = 9, part = "header") %>%
+  # line_spacing(space = 1.0, part = "all") %>%  # Espaçamento entre linhas
+  set_table_properties(layout = "autofit") # %>%  # Layout automático do Word
+  # fit_to_width(max_width = 6.5) 
 ```
 
 ### M1 diagnostic plots
