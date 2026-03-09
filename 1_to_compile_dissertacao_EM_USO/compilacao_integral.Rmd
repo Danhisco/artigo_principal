@@ -489,8 +489,8 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE,vpos=c(0.72,0.25),vt=15,vts=0.9
     theme_classic() +
     theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
           text=element_text(size=vt,face="bold"),
-          legend.position = "inside",
-          legend.position.inside = vpos,
+          legend.position = "bottom",
+          #legend.position.inside = vpos,
           legend.direction="horizontal") +
     guides(linetype = guide_legend(
       title.theme = element_text(size = vt*vts, face = "bold")

@@ -21,8 +21,6 @@ csl: "resources/ecology-letters.csl"
 editor_options:
   chunk_output_type: console
 header-includes:
-  - \usepackage{polyglossia}
-  - \setdefaultlanguage{portuguese}
   - \usepackage{tcolorbox}
   - \usepackage{hyperref}
   - \hypersetup{colorlinks=true, linkcolor=blue, citecolor=red, urlcolor=blue}
@@ -46,9 +44,25 @@ header-includes:
   - \captionsetup[table]{font=it}
 ---
 
+\appendix
+\renewcommand{\thefigure}{SI4.\arabic{figure}}
+\setcounter{figure}{0}
+\renewcommand{\thetable}{SI4.\arabic{table}}
+\setcounter{table}{0}
+\renewcommand{\thesection}{SI4.\arabic{section}}
+\setcounter{section}{0} 
+
+
+
 ```{r setup4,include=TRUE,eval=TRUE,echo=FALSE,message = FALSE,warning = FALSE}
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
-                      fig.pos = "H", fig.show = "hold",dpi = 72)
+knitr::opts_chunk$set(echo = FALSE,
+                      eval = TRUE,
+                      message = FALSE,
+                      warning = FALSE,
+                      cache=FALSE,
+                      fig.pos = "H", 
+                      fig.show = "hold",
+                      dpi = 72)
 library(gratia)
 library(doMC)
 library(gridExtra)
@@ -69,6 +83,22 @@ source("source/2samples_testes.R")
 source("source/general_tools.R")
 source("source/GAMMtools.R")
 source("source/fig_tools.R")
+f_z <- function(x) (x-mean(x))/sd(x)
+f_label <- \(vn){
+  gsub("1","M4",vn) %>% 
+    gsub("s\\(k,by\\=land\\) \\+ \\(lat,long\\)","M1",.) %>% 
+    gsub("s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)","M3",.) %>% 
+    gsub("s\\(k,by\\=land\\)","M2",.)
+    
+}
+f_antilabel <- \(vn){
+  gsub("M4","1",vn) %>% 
+    gsub("M1","s\\(k,by\\=land\\) \\+ \\(lat,long\\)",.) %>% 
+    gsub("M3","s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)",.) %>% 
+    gsub("M2","s\\(k,by\\=land\\)",.)
+    
+}
+select <- dplyr::select
 ## dados
 #@ dados completos de logUU
 df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>% 
@@ -76,8 +106,6 @@ df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>%
   pivot_longer(cols=contains("logratio"),
                values_to="Uefeito",
                names_to = "contraste") %>% 
-  inner_join(.,
-             select(df_md,SiteCode,forest_succession) %>% distinct) %>% 
   mutate(contraste = gsub("_logratio","",contraste) %>% 
            gsub("\\.","",.) %>% 
            gsub("area","Área per se",.) %>% 
@@ -86,15 +114,7 @@ df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>%
          contraste = factor(contraste,
                             levels=c("Frag. total",
                                      "Frag. per se",
-                                     "Área per se")),
-         pert_class = factor(forest_succession,
-                             levels=c("primary",
-                                      "primary/secondary",
-                                      "secondary"),
-                             labels=c("baixa",
-                                      "mediana",
-                                      "alta"))) %>% 
-  select(-forest_succession)
+                                     "Área per se")))
 #@ dados completos da congruência e os sítios selecionados para a interpretação
 df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") 
 df_selected <- df_ad %>% 
@@ -110,15 +130,15 @@ df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
 #@ df logUU apenas as parcelas selecionadas
 df_logUU_pk <- inner_join(filter(df_logUU,k>=0.499999),
                           df_selected[df_selected$selecionado,]) %>% 
-  select(-c(pert_class:selecionado))
+  select(-c(selecionado))
 ```
 
 # Statistical evaluation of forest cover as a predictor of biodiversity vulnerability 
 
 <p>
-Here, to describe variation in log(Ui/Uj), we fitted hierarchical generalized additive models (HGAMs) that allow non-linear responses while accounting for plot-level random effects (Wood 2017; Pedersen et al. 2019). 
-Because forest cover is often associated with non-linear spatial variability and potential threshold dynamics at the landscape scale (e.g. Villard & Metzger 2014; Arroyo-Rodrigues et al. 2020; Puttker et al. 2020), we formally evaluated whether %FC improves the statistical description of the vulnerability metric log(Ui/Uj). 
-We compared five alternative model structures: I) _Interaction model_, a tensor-product smooth between %FC and dispersal limitation (k); II) _Additive model_, independent smooth terms for %FC and k; III) _dispersal-only model_, includes only k smoothers (random and fixed); IV) _dispersal with only intercept per plot__, a fixed effect smooth term for k with only intercept; V) _an intcepet per plot_, includes a general intercept and a intercept by plot (Table 1). Models were fitted separately for each landscape effect (FLF, LFC, FPS) and assumed Gaussian errors. 
+Here, to describe variation in log(Ui/Uj), we fitted hierarchical generalized additive models (HGAMs) that allow non-linear responses while accounting for plot-level random effects (@wood2017, @Pedersen2019). 
+Because forest cover is often associated with non-linear spatial variability and potential threshold dynamics at the landscape scale (e.g. @villard_beyond_2014; @arroyo-rodriguez_designing_2020; @puttker2020indirect), we formally evaluated whether %FC improves the statistical description of the vulnerability metric log(Ui/Uj). 
+We compared five alternative model structures: I) _Interaction model_, a tensor-product smooth between %FC and dispersal limitation (k); II) _Additive model_, independent smooth terms for %FC and k; III) _dispersal-only model_, includes only k smoothers (random and fixed); IV) _dispersal with only intercept per plot_, a fixed effect smooth term for k with only intercept; V) _an intcepet per plot_, includes a general intercept and a intercept by plot (\@ref(tab:tab-desc-logUU-mds)). Models were fitted separately for each landscape effect (FLF, LFC, FPS) and assumed Gaussian errors. 
 </p>
 
 
@@ -127,7 +147,7 @@ vcap <- paste(
       "Description of five competing hierarchical generalized additive models (HGAMs) used to describe the vulnerability metrix, logUi/Uj, for each landscape effevt. In all models, k denotes dispersal limitation intensity (i.e., the fraction of propagules retained in the immediate neighbourhood of the progenitor), and %FC denotes remainig forest cover. Models differ in the inclusion of plot-specific k responses and the inclusion of %FC."
     )
 ```
-```{r tabela de descricao dos HGAMs de logUU}
+```{r tab-desc-logUU-mds}
 tab_models <- tibble::tibble(
   Model = c("M1 (Interaction)", 
             "M2 (Additive)", 
@@ -136,10 +156,10 @@ tab_models <- tibble::tibble(
             "M5 (Null)"),
   
   `Fixed effects` = c(
-    "Tensor-product smooth of %FC and $k$",
-    "Independent smooths of %FC and $k$",
-    "Smooth term of $k$",
-    "Smooth term of $k$",
+    "Tensor-product smooth of %FC and k",
+    "Independent smooths of %FC and k",
+    "Smooth term of k",
+    "Smooth term of k",
     "Intercept only"
   ),
   
@@ -159,33 +179,52 @@ tab_models <- tibble::tibble(
   )
 )
 
+# # Criar flextable
+# ft_models <- flextable(tab_models)
+# 
+# # Ajustes de formatação
+# ft_models <- ft_models |>
+#   set_header_labels(
+#     Model = "Model",
+#     `Fixed effects` = "Fixed effects",
+#     `Random effects (plot-level)` = "Random effects",
+#     `Ecological interpretation` = "Ecological meaning"
+#   ) |>
+#   autofit() |>
+#   align(align = "left", part = "all") |>
+#   bold(part = "header") |>
+#   valign(valign = "top", part = "body") %>% 
+#   # fit_to_width(max_width = 6.5) %>% 
+#   set_caption(
+#     caption = vcap
+#   )
+# Visualizar
+# ft_models
+#########################
 # Criar flextable
-ft_models <- flextable(tab_models)
-
-# Ajustes de formatação
-ft_models <- ft_models |>
+ft_models <- flextable(tab_models) |>
   set_header_labels(
     Model = "Model",
     `Fixed effects` = "Fixed effects",
-    `Random effects (plot-level)` = "Random effects",
+    `Random effects` = "Random effects", # Ajustado para bater com o tibble
     `Ecological interpretation` = "Ecological meaning"
   ) |>
-  autofit() |>
+  # 1. Força o layout fixo para permitir quebra de linha (word wrap)
+  set_table_properties(layout = "fixed") |> 
+  # 2. Define larguras manuais (em polegadas). Ajuste conforme necessário:
+  width(width = c(0.8, 1.2, 1.2, 3.1)) |> 
   align(align = "left", part = "all") |>
   bold(part = "header") |>
-  valign(valign = "top", part = "body") %>% 
-  fit_to_width(max_width = 6.5) %>% 
-  set_caption(
-    caption = vcap
-  )
+  valign(valign = "top", part = "body") |>
+  # Opcional: reduzir um pouco a fonte se ainda estiver apertado
+  fontsize(size = 10, part = "all") |> 
+  set_caption(caption = vcap)
 
-# Visualizar
 ft_models
-
 ```
 
 <p>
-Model selection was conducted using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (Burnham & Anderson 1998). We additionally report deviance explained as a measure of relative model performance. Model fitting and comparison were performed using the mgcv (Wood 2011, 2017) and bbmle packages in R. Model selection results for each landscape effect are presented in Table SI.4.1.
+Model selection was conducted using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (@burnham1998practical). We additionally report deviance explained as a measure of relative model performance. Model fitting and comparison were performed using the mgcv (@wood2011) and bbmle packages in R. Model selection results for each landscape effect are presented in Table 1 in the main text.
 </p>
 
 <!-- ## Model Selection -->
@@ -249,7 +288,7 @@ saveRDS(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_lo
 ```{r caption tab-selecao,echo=FALSE,include=TRUE,eval=TRUE}
 vcap <- "Model comparison among candidate hierarchical generalized additive models (HGAMs). ΔAICc represents the difference in AICc relative to the best-supported model. est. coef. denotes the effective degrees of freedom (model complexity). weight indicates Akaike weight. Dev. Exp. represents deviance explained."
 ```
-```{r tab-selecaoCong,echo=FALSE,include=TRUE,eval=TRUE}
+```{r tab-selecaoCong,echo=FALSE,include=FALSE,eval=FALSE}
 df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds") %>% 
   mutate(across(where(is.numeric), ~round(.x,2)),
          Effect = case_when(
@@ -322,16 +361,22 @@ dfp <- df_plot[df_plot$selecionado,] %>%
               values_from = "Uefeito") %>% 
   mutate(diffABS = abs(LFC) - abs(FPS),
          p_class = case_when(
-      p==1 ~ "%FC = 100",
-      p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
-      p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
-      p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
-      p<0.30 ~ "%FC < 30"),
-    p_class = factor(p_class,levels=c("%FC < 30",
-                                      "30 ≤ %FC < 60",
-                                      "60 ≤ %FC < 80",
-                                      "80 ≤ %FC < 100",
-                                      "%FC = 100"))
+           p==1 ~ "%FC = 100",
+           p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
+           p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
+           p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
+           p<0.30 ~ "%FC < 30"),
+         p_class = factor(p_class,levels=c("%FC < 30",
+                                           "30 ≤ %FC < 60",
+                                           "60 ≤ %FC < 80",
+                                           "80 ≤ %FC < 100",
+                                           "%FC = 100"),
+                          labels = c(" '%FC < 30' ",
+                                     " 30 <= '%FC < 60' ",
+                                     " 60 <= '%FC < 80' ",
+                                     " 80 <= '%FC < 100' ",
+                                     " '%FC = 100' ")
+                          )
     )
 #--------------------- grafico -------------------#
 dfrange <- filter(dfp,
@@ -356,23 +401,29 @@ p <- dfp %>%
   theme(legend.position = "bottom")
 ```
 ```{r}
-vcap <- "Figure SI4.1. Dominance of landscape effects across forest cover classes and dispersal scenarios. Each panel corresponds to a class of percentage forest cover (%FC): <30%, 30–60%, 60–80%, and 80–<100%. The y‑axis shows the difference in absolute magnitudes of the forest loss and fragmentation‑per‑se effects (|LFC| – |FPS|). Positive values indicate dominance of the loss effect; negative values indicate dominance of fragmentation. The x‑axis represents dispersal limitation scenarios (k classes). For each k class, boxplots summarize the distribution of observed values, with points overlaid. The horizontal solid line marks zero (equal magnitude of both effects). Dashed lines indicate the 5th and 95th percentiles of the null distribution, and dotted lines show the full range (minimum–maximum) of |LFC| – |FPS| under 100% forest cover (i.e., in landscapes with no forest loss)."
+vcap <- "Dominance of landscape effects across forest cover classes and dispersal scenarios. Each panel corresponds to a class of percentage forest cover (%FC): <30%, 30–60%, 60–80%, and 80–<100%. The y‑axis shows the difference in absolute magnitudes of the forest loss and fragmentation‑per‑se effects (|LFC| – |FPS|). Positive values indicate dominance of the loss effect; negative values indicate dominance of fragmentation. The x‑axis represents dispersal limitation scenarios (k classes). For each k class, boxplots summarize the distribution of observed values, with points overlaid. The horizontal solid line marks zero (equal magnitude of both effects). Dashed lines indicate the 5th and 95th percentiles of the null distribution, and dotted lines show the full range (minimum–maximum) of |LFC| – |FPS| under 100% forest cover (i.e., in landscapes with no forest loss)."
 ```
-```{r fig-SI41,fig.cap=vcap, fig.width=12,fig.height=5}
+```{r fig-SI41,fig.cap=vcap, fig.width=12,fig.height=5, fig.pos="H"}
 p
 ```
 
 <p>
-In plots with high remaining forest cover (%FC), the distribution of |LFC| – |FPS| remained mostly within the null reference range (Fig. SI4.1). In these plots, only a few cases showed negative values, indicating that |FPS| exceeded |LFC| in magnitude.
+In plots with high remaining forest cover (%FC), the distribution of |LFC| – |FPS| remained mostly within the null reference range (\@ref(fig:fig-SI41)). In these plots, only a few cases showed negative values, indicating that |FPS| exceeded |LFC| in magnitude.
 </p>
 
 <p>
-As %FC decreased, the distribution shifted toward positive values, reflecting increasing dominance of the LFC effect (Fig. SI4.1). In plots with <30% forest cover and under non‑severe dispersal limitation (k < 0.9), most values fell within or above the null range, with few below it. Under severe dispersal limitation (k ≥ 0.9), however, the entire distribution shifted above the null reference, indicating a systematic and complete dominance of LFC.
+As %FC decreased, the distribution shifted toward positive values, reflecting increasing dominance of the LFC effect ((\@ref(fig:fig-SI41)). In plots with <30% forest cover and under non‑severe dispersal limitation (k < 0.9), most values fell within or above the null range, with few below it. Under severe dispersal limitation (k ≥ 0.9), however, the entire distribution shifted above the null reference, indicating a systematic and complete dominance of LFC.
 </p>
 
 <p>
-Across all %FC classes and dispersal scenarios, the majority of |LFC| – |FPS| values lay within or above the null range. Values below the null were rare and largely restricted to high‑cover plots. The most clear dominance of LFC over FPS emerged in low‑cover plots under severe dispersal limitation, where the entire distribution exceeded the null reference (Fig. SI4.1).
+Across all %FC classes and dispersal scenarios, the majority of |LFC| – |FPS| values lay within or above the null range. Values below the null were rare and largely restricted to high-cover plots. The most clear dominance of LFC over FPS emerged in low-cover plots under severe dispersal limitation, where the entire distribution exceeded the null reference (\@ref(fig:fig-SI41)).
 </p>
+
+
+
+
+
+
 
 
 
@@ -380,9 +431,70 @@ Across all %FC classes and dispersal scenarios, the majority of |LFC| – |FPS| 
 
 ## Models Diagnostics
 
-```{r diagnostico dos modelos, eval=FALSE, include=FALSE, echo=FALSE}
-#--------------------------------- VAI PARA O FINAL DESSE ARQUIVO ----------------
+```{r obj comuns do diagnostico do modelo,echo=FALSE,eval=TRUE,include=TRUE}
+library(data.table)
+f_gsub <- \(vchar){
+  gsub("ideal","_pristine",vchar) %>% 
+    gsub("non_frag","_clumped",.) %>% 
+    gsub("cont","_frag",.)
+}
+l_md <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
+df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds")
+df_tabsel <- as.data.table(df_tabsel)
+f_select <- \(dfi){
+  l_md[[dfi$base]][[dfi$modelo]]
+}
+df_tabsel <- df_tabsel[,.SD[1],by=base]
+lmd <- split(df_tabsel,df_tabsel$base) %>% 
+  lapply(.,f_select)
+#-------------------------------------------------------
+f_hgam <- \(hgam){
+  tab_todisp <- as_flextable(hgam) %>% bg(., bg = "white", part = "all")
+  tab_todisp %>% 
+    set_formatter(Term = f_gsub) %>% 
+    set_caption(caption = "Summary of the best-fit Generalized Additive Model.") %>% 
+    autofit() %>% 
+    font(fontname = "Times New Roman", part = "all") %>%
+    set_table_properties(layout = "autofit")
+}
+l_fxtb <- lapply(lmd,f_hgam)
+```
 
+
+
+
+
+### FLF
+
+```{r fig-tabmd-FLF}
+vn <- "Frag. total"
+l_fxtb[[vn]]
+```
+
+```{r fig-diag-FLF}
+gratia::appraise(lmd[[vn]])
+```
+
+### FPS
+
+```{r fig-tabmd-FPS}
+vn <- "Frag. per se"
+l_fxtb[[vn]]
+```
+
+```{r fig-diag-FPS}
+gratia::appraise(lmd[[vn]])
+```
+
+### LFC
+
+```{r fig-tabmd-LFC}
+vn <- "Área per se"
+l_fxtb[[vn]]
+```
+
+```{r fig-diag-LFC}
+gratia::appraise(lmd[[vn]])
 ```
 
 <!-- ## Model Predictions -->
@@ -412,140 +524,4 @@ df_obs_pred_plot <- lapply(names(lmd),\(li){
 saveRDS(df_obs_pred_plot,"dados/csv_SoE/rds/df_obs_pred_plot_logUU_pk.rds")
 ```
 
-
-## The non-selected plots: logU/U
-
-```{r}
-vcap <- ""
-```
-```{r fig-logUU-nonselected,fig.cap=vcap,fig.width=14,fig.height=10,}
-# preparação
-library(metR)
-library(gridExtra)
-library(ggplot2)
-library(dplyr)
-## funções de ajuste e de plot
-source("source/2samples_testes.R")
-source("source/general_tools.R")
-source("source/GAMMtools.R")
-source("source/fig_tools.R")
-## dados
-#@ dados completos de logUU
-df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>% 
-  select(-contains("_z")) %>% 
-  pivot_longer(cols=contains("logratio"),
-               values_to="Uefeito",
-               names_to = "contraste") %>% 
-  inner_join(.,
-             select(df_md,SiteCode,forest_succession) %>% distinct) %>% 
-  mutate(contraste = gsub("_logratio","",contraste) %>% 
-           gsub("\\.","",.) %>% 
-           gsub("area","Área per se",.) %>% 
-           gsub("fragtotal","Frag. total",.) %>% 
-           gsub("fragperse","Frag. per se",.),
-         contraste = factor(contraste,
-                            levels=c("Frag. total",
-                                     "Frag. per se",
-                                     "Área per se")),
-         pert_class = factor(forest_succession,
-                             levels=c("primary",
-                                      "primary/secondary",
-                                      "secondary"),
-                             labels=c("baixa",
-                                      "mediana",
-                                      "alta"))) %>% 
-  select(-forest_succession)
-#@ dados completos da congruência e os sítios selecionados para a interpretação
-df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") 
-df_selected <- df_ad %>% 
-  filter(k>=0.49999) %>%
-  group_by(SiteCode) %>% 
-  dplyr::summarise(selecionado = all(nSAD>=75))
-#@ df_p
-df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
-df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
-  vfilter <- dfi$lado_km[which.min(abs(1-dfi$lado_km))]
-  filter(dfi,lado_km==vfilter)
-}) %>% select(-c(Ntotal:S_obs))
-#@ df logUU apenas as parcelas selecionadas
-df_logUU_pk <- inner_join(filter(df_logUU,k>=0.499999),
-                          df_selected[df_selected$selecionado,]) %>% 
-  select(-c(pert_class:selecionado))
-#
-df_plot <- inner_join(df_selected,select(df_logUU,-p)) %>% 
-  filter(!selecionado) %>% 
-  inner_join(.,select(df_p,SiteCode,p)) %>% 
-  select(-c(selecionado,pert_class)) %>% 
-  mutate(
-    p_class = case_when(
-      p==1 ~ "%FC = 100",
-      p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
-      p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
-      p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
-      p<0.30 ~ "%FC < 30"),
-    p_class = factor(p_class,levels=c("%FC < 30",
-                                      "30 ≤ %FC < 60",
-                                      "60 ≤ %FC < 80",
-                                      "80 ≤ %FC < 100",
-                                      "%FC = 100"))
-  )
-df_ij <- df_plot %>% 
-    select(SiteCode,p_class) %>% 
-    distinct() %>% 
-    group_by(p_class) %>% 
-    tally() %>% 
-    mutate(label = paste0(p_class,", n = ",n)) %>% 
-    select(-n)
-df_ij$label <- factor(df_ij$label,
-                      levels=unique(df_ij$label))
-dfp <- inner_join(df_plot,df_ij)
-nsites <- filter(dfp,p_class=="%FC = 100") %>% pull(SiteCode) %>% unique %>% length()
-dfp <- mutate(dfp,
-              across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
-              matches("Uefeito|fit|er$"),~.x * (-1)
-              ),
-              efeito = gsub("Frag. total","Forest Loss and Frag. (FLF)",contraste) %>% 
-                gsub("Frag. per se","Frag. per se (FPS)",.) %>% 
-                gsub("Área per se","Loss of Forest Cover (LFC)",.)
-              )
-dfrange <- filter(dfp,p_class=="%FC = 100") %>% 
-  reframe(
-      names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
-      value = c(min(Uefeito), max(Uefeito),quantile(Uefeito,probs=0.05),quantile(Uefeito,probs=0.95))
-    )
-dfp <- filter(dfp,p_class!="%FC = 100")
-# ------------------------ gráfico ------------------ #
-vpos=c(0.80,0.3)
-vt = 12.5
-vts=0.90
-dfp %>% 
-  mutate(efeito = factor(efeito,
-                         levels=c("Forest Loss and Frag. (FLF)",
-                                  "Frag. per se (FPS)",
-                                  "Loss of Forest Cover (LFC)"))) %>% 
-  ggplot(aes(x=k,y=Uefeito)) +
-  geom_boxplot(aes(group=k),alpha=0.6) +
-  geom_hline(yintercept = 0,color="black") +
-  geom_hline(data = dfrange, aes(yintercept = value,linetype=names),
-             color="black",linewidth=0.5) +
-  scale_linetype_manual(name = paste0("%FC=100",", n = ",nsites),
-                        values=c("dotted","dashed")) +
-  # geom_smooth(aes(group=SiteCode),se = FALSE,alpha=0.5) +  
-  geom_line(aes(by=SiteCode),color="darkblue",alpha=0.85) +
-  geom_point(aes(color=p),alpha=0.85) +
-  scale_colour_gradient2("% FC",midpoint=0.5,
-                         low="red",
-                         mid = "yellow",
-                         high = "darkgreen") +
-  labs(x="Fraction of propagules dispersing locally (k)",y="logU/U",title="") +
-  facet_grid(efeito~label,scales="free") +
-  theme_classic() +
-  theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
-        text=element_text(size=vt,face="bold"),
-        legend.position = "bottom",
-        legend.direction="horizontal") +
-  guides(linetype = guide_legend(
-      title.theme = element_text(size = vt*vts, face = "bold")
-      )
-    )
-```
+# References

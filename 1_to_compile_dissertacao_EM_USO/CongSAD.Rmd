@@ -1,5 +1,5 @@
 ---
-title: "Empircal validation of SENM and its implications"
+title: "Empirical validation of SENM and its implications for vulnerability assessment"
 author: ""
 output:
   bookdown::pdf_document2:
@@ -51,6 +51,17 @@ header-includes:
   - \usepackage{float}
   - \floatplacement{figure}{H}
 ---
+
+\appendix
+\renewcommand{\thefigure}{SI3.\arabic{figure}}
+\setcounter{figure}{0}
+\renewcommand{\thetable}{SI3.\arabic{table}}
+\setcounter{table}{0}
+\renewcommand{\thesection}{SI3.\arabic{section}}
+\setcounter{section}{0} 
+
+
+
 <!-- # Apêndice: Cong SAD (SI)  {-#CongSAD} -->
 
 ```{r setup4,include=TRUE,eval=TRUE,echo=FALSE,message = FALSE,warning = FALSE}
@@ -61,7 +72,7 @@ knitr::opts_chunk$set(
 	fig.show = "hold",
 	message = FALSE,
 	warning = FALSE,
-	cache = TRUE,
+	cache = FALSE,
 	dpi = 72
 )
 # pacotes
@@ -406,7 +417,7 @@ pfinal <- wrap_plots(lp, nrow = 2) +
     subtitle = "two-sided Moran's I"
   ) & 
   theme(legend.position = "top",
-        plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
+        plot.title = element_text(size = 12, hjust = 0.5, face = "bold"),
         plot.subtitle = element_text(size = 10, hjust = 0.5, face = "bold"),
         plot.margin = margin(2, 0, 2, 0)) 
 saveRDS(pfinal,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_moranI_sensibilidade.rds")
@@ -466,7 +477,7 @@ f_flextable(df_tabsel)
 
 
 <p> <!-- texto interpretando a tabela  -->
-The full model (M1), including both the plot-specific smooth interaction between dispersal capability and landscape configuration and the bivariate spatial smoother, received overwhelming support (ΔAICc = 0; Akaike weight = 0.99; Table 2). However, the simpler model excluding spatial coordinates (M2) explained an identical proportion of deviance (94%) and differed only moderately in AICc (ΔAICc = 8.79; Table 2). Although inclusion of geographic coordinates slightly improved AICc support, it did not increase deviance explained (Table 2). This indicates that the spatial smoother refines model fit without altering the primary congruence structure driven by plot-level interaction. Detailed model coefficients and diagnostic assessments for the best-supported model are provided in the supplementary material (REF).
+The full model (M1), including both the plot-specific smooth interaction between dispersal capability and landscape configuration and the bivariate spatial smoother, received overwhelming support (ΔAICc = 0; Akaike weight = 0.99; \@ref(tab:tab-selecaoCong)). However, the simpler model excluding spatial coordinates (M2) explained an identical proportion of deviance (94%) and differed only moderately in AICc (ΔAICc = 8.79; \@ref(tab:tab-selecaoCong)). Although inclusion of geographic coordinates slightly improved AICc support, it did not increase deviance explained (\@ref(tab:tab-selecaoCong)). This indicates that the spatial smoother refines model fit without altering the primary congruence structure driven by plot-level interaction. Detailed model coefficients and diagnostic assessments for the best-supported model are provided in the supplementary material (REF).
 </p>
 
 <p>
@@ -593,7 +604,7 @@ img <- image_read("figuras/descricao_congruencia_absoluta.png") %>%
 image_write(img,path = "figuras/descricao_congruencia_absoluta.png")
 ```
 ```{r captio figCong,eval=TRUE,echo=FALSE}
-vcap <- "Figure 1. Congruence between simulated and observed SADs across dispersal and landscape gradients. Hexagonal bins show the density of plot‑level observations (lighter = fewer points, darker = up to 100 points). Gray lines: plot‑level predictions from the most plausible model with spatial coordinates set to zero. Red line: overall mean prediction; blue shading: 95% pointwise confidence interval. Mean congruence exceeded 75% in most simulations but declined under very weak dispersal limitation, especially in clumped and pristine landscapes."
+vcap <- "Congruence between simulated and observed SADs across dispersal and landscape gradients. Hexagonal bins show the density of plot‑level observations (lighter = fewer points, darker = up to 100 points). Gray lines: plot‑level predictions from the most plausible model with spatial coordinates set to zero. Red line: overall mean prediction; blue shading: 95% pointwise confidence interval. Mean congruence exceeded 75% in most simulations but declined under very weak dispersal limitation, especially in clumped and pristine landscapes."
 ```
 ```{r figCong,fig.cap=vcap,fig.width=12,eval=FALSE,include=FALSE}
 p <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_interpretacao_cong.rds")
@@ -613,7 +624,7 @@ To generate simulated SADs, SENM is calibrated to approximate observed species r
 </p>
 
 <p>
-Congruence declined under high dispersal scenarios (Fig. X, Appendix S1), indicating that SENM’s mechanistic assumptions are most plausible when dispersal is locally restricted. We therefore focused on parameterizations in which most propagules remain near the parent tree (k ≥ 0.50). Applying this condition, together with a minimum threshold of 75% congruent SADs across all three experimental landscapes, we identified 67 of 105 plots in which SENM consistently reproduced the empirical abundance structure. These plots were retained for subsequent analyses of landscape effects (see main text).
+Congruence declined under high dispersal scenarios (Fig. 2, main text), indicating that SENM’s mechanistic assumptions are most plausible when dispersal is locally restricted. We therefore focused on parameterizations in which most propagules remain near the parent tree (k ≥ 0.50). Applying this condition, together with a minimum threshold of 75% congruent SADs across all three experimental landscapes, we identified 67 of 105 plots in which SENM consistently reproduced the empirical abundance structure. These plots were retained for subsequent analyses of landscape effects (see main text).
 </p>
 
 <p>
@@ -623,20 +634,12 @@ The remaining 38 plots exhibited low congruence and were excluded from the prima
 ## Selected plots do not differ systematically from non-selected plots in environmental variables
 
 <p>
-Operational variables exhibited broadly similar distributions between selected and non-selected plots (Fig. 2). Although selected plots included a greater number of cases with extremely low landscape-level forest cover and spanned a wider geographic range (Fig. 2a–b), central tendencies were comparable. In fact, median forest cover was slightly higher among non-selected plots.
+Operational variables exhibited broadly similar distributions between selected and non-selected plots (\@ref(fig:fig-implicacoes-cong)). Although selected plots included a greater number of cases with extremely low landscape-level forest cover and spanned a wider geographic range (\@ref(fig:fig-implicacoes-cong)a–b), their central tendencies were comparable. The median forest cover was slightly higher among non-selected plots. Non-selected plots also included several outliers with high values of plot area, species richness, and abundance (\@ref(fig:fig-implicacoes-cong)a). However, for all operational variables examined, the interquartile ranges overlapped between selected and non-selected plots (\@ref(fig:fig-implicacoes-cong)a), indicating the absence of systematic distributional shifts. Spatial configuration under the fragmented landscape scenario likewise showed comparable structural patterns for selected and non-selected plots (see supplementary material to this appendix). The vulnerability metrics for the landscape effects were also similar between selected and non-selected plots (\@ref(fig:fig-comp-cong-e-logUU) and the \@ref(fig:fig-logUU-nonselected) in comparison with Fig. 2 from the main text). 
 </p>
 
 <p>
-Non-selected plots also included several outliers with high values of plot area, species richness, and number of individuals (Fig. 2a). However, for all operational variables examined, the interquartile ranges overlapped between selected and non-selected plots (Fig. 2a), indicating the absence of systematic distributional shifts.
-
-
-<p>
-Spatial configuration under the fragmented landscape scenario likewise showed comparable structural patterns for selected and non-selected plots (see supplementary material to this appendix).
-
-
-<p>
 Together, these results indicate that applying the congruence criterion did not generate a biased subset of plots with respect to environmental, demographic, or geographic attributes.
-
+</p>
 
 ```{r criacao da classificação das parcelas quanto à congruencia e suas implicacoes, echo=FALSE, eval=FALSE, include=FALSE}
 # df_p
@@ -671,10 +674,11 @@ dfp <- inner_join(df_selected,select(df_dados_disponiveis,-forest_succession))
 dfp <- inner_join(dfp, distinct( select(df_sim,-c(k:d)) ) )
 dfp <- inner_join(dfp, df_p)
 lp$cong_land <- select(dfp,-tif.path) %>% 
+  mutate(across(c(effort_ha:S_obs),log)) %>% 
   pivot_longer(lat:p) %>% 
   mutate(name=factor(name,
                      levels=c("p","effort_ha","Ntotal","S_obs","lat","long"),
-                     labels=c("%FC","plot area","N","S","lat","long")),
+                     labels=c("%FC","log(plot area)","log(N)","log(S)","lat","long")),
          legend_label = paste0(selecionado,
                               " (",
                               ifelse(selecionado,67,105-67),
@@ -732,7 +736,7 @@ saveRDS(lp,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parc
 ```{r caption fig sem dif entre selecionadas e nao, echo=FALSE,eval=TRUE,include=TRUE}
 vcap <- "Environmental and spatial characterization of plot selection within the Atlantic Forest biome. (A) Comparison of six operational variables: landscape-level forest cover (%FL; 0–1 scale), plot area (ha), number of individuals (N), species richness (S), latitude, and longitude (decimal degrees). Green boxplots represent selected plots (n = 67) and red boxplots represent non-selected plots (n = 38). Boxes indicate interquartile ranges (IQR), horizontal lines denote medians, whiskers extend to 1.5×IQR, and points represent raw values. (B) Geographic distribution of plot centroids within the official biome delimitation (gray polygon; IBGE shapefile). Consistent color coding (green = selected; red = non-selected) enables visual comparison of environmental and spatial patterns."
 ```
-```{r fig-implicacoes-cong,fig.cap=vcap,fig.width=12,fig.height=8}
+```{r fig-implicacoes-cong,fig.cap=vcap,fig.width=12,fig.height=7,cache=FALSE}
 library(sf)
 library(patchwork)
 lp <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parcelas_selecionadas.rds")
@@ -755,21 +759,20 @@ wrap_plots(plotlist=lp,ncol=2) +
 ```
 
 
-## Differences in the vulnerability metric
-
 
 ```{r criacao da figura que compara a diferença no logUU entre as parcelas selcionadas e nao selecionadas,echo=FALSE,include=TRUE,eval=TRUE}
 mutate <- dplyr::mutate
 df_plot <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_plot_p_diferencas_logUU_selecionado_e_nao.rds")
-dfo <- df_plot
-dfp <- mutate(df_plot,
-                across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
-                  matches("Uefeito|fit|er$"),~.x * (-1)
-                  ),
-                efeito = gsub("Frag. total","Forest Loss and Frag. (FLF)",contraste) %>% 
-                  gsub("Frag. per se","Frag. per se (FPS)",.) %>% 
-                  gsub("Área per se","Loss of Forest Cover (LFC)",.)
-                )
+dfp <- filter(df_plot,k>=0.49999)
+dfp <- mutate(dfp,
+              across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
+                matches("Uefeito|fit|er$"),~.x * (-1)
+                ),
+              efeito = gsub("Frag. total","Forest Loss and Frag.
+                            (FLF)",contraste) %>% 
+                gsub("Frag. per se","Frag. per se (FPS)",.) %>% 
+                gsub("Área per se","Loss of Forest Cover (LFC)",.)
+              )
 #--------------- gráficos ---------------------#
 ggplot2::theme_set(theme_bw())
 lp <- list()
@@ -797,16 +800,16 @@ lp$FPSeLFC <- dfp %>%
   pivot_wider(names_from = "efeito",
               values_from = "Uefeito") %>% 
   ggplot(aes(x=LFC,y=FPS)) +
+  geom_abline(intercept = 0,slope = 1,linetype="dotted",linewidth=0.5) +
+  geom_abline(intercept = 0,slope = -1,linetype="dotted",linewidth=0.5) +
   geom_hline(yintercept = 0,color="black") +
   geom_vline(xintercept = 0,color="black") +
   geom_point(aes(color=selecionado),size=2.5,alpha=0.5) +
   scale_color_manual("congruence-based\nselection",values=c("red","green")) +
   facet_grid(selecionado~p_class,
              labeller = labeller(p_class = label_parsed)) + #,nrow=1
-  labs(title="a)") +
   theme(legend.position = "bottom")
 lp$FLC <- dfp %>% 
-  select(-pert_class) %>% 
   filter(grepl("total",contraste)) %>% 
   mutate(efeito = "FLF",
          p_class = case_when(
@@ -833,16 +836,159 @@ lp$FLC <- dfp %>%
   geom_jitter() +
   scale_color_manual("congruence-based\nselection",values=c("red","green")) +
   facet_wrap(~p_class,nrow=1,labeller = label_parsed) +
-  labs(x="",y="FLF",title="b)") +
+  labs(x="",y="FLF") +
   theme(legend.position = "none")
 p_final <- patchwork::wrap_plots(lp,ncol=1,heights = c(2, 1))
-vcap <- "Comparison of vulnerability metrics for landscape effects across forest-cover classes and congruence-based plot selection. (a) Relationship between vulnerability to forest cover loss (LFC) and fragmentation per se (FPS) across forest plots. Each panel shows a scatterplot of log(U/U) for LFC (x-axis) against log(U/U) for FPS (y-axis). Columns correspond to classes of remaining forest cover (%FC = 100; 80 ≤ %FC < 100; 60 ≤ %FC < 80; 30 ≤ %FC < 60; %FC < 30), and rows separate plots according to whether the spatially explicit neutral model was supported by the congruence-based selection criterion (upper row: FALSE; lower row: TRUE). Points are coloured according to this selection (green = selected plots; red = non-selected plots). (b) Distribution of the total vulnerability to forest loss and fragmentation (FLF) across the same forest-cover classes. The y-axis shows log(U/U) for the FLF effect, while the x-axis separates plots according to congruence-based selection (TRUE vs FALSE). Points represent individual vulnerability estimates and boxplots summarize their distribution within each group. For each forest plot, ten values of log(U/U) were estimated corresponding to alternative dispersal scenarios explored in the spatially explicit neutral simulations. Across panels, the distribution of landscape-effect vulnerability is broadly similar between selected and non-selected plots, suggesting that non-selected plots represent a subsample of the same underlying distribution, although the number of plots differs between groups (67 selected vs. 38 non-selected)."
+vcap <- "Comparison of vulnerability metrics for landscape effects across forest-cover classes and congruence-based plot selection. (a) Relationship between vulnerability to forest cover loss (LFC) and fragmentation per se (FPS) across forest plots. Each panel shows a scatterplot of log(U/U) for LFC (x-axis) against log(U/U) for FPS (y-axis). The dotted lines represent identity lines (slopes of 1 and -1). Columns correspond to classes of remaining forest cover (%FC = 100; 80 ≤ %FC < 100; 60 ≤ %FC < 80; 30 ≤ %FC < 60; %FC < 30), and rows separate plots according to whether the spatially explicit neutral model was supported by the congruence-based selection criterion (upper row: FALSE; lower row: TRUE). Points are coloured according to this selection (green = selected plots; red = non-selected plots). (b) Distribution of the total vulnerability to forest loss and fragmentation (FLF) across the same forest-cover classes. The y-axis shows log(U/U) for the FLF effect, while the x-axis separates plots according to congruence-based selection (TRUE vs FALSE). Points represent individual vulnerability estimates and boxplots summarize their distribution within each group. For each forest plot, ten values of log(U/U) were estimated corresponding to alternative dispersal scenarios explored in the spatially explicit neutral simulations. Across panels, the distribution of landscape-effect vulnerability is broadly similar between selected and non-selected plots, suggesting that non-selected plots represent a subsample of the same underlying distribution, although the number of plots differs between groups (67 selected vs. 38 non-selected)."
 ```
-```{r fig-comp-cong-e-logUU, fig.cap=vcap,eval=TRUE,include=TRUE,fig.width=12,fig.height=10}
-p_final
+```{r fig-comp-cong-e-logUU, fig.cap=vcap,eval=TRUE,include=TRUE,fig.width=12,fig.height=8,cache=FALSE}
+library(patchwork)
+p_final +
+  plot_annotation(
+    title = "Vulnerability metrics show similar distributions in selected and non-selected plots",
+    tag_levels = 'a',
+    tag_prefix = '('
+  ) &
+  theme(
+    plot.tag = element_text(size = 14, face = "bold"),
+    plot.tag.position = c(0, 1),
+    plot.title = element_text(
+      size = 14,
+      face = "bold",
+      hjust = 0.5,  # centralizado
+      margin = margin(b = 8, t = 5)
+    )
+  )
 ```
 
 
+```{r caption do padrao de logUU para as nao selecionadas}
+vcap <- "Landscape effects on logU/U for forest plots where MNEE was not empirically validated — raw data without statistical model. Panels, axes, and graphical conventions follow those of Fig. 2 in the main text, except that no statistical model is fitted here. As in Fig. 2, each point represents a pairwise comparison between simulations under the indicated landscape effect (row titles), with points colored by the plot's percentage forest cover (%FC) and grouped by %FC classes (columns). Dispersal limitation (k) is shown on the x‑axis. Points from the same plot are connected by lines to preserve the identity of individual plots across dispersal scenarios. Boxplots summarize values for each k class, and horizontal lines on the y‑axis indicate the null reference derived from plots with 100% forest cover (amplitude and 90% interval). This figure includes only the 38 forest plots where simulated SADs were not classified as congruent with empirical SADs (see main text for selection criteria). It is presented here to allow visual comparison with the validated subset shown in Fig. 2 and to ensure transparency regarding the full dataset."
+```
+```{r fig-logUU-nonselected,fig.cap=vcap,fig.width=14,fig.height=10}
+# preparação
+library(metR)
+library(gridExtra)
+library(ggplot2)
+library(dplyr)
+## funções de ajuste e de plot
+source("source/2samples_testes.R")
+source("source/general_tools.R")
+source("source/GAMMtools.R")
+source("source/fig_tools.R")
+## dados
+#@ dados completos de logUU
+df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>% 
+  filter(k>=0.49999) %>% 
+  select(-contains("_z")) %>% 
+  pivot_longer(cols=contains("logratio"),
+               values_to="Uefeito",
+               names_to = "contraste") %>% 
+  mutate(contraste = gsub("_logratio","",contraste) %>% 
+           gsub("\\.","",.) %>% 
+           gsub("area","Área per se",.) %>% 
+           gsub("fragtotal","Frag. total",.) %>% 
+           gsub("fragperse","Frag. per se",.),
+         contraste = factor(contraste,
+                            levels=c("Frag. total",
+                                     "Frag. per se",
+                                     "Área per se"))
+         )
+#@ dados completos da congruência e os sítios selecionados para a interpretação
+df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") 
+df_selected <- df_ad %>% 
+  filter(k>=0.49999) %>%
+  group_by(SiteCode) %>% 
+  dplyr::summarise(selecionado = all(nSAD>=75))
+#@ df_p
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
+  vfilter <- dfi$lado_km[which.min(abs(1-dfi$lado_km))]
+  filter(dfi,lado_km==vfilter)
+}) %>% select(-c(Ntotal:S_obs))
+#@ df logUU apenas as parcelas selecionadas
+df_logUU_pk <- inner_join(filter(df_logUU,k>=0.499999),
+                          df_selected[df_selected$selecionado,]) %>% 
+  select(-c(selecionado))
+#
+df_plot <- inner_join(df_selected,select(df_logUU,-p)) %>% 
+  filter(!selecionado) %>% 
+  filter(k>=0.49999) %>% 
+  inner_join(.,select(df_p,SiteCode,p)) %>% 
+  select(-c(selecionado)) %>% 
+  mutate(
+    p_class = case_when(
+      p==1 ~ "%FC = 100",
+      p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
+      p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
+      p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
+      p<0.30 ~ "%FC < 30"),
+    p_class = factor(p_class,levels=c("%FC < 30",
+                                      "30 ≤ %FC < 60",
+                                      "60 ≤ %FC < 80",
+                                      "80 ≤ %FC < 100",
+                                      "%FC = 100"))
+  )
+df_ij <- df_plot %>% 
+    select(SiteCode,p_class) %>% 
+    distinct() %>% 
+    group_by(p_class) %>% 
+    tally() %>% 
+    mutate(label = paste0(p_class,", n = ",n)) %>% 
+    select(-n)
+df_ij$label <- factor(df_ij$label,
+                      levels=unique(df_ij$label))
+dfp <- inner_join(df_plot,df_ij)
+nsites <- filter(dfp,p_class=="%FC = 100") %>% pull(SiteCode) %>% unique %>% length()
+dfp <- mutate(dfp,
+              across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
+              matches("Uefeito|fit|er$"),~.x * (-1)
+              ),
+              efeito = gsub("Frag. total","Forest Loss and Frag. (FLF)",contraste) %>% 
+                gsub("Frag. per se","Frag. per se (FPS)",.) %>% 
+                gsub("Área per se","Loss of Forest Cover (LFC)",.)
+              )
+dfrange <- filter(dfp,p_class=="%FC = 100") %>% 
+  reframe(
+      names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
+      value = c(min(Uefeito), max(Uefeito),quantile(Uefeito,probs=0.05),quantile(Uefeito,probs=0.95))
+    )
+dfp <- filter(dfp,p_class!="%FC = 100")
+# ------------------------ gráfico ------------------ #
+vpos=c(0.80,0.3)
+vt = 12.5
+vts=0.90
+dfp %>% 
+  mutate(efeito = factor(efeito,
+                         levels=c("Forest Loss and Frag. (FLF)",
+                                  "Frag. per se (FPS)",
+                                  "Loss of Forest Cover (LFC)"))) %>% 
+  ggplot(aes(x=k,y=Uefeito)) +
+  geom_boxplot(aes(group=k),alpha=0.6) +
+  geom_hline(yintercept = 0,color="black") +
+  geom_hline(data = dfrange, aes(yintercept = value,linetype=names),
+             color="black",linewidth=0.5) +
+  scale_linetype_manual(name = paste0("%FC=100",", n = ",nsites),
+                        values=c("dotted","dashed")) +
+  # geom_smooth(aes(group=SiteCode),se = FALSE,alpha=0.5) +  
+  geom_line(aes(by=SiteCode),color="darkblue",alpha=0.85) +
+  geom_point(aes(color=p),alpha=0.85) +
+  scale_colour_gradient2("% FC",midpoint=0.5,
+                         low="red",
+                         mid = "yellow",
+                         high = "darkgreen") +
+  labs(x="Fraction of propagules dispersing locally (k)",y="logU/U",title="") +
+  facet_grid(efeito~label,scales="free") +
+  theme_classic() +
+  theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
+        text=element_text(size=vt,face="bold"),
+        legend.position = "bottom",
+        legend.direction="horizontal") +
+  guides(linetype = guide_legend(
+      title.theme = element_text(size = vt*vts, face = "bold")
+      )
+    )
+```
 
 
 
@@ -1003,7 +1149,7 @@ plot(img)
 ```{r caption parcelas nao selecionadas}
 vcap <- "Forest cover maps of the landscapes surrounding the selected plots. These maps were obtained from MapBiomas (Collection 6) and represent 4 km x 4 km subsets. Forest cover is shown in green, and non-forest cover in gray."
 ```
-```{r fig-mapas-naoselecionados, fig.cap=vcap,fig.width=12}
+```{r fig-mapas-naoselecionados, fig.cap=vcap,fig.width=12,fig.height=6}
 # knitr::include_graphics(path="selecionadasFALSE.jpeg")
 #file.exists("1_to_compile_dissertacao_EM_USO/selecionadas_FALSE.jpeg")
 img <- image_read("1_to_compile_dissertacao_EM_USO/selecionadasF.jpeg") %>% 
@@ -1056,7 +1202,7 @@ df_tabsel <- read_csv(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_con
 l_md <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/lmd_cong.rds")
 vname <- sapply(df_tabsel$modelo,f_antilabel)
 hgam <- l_md[[vname["M1"]]]
-appraise(hgam)
+gratia::appraise(hgam)
 ```
 
 # References
