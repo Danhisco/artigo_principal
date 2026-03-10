@@ -352,7 +352,6 @@ f_flextable(df_tabsel)
 df_plot <- inner_join(select(df_logUU,-p),df_selected) %>% 
   inner_join(.,df_p)
 saveRDS(df_plot,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_plot_p_diferencas_logUU_selecionado_e_nao.rds")
-
 dfp <- df_plot[df_plot$selecionado,] %>% 
   filter(contraste!="Frag. total",k>=0.49999) %>% 
   mutate(label=ifelse(contraste=="Frag. per se","FPS","LFC")) %>% 
@@ -379,8 +378,7 @@ dfp <- df_plot[df_plot$selecionado,] %>%
                           )
     )
 #--------------------- grafico -------------------#
-dfrange <- filter(dfp,
-                  p_class=="%FC = 100") %>% 
+dfrange <- filter(dfp,grepl("= 100",p_class)) %>% 
     reframe(
       names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
       value = c(min(diffABS), max(diffABS),quantile(diffABS,probs=0.05),quantile(diffABS,probs=0.95))
