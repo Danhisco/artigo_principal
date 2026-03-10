@@ -1813,3 +1813,78 @@ img_cropped <- image_crop(img, paste0("2723x", nova_altura, "+0+", porcao_remove
 plot <- img_to_gg(img_cropped)
 saveRDS(plot,"09_SI/RDS/3paisagenship.rds")
 
+#-------------------------------
+vcap <- "Os propostos efeitos da paisagem na biodiversidade remanescente representados por diagramas direcionados aciclícos (da sigla em inglês, DAG). Uma abordagem tradicional de avaliação de efeito são os experimentos, onde se criam grupos experimentais bem definidos, cujo contraste informa o efeito médio em investigação. Assim, para estimar os efeitos da paisagem propostos no debate, seria possível comparar a biodiversidade arbórea local (α) entre grupos experimentais (ou seja, em diferentes paisagens experimentais) para estimar o efeito médio de interesse. O efeito de perda e fragmentação de cobertura (PFC) poderia ser obtido pelo contraste entre a α em paisagens fragmentadas, tal como observado nos ecossistemas florestais, com um paisagem prístina, sem perda de cobertura florestal, dessa forma, informando o efeito combinado da perda e fragmentação. Já o efeito de fragmentação per se (FPS) pode ser obtido pelo contraste entre a paisagem fragmentada e a paisagem aglomerada, onde todo a cobertura remanescente está agregada ao redor da parcela amostrada, minimizando a complexidade espacial da paisagem. E por fim, o efeito isolado de perda de cobertura (PDC) pode ser obtido pelo contraste entre a paisagem aglomerada e a paisagem prístina, pois essas paisagens diferem apenas na quantidade de habitat remanescente. Como experimentos na escala da paisagem não tem viabilidade prática e ética, estimamos esses efeitos pelo contraste de simulações de um modelo mecanístico, que é uma primeira aproximação da conectividade - o mecanismo consensual para compreender os efeitos da paisagem. Nas parcelas florestais em que esse modelo mecanístico aproximou bem a α, foi possível calcular uma métrica funcional que descreve a mudança na vulnerabilidade da biodiversidade remanescente pela influência da mudança na paisagem (PFC, FPS e PDC). Essas métricas tiveram a escala espacial ajustada para cada cenário de limitação de dispersão explorado e são obtidas por parcela individual."
+library(ggplot2)
+library(dplyr)
+
+f_grafico <- \(h_caixas=2,
+               h_sinais=1,
+               w_alfa=2,
+               w_efeitos=3,
+               x13=-2.5,
+               x4=2.5,
+               x27=5,
+               x5=7.5,
+               yalfa=11.5,
+               yefeitos=3,
+               setabase_ajuste=7/6,
+               setafinal_ajuste=9/10,
+               ajustex_seta=0.96,
+               textsize=15,
+               signajust=0.1){
+  # Criar dataframe com as caixas
+  caixas <- data.frame(
+    id = c(1, 2, 3, 4, 5, 7, 8),
+    x = c(x13, x27, x13, x4, x5, 0, x27),
+    y = c(yalfa, yalfa, yefeitos, yefeitos, yefeitos, yefeitos, yefeitos),
+    texto = c("α", "α", "PFC", "FPS", "PDC", "=", "+"),
+    width = c(w_alfa, w_alfa, 
+              w_efeitos, w_efeitos, w_efeitos, 
+              h_sinais, h_sinais),
+    height = c(h_caixas, h_caixas, h_caixas, h_caixas, h_caixas, 
+               h_sinais, h_sinais),
+    tipo = c("caixa", "caixa", "caixa", "caixa", "caixa", "sinal", "sinal")
+  )
+  # Criar dataframe com as setas
+  setas <- data.frame(
+    x = c(x13, x4, x5),
+    y = yefeitos*setabase_ajuste,
+    xend = c(x13, x27*ajustex_seta, x27*(ajustex_seta^(-1)) ),
+    yend = yalfa*setafinal_ajuste,
+    tipo = "seta"
+  )
+  #ggplo2
+  ggplot() +
+    # Adicionar caixas (retângulos)
+    geom_rect(data = caixas,
+              aes(xmin = x - width/2, xmax = x + width/2,
+                  ymin = y - height/2, ymax = y + height/2),
+              fill = "lightblue", color = "black", linewidth = 0.8) +
+    # Adicionar texto dentro das caixas
+    geom_text(data = caixas,
+              aes(x = x, y = y + signajust, label = texto),
+              size = textsize, color = "black", fontface = "bold") +
+    # Adicionar setas
+    geom_segment(data = setas,
+                 aes(x = x, y = y, xend = xend, yend = yend),
+                 arrow = arrow(type = "closed", length = unit(0.3, "inches")),
+                 color = "black", linewidth = 1.2) +
+    # Ajustar escala e tema
+    scale_x_continuous(limits = c(-8, 13)) +
+    scale_y_continuous(limits = c(0, 14)) +
+    theme_void() +
+    theme(panel.background = element_rect(fill = "white"))
+}
+p <- f_grafico(setabase_ajuste = 8/6,signajust = 0.075,h_sinais=1.2)
+vpath <- "./1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/fig1_esquema_efeitos.png"
+ggsave(filename=vpath,
+       plot=p,
+       dpi=200,
+       width = 12,
+       height = 6,
+       bg = "white")
+img_obj <- image_read(vpath) %>% 
+  image_trim
+image_write(image = img_obj,
+            path = vpath)

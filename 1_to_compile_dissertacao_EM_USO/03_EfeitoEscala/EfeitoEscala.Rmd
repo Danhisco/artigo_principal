@@ -1,3 +1,8 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 
 ```{r setup3, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE)
@@ -162,7 +167,7 @@ l_p[[3]] <- df_sim |>
        y = "d",
        title = "c) 20 graus de dispersão")
 grid.arrange(grobs=l_p,nrow=1)
-save(l_p,file="./apendices/EfeitoEscala/Rdata/fig1_grobs.Rdata")
+save(l_p,file="1_to_compile_dissertacao_EM_USO/03_EfeitoEscala/Rdata/l_p.Rdata")
 ```
 
 <font size="1"> 

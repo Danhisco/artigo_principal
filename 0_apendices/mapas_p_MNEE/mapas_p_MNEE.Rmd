@@ -66,7 +66,10 @@ source("source/mapa_p_MNEE.R")
 
 ## 
 
-```{r exemplo apresentacao Felipe}
+```{r caption fig exemplo paisgens experimentais}
+vcap <- "Comparison of landscape spatial configurations for the neutral model simulations. For each forest plot, three landscape scenarios were generated based on the observed total forest cover: (left) Fragmented, representing the real-world spatial configuration derived from MapBiomas; (center) Clumped, where the total forest cover is preserved but aggregated into a single, continuous, and centered patch; and (right) Pristine, a baseline scenario where the entire landscape is assumed to be fully forested (100% forest cover). Colors follow a terrain-based scale where dark green represents the sampled plot area, yellow represents the remaining forest cover, and white represents the non-forest matrix. These scenarios allow for the decomposition of landscape effects into total forest cover loss (Pristine vs. Clumped) and fragmentation per se (Clumped vs. Fragmented)."
+```
+```{r fig-exemplo-paisagens-experimentais, fig.width=9, fig.height=3.5, fig.cap=vcap}
 f_image <- \(mat,title){
   image(mat,
         main=title,
@@ -75,21 +78,19 @@ f_image <- \(mat,title){
         col=terrain.colors(12,rev = TRUE))
 }
 #
-par(mfrow=c(1,3))
+par(mfrow = c(1, 3), mar = c(1, 1, 3, 1)) # Diminuir margens externas ajuda muito
 #
 path_name <- "dados/simulacao/MGipia1.txt"
 m <- read_table(file = path_name) |> as.matrix()
-f_image(mat=m,title="Contemporâneo")
+f_image(mat=m,title="Fragmented")
 # sem frag
 m_sem_frag <- f_nonFragLand(m)
-f_image(mat=m_sem_frag,title="Sem Isolamento Estrutural")
+f_image(mat=m_sem_frag,title="Clumped")
 # idealizado
 m_ideal <- m
 m_ideal[m_ideal==0] <- 1
-f_image(mat=m_ideal,title="Idealizado")
+f_image(mat=m_ideal,title="Pristine")
 ```
-
-
 
 
 ## Como a proporção de cobertura vegetal varia com a extensão espacial da paisagem?

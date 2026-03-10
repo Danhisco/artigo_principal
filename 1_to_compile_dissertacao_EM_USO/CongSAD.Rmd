@@ -569,6 +569,7 @@ saveRDS(l_dfpred,file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
 <!-- ## Interpretação pelo HGAM mais plausível -->
 
 ```{r criação da figCong, eval=FALSE,include=FALSE,echo=FALSE}
+l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
 library(hexbin)
 p <- l_dfpred$fixo_e_aleat %>% 
   ggplot(aes(x=k,y=nSAD)) +
@@ -994,7 +995,11 @@ dfp %>%
 
 # Supplementary Information
 
+Atlantic Forest political limits were sourced from IBGE 2021 (@IBGE), accessed March 2025.
+
 ## Forest cover maps of fragmented landscapes
+
+Forest cover maps were sourced from MapBiomas 6 collection (@mapbiomas).
 
 ```{r criacao dos mapas de cobertura florestal das parcelas selecionadas e das outras, echo=FALSE, eval=FALSE, include=FALSE}
 # df_p

@@ -1,43 +1,104 @@
 ---
-output: html_document
-editor_options: 
+title: "Complementary Methodology"
+author: ""
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+    pandoc_args: [
+      "--variable", "geometry=a4paper",
+      "--variable", "geometry=twoside",
+      "--variable", "geometry=top=3cm",
+      "--variable", "geometry=bottom=2cm",
+      "--variable", "geometry=inner=3cm",
+      "--variable", "geometry=outer=2cm"
+      ]
+  bookdown::word_document2: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+bibliography: resources/citations2.bib
+csl: "resources/ecology-letters.csl"
+editor_options:
   chunk_output_type: console
+header-includes:
+  - \usepackage{polyglossia}
+  - \setmainlanguage{english}
+  - \renewcommand{\contentsname}{Table of Contents}
+  - \usepackage{caption}
+  - \captionsetup[figure]{name=Figure, font=it}
+  - \captionsetup[table]{name=Table, font=it}
+  - \usepackage{tcolorbox}
+  - \usepackage{hyperref}
+  - \hypersetup{colorlinks=true, linkcolor=blue, citecolor=red, urlcolor=blue}
+  - \usepackage[brazilian,hyperpageref]{backref}
+  - \tcbuselibrary{breakable}
+  - \tcbuselibrary{skins}   
+  - \usepackage{lmodern}
+  - \usepackage{fontspec}
+  - \usepackage{threeparttable} 
+  - \usepackage{caption}
+  - \usepackage{setspace}
+  - \usepackage{etoolbox}
+  - \setmainfont{Times New Roman}
+  - \fontsize{12}{22}
+  - \setlength{\parindent}{1.5cm}
+  - \onehalfspacing
+  - \makeatletter
+  - \patchcmd{\@startsection}{\@afterindentfalse}{\@afterindenttrue}{}{}
+  - \makeatother
+  - \captionsetup[figure]{font=it}
+  - \captionsetup[table]{font=it}
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
 ---
 
-# Apêndice: Informação de Suporte (SI)  {-#SI}
+\appendix
+\renewcommand{\thefigure}{SI1.\arabic{figure}}
+\setcounter{figure}{0}
+\renewcommand{\thetable}{SI1.\arabic{table}}
+\setcounter{table}{0}
+\renewcommand{\thesection}{SI1.\arabic{section}}
+\setcounter{section}{0} 
+
+<!-- # Apêndice 1: Complementary Methodology  {-#SI} -->
 
 ```{r setup4,include=FALSE,eval=FALSE}
-# knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
-#                       fig.pos = "H", fig.show = "hold",dpi = 72)
-# # pacotes
-# # library(dagitty)
-# # library(ggdag)
-# library(gt)
-# library(gratia)
-# library(sads)
-# library(doMC)
-# # library(metR)
-# library(gridExtra)
-# library(ggplot2)
-# library(readr)
-# library(purrr)
-# library(stringr)
-# library(tidyr)
-# # library(MuMIn)
-# # library(AICcmodavg)
-# # library(insight)
-# library(bbmle)
-# library(DHARMa)
-# library(mgcv)
-# library(lme4)
-# library(data.table)
-# library(plyr)
-# library(dplyr)
-# library(flextable)
-# source("source/nameModel.R")
-# source("source/GAMMtools.R")
-# source("source/general_tools.R")
-# f_z <- function(x) (x-mean(x))/sd(x)
+knitr::opts_chunk$set(echo = FALSE,
+                      eval = TRUE,
+                      message = FALSE,
+                      warning = FALSE,
+                      cache=TRUE,
+                      fig.pos = "H", 
+                      fig.show = "hold",dpi = 72)
+# pacotes
+# library(dagitty)
+# library(ggdag)
+library(gt)
+library(gratia)
+library(sads)
+library(doMC)
+# library(metR)
+library(gridExtra)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(stringr)
+library(tidyr)
+# library(MuMIn)
+# library(AICcmodavg)
+# library(insight)
+library(bbmle)
+library(DHARMa)
+library(mgcv)
+library(lme4)
+library(data.table)
+library(plyr)
+library(dplyr)
+library(flextable)
+source("source/nameModel.R")
+source("source/GAMMtools.R")
+source("source/general_tools.R")
+f_z <- function(x) (x-mean(x))/sd(x)
 ```
 
 ```{r trackdown chunk SI, include=FALSE,eval=FALSE}
@@ -56,44 +117,16 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
-A delimitação política da Floresta Atlântica foi obtida do IBGE 2021 (@IBGE), acessado em março de 2025.
+# The features from the pre-selected forest plots   {.unnumbered}
 
-## Função de dispersão {.unnumbered}
-<p>
-No código a seguir há a inversa da Função de Distribuição Cumulativa (CDF) da distribuição de Laplace, que foi usada para gerar números aleatórios (em nosso caso, as distâncias de dispersão).
-</p>
+Of the forest inventories available in the TreeCo database, 109 met the initial selection criteria (Table \@ref(tab:dados-disponiveis)). The sampled plots were distributed between 31°S and 7°S latitude and 55°W and 35°W longitude (Fig. \@ref(fig:GE-sitios)a). Most inventories were conducted in areas classified as primary forests according to TreeCo (@de_lima_how_2015). Only two plots, identified as having very high disturbance, were removed from the analysis (Fig. \@ref(fig:GE-sitios)c), resulting in 107 valid inventories.
 
+These plots have a median sampled area of 1 ha, with a median of 1,540 individuals and 107 recorded species. Sampling years ranged from 1986 to 2016 (Fig. \@ref(fig:GE-sitios)b). All 107 plots were associated with forest cover maps derived from MapBiomas Collection 6 (@mapbiomas). However, in two cases, it was not possible to center the square plot within the landscape due to the spatial configuration of the forest cover, reducing the final set of sites to 105 plots (Fig. @ref(fig:sitios-removidos)). Detailed landscape maps for each plot are available in Figures SI3.5 and SI3.6.
 
-```{r codigo funcao de dispersao, echo=TRUE,include=TRUE,eval=FALSE}
-# código em C++
-int laplace(double sigma){
-    double u;
-    u = - genrand_real2() + 0.5;
-    return ((int) (-sigma/sqrt(2.) * sign(u)*log(1-2*abs(u))));
- }
+```{r caption tabela caracteriscas das parcelas}
+vcap <- "Characteristics of the forest plots used in the analysis. Columns represent: Plot Code (unique site identifier); Lat and Long (geographic coordinates); Plot Area (total sampled area in hectares); Inventory criteria (minimum inclusion limit for tree diameter, where DBH is Diameter at Breast Height and PBH is Perimeter at Breast Height); N (total number of individuals); S (observed species richness); Forest Type (phytophysiognomy classification); Pert. class (disturbance history); and Data Year (year of sampling or closest proxy). Disturbance classes represent a combination of intensity and time since the last major event: 'low' (no known disturbance in the last 80 years); 'medium' (moderate disturbance between 80 and 50 years ago); 'high' (medium to high disturbance within the last 50 years); and 'very high' (medium to high disturbance within the last 20 years)."
 ```
-
-<p>
-A distribuição de Laplace tem função de densidade descrita por:
-</p>
-
-
-$$ f(x) = \frac{1}{2b} \exp\left(-\frac{|x|}{b}\right) $$
-
-No código em C++ sigma representa o desvio-padrão ($\sigma$) da distribuição de Laplace:
-
-$$ \sigma = \sqrt{2} \cdot b $$
-$$ b = \frac{\sigma}{\sqrt{2}} $$
-
- 
-## Tabela com as características de todos os sítios selecionados no TreeCo (n=109)   {.unnumbered}
-
-```{r}
-vcap <- "Características dos sítios dentro do critério de inclusão. (a) PBH : 'perimeter at breast height' e DBH : 'diameter at breast height'. (b) FPIM : Formacao pioneira sob influencia marinha - demais tipos são o padrão TreeCo"
-```
-
 ```{r dados-disponiveis, tab.cap=vcap,warning=FALSE,message=FALSE,tab.width=12,results='asis'}
-library(kableExtra)
 select <- dplyr::select
 rename <- dplyr::rename
 df_dados_disponiveis <- read_csv(file = "~/Documentos/mestrado_Ecologia/artigo_principal/dados/df_dados_disponiveis.csv") %>% 
@@ -105,85 +138,54 @@ df_dados_disponiveis <- read_csv(file = "~/Documentos/mestrado_Ecologia/artigo_p
                                       "primary/secondary",
                                       "secondary",
                                       "capoeira"),
-                             labels=c("baixa",
-                                      "mediana",
-                                      "alta",
-                                      "altíssima")),
+                             labels=c("low",
+                                      "medium",
+                                      "high",
+                                      "very high")),
          forest_type_label = gsub("Formacao pioneira sob influencia marinha",
                                   "FPIM",
                                   forest_type) %>% 
            gsub("Contato ","",.),
-         year_bestProxy = gsub("2012_2013","2012-2013",year_bestProxy)
+         year_bestProxy = gsub("2012_2013","2012\n-2013",year_bestProxy)
          ) %>% 
   select(SiteCode, LAT, LONG, effort_ha, dbh_cutoff, Ntotal, S_obs, forest_type_label,
          pert_class, year_bestProxy)
 ##############################################
-df_dados_disponiveis %>%
-  # flextable() %>%
-  # bg(bg = "white",part = "all") %>%
-  # theme_vanilla() %>%
-  # set_header_labels(
-  #   SiteCode = "Código",
-  #   LAT = "lat",
-  #   LONG = "long",
-  #   effort_ha = "Área (ha)",
-  #   dbh_cutoff = "critério",
-  #   Ntotal = "N",
-  #   S_obs = "S",
-  #   forest_type_label = "floresta",
-  #   pert_class = "clas. pert.",
-  #   year_bestProxy = "ano"
-  #   ) %>%
-  # bold(part = "header") %>%
-  # colformat_num(digits = 2) %>%
-  # align(align = "center", part = "all") %>%
-  # flextable::footnote(i = 1, j = c(5,8),
-  #          value = flextable::as_paragraph(
-  #            c("PBH = 'perimeter at breast height' e DBH = 'diameter at breast height",
-  #              "FPIM = Formacao pioneira sob influencia marinha - demais tipos são o padrão TreeCo")),
-  #          ref_symbols = c("a", "b"),
-  #          part = "header", inline = TRUE) %>% 
-  # autofit() %>% 
-  # fontsize(size = 8, part = "all") %>%
-  # width(width = 0.4) %>%
-  # padding(padding = 2, part = "all") %>%
-  # set_table_properties(layout = "autofit")
-  rename(
-    "Código" = SiteCode,
-    "lat" = LAT,
-    "long" = LONG,
-    "Área (ha)" = effort_ha,
-    "critério" = dbh_cutoff,
-    "N" = Ntotal,
-    "S" = S_obs,
-    "floresta" = forest_type_label,
-    "clas. pert." = pert_class,
-    "ano" = year_bestProxy
-  ) %>%
-  kable(
-    format = "latex",
-    digits = 2,
-    align = "c",
-    booktabs = TRUE,
-    caption = "Tabela de dados disponíveis",
-    longtable = TRUE  # Esta opção é crucial para tabelas longas
-  ) %>%
-  kable_styling(
-    font_size = 8,
-    latex_options = c("hold_position", "repeat_header")  # Repete cabeçalho em cada página
-  ) #%>%
-  # footnote(
-  #   general = c(
-  #     "a PBH = 'perimeter at breast height' e DBH = 'diameter at breast height'",
-  #     "b FPIM = Formacao pioneira sob influencia marinha - demais tipos são o padrão TreeCo"
-  #   ),
-  #   general_title = "",
-  #   footnote_as_chunk = TRUE,
-  #   threeparttable = TRUE
-  # )
+library(flextable)
+library(dplyr)
+
+# 1. Preparar os dados (opcional, ou faça direto no set_header_labels)
+ft_desc <- flextable(df_dados_disponiveis) |>
+  set_header_labels(
+    SiteCode = "Plot Code",
+    LAT = "Lat",
+    LONG = "Long",
+    effort_ha = "Plot Area (ha)",
+    dbh_cutoff = "Inventory criteria",
+    Ntotal = "N",
+    S_obs = "S",
+    forest_type_label = "Forest Type",
+    pert_class = "Pert. class",
+    year_bestProxy = "Data Year"
+  ) |>
+  # 2. Configurações para o PDF não vazar
+  set_table_properties(layout = "fixed") |>
+  # Ajuste as larguras (em polegadas) para somar ~6.3
+  width(width = c(0.7, 0.5, 0.5, 0.6, 1.0, 0.4, 0.4, 0.7, 0.8, 0.7)) |>
+  fontsize(size = 9, part = "all") |> # Fonte menor para tabelas densas
+  align(align = "center", part = "header") |>
+  align(align = "left", part = "body") |>
+  bold(part = "header") |>
+  valign(valign = "top", part = "body") |>
+  set_caption(caption = vcap)
+
+# Visualizar
+ft_desc
 ```
 
-## Exemplo de deslocamento da parcela para a vizinhança imediata   {.unnumbered}
+# Geoprocessing
+
+## Example of plot relocation to the immediate neighborhood   {.unnumbered}
 
 ```{r deslocamento parcela, eval=FALSE, include=FALSE}
 library(purrr)
@@ -195,18 +197,49 @@ img_to_gg <- function(img) {
     draw_image(img) +  # Scale de 0.9 para margens
     theme_void()
 }
-img <- image_read("../0_apendices/mapas_p_MNEE/figuras/exemplo_redesenho_parcela.png") %>% 
+img <- image_read("0_apendices/mapas_p_MNEE/figuras/exemplo_redesenho_parcela.png") %>% 
   image_trim()
-plot <- img_to_gg(img)
-saveRDS(plot,"09_SI/RDS/deslocamento_parcela.rds")
+img_crop <- image_crop(img, "558x475+0+16")
+plot <- img_to_gg(img_crop)
+saveRDS(plot,"1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
 ```
-
+```{r caption deslocamento das parcelas}
+vcap <- "Example of plot displacement to the immediate neighborhood. Due to the spatial configuration of the forest cover, some plots could not be centered within the landscape. In these cases, the plot was relocated to the nearest available forest area within the same forest patch. In the figure, dark red represents the adjusted sampled plot area, yellow represents the remaining forest cover, and white represents the non-forest matrix."
+```
 ```{r desloc-parcela, fig.height=2,fig.width=4.5,fig.cap="Exemplo de deslocamenteo da parcela quadrada do centro da parcela para a vizinhança próxima."}
-plot <- readRDS("./09_SI/RDS/deslocamento_parcela.rds")
+plot <- readRDS("1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
 plot
 ```
 
+
 ## Exemplo das três paisagens hipotéticas   {.unnumbered}
+
+```{r caption fig exemplo paisgens experimentais}
+vcap <- "Comparison of landscape spatial configurations for the neutral model simulations. For each forest plot, three landscape scenarios were generated based on the observed total forest cover: (left) Fragmented, representing the real-world spatial configuration derived from MapBiomas; (center) Clumped, where the total forest cover is preserved but aggregated into a single, continuous, and centered patch; and (right) Pristine, a baseline scenario where the entire landscape is assumed to be fully forested (100% forest cover). Colors follow a terrain-based scale where dark green represents the sampled plot area, yellow represents the remaining forest cover, and white represents the non-forest matrix. These scenarios allow for the decomposition of landscape effects into total forest cover loss (Pristine vs. Clumped) and fragmentation per se (Clumped vs. Fragmented)."
+```
+```{r fig-exemplo-paisagens-experimentais, fig.width=9, fig.height=3.5, fig.cap=vcap}
+f_image <- \(mat,title){
+  image(mat,
+        main=title,
+        zlim=c(0,2),
+        axes=FALSE,
+        col=terrain.colors(12,rev = TRUE))
+}
+#
+par(mfrow = c(1, 3), mar = c(1, 1, 3, 1)) # Diminuir margens externas ajuda muito
+#
+path_name <- "dados/simulacao/MGipia1.txt"
+m <- read_table(file = path_name) |> as.matrix()
+f_image(mat=m,title="Fragmented")
+# sem frag
+m_sem_frag <- f_nonFragLand(m)
+f_image(mat=m_sem_frag,title="Clumped")
+# idealizado
+m_ideal <- m
+m_ideal[m_ideal==0] <- 1
+f_image(mat=m_ideal,title="Pristine")
+```
+
 
 ```{r criacao paisagens hipoteticas, eval=FALSE, include=FALSE}
 img <- image_read("../figuras/exemplo paisagens hipoteticas-1.png") %>% 
@@ -220,13 +253,10 @@ saveRDS(plot,"09_SI/RDS/3paisagenship.rds")
 ```
 
 
-
-
 ```{r paisagens-hipoteticas, fig.cap="As 3 paisagem hipotéticas em paisagens com lado de 4 km: na esquerda, paisagem fragmentada; no centro, paisagem aglomerada; na direita paisagem prístina. Detalhes no texto principal",dpi=200}
 plot <- readRDS("09_SI/RDS/3paisagenship.rds")
 plot
 ```
-
 
 ## Mapas de cobertura florestal dos sítios simulados (n=105)   {.unnumbered}
 
@@ -290,82 +320,52 @@ p <- readRDS(file="./09_SI/RDS/mapas_semquadrado.rds")
 grid.arrange(grobs=p,nrow=1)
 ```
 
-## Descrição estatística de logUi/Uj de cada efeito da paisagem  {.unnumbered#formulasloUU}
 
-```{r modelos usados para logUi/Uj, echo=TRUE,eval=FALSE}
-library(plyr)
-library(mgcv)
-f_gam <- \(dfi){
-  l_md <- list()
-  l_md[[1]] <- gam(
-    Uefeito ~ 
-      te(p,k,
-         bs=c("cr","cr"),m=2,
-         id = "fixo") +
-      s(k, SiteCode, 
-        bs = "fs", xt=list(bs = "cr"), m=2, 
-        id="efeito_sitio"),
-    data=dfi, method = "REML")
-  l_md[[2]] <- gam(
-    Uefeito ~ 
-      te(p,k,
-         bs=c("cr","cr"),m=2,
-         id = "fixo") +
-      s(SiteCode,bs = "re"),
-    data=dfi, method = "REML")
-  names(l_md) <- c("~ te(p,k) + s(k)|Site",
-                   "~ te(p,k) + 1|Site")
-  return(l_md)
-}
-# contraste = efeito da paisagem (frag. total, frag. per se e área per se)
-l_md <- dlply(df_logUU_pk,"contraste",f_gam)
+# Dispersal kernel {.unnumbered}
+
+<p>
+Dispersal distances were modeled using a Laplace kernel, which captures the canonical pattern expected for dispersal processes—high propagule density near the source and decreasing probability with distance. 
+Although no single statistical distribution universally describes real dispersal kernels, exponential-tailed functions provide a tractable and commonly used approximation of dispersal (REF 2017). In this study, the Laplace kernel was adopted as a parsimonious representation of neighbourhood influence, suitable for a first approximation of connectivity in the spatially explicit neutral simulations. 
+This formulation allowed us to explore uncertainty in dispersal limitation while maintaining a mechanistically interpretable representation of neighbourhood recruitment.
+</p>
+
+<p>
+Dispersal distances were sampled from a Laplace distribution. The probability density function is given by
+</p>
+
+
+$$ f(x) = \frac{1}{2b} \exp\left(-\frac{|x|}{b}\right) $$
+
+The dispersal kernel was parameterized using the scale parameter b. In our implementation, the distribution was defined in terms of its standard deviation ($\sigma$), such that:
+
+$$ \sigma = \sqrt{2} \cdot b $$
+and therefore
+
+$$ b = \frac{\sigma}{\sqrt{2}} $$
+Random dispersal distances were generated using the inverse cumulative distribution function (inverse-CDF) method. All simulations were implemented in C++ following the implementation described by James Rosindell et al. (2008; Appendix X).
+
+## Empirical Calibration
+
+For each plot, the parameter b was calibrated according to the local tree density and the predefined dispersal scenario (k). The parameter k represents the fraction of propagules that disperse locally (i.e., within the area of the parent and its immediate neighbors). The explored scenarios range from k = 0.99, representing severe dispersal limitation, to k = 0.05, representing high dispersal capability. As expected, calibrated b values increase as k and density decreases (Fig. X), reflecting the larger mean dispersal distances required to achieve lower local retention.
+
+```{r caption k calibration,eval=TRUE,include=TRUE,echo=FALSE}
+vcap <- "Empirical calibration of the dispersal scale parameter (b) across plots and dispersal scenarios (k). Each boxplot shows the distribution of calibrated b values for all forest plots under different dispersal scenarios (k). The parameter k represents the fraction of propagules dispersing locally, ranging from 0.99 (severe dispersal limitation) to 0.05 (high dispersal capability). For each scenario, b was calibrated based on the plot-specific tree density (individuals /plot area), as shown by the color gradient. The observed increase in b at lower k values reflects the larger standard deviation ($\sigma = \sqrt{2} \cdot b$) required to achieve greater dispersal distances. Each point represents an individual forest plot (n = 105)."
 ```
-
-
-## Diagnóstico dos modelos mais plausíveis para descrever a métrica funcional de cada efeito da paisagem  {.unnumbered}
-
-### Fragmentação total  {.unnumbered}
-
-```{r criacao diag FT, eval=FALSE, include=FALSE}
-img <- image_read("~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/figuras/diag_fratotal_te_pk.png") %>% 
-  image_trim() %>% 
-  image_resize("50%")
-plot <- img_to_gg(img)
-saveRDS(plot,file="09_SI/RDS/diag_FT.rds")
-```
-```{r diag-FT, fig.cap="Diagnóstico do modelo estatístico mais plausível usado para descreve o efeito de fragmentação total.",dpi=200}
-plot <- readRDS(file="./09_SI/RDS/diag_FT.rds")
-plot
-```
-
-
-### Fragmentação *per se*  {.unnumbered}
-
-```{r criacao diag FPS, eval=FALSE, include=FALSE, fig.cap="Diagnóstico do modelo estatístico mais plausível usado para descreve o efeito de fragmentação per se."}
-img <- image_read("~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/figuras/diag_fragperse_te_pk.png") %>% 
-  image_trim() %>% 
-  image_resize("75%")
-plot <- img_to_gg(img)
-saveRDS(plot,file="09_SI/RDS/diag_FPS.rds")
-```
-```{r diag-FPS}
-plot <- readRDS(file="./09_SI/RDS/diag_FPS.rds")
-plot
-```
-
-
-### Área *per se*  {.unnumbered}
-
-
-```{r criacao diag APS, eval=FALSE, include=FALSE}
-img <- image_read("~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/figuras/diag_areaperse_te_pk.png") %>% 
-  image_trim() %>% 
-  image_resize("50%")
-plot <- img_to_gg(img)
-saveRDS(plot,file="09_SI/RDS/diag_APS.rds")
-```
-```{r diag-APS,fig.cap="Diagnóstico do modelo estatístico mais plausível usado para descreve o efeito de área per se."}
-plot <- readRDS(file="./09_SI/RDS/diag_APS.rds")
-plot
+```{r fig-kcalib,fig.cap=vcap,fig.width=8,include=TRUE,eval=TRUE,echo=FALSE}
+# df dados da proporção de cobertura vegetal
+df_p <- read_csv("dados/df_p.csv")
+# df dados para simulação
+df_sim <- read_csv("dados/df_simulacao.csv") |> 
+  inner_join(x=df_p,by="SiteCode")
+df_sim |> 
+  mutate(DA = Ntotal / effort_ha) %>% 
+  ggplot(aes(x=k,y=d,group=k,color=DA)) +
+  geom_boxplot() +
+  geom_jitter(alpha=0.8) +
+  scale_x_continuous(breaks = unique(df_sim$k)) +
+  scale_color_viridis_c(name = expression(Density~(ind.ha^-1))) +
+  labs(x = "Dispersal scenario (k)",
+       y = "Calibrated parameter (b)") +
+  theme_bw()
 ```
 

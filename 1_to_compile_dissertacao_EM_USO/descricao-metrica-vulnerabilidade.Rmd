@@ -227,7 +227,7 @@ ft_models
 Model selection was conducted using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (@burnham1998practical). We additionally report deviance explained as a measure of relative model performance. Model fitting and comparison were performed using the mgcv (@wood2011) and bbmle packages in R. Model selection results for each landscape effect are presented in Table 1 in the main text.
 </p>
 
-<!-- ## Model Selection -->
+<!-- ## Model Evaluation -->
 
 ```{r ajuste per se dos modelos, eval=FALSE, include=FALSE, echo=FALSE}
 df_logUU_pk <- readRDS(file="dados/csv_SoE/rds/df_logUUpk.rds") %>% 
@@ -285,64 +285,9 @@ saveRDS(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_lo
 # write_csv(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv")
 ```
 
-```{r caption tab-selecao,echo=FALSE,include=TRUE,eval=TRUE}
-vcap <- "Model comparison among candidate hierarchical generalized additive models (HGAMs). ΔAICc represents the difference in AICc relative to the best-supported model. est. coef. denotes the effective degrees of freedom (model complexity). weight indicates Akaike weight. Dev. Exp. represents deviance explained."
-```
-```{r tab-selecaoCong,echo=FALSE,include=FALSE,eval=FALSE}
-df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds") %>% 
-  mutate(across(where(is.numeric), ~round(.x,2)),
-         Effect = case_when(
-           grepl("total",base) ~ "FLF",
-           grepl("Frag. per se",base) ~ "FPS",
-           grepl("Área",base) ~ "LFC",
-         )) %>% # ,modelo=f_label(modelo)
-  select(-base)
-library(flextable)
-f_label <- \(vn){
-  gsub("1","M4",vn) %>% 
-    gsub("s\\(k,by\\=land\\) \\+ \\(lat,long\\)","M1",.) %>% 
-    gsub("s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)","M3",.) %>% 
-    gsub("s\\(k,by\\=land\\)","M2",.)
-    
-}
-f_flextable <- \(dfi){
-  #
-  df_grouped <- as_grouped_data(dfi, groups = "Effect")
-  #
-  as_flextable(df_grouped) %>%
-    # Estética geral
-    bg(bg = "white", part = "all") %>%
-    theme_vanilla() %>% 
-    
-    # Rótulos (Note que 'base' agora é o nome da linha de cabeçalho)
-    set_header_labels(
-      modelo = "HGAM",
-      dAICc = "ΔAICc",
-      df = "est. coef.", # Dica: Geralmente 'df' é 'Degrees of Freedom', verifique se é isso mesmo
-      weight = "weight",
-      dev.expl = "Dev. Exp."
-    ) %>%
-    
-    # Destacar as linhas que são os nomes dos grupos (Frag. total, etc)
-    bold(i = ~ !is.na(Effect), bold = TRUE, part = "body") %>%
-    #as_italic(i = ~ !is.na(base), part = "body") %>%
-    bg(i = ~ !is.na(Effect), bg = "#F7F7F7", part = "body") %>% # Um cinza bem claro para separar
-    
-    # Formatação de números
-    colformat_double(digits = 2) %>% 
-    colformat_double(j = "weight", digits = 4) %>% # Weight geralmente precisa de mais casas
-    
-    # Alinhamento e legenda
-    align(align = "center", part = "all") %>% 
-    align(j = 1, align = "left", part = "body") %>% # Modelo alinhado à esquerda fica melhor
-    set_caption(caption = vcap) %>% 
-    
-    # Ajuste para caber no PDF (o que discutimos antes!)
-    set_table_properties(layout = "fixed") %>%
-    flextable::width(width = 6.5/5, unit = "in")
-}
-f_flextable(df_tabsel)
-```
+
+<!-- ## Model selection -->
+
 
 # Supplementary Information
 
