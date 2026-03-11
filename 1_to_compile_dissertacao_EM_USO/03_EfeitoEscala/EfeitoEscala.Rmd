@@ -1,8 +1,64 @@
 ---
-output: html_document
-editor_options: 
+title: "The effect of landscape scale in the demographic stability of the SENM"
+author: ""
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+    pandoc_args: [
+      "--variable", "geometry=a4paper",
+      "--variable", "geometry=twoside",
+      "--variable", "geometry=top=3cm",
+      "--variable", "geometry=bottom=2cm",
+      "--variable", "geometry=inner=3cm",
+      "--variable", "geometry=outer=2cm"
+      ]
+  bookdown::word_document2: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+bibliography: resources/citations2.bib
+csl: "resources/ecology-letters.csl"
+editor_options:
   chunk_output_type: console
+header-includes:
+  - \usepackage{polyglossia}
+  - \setmainlanguage{english}
+  - \renewcommand{\contentsname}{Table of Contents}
+  - \usepackage{caption}
+  - \captionsetup[figure]{name=Figure, font=it}
+  - \captionsetup[table]{name=Table, font=it}
+  - \usepackage{tcolorbox}
+  - \usepackage{hyperref}
+  - \hypersetup{colorlinks=true, linkcolor=blue, citecolor=red, urlcolor=blue}
+  - \usepackage[brazilian,hyperpageref]{backref}
+  - \tcbuselibrary{breakable}
+  - \tcbuselibrary{skins}   
+  - \usepackage{lmodern}
+  - \usepackage{fontspec}
+  - \usepackage{threeparttable} 
+  - \usepackage{caption}
+  - \usepackage{setspace}
+  - \usepackage{etoolbox}
+  - \setmainfont{Times New Roman}
+  - \fontsize{12}{22}
+  - \setlength{\parindent}{1.5cm}
+  - \onehalfspacing
+  - \makeatletter
+  - \patchcmd{\@startsection}{\@afterindentfalse}{\@afterindenttrue}{}{}
+  - \makeatother
+  - \captionsetup[figure]{font=it}
+  - \captionsetup[table]{font=it}
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
 ---
+
+\appendix
+\renewcommand{\thefigure}{SI3.\arabic{figure}}
+\setcounter{figure}{0}
+\renewcommand{\thetable}{SI3.\arabic{table}}
+\setcounter{table}{0}
+\renewcommand{\thesection}{SI3.\arabic{section}}
+\setcounter{section}{0} 
 
 ```{r setup3, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, tidy = FALSE, include = TRUE, warning = FALSE,cache = TRUE,message=FALSE,eval=TRUE)
@@ -128,7 +184,9 @@ download_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
               gpath = "mestrado/DaniloPMori-artigo_mestrado/")
 ```
 
-## Objetivo
+# Introduction
+
+
  
 O objetivo desse apêndice é descrever a relação dos graus de limitação de dispersão simulados e a extensão espacial da paisagem ao redor da parcela amostrada. A extensão espacial da paisagem determina a posição da paisagem local no gradiente de cobertura vegetal, para uma dada configuração espacial da cobertura florestal remanescente (figura 1a).
 Buscamos descrever qual escala mínima suficiente para simular os 20 graus de limitação de dispersão inicialmente propostos (Figura 1c). As simulações ocorrerm em 6 paisagens que diferem em sua extensão espacial com o lado variando entre 0.5 km e 16 km de lado (0.5, 1, 2,4 ,8,16). Sorteamos e selecionamos 36 sítios da base de dados completo (108 sítios). Esses 36 sítios incluem os extremos da riqueza de espécies e número de indivíduos observado e outros 32 sítios sorteados na amplitude de valores dessas duas variáveis (figura 1b). 
@@ -265,7 +323,7 @@ p <- df_p |>
 #        width = 17.2,
 #        height = 6.7)
 p
-save(p,file="./apendices/EfeitoEscala/Rdata/fig3_EfeitoEscalarObs.Rdata")
+# save(p,file="./apendices/EfeitoEscala/Rdata/fig3_EfeitoEscalarObs.Rdata")
 ```
 
 <font size="1"> 
@@ -369,9 +427,9 @@ df_plot |>
        y="avg U rate (Umed)",
        color="") +
   theme(legend.position = "top")
-ggsave("apendices/EfeitoEscala/figuras/fig5_SoE.png",
-       width = 10.2,
-       height = 6.7)
+# ggsave("apendices/EfeitoEscala/figuras/fig5_SoE.png",
+#        width = 10.2,
+#        height = 6.7)
 ```
 
 <font size="1"> 
@@ -419,10 +477,10 @@ p <- df_plot |>
        title="lado da paisagem que acumula a maior parte do efeito da escala") +
   theme_bw()
 p
-ggsave("apendices/EfeitoEscala/figuras/fig6_SoE_resumo.png",
-       width = 8.5,
-       height = 6.7)
-save(p,file="./apendices/EfeitoEscala/Rdata/fig6_resumo_EscalaAdequada_k.Rdata")
+# ggsave("apendices/EfeitoEscala/figuras/fig6_SoE_resumo.png",
+#        width = 8.5,
+#        height = 6.7)
+# save(p,file="./apendices/EfeitoEscala/Rdata/fig6_resumo_EscalaAdequada_k.Rdata")
 ```
   
 <font size="1"> 
@@ -467,9 +525,9 @@ l_p[[3]] <- df_plot |>
 grob <- grid.arrange(grobs=l_p,
                      layout_matrix = rbind(c(1,2),
                                            c(3,3)))
-ggsave("apendices/EfeitoEscala/figuras/figSI_diagnostico_md_SoE.png",grob,
-       width = 8.5,
-       height = 6.7)
+# ggsave("apendices/EfeitoEscala/figuras/figSI_diagnostico_md_SoE.png",grob,
+#        width = 8.5,
+#        height = 6.7)
 ```
 
 <font size="1"> 

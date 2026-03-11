@@ -62,7 +62,7 @@ knitr::opts_chunk$set(echo = FALSE,
                       cache=FALSE,
                       fig.pos = "H", 
                       fig.show = "hold",
-                      dpi = 72)
+                      dpi = 60)
 library(gratia)
 library(doMC)
 library(gridExtra)

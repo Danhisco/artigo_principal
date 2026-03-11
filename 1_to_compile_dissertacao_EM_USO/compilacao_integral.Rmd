@@ -56,7 +56,7 @@ header-includes:
 options(tinytex.verbose = TRUE)
 knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
                       fig.pos = "H", fig.show = "hold",
-                      dpi = 72)
+                      dpi = 60)
 library(gridExtra)
 library(ggplot2)
 library(readr)
