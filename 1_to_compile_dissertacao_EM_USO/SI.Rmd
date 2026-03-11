@@ -62,14 +62,15 @@ header-includes:
 
 <!-- # Apêndice 1: Complementary Methodology  {-#SI} -->
 
-```{r setup4,include=FALSE,eval=FALSE}
+```{r setup SI,include=TRUE,eval=TRUE,echo=FALSE,message = FALSE,warning = FALSE}
 knitr::opts_chunk$set(echo = FALSE,
                       eval = TRUE,
                       message = FALSE,
                       warning = FALSE,
                       cache=TRUE,
                       fig.pos = "H", 
-                      fig.show = "hold",dpi = 72)
+                      fig.show = "hold",
+                      dpi = 72)
 # pacotes
 # library(dagitty)
 # library(ggdag)
@@ -99,6 +100,16 @@ source("source/nameModel.R")
 source("source/GAMMtools.R")
 source("source/general_tools.R")
 f_z <- function(x) (x-mean(x))/sd(x)
+#-------- dados
+#- dados tif
+df_dados <- read_csv("dados/df_dados_disponiveis.csv") |> 
+  dplyr::select(SiteCode, effort_ha, Ntotal, S_obs) |> 
+  inner_join(data.frame(tif.path = list.files(path="dados/paisagens/paisagens_mapbiomas6_padronizadas",
+                                              pattern=".tif",full.names=T),
+                        SiteCode = str_extract(list.files(path="dados/paisagens/paisagens_mapbiomas6_padronizadas",
+                                                    pattern=".tif",full.names=T),
+                                               "(?<=as\\/).*?(?=.tif)")),
+             by = "SiteCode")
 ```
 
 ```{r trackdown chunk SI, include=FALSE,eval=FALSE}
@@ -127,6 +138,8 @@ These plots have a median sampled area of 1 ha, with a median of 1,540 individua
 vcap <- "Characteristics of the forest plots used in the analysis. Columns represent: Plot Code (unique site identifier); Lat and Long (geographic coordinates); Plot Area (total sampled area in hectares); Inventory criteria (minimum inclusion limit for tree diameter, where DBH is Diameter at Breast Height and PBH is Perimeter at Breast Height); N (total number of individuals); S (observed species richness); Forest Type (phytophysiognomy classification); Pert. class (disturbance history); and Data Year (year of sampling or closest proxy). Disturbance classes represent a combination of intensity and time since the last major event: 'low' (no known disturbance in the last 80 years); 'medium' (moderate disturbance between 80 and 50 years ago); 'high' (medium to high disturbance within the last 50 years); and 'very high' (medium to high disturbance within the last 20 years)."
 ```
 ```{r dados-disponiveis, tab.cap=vcap,warning=FALSE,message=FALSE,tab.width=12,results='asis'}
+library(readr)
+library(dplyr)
 select <- dplyr::select
 rename <- dplyr::rename
 df_dados_disponiveis <- read_csv(file = "~/Documentos/mestrado_Ecologia/artigo_principal/dados/df_dados_disponiveis.csv") %>% 
@@ -183,6 +196,10 @@ ft_desc <- flextable(df_dados_disponiveis) |>
 ft_desc
 ```
 
+## Forest Cover Map from MapBiomas6
+
+The processed forest cover map from MapBiomas collection 6 used in the simulations were displayed in figure SI3.5 e SI3.6.
+
 # Geoprocessing
 
 ## Example of plot relocation to the immediate neighborhood   {.unnumbered}
@@ -211,13 +228,27 @@ plot <- readRDS("1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.
 plot
 ```
 
+## Forest Fragments with Insufficient Area for Square Plots
 
-## Exemplo das três paisagens hipotéticas   {.unnumbered}
+```{r criacao sitios remov, eval=FALSE, include=FALSE}
+limg <- c("0_apendices/mapas_p_MNEE/figuras/sitio_removido.png",
+          "0_apendices/mapas_p_MNEE/figuras/sitio_removido_BAURUC.png")
+limg <- lapply(limg,img_to_gg)
+saveRDS(limg,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/mapas_semquadrado.rds")
+```
+```{r sitios-removidos, fig.cap="Detail of two forest fragments where it was not possible to allocate a square plot due to limited continuous habitat. The cutouts show that although there is forest in the surroundings, there is insufficient area to shift the plot to another position within the same fragment without exceeding the boundaries of the target habitat."}
+library(gridExtra)
+p <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/mapas_semquadrado.rds")
+grid.arrange(grobs=p,nrow=1)
+```
+
+## Exemple of the experimental landscape
 
 ```{r caption fig exemplo paisgens experimentais}
 vcap <- "Comparison of landscape spatial configurations for the neutral model simulations. For each forest plot, three landscape scenarios were generated based on the observed total forest cover: (left) Fragmented, representing the real-world spatial configuration derived from MapBiomas; (center) Clumped, where the total forest cover is preserved but aggregated into a single, continuous, and centered patch; and (right) Pristine, a baseline scenario where the entire landscape is assumed to be fully forested (100% forest cover). Colors follow a terrain-based scale where dark green represents the sampled plot area, yellow represents the remaining forest cover, and white represents the non-forest matrix. These scenarios allow for the decomposition of landscape effects into total forest cover loss (Pristine vs. Clumped) and fragmentation per se (Clumped vs. Fragmented)."
 ```
 ```{r fig-exemplo-paisagens-experimentais, fig.width=9, fig.height=3.5, fig.cap=vcap}
+source("source/mapa_p_MNEE.R")
 f_image <- \(mat,title){
   image(mat,
         main=title,
@@ -241,87 +272,7 @@ f_image(mat=m_ideal,title="Pristine")
 ```
 
 
-```{r criacao paisagens hipoteticas, eval=FALSE, include=FALSE}
-img <- image_read("../figuras/exemplo paisagens hipoteticas-1.png") %>% 
-  image_trim() 
-altura_original <- 790
-porcao_remover <- round(altura_original * 0.10)  # 20% de 790 = 158
-nova_altura <- altura_original - porcao_remover
-img_cropped <- image_crop(img, paste0("2723x", nova_altura, "+0+", porcao_remover))
-plot <- img_to_gg(img_cropped)
-saveRDS(plot,"09_SI/RDS/3paisagenship.rds")
-```
-
-
-```{r paisagens-hipoteticas, fig.cap="As 3 paisagem hipotéticas em paisagens com lado de 4 km: na esquerda, paisagem fragmentada; no centro, paisagem aglomerada; na direita paisagem prístina. Detalhes no texto principal",dpi=200}
-plot <- readRDS("09_SI/RDS/3paisagenship.rds")
-plot
-```
-
-## Mapas de cobertura florestal dos sítios simulados (n=105)   {.unnumbered}
-
-```{r criacao de plot_matrix, eval=FALSE,include=FALSE}
-img <- image_read("./0_apendices/EfeitoEscala/figuras/may2012_fi1a.png") %>% 
-  image_trim()
-combined_plot <- ggdraw() +
-  draw_image(img, x = 0, y = 0, width = 0.5, height = 1) +  # Metade esquerda
-  draw_plot(p, x = 0.5, y = 0, width = 0.5, height = 1)   # Metade direita
-saveRDS(object = combined_plot,file = "0_apendices/EfeitoEscala/figuras/fig2comparacao_resultados.rds")
-```
-```{r criação de plot mat sitios, eval=FALSE, include=FALSE}
-l_dfpred <- readRDS(file = "~/Documentos/mestrado_Ecologia/artigo_principal/dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
-vsites105 <- l_dfpred$fixo_e_aleat$SiteCode %>% unique
-#
-limg <- list.files(path="~/Documentos/mestrado_Ecologia/artigo_principal/dados/paisagens/png_land_sim",pattern = ".png",full.names = TRUE)
-names(limg) <- gsub("~/Documentos/mestrado_Ecologia/artigo_principal/dados/paisagens/png_land_sim/","",limg) %>% 
-  gsub(".png","",.)
-limg <- limg[vsites105]
-#
-library(purrr)
-library(magick)
-library(cowplot)
-library(ggplot2)
-img_to_gg <- function(img) {
-  ggdraw() + 
-    draw_image(img) +  # Scale de 0.9 para margens
-    theme_void()
-}
-# 
-plot_matrix <- map(limg, img_to_gg) %>%
-  plot_grid(
-    plotlist = .,
-    ncol = 10,  # 10 colunas
-    nrow = 11,   # 11 linhas
-    scale = 1  # Ajuste de espaçamento
-  )
-# 4. Exportar para PDF
-ggsave("1_to_compile_dissertacao_EM_USO/09_SI/RDS/plot_matrix_105parcelas.png", plot_matrix, 
-       width = 29.7, height = 21,  # Tamanho A4 em cm (landscape)
-       units = "cm", dpi = 400,bg = "white")
-saveRDS(plot_matrix,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/plot_matrix_105parcelas.rds")
-```
-
-```{r mapas-sitios,fig.width=15,fig.height=16,dpi=400,fig.cap="Mapas de cobertura florestal das parcelas simuladas nas paisagens com lado de 4 km, detalhes no texto principal."}
-# knitr::include_graphics("1_to_compile_dissertacao_EM_USO/09_SI/RDS/plot_matrix_105parcelas.png")
-plot_matrix <- readRDS(file = "./09_SI/RDS/plot_matrix_105parcelas.rds")
-plot_matrix
-```
-
-## Mapas em que não foi possível criar uma parcela quadrada   {.unnumbered}
-
-```{r criacao sitios remov, eval=FALSE, include=FALSE}
-limg <- c("0_apendices/mapas_p_MNEE/figuras/sitio_removido.png",
-          "0_apendices/mapas_p_MNEE/figuras/sitio_removido_BAURUC.png")
-limg <- lapply(limg,img_to_gg)
-saveRDS(limg,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/mapas_semquadrado.rds")
-```
-```{r sitios-removidos, fig.cap="Parcelas removidas, detalhes no texto principal"}
-p <- readRDS(file="./09_SI/RDS/mapas_semquadrado.rds")
-grid.arrange(grobs=p,nrow=1)
-```
-
-
-# Dispersal kernel {.unnumbered}
+# Dispersal kernel
 
 <p>
 Dispersal distances were modeled using a Laplace kernel, which captures the canonical pattern expected for dispersal processes—high propagule density near the source and decreasing probability with distance. 
@@ -344,14 +295,15 @@ and therefore
 $$ b = \frac{\sigma}{\sqrt{2}} $$
 Random dispersal distances were generated using the inverse cumulative distribution function (inverse-CDF) method. All simulations were implemented in C++ following the implementation described by James Rosindell et al. (2008; Appendix X).
 
-## Empirical Calibration
+## Empirical Calibration of the dispersal kernel
 
-For each plot, the parameter b was calibrated according to the local tree density and the predefined dispersal scenario (k). The parameter k represents the fraction of propagules that disperse locally (i.e., within the area of the parent and its immediate neighbors). The explored scenarios range from k = 0.99, representing severe dispersal limitation, to k = 0.05, representing high dispersal capability. As expected, calibrated b values increase as k and density decreases (Fig. X), reflecting the larger mean dispersal distances required to achieve lower local retention.
+For each plot, the parameter b was calibrated according to the local tree density and the predefined dispersal scenario (k). The parameter k represents the fraction of propagules that disperse locally (i.e., within the area of the parent and its immediate neighbors). The explored scenarios range from k = 0.99, representing severe dispersal limitation, to k = 0.05, representing high dispersal capability. As expected, calibrated b values increase as k and density decreases (Fig. \@ref(fig:fig-kcalib)), reflecting the larger mean dispersal distances required to achieve lower local retention.
 
 ```{r caption k calibration,eval=TRUE,include=TRUE,echo=FALSE}
-vcap <- "Empirical calibration of the dispersal scale parameter (b) across plots and dispersal scenarios (k). Each boxplot shows the distribution of calibrated b values for all forest plots under different dispersal scenarios (k). The parameter k represents the fraction of propagules dispersing locally, ranging from 0.99 (severe dispersal limitation) to 0.05 (high dispersal capability). For each scenario, b was calibrated based on the plot-specific tree density (individuals /plot area), as shown by the color gradient. The observed increase in b at lower k values reflects the larger standard deviation ($\sigma = \sqrt{2} \cdot b$) required to achieve greater dispersal distances. Each point represents an individual forest plot (n = 105)."
+vcap <- "Empirical calibration of the dispersal scale parameter (b) across plots and dispersal scenarios (k). Each boxplot shows the distribution of calibrated b values for all forest plots under different dispersal scenarios (k). The parameter k represents the fraction of propagules dispersing locally, ranging from 0.99 (severe dispersal limitation) to 0.05 (high dispersal capability). For each scenario, b was calibrated based on the plot-specific tree density (individuals /plot area), as shown by the color gradient. The observed increase in b at lower k values reflects the larger standard deviation required to achieve greater dispersal distances. Each point represents an individual forest plot (n = 105)."
 ```
-```{r fig-kcalib,fig.cap=vcap,fig.width=8,include=TRUE,eval=TRUE,echo=FALSE}
+```{r fig-kcalib,fig.cap=vcap,fig.width=8,include=TRUE,eval=TRUE,echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
 # df dados da proporção de cobertura vegetal
 df_p <- read_csv("dados/df_p.csv")
 # df dados para simulação
