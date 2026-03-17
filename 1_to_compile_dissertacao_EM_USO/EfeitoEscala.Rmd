@@ -176,13 +176,235 @@ upload_file(file="apendices/EfeitoEscala/EfeitoEscala.Rmd",
             hide_code = TRUE)
 # both overwrite: 
 # overwrite the current google drive file with the current Rmd:
-update_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
+update_file(file ="1_to_compile_dissertacao_EM_USO/EfeitoEscala.Rmd",
             gpath = "mestrado/DaniloPMori-artigo_mestrado/",
             hide_code = TRUE)
 # overwrite the current Rmd with the current google drive 
-download_file(file ="apendices/EfeitoEscala/EfeitoEscala.Rmd",
+download_file(file ="1_to_compile_dissertacao_EM_USO/EfeitoEscala.Rmd",
               gpath = "mestrado/DaniloPMori-artigo_mestrado/")
 ```
+
+
+# Context
+
+<p>
+In spatially explicit neutral simulations, dispersal processes can in principle be represented in landscapes of unlimited spatial extent (Rosindell et al. 2008). Under such conditions, the total effect of forest loss and fragmentation (FLF) could be estimated by comparing pristine and fragmented landscapes of approximately infinite size. However, decomposing this total effect into forest cover loss (LFC) and fragmentation per se (FPS) requires a third experimental landscape (REF). To enable this additive decomposition, we constructed a clumped landscape that preserves the forest cover of the fragmented landscape while minimizing spatial configuration effects. Generating this landscape requires defining a spatial extent around the focal plot within which remaining habitat is aggregated (Fig. SI2.1).
+</p>
+
+```{r criacao de fig SI21 e SI22, eval=FALSE, echo=FALSE, include=FALSE}
+df_p <- df_sim |>
+  filter(k==0.05) |> 
+  mutate(sorteio_site = ifelse(SiteCode %in% unique(df_Unull$SiteCode),"SoE","non SoE"),
+         DA = Ntotal / effort_ha)
+l_p <- list()
+l_p[[1]] <- df_p_extensoes |> filter(lado_km<=16.02) |> 
+  ggplot(aes(x=lado_km,y=p)) + 
+  # geom_point(alpha=0.2,size=0.2) +
+  geom_line(aes(group=SiteCode),linewidth=0.2,alpha=0.5) +
+  labs(
+    x = "Landscape scale (km)", 
+    y = "Forest cover (%FC)"
+    ) +
+  scale_y_continuous(breaks = seq(0,1,by=0.1)) +
+  coord_cartesian(expand = F) +
+  theme_light()
+l_p[[2]] <- df_p |> 
+  mutate(sorteio_site = ifelse(sorteio_site=="SoE","Selected","Non-selected")) %>% 
+  ggplot(aes(x=DA,y=S_obs,color=sorteio_site)) +
+  geom_point(alpha=0.8) +
+  scale_color_manual(values=c("black","red"),name="36 plots") +
+  labs(x="density (individuals / ha)", 
+       y="spp richness") +
+  theme(legend.position = "bottom")
+l_p[[3]] <- df_sim |> 
+  ggplot(aes(x=k,y=d,group=k)) +
+  geom_jitter() +
+  geom_boxplot() +
+  labs(x = "k",
+       y = "d",
+       title = "c) 20 graus de dispersão")
+grid.arrange(grobs=l_p,nrow=1)
+saveRDS(l_p,file="1_to_compile_dissertacao_EM_USO/03_EfeitoEscala/Rdata/l_p.rds")
+```
+
+
+```{r captio fig SI21,echo=FALSE,eval=TRUE,include=TRUE}
+vcap <- "Forest cover (%FC) as a function of landscape scale (km). Each line depicts the change in forest cover proportion across increasing spatial extents, calculated from empirical forest cover maps centered on each forest plot."
+```
+```{r figSI21,fig.cap=vcap,fig.width=8,fig.height=6}
+l_p <- readRDS(file="1_to_compile_dissertacao_EM_USO/03_EfeitoEscala/Rdata/l_p.rds")
+l_p[[1]]
+```
+
+
+<p>
+The spatial extent of the simulated landscape determines the pool of individuals that can potentially contribute propagules to the focal community (May et al. 2012). When the landscape is small relative to dispersal distances, propagule influx from surrounding populations is underestimated. Under these conditions, the parameter U must increase to compensate for the missing external propagule rain required to maintain the observed species richness under equilibrium. As the landscape extent increases, a larger pool of individuals becomes available as propagule sources. Consequently, the estimated value of U is expected to decrease until most potential propagule sources influencing the focal community are represented within the simulated landscape.
+</p>
+
+<p>
+We therefore identify the sufficient spatial scale as the minimum landscape extent at which estimates of U stabilize for a given dispersal scenario. At this scale, further increases in landscape extent would produce negligible changes in the estimated value of U, indicating that the simulated landscape adequately captures the propagule sources contributing to the focal community.
+</p>
+
+<p>
+To estimate this scale, we simulated the spatially explicit neutral model in pristine landscapes across six spatial extents. Landscape size was controlled by the simulated landscape's side length, ranging from 0.5 km to 16 km (0.5, 1, 2, 4, 8, and 16 km). We sampled 30 plots from the original set of 109 pre-selected plots, representing the observed range of individual density and species richness (Fig. S2.2). For each of the 20 dispersal scenarios and each spatial extent, the estimation of U was replicated 10 times.
+</p>
+
+
+```{r captio fig SI22,echo=FALSE,eval=TRUE,include=TRUE}
+vcap <- "Relationship between species richness and individual density for the 108 pre-selected plots. Sites highlighted in red represent the subset selected for evaluating landscape size effects on the U estimates."
+```
+```{r figSI22,fig.cap=vcap,fig.width=8,fig.height=6}
+l_p <- readRDS(file="1_to_compile_dissertacao_EM_USO/03_EfeitoEscala/Rdata/l_p.rds")
+l_p[[2]]
+```
+
+
+# Largest landscape scale approximates infinite-landscape estimates
+
+```{r caption fig SI23}
+vcap <- "Estimated U as a function of dispersal limitation (k) in pristine landscapes at the largest spatial extent (16 km) by forest plot. Semi-transparent black points represent replicate U estimates per study site and dispersal level, while red points indicate mean values. Red lines connect means across dispersal scenarios. Panel titles indicate the plot code, species richness, number of individuals, and plot area (ha), respectively."
+```
+```{r fig SI23, fig.cap=vcap,fig.width=10,fig.height=8}
+df_p <- df_Unull |> 
+  arrange(S_obs) |> 
+  mutate(label = paste(SiteCode,S_obs,Ntotal,effort_ha,sep = ", "))
+df_p$label <- factor(df_p$label,levels = unique(df_p$label))
+df_p |> 
+  ggplot(aes(x=k,y=U)) +
+  geom_point(alpha=0.4) +
+  stat_summary(geom = "line",fun.data = mean_se) +
+  stat_summary(geom = "pointrange",fun.data = mean_se, color="red",size=0.1) +
+  stat_summary(geom = "errorbar",fun.data = mean_se, color="red",linewidth=0.5) +
+  facet_wrap(~label, ncol=6,scales="free_y") +
+  theme_classic()
+```
+
+<p>
+Estimates of U obtained in the 16-km landscape reveal a consistent pattern across plots (Fig. S2.3). Under severe dispersal limitation, U remains at relatively low values, followed by a sharp increase as dispersal limitation relaxes to moderate levels. In these moderate dispersal scenarios, U reaches a higher plateau and subsequently decreases gradually as dispersal becomes extremely mild. Overall, increasing dispersal capability shifts U from a lower baseline to a higher plateau, followed by a gradual decline. Although this general pattern is shared among plots, there is substantial variation in the baseline values of U, in the magnitude of the plateau, and in the rate of decline at higher dispersal levels. When estimates from all plots are pooled, the overall pattern emerges as an asymmetric maximum at moderate dispersal limitation with a long tail toward extremely mild limitation (Fig. S2.4).
+</p>
+  
+<p>
+This pattern is consistent with theoretical expectations for infinite landscapes, where species richness reaches a minimum at intermediate dispersal limitation for a fixed U rate (May et al. 2012). Because species richness was fixed in our simulations and U was estimated to match this constraint, the relationship is inverted, producing a maximum of U at moderate dispersal limitation. The emergence of this expected inverse pattern indicates that simulations conducted in the largest landscape extent approximate the infinite-landscape condition.
+</p>
+
+
+```{r caption fisi24}
+vcap <- "Estimated U-rates obtained from simulations in the largest pristine landscape (16 km side length) as a function of dispersal limitation (k). Each point represents the median of 10 simulation replicates for a forest plot and k value; vertical bars indicate the 95% interquantile range. Light orange lines connect results within the same plot. The blue line represents a Gaussian spline smoothing model fitted across all simulated data points."
+```
+```{r figSI24. fig.cap=vcap,fig.height=,fig.width=}
+my_summary_fun <- function(x) {
+  data.frame(
+    y = median(x),
+    ymin = quantile(x, 0.025),
+    ymax = quantile(x, 0.975)
+  )
+}
+df_median <- group_by(df_Unull,SiteCode,k) %>% 
+  summarise(y=median(U))
+df_Unull |> 
+  ggplot(aes(x=k,y=U)) +
+  geom_line(data=df_median,aes(x=k,y=y,group=SiteCode),alpha=0.4,color="darkorange") +
+  stat_summary(aes(group=interaction(SiteCode,k)),fun.data = my_summary_fun, geom = "pointrange",alpha=0.5) +
+  geom_smooth(se=F,method = "gam") +
+  scale_x_continuous(expand = c(0.01,0),breaks = c(seq(0.05,0.95,0.05),0.99)) +
+  scale_y_continuous(expand = c(0.01,0)) +
+  theme_bw() +
+  labs(x="k",
+       y="U estimate") +
+  theme(plot.title = element_text(hjust = 0.5, size = 13))
+```
+
+# Spatial-scale dependence of U estimates across dispersal scenarios
+
+<p>
+At the extremes of the dispersal gradient (strong and weak dispersal limitation), estimates of U decreased with increasing landscape extent (Fig. S2.5). In contrast, under moderate dispersal limitation, variation across spatial scales was small relative to the variability observed among simulation replicates (Fig. S2.6). Because the sensitivity of U estimates to spatial extent varies across dispersal scenarios, we introduce a heuristic procedure to determine the minimum spatial scale required to simulate each scenario. 
+</p>
+
+
+```{r}
+library(data.table)
+f_prow <- \(dfi){
+  vl <- c(0.75,0.90)
+  names(vl) <- gsub("0\\.","l",vl)
+  lt <- lapply(vl,\(li) dfi[which.min(abs(li - dfi$Ucsum)),c("lado_km","Ucsum")] )
+  as.data.frame(lt)
+}
+dfp <- as.data.table(df_Usoe)
+dfp <- dfp[,f_prow(.SD),by=c("SiteCode","k")] %>% 
+  pivot_longer(cols = starts_with("l"),
+               names_to="limiar",
+               values_to = "L") %>% 
+  mutate(limiar=factor(limiar,
+                       levels = c("l75","l9","l95"),
+                       labels = c("l75","l90","l95"))
+         )
+
+dfp %>% 
+  ggplot(aes(x=limiar, y=L)) +
+  geom_boxplot() +
+  geom_jitter() +
+  facet_wrap(~k,ncol=5)
+```
+
+
+
+Fig SI2.5: U (y) ~ scale (x) * k (color) | Plot (faceta)
+ 
+
+? Fig SI2.6: U (y) ~ scale (x) * k (color) | Plot (faceta) ?
+
+
+## Heuristic procedure to determine the sufficient spatial scale
+
+<p>
+The heuristic procedure assumes that the total effect of spatial scale corresponds to the contrast between the smallest (0.5 km) and the largest (16 km) landscapes. The total effect is then decomposed into successive increments between adjacent spatial scales. The sufficient spatial scale is defined as the minimum landscape extent at which a specified proportion of the total scale effect is reached. In the main analysis, this proportion was set to 75%. Higher thresholds (95% and 99%) were examined in a sensitivity analysis reported at the end of this appendix.
+</p>
+
+<p>
+The mean value of U was estimated for each combination of dispersal and spatial scale scenarios. Mean estimates of U were obtained using a linear mixed-effects model. Observed species richness (S) and the number of individuals (N) were included as fixed effects after log and z transformation. Dispersal limitation (k) and spatial extent (L) were treated as categorical predictors, and plot identity was included as a random intercept. Model fitting was performed using the lmer function from the lme4 package (Bates et al. 2015). The selected model included both log-transformed richness and abundance as predictors (Table X).
+</p>
+
+For each dispersal scenario k, the total scale effect was defined as:
+
+$$
+\Delta U_{\text{total}}(k) = U(k, L_{\min}) - U(k, L_{\max})
+$$
+
+where $L_{\min}$ and $L_{\max}$ correspond to the smallest and largest landscape extents considered in the simulations (0.5 km and 16 km, respectively).
+
+The contribution of each spatial-scale increment was calculated as the difference in U between consecutive landscape extents:
+
+$$
+\Delta U_i(k) = U(k, L_i) - U(k, L_{i+1})
+$$
+
+The cumulative proportion of the total scale effect captured up to scale $L_i$ was then calculated as:
+
+$$
+C_i(k) = \frac{\sum_{j=1}^{i} \Delta U_j(k)}{\Delta U_{\text{total}}(k)}
+$$
+
+The sufficient spatial scale was defined as the smallest $L_i$ such that:
+
+$$
+C_i(k) \geq 0.75
+$$
+
+
+## Estimated sufficient spatial scale across dispersal scenarios
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------------
+
 
 # Introduction
 
