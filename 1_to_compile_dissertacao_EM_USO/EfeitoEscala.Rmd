@@ -246,7 +246,7 @@ We therefore identify the sufficient spatial scale as the minimum landscape exte
 </p>
 
 <p>
-To estimate this scale, we simulated the spatially explicit neutral model in pristine landscapes across six spatial extents. Landscape size was controlled by the simulated landscape's side length, ranging from 0.5 km to 16 km (0.5, 1, 2, 4, 8, and 16 km). We sampled 30 plots from the original set of 109 pre-selected plots, representing the observed range of individual density and species richness (Fig. S2.2). For each of the 20 dispersal scenarios and each spatial extent, the estimation of U was replicated 10 times.
+To estimate this scale, we simulated the spatially explicit neutral model in pristine landscapes across six spatial extents. Landscape size was controlled by the simulated landscape's side length, ranging from 0.5 km to 16 km (0.5, 1, 2, 4, 8, and 16 km). We sampled 36 plots from the original set of 109 pre-selected plots, representing the observed range of individual density and species richness (Fig. S2.2). For each of the 20 dispersal scenarios and each spatial extent, the estimation of U was replicated 10 times.
 </p>
 
 
@@ -320,46 +320,65 @@ df_Unull |>
 At the extremes of the dispersal gradient (strong and weak dispersal limitation), estimates of U decreased with increasing landscape extent (Fig. S2.5). In contrast, under moderate dispersal limitation, variation across spatial scales was small relative to the variability observed among simulation replicates (Fig. S2.6). Because the sensitivity of U estimates to spatial extent varies across dispersal scenarios, we introduce a heuristic procedure to determine the minimum spatial scale required to simulate each scenario. 
 </p>
 
-
-```{r}
-library(data.table)
-f_prow <- \(dfi){
-  vl <- c(0.75,0.90)
-  names(vl) <- gsub("0\\.","l",vl)
-  lt <- lapply(vl,\(li) dfi[which.min(abs(li - dfi$Ucsum)),c("lado_km","Ucsum")] )
-  as.data.frame(lt)
-}
-dfp <- as.data.table(df_Usoe)
-dfp <- dfp[,f_prow(.SD),by=c("SiteCode","k")] %>% 
-  pivot_longer(cols = starts_with("l"),
-               names_to="limiar",
-               values_to = "L") %>% 
-  mutate(limiar=factor(limiar,
-                       levels = c("l75","l9","l95"),
-                       labels = c("l75","l90","l95"))
-         )
-
-dfp %>% 
-  ggplot(aes(x=limiar, y=L)) +
-  geom_boxplot() +
-  geom_jitter() +
-  facet_wrap(~k,ncol=5)
-
-
-df_Usoe %>% 
-  ggplot(aes(x=lado_km,y=Umed, group=SiteCode)) +
-  geom_point(alpha=0.2) +
-  geom_line(alpha=0.2) +
-  # scale_y_continuous(transform = "log10") +
-  facet_wrap(~k,ncol=5) #,scales="free"
+```{r cap figUscale obs,eval=TRUE,include=TRUE}
+vcap <- ""
 ```
+```{r figUscale-obs,fig.cap=vcap,fig.height=12,fig.width=10,eval=TRUE,include=TRUE}
+dfp <- df_Usoe
+dfp$sideL <- factor(sprintf("%.1f", round(dfp$lado_km, 1)), 
+                   levels = sprintf("%.1f", 2^c(-1:4))) 
+dfp$k_factor <- factor(sprintf("%.2f", dfp$k), 
+                       levels = c(sprintf("%.2f", seq(0.05, 0.95, 0.05)), "0.99"))
+f_mean <- \(x){
+  vsd <- sd(x)
+  vavg <- mean(x)
+  data.frame(
+    y = vavg,
+    ymin = vavg + (-1.95 * vsd),
+    ymax = vavg + (1.95 * vsd)
+  )
+}
+f_median <- \(x){
+  data.frame(
+    y = median(x),
+    ymin = quantile(x, 0.025),
+    ymax = quantile(x, 0.975)
+  )
+}
 
-
-
-Fig SI2.5: U (y) ~ scale (x) * k (color) | Plot (faceta)
- 
-
-? Fig SI2.6: U (y) ~ scale (x) * k (color) | Plot (faceta) ?
+f_ggplot <- \(dfp,vmean="mean 95% IC",vmed="median 95% IQR"){
+  # s
+  vcols <- c("darkorange","darkgreen")
+  names(vcols) <- c(vmean,vmed)
+  df_avg <- dfp %>% 
+    group_by(sideL,k_factor) %>% 
+    summarise(y=mean(Umed))
+  # df_med <- dfp %>% 
+  #   group_by(sideL,k_factor) %>% summarise(y=quantile(Umed,0.5))
+  # graf
+  dfp %>% 
+    # setup
+    ggplot(aes(x=sideL,y=Umed)) +
+    geom_point(alpha=0.2,aes(group=SiteCode)) +
+    geom_line(alpha=0.2,aes(group=SiteCode)) +
+    # geom_boxplot(aes(group = sideL)) +
+    # media
+    stat_summary(aes(group=sideL,color=vmean),fun.data = f_mean, geom = "pointrange",alpha=1) +
+    geom_line(data=df_avg,aes(x=sideL,y=y,group=1,color=vmean),alpha=1) +
+    geom_smooth(method="gam") +
+    # scale_y_continuous(transform = "logit") +
+    # mediana
+    # stat_summary(aes(group=sideL,color=vmed),fun.data = f_median, geom = "pointrange",alpha=1) +
+    # geom_line(data=df_med,aes(x=sideL,y=y,group=1,color=vmed),alpha=1) +
+    # customização
+    scale_color_manual("",values=vcols) +
+    labs(x="side length (km)",y="average U") +
+    facet_wrap(~k_factor,ncol=5,scales="free") +
+    theme_classic() +
+    theme(legend.position = "bottom")
+}
+f_ggplot(dfp) 
+```
 
 
 ## Heuristic procedure to determine the sufficient spatial scale
@@ -399,6 +418,8 @@ C_i(k) \geq 0.75
 $$
 
 
+
+
 ## Estimated sufficient spatial scale across dispersal scenarios
 
 
@@ -408,7 +429,98 @@ $$
 
 
 
+# Additional Information
 
+```{r ajuste dos modelos e criação da tabela de seleção, eval=FALSE, include=FALSE }
+#-----------------------------------------------------------------------------
+#---------------------------- ajuste ----------------------------------------
+
+source("source/nameModel.R")
+source("source/GAMMtools.R")
+source("source/general_tools.R")
+f_nmmd <- \(mdi){
+  string <- unlist(find_predictors(mdi))
+  string <- gsub("log_","log(",string) %>% 
+    gsub("_z",")",.) %>% 
+    gsub("_obs","",.) %>% 
+    gsub("total","",.) %>% 
+    gsub("_factor","",.)
+  if(is_empty(string)) string <- "1"
+  paste0("~ ",paste(string,collapse = " * ")," + 1|plot")
+}
+#-----------------------------------------------------------------------------
+#---------------------------- ajuste ----------------------------------------
+
+l_md <- list()
+l_md[[1]] <- lmer(logit_Umed ~ log_S_obs_z * log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[2]] <- lmer(logit_Umed ~ log_S_obs_z * k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[3]] <- lmer(logit_Umed ~ log_Ntotal_z * k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[4]] <- lmer(logit_Umed ~ k_factor * lado_factor + (1|SiteCode),
+                  data=df_md)
+l_md[[5]] <- lmer(logit_Umed ~ 1 + (1|SiteCode),
+                  data=df_md)
+names(l_md) <-laply(l_md,f_nmmd)
+
+f_tabsel <- \(lmd){
+  #
+  l_names <- names(lmd)
+  #
+  df_aicctab <- AICctab(lmd,weights=TRUE,mnames = l_names) |> as.data.frame()
+  df_aicctab$modelo <- row.names(df_aicctab)
+  row.names(df_aicctab) <- NULL
+  #
+  library(MuMIn)
+  df_r2 <- ldply(lmd,r.squaredGLMM,.id="modelo")
+  #
+  inner_join(df_aicctab,df_r2) %>% 
+    relocate(modelo)
+  
+}
+#-----------------------------------------------------------------------------
+#---------------------- tabela de seleção ------------------------------------
+
+df_tabsel <- f_tabsel(l_md)
+#-----------------------------------------------------------------------------
+#---------------------------- ajuste ----------------------------------------
+library(emmeans)
+
+md_lik <- l_md[[df_tabsel$modelo[1]]]
+em_results <- emmeans(md_lik, ~ k_factor * lado_factor)
+# Extraindo os resultados
+df_plot <- as.data.frame(em_results)
+
+# Voltando para a escala original (Inversa do Logit = Plogis)
+df_plot$U_pred <- plogis(df_plot$emmean)
+df_plot$conf.low <- plogis(df_plot$asymp.LCL) # Nota: mudou para asymp porque o D.f. foi desativado
+df_plot$conf.high <- plogis(df_plot$asymp.UCL)
+df_plot$k_factor <- factor(df_plot$k_factor,
+                           levels = c(seq(0.05, 0.95, 0.05),"0.99"),
+                           labels = c(sprintf("%.2f", seq(0.05, 0.95, 0.05)), "0.99"))
+df_plot$k <- as.numeric(as.character(df_plot$k_factor))
+
+# avaliação
+df_plot %>% 
+  select(k_factor,k,
+         lado_factor,
+         U_pred:conf.high) %>% 
+  ggplot(aes(x=lado_factor,color=k)) +
+  geom_line(aes(y=U_pred,group=k_factor),linewidth=2) +
+  # geom_line(aes(y=conf.high,group=1),linewidth=1,color="red") +
+  # geom_line(aes(y=conf.low,group=1),linewidth=1,color="red") +
+  facet_wrap(~k_factor,ncol=5,scales="free")
+
+#salvamento
+saveRDS(df_plot,file=)
+saveRDS(df_tabsel,file=)
+```
+
+
+
+
+"Estimated marginal means for the interaction between dispersal limitation ($k$) and landscape scale were calculated using the emmeans package. To isolate these effects from local variations in community structure, species richness ($S$) and total abundance ($N$) were held constant at their respective mean values (z-score = 0) during prediction."
 
 
 ---------------------------------------------------------------------------------
