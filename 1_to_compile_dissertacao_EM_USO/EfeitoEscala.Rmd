@@ -500,24 +500,84 @@ df_plot$k_factor <- factor(df_plot$k_factor,
                            levels = c(seq(0.05, 0.95, 0.05),"0.99"),
                            labels = c(sprintf("%.2f", seq(0.05, 0.95, 0.05)), "0.99"))
 df_plot$k <- as.numeric(as.character(df_plot$k_factor))
+df_soe <- df_plot %>% 
+  select(k_factor,k,lado_factor,U_pred:conf.high) %>% 
+  inner_join(.,distinct(select(df_md,starts_with("lado")))) %>% 
+  rename(Umed=U_pred)
 
 # avaliação
-df_plot %>% 
-  select(k_factor,k,
-         lado_factor,
-         U_pred:conf.high) %>% 
-  ggplot(aes(x=lado_factor,color=k)) +
-  geom_line(aes(y=U_pred,group=k_factor),linewidth=2) +
-  # geom_line(aes(y=conf.high,group=1),linewidth=1,color="red") +
-  # geom_line(aes(y=conf.low,group=1),linewidth=1,color="red") +
+df_soe %>% 
+  ggplot(aes(x=lado_factor)) +
+  geom_point(aes(y=Umed,group=k_factor),size=2) +
+  geom_line(aes(y=Umed,group=k_factor),linewidth=2) +
+  geom_line(aes(y=conf.high,group=1),linewidth=1,color="red") +
+  geom_line(aes(y=conf.low,group=1),linewidth=1,color="red") +
   facet_wrap(~k_factor,ncol=5,scales="free")
 
 #salvamento
 saveRDS(df_plot,file=)
 saveRDS(df_tabsel,file=)
+saveRDS(df_soe,file=)
+#-----------------------------------------------------------------------------
+#-------------------------- U acumulado---------------------------------------
+#dfi <- df_soe %>% filter(k_factor=="0.65")
+f_lag.U <- function(dfi){
+  # diferença entre as escalas mais extremas
+  v_Udiff <- diff(dfi[round(dfi$lado_km,1) %in% c(0.5,16.0),"Umed"][2:1])
+  # diferença com lag 1
+  dfi$Ulag <- c(diff(dfi$Umed)*(-1),NA)/v_Udiff
+  #@ para os casos em que não houve redução com o aumento da escala.
+  dfi$Ulag0 <- dfi$Ulag
+  dfi$Ulag0[dfi$Ulag0<0] <- 0
+  # acumulo de distâncias entre escalas consecutivas
+  dfi$Ucsum <- cumsum(dfi$Ulag)
+  dfi$Ucsum0 <- cumsum(dfi$Ulag0)
+  return(dfi)
+}
+f_limiar <- \(dfi,vlim=c(0.75,0.90,0.95,0.99)){
+  # s
+  vcs <- na.omit(dfi$Ucsum)
+  if(vcs[5]!=1) vcs <- na.omit(dfi$Ucsum0 )
+  #
+  vind <- sapply(vlim,\(x){
+    vret <- vcs-x
+    which(vret==vret[vret>0][which.min(vret[vret>0])])
+    }
+  )
+  #
+  data.frame(
+    k_factor = dfi$k_factor[1],
+    limiar = vlim,
+    Li = dfi$lado_factor[vind],
+    EoS = vcs[vind]
+  )
+}
+df_tabsoe <- split(df_soe,df_soe$k_factor) %>% 
+  lapply(.,f_lag.U) %>% 
+  lapply(.,f_limiar) %>% 
+  do.call("rbind",.) %>% 
+  mutate(k=as.numeric(as.character(k_factor)))
+  
+df_tabsoe %>% 
+  ggplot(aes(x=k,y=Li,fill=EoS)) +
+  geom_point(size=6,shape=21) +
+  scale_fill_viridis_c("Accumulated scale effect (%)") +
+  facet_wrap(~limiar,nrow=1) +
+  theme_bw() +
+  theme(legend.position = "top")
+
+df_tabsoe %>% 
+  ggplot(aes(x=k,y=EoS)) +
+  geom_point(size=6,color="black") +
+  geom_text(size=5,aes(label=Li),color="white") +
+  #scale_fill_viridis_c("Accumulated scale effect (%)") +
+  facet_wrap(~limiar,nrow=1) +
+  theme_bw() +
+  theme(legend.position = "top")
+
 ```
 
-
+"Model selection revealed that community structure (species richness, $S$, and abundance, $N$) accounted for the majority of the explained variance in congruence ($R^2_m$ decreased from 0.96 to 0.20 upon their removal; Table X). To isolate the specific contribution of dispersal limitation ($k$) and landscape scale from this dominant influence of local community parameters, we calculated predicted mean $U$-rates from the full interaction model. We achieved this by marginalizing across $S$ and $N$ (i.e., fixing these covariates at their mean values, z-score = 0), thereby effectively controlling for the confounding effects of community-level variation."
 
 
 "Estimated marginal means for the interaction between dispersal limitation ($k$) and landscape scale were calculated using the emmeans package. To isolate these effects from local variations in community structure, species richness ($S$) and total abundance ($N$) were held constant at their respective mean values (z-score = 0) during prediction."
@@ -776,15 +836,28 @@ Para determinar quais os graus de limitação de dispersão são adequados avali
   
   
 ```{r f_lag.U, echo=F}
-f_lag.U <- function(df){
-  v_Udiff <- diff(range(df$Umed))
-  df$Ulag <- c((df$Umed[1:(nrow(df)-1)] - df$Umed[2:nrow(df)])/v_Udiff,NA)
-  df <- df |> mutate(Ulag0 = ifelse(Ulag<0,0,Ulag))
-  df$Ucsum <- cumsum(df$Ulag)
-  df$Ucsum0 <- cumsum(df$Ulag0)
-  df <- df |> mutate(Ucsum0 = ifelse(Ucsum0>1,1,Ucsum0))
-  return(df)
+f_lag.U <- function(dfi){
+  # diferença entre as escalas mais extremas
+  v_Udiff <- diff(dfi[round(dfi$lado_km,1) %in% c(0.5,16.0),"Umed"][2:1])
+  # diferença com lag 1
+  dfi$Ulag <- c(diff(dfi$Umed)*(-1),NA)/v_Udiff
+  #@ para os casos em que não houve redução com o aumento da escala.
+  dfi$Ulag0 <- dfi$Ulag
+  dfi$Ulag0[dfi$Ulag0<0] <- 0
+  # acumulo de distâncias entre escalas consecutivas
+  dfi$Ucsum <- cumsum(dfi$Ulag)
+  dfi$Ucsum0 <- cumsum(dfi$Ulag0)
+  
+  dfi <- dfi |> mutate(Ulag0 = ifelse(Ulag<0,0,Ulag))
+  dfi$Ucsum <- cumsum(dfi$Ulag)
+  dfi$Ucsum0 <- cumsum(dfi$Ulag0)
+  dfi <- dfi |> mutate(Ucsum0 = ifelse(Ucsum0>1,1,Ucsum0))
+  return(dfi)
 }
+
+dfi <- df_Usoe %>% select(SiteCode,k,lado_km,Umed)
+
+
 ```
 
 
