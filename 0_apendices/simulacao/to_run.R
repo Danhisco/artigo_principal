@@ -16,8 +16,9 @@ select <- dplyr::select
 # df_p
 df_p <- read_csv("dados/df_p.csv")
 #df_sítios simuláveis em MNEE contemporâneo
-v_site <- read_csv("dados/csv/resultados_MN/MNEE/cont/df_resultados.csv") |> 
-  pull(SiteCode) |> unique()
+l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
+vsites105 <- l_dfpred$fixo_e_aleat$SiteCode %>% unique
+
 # df_sim
 df_sim <- read_csv("dados/df_simulacao.csv") |> 
   dplyr::select(-tif.path) |> 
@@ -25,7 +26,7 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
     data.frame(txt.path = list.files(path="dados/simulacao",pattern=".txt")),
     SiteCode = str_extract(txt.path,".*?(?=.txt)")),
     by="SiteCode") |> 
-  filter(SiteCode %in% v_site) |>
+  filter(SiteCode %in% vsites105) |>
   left_join(df_p,by="SiteCode")
 df_sim <- cbind(df_sim,land_type = rep(x=c("ideal","non_frag"),each=nrow(df_sim)))
 df_simSAD <- inner_join(

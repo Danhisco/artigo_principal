@@ -145,6 +145,10 @@ for(i in 1:nrow(df)){
 
 ### Mapas de cobertura vegetal adequados para MNEE.
 
+Aqui é feita a criação das paisagens experimentais
+
+1o) é criado a paisagem de lado 16 km, com isso a resolução é ajustada usamdo f_landscape_for_MNEE
+
 
 ```{r rotina para processar as paisagens,eval=FALSE}
 # df_sitios <- anti_join(df_sitios_se,df_auditoria,by = "SiteCode")
