@@ -224,21 +224,32 @@ f_simMNEE <- function(df,
   }
   f_SoE <- \(m_maxext){
   #@ função que aplica a simulação em todas as escalas espacias suficientes
-    v_maxext <- max(df$SoE)
-    ldf <- split(df,df$SoE)
-    v_namesSoE <- abs(sort(desc(as.numeric(names(ldf)))))
-    v_namesSoE <- v_namesSoE[v_namesSoE!=v_maxext]
+    #----------------------------------------------------------------------
+    # função que recorta a paisagem ao redor
     crop_matrix <- \(mat, ratio){
       n <- nrow(mat)
       start_idx <- ceiling(n / 2 - n * ratio / 2 + 1)
       end_idx <- floor(n / 2 + n * ratio / 2)
       return(mat[start_idx:end_idx, start_idx:end_idx])
     }
-    # 1o ciclo com a paisagem máxima
-    f_singleext(mland = m_maxext,
-                dfi=ldf[[as.character(v_maxext)]])
+    
+    # setup
+    # maior paisagem segundo a estimativa no limiar escolhido
+    v_maxext <- max(df$Li)
+    # os cenários de dispersão segundo a regra estabelecida de Li: SoE
+    ldf <- split(df,df$SoE)
+    # Os valores de SoE dos cenários que serão simulados
+    vSoE <- abs(sort(desc(as.numeric(names(ldf)))))
+    # Remoção da maio escala espacial
+    v_namesSoE <- vSoE[vSoE!=v_maxext]
+    # caso s
+    if(length(vSoE)>1){
+      # 1o ciclo com a paisagem máxima
+      f_singleext(mland = m_maxext,
+                  dfi=ldf[[as.character(v_maxext)]])  
+    }
     # nas subescalas:
-    lapply(v_namesSoE,\(i){
+    lapply(vSoE,\(i){
       msim <- crop_matrix(m_maxext,
                           ratio=i/v_maxext)
       f_singleext(msim,
@@ -247,8 +258,8 @@ f_simMNEE <- function(df,
   }
   # rotina
   ## paisagem máxima
-  m_land <- read.table(df$txt.path[1]) |> as.matrix()
-  f_SoE(m_land)
+  m_maxext <- read.table(df$txt.path[1]) |> as.matrix()
+  f_SoE(m_maxext)
 }
 
 f_simMNEE2 <- \(df, 
