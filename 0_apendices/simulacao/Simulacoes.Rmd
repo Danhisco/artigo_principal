@@ -99,7 +99,7 @@ df_sim2 <- filter(df_sim,SiteCode%in%vsites)
 # f_d_ply <- function(dataframe) f_simMNEE(df = dataframe,general_path = v_gpath)
 # df <- df_sim2 %>% filter(SiteCode==vsite[2])
 registerDoMC(3)
-d_ply(df_sim2,"SiteCode",f_simMNEE,.parallel = TRUE)
+d_ply(df_sim,"SiteCode",f_simMNEE,.parallel = TRUE)
 ```
 
 
