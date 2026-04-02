@@ -20,7 +20,9 @@ knitr::opts_chunk$set(echo = FALSE,eval = FALSE,message = FALSE,warning = FALSE)
 # funções (deixar sempre em cima pois alguns carregam suas próprias bibliotecas)
 source("source/dinamica_coalescente.R")
 source("source/mapa_p_MNEE.R")
+source("source/2samples_testes.R")
 # pacotes #
+library(twosamples)
 library(doMC)
 library(gridExtra)
 library(ggplot2)
@@ -55,12 +57,12 @@ df_sim <- read_csv("dados/df_simulacao.csv") |>
   left_join(df_p,by="SiteCode") %>% 
   mutate(k=round(k,2))
 # df com o efeito de escalar
-vk_sim <- 0.01 
-vk_sim <- 0.49999999
+vk_sim <- 0.33333
+vk_sim <- 0.001 
 df_tabsoe <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_tabsoe.rds") %>%
   filter(limiar==0.75) %>% 
   mutate(Li=as.numeric(as.character(Li)),
-         SoE=ifelse(Li<=0.30,4,2))
+         SoE=ifelse(k<=0.30,4,2))
 # df com as informações para simulação
 df_sim <- inner_join(
   df_sim,
@@ -74,32 +76,88 @@ df_sim <- inner_join(
 
 ```{r função para simular as SADs para MNEE em diferentes tipos de paisagens}
 setwd("dados/simulacao")
-dfi <- df_sim %>% filter(SiteCode=="SPigua1")
-v_gpath <- ".."
-formals(f_simMNEE)$general_path <- v_gpath
-#
-lpaths <- list.files(path="../csv_SoE2",
-                     pattern = ".csv",
-                     recursive = TRUE,
-                     all.files = TRUE,
-                     full.names = TRUE,
-                     include.dirs = TRUE) %>% 
-  gsub("../csv_SoE2/","",.) %>% 
-  gsub("taxaU/MNEE/","",.) %>% 
-  gsub("SADs_neutras/MNEE/","",.) %>% 
-  gsub("cont|non_frag|ideal","",.) %>% 
-  gsub("/","",.) %>% 
-  gsub("_SoE2km.csv","",.)
-vsites2 <- table(lpaths)
-vsites_completos <- names(vsites2)[vsites2==6]
-#
-vsites <- setdiff(unique(df_sim$SiteCode),vsites_completos)
-# df_sim2 <- filter(df_sim,!SiteCode%in%df_lf$SiteCode)
-df_sim2 <- filter(df_sim,SiteCode%in%vsites)
-# f_d_ply <- function(dataframe) f_simMNEE(df = dataframe,general_path = v_gpath)
-# df <- df_sim2 %>% filter(SiteCode==vsite[2])
-registerDoMC(3)
+# dfi <- df_sim %>% filter(SiteCode=="SPigua1")
+formals(f_simMNEE)$general_path <- ".."
+formals(f_simMNEE)$pathU <- "/csv_SoE/taxaU/p_consolidar/"
+formals(f_simMNEE)$pathSAD <- "/csv_SoE/SADs_neutras/p_consolidar/"
+registerDoMC(12)
 d_ply(df_sim,"SiteCode",f_simMNEE,.parallel = TRUE)
+```
+
+
+```{r}
+setwd("../..")
+# remoção dos casos de SoE = 1km
+lf <- list.files(path="dados/csv_SoE",
+                 pattern="1km",
+                 full.names=TRUE,
+                 recursive=TRUE)
+file.remove(lf)
+# junção dos SoE=2km de MNEE e de p_consolidar
+## taxa U
+lf <- list.files(path="dados/csv_SoE/taxaU/MNEE",
+                 pattern="2km",
+                 full.names=TRUE,
+                 recursive=TRUE)
+f_juntar <- \(lfi){
+  dfx <- read_csv(lfi)
+  vpath <- gsub("MNEE","p_consolidar",lfi)
+  if(!file.exists(vpath)){
+    file.remove(lfi)
+  }else{
+    dfy <- read_csv(vpath)
+    dfr <- rbind(dfx,dfy) %>% 
+      arrange(k) %>% 
+      distinct()
+    write_csv(dfr,file=lfi)
+  }
+}
+lapply(lf,f_juntar)
+
+## SADs
+lf <- list.files(path="dados/csv_SoE/SADs_neutras/MNEE",
+                 pattern="2km",
+                 full.names=TRUE,
+                 recursive=TRUE)
+f_juntar <- \(lfi){
+  #
+  dfx <- read_csv(lfi)
+  vk <- unique(dfx$k)
+  if(length(vk)==17){
+    rm(dfx);gc()
+    return(NULL)
+  } 
+  #
+  vpath <- gsub("MNEE","p_consolidar",lfi)
+  if(!file.exists(vpath)){
+    file.remove(lfi)
+  }else{
+    dfy <- read_csv(vpath)
+    #
+    if(length(vk)==14) dfx <- filter(dfx,k<=0.31)
+    #
+    dfr <- rbind(dfx,dfy) %>% 
+      arrange(k) %>% 
+      distinct()
+    out <- write_csv(dfr,file=lfi)  
+    rm(out,dfr,vk,dfx,dfy);gc()
+  }
+}
+lapply(lf,f_juntar)
+for(i in seq_along(lf)){
+  f_juntar(lf[i])
+}
+```
+
+```{r}
+vx <- unique(dfx$k)
+vy <- unique(dfy$k)
+setdiff(vy,vx)
+vpath2 <- gsub("2","4",lfi)
+dfx4 <- read_csv(vpath2)
+vx4 <- unique(dfx4$k)
+
+
 ```
 
 
@@ -120,22 +178,8 @@ df_SADrep <- mutate(
                           "(?<=MNEE\\/).*?(?=\\/)"),
   SoE = str_extract(gsub("dados/csv_SoE","",SADrep.path),
                     "(?<=SoE).*?(?=km)"),
-  SADobs.path = paste0("dados/csv/SADs_observadas/",SiteCode,".csv")
+  SADobs.path = paste0("dados/csv_SoE/SADs_observadas/",SiteCode,".csv")
 )
-##################################################################
-############## Existem sítios sem simulação? #####################
-##################################################################
-# em simulação?
-resp <- FALSE
-if(resp){
-  vsite <- df_SADrep %>%
-    group_by(SiteCode,land_type) %>%
-    tally() %>%
-    filter(n!=3) %>%
-    pull(SiteCode)
-  df_SADrep %>% filter(SiteCode%in%vsite,land_type=="ideal")
-}
-##################################################################
 #
 # função que une os data frames de diferentes escaslas em um só e aplica o teste KS
 f_bySite_e_Land <- \(dfi,fname = "f_resultsMN",colname="SADrep.path"){
@@ -157,11 +201,11 @@ f_bySite_e_Land <- \(dfi,fname = "f_resultsMN",colname="SADrep.path"){
   #
   return(dfr)
 }
-registerDoMC(2)
+#registerDoMC(2)
 df_KSrep <- ddply(df_SADrep,
                   c("SiteCode","land_type"),
                   f_bySite_e_Land,
-                  .parallel = TRUE)
+                  .parallel = FALSE)
 write_csv(df_KSrep,file="dados/csv_SoE/df_KSrep.csv")
 ```
 

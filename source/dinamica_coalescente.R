@@ -164,6 +164,8 @@ f_simMNEE <- function(df,
                       U_rep=10,
                       SAD_rep=100,
                       Umin = 1.25e-06,
+                      pathU = "/csv_SoE/taxaU/p_consolidar/",
+                      pathSAD = "/csv_SoE/SADs_neutras/p_consolidar/",
                       general_path){
   #@ função aplicada em cada sítio de amostragem para simular U e SAD
   f_simUeSAD <- \(df_exti,
@@ -171,7 +173,7 @@ f_simMNEE <- function(df,
                   m_landi){
   #@ função que simula U e a SAD em função de um df ref e uma paisagem
     folder_path <- paste0(general_path,
-                          "/csv_SoE/taxaU/p_consolidar/",
+                          pathU,
                           land_type,
                           "/")
     path_df_simSAD <- paste0(folder_path,
@@ -193,7 +195,7 @@ f_simMNEE <- function(df,
       inner_join(x=df_exti,by="k")
     # SAD
     folder_path <- paste0(general_path,
-                          "/csv_SoE/SADs_neutras/p_consolidar/",
+                          pathSAD,
                           land_type,
                           "/",
                           df_exti$SiteCode[1],

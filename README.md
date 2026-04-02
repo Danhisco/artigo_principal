@@ -20,3 +20,10 @@ Uma vez que a maior escala espacial da paisagem foi de lado 4 km, as paisagens s
 
 Na sequência, as simulações são executadas em:
 - 0_apendices/simulacao/Simulacoes.Rmd
+Nesse arquivo é necessário hardcoding as decisões da escala adequada por cenário de dispersão,
+pois não decorrem diretamente da abordagem heurística e sim da interpretação desses resultados.
+Um dos outputs desse .Rmd é obtido pela aplicação da função f_simMNEE que aplica a cada parcela
+a estimativa da taxa U e das respectivas SADs para cada combinação de cenário de dispersão e
+cenário de dispersão.
+
+Após realizar as simulações é necessário fazer a comparação das SADs neutras com a SAD observada
