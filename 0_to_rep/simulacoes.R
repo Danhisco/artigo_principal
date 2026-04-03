@@ -139,48 +139,23 @@ write_csv(df_ad,file="dados/csv_SoE/df_congruencia_simulacao.csv")
 #------------------- Contraste logU/U ----------------------
 ##----------------------------------------------------------
 
-df_U %>% 
-  count(SiteCode,land_type,k) %>% 
-  group_by(land_type,k) %>% 
-  summarise(n_sites=length(unique(SiteCode))) %>% 
-  filter(n_sites==105)
-v_sites <- df_U %>% 
-  filter(k>0.19 & k<0.21) %>% 
-  pull(SiteCode) %>% 
-  unique
-lapply(df_Urep %>% 
-         filter(!SiteCode%in%v_sites) %>% 
-         pull(Urep.path),
-       file.remove)
-
-
-
-
 f_contraste_Umed <- \(dfUrep,
                       path_U="dados/csv/taxaU/df_U.csv",
-                      path_land_effect="dados/csv/taxaU/df_contrastes.csv",
-                      nobj_export=c("df_U","df_contrastes")){
+                      path_land_effect="dados/csv/taxaU/df_contrastes.csv"){
   df_U <- dfUrep |> select(SiteCode:k)
   df_U$Umed <- apply(select(df_Urep,-c(SiteCode:d)),1,mean)
   df_U$Usd <- apply(select(df_Urep,-c(SiteCode:d)),1,sd)
-  df_contrastes <- df_U |>  
-    pivot_wider(names_from = land_type, values_from = c(Umed,Usd)) |> 
+  df_contrastes <- df_U |>
+    distinct() %>% 
+    pivot_wider(names_from = "land_type", 
+                values_from = c("Umed","Usd")) |> 
     mutate(FLF = log( Umed_ideal / Umed_cont),
            FPS = log( Umed_non_frag / Umed_cont),
            LFC = log( Umed_ideal / Umed_non_frag)) |> 
     select(-starts_with("U"))
   write_csv(df_contrastes,file=path_land_effect)
   write_csv(df_U,file=path_U)
-  if(!is.null(nobj_export)){
-    sapply(nobj_export,\(i) assign(i,get(i),envir = .GlobalEnv))
-  }
 }
-
-
-
-
-
-
 # dados
 df_Urep <- mutate(
   data.frame(
@@ -203,13 +178,14 @@ f_bySite_e_Land <- \(dfi,
   do.call("rbind",l_csv)
 }
 registerDoMC(2)
-df_Urep <- ddply(df_Urep,c("SiteCode","land_type"),f_bySite_e_Land,.parallel = TRUE)
+df_Urep <- ddply(df_Urep,c("SiteCode","land_type"),
+                 f_bySite_e_Land,
+                 .parallel = TRUE)
 df_Urep <- relocate(df_Urep,SiteCode)
 # sumarização
-source("source/2samples_testes.R")
 f_contraste_Umed(df_Urep,
                  path_U = "dados/csv_SoE/taxaU/df_U.csv",
-                 path_land_effect <- "dados/csv_SoE/taxaU/df_contrastes.csv") # criação dos objetos endereçados acima
+                 path_land_effect <- "dados/csv_SoE/taxaU/df_contrastes.csv")
 
 #--------------------------------------------------------------------
 #------------------- Sumário paisagens hipotéticas ------------------
