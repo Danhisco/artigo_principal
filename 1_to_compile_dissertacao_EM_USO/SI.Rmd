@@ -242,7 +242,7 @@ p <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/mapas_semquadrado.r
 grid.arrange(grobs=p,nrow=1)
 ```
 
-## Exemple of the experimental landscape
+## Example of the experimental landscape
 
 ```{r caption fig exemplo paisgens experimentais}
 vcap <- "Comparison of landscape spatial configurations for the neutral model simulations. For each forest plot, three landscape scenarios were generated based on the observed total forest cover: (left) Fragmented, representing the real-world spatial configuration derived from MapBiomas; (center) Clumped, where the total forest cover is preserved but aggregated into a single, continuous, and centered patch; and (right) Pristine, a baseline scenario where the entire landscape is assumed to be fully forested (100% forest cover). Colors follow a terrain-based scale where dark green represents the sampled plot area, yellow represents the remaining forest cover, and white represents the non-forest matrix. These scenarios allow for the decomposition of landscape effects into total forest cover loss (Pristine vs. Clumped) and fragmentation per se (Clumped vs. Fragmented)."
@@ -299,6 +299,52 @@ Random dispersal distances were generated using the inverse cumulative distribut
 
 For each plot, the parameter b was calibrated according to the local tree density and the predefined dispersal scenario (k). The parameter k represents the fraction of propagules that disperse locally (i.e., within the area of the parent and its immediate neighbors). The explored scenarios range from k = 0.99, representing severe dispersal limitation, to k = 0.05, representing high dispersal capability. As expected, calibrated b values increase as k and density decreases (Fig. \@ref(fig:fig-kcalib)), reflecting the larger mean dispersal distances required to achieve lower local retention.
 
+
+
+```{r criacao cenarios de dispersao,eval=FALSE,include=FALSE,echo=FALSE}
+### Protocolo para obter o desvio padrão da função de dispersão
+
+# <p>1) função que retorna o quantil para um determinado percentil, pressuposto a função de dispersão parametrizada de uma determinada forma e que os sorteios são feitos de forma independentes em eixos ortogonais.</p> 
+# 
+# <p>2) função que retorna o desvio padrão adequado para que um determinado percentil (k) seja observado, uma vez que uma distância padronizada é informada.</p>
+# 
+# <p>3) para cada sítio, obter o desvio padrão adequado para aquele cenário de limitação de dispersão, k = proporção de propágulos que permanece até a vizinhança imediata (100 / sqrt(DA), a distância entre indivíduos no mapa de cobertura vegetal usado em MNEE)<p/>
+# 
+# <p> __Janela de Código 1__: funções usadas para obter o desvio padrão da função de dispersão (distribuição de Laplace) no qual k propágulos permanece até a distância imediata da planta progenitora (dist_0 = 100 / sqrt(densidade),  densidade = indivíduos / ha), k = proporção de propágulos que permanece até a vizinhança imediata c(0.99, seq(0.95,0.05,-0.05)). Na janela código apenas para a situação que pressupõe a distribuição de probabilidade de Laplace, em 'source/qkernel_e_sigkernel.R' o código completo. Funções de autoria de PI Prado, R M Coutinho e D P Mori.</p>
+
+library(rmutil)
+library(lamW)
+qkernel<- function(sigma, kernel, p, density=20852/50, npoints){
+    kernel <- match.arg(kernel, choices=c("normal","gaussian","laplace","uniform"))
+    d_ind_MA  <- 100/sqrt(density)
+    if(kernel=="laplace"){
+        b_laplace <- sigma / sqrt(2)
+        X_laplace <- d_ind_MA * round(rlaplace(npoints, s=b_laplace) / d_ind_MA)
+        Y_laplace <- d_ind_MA * round(rlaplace(npoints, s=b_laplace) / d_ind_MA)
+        dist_laplace <- sqrt(X_laplace^2+Y_laplace^2)
+        result <- quantile(dist_laplace, p)
+    }
+    return(unname(result))
+}
+sigkernel <- function(kernel = "laplace", p, density,
+                      npoints =1e5, sigma.min = 1e-6, sigma.max= 1e6){
+    distance <- 100/sqrt(density)
+    f1 <- function(x) distance - qkernel(x, kernel, p, density, npoints)
+    v_ <- uniroot( f1 , lower = sigma.min, upper = sigma.max)
+    return(v_$root)
+}
+
+# <p> __Janela de Código 2__: rotina para obter df_simulacao.csv </p>
+f_dfSimulacao <- function(df, k = c(0.99,seq(0.95,0.05,-0.05))){
+  f_sd.kernel <- function(proportion) sigkernel(p=proportion, density = df$Ntotal/df$effort_ha)
+  df_sd <- cbind(df,k)
+  df_sd$d <- sapply(k,f_sd.kernel)
+  return(df_sd)
+}
+registerDoMC(2)
+df_sim <- adply(df_dados,1,f_dfSimulacao,.parallel = TRUE)
+write_csv(df_sim,file = "dados/df_simulacao.csv")
+```
 ```{r caption k calibration,eval=TRUE,include=TRUE,echo=FALSE}
 vcap <- "Empirical calibration of the dispersal scale parameter (b) across plots and dispersal scenarios (k). Each boxplot shows the distribution of calibrated b values for all forest plots under different dispersal scenarios (k). The parameter k represents the fraction of propagules dispersing locally, ranging from 0.99 (severe dispersal limitation) to 0.05 (high dispersal capability). For each scenario, b was calibrated based on the plot-specific tree density (individuals /plot area), as shown by the color gradient. The observed increase in b at lower k values reflects the larger standard deviation required to achieve greater dispersal distances. Each point represents an individual forest plot (n = 105)."
 ```

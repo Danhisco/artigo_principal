@@ -44,6 +44,16 @@ source("source/qkernel_e_sigkernel.R")
 <p> __Janela de Código 1__: funções usadas para obter o desvio padrão da função de dispersão (distribuição de Laplace) no qual k propágulos permanece até a distância imediata da planta progenitora (dist_0 = 100 / sqrt(densidade),  densidade = indivíduos / ha), k = proporção de propágulos que permanece até a vizinhança imediata c(0.99, seq(0.95,0.05,-0.05)). Na janela código apenas para a situação que pressupõe a distribuição de probabilidade de Laplace, em 'source/qkernel_e_sigkernel.R' o código completo. Funções de autoria de PI Prado, R M Coutinho e D P Mori.</p>
 
 ```{r exibicao das funcoes usadas, echo=TRUE}
+### Protocolo para obter o desvio padrão da função de dispersão
+
+# <p>1) função que retorna o quantil para um determinado percentil, pressuposto a função de dispersão parametrizada de uma determinada forma e que os sorteios são feitos de forma independentes em eixos ortogonais.</p> 
+# 
+# <p>2) função que retorna o desvio padrão adequado para que um determinado percentil (k) seja observado, uma vez que uma distância padronizada é informada.</p>
+# 
+# <p>3) para cada sítio, obter o desvio padrão adequado para aquele cenário de limitação de dispersão, k = proporção de propágulos que permanece até a vizinhança imediata (100 / sqrt(DA), a distância entre indivíduos no mapa de cobertura vegetal usado em MNEE)<p/>
+# 
+# <p> __Janela de Código 1__: funções usadas para obter o desvio padrão da função de dispersão (distribuição de Laplace) no qual k propágulos permanece até a distância imediata da planta progenitora (dist_0 = 100 / sqrt(densidade),  densidade = indivíduos / ha), k = proporção de propágulos que permanece até a vizinhança imediata c(0.99, seq(0.95,0.05,-0.05)). Na janela código apenas para a situação que pressupõe a distribuição de probabilidade de Laplace, em 'source/qkernel_e_sigkernel.R' o código completo. Funções de autoria de PI Prado, R M Coutinho e D P Mori.</p>
+
 library(rmutil)
 library(lamW)
 qkernel<- function(sigma, kernel, p, density=20852/50, npoints){
@@ -65,11 +75,23 @@ sigkernel <- function(kernel = "laplace", p, density,
     v_ <- uniroot( f1 , lower = sigma.min, upper = sigma.max)
     return(v_$root)
 }
+
+# <p> __Janela de Código 2__: rotina para obter df_simulacao.csv </p>
+f_dfSimulacao <- function(df, k = c(0.99,seq(0.95,0.05,-0.05))){
+  f_sd.kernel <- function(proportion) sigkernel(p=proportion, density = df$Ntotal/df$effort_ha)
+  df_sd <- cbind(df,k)
+  df_sd$d <- sapply(k,f_sd.kernel)
+  return(df_sd)
+}
+registerDoMC(2)
+df_sim <- adply(df_dados,1,f_dfSimulacao,.parallel = TRUE)
+write_csv(df_sim,file = "dados/df_simulacao.csv")
 ```
 
 <p> __Janela de Código 2__: rotina para obter df_simulacao.csv </p>
 
 ```{r SD funcao de dispersao por sitio nos 20 cenarios de limitacao a dispersao, echo=TRUE}
+# <p> __Janela de Código 2__: rotina para obter df_simulacao.csv </p>
 f_dfSimulacao <- function(df, k = c(0.99,seq(0.95,0.05,-0.05))){
   f_sd.kernel <- function(proportion) sigkernel(p=proportion, density = df$Ntotal/df$effort_ha)
   df_sd <- cbind(df,k)
