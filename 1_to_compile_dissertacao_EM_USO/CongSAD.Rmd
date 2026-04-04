@@ -171,7 +171,7 @@ df_ad <- data.table::rbindlist(ldf)
 # inclusão das covariáveis
 df_ad <- inner_join(df_ad,df_dados_disponiveis)
 #
-# write_csv(df_ad,file="dados/csv_SoE/df_congruencia_simulacao.csv")
+write_csv(df_ad,file="dados/csv_SoE/df_congruencia_simulacao.csv")
 ```
 
 ```{r leitura de df_ad,echo=FALSE,include=TRUE,eval=TRUE}
@@ -588,9 +588,10 @@ p <- l_dfpred$fixo_e_aleat %>%
   scale_x_continuous(expand = c(0.01, 0)) +
   scale_y_continuous(expand = c(0.01, 0)) +
   labs(x="Fraction of propagules within the immediate neighborhood (k)",
-       y="Number of congruent simulated SADs (goodness-of-fit)",
-       title="Congruence of simulated SADs across experimental landscapes",
-       subtitle="Congruence is best described by connectivity and spatial proximity among forest plots") +
+       y="Number of congruent simulated SADs (goodness-of-fit)"#,
+       # title="Congruence of simulated SADs across experimental landscapes",
+       # subtitle="Congruence is best described by connectivity and spatial proximity among forest plots"
+       ) +
   facet_wrap(~land) +
   theme_bw() +
   theme(strip.text = element_text(size=12, #margin=margin(),
@@ -666,6 +667,7 @@ df_selected <- df_ad %>%
   filter(k>=0.49999) %>%
   group_by(SiteCode) %>% 
   dplyr::summarise(selecionado = all(nSAD>=75))
+vnum_selected <- sum(df_selected$selecionado)
 #-------------------------------------------------------------
 #--------------------------- gráficos ------------------------
 #-------------------------------------------------------------
@@ -674,6 +676,10 @@ lp <- list()
 dfp <- inner_join(df_selected,select(df_dados_disponiveis,-forest_succession))
 dfp <- inner_join(dfp, distinct( select(df_sim,-c(k:d)) ) )
 dfp <- inner_join(dfp, df_p)
+vcols <- c("green3","red")
+names(vcols) <- c(paste0("TRUE (",vnum_selected,")"),
+                  paste0("FALSE (",105-vnum_selected,")"))
+
 lp$cong_land <- select(dfp,-tif.path) %>% 
   mutate(across(c(effort_ha:S_obs),log)) %>% 
   pivot_longer(lat:p) %>% 
@@ -682,13 +688,13 @@ lp$cong_land <- select(dfp,-tif.path) %>%
                      labels=c("%FC","log(plot area)","log(N)","log(S)","lat","long")),
          legend_label = paste0(selecionado,
                               " (",
-                              ifelse(selecionado,67,105-67),
+                              ifelse(selecionado,vnum_selected,105-vnum_selected),
                               ")")
          ) %>% 
   ggplot(aes(x=legend_label,y=value,color=legend_label)) +
   geom_boxplot() +
   geom_jitter() +
-  scale_color_manual("selected",values=c("TRUE (67)"="green3","FALSE (38)"="red")) +
+  scale_color_manual("selected",values=vcols) +
   facet_wrap(~name,nrow=2,scales="free") +
   theme_bw() +
   labs(x="",y="") +
@@ -766,9 +772,9 @@ mutate <- dplyr::mutate
 df_plot <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_plot_p_diferencas_logUU_selecionado_e_nao.rds")
 dfp <- filter(df_plot,k>=0.49999)
 dfp <- mutate(dfp,
-              across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
-                matches("Uefeito|fit|er$"),~.x * (-1)
-                ),
+              # across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
+              #   matches("Uefeito|fit|er$"),~.x * (-1)
+              #   ),
               efeito = gsub("Frag. total","Forest Loss and Frag.
                             (FLF)",contraste) %>% 
                 gsub("Frag. per se","Frag. per se (FPS)",.) %>% 
@@ -942,9 +948,9 @@ df_ij$label <- factor(df_ij$label,
 dfp <- inner_join(df_plot,df_ij)
 nsites <- filter(dfp,p_class=="%FC = 100") %>% pull(SiteCode) %>% unique %>% length()
 dfp <- mutate(dfp,
-              across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
-              matches("Uefeito|fit|er$"),~.x * (-1)
-              ),
+              # across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
+              # matches("Uefeito|fit|er$"),~.x * (-1)
+              # ),
               efeito = gsub("Frag. total","Forest Loss and Frag. (FLF)",contraste) %>% 
                 gsub("Frag. per se","Frag. per se (FPS)",.) %>% 
                 gsub("Área per se","Loss of Forest Cover (LFC)",.)
@@ -979,7 +985,7 @@ dfp %>%
                          mid = "yellow",
                          high = "darkgreen") +
   labs(x="Fraction of propagules dispersing locally (k)",y="logU/U",title="") +
-  facet_grid(efeito~label,scales="free") +
+    facet_grid(efeito~label,scales="free") +
   theme_classic() +
   theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
         text=element_text(size=vt,face="bold"),

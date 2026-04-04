@@ -62,11 +62,9 @@ formals(f_simMNEE)$pathSAD <- "/csv_SoE/SADs_neutras/p_consolidar/"
 registerDoMC(12)
 d_ply(df_sim,"SiteCode",f_simMNEE,.parallel = TRUE)
 
-
 #-----------------------------------------------------------------------
 #-----------------------------  COMPARAÇÃO SADS-------------------------
 #-----------------------------------------------------------------------
-
 
 setwd("../..")
 df_SADrep <- mutate(
@@ -84,6 +82,7 @@ df_SADrep <- mutate(
                     "(?<=SoE).*?(?=km)"),
   SADobs.path = paste0("dados/csv_SoE/SADs_observadas/",SiteCode,".csv")
 )
+
 #
 # função que une os data frames de diferentes escaslas em um só e aplica o teste KS
 f_bySite_e_Land <- \(dfi,fname = "f_resultsMN",colname="SADrep.path"){
@@ -112,27 +111,28 @@ df_KSrep <- ddply(df_SADrep,
                   .parallel = FALSE)
 write_csv(df_KSrep,file="dados/csv_SoE/df_KSrep.csv")
 
+
 #--------------------------------------------------------------
 #------------- Sumário dos resultados do teste KS -------------
 #--------------------------------------------------------------
 
-f_summarise_SAD_MNEE <- \(df){
-  #@ df: df por site, k, e  land_type
-  #@ e.g. ddply(.,c("SiteCode","k","land_type"))
-  cbind(df[1,c("SiteCode","k","land_type")],with(df,data.frame(
-    nCongKS = sum(p.KS>0.05),
-    Smed = mean(S),
-    Ssd = sd(S),
-    Smin = min(S),
-    Smax = max(S)))
-  )
-}
-df_KSrep <- read_csv(file="dados/csv_SoE/df_KSrep.csv")
-registerDoMC(3)
-df_ad <- ddply(df_KSrep,c("SiteCode","k","land_type"),
-               f_summarise_SAD_MNEE,
-               .parallel = TRUE)
-write_csv(df_ad,file="dados/csv_SoE/df_congruencia_simulacao.csv")
+# f_summarise_SAD_MNEE <- \(df){
+#   #@ df: df por site, k, e  land_type
+#   #@ e.g. ddply(.,c("SiteCode","k","land_type"))
+#   cbind(df[1,c("SiteCode","k","land_type")],with(df,data.frame(
+#     nSAD = sum(p.KS>0.05),
+#     Smed = mean(S),
+#     Ssd = sd(S),
+#     Smin = min(S),
+#     Smax = max(S)))
+#   )
+# }
+# df_KSrep <- read_csv(file="dados/csv_SoE/df_KSrep.csv")
+# registerDoMC(3)
+# df_ad <- ddply(df_KSrep,c("SiteCode","k","land_type"),
+#                f_summarise_SAD_MNEE,
+#                .parallel = TRUE)
+# write_csv(df_ad,file="dados/csv_SoE/df_congruencia_simulacao.csv")
 
 
 ##----------------------------------------------------------
@@ -186,9 +186,3 @@ df_Urep <- relocate(df_Urep,SiteCode)
 f_contraste_Umed(df_Urep,
                  path_U = "dados/csv_SoE/taxaU/df_U.csv",
                  path_land_effect <- "dados/csv_SoE/taxaU/df_contrastes.csv")
-
-#--------------------------------------------------------------------
-#------------------- Sumário paisagens hipotéticas ------------------
-#--------------------------------------------------------------------
-
-source("0_apendices/analise_dados/sumario_paisagens_hipoteticas.R")
