@@ -631,7 +631,6 @@ df_sim <- read_csv("dados/df_simulacao.csv") %>%
   filter(SiteCode %in% vsites105)
 # quem são os não intepretados?
 df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") 
-summarise <- 
 df_selected <- df_ad %>% 
   filter(k>=0.49999) %>%
   group_by(SiteCode) %>% 

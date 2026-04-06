@@ -101,20 +101,26 @@ f_antilabel <- \(vn){
 select <- dplyr::select
 ## dados
 #@ dados completos de logUU
-df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>% 
-  select(-contains("_z")) %>% 
-  pivot_longer(cols=contains("logratio"),
-               values_to="Uefeito",
-               names_to = "contraste") %>% 
-  mutate(contraste = gsub("_logratio","",contraste) %>% 
-           gsub("\\.","",.) %>% 
-           gsub("area","Área per se",.) %>% 
-           gsub("fragtotal","Frag. total",.) %>% 
-           gsub("fragperse","Frag. per se",.),
-         contraste = factor(contraste,
-                            levels=c("Frag. total",
-                                     "Frag. per se",
-                                     "Área per se")))
+# df_logUU <- readRDS(file="dados/csv_SoE/df_contrastes_z_e_padraor.rds") %>% 
+#   select(-contains("_z")) %>% 
+#   pivot_longer(cols=contains("logratio"),
+#                values_to="Uefeito",
+#                names_to = "contraste") %>% 
+#   mutate(contraste = gsub("_logratio","",contraste) %>% 
+#            gsub("\\.","",.) %>% 
+#            gsub("area","Área per se",.) %>% 
+#            gsub("fragtotal","Frag. total",.) %>% 
+#            gsub("fragperse","Frag. per se",.),
+#          contraste = factor(contraste,
+#                             levels=c("Frag. total",
+#                                      "Frag. per se",
+#                                      "Área per se")))
+df_logUU <- read_csv("dados/csv_SoE/taxaU/df_contrastes.csv") %>% 
+  pivot_longer(cols = FLF:LFC,
+               names_to = "contraste",
+               values_to = "Uefeito") %>% 
+  arrange(SiteCode,k)
+
 #@ dados completos da congruência e os sítios selecionados para a interpretação
 df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") 
 df_selected <- df_ad %>% 
@@ -124,14 +130,43 @@ df_selected <- df_ad %>%
 #@ df_p
 df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
 df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
-  vfilter <- dfi$lado_km[which.min(abs(1-dfi$lado_km))]
+  vfilter <- dfi$lado_km[which.min(abs(2-dfi$lado_km))]
   filter(dfi,lado_km==vfilter)
 }) %>% select(-c(Ntotal:S_obs))
 #@ df logUU apenas as parcelas selecionadas
-df_logUU_pk <- inner_join(filter(df_logUU,k>=0.499999),
-                          df_selected[df_selected$selecionado,]) %>% 
-  select(-c(selecionado))
+df_logUU_pk <- inner_join(filter(df_logUU,k>=0.499999),df_selected[df_selected$selecionado,]) %>% 
+  inner_join(df_p) %>% 
+  select(-c(selecionado,lado_km)) %>% 
+  mutate(across(where(is.character),factor),
+         p_class = case_when(
+           p==1 ~ "%FC = 100",
+           p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
+           p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
+           p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
+           p<0.30 ~ "%FC < 30"),
+         p_class = factor(p_class,levels=c("%FC < 30",
+                                           "30 ≤ %FC < 60",
+                                           "60 ≤ %FC < 80",
+                                           "80 ≤ %FC < 100",
+                                           "%FC = 100"),
+                          labels = c(" '%FC < 30' ",
+                                     " 30 <= '%FC < 60' ",
+                                     " 60 <= '%FC < 80' ",
+                                     " 80 <= '%FC < 100' ",
+                                     " '%FC = 100' ")
+                          ))
 ```
+
+
+```{r}
+df_logUU_pk %>% 
+  filter(p_class!="%FC = 100") %>% 
+  ggplot(aes(x=k,y=Uefeito,color=p)) +
+  geom_line(aes(group=SiteCode)) +
+  geom_point() +
+  facet_grid(contraste~p_class)
+```
+
 
 # Statistical evaluation of forest cover as a predictor of biodiversity vulnerability 
 
@@ -230,9 +265,6 @@ Model selection was conducted using the Akaike Information Criterion corrected f
 <!-- ## Model Evaluation -->
 
 ```{r ajuste per se dos modelos, eval=FALSE, include=FALSE, echo=FALSE}
-df_logUU_pk <- readRDS(file="dados/csv_SoE/rds/df_logUUpk.rds") %>% 
-  mutate(SiteCode=factor(SiteCode)) %>% 
-  filter(k>=0.4999999999)
 f_gam <- \(dfi){
   #
   l_md <- list()
@@ -273,7 +305,7 @@ f_gam <- \(dfi){
   return(l_md)
 }
 l_md <- dlply(df_logUU_pk,"contraste",f_gam)
-saveRDS(l_md,file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
+saveRDS(l_md,file="dados/csv_SoE/rds/l_md_logUUpk.rds")
 ```
 ```{r criacao da tabela final, include=FALSE,eval=FALSE,echo=FALSE}
 l_md <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
