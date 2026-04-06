@@ -143,6 +143,11 @@ l_f$`1` <-
   cbind(nSAD,100-nSAD) ~ 
   1 +
   s(SiteCode,bs="re")
+#---------------------------------------------------------------
+#------------------- dados -------------------------------------
+#---------------------------------------------------------------
+
+df_selected <- readRDS(file="dados/csv_SoE/df_selected.csv")
 ```
 
 
@@ -204,7 +209,7 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 # Statistical description of congruence with the observed SAD
 
 <p>
-The probability that a simulated species abundance distribution (SAD) was classified as congruent with the observed SAD was modelled using hierarchical generalized additive models (HGAM, @wood2017, @Pedersen2019). HGAMs accommodate hierarchical data structures while allowing flexible, non-linear responses through smooth functions. Smoothness parameters were estimated via restricted maximum likelihood (REML), which penalizes excessive model complexity and reduces overfitting. All analyses were conducted in R using the mgcv package.
+The probability that a simulated species abundance distribution (SAD) was classified as congruent with the observed SAD was modelled using hierarchical generalized additive models (HGAM, @wood2017, @Pedersen2019). HGAMs accommodate hierarchical data structures while allowing flexible, non-linear responses through smooth functions. Smoothness parameters were estimated via restricted maximum likelihood (REML), which penalizes excessive model complexity and reduces overfitting. All analyses were conducted in R using the mgcv package (@wood2011).
 </p>
 
 <p>
@@ -286,9 +291,9 @@ tab_models <- tibble::tibble(
   ),
   
   `Ecological interpretation` = c(
-    "Congruence reflects connectivity arising from dispersal–landscape interactions, with additional spatial structuring among forest plots.",
-    "Congruence reflects connectivity driven by dispersal–landscape interactions, independent of geographic proximity.",
-    "Congruence reflects average connectivity effects, without plot-specific dispersal–landscape responses.",
+    "Congruence reflects dispersal–landscape specific interactions, with additional spatial structuring among forest plots.",
+    "Congruence reflects dispersal–landscape specific interactions, independent of geographic proximity.",
+    "Congruence reflects average dispersal–landscape interactions, without plot-specific responses.",
     "Congruence varies among plots but is unrelated to dispersal limitation or landscape configuration."
   )
 )
@@ -339,10 +344,10 @@ ft_models
 ```
 
 <p>
-Models were compared using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (@burnham1998practical). We additionally report deviance explained, re  presenting the proportion of variation accounted for relative to a null model. Model fitting and comparison were performed using functions from the mgcv (@wood2011) and bbmle (@bbmle_package) packages .
+Models were compared using the Akaike Information Criterion corrected for small sample sizes (AICc), along with ΔAICc and Akaike weights (@burnham1998practical). We additionally report deviance explained, representing the proportion of variation accounted for relative to a null model. Model fitting and comparison were performed using functions from the mgcv (@wood2011) and bbmle (@bbmle_package) packages .
 </p>
 
-## Spatial autocorrelation test: Moran’s I 
+## Spatial autocorrelation test: global Moran’s I
 
 <p>
 Because spline-based smoothers are well-suited for describing continuous functions, they may not adequately represent negative spatial dependence. To evaluate residual spatial structure, we conducted two-tailed tests of spatial autocorrelation on plot-level mean residuals using Moran’s I. Moran’s I ranges from −1 (negative autocorrelation) to +1 (positive autocorrelation), with statistical significance assessed at α = 0.05. The statistic requires specification of a spatial neighbourhood structure. We defined neighbourhoods using an n-nearest neighbours approach and performed a sensitivity analysis by varying n from 1 to 100, given the total of 105 forest plots. All analyses were conducted using the spdep package (@bivand2020).
@@ -400,7 +405,7 @@ pfinal
 
 
 <p> <!-- texto explicando fig-moranI -->
-The sensitivity analysis revealed two contrasting patterns (\@ref(fig:fig-moranI)). Models including the plot-specific smooth term for the k-by-land interaction exhibited no significant spatial autocorrelation across the full range of neighbourhood sizes tested. In contrast, models lacking this plot-level interaction displayed significant positive spatial autocorrelation across a broad range of neighbourhood definitions (\@ref(fig:fig-moranI)). These results indicate that allowing plot-specific dispersal–landscape interaction effectively accounts for spatial proximity among forest plots, removing residual spatial structure from the model.
+The sensitivity analysis revealed two contrasting patterns (fig. \@ref(fig:fig-moranI)). Models including the plot-specific smooth term for the k-by-land interaction exhibited no significant spatial autocorrelation across the full range of neighbourhood sizes tested. In contrast, models lacking this plot-level interaction displayed significant positive spatial autocorrelation across a broad range of neighbourhood definitions (fig. \@ref(fig:fig-moranI)). These results indicate that allowing plot-specific dispersal–landscape interaction effectively accounts for spatial proximity among forest plots, removing residual spatial structure from the model.
 </p>
 
 
@@ -444,11 +449,11 @@ f_flextable(df_tabsel)
 
 
 <p> <!-- texto interpretando a tabela  -->
-The full model (M1), including both the plot-specific smooth interaction between dispersal capability and landscape configuration and the bivariate spatial smoother, received overwhelming support (ΔAICc = 0; Akaike weight = `r df_tabsel$weight[1]` ; \@ref(tab:tab-selecaoCong)). However, the simpler model excluding spatial coordinates (M2) explained an identical proportion of deviance (94%) and differed only moderately in AICc (ΔAICc = `r df_tabsel$dAICc[2]`; \@ref(tab:tab-selecaoCong)). Although inclusion of geographic coordinates slightly improved AICc support, it did not increase deviance explained (\@ref(tab:tab-selecaoCong)). This indicates that the spatial smoother refines model fit without altering the primary congruence structure driven by plot-level interaction. Detailed model coefficients and diagnostic assessments for the best-supported model are provided in the supplementary material (REF).
+The full model (M1), including both the plot-specific smooth interaction between dispersal capability and landscape configuration and the bivariate spatial smoother, received overwhelming support (ΔAICc = 0; Akaike weight = `r df_tabsel$weight[1]` ; tab. \@ref(tab:tab-selecaoCong)). However, the simpler model excluding spatial coordinates (M2) explained an identical proportion of deviance (`r  paste0(round(df_tabsel$dev.expl[2],2)*100,"%")`) and differed only moderately in AICc (ΔAICc = `r df_tabsel$dAICc[2]`; tab. \@ref(tab:tab-selecaoCong)). Although inclusion of geographic coordinates slightly improved AICc support, it did not increase deviance explained (tab. \@ref(tab:tab-selecaoCong)). This indicates that the spatial smoother refines model fit without altering the primary congruence structure driven by plot-level interaction. Detailed model coefficients and diagnostic assessments for the best-supported model are provided at the end of this document.
 </p>
 
 <p>
-In combination with the Moran’s I analysis, these results indicate that spatial proximity in congruence is effectively absorbed by the plot-specific dispersal–landscape interaction. Although inclusion of an explicit geographic smoother improves Akaike weight, it does not increase deviance explained.
+Consistent with the Moran’s I analysis, these findings suggest that any spatial structure in the data is adequately accounted for by the interaction between dispersal and landscape spatial configuration. Although inclusion of an explicit geographic smoother improves Akaike weight, it does not increase deviance explained (tab. \@ref(tab:tab-selecaoCong)).
 </p>
 
 <p>
@@ -585,32 +590,29 @@ p
 # Implications for estimating landscape effects
 
 <p>
-A recurrent critique of Neutral Theory is that empirical evaluations often rely on the same data for model calibration and validation, effectively reducing tests to curve-fitting exercises rather than mechanistic assessments (REF). Here, instead of interpreting SENM indiscriminately across all plots, we restricted inference to those in which the model reproduced the empirical species abundance distribution (SAD) with high fidelity.
+Here, instead of interpreting SENM indiscriminately across all plots, we restricted inference to those in which the model reproduced the empirical species abundance distribution (SAD) with high fidelity.
+To generate simulated SADs, SENM is calibrated to approximate observed species richness under each dispersal and landscape scenarios. However, for a given richness and total abundance, multiple SAD configurations are possible (@locey2013). Consequently, congruence between simulated and observed SADs reflects more than richness matching; it provides evidence that the internal dispersal–landscape dynamics generate realistic abundance structures.
 </p>
 
 <p>
-To generate simulated SADs, SENM is calibrated to approximate observed species richness under each dispersal and landscape scenario. However, for a given richness and total abundance, multiple SAD configurations are possible. Consequently, congruence between simulated and observed SADs reflects more than richness matching; it provides evidence that the internal dispersal–landscape dynamics generate realistic abundance structures (REF).
+Congruence declined under high dispersal scenarios (Fig. 1, main text), indicating that SENM’s mechanistic assumptions are most plausible when dispersal is locally restricted. We therefore focused on parameterizations in which most propagules remain near the parent tree (k ≥ 0.50). Applying this condition, together with a minimum threshold of 75% congruent SADs across all three experimental landscapes, we identified 66 of 105 plots in which SENM consistently reproduced the empirical abundance structure. These plots were retained for subsequent analyses of landscape effects (see main text).
 </p>
 
 <p>
-Congruence declined under high dispersal scenarios (Fig. 2, main text), indicating that SENM’s mechanistic assumptions are most plausible when dispersal is locally restricted. We therefore focused on parameterizations in which most propagules remain near the parent tree (k ≥ 0.50). Applying this condition, together with a minimum threshold of 75% congruent SADs across all three experimental landscapes, we identified 67 of 105 plots in which SENM consistently reproduced the empirical abundance structure. These plots were retained for subsequent analyses of landscape effects (see main text).
-</p>
-
-<p>
-The remaining 38 plots exhibited low congruence and were excluded from the primary inference. Rather than representing random model failure, these cases may reflect additional ecological processes not captured by SENM, as discussed in the main text, and thus indicate directions for future model refinement (REF).
+The remaining 39 plots were excluded from the primary inference. Rather than representing random model failure, these cases may reflect additional ecological processes not captured by SENM, as discussed in the main text, and thus indicate directions for future model refinement.
 </p>
 
 ## Selected plots do not differ systematically from non-selected plots in environmental variables
 
 <p>
-Operational variables exhibited broadly similar distributions between selected and non-selected plots (\@ref(fig:fig-implicacoes-cong)). Although selected plots included a greater number of cases with extremely low landscape-level forest cover and spanned a wider geographic range (\@ref(fig:fig-implicacoes-cong)a–b), their central tendencies were comparable. The median forest cover was slightly higher among non-selected plots. Non-selected plots also included several outliers with high values of plot area, species richness, and abundance (\@ref(fig:fig-implicacoes-cong)a). However, for all operational variables examined, the interquartile ranges overlapped between selected and non-selected plots (\@ref(fig:fig-implicacoes-cong)a), indicating the absence of systematic distributional shifts. Spatial configuration under the fragmented landscape scenario likewise showed comparable structural patterns for selected and non-selected plots (see supplementary material to this appendix). The vulnerability metrics for the landscape effects were also similar between selected and non-selected plots (\@ref(fig:fig-comp-cong-e-logUU) and the \@ref(fig:fig-logUU-nonselected) in comparison with Fig. 2 from the main text). 
+Operational variables exhibited broadly similar distributions between selected and non-selected plots (fig. \@ref(fig:fig-implicacoes-cong)). Although selected plots included a greater number of cases with extremely low landscape-level forest cover and spanned a wider geographic range (fig. \@ref(fig:fig-implicacoes-cong)a–b), their central tendencies were comparable. The median forest cover was slightly higher among non-selected plots. Non-selected plots also included several outliers with high values of plot area, species richness, and abundance (fig. \@ref(fig:fig-implicacoes-cong)a). However, for all operational variables examined, the interquartile ranges overlapped between selected and non-selected plots (fig. \@ref(fig:fig-implicacoes-cong)a), indicating the absence of systematic distributional shifts. Spatial configuration under the fragmented landscape scenario likewise showed comparable structural patterns for selected and non-selected plots (see supplementary material to this appendix). The vulnerability metrics for the landscape effects were also similar between selected and non-selected plots (fig. \@ref(fig:fig-comp-cong-e-logUU) and the fig. \@ref(fig:fig-logUU-nonselected) in comparison with Fig. 2 from the main text). 
 </p>
 
 <p>
 Together, these results indicate that applying the congruence criterion did not generate a biased subset of plots with respect to environmental, demographic, or geographic attributes.
 </p>
 
-```{r criacao da classificação das parcelas quanto à congruencia e suas implicacoes, echo=FALSE, eval=FALSE, include=FALSE}
+```{r criacao da classificação das parcelas quanto à congruencia e suas implicacoes, echo=FALSE, eval=TRUE, include=TRUE}
 # df_p
 df_p <- read_csv("dados/df_p.csv")
 #df_sítios simuláveis em SENM contemporâneo
@@ -708,7 +710,7 @@ lp$mapa <- ggplot() +
 saveRDS(lp,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parcelas_selecionadas.rds")
 ```
 ```{r caption fig sem dif entre selecionadas e nao, echo=FALSE,eval=TRUE,include=TRUE}
-vcap <- "Environmental and spatial characterization of plot selection within the Atlantic Forest biome. (A) Comparison of six operational variables: landscape-level forest cover (%FL; 0–1 scale), plot area (ha), number of individuals (N), species richness (S), latitude, and longitude (decimal degrees). Green boxplots represent selected plots (n = 67) and red boxplots represent non-selected plots (n = 38). Boxes indicate interquartile ranges (IQR), horizontal lines denote medians, whiskers extend to 1.5×IQR, and points represent raw values. (B) Geographic distribution of plot centroids within the official biome delimitation (gray polygon; IBGE shapefile). Consistent color coding (green = selected; red = non-selected) enables visual comparison of environmental and spatial patterns."
+vcap <- "Environmental and spatial characterization of plot selection within the Atlantic Forest biome. (A) Comparison of six operational variables: landscape-level forest cover (%FL; 0–1 scale), plot area (ha), number of individuals (N), species richness (S), latitude, and longitude (decimal degrees). Green boxplots represent selected plots (n = 66) and red boxplots represent non-selected plots (n = 39). Boxes indicate interquartile ranges (IQR), horizontal lines denote medians, whiskers extend to 1.5×IQR, and points represent raw values. (B) Geographic distribution of plot centroids within the official biome delimitation (gray polygon; IBGE shapefile). Consistent color coding (green = selected; red = non-selected) enables visual comparison of environmental and spatial patterns."
 ```
 ```{r fig-implicacoes-cong,fig.cap=vcap,fig.width=12,fig.height=7,cache=FALSE}
 library(sf)
@@ -735,10 +737,26 @@ wrap_plots(plotlist=lp,ncol=2) +
 
 
 ```{r criacao da figura que compara a diferença no logUU entre as parcelas selcionadas e nao selecionadas,echo=FALSE,include=TRUE,eval=TRUE}
-mutate <- dplyr::mutate
-df_plot0 <- read_csv("dados/csv_SoE/taxaU/df_contrastes.csv") %>% 
-  arrange(SiteCode,k)
+#-------------------------------------
+#-------------- dados-----------------
+#-------------------------------------
+#@ %FC = p
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+Li <- 2
+df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
+  vfilter <- dfi$lado_km[which.min(abs(Li-dfi$lado_km))]
+  filter(dfi,lado_km%in%vfilter)
+}) %>% select(SiteCode,p)
+#@ efeitos da paissagem 
+df_contrastes <- read_csv("dados/csv_SoE/taxaU/df_contrastes.csv") %>% 
+  arrange(SiteCode,k) %>% 
+  pivot_longer(cols = FLF:LFC,
+               names_to = "contraste",
+               values_to = "Uefeito") %>% 
+  inner_join(.,df_selected)
 
+
+#
 df_plot <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_plot_p_diferencas_logUU_selecionado_e_nao.rds")
 dfp <- filter(df_plot,k>=0.49999)
 dfp <- mutate(dfp,
@@ -816,7 +834,7 @@ lp$FLC <- dfp %>%
   labs(x="",y="FLF") +
   theme(legend.position = "none")
 p_final <- patchwork::wrap_plots(lp,ncol=1,heights = c(2, 1))
-vcap <- "Comparison of vulnerability metrics for landscape effects across forest-cover classes and congruence-based plot selection. (a) Relationship between vulnerability to forest cover loss (LFC) and fragmentation per se (FPS) across forest plots. Each panel shows a scatterplot of log(U/U) for LFC (x-axis) against log(U/U) for FPS (y-axis). The dotted lines represent identity lines (slopes of 1 and -1). Columns correspond to classes of remaining forest cover (%FC = 100; 80 ≤ %FC < 100; 60 ≤ %FC < 80; 30 ≤ %FC < 60; %FC < 30), and rows separate plots according to whether the spatially explicit neutral model was supported by the congruence-based selection criterion (upper row: FALSE; lower row: TRUE). Points are coloured according to this selection (green = selected plots; red = non-selected plots). (b) Distribution of the total vulnerability to forest loss and fragmentation (FLF) across the same forest-cover classes. The y-axis shows log(U/U) for the FLF effect, while the x-axis separates plots according to congruence-based selection (TRUE vs FALSE). Points represent individual vulnerability estimates and boxplots summarize their distribution within each group. For each forest plot, ten values of log(U/U) were estimated corresponding to alternative dispersal scenarios explored in the spatially explicit neutral simulations. Across panels, the distribution of landscape-effect vulnerability is broadly similar between selected and non-selected plots, suggesting that non-selected plots represent a subsample of the same underlying distribution, although the number of plots differs between groups (67 selected vs. 38 non-selected)."
+vcap <- "Comparison of vulnerability metrics for landscape effects across forest-cover classes and congruence-based plot selection. (a) Relationship between vulnerability to forest cover loss (LFC) and fragmentation per se (FPS) across forest plots. Each panel shows a scatterplot of log(U/U) for LFC (x-axis) against log(U/U) for FPS (y-axis). The dotted lines represent identity lines (slopes of 1 and -1). Columns correspond to classes of remaining forest cover (%FC = 100; 80 ≤ %FC < 100; 60 ≤ %FC < 80; 30 ≤ %FC < 60; %FC < 30), and rows separate plots according to whether the spatially explicit neutral model was supported by the congruence-based selection criterion (upper row: FALSE; lower row: TRUE). Points are coloured according to this selection (green = selected plots; red = non-selected plots). (b) Distribution of the total vulnerability to forest loss and fragmentation (FLF) across the same forest-cover classes. The y-axis shows log(U/U) for the FLF effect, while the x-axis separates plots according to congruence-based selection (TRUE vs FALSE). Points represent individual vulnerability estimates and boxplots summarize their distribution within each group. For each forest plot, ten values of log(U/U) were estimated corresponding to alternative dispersal scenarios explored in the spatially explicit neutral simulations. Across panels, the distribution of landscape-effect vulnerability is broadly similar between selected and non-selected plots, suggesting that non-selected plots represent a subsample of the same underlying distribution, although the number of plots differs between groups (66 selected vs. 39 non-selected)."
 ```
 ```{r fig-comp-cong-e-logUU, fig.cap=vcap,eval=TRUE,include=TRUE,fig.width=12,fig.height=8,cache=FALSE}
 library(patchwork)
@@ -877,6 +895,7 @@ df_selected <- df_ad %>%
   filter(k>=0.49999) %>%
   group_by(SiteCode) %>% 
   dplyr::summarise(selecionado = all(nSAD>=75))
+saveRDS(df_selected,file="dados/csv_SoE/df_selected.csv")
 #@ df_p
 df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
 df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
