@@ -111,30 +111,6 @@ df_KSrep <- ddply(df_SADrep,
                   .parallel = FALSE)
 write_csv(df_KSrep,file="dados/csv_SoE/df_KSrep.csv")
 
-
-#--------------------------------------------------------------
-#------------- Sumário dos resultados do teste KS -------------
-#--------------------------------------------------------------
-
-# f_summarise_SAD_MNEE <- \(df){
-#   #@ df: df por site, k, e  land_type
-#   #@ e.g. ddply(.,c("SiteCode","k","land_type"))
-#   cbind(df[1,c("SiteCode","k","land_type")],with(df,data.frame(
-#     nSAD = sum(p.KS>0.05),
-#     Smed = mean(S),
-#     Ssd = sd(S),
-#     Smin = min(S),
-#     Smax = max(S)))
-#   )
-# }
-# df_KSrep <- read_csv(file="dados/csv_SoE/df_KSrep.csv")
-# registerDoMC(3)
-# df_ad <- ddply(df_KSrep,c("SiteCode","k","land_type"),
-#                f_summarise_SAD_MNEE,
-#                .parallel = TRUE)
-# write_csv(df_ad,file="dados/csv_SoE/df_congruencia_simulacao.csv")
-
-
 ##----------------------------------------------------------
 #------------------- Contraste logU/U ----------------------
 ##----------------------------------------------------------

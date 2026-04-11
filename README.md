@@ -29,7 +29,7 @@ Na sequência, as simulações são executadas em '1_torep/simulacoes.R', que:
 Nesse arquivo é necessário hardcoding as decisões da escala adequada por cenário de dispersão,
 pois não decorrem diretamente da abordagem heurística e sim da interpretação desses resultados.
 
-No apêndice 3 01_tocomp/CongSAD.Rmd há as análises finais para obter a figura 1 do texto principal.
+No apêndice 3 01_tocomp/CongSAD.Rmd há as análises para obter a figura 1 do texto principal.
 Nesse apêndice é feito toda a análise a partir de dados/csv_SoE/df_KSrep.csv.
 Aqui é feito a análise de autocorrelação espacial global (I de Moran),
 a seleção de modelos e predição,

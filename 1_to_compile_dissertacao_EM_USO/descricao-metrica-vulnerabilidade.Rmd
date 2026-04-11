@@ -158,16 +158,6 @@ df_logUU_pk <- inner_join(filter(df_logUU,k>=0.499999),df_selected[df_selected$s
 ```
 
 
-```{r}
-df_logUU_pk %>% 
-  filter(p_class!="%FC = 100") %>% 
-  ggplot(aes(x=k,y=Uefeito,color=p)) +
-  geom_line(aes(group=SiteCode)) +
-  geom_point() +
-  facet_grid(contraste~p_class)
-```
-
-
 # Statistical evaluation of forest cover as a predictor of biodiversity vulnerability 
 
 <p>
@@ -297,9 +287,9 @@ f_gam <- \(dfi){
       s(SiteCode,bs="re"),
     data=dfi, method = "REML")
   #
-  names(l_md) <- c("~ te(p,k)",
-                   "~ s(k) + s(p)",
-                   "~ s(k)",
+  names(l_md) <- c("~ te(p,k) + s(k)|Site",
+                   "~ s(k) + s(p) + s(k)|Site",
+                   "~ s(k) + s(k)|Site",
                    "~ s(k) + 1|Site",
                    "~ 1 + 1|Site")
   return(l_md)
@@ -308,7 +298,7 @@ l_md <- dlply(df_logUU_pk,"contraste",f_gam)
 saveRDS(l_md,file="dados/csv_SoE/rds/l_md_logUUpk.rds")
 ```
 ```{r criacao da tabela final, include=FALSE,eval=FALSE,echo=FALSE}
-l_md <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
+l_md <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk.rds")
 df_tabsel <- lapply(l_md,f_TabSelGAMM)
 df_tabsel <- lapply(names(df_tabsel),\(li){
   mutate(df_tabsel[[li]],base=li)
@@ -326,48 +316,47 @@ saveRDS(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_lo
 ## Difference in magnitude between LFC e FPS
 
 ```{r criacao da figura de diferença na magnitude de LFC e FPS}
-df_plot <- inner_join(select(df_logUU,-p),df_selected) %>% 
+df_plot <- inner_join(df_logUU,df_selected) %>% 
   inner_join(.,df_p)
 saveRDS(df_plot,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_plot_p_diferencas_logUU_selecionado_e_nao.rds")
 dfp <- df_plot[df_plot$selecionado,] %>% 
-  filter(contraste!="Frag. total",k>=0.49999) %>% 
-  mutate(label=ifelse(contraste=="Frag. per se","FPS","LFC")) %>% 
-  select(-contraste,-selecionado) %>% 
-  pivot_wider(names_from = "label",
+  filter(contraste!="FLF",k>=0.49999) %>% 
+  select(-selecionado) %>% 
+  pivot_wider(names_from = "contraste",
               values_from = "Uefeito") %>% 
   mutate(diffABS = abs(LFC) - abs(FPS),
          p_class = case_when(
-           p==1 ~ "%FC = 100",
-           p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
+           p>=0.99 ~ "%FC ≥ 99",
+           p<0.99 & p>=0.80 ~ "80 ≤ %FC < 99",
            p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
            p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
            p<0.30 ~ "%FC < 30"),
          p_class = factor(p_class,levels=c("%FC < 30",
                                            "30 ≤ %FC < 60",
                                            "60 ≤ %FC < 80",
-                                           "80 ≤ %FC < 100",
-                                           "%FC = 100"),
-                          labels = c(" '%FC < 30' ",
-                                     " 30 <= '%FC < 60' ",
-                                     " 60 <= '%FC < 80' ",
-                                     " 80 <= '%FC < 100' ",
-                                     " '%FC = 100' ")
+                                           "80 ≤ %FC < 99",
+                                           "%FC ≥ 99") #,
+                          # labels = c(" '%FC < 30' ",
+                          #            " 30 <= '%FC < 60' ",
+                          #            " 60 <= '%FC < 80' ",
+                          #            " 80 ≤ '%FC < 100' ",
+                          #            " '%FC = 100' ")
                           )
     )
 #--------------------- grafico -------------------#
-dfrange <- filter(dfp,grepl("= 100",p_class)) %>% 
+dfrange <- filter(dfp,p_class=="%FC ≥ 99") %>% 
     reframe(
       names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
       value = c(min(diffABS), max(diffABS),quantile(diffABS,probs=0.05),quantile(diffABS,probs=0.95))
     )
-nsites <- filter(dfp,p_class=="%FC = 100") %>% pull(SiteCode) %>% unique() %>% length()
+nsites <- filter(dfp,p_class=="%FC ≥ 99") %>% pull(SiteCode) %>% unique() %>% length()
 p <- dfp %>% 
   filter(p!=1,) %>% 
   ggplot(aes(x=k,group=k,y=diffABS)) +
   geom_hline(yintercept = 0,color="black") +
   geom_hline(data = dfrange, aes(yintercept = value,linetype=names),
              color="black",linewidth=0.5) +
-  scale_linetype_manual(name = paste0("%FC=100",", n = ",nsites),
+  scale_linetype_manual(name = paste0("%FC ≥ 99",", n = ",nsites),
                         values=c("dotted","dashed")) +
   geom_boxplot() +
   geom_jitter(alpha=0.5) +
@@ -393,13 +382,6 @@ As %FC decreased, the distribution shifted toward positive values, reflecting in
 <p>
 Across all %FC classes and dispersal scenarios, the majority of |LFC| – |FPS| values lay within or above the null range. Values below the null were rare and largely restricted to high-cover plots. The most clear dominance of LFC over FPS emerged in low-cover plots under severe dispersal limitation, where the entire distribution exceeded the null reference (\@ref(fig:fig-SI41)).
 </p>
-
-
-
-
-
-
-
 
 
 
@@ -476,7 +458,7 @@ gratia::appraise(lmd[[vn]])
 
 ```{r model predictions, eval=FALSE, include=FALSE, echo=FALSE}
 library(data.table)
-l_md <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
+l_md <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk.rds")
 df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds")
 df_tabsel <- as.data.table(df_tabsel)
 f_select <- \(dfi){
