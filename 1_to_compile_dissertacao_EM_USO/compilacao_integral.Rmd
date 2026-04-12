@@ -298,9 +298,10 @@ p <- l_dfpred$fixo_e_aleat %>%
   scale_x_continuous(expand = c(0.01, 0)) +
   scale_y_continuous(expand = c(0.01, 0)) +
   labs(x="Fraction of propagules within the immediate neighborhood (k)",
-       y="Number of congruent simulated SADs (goodness-of-fit)",
-       title="Congruence of simulated SADs across experimental landscapes",
-       subtitle="Congruence is best described by connectivity and spatial proximity among forest plots") +
+       y="Number of congruent simulated SADs (goodness-of-fit)" #,
+       # title="Congruence of simulated SADs across experimental landscapes",
+       # subtitle="Congruence is best described by connectivity and spatial proximity among forest plots"
+       ) +
   facet_wrap(~land) +
   theme_bw() +
   theme(strip.text = element_text(size=12, #margin=margin(),
@@ -349,22 +350,16 @@ library(dplyr)
 df_real <- readRDS("dados/csv_SoE/rds/df_obs_pred_plot_logUU_pk.rds") %>% 
   mutate(
     p_class = case_when(
-      p==1 ~ "%FC = 100",
-      p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
-      p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
-      p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
-      p<0.30 ~ "%FC < 30"),
+       p>=0.99 ~ "%FC ≥ 99",
+       p<0.99 & p>=0.80 ~ "80 ≤ %FC < 99",
+       p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
+       p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
+       p<0.30 ~ "%FC < 30"),
     p_class = factor(p_class,levels=c("%FC < 30",
                                            "30 ≤ %FC < 60",
                                            "60 ≤ %FC < 80",
-                                           "80 ≤ %FC < 100",
-                                           "%FC = 100"),
-                          labels = c(" '%FC < 30' ",
-                                     " 30 <= '%FC < 60' ",
-                                     " 60 <= '%FC < 80' ",
-                                     " 80 <= '%FC < 100' ",
-                                     " '%FC = 100' ")
-                          ),
+                                           "80 ≤ %FC < 99",
+                                           "%FC ≥ 99")),
     lower = fit - 1.96 * se.fit,
     upper = fit + 1.96 * se.fit
   )
@@ -375,16 +370,16 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE,vpos=c(0.72,0.25),vt=15,vts=0.9
   dfpred <- dff %>% 
     mutate(
       p_class = case_when(
-        p==1 ~ "%FC = 100",
-        p<1 & p>=0.80 ~ "80 ≤ %FC < 100",
+        p>=0.99 ~ "%FC ≥ 99",
+        p<0.99 & p>=0.80 ~ "80 ≤ %FC < 99",
         p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
         p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
         p<0.30 ~ "%FC < 30"),
       p_class = factor(p_class,levels=c("%FC < 30",
                                         "30 ≤ %FC < 60",
                                         "60 ≤ %FC < 80",
-                                        "80 ≤ %FC < 100",
-                                        "%FC = 100")),
+                                        "80 ≤ %FC < 99",
+                                        "%FC ≥ 99")),
       lower = fit - 1.96 * se.fit,
       upper = fit + 1.96 * se.fit
     )
@@ -398,22 +393,19 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE,vpos=c(0.72,0.25),vt=15,vts=0.9
   df_ij$label <- factor(df_ij$label,
                         levels=unique(df_ij$label))
   dfp <- inner_join(dfpred,df_ij)
-  nsites <- filter(dfp,p_class=="%FC = 100") %>% pull(SiteCode) %>% unique %>% length()
+  nsites <- filter(dfp,p_class=="%FC ≥ 99") %>% pull(SiteCode) %>% unique %>% length()
   dfp <- mutate(dfp,
-                across( # uma vez que: -1 * log(i/j) = log( (i/j)^(-1) )
-                  matches("Uefeito|fit|er$"),~.x * (-1)
-                  ),
-                efeito = gsub("Frag. total","Forest Loss and Frag. (FLF)",efeito) %>% 
-                  gsub("Frag. per se","Frag. per se (FPS)",.) %>% 
-                  gsub("Área per se","Loss of Forest Cover (LFC)",.)
+                efeito = gsub("FLF","Forest Loss and Frag. (FLF)",efeito) %>% 
+                  gsub("FPS","Frag. per se (FPS)",.) %>% 
+                  gsub("LFC","Loss of Forest Cover (LFC)",.)
                 )
-  dfrange <- filter(dfp,p_class=="%FC = 100") %>% 
+  dfrange <- filter(dfp,p_class=="%FC ≥ 99") %>% 
     reframe(
       names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
       value = c(min(Uefeito), max(Uefeito),quantile(Uefeito,probs=0.05),quantile(Uefeito,probs=0.95))
     )
-  dfp <- filter(dfp,p_class!="%FC = 100")
-  dfp %>% 
+  dfp <- filter(dfp,p_class!="%FC ≥ 99")
+  p <- dfp %>% 
     mutate(efeito = factor(efeito,
                            levels=c("Forest Loss and Frag. (FLF)",
                                     "Frag. per se (FPS)",
@@ -423,7 +415,7 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE,vpos=c(0.72,0.25),vt=15,vts=0.9
     geom_hline(yintercept = 0,color="black") +
     geom_hline(data = dfrange, aes(yintercept = value,linetype=names),
                color="black",linewidth=0.5) +
-    scale_linetype_manual(name = paste0("%FC=100",", n = ",nsites),
+    scale_linetype_manual(name = paste0("%FC ≥ 99",", n = ",nsites),
                           values=c("dotted","dashed")) +
     {if(logic_ribbon)geom_ribbon(aes(x=k,y=fit,ymin=lower,ymax=upper,group = SiteCode),
                                  fill="lightblue",
@@ -439,27 +431,35 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE,vpos=c(0.72,0.25),vt=15,vts=0.9
     theme_classic() +
     theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
           text=element_text(size=vt,face="bold"),
-          legend.position = "bottom",
-          #legend.position.inside = vpos,
+          legend.position = "inside",
+          legend.position.inside = vpos,
           legend.direction="horizontal") +
     guides(linetype = guide_legend(
       title.theme = element_text(size = vt*vts, face = "bold")
       )
     )
+  return(list("plot"=p,"range"=dfrange))
 }
 #
 #-----------------------------------------------------------
 #------------------ criação da figura ----------------------
 #-----------------------------------------------------------
-p_efeitos <- f_obs_predito_bysite(df_real,logic_ribbon = TRUE, vpos=c(0.72,0.10),vt = 12.5)
+lret <- f_obs_predito_bysite(df_real,logic_ribbon = TRUE, vpos=c(0.72,0.10),vt = 12.5)
+p_efeitos <- lret$plot
 ggsave(filename = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.png",
        dpi=200,
        plot=p_efeitos,
        width=12,height=9)
 saveRDS(p_efeitos,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.rds")
+dfrange <- lret$range
+saveRDS(dfrange,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/dfrange.rds")
 ```
 ```{r}
-vcap="Proposed landscape effects described by the functional metric log Ui/Uj, shown as observed values and predictions from a hierarchical generalized additive model (HGAM). Differences in U reflect variation in the external replenishment required to sustain observed diversity patterns. The metric log(Ui/Uj) quantifies the relative change in this requirement and can thus be interpreted as a measure of landscape-induced vulnerability. Each point represents the comparison between two simulations, varying according to the landscape effect under evaluation (row titles). Forest Loss and Fragmentation (FLF): pristine vs  fragmented (joint change in forest amount and configuration); Loss of Forest Cover (LFC): pristine vs clumped (change in forest amount, constant aggregation); Fragmentation per se (FPS): clumped vs fragmented (change in configuration, constant forest amount). The x-axis represents dispersal limitation (k), defined as the fraction of propagules retained within the immediate neighbourhood of the parent individual. Points are coloured according to the percentage of forest cover observed within the 1-km landscape extent surrounding each focal plot. Columns correspond to classes of observed forest cover (%FC) for each plot (column titles). Plots with 100% forest cover were excluded from the graphical display; only the amplitude (maximum = 0.133; minimum = −0.104) and the central 90% interval (95th quantile = 0.060; 5th quantile = −0.048) of log Ui/Uj are indicated on the y-axis. This variability reflects the stochasticity inherent to the spatially explicit neutral model. Boxplots summarise values for each level of k. The y-axis scale differs among landscape effects. Only inventories classified as congruent are shown."
+library(glue)
+dfrange <- readRDS(file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/dfrange.rds")
+vlabel <- sapply(dfrange$value,round,digits=3)
+names(vlabel) <- paste0(rep(c("neg","pos"),2),dfrange$names)
+vcap <- glue("Proposed landscape effects described by the functional metric log Ui/Uj, shown as observed values and predictions from a hierarchical generalized additive model (HGAM). Differences in U reflect variation in the external replenishment required to sustain observed diversity patterns. The metric log(Ui/Uj) quantifies the relative change in this requirement and can thus be interpreted as a measure of landscape-induced vulnerability. Each point represents the comparison between two simulations, varying according to the landscape effect under evaluation (row titles). Forest Loss and Fragmentation (FLF): pristine vs  fragmented (joint change in forest amount and configuration); Loss of Forest Cover (LFC): pristine vs clumped (change in forest amount, constant aggregation); Fragmentation per se (FPS): clumped vs fragmented (change in configuration, constant forest amount). The x-axis represents dispersal limitation (k), defined as the fraction of propagules retained within the immediate neighbourhood of the parent individual. Points are coloured according to the percentage of forest cover observed within the 2-km landscape extent surrounding each focal plot. Columns correspond to classes of observed forest cover (%FC) for each plot (column titles). Plots with forest cover greater than or equal to 0.99 were excluded from the graphical display; instead, their amplitude (maximum = {vlabel['posamplitude']}; minimum = {vlabel['negamplitude']}) and the central 90% interval (95th quantile = {vlabel['posQ 5%-95%']}; 5th quantile = {vlabel['negQ 5%-95%']} ) of log Ui/Uj are indicated on the y-axis. This variability reflects the stochasticity inherent to the spatially explicit neutral model. Boxplots summarise values for each level of k. The y-axis scale differs among landscape effects. Only forest plots classified as congruent are shown.")
 ```
 ```{r p-efeitos, fig.cap=vcap,fig.width=14,fig.height=10,cache=TRUE}
 p_efeitos <- readRDS("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.rds")
@@ -500,11 +500,8 @@ vcap <- "Model comparison among candidate hierarchical generalized additive mode
 ```{r tab-selecaoCong,echo=FALSE,include=TRUE,eval=TRUE}
 df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds") %>% 
   mutate(across(where(is.numeric), ~round(.x,2)),
-         Effect = case_when(
-           grepl("total",base) ~ "FLF",
-           grepl("Frag. per se",base) ~ "FPS",
-           grepl("Área",base) ~ "LFC",
-         )) %>% # ,modelo=f_label(modelo)
+         Effect=base,
+         modelo=gsub("Site","Plot",modelo)) %>% 
   select(-base)
 library(flextable)
 f_label <- \(vn){
@@ -522,7 +519,6 @@ f_flextable <- \(dfi){
     # Estética geral
     bg(bg = "white", part = "all") %>%
     theme_vanilla() %>% 
-    
     # 
     set_header_labels(
       modelo = "HGAM",
@@ -539,7 +535,7 @@ f_flextable <- \(dfi){
     
     # Formatação de números
     colformat_double(digits = 2) %>% 
-    colformat_double(j = "weight", digits = 4) %>% # 
+    colformat_double(j = "weight", digits = 2) %>% # 
     
     # Alinhamento e legenda
     align(align = "center", part = "all") %>% 
@@ -548,7 +544,10 @@ f_flextable <- \(dfi){
     
     # 
     set_table_properties(layout = "fixed") %>%
-    flextable::width(width = 6.5/5, unit = "in")
+    # Define a largura apenas para a coluna 'modelo'
+    flextable::width(j = "modelo", width = 9.5/5, unit = "in") %>%
+    # Define a largura para todas as OUTRAS colunas
+    flextable::width(j = c("dAICc", "df", "weight", "dev.expl"), width = 6.5/5, unit = "in")
 }
 f_flextable(df_tabsel)
 ```
