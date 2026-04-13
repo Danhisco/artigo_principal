@@ -281,7 +281,7 @@ All 107 plots were associated with forest cover maps derived from MapBiomas Coll
 </p>
 
 <p>
-The spatial extent of the experimental landscapes was defined to ensure biological realism, ranging from 1 to 4 km per side depending on the degree of dispersal limitation. This range was chosen to achieve demographic stability across the 20 dispersal scenarios evaluated (Fig. S1.X).
+The spatial extent of the experimental landscapes was defined to ensure biological realism. Spatial scale sensitivity analysis indicated that for mild dispersal limitation scenarios, where less than 0.35 of propagules are retained within the immediate neighborhood, a 4-km landscape side length was sufficient (Supporting Information 2). In contrast, for more severe dispersal limitation scenarios, a 2-km side length proved adequate.
 </p>
 
 ## Dispersal limitation constrains the empirical validity of a spatially explicit neutral model 
