@@ -272,8 +272,16 @@ As estimativas empíricas e expectativas teóricas indicam que a cobertura flore
 
 # Results
 
-<p> <!--Resultados auxiliares: exposição e citação do SI -->
-A total of 105 forest plots were preselected from the Atlantic Forest, covering broad gradients of tree species richness, abundance, and landscape spatial configuration (Table S1.1; Fig. S1.1). For each plot, we designed three experimental landscapes from remote sensing data: fragmented, clumped, and pristine. The spatial extent of the experimental landscapes was defined to ensure biological realism, ranging from 1 to 4 km per side depending on the degree of dispersal limitation. This range was chosen to achieve demographic stability across the 20 dispersal scenarios evaluated (Fig. S1.X).
+<p>
+Of the forest plots available in the TreeCo database, 109 met the initial selection criteria (table SI1.1). Most inventories were conducted in areas classified as low perturbation forest areas according to TreeCo (@de_lima_how_2015). Only two plots, identified as having very high disturbance, were removed from the analysis (table SI1.1), resulting in 107 valid inventories. These plots have a median sampled area of 1 ha, with a median of 1,540 individuals and 107 recorded species. The plots were distributed between 31°S and 7°S latitude and 55°W and 35°W longitude (fig. SI1.1). Sampling years ranged from 1986 to 2016 (fig. SI1.1). 
+</p>
+
+<p>
+All 107 plots were associated with forest cover maps derived from MapBiomas Collection 6 (@mapbiomas). However, in two cases, it was not possible to center the square plot within the center region of the landscape due to the spatial configuration of the forest cover, reducing the final set of sites to 105 plots (fig. SI1.3). Detailed landscape maps for each plot are available in Figures SI3.5 and SI3.6.
+</p>
+
+<p>
+The spatial extent of the experimental landscapes was defined to ensure biological realism, ranging from 1 to 4 km per side depending on the degree of dispersal limitation. This range was chosen to achieve demographic stability across the 20 dispersal scenarios evaluated (Fig. S1.X).
 </p>
 
 ## Dispersal limitation constrains the empirical validity of a spatially explicit neutral model 
@@ -324,7 +332,7 @@ p
 ```
 
 <p> <!--Descrição do padrão empírico chave para o critério post-hoc -->
-Mean congruence exceeded 75% in most simulations but declined under very weak dispersal limitation, especially in clumped and pristine landscapes (Fig. 1). There is substantial variability between plot-level trends, with non-linear congruence responses as a function of dispersal-by-landscape interaction (Fig. 1). Figure 1 shows the prediction from the most plausible statistical model, that describes the probability of congruence by the interaction of dispersal and landscape configuration at the plot-level in addition with the spatial proximity between forest plots (@ref(CongSAD)). 
+Mean congruence exceeded 75% in most simulations but declined under very weak dispersal limitation, especially in clumped and pristine landscapes (fig. \@ref(fig:IfigCong)). There is substantial variability between plot-level trends, with non-linear congruence responses as a function of dispersal-by-landscape interaction (fig. \@ref(fig:IfigCong)). Figure 1 shows the prediction from the most plausible statistical model, that describes the probability of congruence by the interaction of dispersal and landscape configuration at the plot-level in addition with the spatial proximity between forest plots (@ref(CongSAD)). 
 </p>
 
 
@@ -333,10 +341,96 @@ Although the most plausible model included both the dispersal-by-landscape inter
 </p>
 
 <p> <!--Critério post-hoc-->
-Congruence declined under high dispersal scenarios (Fig. 1), indicating that MNEE's mechanistic assumptions are most plausible when dispersal is locally restricted. We therefore restricted subsequent analyses to scenarios with moderate-to-strong dispersal limitation (k ≥ 0.50), where MNEE consistently showed high mean congruence across all experimental landscapes. Combining this post-hoc criterion with the predefined 75% congruence threshold across all three landscapes yielded 67 selected plots (63,8%) for the vulnerability metric analysis. Selected and non-selected plots exhibited similar environmental characteristics and were distributed across the Atlantic Forest with no evidence of systematic spatial patterning (Appendix S3).
+Congruence declined under high dispersal scenarios (fig. \@ref(fig:IfigCong)), indicating that MNEE's mechanistic assumptions are most plausible when dispersal is locally restricted. We therefore restricted subsequent analyses to scenarios with moderate-to-strong dispersal limitation (k ≥ 0.50), where MNEE consistently showed high mean congruence across all experimental landscapes. Combining this post-hoc criterion with the predefined 75% congruence threshold across all three landscapes yielded 67 selected plots (63,8%) for the vulnerability metric analysis. Selected and non-selected plots exhibited similar environmental characteristics and were distributed across the Atlantic Forest with no evidence of systematic spatial patterning (Appendix S3).
 </p>
 
-## Forest cover and dispersal interact to shape vulnerability to habitat loss and fragmentation?
+## Forest cover and dispersal interact to shape vulnerability to habitat loss and fragmentation
+
+```{r caption tab-selecao,echo=FALSE,include=TRUE,eval=TRUE}
+f_z <- function(x) (x-mean(x))/sd(x)
+f_label <- \(vn){
+  gsub("1","M4",vn) %>% 
+    gsub("s\\(k,by\\=land\\) \\+ \\(lat,long\\)","M1",.) %>% 
+    gsub("s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)","M3",.) %>% 
+    gsub("s\\(k,by\\=land\\)","M2",.)
+    
+}
+f_antilabel <- \(vn){
+  gsub("M4","1",vn) %>% 
+    gsub("M1","s\\(k,by\\=land\\) \\+ \\(lat,long\\)",.) %>% 
+    gsub("M3","s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)",.) %>% 
+    gsub("M2","s\\(k,by\\=land\\)",.)
+    
+}
+vcap <- "Model comparison among candidate hierarchical generalized additive models (HGAMs). ΔAICc represents the difference in AICc relative to the best-supported model. est. coef. denotes the effective degrees of freedom (model complexity). weight indicates Akaike weight. Dev. Exp. represents deviance explained."
+```
+```{r tab-selecaoCong,echo=FALSE,include=TRUE,eval=TRUE}
+df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds") %>% 
+  mutate(across(where(is.numeric), ~round(.x,2)),
+         Effect=base,
+         modelo=gsub("Site","Plot",modelo)) %>% 
+  select(-base)
+library(flextable)
+f_label <- \(vn){
+  gsub("1","M4",vn) %>% 
+    gsub("s\\(k,by\\=land\\) \\+ \\(lat,long\\)","M1",.) %>% 
+    gsub("s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)","M3",.) %>% 
+    gsub("s\\(k,by\\=land\\)","M2",.)
+    
+}
+f_flextable <- \(dfi){
+  #
+  df_grouped <- as_grouped_data(dfi, groups = "Effect")
+  #
+  as_flextable(df_grouped) %>%
+    # Estética geral
+    bg(bg = "white", part = "all") %>%
+    theme_vanilla() %>% 
+    # 
+    set_header_labels(
+      modelo = "HGAM",
+      dAICc = "ΔAICc",
+      df = "est. coef.", # 
+      weight = "weight",
+      dev.expl = "Dev. Exp."
+    ) %>%
+    
+    # Destacar as linhas que são os nomes dos grupos (Frag. total, etc)
+    bold(i = ~ !is.na(Effect), bold = TRUE, part = "body") %>%
+    #as_italic(i = ~ !is.na(base), part = "body") %>%
+    bg(i = ~ !is.na(Effect), bg = "#F7F7F7", part = "body") %>% # 
+    
+    # Formatação de números
+    colformat_double(digits = 2) %>% 
+    colformat_double(j = "weight", digits = 2) %>% # 
+    
+    # Alinhamento e legenda
+    align(align = "center", part = "all") %>% 
+    align(j = 1, align = "left", part = "body") %>% # 
+    set_caption(caption = vcap) %>% 
+    
+    # 
+    set_table_properties(layout = "fixed") %>%
+    # Define a largura apenas para a coluna 'modelo'
+    flextable::width(j = "modelo", width = 9.5/5, unit = "in") %>%
+    # Define a largura para todas as OUTRAS colunas
+    flextable::width(j = c("dAICc", "df", "weight", "dev.expl"), width = 6.5/5, unit = "in")
+}
+f_flextable(df_tabsel)
+```
+
+
+Differences in U between landscapes reflect variation in the external replenishment required to sustain observed diversity patterns. Accordingly, log(U/U) quantifies landscape‑induced vulnerability across experimental contrasts that isolate three effects: forest loss and fragmentation (FLF), fragmentation per se (FPS), and their combined forest loss and fragmentation effect (LFC; fig. \@ref(fig:p-efeitos)).
+
+Model selection indicated that the interaction between remaining forest cover (%FC) and dispersal limitation (k) improved model fit only for the LFC effect (Table 1). For FLF and FPS, models including plot‑specific responses to dispersal limitation provided the best fit, whereas adding %FC as either an additive or interactive term did not substantially improve model support (Table 1). Therefore, vulnerability associated with forest cover loss depended jointly on %FC and dispersal limitation, whereas effects involving spatial configuration were primarily explained by variation in dispersal responses among plots.
+
+We compared observed logU/U values with predictions from the best‑fitting model for each landscape effect (Table 1). Given the additive decomposition of landscape effects (FLF = FPS + LFC), we present all three effects together in fig. \@ref(fig:p-efeitos). Modeling the LFC effect requires both %FC and dispersal scenario (k; Table 1). In contrast, the best models for FLF and FPS include only k (Table 1). Because the best models for FLF and FPS are nested within the best model for LFC, logU/U values in fig. \@ref(fig:p-efeitos) are aggregated by %FC classes to facilitate comparison across effects.
+
+The LFC effect increased consistently in plots with reduced %FC and was negligible in plots with high %FC (fig. \@ref(fig:p-efeitos)). Across dispersal regimes, LFC exhibited a non-linear response to dispersal capability, with minimum vulnerability at intermediate values (k ≈ 0.70) and stronger effects under both severe and relaxed limitation. This pattern indicates that habitat loss exerts its strongest influence when dispersal is highly restricted or elevated, whereas intermediate dispersal partially buffers vulnerability. Overall, LFC represented the most systematic component of landscape vulnerability.
+
+The FPS effect was generally weak, with most values clustering around the null reference (fig. \@ref(fig:p-efeitos)). However, a subset of plots displayed a biphasic pattern characterized by reduced vulnerability under severe dispersal limitation and increased vulnerability at moderate limitation. Although the magnitude of FPS occasionally increased in plots with reduced %FC, the strongest biphasic responses were observed in a small number of plots with high %FC. Thus, fragmentation per se acted primarily as a context-dependent modifier rather than a systematic driver of vulnerability.
+
+The FLF effect exhibited greater heterogeneity, combining elements of both LFC and FPS patterns (fig. \@ref(fig:p-efeitos)). In plots with reduced %FC, FLF closely resembled the LFC pattern, while FPS modulated its magnitude across dispersal regimes: attenuating negative effects under severe dispersal limitation but amplifying them under moderate limitation (fig. SI4.1). In contrast, FLF values were generally small in plots with high %FC, except in a few cases where FPS dominated the response. The difference in magnitude between LFC and FPS was typically small and often remained within the null reference range, although LFC tended to dominate under severe dispersal limitation in plots with reduced %FC (Fig. SI4.1). Together, these patterns indicate that vulnerability to forest loss and fragmentation varies according to plot-specific dispersal responses, while habitat loss becomes the predominant driver of vulnerability in landscapes with low remaining forest cover.
 
 
 ```{r criacao de figura pefeitos,eval=FALSE,include=FALSE,echo=FALSE}
@@ -464,92 +558,6 @@ vcap <- glue("Proposed landscape effects described by the functional metric log 
 ```{r p-efeitos, fig.cap=vcap,fig.width=14,fig.height=10,cache=TRUE}
 p_efeitos <- readRDS("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.rds")
 p_efeitos
-```
-
-Differences in U between landscapes reflect variation in the external replenishment required to sustain observed diversity patterns. Accordingly, log(U/U) quantifies landscape‑induced vulnerability across experimental contrasts that isolate three effects: forest loss and fragmentation (FLF), fragmentation per se (FPS), and their combined forest loss and fragmentation effect (LFC; Fig. 2).
-
-Model selection indicated that the interaction between remaining forest cover (%FC) and dispersal limitation (k) improved model fit only for the LFC effect (Table 1). For FLF and FPS, models including plot‑specific responses to dispersal limitation provided the best fit, whereas adding %FC as either an additive or interactive term did not substantially improve model support (Table 1). Therefore, vulnerability associated with forest cover loss depended jointly on %FC and dispersal limitation, whereas effects involving spatial configuration were primarily explained by variation in dispersal responses among plots.
-
-We compared observed logU/U values with predictions from the best‑fitting model for each landscape effect (Table 1). Given the additive decomposition of landscape effects (FLF = FPS + LFC), we present all three effects together in Fig. 2. Modeling the LFC effect requires both %FC and dispersal scenario (k; Table 1). In contrast, the best models for FLF and FPS include only k (Table 1). Because the best models for FLF and FPS are nested within the best model for LFC, logU/U values in Fig. 2 are aggregated by %FC classes to facilitate comparison across effects.
-
-The LFC effect increased consistently in plots with reduced %FC and was negligible in plots with high %FC (Fig. 2). Across dispersal regimes, LFC exhibited a non-linear response to dispersal capability, with minimum vulnerability at intermediate values (k ≈ 0.70) and stronger effects under both severe and relaxed limitation. This pattern indicates that habitat loss exerts its strongest influence when dispersal is highly restricted or elevated, whereas intermediate dispersal partially buffers vulnerability. Overall, LFC represented the most systematic component of landscape vulnerability.
-
-The FPS effect was generally weak, with most values clustering around the null reference (Fig. 2). However, a subset of plots displayed a biphasic pattern characterized by reduced vulnerability under severe dispersal limitation and increased vulnerability at moderate limitation. Although the magnitude of FPS occasionally increased in plots with reduced %FC, the strongest biphasic responses were observed in a small number of plots with high %FC. Thus, fragmentation per se acted primarily as a context-dependent modifier rather than a systematic driver of vulnerability.
-
-The FLF effect exhibited greater heterogeneity, combining elements of both LFC and FPS patterns (Fig. 2). In plots with reduced %FC, FLF closely resembled the LFC pattern, while FPS modulated its magnitude across dispersal regimes: attenuating negative effects under severe dispersal limitation but amplifying them under moderate limitation (Fig. ) SI4.1). In contrast, FLF values were generally small in plots with high %FC, except in a few cases where FPS dominated the response. The difference in magnitude between LFC and FPS was typically small and often remained within the null reference range, although LFC tended to dominate under severe dispersal limitation in plots with reduced %FC (Fig. SI4.1). Together, these patterns indicate that vulnerability to forest loss and fragmentation varies according to plot-specific dispersal responses, while habitat loss becomes the predominant driver of vulnerability in landscapes with low remaining forest cover.
-
-
-```{r caption tab-selecao,echo=FALSE,include=TRUE,eval=TRUE}
-f_z <- function(x) (x-mean(x))/sd(x)
-f_label <- \(vn){
-  gsub("1","M4",vn) %>% 
-    gsub("s\\(k,by\\=land\\) \\+ \\(lat,long\\)","M1",.) %>% 
-    gsub("s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)","M3",.) %>% 
-    gsub("s\\(k,by\\=land\\)","M2",.)
-    
-}
-f_antilabel <- \(vn){
-  gsub("M4","1",vn) %>% 
-    gsub("M1","s\\(k,by\\=land\\) \\+ \\(lat,long\\)",.) %>% 
-    gsub("M3","s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)",.) %>% 
-    gsub("M2","s\\(k,by\\=land\\)",.)
-    
-}
-vcap <- "Model comparison among candidate hierarchical generalized additive models (HGAMs). ΔAICc represents the difference in AICc relative to the best-supported model. est. coef. denotes the effective degrees of freedom (model complexity). weight indicates Akaike weight. Dev. Exp. represents deviance explained."
-```
-```{r tab-selecaoCong,echo=FALSE,include=TRUE,eval=TRUE}
-df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds") %>% 
-  mutate(across(where(is.numeric), ~round(.x,2)),
-         Effect=base,
-         modelo=gsub("Site","Plot",modelo)) %>% 
-  select(-base)
-library(flextable)
-f_label <- \(vn){
-  gsub("1","M4",vn) %>% 
-    gsub("s\\(k,by\\=land\\) \\+ \\(lat,long\\)","M1",.) %>% 
-    gsub("s\\(k,by\\=land\\) - te\\(k,plot,by\\=land\\)","M3",.) %>% 
-    gsub("s\\(k,by\\=land\\)","M2",.)
-    
-}
-f_flextable <- \(dfi){
-  #
-  df_grouped <- as_grouped_data(dfi, groups = "Effect")
-  #
-  as_flextable(df_grouped) %>%
-    # Estética geral
-    bg(bg = "white", part = "all") %>%
-    theme_vanilla() %>% 
-    # 
-    set_header_labels(
-      modelo = "HGAM",
-      dAICc = "ΔAICc",
-      df = "est. coef.", # 
-      weight = "weight",
-      dev.expl = "Dev. Exp."
-    ) %>%
-    
-    # Destacar as linhas que são os nomes dos grupos (Frag. total, etc)
-    bold(i = ~ !is.na(Effect), bold = TRUE, part = "body") %>%
-    #as_italic(i = ~ !is.na(base), part = "body") %>%
-    bg(i = ~ !is.na(Effect), bg = "#F7F7F7", part = "body") %>% # 
-    
-    # Formatação de números
-    colformat_double(digits = 2) %>% 
-    colformat_double(j = "weight", digits = 2) %>% # 
-    
-    # Alinhamento e legenda
-    align(align = "center", part = "all") %>% 
-    align(j = 1, align = "left", part = "body") %>% # 
-    set_caption(caption = vcap) %>% 
-    
-    # 
-    set_table_properties(layout = "fixed") %>%
-    # Define a largura apenas para a coluna 'modelo'
-    flextable::width(j = "modelo", width = 9.5/5, unit = "in") %>%
-    # Define a largura para todas as OUTRAS colunas
-    flextable::width(j = c("dAICc", "df", "weight", "dev.expl"), width = 6.5/5, unit = "in")
-}
-f_flextable(df_tabsel)
 ```
 
 

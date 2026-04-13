@@ -110,6 +110,13 @@ df_dados <- read_csv("dados/df_dados_disponiveis.csv") |>
                                                     pattern=".tif",full.names=T),
                                                "(?<=as\\/).*?(?=.tif)")),
              by = "SiteCode")
+#
+df_p_extensoes <- read_csv("dados/csv/df_p_extensoes.csv")
+Li <- 2
+df_p <- ddply(df_p_extensoes,"SiteCode",\(dfi){
+  vfilter <- dfi$lado_km[which.min(abs(Li-dfi$lado_km))]
+  filter(dfi,lado_km%in%vfilter)
+}) %>% select(SiteCode,p)
 ```
 
 ```{r trackdown chunk SI, include=FALSE,eval=FALSE}
@@ -130,9 +137,10 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 # The features from the pre-selected forest plots   {.unnumbered}
 
-Of the forest inventories available in the TreeCo database, 109 met the initial selection criteria (Table \@ref(tab:dados-disponiveis)). The sampled plots were distributed between 31°S and 7°S latitude and 55°W and 35°W longitude (Fig. \@ref(fig:GE-sitios)a). Most inventories were conducted in areas classified as primary forests according to TreeCo (@de_lima_how_2015). Only two plots, identified as having very high disturbance, were removed from the analysis (Fig. \@ref(fig:GE-sitios)c), resulting in 107 valid inventories.
+Of the forest inventories available in the TreeCo database, 109 met the initial selection criteria (table \@ref(tab:dados-disponiveis)). The sampled plots were distributed between 31°S and 7°S latitude and 55°W and 35°W longitude (fig. \@ref(fig:GE-sitios)). Most inventories were conducted in areas classified as primary forests according to TreeCo (@de_lima_how_2015). Only two plots, identified as having very high disturbance, were removed from the analysis (table \@ref(tab:dados-disponiveis)), resulting in 107 valid inventories. These plots have a median sampled area of 1 ha, with a median of 1,540 individuals and 107 recorded species. Sampling years ranged from 1986 to 2016 (fig. \@ref(fig:GE-sitios)). 
 
-These plots have a median sampled area of 1 ha, with a median of 1,540 individuals and 107 recorded species. Sampling years ranged from 1986 to 2016 (Fig. \@ref(fig:GE-sitios)b). All 107 plots were associated with forest cover maps derived from MapBiomas Collection 6 (@mapbiomas). However, in two cases, it was not possible to center the square plot within the landscape due to the spatial configuration of the forest cover, reducing the final set of sites to 105 plots (Fig. @ref(fig:sitios-removidos)). Detailed landscape maps for each plot are available in Figures SI3.5 and SI3.6.
+
+All 107 plots were associated with forest cover maps derived from MapBiomas Collection 6 (@mapbiomas). However, in two cases, it was not possible to center the square plot within the landscape due to the spatial configuration of the forest cover, reducing the final set of sites to 105 plots (Fig. @ref(fig:sitios-removidos)). Detailed landscape maps for each plot are available in Figures SI3.5 and SI3.6.
 
 ```{r caption tabela caracteriscas das parcelas}
 vcap <- "Characteristics of the forest plots used in the analysis. Columns represent: Plot Code (unique site identifier); Lat and Long (geographic coordinates); Plot Area (total sampled area in hectares); Inventory criteria (minimum inclusion limit for tree diameter, where DBH is Diameter at Breast Height and PBH is Perimeter at Breast Height); N (total number of individuals); S (observed species richness); Forest Type (phytophysiognomy classification); Pert. class (disturbance history); and Data Year (year of sampling or closest proxy). Disturbance classes represent a combination of intensity and time since the last major event: 'low' (no known disturbance in the last 80 years); 'medium' (moderate disturbance between 80 and 50 years ago); 'high' (medium to high disturbance within the last 50 years); and 'very high' (medium to high disturbance within the last 20 years)."
@@ -196,11 +204,63 @@ ft_desc <- flextable(df_dados_disponiveis) |>
 ft_desc
 ```
 
-## Forest Cover Map from MapBiomas6
 
-The processed forest cover map from MapBiomas collection 6 used in the simulations were displayed in figure SI3.5 e SI3.6.
+```{r criação da captio de GE-sitios, eval=TRUE,include=TRUE,echo=FALSE}
+vcap <- "Summary of the sampling and landscape attributes of the study plots. Panels show the distribution of forest cover (%FC), sampling effort (plot area), abundance (N), species richness (S), geographic location, and sampling year. Points represent individual inventories (n = 107). Log-transformation was applied to area, abundance, and richness to facilitate visualization of distributions."
+```
+
+```{r GE-sitios,fig.cap=vcap,fig.width=12,fig.height=3.75, eval=TRUE,include=TRUE,echo=FALSE}
+# precisa mostrar: Effort_ha, lat, long 
+dfp <- read_csv(file = "~/Documentos/mestrado_Ecologia/artigo_principal/dados/df_dados_disponiveis.csv") %>% 
+  mutate(LAT = ifelse(is.na(lat_correct),lat,lat_correct),
+         LONG = ifelse(is.na(long_correct),long,long_correct),
+         across(where(is.numeric),~round(.x,digits=2)),
+         data_year=as.numeric(gsub("2012_2013","2012.5",year_bestProxy)),
+         pert_class = factor(forest_succession,
+                             levels=c("primary",
+                                      "primary/secondary",
+                                      "secondary",
+                                      "capoeira"),
+                             labels=c("low",
+                                      "medium",
+                                      "high",
+                                      "very high")),
+         forest_type_label = gsub("Formacao pioneira sob influencia marinha",
+                                  "FPIM",
+                                  forest_type) %>% 
+           gsub("Contato ","",.)
+         ) %>% 
+  select(SiteCode, LAT, LONG, effort_ha, dbh_cutoff, Ntotal, S_obs, forest_type_label,
+         pert_class, data_year) %>% 
+  inner_join(df_p,.) %>% 
+  rename(lat=LAT,long=LONG) %>% 
+  select(-dbh_cutoff) %>% 
+  relocate(data_year,.after=S_obs) %>% 
+  mutate(across(c(effort_ha:S_obs),log)) %>% 
+  pivot_longer(cols=p:data_year) %>% 
+  mutate(name=factor(name,
+                     levels=c("p","effort_ha","Ntotal","S_obs","lat","long","data_year"),
+                     labels=c("%FC","log(plot area)","log(N)","log(S)","lat","long","data year"))
+         ) %>% 
+  filter(pert_class!="very high")
+#------------------------------
+
+dfp %>% 
+  ggplot(aes(x=name,y=value)) +
+  geom_boxplot() +
+  geom_jitter() +
+  facet_wrap(~name,scales="free",nrow=1) +
+  labs(x="",y="") +
+  theme_bw() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+```
+
+
 
 # Geoprocessing
+
+The processed forest cover map from MapBiomas collection 6 used in the simulations were displayed in figure SI3.5 e SI3.6.
 
 ## Example of plot relocation to the immediate neighborhood   {.unnumbered}
 
