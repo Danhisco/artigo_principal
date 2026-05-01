@@ -316,7 +316,7 @@ p <- l_dfpred$fixo_e_aleat %>%
                                   face="bold"))
 saveRDS(p,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_interpretacao_cong.rds")
 ggsave(filename="figuras/descricao_congruencia_absoluta.png",
-       p,height = 7.33,width = 13.8)
+       p,height = 5,width = 13.8)
 library(magick)
 img <- image_read("figuras/descricao_congruencia_absoluta.png") %>% 
   image_resize("50%") %>% 
@@ -347,6 +347,7 @@ Congruence declined under high dispersal scenarios (fig. \@ref(fig:IfigCong)), i
 ## Forest cover and dispersal interact to shape vulnerability to habitat loss and fragmentation
 
 ```{r caption tab-selecao,echo=FALSE,include=TRUE,eval=TRUE}
+library(officer)
 f_z <- function(x) (x-mean(x))/sd(x)
 f_label <- \(vn){
   gsub("1","M4",vn) %>% 
@@ -362,7 +363,7 @@ f_antilabel <- \(vn){
     gsub("M2","s\\(k,by\\=land\\)",.)
     
 }
-vcap <- "Model comparison among candidate hierarchical generalized additive models (HGAMs). ΔAICc represents the difference in AICc relative to the best-supported model. est. coef. denotes the effective degrees of freedom (model complexity). weight indicates Akaike weight. Dev. Exp. represents deviance explained."
+vcap <- "Model comparison among candidate hierarchical generalized additive models (HGAMs). ΔAICc represents the difference in AICc relative to the best-supported model; est. coef. denotes the effective degrees of freedom (model complexity); weight indicates Akaike weight; Dev. Exp. represents deviance explained. Model formulas are expressed using the mgcv package syntax: s() denotes a univariate smooth term, and te() denotes a tensor-product smooth for interactions between continuous variables (here, dispersal limitation, k, and landscape forest cover, p). The notation | Plot indicates plot-specific smooth terms (hierarchical structure), allowing dispersal effects to vary among plots."
 ```
 ```{r tab-selecaoCong,echo=FALSE,include=TRUE,eval=TRUE}
 df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds") %>% 
@@ -407,8 +408,15 @@ f_flextable <- \(dfi){
     # Alinhamento e legenda
     align(align = "center", part = "all") %>% 
     align(j = 1, align = "left", part = "body") %>% # 
-    set_caption(caption = vcap) %>% 
-    
+    # set_caption(caption = vcap) %>% 
+    add_header_lines(values = as_paragraph(
+            as_chunk("Table 1. ", props = fp_text(bold = TRUE)),
+            as_chunk(vcap, 
+                     props = fp_text(bold = FALSE),
+                     fp_p = fp_par(text.align = "justify") 
+                     )
+             )
+            ) %>%
     # 
     set_table_properties(layout = "fixed") %>%
     # Define a largura apenas para a coluna 'modelo'
@@ -416,7 +424,9 @@ f_flextable <- \(dfi){
     # Define a largura para todas as OUTRAS colunas
     flextable::width(j = c("dAICc", "df", "weight", "dev.expl"), width = 6.5/5, unit = "in")
 }
-f_flextable(df_tabsel)
+fxtow <- f_flextable(df_tabsel)
+save_as_image(fxtow, 
+              path = "figuras/tabsel_efeitos.png")
 ```
 
 
@@ -522,12 +532,18 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE,vpos=c(0.72,0.25),vt=15,vts=0.9
                            high = "darkgreen") +
     labs(x="Fraction of propagules dispersing locally (k)",y="logU/U",title="") +
     facet_grid(efeito~label,scales="free") +
-    theme_classic() +
+    theme_linedraw() +
     theme(plot.margin=unit(c(0,0.2,0,0), "cm"),
           text=element_text(size=vt,face="bold"),
+          strip.background = element_rect(fill = "white"),
+          strip.text = element_text(color="black"),
           legend.position = "inside",
           legend.position.inside = vpos,
-          legend.direction="horizontal") +
+          legend.direction="horizontal",
+          legend.box = "horizontal",
+          legend.box.just = "left",
+          legend.background = element_rect(color="black")
+          ) +
     guides(linetype = guide_legend(
       title.theme = element_text(size = vt*vts, face = "bold")
       )
@@ -538,12 +554,13 @@ f_obs_predito_bysite <- \(dff,logic_ribbon=FALSE,vpos=c(0.72,0.25),vt=15,vts=0.9
 #-----------------------------------------------------------
 #------------------ criação da figura ----------------------
 #-----------------------------------------------------------
-lret <- f_obs_predito_bysite(df_real,logic_ribbon = TRUE, vpos=c(0.72,0.10),vt = 12.5)
+lret <- f_obs_predito_bysite(df_real,logic_ribbon = TRUE, vpos=c(0.72,0.05),vt = 12.5)
 p_efeitos <- lret$plot
+vfac <- 1.2
 ggsave(filename = "1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.png",
        dpi=200,
        plot=p_efeitos,
-       width=12,height=9)
+       width=12*vfac,height=9*vfac)
 saveRDS(p_efeitos,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.rds")
 dfrange <- lret$range
 saveRDS(dfrange,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/dfrange.rds")
