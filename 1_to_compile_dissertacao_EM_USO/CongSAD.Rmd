@@ -423,8 +423,9 @@ vcap <- "Model comparison among candidate hierarchical generalized additive mode
 ```
 ```{r tab-selecaoCong,echo=FALSE,include=TRUE,eval=TRUE}
 df_tabsel <- read_csv(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong.csv") %>% 
-  mutate(across(where(is.numeric), ~round(.x,2)),
-         modelo=f_label(modelo))
+  mutate(modelo=f_label(modelo),
+         dev.expl=dev.expl*100,
+         across(where(is.numeric), ~round(.x,2)))
 f_flextable <- \(dfi){
   dfi %>% 
     flextable() %>%

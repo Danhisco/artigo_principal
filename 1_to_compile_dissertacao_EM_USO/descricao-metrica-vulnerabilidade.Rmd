@@ -349,19 +349,38 @@ dfrange <- filter(dfp,p_class=="%FC ≥ 99") %>%
       names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
       value = c(min(diffABS), max(diffABS),quantile(diffABS,probs=0.05),quantile(diffABS,probs=0.95))
     )
-nsites <- filter(dfp,p_class=="%FC ≥ 99") %>% pull(SiteCode) %>% unique() %>% length()
+dfrange <- rbind(
+  mutate(dfrange,vsig="same sign"),
+  mutate(dfrange,vsig="different sign")
+)
+
+nsites <- filter(dfp,p>=0.99) %>% pull(SiteCode) %>% unique() %>% length()
+dfp <- dfp %>% 
+  mutate(vsig=sign(FPS*LFC),
+         vsig=factor(vsig,
+                     levels=c(1,-1),
+                     labels=c("same sign","different sign")
+                     ))
+dfp %>% 
+  count(p_class,vsig) %>% 
+  group_by(p_class) %>% 
+  mutate(perc=n*100/(sum(n)))
+
 p <- dfp %>% 
-  filter(p!=1,) %>% 
   ggplot(aes(x=k,group=k,y=diffABS)) +
   geom_hline(yintercept = 0,color="black") +
   geom_hline(data = dfrange, aes(yintercept = value,linetype=names),
              color="black",linewidth=0.5) +
   scale_linetype_manual(name = paste0("%FC ≥ 99",", n = ",nsites),
                         values=c("dotted","dashed")) +
-  geom_boxplot() +
-  geom_jitter(alpha=0.5) +
+  geom_boxplot(alpha=0.25) +
+  geom_jitter(alpha=1,aes(shape = vsig),size=3) +
+  scale_shape_manual("",
+                     values=c("same sign"=0,
+                              "different sign"=2)
+                     ) +
   labs(y="|LFC| - |FPS|") +
-  facet_wrap(~p_class,nrow=1) +
+  facet_grid(vsig~p_class) +
   theme(legend.position = "bottom")
 ```
 ```{r}

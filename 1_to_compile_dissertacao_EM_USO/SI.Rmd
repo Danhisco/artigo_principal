@@ -135,6 +135,11 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
+# Context
+
+For each plot, we designed three experimental landscapes from remote sensing data: fragmented, clumped, and pristine. The spatial extent of the experimental landscapes was defined to ensure biological realism, ranging from 1 to 4 km per side depending on the degree of dispersal limitation. This range was chosen to achieve demographic stability across the 20 dispersal scenarios evaluated (Fig. S2.X).
+
+
 # The features from the pre-selected forest plots   {.unnumbered}
 
 Of the forest inventories available in the TreeCo database, 109 met the initial selection criteria (table \@ref(tab:dados-disponiveis)). The sampled plots were distributed between 31°S and 7°S latitude and 55°W and 35°W longitude (fig. \@ref(fig:GE-sitios)). Most inventories were conducted in areas classified as primary forests according to TreeCo (@de_lima_how_2015). Only two plots, identified as having very high disturbance, were removed from the analysis (table \@ref(tab:dados-disponiveis)), resulting in 107 valid inventories. These plots have a median sampled area of 1 ha, with a median of 1,540 individuals and 107 recorded species. Sampling years ranged from 1986 to 2016 (fig. \@ref(fig:GE-sitios)). 

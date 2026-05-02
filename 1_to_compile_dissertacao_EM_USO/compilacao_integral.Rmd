@@ -367,7 +367,8 @@ vcap <- "Model comparison among candidate hierarchical generalized additive mode
 ```
 ```{r tab-selecaoCong,echo=FALSE,include=TRUE,eval=TRUE}
 df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds") %>% 
-  mutate(across(where(is.numeric), ~round(.x,2)),
+  mutate(dev.expl=100*dev.expl,
+         across(where(is.numeric), ~round(.x,2)),
          Effect=base,
          modelo=gsub("Site","Plot",modelo)) %>% 
   select(-base)
@@ -420,9 +421,11 @@ f_flextable <- \(dfi){
     # 
     set_table_properties(layout = "fixed") %>%
     # Define a largura apenas para a coluna 'modelo'
-    flextable::width(j = "modelo", width = 9.5/5, unit = "in") %>%
+    flextable::width(j = "modelo", 
+                     width = 10.5/5, unit = "in") %>%
     # Define a largura para todas as OUTRAS colunas
-    flextable::width(j = c("dAICc", "df", "weight", "dev.expl"), width = 6.5/5, unit = "in")
+    flextable::width(j = c("dAICc", "df", "weight", "dev.expl"), 
+                     width = 1, unit = "in")
 }
 fxtow <- f_flextable(df_tabsel)
 save_as_image(fxtow, 
