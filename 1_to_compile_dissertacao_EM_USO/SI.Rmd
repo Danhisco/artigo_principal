@@ -212,7 +212,31 @@ ft_desc
 
 ```{r criação da captio de GE-sitios, eval=TRUE,include=TRUE,echo=FALSE}
 vcap <- "Summary of the sampling and landscape attributes of the study plots. Panels show the distribution of forest cover (%FC), sampling effort (plot area), abundance (N), species richness (S), geographic location, and sampling year. Points represent individual inventories (n = 107). Log-transformation was applied to area, abundance, and richness to facilitate visualization of distributions."
+#--
+l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
+vsites105 <- l_dfpred$fixo_e_aleat$SiteCode %>% unique
+dfp <- read_csv(file = "~/Documentos/mestrado_Ecologia/artigo_principal/dados/df_dados_disponiveis.csv") %>% 
+  filter(SiteCode %in% vsites105) %>% 
+  select(SiteCode,S_obs,Ntotal,effort_ha) %>% 
+  rename("S"="S_obs",
+         "N"="Ntotal",
+         "Plot Area"="effort_ha") %>% 
+  summarise(
+    across(is.numeric,
+           list(mean=mean,sd=sd,median=median,IQR=IQR,min=min,max=max),
+           .names="{.col}_{.fn}"
+           )
+    ) %>% 
+  pivot_longer(everything()) %>% 
+  separate_wider_delim(cols="name",
+                       delim = "_",
+                       names = c("Variable","sumario")) %>% 
+  pivot_wider(names_from = "sumario",values_from = "value")
+
 ```
+
+
+
 
 ```{r GE-sitios,fig.cap=vcap,fig.width=12,fig.height=3.75, eval=TRUE,include=TRUE,echo=FALSE}
 # precisa mostrar: Effort_ha, lat, long 
@@ -259,6 +283,11 @@ dfp %>%
   theme_bw() +
   theme(axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
+
+
+
+dfp %>% 
+  filter(name %in% c(""))
 ```
 
 

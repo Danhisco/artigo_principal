@@ -361,10 +361,11 @@ dfp <- dfp %>%
                      levels=c(1,-1),
                      labels=c("same sign","different sign")
                      ))
-dfp %>% 
+df_text <- dfp %>% 
   count(p_class,vsig) %>% 
   group_by(p_class) %>% 
-  mutate(perc=n*100/(sum(n)))
+  mutate(perc=n*100/(sum(n)),
+         label=paste0(round(perc,2),"%\n(n=",n,")"))
 
 p <- dfp %>% 
   ggplot(aes(x=k,group=k,y=diffABS)) +
@@ -379,9 +380,28 @@ p <- dfp %>%
                      values=c("same sign"=0,
                               "different sign"=2)
                      ) +
+  geom_label(
+    data = df_text,
+    aes(x = Inf, y = -Inf, label = label),
+    fill = "white",
+    hjust = 1.1, vjust = -0.3, # Ajusta para "dentro" do gráfico
+    color = "black",           # Cor do texto
+    fontface = "bold",
+    size = 3.5,
+    inherit.aes = FALSE        # Importante para não herdar o shape do jitter
+  ) +
+  # scale_fill_viridis_c(option = "viridis", name = "Perc (%)") +
   labs(y="|LFC| - |FPS|") +
   facet_grid(vsig~p_class) +
-  theme(legend.position = "bottom")
+  theme_linedraw() +
+  theme(legend.position = "bottom",
+        strip.background = element_rect(fill="white"),
+        strip.text = element_text(color="black"))
+ggsave(filename="./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/LFC_menos_FPS.jpeg",
+       plot=p,
+       dpi=120,
+       width = 14,
+       height = 7.5)
 ```
 ```{r}
 vcap <- "Dominance of landscape effects across forest cover classes and dispersal scenarios. Each panel corresponds to a class of percentage forest cover (%FC): <30%, 30–60%, 60–80%, and 80–<100%. The y‑axis shows the difference in absolute magnitudes of the forest loss and fragmentation‑per‑se effects (|LFC| – |FPS|). Positive values indicate dominance of the loss effect; negative values indicate dominance of fragmentation. The x‑axis represents dispersal limitation scenarios (k classes). For each k class, boxplots summarize the distribution of observed values, with points overlaid. The horizontal solid line marks zero (equal magnitude of both effects). Dashed lines indicate the 5th and 95th percentiles of the null distribution, and dotted lines show the full range (minimum–maximum) of |LFC| – |FPS| under 100% forest cover (i.e., in landscapes with no forest loss)."
