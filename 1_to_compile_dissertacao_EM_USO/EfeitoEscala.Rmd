@@ -620,7 +620,13 @@ In summary, the dependence of U on spatial scale varies across dispersal scenari
 To ensure robust inference, we therefore restrict the application of the heuristic procedure to dispersal scenarios in which (i) the relationship between U and spatial extent is monotonic and (ii) the total scale effect is sufficiently large relative to stochastic variation. Within this subset of scenarios, a threshold of 75% of the accumulated scale effect provided the most consistent estimates of the sufficient spatial scale across adjacent dispersal levels, whereas more stringent thresholds (≥ 90%) resulted in increased variability and reduced interpretability. Under this criterion, we adopted a simplified operational rule for subsequent analyses: dispersal scenarios with k ≥ 0.35 were assigned a sufficient spatial scale of $L_0$ = 2 km, whereas scenarios with k ≤ 0.30 were assigned $L_0$ = 4 km. These values reflect the empirical clustering of scale estimates under the 75% threshold and provide a stable approximation for scenarios in which the heuristic procedure yields consistent and interpretable results.
 
 
-# Additional Information
+# Apendix
+
+## Discussion
+
+Fragmentation studies often estimate the spatial extent that maximizes the statistical relationship between local biodiversity and a landscape metric, the 'scale of effect' (REF). Our approach instead determines the extent sufficient to simulate each dispersal regime under pristine conditions (no forest loss or configuration change). This provides a mechanistic definition of spatial scale, at the cost of assuming a first-principles mechanistic model.
+
+Both approaches assume that observed biodiversity patterns primarily reflect contemporary landscape structure. The SENM framework partially relaxes this assumption because its scale sensitivity analyses are estimated under pristine scenarios while still using observed local richness values, although even this relaxation does not fully eliminate the need for historical data. The SENM framework partially relaxes this assumption because its scale sensitivity analyses are estimated under pristine scenarios while still using observed local richness values. This relaxation does not eliminate the need for historical data.
 
 ```{r caption fig SI23}
 vcap <- "Estimated U as a function of dispersal limitation (k) in pristine landscapes at the largest spatial extent (16 km) by forest plot. Semi-transparent black points represent replicate U estimates per study site and dispersal level, while red points indicate mean values. Red lines connect means across dispersal scenarios. Panel titles indicate the plot code, species richness, number of individuals, and plot area (ha), respectively."
