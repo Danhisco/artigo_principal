@@ -73,6 +73,83 @@ f_MoranTest_GAMM_severalK <- \(md){
   return(df_moranI)
 }
 
+
+f_MoranTest_CONG_severalK <- \(md){
+  # setup
+  ## functions
+  library(spdep)
+  f_applyMoranI_getStatPval <- \(vk,vcoord,vres){
+    # apply Moran I
+    nb <- knn2nb(knearneigh(vcoord, k=vk))  
+    listw <- nb2listw(nb)
+    moran_output <- moran.test(vres, listw,alternative = "two.sided")
+    # get Stat and Pval
+    data.frame(
+      Statistic = c(
+        "MoranI_stat_res", 
+        "Expectation", 
+        "Variance", 
+        "StdDev", 
+        "pvalue"
+      ),
+      Value = c(
+        moran_output$estimate[["Moran I statistic"]], 
+        moran_output$estimate[["Expectation"]], 
+        moran_output$estimate[["Variance"]], 
+        moran_output$statistic, 
+        moran_output$p.value
+      )
+    ) %>% 
+      pivot_wider(names_from = Statistic,
+                  values_from = Value)
+  }
+  ## data
+  dfmd <- md$model
+  dfmd$residuals <- residuals(md)
+  if(sum(names(dfmd)%in%c("lat","long"))<1){
+    df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+      mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+             long = ifelse(is.na(long_correct),long,long_correct),
+             Sitecode = factor(SiteCode)) %>% 
+      select(SiteCode,lat,long)
+    dfmd <- inner_join(
+      dfmd,
+      df_coord
+    )
+  }
+  dfmd_avgbySite <- dfmd %>% 
+    dplyr::group_by(SiteCode) %>% 
+    dplyr::summarise(mean_res = mean(residuals),
+                     lat = first(lat),
+                     long = first(long)) %>% 
+    ungroup()
+  # Prepare spatial data
+  coordinates <- dfmd_avgbySite[, c("lat","long")]
+  coordinates <- as.matrix(coordinates)
+  # Calculate Moran's I for residuals
+  doMC::registerDoMC(2)
+  df_moranI <- alply(1:100,1,f_applyMoranI_getStatPval,
+                     vcoord=coordinates,
+                     vres=dfmd_avgbySite$mean_res,
+                     .parallel = TRUE)
+  names(df_moranI) <- 1:100
+  df_moranI <- lapply(names(df_moranI),\(li){
+    mutate(df_moranI[[li]],k=li) %>% relocate(k)
+  }) %>% do.call("rbind",.)
+  #
+  return(df_moranI)
+}
+
+
+
+
+
+
+
+
+
+
+
 f_MoranTest_GAMM <- \(md,vk0=3){
   # setup
   ## functions

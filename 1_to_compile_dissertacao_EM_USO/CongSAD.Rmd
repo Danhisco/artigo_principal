@@ -605,13 +605,10 @@ The remaining 39 plots were excluded from the primary inference. Rather than rep
 
 ## Selected plots do not differ systematically from non-selected plots in environmental variables
 
-<p>
-Operational variables exhibited broadly similar distributions between selected and non-selected plots (fig. \@ref(fig:fig-implicacoes-cong)). Although selected plots included a greater number of cases with extremely low landscape-level forest cover and spanned a wider geographic range (fig. \@ref(fig:fig-implicacoes-cong)a–b), their central tendencies were comparable. The median forest cover was slightly higher among non-selected plots. Non-selected plots also included several outliers with high values of plot area, species richness, and abundance (fig. \@ref(fig:fig-implicacoes-cong)a). However, for all operational variables examined, the interquartile ranges overlapped between selected and non-selected plots (fig. \@ref(fig:fig-implicacoes-cong)a), indicating the absence of systematic distributional shifts. Spatial configuration under the fragmented landscape scenario likewise showed comparable structural patterns for selected and non-selected plots (see supplementary material to this appendix). The vulnerability metrics for the landscape effects were also similar between selected and non-selected plots (fig. \@ref(fig:fig-comp-cong-e-logUU) and the fig. \@ref(fig:fig-logUU-nonselected) in comparison with Fig. 2 from the main text). 
+<p><!--apresenta a dist. das vars-->
+Operational variables exhibited broadly similar distributions between selected and non-selected plots (fig. \@ref(fig:fig-implicacoes-cong)). Although selected plots included a greater number of cases with extremely low landscape-level forest cover and spanned a wider geographic range, their central tendencies were comparable. The median forest cover was slightly higher among non-selected plots. Non-selected plots also included several outliers with high values of plot area, species richness, and abundance (fig. \@ref(fig:fig-implicacoes-cong)a). However, for all operational variables examined, the interquartile ranges overlapped between selected and non-selected plots (fig. \@ref(fig:fig-implicacoes-cong)a), indicating the absence of systematic distributional shifts. Spatial configuration under the fragmented landscape scenario likewise showed comparable structural patterns for selected and non-selected plots (see supplementary material to this appendix). The vulnerability metrics for the landscape effects were also similar between selected and non-selected plots (fig. \@ref(fig:fig-comp-cong-e-logUU) and the fig. \@ref(fig:fig-logUU-nonselected) in comparison with Fig. 2 from the main text). 
 </p>
 
-<p>
-Together, these results indicate that applying the congruence criterion did not generate a biased subset of plots with respect to environmental, demographic, or geographic attributes.
-</p>
 
 ```{r criacao da classificação das parcelas quanto à congruencia e suas implicacoes, echo=FALSE, eval=TRUE, include=TRUE}
 # df_p
@@ -712,29 +709,52 @@ saveRDS(lp,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parc
 ```{r caption fig sem dif entre selecionadas e nao, echo=FALSE,eval=TRUE,include=TRUE}
 vcap <- "Environmental and spatial characterization of plot selection within the Atlantic Forest biome. (A) Comparison of six operational variables: landscape-level forest cover (%FL; 0–1 scale), plot area (ha), number of individuals (N), species richness (S), latitude, and longitude (decimal degrees). Green boxplots represent selected plots (n = 66) and red boxplots represent non-selected plots (n = 39). Boxes indicate interquartile ranges (IQR), horizontal lines denote medians, whiskers extend to 1.5×IQR, and points represent raw values. (B) Geographic distribution of plot centroids within the official biome delimitation (gray polygon; IBGE shapefile). Consistent color coding (green = selected; red = non-selected) enables visual comparison of environmental and spatial patterns."
 ```
-```{r fig-implicacoes-cong,fig.cap=vcap,fig.width=12,fig.height=7,cache=FALSE}
+```{r fig-implicacoes-cong,fig.cap=vcap,fig.width=8,fig.height=7,cache=FALSE}
 library(sf)
 library(patchwork)
 lp <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parcelas_selecionadas.rds")
-wrap_plots(plotlist=lp,ncol=2) +
-  plot_annotation(
-    title = "Operational variables show similar distributions in selected and non-selected plots",
-    tag_levels = 'a',
-    tag_prefix = '('
-  ) &
-  theme(
-    plot.tag = element_text(size = 14, face = "bold"),
-    plot.tag.position = c(0, 1),
-    plot.title = element_text(
-      size = 14,
-      face = "bold",
-      hjust = 0.5,  # centralizado
-      margin = margin(b = 8, t = 5)
-    )
-  )
+# wrap_plots(plotlist=lp,ncol=2) +
+#   plot_annotation(
+#     title = "Operational variables show similar distributions in selected and non-selected plots",
+#     tag_levels = 'a',
+#     tag_prefix = '('
+#   ) &
+#   theme(
+#     plot.tag = element_text(size = 14, face = "bold"),
+#     plot.tag.position = c(0, 1),
+#     plot.title = element_text(
+#       size = 14,
+#       face = "bold",
+#       hjust = 0.5,  # centralizado
+#       margin = margin(b = 8, t = 5)
+#     )
+#   )
+lp[["cong_land"]]
 ```
 
 
+### Global spatial autocorrelation of model congruence
+
+To evaluate whether model congruence exhibited non-random spatial organization across sampled plots, we quantified global spatial autocorrelation using Join Count statistics for binary spatial data (Bivand et al. 2020). Plots (n=105) were classified as congruent (C, 63%) or incongruent (I, 37%) according to the SAD congruence criterion adopted in the main analyses. Spatial joins were then computed for the three possible pairwise combinations among neighboring plots: CC, CI, and II. Neighborhood relationships were defined using k-nearest neighbor graphs, and sensitivity analyses were conducted across multiple values of k to evaluate the robustness of spatial autocorrelation patterns to neighborhood definition.
+
+For each join type, the observed number of joins was compared with the expected number under spatial randomness using Monte Carlo permutation tests (nsim = 999). Because our primary interest was detecting spatial clustering, one-tailed tests were used for CC and II joins to evaluate whether observed joins exceeded expectations under randomness, whereas CI joins were evaluated using two-tailed tests because both excess and deficit of boundaries between categories are ecologically informative.
+
+
+To facilitate interpretation and comparison among join types, we summarized the Join Count results using the log observed-to-expected join ratio:
+
+$$
+LRJC = \ln \left(\frac{Observed}{Expected}\right)
+$$
+
+where positive values indicate a higher-than-expected frequency of joins and negative values indicate fewer joins than expected. Statistical significance was assessed using permutation-based p-values derived from the Monte Carlo simulations.
+
+
+<p> <!-- avaliar se mantem -->
+Together, these results indicate that applying the congruence criterion did not generate a biased subset of plots with respect to environmental, demographic, or geographic attributes.
+</p>
+
+
+<!-- Criacao da comparação de logUU entre cong e incong  -->
 
 ```{r criacao da figura que compara a diferença no logUU entre as parcelas selcionadas e nao selecionadas,echo=FALSE,include=TRUE,eval=TRUE}
 #-------------------------------------

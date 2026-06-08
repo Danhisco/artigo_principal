@@ -135,6 +135,113 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
+
+# Material and Method
+
+## Empirical data
+
+### Study biome
+
+The Atlantic Forest functions as a model system for forest ecosystems undergoing advanced fragmentation processes (REF). Currently, less than 30% of its original forest cover remains, distributed as a mosaic of fragments with varying sizes and configurations (REF). At spatial scales of tens of kilometers, this mosaic allows the delineation of landscapes ranging from areas near continuous forest cover to those with minimal remaining cover, providing a broad empirical gradient of forest cover for analysis (REF). This natural variation, however, inextricably couples habitat loss and fragmentation, requiring experimental or modeling approaches, to estimate the isolated effects of cover loss and fragmentation *per se* (REF). Furthermore, the biome's high tree diversity and high degree of endemism reinforce the relevance of the Atlantic Forest as a study system for investigating biodiversity responses to habitat loss and configuration change in biodiversity hotspots (REF).
+
+### Forest inventories
+
+We consulted the TreeCo database, which compiles phytosociological studies conducted in the Atlantic Forest (@de_lima_how_2015). From this database, we selected forest inventories that: (i) sampled tree individuals with diameter at breast height (DBH) ≥ 4.8 cm; (ii) used single plots of at least 1 ha of forest; and (iii) were classified by the TreeCo authors as having high taxonomic reliability (at the morphospecies level) and high precision of plot central coordinates. Details of the inventory selection procedure are provided in the Supporting Information (REF).
+
+### Remote sensing
+
+To characterize forest cover surrounding each plot, we used annual land use and land cover maps from MapBiomas Collection 6 (1985–2020; 30 m spatial resolution; @mapbiomas). In this collection, forest cover is defined as areas classified as native forest formations, including ombrophilous forests, seasonal forests, and secondary forest formations at different successional stages, according to the MapBiomas classification system (@mapbiomas). For each plot, we selected the map corresponding to the year closest to the sampling date, and the analysis area was defined as a 16 km × 16 km square centered on the plot location. The 16-km landscape extent was defined as an upper spatial bound to ensure that the stabilization of U could be evaluated across all dispersal regimes. This extent substantially exceeds the spatial scales typically adopted in landscape-fragmentation studies, which commonly focus on buffers of up to a few kilometers around sampling sites (REF). Additional details on map processing and the classes considered are provided in the Supporting Information (REF).
+
+## Construction of experimental landscapes 
+
+To construct the experimental landscapes, we sequentially processed the contemporary forest-cover map associated with each empirical forest plot. Initially, the original land-cover map was resampled so that its spatial resolution matched the observed density of individuals within the corresponding forest inventory, thereby establishing a direct correspondence between landscape cells and simulated individuals. Habitat units were subsequently defined according to the proportion of forest cover within each resampled cell, allowing the spatial configuration of habitat to be represented explicitly within the simulation domain (details in Supporting Information). This procedure defined the contemporary fragmented landscape, initially represented within a 16 × 16 km square window centered on each forest plot.
+
+Using the resampled fragmented landscape as a baseline, we subsequently generated the two additional experimental landscapes. First, the pristine landscape was constructed by converting all non-habitat cells into habitat cells, thereby representing a continuous-forest scenario without habitat loss. This pristine landscape was then used to estimate the minimum spatial extent required for stabilization of the species input parameter U under each dispersal regime (see Section REF).
+
+Finally, within the spatial extent estimated for each dispersal condition, we constructed the clumped landscape by spatially aggregating all remaining habitat from the fragmented landscape into a single square block centered on the empirical plot. The square geometry preserved consistency with the simulation domain and the spatial structure of the pristine landscape while maintaining total habitat amount and minimizing habitat fragmentation. 
+
+## Spatially Explicit Neutral Model (SENM)
+The SENM describes community dynamics using a spatially explicit coalescence framework that reconstructs the ancestry of individuals sampled within each empirical plot until all lineages converge to the first individuals of their respective species in the landscape (\cite{rosindell2008}; \cite{thompsonPycoalescence2020}). Simulations are initialized without prior species identities for sampled individuals. During each iteration, the ancestry of a randomly selected individual is traced backward in time through one of two possible events: (i) ancestry from a newly introduced species with probability U, or (ii) ancestry from a resident parental individual in the landscape with probability 1−U.
+When ancestry occurs through resident propagules, dispersal events are modeled using a distance-dependent dispersal kernel from which propagule distances are independently sampled (\cite{rosindell2008}; \cite{thompsonPycoalescence2020}). The dispersal kernel is centered on the focal offspring location, and potential parental positions are sampled across the landscape according to the probability distribution defined by the kernel until a habitat cell containing an individual is encountered. This individual is then assigned as the parental lineage of the propagule.
+The simulation proceeds iteratively until all sampled individuals coalesce into a set of ancestral lineages representing the first individuals of their species within the landscape (Fig. 1 in \cite{rosindell2008}; Fig. 1 in \cite{thompsonPycoalescence2020}). This coalescent reconstruction allows species identities to be assigned to individuals in the sampled plot and enables prediction of empirical species abundance distributions (SAD).
+
+### Core assumptions and theoretical interpretation
+
+The SENM assumes a zero-sum dynamic in which each adult death is immediately compensated by recruitment of a new individual (\cite{rosindell2008}). The model further assumes that communities operate under neutral dynamic equilibrium, where stochastic species loss through ecological drift is balanced by the external species-input rate U.
+Under these assumptions, simulations performed in each experimental landscape represent alternative hypotheses regarding the processes generating local alpha diversity. Simulations in fragmented landscapes represent neutral equilibrium under the contemporary spatial configuration of habitat, reflecting the combined effects of habitat loss and fragmentation (\cite{kuussaari_extinction_2009}; \cite{lira_temporal_2019}; \cite{figueiredo_understanding_2019}; \cite{thompson2019characterising}). Simulations in clumped landscapes represent neutral equilibrium under maximized spatial aggregation of remaining habitat while maintaining total habitat amount, thereby minimizing fragmentation per se effects (\cite{etienne2005new}; \cite{fahrig_rethinking_2013}). Finally, simulations in pristine landscapes represent neutral equilibrium in the absence of habitat loss and fragmentation, providing a reference condition (\cite{fahrig_resolving_2022}; \cite{kuussaari_extinction_2009}; \cite{lira_temporal_2019}).
+
+### Semi-analytical estimation of the species-input parameter U
+
+The species-input parameter U, representing the probability that an individual lineage originates from a newly introduced species, was estimated using the semi-analytical approach proposed by \cite{rosindell2008} (Appendix A). This method derives the expected relationship between species richness and the coalescence tree generated by the SENM as U approaches zero. The algorithm traverses the coalescence tree backward while evaluating the balance between lineage coalescence and the introduction of new species along ancestral branches. This procedure yields an analytical relationship between U and expected species richness, allowing estimation of the value of U that minimizes the difference between simulated and observed richness (details in Supporting Information).
+
+
+## Simulation and calibration procedures
+
+In this section, we describe the simulation procedures used to calibrate and validate the SENM as a mechanistic representation of the empirical system and to derive the vulnerability metrics used in subsequent analyses.
+### Calibration of dispersal regimes
+
+Dispersal was modeled using a Laplace dispersal kernel describing the exponential decay in propagule colonization probability with increasing distance from parental individuals. Dispersal limitation was quantified by the parameter (k), defined as the expected proportion of propagules retained within the immediate neighborhood of the parental tree (i.e., up to the adjacent neighboring individual).
+
+Because the spatial resolution of the simulation domain varied among empirical plots according to local tree density, the scale parameter of the Laplace kernel was calibrated independently for each plot to ensure equivalent values of (k) across landscapes differing in individual density. This procedure standardized dispersal limitation in terms of local propagule retention rather than absolute dispersal distance.
+
+Simulations were conducted across 20 dispersal regimes, ranging from (k = 0.99) (strong dispersal limitation) to (k = 0.05) (weak dispersal limitation).
+
+### Estimation of landscape extent
+
+Estimating landscape extent was necessary for constructing the clumped landscape because spatial extent determines the total amount of habitat available for redistribution around the empirical plot. To avoid introducing scale-dependent biases into the comparison among counterfactual landscapes, we estimated the minimum landscape extent required for each dispersal regime.
+
+For a subset of empirical plots, the species-input parameter (U) was estimated across increasing pristine landscape extents ranging from 0.5 to 16 km under each dispersal regime. The objective was to identify the minimum spatial extent at which estimates of (U) stabilized, such that further increases in landscape extent no longer produced substantial changes in the estimated value of (U).
+
+Pristine landscapes were used for this procedure to avoid confounding the estimation of spatial extent with the effects of habitat loss and fragmentation, which constitute the focal processes investigated in this study (details in Appendix REF). The resulting extent estimates were subsequently used to define the simulation domain for each dispersal regime and experimental landscape.
+
+### Calibration of the species-input parameter (U)
+
+After estimating the appropriate spatial extent for each dispersal regime, SENM simulations were performed for the three experimental landscapes. For each simulation batch, the species-input parameter (U) was estimated as the value required for simulated species richness to match the observed richness of the empirical plot. Ten replicate estimates of (U) were obtained for each combination of empirical plot, dispersal regime, and experimental landscape.
+
+### Validation using empirical species abundance distributions
+
+For each simulation batch and estimated value of (U), the SENM was replicated 100 times to generate replicate species abundance distributions (SADs). Congruence between simulated and observed SADs was evaluated using Kolmogorov-Smirnov (KS) tests (REF). The KS statistic measures the maximum difference between the cumulative distribution functions of the observed SAD and each simulated SAD, testing the null hypothesis that both distributions were drawn from the same underlying theoretical distribution (REF).
+
+P-values associated with the KS statistic were estimated using a bootstrap procedure with (N) iterations (REF). Simulated SADs with p-value < 0.05 were classified as non-congruent with the empirical SAD, otherwise were classified as congruent.
+
+As a predefined criterion for inclusion in subsequent landscape-effect analyses, we required a minimum proportion of congruent replicate SADs. For each empirical plot, only simulation batches in which at least 75% of replicate SADs were classified as congruent simultaneously across the three experimental landscapes were retained.
+
+In addition, interpretation of landscape effects was restricted to dispersal regimes showing consistently high congruence between simulated and observed SADs. This procedure empirically delimited the range of dispersal conditions under which the SENM provided an adequate approximation of the empirical system, as described in the Results section.
+
+
+## Vulnerability metric
+
+For empirical plots retained after the validation procedure, vulnerability associated with landscape modification was quantified from contrasts between estimated values of the species-input parameter (U) across pairs of experimental landscapes. Within the SENM framework, (U) represents the dependence of local communities on external biodiversity sources required to maintain local diversity under ecological drift (REF). Differences in (U) between counterfactual landscapes therefore provide a mechanistic measure of biodiversity vulnerability associated with changes in habitat amount and spatial configuration.
+Because the counterfactual landscapes were constructed by modifying one spatial component at a time, direct comparisons between landscapes isolate the effects associated with each landscape component. For each combination of empirical plot and dispersal regime (k), vulnerability contrasts were calculated as the logarithm of the ratio between (U) estimates across experimental landscapes:
+- Total effect of forest cover loss and fragmentation (FLF): ( \log(U_{\text{pristine}} / U_{\text{fragmented}}) )
+- Fragmentation per se effect (FPS): ( \log(U_{\text{clumped}} / U_{\text{fragmented}}) )
+- Forest cover loss effect (LFC): ( \log(U_{\text{pristine}} / U_{\text{clumped}}) )
+
+Under this experimental design, the total effect of habitat loss and fragmentation can be decomposed additively as:
+
+PFC = FPS + PC
+
+The clumped landscape therefore acts as an intermediate reference condition, sharing habitat amount with the fragmented landscape and spatial configuration with the pristine landscape, allowing decomposition of total landscape effects into independent components associated with habitat loss and fragmentation *per se*.
+
+## Statistical analyses
+
+### Analyses of SENM congruence
+
+Statistical variation in SENM congruence was quantified using the proportion of replicate SADs classified as congruent within each simulation batch. Congruence probability was modeled using Hierarchical Generalized Additive Models (HGAMs) with binomial error distribution (\cite{wood2017}; \cite{Pedersen2019}).
+
+The most complex model included smooth terms for dispersal limitation ((k)) with landscape-specific smoothers, as well as a plot-level random effect represented by a spline of (k) nested within empirical plots to account for among-plot variability. A bivariate smoother for the geographic coordinates of plot centroids was also included. This model was compared with reduced HGAMs excluding spatial coordinates, plot-level dispersal smoothers, or both (details in Appendix REF).
+
+### Analyses of vulnerability metrics
+
+Both empirical evidence and theoretical expectations suggest that remaining forest cover (%FC) may modulate the effects of habitat loss and fragmentation on biodiversity (REF). We therefore evaluated the influence of (%FC) on each vulnerability metric (PFC, FPS, and PC).
+
+For each metric, we fitted a series of five HGAMs of increasing complexity. The simplest model included only plot-specific intercepts. Additional models incorporated smooth terms for dispersal limitation (k) as fixed and random effects, followed by inclusion of (%FC) either as an additive smoother or as a tensor-product interaction with (k).
+
+Models were fitted using restricted maximum likelihood (REML). Predictions from fitted models were subsequently used to estimate mean vulnerability responses across the observed gradients of dispersal limitation and forest cover. All analyses were performed in R using the mgcv package (\cite{wood2017}).
+
+
+
+
 # Context
 
 For each plot, we designed three experimental landscapes from remote sensing data: fragmented, clumped, and pristine. The spatial extent of the experimental landscapes was defined to ensure biological realism, ranging from 1 to 4 km per side depending on the degree of dispersal limitation. This range was chosen to achieve demographic stability across the 20 dispersal scenarios evaluated (Fig. S2.X).
