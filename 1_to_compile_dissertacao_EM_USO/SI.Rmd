@@ -142,23 +142,102 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 ### Study biome
 
-The Atlantic Forest functions as a model system for forest ecosystems undergoing advanced fragmentation processes (REF). Currently, less than 30% of its original forest cover remains, distributed as a mosaic of fragments with varying sizes and configurations (REF). At spatial scales of tens of kilometers, this mosaic allows the delineation of landscapes ranging from areas near continuous forest cover to those with minimal remaining cover, providing a broad empirical gradient of forest cover for analysis (REF). This natural variation, however, inextricably couples habitat loss and fragmentation, requiring experimental or modeling approaches, to estimate the isolated effects of cover loss and fragmentation *per se* (REF). Furthermore, the biome's high tree diversity and high degree of endemism reinforce the relevance of the Atlantic Forest as a study system for investigating biodiversity responses to habitat loss and configuration change in biodiversity hotspots (REF).
+The Atlantic Forest functions as a model system for forest ecosystems undergoing advanced fragmentation processes (@vancine2024atlantic). Currently, less than 30% of its original forest cover remains, distributed as a mosaic of fragments with varying sizes and configurations (@de2015much, @vancine2024atlantic). At spatial scales of tens of kilometers, this mosaic allows the delineation of landscapes ranging from areas near continuous forest cover to those with minimal remaining cover, providing a broad empirical gradient of forest cover for analysis (REF). This natural variation, however, inextricably couples habitat loss and fragmentation, requiring experimental or modeling approaches, to estimate the isolated effects of cover loss and fragmentation *per se* (REF). Furthermore, the biome's high tree diversity and high degree of endemism reinforce the relevance of the Atlantic Forest as a study system for investigating biodiversity responses to habitat loss and configuration change in biodiversity hotspots (REF).
 
 ### Forest inventories
 
 We consulted the TreeCo database, which compiles phytosociological studies conducted in the Atlantic Forest (@de_lima_how_2015). From this database, we selected forest inventories that: (i) sampled tree individuals with diameter at breast height (DBH) ≥ 4.8 cm; (ii) used single plots of at least 1 ha of forest; and (iii) were classified by the TreeCo authors as having high taxonomic reliability (at the morphospecies level) and high precision of plot central coordinates. Details of the inventory selection procedure are provided in the Supporting Information (REF).
 
-### Remote sensing
+## Remote sensing
 
-To characterize forest cover surrounding each plot, we used annual land use and land cover maps from MapBiomas Collection 6 (1985–2020; 30 m spatial resolution; @mapbiomas). In this collection, forest cover is defined as areas classified as native forest formations, including ombrophilous forests, seasonal forests, and secondary forest formations at different successional stages, according to the MapBiomas classification system (@mapbiomas). For each plot, we selected the map corresponding to the year closest to the sampling date, and the analysis area was defined as a 16 km × 16 km square centered on the plot location. The 16-km landscape extent was defined as an upper spatial bound to ensure that the stabilization of U could be evaluated across all dispersal regimes. This extent substantially exceeds the spatial scales typically adopted in landscape-fragmentation studies, which commonly focus on buffers of up to a few kilometers around sampling sites (REF). Additional details on map processing and the classes considered are provided in the Supporting Information (REF).
+To characterize forest cover surrounding each plot, we used annual land use and land cover maps from MapBiomas Collection 6 (1985–2020; 30 m spatial resolution; @mapbiomas). In this collection, forest cover is defined as areas classified as native forest formations, including ombrophilous forests, seasonal forests, and secondary forest formations at different successional stages, according to the MapBiomas classification system (@mapbiomas). The processed forest cover map from MapBiomas collection 6 used in the simulations were displayed in figure SI3.5 e SI3.6.
+
+For each plot, we selected the map corresponding to the year closest to the sampling date, and the analysis area was defined as a 16 km × 16 km square centered on the plot location. The 16-km landscape extent was defined as an upper spatial bound to ensure that the stabilization of U could be evaluated across all dispersal regimes. This extent substantially exceeds the spatial scales typically adopted in landscape-fragmentation studies, which commonly focus on buffers of up to a few kilometers around sampling sites (REF).
+
+
+### Example of plot relocation to the immediate neighborhood   {.unnumbered}
+
+```{r deslocamento parcela, eval=FALSE, include=FALSE}
+library(purrr)
+library(magick)
+library(cowplot)
+library(ggplot2)
+img_to_gg <- function(img) {
+  ggdraw() + 
+    draw_image(img) +  # Scale de 0.9 para margens
+    theme_void()
+}
+img <- image_read("0_apendices/mapas_p_MNEE/figuras/exemplo_redesenho_parcela.png") %>% 
+  image_trim()
+img_crop <- image_crop(img, "558x475+0+16")
+plot <- img_to_gg(img_crop)
+saveRDS(plot,"1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
+```
+```{r caption deslocamento das parcelas}
+vcap <- "Example of plot displacement to the immediate neighborhood. Due to the spatial configuration of the forest cover, some plots could not be centered within the landscape. In these cases, the plot was relocated to the nearest available forest area within the same forest patch. In the figure, dark red represents the adjusted sampled plot area, yellow represents the remaining forest cover, and white represents the non-forest matrix."
+```
+```{r desloc-parcela, fig.height=2,fig.width=4.5,fig.cap="Exemplo de deslocamenteo da parcela quadrada do centro da parcela para a vizinhança próxima."}
+plot <- readRDS("1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
+plot
+```
+
+### Forest Fragments with Insufficient Area for Square Plots
+
+```{r criacao sitios remov, eval=FALSE, include=FALSE}
+limg <- c("0_apendices/mapas_p_MNEE/figuras/sitio_removido.png",
+          "0_apendices/mapas_p_MNEE/figuras/sitio_removido_BAURUC.png")
+limg <- lapply(limg,img_to_gg)
+saveRDS(limg,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/mapas_semquadrado.rds")
+```
+```{r sitios-removidos, fig.cap="Detail of two forest fragments where it was not possible to allocate a square plot due to limited continuous habitat. The cutouts show that although there is forest in the surroundings, there is insufficient area to shift the plot to another position within the same fragment without exceeding the boundaries of the target habitat."}
+library(gridExtra)
+p <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/mapas_semquadrado.rds")
+grid.arrange(grobs=p,nrow=1)
+```
+
+
+
+
+
+
+
 
 ## Construction of experimental landscapes 
 
-To construct the experimental landscapes, we sequentially processed the contemporary forest-cover map associated with each empirical forest plot. Initially, the original land-cover map was resampled so that its spatial resolution matched the observed density of individuals within the corresponding forest inventory, thereby establishing a direct correspondence between landscape cells and simulated individuals. Habitat units were subsequently defined according to the proportion of forest cover within each resampled cell, allowing the spatial configuration of habitat to be represented explicitly within the simulation domain (details in Supporting Information). This procedure defined the contemporary fragmented landscape, initially represented within a 16 × 16 km square window centered on each forest plot.
+To construct the experimental landscapes, we sequentially processed the contemporary forest-cover map associated with each empirical forest plot (Fig. \@ref(fig-exemplo-paisagens-experimentais)) . Initially, the original land-cover map was resampled so that its spatial resolution matched the observed density of individuals within the corresponding forest inventory, thereby establishing a direct correspondence between landscape cells and simulated individuals. Habitat units were subsequently defined according to the proportion of forest cover within each resampled cell, allowing the spatial configuration of habitat to be represented explicitly within the simulation domain (details in Supporting Information). This procedure defined the contemporary fragmented landscape, initially represented within a 16 × 16 km square window centered on each forest plot.
 
-Using the resampled fragmented landscape as a baseline, we subsequently generated the two additional experimental landscapes. First, the pristine landscape was constructed by converting all non-habitat cells into habitat cells, thereby representing a continuous-forest scenario without habitat loss. This pristine landscape was then used to estimate the minimum spatial extent required for stabilization of the species input parameter U under each dispersal regime (see Section REF).
+Using the resampled fragmented landscape as a baseline, we subsequently generated the two additional experimental landscapes. First, the pristine landscape was constructed by converting all non-habitat cells into habitat cells, thereby representing a continuous-forest scenario without habitat loss. This pristine landscape was then used to estimate the minimum spatial extent required for stabilization of the species input parameter U under each dispersal regime (see Section 'Estimation of landscape extent').
 
 Finally, within the spatial extent estimated for each dispersal condition, we constructed the clumped landscape by spatially aggregating all remaining habitat from the fragmented landscape into a single square block centered on the empirical plot. The square geometry preserved consistency with the simulation domain and the spatial structure of the pristine landscape while maintaining total habitat amount and minimizing habitat fragmentation. 
+
+
+```{r caption fig exemplo paisgens experimentais}
+vcap <- "Comparison of landscape spatial configurations for the neutral model simulations. For each forest plot, three landscape scenarios were generated based on the observed total forest cover: (left) Fragmented, representing the real-world spatial configuration derived from MapBiomas; (center) Clumped, where the total forest cover is preserved but aggregated into a single, continuous, and centered patch; and (right) Pristine, a baseline scenario where the entire landscape is assumed to be fully forested (100% forest cover). Colors follow a terrain-based scale where dark green represents the sampled plot area, yellow represents the remaining forest cover, and white represents the non-forest matrix. These scenarios allow for the decomposition of landscape effects into total forest cover loss (Pristine vs. Clumped) and fragmentation per se (Clumped vs. Fragmented)."
+```
+```{r fig-exemplo-paisagens-experimentais, fig.width=9, fig.height=3.5, fig.cap=vcap}
+source("source/mapa_p_MNEE.R")
+f_image <- \(mat,title){
+  image(mat,
+        main=title,
+        zlim=c(0,2),
+        axes=FALSE,
+        col=terrain.colors(12,rev = TRUE))
+}
+#
+par(mfrow = c(1, 3), mar = c(1, 1, 3, 1)) # Diminuir margens externas ajuda muito
+#
+path_name <- "dados/simulacao/MGipia1.txt"
+m <- read_table(file = path_name) |> as.matrix()
+f_image(mat=m,title="Fragmented")
+# sem frag
+m_sem_frag <- f_nonFragLand(m)
+f_image(mat=m_sem_frag,title="Clumped")
+# idealizado
+m_ideal <- m
+m_ideal[m_ideal==0] <- 1
+f_image(mat=m_ideal,title="Pristine")
+```
+
 
 ## Spatially Explicit Neutral Model (SENM)
 The SENM describes community dynamics using a spatially explicit coalescence framework that reconstructs the ancestry of individuals sampled within each empirical plot until all lineages converge to the first individuals of their respective species in the landscape (\cite{rosindell2008}; \cite{thompsonPycoalescence2020}). Simulations are initialized without prior species identities for sampled individuals. During each iteration, the ancestry of a randomly selected individual is traced backward in time through one of two possible events: (i) ancestry from a newly introduced species with probability U, or (ii) ancestry from a resident parental individual in the landscape with probability 1−U.
@@ -178,6 +257,8 @@ The species-input parameter U, representing the probability that an individual l
 ## Simulation and calibration procedures
 
 In this section, we describe the simulation procedures used to calibrate and validate the SENM as a mechanistic representation of the empirical system and to derive the vulnerability metrics used in subsequent analyses.
+  
+    
 ### Calibration of dispersal regimes
 
 Dispersal was modeled using a Laplace dispersal kernel describing the exponential decay in propagule colonization probability with increasing distance from parental individuals. Dispersal limitation was quantified by the parameter (k), defined as the expected proportion of propagules retained within the immediate neighborhood of the parental tree (i.e., up to the adjacent neighboring individual).
@@ -239,15 +320,9 @@ For each metric, we fitted a series of five HGAMs of increasing complexity. The 
 
 Models were fitted using restricted maximum likelihood (REML). Predictions from fitted models were subsequently used to estimate mean vulnerability responses across the observed gradients of dispersal limitation and forest cover. All analyses were performed in R using the mgcv package (\cite{wood2017}).
 
+# Complementary Results
 
-
-
-# Context
-
-For each plot, we designed three experimental landscapes from remote sensing data: fragmented, clumped, and pristine. The spatial extent of the experimental landscapes was defined to ensure biological realism, ranging from 1 to 4 km per side depending on the degree of dispersal limitation. This range was chosen to achieve demographic stability across the 20 dispersal scenarios evaluated (Fig. S2.X).
-
-
-# The features from the pre-selected forest plots   {.unnumbered}
+## The features from the pre-selected forest plots   {.unnumbered}
 
 Of the forest inventories available in the TreeCo database, 109 met the initial selection criteria (table \@ref(tab:dados-disponiveis)). The sampled plots were distributed between 31°S and 7°S latitude and 55°W and 35°W longitude (fig. \@ref(fig:GE-sitios)). Most inventories were conducted in areas classified as primary forests according to TreeCo (@de_lima_how_2015). Only two plots, identified as having very high disturbance, were removed from the analysis (table \@ref(tab:dados-disponiveis)), resulting in 107 valid inventories. These plots have a median sampled area of 1 ha, with a median of 1,540 individuals and 107 recorded species. Sampling years ranged from 1986 to 2016 (fig. \@ref(fig:GE-sitios)). 
 
@@ -390,88 +465,7 @@ dfp %>%
   theme_bw() +
   theme(axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
-
-
-
-dfp %>% 
-  filter(name %in% c(""))
 ```
-
-
-
-# Geoprocessing
-
-The processed forest cover map from MapBiomas collection 6 used in the simulations were displayed in figure SI3.5 e SI3.6.
-
-## Example of plot relocation to the immediate neighborhood   {.unnumbered}
-
-```{r deslocamento parcela, eval=FALSE, include=FALSE}
-library(purrr)
-library(magick)
-library(cowplot)
-library(ggplot2)
-img_to_gg <- function(img) {
-  ggdraw() + 
-    draw_image(img) +  # Scale de 0.9 para margens
-    theme_void()
-}
-img <- image_read("0_apendices/mapas_p_MNEE/figuras/exemplo_redesenho_parcela.png") %>% 
-  image_trim()
-img_crop <- image_crop(img, "558x475+0+16")
-plot <- img_to_gg(img_crop)
-saveRDS(plot,"1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
-```
-```{r caption deslocamento das parcelas}
-vcap <- "Example of plot displacement to the immediate neighborhood. Due to the spatial configuration of the forest cover, some plots could not be centered within the landscape. In these cases, the plot was relocated to the nearest available forest area within the same forest patch. In the figure, dark red represents the adjusted sampled plot area, yellow represents the remaining forest cover, and white represents the non-forest matrix."
-```
-```{r desloc-parcela, fig.height=2,fig.width=4.5,fig.cap="Exemplo de deslocamenteo da parcela quadrada do centro da parcela para a vizinhança próxima."}
-plot <- readRDS("1_to_compile_dissertacao_EM_USO/09_SI/RDS/deslocamento_parcela.rds")
-plot
-```
-
-## Forest Fragments with Insufficient Area for Square Plots
-
-```{r criacao sitios remov, eval=FALSE, include=FALSE}
-limg <- c("0_apendices/mapas_p_MNEE/figuras/sitio_removido.png",
-          "0_apendices/mapas_p_MNEE/figuras/sitio_removido_BAURUC.png")
-limg <- lapply(limg,img_to_gg)
-saveRDS(limg,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/mapas_semquadrado.rds")
-```
-```{r sitios-removidos, fig.cap="Detail of two forest fragments where it was not possible to allocate a square plot due to limited continuous habitat. The cutouts show that although there is forest in the surroundings, there is insufficient area to shift the plot to another position within the same fragment without exceeding the boundaries of the target habitat."}
-library(gridExtra)
-p <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/mapas_semquadrado.rds")
-grid.arrange(grobs=p,nrow=1)
-```
-
-## Example of the experimental landscape
-
-```{r caption fig exemplo paisgens experimentais}
-vcap <- "Comparison of landscape spatial configurations for the neutral model simulations. For each forest plot, three landscape scenarios were generated based on the observed total forest cover: (left) Fragmented, representing the real-world spatial configuration derived from MapBiomas; (center) Clumped, where the total forest cover is preserved but aggregated into a single, continuous, and centered patch; and (right) Pristine, a baseline scenario where the entire landscape is assumed to be fully forested (100% forest cover). Colors follow a terrain-based scale where dark green represents the sampled plot area, yellow represents the remaining forest cover, and white represents the non-forest matrix. These scenarios allow for the decomposition of landscape effects into total forest cover loss (Pristine vs. Clumped) and fragmentation per se (Clumped vs. Fragmented)."
-```
-```{r fig-exemplo-paisagens-experimentais, fig.width=9, fig.height=3.5, fig.cap=vcap}
-source("source/mapa_p_MNEE.R")
-f_image <- \(mat,title){
-  image(mat,
-        main=title,
-        zlim=c(0,2),
-        axes=FALSE,
-        col=terrain.colors(12,rev = TRUE))
-}
-#
-par(mfrow = c(1, 3), mar = c(1, 1, 3, 1)) # Diminuir margens externas ajuda muito
-#
-path_name <- "dados/simulacao/MGipia1.txt"
-m <- read_table(file = path_name) |> as.matrix()
-f_image(mat=m,title="Fragmented")
-# sem frag
-m_sem_frag <- f_nonFragLand(m)
-f_image(mat=m_sem_frag,title="Clumped")
-# idealizado
-m_ideal <- m
-m_ideal[m_ideal==0] <- 1
-f_image(mat=m_ideal,title="Pristine")
-```
-
 
 # Dispersal kernel
 

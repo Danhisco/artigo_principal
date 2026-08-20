@@ -3,6 +3,7 @@ title: ""
 author: ""
 output:
   bookdown::pdf_document2:
+    ]
     latex_engine: lualatex
     pandoc_args: [
       "--variable", "geometry=a4paper",
@@ -11,7 +12,6 @@ output:
       "--variable", "geometry=bottom=2cm",
       "--variable", "geometry=inner=3cm",
       "--variable", "geometry=outer=2cm"
-    ]
   bookdown::word_document2: default
   pdf_document: default
   html_document:
