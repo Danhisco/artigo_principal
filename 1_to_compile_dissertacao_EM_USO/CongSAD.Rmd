@@ -114,7 +114,7 @@ df_dados_disponiveis <- read_csv(file = "dados/df_dados_disponiveis.csv") %>%
   mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
          long = ifelse(is.na(long_correct),long,long_correct),
          Sitecode = factor(SiteCode)) %>% 
-  select(SiteCode,lat,long, forest_succession) %>% 
+  select(refID, SiteCode,lat,long, forest_succession) %>% 
   filter(forest_succession!="capoeira",
          SiteCode %in% vsites105)
 #
@@ -609,6 +609,278 @@ Congruence declined under high dispersal scenarios (Fig. 1, main text), indicati
 The remaining 39 plots were excluded from the primary inference. Rather than representing random model failure, these cases may reflect additional ecological processes not captured by SENM, as discussed in the main text, and thus indicate directions for future model refinement.
 </p>
 
+## Spatial autocorrelation between selected and not selected plots
+
+
+```{r figcap mapa selecionado e nao, eval=TRUE}
+vcap <- "Geographic distribution of plot centroids within the official biome delimitation (gray polygon; IBGE shapefile). Consistent color coding (green = selected; red = non-selected) enables visual comparison of environmental and spatial patterns."
+```
+```{r fig-mapa-selecionado-e-nao, fig.cap=vcap,fig.height=,fig.width=,eval=TRUE,echo=FALSE}
+library(sf)
+library(patchwork)
+# df_p
+df_p <- read_csv("dados/df_p.csv")
+#df_sítios simuláveis em SENM contemporâneo
+df_coord <- read_csv(file = "dados/df_dados_disponiveis.csv") %>% 
+  mutate(lat = ifelse(is.na(lat_correct),lat,lat_correct),
+         long = ifelse(is.na(long_correct),long,long_correct),
+         Sitecode = factor(SiteCode)) %>% 
+  select(SiteCode,lat,long, forest_succession) %>% 
+  filter(forest_succession!="capoeira")
+
+v_site <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
+  pull(SiteCode) |> unique()
+v_site <- intersect(df_coord$SiteCode,v_site)
+# df_sim
+df_sim <- read_csv("dados/df_simulacao.csv") %>% 
+  filter(SiteCode %in% vsites105)
+# quem são os não intepretados?
+df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") 
+df_selected <- df_ad %>% 
+  filter(k>=0.49999) %>%
+  group_by(SiteCode) %>% 
+  dplyr::summarise(selecionado = all(nSAD>=75))
+vnum_selected <- sum(df_selected$selecionado)
+#-------------------------------------------------------------
+#--------------------------- gráficos ------------------------
+#-------------------------------------------------------------
+lp <- list()
+# características das parcelas interpretadas e das outras
+dfp <- inner_join(df_selected,select(df_dados_disponiveis,-forest_succession))
+dfp <- inner_join(dfp, distinct( select(df_sim,-c(k:d)) ) )
+dfp <- inner_join(dfp, df_p)
+vcols <- c("green3","red")
+names(vcols) <- c(paste0("TRUE (",vnum_selected,")"),
+                  paste0("FALSE (",105-vnum_selected,")"))
+library(sf)
+shp_FA <- read_sf("dados/shapefile/biome_border.shp")
+sf_plot <- st_as_sf(dfp,coords = c("long", "lat"), crs = 4326)
+sf_plot <- st_transform(sf_plot,crs=st_crs(shp_FA))
+sf_plot <- mutate(sf_plot,
+                  selecionado = ifelse(selecionado,"Selected","Not selected"))
+sf_plot <- inner_join(sf_plot,
+                      count(st_drop_geometry(sf_plot),selecionado) %>% 
+                        mutate(label=paste(selecionado,"=",n)) %>% 
+                        select(-n)
+                      )
+f_ggplot <- \(vfilter){
+  ggplot() +
+  geom_sf(data=shp_FA,fill="darkgray",color="darkgreen") +
+  geom_sf(data = filter(sf_plot,selecionado==vfilter),
+          aes(fill=selecionado,shape=selecionado, size=5,alpha=0.75)) +
+  coord_sf(ylim = c(-32,-5),xlim = c(-56,-34),expand = FALSE) +
+  scale_shape_manual(
+    name = NULL,
+    values = c("Not selected" = 25, "Selected" = 24),
+    ) +
+  scale_fill_manual(
+    name = NULL,
+    values = c("Not selected" = "red", "Selected" = "green3")
+    ) +
+  theme_classic() +
+  theme(
+    legend.position = "none"
+  ) + {
+    if(vfilter == "Selected") {
+      list(
+        ggspatial::annotation_north_arrow(
+          location = "br",
+          which_north = "true",
+          height = unit(1.2, "cm"),
+          width = unit(1.2, "cm"),
+          pad_x = unit(0.5, "cm"),
+          pad_y = unit(0.5, "cm")
+        ),
+        ggspatial::annotation_scale(
+          location = "br",
+          pad_x = unit(2.5, "cm"),
+          pad_y = unit(0.5, "cm"),
+          width_hint = 0.2,
+          style = "bar"
+        )
+      )
+    }
+  } + 
+  facet_wrap(~label)
+}
+lp <- lapply(unique(sf_plot$selecionado)[2:1],f_ggplot)
+wrap_plots(lp,ncol=2)
+```
+
+- aqui vai a parte que descreve o mapa 
+
+
+
+
+MAPA -> teste de autocorrelação e sensibilidade aos tipos de estudos-> diferença entre as variáveis ambientais
+
+## Selected plots does not have evidence of spatial autocorrelation; not selected may have some
+
+```{r joint count PROXIMOS PASSOS, eval=FALSE,include=FALSE}
+library(readr)
+library(dplyr)
+library(spdep)
+library(ggplot2)
+df_aud <- inner_join(df_selected,select(df_dados_disponiveis,SiteCode,refID))
+vrefID <- df_aud %>% count(refID) %>% 
+  mutate(nparcelas=factor(n,
+                          levels=c(1,2,10),
+                          labels=c("1 plot","2 plots","10 plots")))
+df_aud <- inner_join(df_aud,select(vrefID,refID,nparcelas))
+df_aud <- inner_join(df_aud,df_coord) %>% 
+    mutate(status = factor(ifelse(selecionado, "Selected", "NotSelected")))
+coords <- as.matrix(df_aud[, c("lat", "long")])
+f_ne <- \(vjcmc){
+  sapply(vjcmc,"[[","statistic") %>% 
+    names() %>% 
+    gsub("Join-count statistic for ","",.)
+}
+
+
+f_joincount_byK <- function(k, coords, status) {
+  nb <- knn2nb(knearneigh(coords, k = k))
+  nb <- make.sym.nb(nb)              
+  listw <- nb2listw(nb, style = "B", zero.policy = TRUE)
+  jc_mc <- joincount.mc(status, 
+                        listw, 
+                        nsim = 999, 
+                        alternative = "greater",
+                        zero.policy = TRUE)
+  data.frame(
+    k = k,
+    tipo = f_ne(jc_mc),
+    statistic = sapply(jc_mc,"[[","statistic"),
+    pvalue = sapply(jc_mc,"[[","p.value")
+  )
+}
+
+# sequencial - sem doMC/parallel, evita o problema de compatibilidade
+f_joincount_allk <- \(dfinput,label="all plots"){
+  coords <- as.matrix(dfinput[, c("lat", "long")])
+  df_jc <- do.call(rbind, lapply(3:30, f_joincount_byK, coords = coords, status = dfinput$status))
+  df_jc$label <- label
+  return(df_jc)
+}
+df_jc <- lapply(c(NA,"1 plot"),\(li){
+  if(is.na(li)){
+    f_joincount_allk(df_aud)
+  }else{
+    f_joincount_allk(filter(df_aud,nparcelas==li),
+                     label = gsub("1 plot","studies with single plot",li))
+  }
+}) %>% rbindlist
+df_jc[,tipo:=ifelse(tipo=="Selected",tipo,"Not selected")]
+
+ggplot(df_jc, aes(x = k, y = pvalue, color = tipo)) +
+  geom_hline(yintercept = 0.05, linetype = 2, color = "black") +
+  scale_color_manual("",values=c("Selected"="green","Not selected"="red")) +
+  geom_point() +
+  geom_line() +
+  theme_bw() +
+  labs(x = "n-nearest neighbors", y = "p-value (join count, Monte Carlo)") +
+  facet_wrap(~label,ncol=2) +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+# Os estudos com mais de uma parcela tem o número de FALSE e TRUE desbalanceado?
+# Para todas as parcelas:
+#@ calcular a distância média e o desvio padrão dos vizinhos
+#@ estratificação: nparcelas (todos, 1 plot, 2 plots e 10 plots)
+##
+library(spdep)
+library(ggplot2)
+library(dplyr)
+# Identificar o tipo de estudo para cada parcela
+# Função para calcular distâncias médias por k
+f_calc_distancias <- \(dfi, k_range = 3:30){
+  f_dist0 <- \(df0,nb,comp_ids){
+    #
+    idx_ref <- which(dfi$SiteCode == df0$SiteCode)  
+    vizinhos_idx <- nb[[idx_ref]]
+    # Tamanho do componente
+    comp_id <- comp_ids[idx_ref]
+    tamanho_componente <- sum(comp_ids == comp_id)
+    #
+    coords_ref <- unlist(df0[,c("long","lat")])
+    coords_vizinhos <- as.matrix(dfi[vizinhos_idx, c("long", "lat")])
+    # 
+    distancias <- sqrt((coords_ref[1] - coords_vizinhos[,1])^2 + 
+                         (coords_ref[2] - coords_vizinhos[,2])^2)
+    #
+    data.frame(
+      SiteCode = df0$SiteCode,
+      lat = df0$lat,
+      long = df0$long,
+      n_vizinhos = length(vizinhos_idx),
+      componente_id = comp_id,
+      tamanho_componente = tamanho_componente,
+      dist_media = mean(distancias, na.rm = TRUE),
+      dist_sd = sd(distancias, na.rm = TRUE),
+      dist_max = max(distancias, na.rm = TRUE),
+      dist_min = min(distancias, na.rm = TRUE)
+      )
+  }
+  frun <- \(vk){
+    # 
+    nb <- knn2nb(knearneigh(dfi[,c("lat","long")], k = vk))
+    comp <- n.comp.nb(nb)
+    comp_ids <- comp$comp.id
+    n_componentes <- comp$nc
+    #
+    dfi <- as.data.table(dfi)
+    res <- dfi[,{
+      f_dist0(.SD,nb,comp_ids)
+    },by=.I]
+    res[,I:=NULL]
+    return(res)
+  }
+  rbindlist(lapply(k_range,frun))
+}
+# Calcular
+ldf_distancias <- lapply(c("full",
+                           levels(df_aud$nparcelas)[3:2],
+                           paste(levels(df_aud$nparcelas)[3:2],collapse = "|")),
+                         \(li){
+                           if(li=="full"){
+                             f_calc_distancias(dfi = df_aud)
+                             }else{
+                               f_calc_distancias(dfi = filter(df_aud,!grepl(li,nparcelas)) ) 
+                             }
+                           }
+                         )
+  
+df_distancias %>% 
+  pivot_longer(dist_media:dist_sd) %>% 
+  ggplot(aes(x=n_vizinhos,y=value)) +
+  geom_jitter(aes(group=n_vizinhos)) +
+  geom_boxplot(aes(group=n_vizinhos)) +
+  facet_wrap(~name,ncol=2,scales="free")
+```
+
+
+
+To evaluate whether model congruence exhibited non-random spatial organization across sampled plots, we quantified global spatial autocorrelation using Join Count statistics for binary spatial data (Bivand et al. 2020). Plots (n=105) were classified as congruent (C, 63%) or incongruent (I, 37%) according to the SAD congruence criterion adopted in the main analyses. Spatial joins were then computed for the three possible pairwise combinations among neighboring plots: CC, CI, and II. Neighborhood relationships were defined using k-nearest neighbor graphs, and sensitivity analyses were conducted across multiple values of k to evaluate the robustness of spatial autocorrelation patterns to neighborhood definition.
+
+For each join type, the observed number of joins was compared with the expected number under spatial randomness using Monte Carlo permutation tests (nsim = 999). Because our primary interest was detecting spatial clustering, one-tailed tests were used for CC and II joins to evaluate whether observed joins exceeded expectations under randomness, whereas CI joins were evaluated using two-tailed tests because both excess and deficit of boundaries between categories are ecologically informative.
+
+
+To facilitate interpretation and comparison among join types, we summarized the Join Count results using the log observed-to-expected join ratio:
+
+$$
+LRJC = \ln \left(\frac{Observed}{Expected}\right)
+$$
+
+where positive values indicate a higher-than-expected frequency of joins and negative values indicate fewer joins than expected. Statistical significance was assessed using permutation-based p-values derived from the Monte Carlo simulations.
+
+
+<p> <!-- avaliar se mantem -->
+Together, these results indicate that applying the congruence criterion did not generate a biased subset of plots with respect to environmental, demographic, or geographic attributes.
+</p>
+
+
+#@---- antigo -----@# 
+
 ## Selected plots do not differ systematically from non-selected plots in environmental variables
 
 <p><!--apresenta a dist. das vars-->
@@ -741,156 +1013,6 @@ lp[["cong_land"]]
 
 ### Global spatial autocorrelation of model congruence
 
-```{r joint count PROXIMOS PASSOS, eval=FALSE,include=FALSE}
-library(readr)
-library(dplyr)
-library(spdep)
-library(ggplot2)
-
-df <- read_delim("dados/df_to_md_selectedplots.csv", delim = ";",
-                  locale = locale(decimal_mark = ","))
-
-df <- df %>%
-  mutate(status = factor(ifelse(selecionado, "Selected", "NotSelected")))
-
-coords <- as.matrix(df[, c("lat", "long")])
-f_ne <- \(vjcmc){
-  sapply(vjcmc,"[[","statistic") %>% 
-    names() %>% 
-    gsub("Join-count statistic for ","",.)
-}
-
-
-f_joincount_byK <- function(k, coords, status) {
-  nb <- knn2nb(knearneigh(coords, k = k))
-  nb <- make.sym.nb(nb)              
-  listw <- nb2listw(nb, style = "B", zero.policy = TRUE)
-  jc_mc <- joincount.mc(status, 
-                        listw, 
-                        nsim = 999, 
-                        alternative = "greater",
-                        zero.policy = TRUE)
-  data.frame(
-    k = k,
-    tipo = f_ne(jc_mc),
-    statistic = sapply(jc_mc,"[[","statistic"),
-    pvalue = sapply(jc_mc,"[[","p.value")
-  )
-}
-
-# sequencial - sem doMC/parallel, evita o problema de compatibilidade
-df_jc <- do.call(rbind, lapply(3:30, f_joincount_byK, coords = coords, status = df$status))
-
-ggplot(df_jc, aes(x = k, y = pvalue, color = tipo)) +
-  geom_hline(yintercept = 0.05, linetype = 2, color = "red") +
-  geom_point() +
-  geom_line() +
-  theme_bw() +
-  labs(x = "n vizinhos mais proximos", y = "p-valor (join count, Monte Carlo)")
-```
-
-```{r}
-# Os estudos com mais de uma parcela tem o número de FALSE e TRUE desbalanceado?
-df_aud <- inner_join(df_selected,select(df_dados_disponiveis,SiteCode,refID))
-vrefID <- df_aud %>% count(refID) %>% 
-  mutate(nparcelas=factor(n,
-                          levels=c(1,2,10),
-                          labels=c("1 plot","2 plots","10 plots")))
-df_aud <- inner_join(df_aud,select(vrefID,refID,nparcelas))
-df_aud <- inner_join(df_aud,df_coord)
-# Para todas as parcelas:
-#@ calcular a distância média e o desvio padrão dos vizinhos
-#@ estratificação: nparcelas (todos, 1 plot, 2 plots e 10 plots)
-##
-library(spdep)
-library(ggplot2)
-library(dplyr)
-# Identificar o tipo de estudo para cada parcela
-# Função para calcular distâncias médias por k
-f_calc_distancias <- \(dfi, k_range = 3:30){
-  f_dist0 <- \(df0,nb,comp_ids){
-    #
-    idx_ref <- which(dfi$SiteCode == df0$SiteCode)  
-    vizinhos_idx <- nb[[idx_ref]]
-    # Tamanho do componente
-    comp_id <- comp_ids[idx_ref]
-    tamanho_componente <- sum(comp_ids == comp_id)
-    #
-    coords_ref <- unlist(df0[,c("long","lat")])
-    coords_vizinhos <- as.matrix(dfi[vizinhos_idx, c("long", "lat")])
-    # 
-    distancias <- sqrt((coords_ref[1] - coords_vizinhos[,1])^2 + 
-                         (coords_ref[2] - coords_vizinhos[,2])^2)
-    #
-    data.frame(
-      SiteCode = df0$SiteCode,
-      lat = df0$lat,
-      long = df0$long,
-      n_vizinhos = length(vizinhos_idx),
-      componente_id = comp_id,
-      tamanho_componente = tamanho_componente,
-      dist_media = mean(distancias, na.rm = TRUE),
-      dist_sd = sd(distancias, na.rm = TRUE),
-      dist_max = max(distancias, na.rm = TRUE),
-      dist_min = min(distancias, na.rm = TRUE)
-      )
-  }
-  frun <- \(vk){
-    # 
-    nb <- knn2nb(knearneigh(dfi[,c("lat","long")], k = vk))
-    comp <- n.comp.nb(nb)
-    comp_ids <- comp$comp.id
-    n_componentes <- comp$nc
-    #
-    dfi <- as.data.table(dfi)
-    res <- dfi[,{
-      f_dist0(.SD,nb,comp_ids)
-    },by=.I]
-    res[,I:=NULL]
-    return(res)
-  }
-  rbindlist(lapply(k_range,frun))
-}
-# Calcular
-ldf_distancias <- lapply(c("full",
-                           levels(df_aud$nparcelas)[3:2],
-                           paste(levels(df_aud$nparcelas)[3:2],collapse = "|")),
-                         \(li){
-                           if(li=="full"){
-                             f_calc_distancias(dfi = df_aud)
-                             }else{
-                               f_calc_distancias(dfi = filter(df_aud,!grepl(li,nparcelas)) ) 
-                             }
-                           }
-                         )
-  
-df_distancias %>% 
-  pivot_longer(dist_media:dist_sd) %>% 
-  ggplot(aes(x=n_vizinhos,y=value)) +
-  geom_jitter(aes(group=n_vizinhos)) +
-  geom_boxplot(aes(group=n_vizinhos)) +
-  facet_wrap(~name,ncol=2,scales="free")
-```
-
-
-
-To evaluate whether model congruence exhibited non-random spatial organization across sampled plots, we quantified global spatial autocorrelation using Join Count statistics for binary spatial data (Bivand et al. 2020). Plots (n=105) were classified as congruent (C, 63%) or incongruent (I, 37%) according to the SAD congruence criterion adopted in the main analyses. Spatial joins were then computed for the three possible pairwise combinations among neighboring plots: CC, CI, and II. Neighborhood relationships were defined using k-nearest neighbor graphs, and sensitivity analyses were conducted across multiple values of k to evaluate the robustness of spatial autocorrelation patterns to neighborhood definition.
-
-For each join type, the observed number of joins was compared with the expected number under spatial randomness using Monte Carlo permutation tests (nsim = 999). Because our primary interest was detecting spatial clustering, one-tailed tests were used for CC and II joins to evaluate whether observed joins exceeded expectations under randomness, whereas CI joins were evaluated using two-tailed tests because both excess and deficit of boundaries between categories are ecologically informative.
-
-
-To facilitate interpretation and comparison among join types, we summarized the Join Count results using the log observed-to-expected join ratio:
-
-$$
-LRJC = \ln \left(\frac{Observed}{Expected}\right)
-$$
-
-where positive values indicate a higher-than-expected frequency of joins and negative values indicate fewer joins than expected. Statistical significance was assessed using permutation-based p-values derived from the Monte Carlo simulations.
-
-
-<p> <!-- avaliar se mantem -->
-Together, these results indicate that applying the congruence criterion did not generate a biased subset of plots with respect to environmental, demographic, or geographic attributes.
-</p>
 
 
 <!-- Criacao da comparação de logUU entre cong e incong  -->
