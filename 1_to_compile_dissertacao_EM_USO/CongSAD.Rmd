@@ -609,8 +609,7 @@ Congruence declined under high dispersal scenarios (Fig. 1, main text), indicati
 The remaining 39 plots were excluded from the primary inference. Rather than representing random model failure, these cases may reflect additional ecological processes not captured by SENM, as discussed in the main text, and thus indicate directions for future model refinement.
 </p>
 
-## Spatial autocorrelation between selected and not selected plots
-
+## Spatial autocorrelation among selected and not selected plots
 
 ```{r figcap mapa selecionado e nao, eval=TRUE}
 vcap <- "Geographic distribution of plot centroids within the official biome delimitation (gray polygon; IBGE shapefile). Consistent color coding (green = selected; red = non-selected) enables visual comparison of environmental and spatial patterns."
@@ -707,16 +706,14 @@ lp <- lapply(unique(sf_plot$selecionado)[2:1],f_ggplot)
 wrap_plots(lp,ncol=2)
 ```
 
-- aqui vai a parte que descreve o mapa 
 
 
 
-
-MAPA -> teste de autocorrelação e sensibilidade aos tipos de estudos-> diferença entre as variáveis ambientais
-
-## Selected plots does not have evidence of spatial autocorrelation; not selected may have some
-
-```{r joint count PROXIMOS PASSOS, eval=FALSE,include=FALSE}
+```{r}
+vcap <- "Spatial autocorrelation of plot selection status across k-nearest neighbor networks. Monte Carlo join-count statistics (n = 999 simulations, one-tailed test for spatial clustering) for 'Selected' (green) and 'Not selected' (red) plots as a function of network order (k ∈ [3, 30]). (Left) Analysis including all survey plots (n plots = 105). For 'Not selected' plots, significant spatial clustering (p < 0.05) occurred in 67.9% of tested neighborhood sizes, specifically when k > 12. (Right) Subset analysis restricted to single-plot studies (n plots = 77). Here, 'Not selected' plots exhibited predominantly random spatial distributions (p ≥ 0.05 in 71.4% of cases, with remaining values near the 0.05 threshold). Across both panels, 'Selected' plots consistently showed no evidence of spatial clustering (p > 0.05). Dashed horizontal lines indicate the α = 0.05 significance threshold."
+```
+```{r fig-jointcount, fig.cap=vcap, eval=FALSE,include=FALSE}
+library(tidyverse)
 library(readr)
 library(dplyr)
 library(spdep)
@@ -736,7 +733,8 @@ f_ne <- \(vjcmc){
     gsub("Join-count statistic for ","",.)
 }
 
-
+#
+set.seed(17121988)
 f_joincount_byK <- function(k, coords, status) {
   nb <- knn2nb(knearneigh(coords, k = k))
   nb <- make.sym.nb(nb)              
@@ -770,7 +768,6 @@ df_jc <- lapply(c(NA,"1 plot"),\(li){
   }
 }) %>% rbindlist
 df_jc[,tipo:=ifelse(tipo=="Selected",tipo,"Not selected")]
-
 ggplot(df_jc, aes(x = k, y = pvalue, color = tipo)) +
   geom_hline(yintercept = 0.05, linetype = 2, color = "black") +
   scale_color_manual("",values=c("Selected"="green","Not selected"="red")) +
@@ -780,7 +777,57 @@ ggplot(df_jc, aes(x = k, y = pvalue, color = tipo)) +
   labs(x = "n-nearest neighbors", y = "p-value (join count, Monte Carlo)") +
   facet_wrap(~label,ncol=2) +
   theme(legend.position = "bottom")
+# 
+# 
+# df_jc[grepl("single", label) & grepl("Not", tipo), 
+#       .(`Prop. p-value ≥ 0.05` = sum(pvalue >= 0.05) * 100 / .N,
+#         `Prop. p-value < 0.05` = sum(pvalue < 0.05) * 100 / .N)]
+# df_jc[grepl("all", label) & grepl("Not", tipo), 
+#       .(`Prop. p-value ≥ 0.05` = sum(pvalue >= 0.05) * 100 / .N,
+#         `Prop. p-value < 0.05` = sum(pvalue < 0.05) * 100 / .N)]
 ```
+
+
+
+```{r caption tab freq selected}
+vcaptab <- "Percentage of selected and non-selected plots by forest survey design. Here, n represents the total number of surveys in each category (where the total number of plots equals n multiplied by the number of plots per survey). Values in the 'Selected' and 'Not Selected' columns are expressed as percentages (%)."
+```
+```{r tab-freq-selected}
+dftab <- rbind(
+  df_aud %>% 
+    group_by(nparcelas,status) %>% 
+    tally() %>% 
+    group_by(nparcelas) %>% 
+    mutate(perc=n*100/sum(n),
+           label_parcelas = paste0(nparcelas,", n=",sum(n))) ,
+  df_aud %>% 
+    group_by(status) %>% 
+    tally() %>% 
+    mutate(perc=n*100/sum(n)) %>% 
+    mutate(nparcelas="full dataset, n=87",
+           label_parcelas=nparcelas)
+  ) %>% 
+  as.data.frame() %>% 
+  select(-n,-nparcelas) %>%
+  mutate(label_parcelas=gsub("n=18","n=9",label_parcelas) %>% 
+           gsub("n=10$","n=1",.)) %>% 
+  pivot_wider(names_from = status,values_from=perc)
+#
+ft_tabselected <- dftab %>% 
+  flextable() %>% 
+  set_header_labels(
+    `label_parcelas` = "Forest Survey Type",
+    `Selected` = "Selected (%)",
+    `NotSelected` = "Not Selected (%)"
+  ) %>% 
+  colformat_double(j = c("Selected", "NotSelected"), digits = 1) %>% 
+  autofit() %>% 
+  set_caption(caption = vcaptab) %>% 
+  theme_vanilla()
+ft_tabselected
+```
+
+
 
 ```{r}
 # Os estudos com mais de uma parcela tem o número de FALSE e TRUE desbalanceado?
