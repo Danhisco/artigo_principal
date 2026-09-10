@@ -843,9 +843,6 @@ Non-selected plots showed limited evidence of positive spatial autocorrelation, 
 
 We next evaluated whether selected and non-selected plots also differed in the environmental and community variables used to parameterize the SENM and characterize landscape conditions.
 
-
-
-
 To evaluate whether model congruence exhibited non-random spatial organization across sampled plots, we quantified global spatial autocorrelation using Join Count statistics for binary spatial data (Bivand et al. 2020). Plots (n=105) were classified as congruent (C) or incongruent (I) according to the SAD congruence criterion adopted in the main analyses. Spatial joins were then computed for the two pairwise combinations among neighboring plots: CC, and II. Neighborhood relationships were defined using k-nearest neighbor graphs, and sensitivity analyses were conducted across multiple values of k to evaluate the robustness of spatial autocorrelation patterns to neighborhood definition.
 
 For each join type, the observed number of joins was compared with the expected number under spatial randomness using Monte Carlo permutation tests (nsim = 999). Because our primary interest was detecting spatial clustering, one-tailed tests were used for CC and II joins to evaluate whether observed joins exceeded expectations under randomness.
