@@ -151,9 +151,14 @@ df_selected <- readRDS(file="dados/csv_SoE/df_selected.csv")
 df_to_md_selectedplots <- inner_join(df_selected,df_dados_disponiveis) %>% 
   select(-forest_succession)
 write_csv2(df_to_md_selectedplots,file = "./dados/df_to_md_selectedplots.csv")
+
+
+df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
+  select(-(Smed:Smax)) %>%
+  mutate(across(where(is.character), factor))
+names(df_ad) <- gsub("\\_type","",names(df_ad)) %>% 
+  gsub("forest\\_succession","class_pert",.)
 ```
-
-
 
 
 
@@ -183,14 +188,6 @@ df_ad <- data.table::rbindlist(ldf)
 df_ad <- inner_join(df_ad,df_dados_disponiveis)
 #
 write_csv(df_ad,file="dados/csv_SoE/df_congruencia_simulacao.csv")
-```
-
-```{r leitura de df_ad,echo=FALSE,include=TRUE,eval=TRUE}
-df_ad <- read_csv(file="dados/csv_SoE/df_congruencia_simulacao.csv") %>% 
-  select(-(Smed:Smax)) %>%
-  mutate(across(where(is.character), factor))
-names(df_ad) <- gsub("\\_type","",names(df_ad)) %>% 
-  gsub("forest\\_succession","class_pert",.)
 ```
 
 
@@ -609,7 +606,7 @@ Congruence declined under high dispersal scenarios (Fig. 1, main text), indicati
 The remaining 39 plots were excluded from the primary inference. Rather than representing random model failure, these cases may reflect additional ecological processes not captured by SENM, as discussed in the main text, and thus indicate directions for future model refinement.
 </p>
 
-## Spatial autocorrelation among selected and not selected plots
+## Is there meaningful differences among selected and not selected plots?
 
 ```{r figcap mapa selecionado e nao, eval=TRUE}
 vcap <- "Geographic distribution of plot centroids within the official biome delimitation (gray polygon; IBGE shapefile). Consistent color coding (green = selected; red = non-selected) enables visual comparison of environmental and spatial patterns."
@@ -657,6 +654,7 @@ sf_plot <- st_as_sf(dfp,coords = c("long", "lat"), crs = 4326)
 sf_plot <- st_transform(sf_plot,crs=st_crs(shp_FA))
 sf_plot <- mutate(sf_plot,
                   selecionado = ifelse(selecionado,"Selected","Not selected"))
+count <- dplyr::count
 sf_plot <- inner_join(sf_plot,
                       count(st_drop_geometry(sf_plot),selecionado) %>% 
                         mutate(label=paste(selecionado,"=",n)) %>% 
@@ -706,13 +704,17 @@ lp <- lapply(unique(sf_plot$selecionado)[2:1],f_ggplot)
 wrap_plots(lp,ncol=2)
 ```
 
+We next evaluated whether selected and non-selected plots also differed in the environmental and community variables used to parameterize the SENM and characterize landscape conditions.
 
+To evaluate whether model congruence exhibited non-random spatial organization across sampled plots, we quantified global spatial autocorrelation using Join Count statistics for binary spatial data (Bivand et al. 2020). Plots (n=105) were classified as congruent (C) or incongruent (I) according to the SAD congruence criterion adopted in the main analyses. Spatial joins were then computed for the two pairwise combinations among neighboring plots: CC, and II. Neighborhood relationships were defined using k-nearest neighbor graphs, and sensitivity analyses were conducted across multiple values of k to evaluate the robustness of spatial autocorrelation patterns to neighborhood definition.
+
+For each join type, the observed number of joins was compared with the expected number under spatial randomness using Monte Carlo permutation tests (nsim = 999). Because our primary interest was detecting spatial clustering, one-tailed tests were used for CC and II joins to evaluate whether observed joins exceeded expectations under randomness.
 
 
 ```{r}
 vcap <- "Spatial autocorrelation of plot selection status across k-nearest neighbor networks. Monte Carlo join-count statistics (n = 999 simulations, one-tailed test for spatial clustering) for 'Selected' (green) and 'Not selected' (red) plots as a function of network order (k ∈ [3, 30]). (Left) Analysis including all survey plots (n plots = 105). For 'Not selected' plots, significant spatial clustering (p < 0.05) occurred in 67.9% of tested neighborhood sizes, specifically when k > 12. (Right) Subset analysis restricted to single-plot studies (n plots = 77). Here, 'Not selected' plots exhibited predominantly random spatial distributions (p ≥ 0.05 in 71.4% of cases, with remaining values near the 0.05 threshold). Across both panels, 'Selected' plots consistently showed no evidence of spatial clustering (p > 0.05). Dashed horizontal lines indicate the α = 0.05 significance threshold."
 ```
-```{r fig-jointcount, fig.cap=vcap, eval=FALSE,include=FALSE}
+```{r fig-jointcount, eval=FALSE,include=FALSE,echo=FALSE}
 library(tidyverse)
 library(readr)
 library(dplyr)
@@ -726,6 +728,8 @@ vrefID <- df_aud %>% count(refID) %>%
 df_aud <- inner_join(df_aud,select(vrefID,refID,nparcelas))
 df_aud <- inner_join(df_aud,df_coord) %>% 
     mutate(status = factor(ifelse(selecionado, "Selected", "NotSelected")))
+saveRDS(df_aud,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_aud_jc.rds")
+
 coords <- as.matrix(df_aud[, c("lat", "long")])
 f_ne <- \(vjcmc){
   sapply(vjcmc,"[[","statistic") %>% 
@@ -768,15 +772,7 @@ df_jc <- lapply(c(NA,"1 plot"),\(li){
   }
 }) %>% rbindlist
 df_jc[,tipo:=ifelse(tipo=="Selected",tipo,"Not selected")]
-ggplot(df_jc, aes(x = k, y = pvalue, color = tipo)) +
-  geom_hline(yintercept = 0.05, linetype = 2, color = "black") +
-  scale_color_manual("",values=c("Selected"="green","Not selected"="red")) +
-  geom_point() +
-  geom_line() +
-  theme_bw() +
-  labs(x = "n-nearest neighbors", y = "p-value (join count, Monte Carlo)") +
-  facet_wrap(~label,ncol=2) +
-  theme(legend.position = "bottom")
+saveRDS(df_jc,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_jc.rds")
 # 
 # 
 # df_jc[grepl("single", label) & grepl("Not", tipo),
@@ -786,19 +782,32 @@ ggplot(df_jc, aes(x = k, y = pvalue, color = tipo)) +
 #       .(`Prop. p-value ≥ 0.05` = sum(pvalue >= 0.05) * 100 / .N,
 #         `Prop. p-value < 0.05` = sum(pvalue < 0.05) * 100 / .N)]
 ```
+```{r fig-joint0count,fig.cap=vcap,eval=TRUE,include=TRUE}
+df_jc <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_jc.rds")
+ggplot(df_jc, aes(x = k, y = pvalue, color = tipo)) +
+  geom_hline(yintercept = 0.05, linetype = 2, color = "black") +
+  scale_color_manual("",values=c("Selected"="green","Not selected"="red")) +
+  geom_point() +
+  geom_line() +
+  theme_bw() +
+  labs(x = "n-nearest neighbors", y = "p-value (join count, Monte Carlo)") +
+  facet_wrap(~label,ncol=2) +
+  theme(legend.position = "bottom")
+```
 
 
 ```{r caption tab freq selected}
 vcaptab <- "Percentage of selected and non-selected plots by forest survey design. Here, n represents the total number of surveys in each category (where the total number of plots equals n multiplied by the number of plots per survey). Values in the 'Selected' and 'Not Selected' columns are expressed as percentages (%)."
 ```
 ```{r tab-freq-selected}
+df_aud <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_aud_jc.rds")
 dftab <- rbind(
   df_aud %>% 
-    group_by(nparcelas,status) %>% 
-    tally() %>% 
+    count(nparcelas, status,name = "count") %>%
     group_by(nparcelas) %>% 
-    mutate(perc=n*100/sum(n),
-           label_parcelas = paste0(nparcelas,", n=",sum(n))) ,
+    mutate(total_grupo = sum(count),
+           perc=count*100/total_grupo,
+           label_parcelas = paste0(nparcelas,", n=",total_grupo)) ,
   df_aud %>% 
     group_by(status) %>% 
     tally() %>% 
@@ -841,23 +850,63 @@ Plots selected for landscape-effect inference showed no evidence of spatial auto
 
 Non-selected plots showed limited evidence of positive spatial autocorrelation, restricted to analyses using neighborhoods larger than 12 nearest neighbors (Fig. X). This pattern became largely absent after removing multiple plots from the same forest survey, indicating that the observed spatial structure was primarily associated with local sampling design rather than broad biogeographic aggregation.
 
-We next evaluated whether selected and non-selected plots also differed in the environmental and community variables used to parameterize the SENM and characterize landscape conditions.
-
-To evaluate whether model congruence exhibited non-random spatial organization across sampled plots, we quantified global spatial autocorrelation using Join Count statistics for binary spatial data (Bivand et al. 2020). Plots (n=105) were classified as congruent (C) or incongruent (I) according to the SAD congruence criterion adopted in the main analyses. Spatial joins were then computed for the two pairwise combinations among neighboring plots: CC, and II. Neighborhood relationships were defined using k-nearest neighbor graphs, and sensitivity analyses were conducted across multiple values of k to evaluate the robustness of spatial autocorrelation patterns to neighborhood definition.
-
-For each join type, the observed number of joins was compared with the expected number under spatial randomness using Monte Carlo permutation tests (nsim = 999). Because our primary interest was detecting spatial clustering, one-tailed tests were used for CC and II joins to evaluate whether observed joins exceeded expectations under randomness.
-
-To facilitate interpretation and comparison among join types, we summarized the Join Count results using the log observed-to-expected join ratio:
-
-PAREI AQUI
 
 
-$$
-LRJC = \ln \left(\frac{Observed}{Expected}\right)
-$$
 
-where positive values indicate a higher-than-expected frequency of joins and negative values indicate fewer joins than expected. Statistical significance was assessed using permutation-based p-values derived from the Monte Carlo simulations.
 
+```{r}
+dfp <- mutate(dfp,
+              pert_class = factor(forest_succession,
+                             levels=c("primary",
+                                      "primary/secondary",
+                                      "secondary"),
+                             labels=c("low",
+                                      "medium",
+                                      "high"))
+              )
+
+vars_to_test <- c(
+  "pert_class" = "Pert. class",
+  "p"             = "%FC",
+  "log_effort_ha" = "log(plot area)",
+  "log_Ntotal"    = "log(N)",
+  "log_S_obs"     = "log(S)"
+)
+
+f_chisquare <- \(){
+  tab_succession <- table(
+    selecionado = dfp$selecionado,
+    pert_class = dfp$pert_class
+  )
+  chi_res <- suppressWarnings(chisq.test(tab_succession))
+  fisher_res <- fisher.test(tab_succession, simulate.p.value = TRUE, B = 9999)
+  tibble(
+    test = c("Chi-square", "Fisher's exact"),
+    p_value = c(chi_res$p.value, fisher_res$p.value)
+  )
+}
+
+f_compare_var <- function(varname) {
+  label <- vars_to_test[varname]
+  x_sel <- dfp[[varname]][dfp$selecionado]
+  x_nao <- dfp[[varname]][!dfp$selecionado]
+  if(is.factor(x_sel)){
+    f_chisquare() %>% 
+      mutate(variable=varname) %>% 
+      relocate(variable)
+  }else{
+    wt <- wilcox.test(x_sel, x_nao, exact = FALSE)
+    kt <- ks.test(x_sel, x_nao)
+    tibble(
+      variable = label,
+      test = c("Mann-Whitney/Wilcoxon","Kolmogorov-Smirnov"),
+      p.value = c(wt$p.value,kt$p.value)
+    )
+  }
+}
+df_tests <- lapply(names(vars_to_test),f_compare_var) %>% rbindlist()
+
+```
 
 
 
