@@ -779,13 +779,19 @@ ggplot(df_jc, aes(x = k, y = pvalue, color = tipo)) +
   theme(legend.position = "bottom")
 # 
 # 
-# df_jc[grepl("single", label) & grepl("Not", tipo), 
+# df_jc[grepl("single", label) & grepl("Not", tipo),
 #       .(`Prop. p-value ≥ 0.05` = sum(pvalue >= 0.05) * 100 / .N,
 #         `Prop. p-value < 0.05` = sum(pvalue < 0.05) * 100 / .N)]
-# df_jc[grepl("all", label) & grepl("Not", tipo), 
+# df_jc[grepl("all", label) & grepl("Not", tipo),
 #       .(`Prop. p-value ≥ 0.05` = sum(pvalue >= 0.05) * 100 / .N,
 #         `Prop. p-value < 0.05` = sum(pvalue < 0.05) * 100 / .N)]
 ```
+
+
+- The selected plots always showed no evidence of spatial autocorrelation (fig. autocorrelation analyz), covering all the Atlantic Forest biome (Fig. FA map).
+- The not selected plots showed some evidence of spatial autocorrelation, that was marginal when the plots from a same forest surveys were removed (Fig autocorrelation analys).
+- The selected plots was more than 60% of plots, except from 9 forest surveys with 2 plots each (tab frequency of selected and not selected plots as a funcion of forest survey's number of plots).
+- Removing plots from surveys with multiples plots the evidence of spatial autocorrelation was reduced in the range of nearest neightbors - most higher than 12.
 
 
 
@@ -827,82 +833,14 @@ ft_tabselected <- dftab %>%
 ft_tabselected
 ```
 
-
-
 ```{r}
-# Os estudos com mais de uma parcela tem o número de FALSE e TRUE desbalanceado?
-# Para todas as parcelas:
-#@ calcular a distância média e o desvio padrão dos vizinhos
-#@ estratificação: nparcelas (todos, 1 plot, 2 plots e 10 plots)
-##
-library(spdep)
-library(ggplot2)
-library(dplyr)
-# Identificar o tipo de estudo para cada parcela
-# Função para calcular distâncias médias por k
-f_calc_distancias <- \(dfi, k_range = 3:30){
-  f_dist0 <- \(df0,nb,comp_ids){
-    #
-    idx_ref <- which(dfi$SiteCode == df0$SiteCode)  
-    vizinhos_idx <- nb[[idx_ref]]
-    # Tamanho do componente
-    comp_id <- comp_ids[idx_ref]
-    tamanho_componente <- sum(comp_ids == comp_id)
-    #
-    coords_ref <- unlist(df0[,c("long","lat")])
-    coords_vizinhos <- as.matrix(dfi[vizinhos_idx, c("long", "lat")])
-    # 
-    distancias <- sqrt((coords_ref[1] - coords_vizinhos[,1])^2 + 
-                         (coords_ref[2] - coords_vizinhos[,2])^2)
-    #
-    data.frame(
-      SiteCode = df0$SiteCode,
-      lat = df0$lat,
-      long = df0$long,
-      n_vizinhos = length(vizinhos_idx),
-      componente_id = comp_id,
-      tamanho_componente = tamanho_componente,
-      dist_media = mean(distancias, na.rm = TRUE),
-      dist_sd = sd(distancias, na.rm = TRUE),
-      dist_max = max(distancias, na.rm = TRUE),
-      dist_min = min(distancias, na.rm = TRUE)
-      )
-  }
-  frun <- \(vk){
-    # 
-    nb <- knn2nb(knearneigh(dfi[,c("lat","long")], k = vk))
-    comp <- n.comp.nb(nb)
-    comp_ids <- comp$comp.id
-    n_componentes <- comp$nc
-    #
-    dfi <- as.data.table(dfi)
-    res <- dfi[,{
-      f_dist0(.SD,nb,comp_ids)
-    },by=.I]
-    res[,I:=NULL]
-    return(res)
-  }
-  rbindlist(lapply(k_range,frun))
-}
-# Calcular
-ldf_distancias <- lapply(c("full",
-                           levels(df_aud$nparcelas)[3:2],
-                           paste(levels(df_aud$nparcelas)[3:2],collapse = "|")),
-                         \(li){
-                           if(li=="full"){
-                             f_calc_distancias(dfi = df_aud)
-                             }else{
-                               f_calc_distancias(dfi = filter(df_aud,!grepl(li,nparcelas)) ) 
-                             }
-                           }
-                         )
-  
-df_distancias %>% 
-  pivot_longer(dist_media:dist_sd) %>% 
-  ggplot(aes(x=n_vizinhos,y=value)) +
-  geom_jitter(aes(group=n_vizinhos)) +
-  geom_boxplot(aes(group=n_vizinhos)) +
-  facet_wrap(~name,ncol=2,scales="free")
+df_aud %>% 
+  count(selecionado,forest_succession) %>% 
+  group_by(selecionado) %>% 
+  mutate(prop=n/sum(n)) %>%
+  select(-n) %>% 
+  mutate(selecionado=ifelse(selecionado,"Selected","NotSelected")) %>% 
+  pivot_wider(names_from = selecionado,values_from = prop)
 ```
 
 
@@ -1056,10 +994,6 @@ lp <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_p
 #   )
 lp[["cong_land"]]
 ```
-
-
-### Global spatial autocorrelation of model congruence
-
 
 
 <!-- Criacao da comparação de logUU entre cong e incong  -->
