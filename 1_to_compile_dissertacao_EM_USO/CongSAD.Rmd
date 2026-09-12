@@ -857,7 +857,7 @@ Differences in the frequency of disturbance classes (Pert. class; Table S1) were
 
 
 ```{r caption tabela testes nao parametricos variaveis ambientais}
-vcap <- "Comparison of selected and non-selected plots across landscape, community, and disturbance variables. Reported values are p-values from non-parametric tests comparing forest cover (%FC), plot area, total abundance (N), species richness (S), and disturbance class (Pert. class; Table S1). Continuous variables were evaluated using Mann–Whitney U and Kolmogorov–Smirnov tests after log-transformation of plot area, N, and S, whereas the categorical disturbance class was compared using chi-square and Fisher’s exact tests. No significant differences were detected after FDR correction."
+vcap <- "Comparison of selected and non-selected plots across landscape, community, and disturbance variables. Reported values are p-values from non-parametric tests comparing forest cover (%FC), plot area, total abundance (N), species richness (S), and disturbance class (Pert. class; Table S1). Continuous variables were evaluated using Mann–Whitney U and Kolmogorov–Smirnov tests after log-transformation of plot area, N, and S, whereas the categorical disturbance class was compared using chi-square and Fisher’s exact tests."
 ```
 ```{r tab-comp-envvars-selected, message=FALSE,warning=FALSE,eval=TRUE,include=TRUE,echo=FALSE}
 dfp <- inner_join(df_selected,df_dados_disponiveis)
@@ -923,9 +923,8 @@ df_tests %>%
   set_caption(caption = vcap)
 ```
 
-No evidence of systematic differences was detected between selected and non-selected plots for forest cover (%FC), plot area, species richness (S), or disturbance class (Pert. class), indicating that the congruence criterion did not preferentially retain plots from particular landscape or community conditions (Table S4). Total abundance (log N) was the only variable showing a significant difference in the Kolmogorov–Smirnov test, whereas the corresponding Mann–Whitney test was not significant. Because this difference was restricted to distributional shape rather than central tendency, it provides only limited evidence of a systematic separation between the two groups. 
-  
 
+The non-parametric comparisons provided little evidence of systematic differences between selected and non-selected plots (tab. \@ref(tab:tab-comp-envvars-selected)). Forest cover (%FC), plot area, species richness (S), and disturbance class (Pert. class) were not significantly different under either the Mann–Whitney or Kolmogorov–Smirnov tests, nor under the chi-square and Fisher’s exact tests for the categorical variable. The only significant result was observed for total abundance (log N) in the Kolmogorov–Smirnov test, whereas the corresponding Mann–Whitney test was not significant. Because this discrepancy suggests a possible difference in distributional shape rather than central tendency, we complement these statistical comparisons with a visual examination of the variable distributions.
 
 
 ```{r criacao da classificação das parcelas quanto à congruencia e suas implicacoes, echo=FALSE, eval=TRUE, include=TRUE}
@@ -998,36 +997,36 @@ library(sf)
 shp_FA <- read_sf("dados/shapefile/biome_border.shp")
 sf_plot <- st_as_sf(dfp,coords = c("long", "lat"), crs = 4326)
 sf_plot <- st_transform(sf_plot,crs=st_crs(shp_FA))
-lp$mapa <- ggplot() +
-  geom_sf(data=shp_FA,fill="darkgray",color="darkgreen") +
-  geom_sf(data = sf_plot,aes(fill=selecionado,shape=selecionado, size=5,alpha=0.75)) +
-  coord_sf(ylim = c(-32,-5),xlim = c(-56,-34),expand = FALSE) +
-  scale_shape_manual(
-    name = NULL,
-    values = c("FALSE" = 25, "TRUE" = 24)
-    ) +
-  scale_fill_manual(
-    name = NULL,
-    values = c("FALSE" = "red", "TRUE" = "green3")
-    ) +
-  theme(
-    legend.position = "none"
-  ) +
-  ggspatial::annotation_north_arrow(
-    location = "br",                   # bottom right
-    which_north = "true",
-    height = unit(1.2, "cm"),
-    width = unit(1.2, "cm"),
-    pad_x = unit(0.5, "cm"),
-    pad_y = unit(0.5, "cm")
-  ) +
-  ggspatial::annotation_scale(
-    location = "br",                    
-    pad_x = unit(2.5, "cm"),
-    pad_y = unit(0.5, "cm"),
-    width_hint = 0.2,                   # largura relativa (20% do mapa)
-    style = "bar"                       # estilo "bar" ou "ticks"
-  ) 
+# lp$mapa <- ggplot() +
+#   geom_sf(data=shp_FA,fill="darkgray",color="darkgreen") +
+#   geom_sf(data = sf_plot,aes(fill=selecionado,shape=selecionado, size=5,alpha=0.75)) +
+#   coord_sf(ylim = c(-32,-5),xlim = c(-56,-34),expand = FALSE) +
+#   scale_shape_manual(
+#     name = NULL,
+#     values = c("FALSE" = 25, "TRUE" = 24)
+#     ) +
+#   scale_fill_manual(
+#     name = NULL,
+#     values = c("FALSE" = "red", "TRUE" = "green3")
+#     ) +
+#   theme(
+#     legend.position = "none"
+#   ) +
+#   ggspatial::annotation_north_arrow(
+#     location = "br",                   # bottom right
+#     which_north = "true",
+#     height = unit(1.2, "cm"),
+#     width = unit(1.2, "cm"),
+#     pad_x = unit(0.5, "cm"),
+#     pad_y = unit(0.5, "cm")
+#   ) +
+#   ggspatial::annotation_scale(
+#     location = "br",                    
+#     pad_x = unit(2.5, "cm"),
+#     pad_y = unit(0.5, "cm"),
+#     width_hint = 0.2,                   # largura relativa (20% do mapa)
+#     style = "bar"                       # estilo "bar" ou "ticks"
+#   ) 
 saveRDS(lp,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parcelas_selecionadas.rds")
 ```
 ```{r caption fig sem dif entre selecionadas e nao, echo=FALSE,eval=TRUE,include=TRUE}
@@ -1057,12 +1056,13 @@ lp[["cong_land"]]
 ```
 
 
+Operational variables exhibited broadly similar distributions between selected and non-selected plots (fig. \@ref(fig:fig-implicacoes-cong)). Although selected plots included a greater number of cases with extremely low landscape-level forest cover and spanned a wider geographic range, their central tendencies were comparable. The median forest cover was slightly higher among non-selected plots. Non-selected plots also included several outliers with high values of plot area, species richness, and abundance (fig. \@ref(fig:fig-implicacoes-cong)). However, for all operational variables examined, the interquartile ranges overlapped between selected and non-selected plots (fig. \@ref(fig:fig-implicacoes-cong)), indicating the absence of systematic distributional shifts. Spatial configuration under the fragmented landscape scenario likewise showed comparable structural patterns for selected and non-selected plots (see supplementary material to this appendix).
+</p>
 
 
+### There is no evidence of meaningful differences among selected and no selected plots
 
-
- Overall, selected and non-selected plots exhibited broadly comparable environmental and community characteristics.
-
+No evidence of systematic differences was detected between selected and non-selected plots for forest cover (%FC), plot area, species richness (S), or disturbance class (Pert. class), based on both the non-parametric comparisons (Table S4) and the exploratory distributions shown in Fig. S4. Together, these results indicate that the congruence criterion did not preferentially retain plots from particular landscape or community conditions. Total abundance (log N) was the only variable showing a significant difference in the Kolmogorov–Smirnov test, whereas the corresponding Mann–Whitney test was not significant. Because this difference was restricted to distributional shape rather than central tendency, it provides only limited evidence of a systematic separation between the two groups.
 
 
 #@---- antigo -----@# 
@@ -1070,8 +1070,6 @@ lp[["cong_land"]]
 ## Selected plots do not differ systematically from non-selected plots in environmental variables
 
 <p><!--apresenta a dist. das vars-->
-Operational variables exhibited broadly similar distributions between selected and non-selected plots (fig. \@ref(fig:fig-implicacoes-cong)). Although selected plots included a greater number of cases with extremely low landscape-level forest cover and spanned a wider geographic range, their central tendencies were comparable. The median forest cover was slightly higher among non-selected plots. Non-selected plots also included several outliers with high values of plot area, species richness, and abundance (fig. \@ref(fig:fig-implicacoes-cong)a). However, for all operational variables examined, the interquartile ranges overlapped between selected and non-selected plots (fig. \@ref(fig:fig-implicacoes-cong)a), indicating the absence of systematic distributional shifts. Spatial configuration under the fragmented landscape scenario likewise showed comparable structural patterns for selected and non-selected plots (see supplementary material to this appendix). The vulnerability metrics for the landscape effects were also similar between selected and non-selected plots (fig. \@ref(fig:fig-comp-cong-e-logUU) and the fig. \@ref(fig:fig-logUU-nonselected) in comparison with Fig. 2 from the main text). 
-</p>
 
 
 
