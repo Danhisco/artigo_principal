@@ -3,6 +3,7 @@ title: "Empirical validation of SENM and its implications for vulnerability asse
 author: ""
 output:
   bookdown::pdf_document2:
+    toc: false
     latex_engine: lualatex
     pandoc_args: [
       "--variable", "geometry=a4paper",
@@ -612,7 +613,7 @@ The remaining 39 plots were excluded from the primary inference. Rather than rep
 ```{r figcap mapa selecionado e nao, eval=TRUE}
 vcap <- "Geographic distribution of plot centroids within the official biome delimitation (gray polygon; IBGE shapefile). Consistent color coding (green = selected; red = non-selected) enables visual comparison of environmental and spatial patterns."
 ```
-```{r fig-mapa-selecionado-e-nao, fig.cap=vcap,fig.height=7,fig.width=14,eval=TRUE,echo=FALSE}
+```{r fig-mapa-selecionado-e-nao, fig.cap=vcap,fig.height=6,fig.width=14,eval=TRUE,echo=FALSE}
 library(sf)
 library(patchwork)
 # df_p
@@ -781,7 +782,7 @@ saveRDS(df_jc,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_jc.rds")
 #       .(`Prop. p-value ≥ 0.05` = sum(pvalue >= 0.05) * 100 / .N,
 #         `Prop. p-value < 0.05` = sum(pvalue < 0.05) * 100 / .N)]
 ```
-```{r fig-joint0count,fig.cap=vcap,eval=TRUE,include=TRUE}
+```{r fig-joint0count,fig.cap=vcap,eval=TRUE,include=TRUE,fig.height=4,fig.width=5}
 df_jc <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/df_jc.rds")
 ggplot(df_jc, aes(x = k, y = pvalue, color = tipo)) +
   geom_hline(yintercept = 0.05, linetype = 2, color = "black") +
@@ -917,6 +918,7 @@ f_compare_var <- function(varname) {
 }
 df_tests <- lapply(names(vars_to_test),f_compare_var) %>% rbindlist()
 df_tests %>% 
+  mutate(p_value=round(p_value,2)) %>% 
   pivot_wider(names_from=variable,values_from = p_value) %>% 
   flextable() %>% 
   autofit() %>% 
@@ -969,12 +971,11 @@ vcols <- c("green3","red")
 names(vcols) <- c(paste0("TRUE (",vnum_selected,")"),
                   paste0("FALSE (",105-vnum_selected,")"))
 
-lp$cong_land <- select(dfp,-tif.path) %>% 
-  mutate(across(c(effort_ha:S_obs),log)) %>% 
-  pivot_longer(lat:p) %>% 
+lp$cong_land <- select(dfp,-tif.path,-lat,-long) %>% 
+  pivot_longer(p:log_S_obs) %>% 
   mutate(name=factor(name,
-                     levels=c("p","effort_ha","Ntotal","S_obs","lat","long"),
-                     labels=c("%FC","log(plot area)","log(N)","log(S)","lat","long")),
+                     levels=c("p","log_effort_ha","log_Ntotal","log_S_obs"),
+                     labels=c("%FC","log(plot area)","log(N)","log(S)")),
          legend_label = paste0(selecionado,
                               " (",
                               ifelse(selecionado,vnum_selected,105-vnum_selected),
@@ -1032,7 +1033,7 @@ saveRDS(lp,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parc
 ```{r caption fig sem dif entre selecionadas e nao, echo=FALSE,eval=TRUE,include=TRUE}
 vcap <- "Environmental and spatial characterization of plot selection within the Atlantic Forest biome. (A) Comparison of six operational variables: landscape-level forest cover (%FL; 0–1 scale), plot area (ha), number of individuals (N), species richness (S), latitude, and longitude (decimal degrees). Green boxplots represent selected plots (n = 66) and red boxplots represent non-selected plots (n = 39). Boxes indicate interquartile ranges (IQR), horizontal lines denote medians, whiskers extend to 1.5×IQR, and points represent raw values. (B) Geographic distribution of plot centroids within the official biome delimitation (gray polygon; IBGE shapefile). Consistent color coding (green = selected; red = non-selected) enables visual comparison of environmental and spatial patterns."
 ```
-```{r fig-implicacoes-cong,fig.cap=vcap,fig.width=8,fig.height=7,cache=FALSE}
+```{r fig-implicacoes-cong,fig.cap=vcap,fig.width=6,fig.height=5,cache=FALSE}
 library(sf)
 library(patchwork)
 lp <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/lp_implicacoes_parcelas_selecionadas.rds")
