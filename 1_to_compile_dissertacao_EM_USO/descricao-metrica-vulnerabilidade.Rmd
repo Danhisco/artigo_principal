@@ -3,6 +3,7 @@ title: "Description of the Vulnerability Metric"
 author: ""
 output:
   bookdown::pdf_document2:
+    toc: false
     latex_engine: lualatex
     pandoc_args: [
       "--variable", "geometry=a4paper",
@@ -311,9 +312,7 @@ saveRDS(df_tabsel,file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_lo
 <!-- ## Model selection -->
 
 
-# Supplementary Information
-
-## Difference in magnitude between LFC e FPS
+# Difference in magnitude between LFC e FPS
 
 ```{r criacao da figura de diferença na magnitude de LFC e FPS}
 df_plot <- inner_join(df_logUU,df_selected) %>% 
@@ -326,16 +325,16 @@ dfp <- df_plot[df_plot$selecionado,] %>%
               values_from = "Uefeito") %>% 
   mutate(diffABS = abs(LFC) - abs(FPS),
          p_class = case_when(
-           p>=0.99 ~ "%FC ≥ 99",
-           p<0.99 & p>=0.80 ~ "80 ≤ %FC < 99",
-           p<0.80 & p>=0.60 ~ "60 ≤ %FC < 80",
-           p<0.60 & p>=0.30 ~ "30 ≤ %FC < 60",
-           p<0.30 ~ "%FC < 30"),
-         p_class = factor(p_class,levels=c("%FC < 30",
-                                           "30 ≤ %FC < 60",
-                                           "60 ≤ %FC < 80",
-                                           "80 ≤ %FC < 99",
-                                           "%FC ≥ 99") #,
+           p>=0.99 ~ "%FC c [99,100]",
+           p<0.99 & p>=0.80 ~ "%FC c [80, 99[",
+           p<0.80 & p>=0.60 ~ "%FC c [60, 80[",
+           p<0.60 & p>=0.30 ~ "%FC c [30, 60[",
+           p<0.30 ~ "%FC c [0, 30["),
+         p_class = factor(p_class,levels=c("%FC c [0, 30[",
+                                           "%FC c [30, 60[",
+                                           "%FC c [60, 80[",
+                                           "%FC c [80, 99[",
+                                           "%FC c [99,100]") #,
                           # labels = c(" '%FC < 30' ",
                           #            " 30 <= '%FC < 60' ",
                           #            " 60 <= '%FC < 80' ",
@@ -344,7 +343,7 @@ dfp <- df_plot[df_plot$selecionado,] %>%
                           )
     )
 #--------------------- grafico -------------------#
-dfrange <- filter(dfp,p_class=="%FC ≥ 99") %>% 
+dfrange <- filter(dfp,p_class=="%FC c [99,100]") %>% 
     reframe(
       names = c("amplitude","amplitude","Q 5%-95%","Q 5%-95%"),
       value = c(min(diffABS), max(diffABS),quantile(diffABS,probs=0.05),quantile(diffABS,probs=0.95))
@@ -372,7 +371,7 @@ p <- dfp %>%
   geom_hline(yintercept = 0,color="black") +
   geom_hline(data = dfrange, aes(yintercept = value,linetype=names),
              color="black",linewidth=0.5) +
-  scale_linetype_manual(name = paste0("%FC ≥ 99",", n = ",nsites),
+  scale_linetype_manual(name = paste0("%FC c [99,100]",", n = ",nsites),
                         values=c("dotted","dashed")) +
   geom_boxplot(alpha=0.25) +
   geom_jitter(alpha=1,aes(shape = vsig),size=3) +
@@ -393,7 +392,7 @@ p <- dfp %>%
   # scale_fill_viridis_c(option = "viridis", name = "Perc (%)") +
   labs(y="|LFC| - |FPS|") +
   facet_grid(vsig~p_class) +
-  theme_linedraw() +
+  theme_light() +
   theme(legend.position = "bottom",
         strip.background = element_rect(fill="white"),
         strip.text = element_text(color="black"))
@@ -406,7 +405,7 @@ ggsave(filename="./1_to_compile_dissertacao_EM_USO/09_SI/figuras_SI/LFC_menos_FP
 ```{r}
 vcap <- "Dominance of landscape effects across forest cover classes and dispersal scenarios. Each panel corresponds to a class of percentage forest cover (%FC): <30%, 30–60%, 60–80%, and 80–<100%. The y‑axis shows the difference in absolute magnitudes of the forest loss and fragmentation‑per‑se effects (|LFC| – |FPS|). Positive values indicate dominance of the loss effect; negative values indicate dominance of fragmentation. The x‑axis represents dispersal limitation scenarios (k classes). For each k class, boxplots summarize the distribution of observed values, with points overlaid. The horizontal solid line marks zero (equal magnitude of both effects). Dashed lines indicate the 5th and 95th percentiles of the null distribution, and dotted lines show the full range (minimum–maximum) of |LFC| – |FPS| under 100% forest cover (i.e., in landscapes with no forest loss)."
 ```
-```{r fig-SI41,fig.cap=vcap, fig.width=12,fig.height=5, fig.pos="H"}
+```{r fig-SI41,fig.cap=vcap, fig.width=14,fig.height=7, fig.pos="H"}
 p
 ```
 
@@ -435,7 +434,13 @@ f_gsub <- \(vchar){
     gsub("cont","_frag",.)
 }
 l_md <- readRDS(file="dados/csv_SoE/rds/l_md_logUUpk2.rds")
-df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds")
+df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds") %>% 
+  mutate(
+    base=case_when(
+      base=="FLF" ~ "Frag. total",
+      base=="FPS" ~ "Frag. per se",
+      base=="LFC" ~ "Área per se"),
+    modelo = gsub(" \\+ s\\(k\\)\\|Site","",modelo))
 df_tabsel <- as.data.table(df_tabsel)
 f_select <- \(dfi){
   l_md[[dfi$base]][[dfi$modelo]]
