@@ -272,7 +272,7 @@ l_p[[1]] <- df_p_extensoes |> filter(lado_km<=16.02) |>
   coord_cartesian(expand = F) +
   theme_light()
 l_p[[2]] <- df_p |> 
-  mutate(sorteio_site = ifelse(sorteio_site=="SoE","36 Selected","73 Non-selected")) %>% 
+  mutate(sorteio_site = ifelse(sorteio_site=="SoE","36 Selected","71 Non-selected")) %>% 
   ggplot(aes(x=DA,y=S_obs,color=sorteio_site)) +
   geom_point(alpha=0.8) +
   scale_color_manual(values=c("black","red"),name="") +
@@ -293,7 +293,7 @@ saveRDS(l_p,file="1_to_compile_dissertacao_EM_USO/03_EfeitoEscala/Rdata/l_p.rds"
 
 
 ```{r captio fig SI21,echo=FALSE,eval=TRUE,include=TRUE}
-vcap <- "The context of the sensitivity analysis. a) Forest cover (%FC) as a function of landscape scale (km). Each line depicts the change in forest cover proportion across increasing spatial extents, calculated from empirical forest cover maps centered on each forest plot. b) Relationship between species richness and individual density for the 109 pre-selected plots. Sites highlighted in red represent the subset selected for evaluating landscape size effects on the U estimates."
+vcap <- "The context of the sensitivity analysis. a) Forest cover (%FC) as a function of landscape scale (km). Each line depicts the change in forest cover proportion across increasing spatial extents, calculated from empirical forest cover maps centered on each forest plot. b) Relationship between species richness and individual density for the 107 pre-selected plots. Sites highlighted in red represent the subset selected for evaluating landscape size effects on the U estimates."
 ```
 ```{r figSI21,fig.cap=vcap,fig.width=8,fig.height=4}
 l_p <- readRDS(file="1_to_compile_dissertacao_EM_USO/03_EfeitoEscala/Rdata/l_p.rds")
@@ -310,16 +310,16 @@ We therefore identify the sufficient spatial scale as the minimum landscape exte
 </p>
 
 <p>
-To estimate this scale, we simulated the spatially explicit neutral model in pristine landscapes across six spatial extents. Landscape size was controlled by the simulated landscape's side length, ranging from 0.5 km to 16 km (0.5, 1, 2, 4, 8, and 16 km). We sampled 36 plots from the original set of 109 pre-selected plots, representing the observed range of individual density and species richness (fig. \@ref(fig:figSI21) b). For each of the 20 dispersal scenarios and each spatial extent, the estimation of U was replicated 10 times.
+To estimate this scale, we simulated the spatially explicit neutral model in pristine landscapes across six spatial extents. Landscape size was controlled by the simulated landscape's side length, ranging from 0.5 km to 16 km (0.5, 1, 2, 4, 8, and 16 km). We sampled 36 plots from the original set of 107 pre-selected plots, representing the observed range of individual density and species richness (fig. \@ref(fig:figSI21) b). For each of the 20 dispersal scenarios and each spatial extent, the estimation of U was replicated 10 times.
 </p>
 
-```{r captio fig SI22,echo=FALSE,eval=TRUE,include=TRUE}
-vcap <- ""
-```
-```{r figSI22,fig.cap=vcap,fig.width=4,fig.height=3,eval=FALSE,include=FALSE}
-l_p <- readRDS(file="1_to_compile_dissertacao_EM_USO/03_EfeitoEscala/Rdata/l_p.rds")
-l_p[[2]]
-```
+<!-- ```{r captio fig SI22,echo=FALSE,eval=TRUE,include=TRUE} -->
+<!-- vcap <- "" -->
+<!-- ``` -->
+<!-- ```{r figSI22,fig.cap=vcap,fig.width=4,fig.height=3,eval=FALSE,include=FALSE} -->
+<!-- l_p <- readRDS(file="1_to_compile_dissertacao_EM_USO/03_EfeitoEscala/Rdata/l_p.rds") -->
+<!-- l_p[[2]] -->
+<!-- ``` -->
 
 
 # Largest landscape scale approximates infinite-landscape estimates
