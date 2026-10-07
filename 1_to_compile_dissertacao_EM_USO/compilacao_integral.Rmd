@@ -2,6 +2,7 @@
 title: ""
 author: ""
 output:
+  bookdown::word_document2: default
   bookdown::pdf_document2:
     latex_engine: lualatex
     pandoc_args: [
@@ -13,12 +14,11 @@ output:
       "--variable", "geometry=inner=3cm",
       "--variable", "geometry=outer=2cm"
       ]
-  bookdown::word_document2: default
   pdf_document: default
   html_document:
     df_print: paged
 bibliography: resources/citations2.bib
-csl: "resources/ecology-letters.csl"
+csl: "resources/ecography.csl"
 editor_options:
   chunk_output_type: console
 header-includes:
@@ -55,9 +55,9 @@ header-includes:
 
 ```{r setup resultados,include=FALSE}
 options(tinytex.verbose = TRUE)
-knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=TRUE,
+knitr::opts_chunk$set(echo = FALSE,eval = TRUE,message = FALSE,warning = FALSE,cache=FALSE,
                       fig.pos = "H", fig.show = "hold",
-                      dpi = 60)
+                      dpi = 120)
 library(gridExtra)
 library(ggplot2)
 library(readr)
@@ -66,6 +66,7 @@ library(plyr)
 library(flextable)
 library(officer)
 library(magick)
+library(glue)
 ```
 
 ```{r trackdown compilacao integral, eval=FALSE, include=FALSE}
@@ -98,7 +99,7 @@ Habitat loss and fragmentation are major drivers of biodiversity change in tropi
 
 # Introduction (371 palavras)
 
-Habitat loss and fragmentation are major drivers of biodiversity change in tropical forests (@diaz_pervasive_2019). Yet empirical estimates of the independent effect of fragmentation remain highly inconsistent, ranging from negative to neutral or even positive across systems (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Part of this uncertainty may arise because landscape effects are often inferred from landscape configuration alone, despite connectivity being widely recognized as a fundamental process underlying biodiversity responses (@villard_beyond_2014; @hanski_2015; @rivaEbanskleite2024). Resolving this gap is not only a theoretical challenge but also a practical necessity for conservation planning, in which different traditions (from generalizable heuristics to context-specific mechanistic models) offer contrasting yet potentially complementary paths forward (@rodriguez_designing_2020; @banks-leite_suggestion_2021; @rodriguez_preserving_2021). 
+Habitat loss and fragmentation are major drivers of biodiversity change in tropical forests (@diaz_pervasive_2019). Yet empirical estimates of the independent effect of fragmentation remain highly inconsistent, ranging from negative to neutral or even positive across systems (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Part of this uncertainty may arise because landscape effects are often inferred from landscape configuration alone, despite connectivity being widely recognized as a fundamental process underlying biodiversity responses (@villard_beyond_2014; @hanski_2015; @rivaEbanskleite2024). Resolving this gap is not only a theoretical challenge but also a practical necessity for conservation planning, in which different traditions (from generalizable heuristics to context-specific mechanistic models) offer contrasting yet potentially complementary paths forward (@arroyo-rodriguez_designing_2020; @banks-leite_suggestion_2021; @arroyo-rodriguez_preserving_2021). 
 
 Functional connectivity is the movement of individuals through remaining habitat and emerges from the interaction between landscape structure and species dispersal ability (@auffret2017plant; @hatfield2018using). By regulating the exchange of individuals among local communities, connectivity modifies the demographic balance between local extinction and recolonization (@kindlmann2008connectivity; @pardini_beyond_2010; @may_dispersal_2012 @baguette2013individual; @campos2013; @chase_biodiversity_2020). Thus, for a given landscape configuration, different levels of dispersal limitation produce different connectivity regimes and thereby alter colonization, local replacement, and extinction dynamics. Understanding landscape effects therefore requires evaluating how variation in dispersal modifies the demographic consequences of landscape structure.
 
@@ -239,7 +240,7 @@ Our results revealed a general tendency for forest cover loss to dominate landsc
 
 
 <p>
-This distinction reflects a broader tension within landscape ecology regarding how biodiversity responses should be incorporated into conservation planning. One tradition emphasizes generalizable heuristics derived from broad comparative analyses of landscape structure and biodiversity responses, prioritizing scalable recommendations based on relatively simple landscape descriptors (e.g., @fahrig_rethinking_2013; @watling2020support; @rodriguez_designing_2020; @riva2024overcoming). In contrast, more mechanistic approaches seek to represent species responses, dispersal dynamics, and restoration scenarios explicitly through spatially detailed models tailored to particular ecological contexts (@banks-leite_suggestion_2021; @fletcher2026resurrecting). More broadly, these traditions reflect different strategies for balancing ecological realism, inferential generality, and data availability in conservation science.
+This distinction reflects a broader tension within landscape ecology regarding how biodiversity responses should be incorporated into conservation planning. One tradition emphasizes generalizable heuristics derived from broad comparative analyses of landscape structure and biodiversity responses, prioritizing scalable recommendations based on relatively simple landscape descriptors (e.g., @fahrig_rethinking_2013; @watling2020support; @arroyo-rodriguez_designing_2020; @riva2024overcoming). In contrast, more mechanistic approaches seek to represent species responses, dispersal dynamics, and restoration scenarios explicitly through spatially detailed models tailored to particular ecological contexts (@banks-leite_suggestion_2021; @fletcher2026resurrecting). More broadly, these traditions reflect different strategies for balancing ecological realism, inferential generality, and data availability in conservation science.
 </p>
 
 
@@ -311,7 +312,19 @@ Variation among plots was a central feature of how landscape structure affected 
 These estimates support a situated, mechanism-based counterfactual interpretation. This interpretation is conditional on the SENM assumptions, the dispersal scenarios, and the empirical evidence used to calibrate and evaluate the model. These estimates also remain conditional on an inert matrix and equilibrium, both explicit targets for future refinement. By making the counterfactual contrasts and their underlying demographic mechanisms explicit, the framework treats variation among plots as part of the landscape effect to be explained rather than averaged out. This provides a way to connect general conservation heuristics with context-specific mechanistic evidence.
 </p>
 
+
+# References
+
+
+```{=latex}
+\bibliographystyle{plainnat}
+\bibliography{resources/citations2}
+```
+
+
 <!-- código para construção e display dos eleentos textuais -->
+
+# Table
 
 ```{r caption tab-selecao,echo=FALSE,include=TRUE,eval=TRUE}
 library(officer)
@@ -376,15 +389,15 @@ f_flextable <- \(dfi){
     # Alinhamento e legenda
     align(align = "center", part = "all") %>% 
     align(j = 1, align = "left", part = "body") %>% # 
-    # set_caption(caption = vcap) %>% 
-    add_header_lines(values = as_paragraph(
-            as_chunk("Table 1. ", props = fp_text(bold = TRUE)),
-            as_chunk(vcap, 
-                     props = fp_text(bold = FALSE),
-                     fp_p = fp_par(text.align = "justify") 
-                     )
-             )
-            ) %>%
+    set_caption(caption = vcap) %>% 
+    # add_header_lines(values = as_paragraph(
+    #         as_chunk("Table 1. ", props = fp_text(bold = TRUE)),
+    #         as_chunk(vcap, 
+    #                  props = fp_text(bold = FALSE),
+    #                  fp_p = fp_par(text.align = "justify") 
+    #                  )
+    #          )
+    #         ) %>%
     # 
     set_table_properties(layout = "fixed") %>%
     # Define a largura apenas para a coluna 'modelo'
@@ -395,39 +408,14 @@ f_flextable <- \(dfi){
                      width = 1, unit = "in")
 }
 fxtow <- f_flextable(df_tabsel)
-saveRDS(fxtow,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/fxtow_tab1.rds")
-save_as_image(fxtow, 
-              path = "figuras/tabsel_efeitos.png")
-```
-```{r display da tabela 1}
-library(knitr)
-library(kableExtra)
-
-df_tabsel <- readRDS(file="1_to_compile_dissertacao_EM_USO/09_SI/RDS/tabsel_cong_logUU.rds") %>% 
-  mutate(dev.expl=100*dev.expl,
-         across(where(is.numeric), ~round(.x,2)),
-         Effect=base,
-         modelo=gsub("Site","Plot",modelo)) %>% 
-  select(-base)
-
-# Aplicar o label para tornar os nomes dos modelos mais legíveis
-df_tabsel$modelo <- f_label(df_tabsel$modelo)
-
-# Criar a tabela com kableExtra
-kable(df_tabsel, 
-      caption = vcap,  # <-- a legenda vai aqui
-      booktabs = TRUE,
-      linesep = "",
-      format = "latex") %>%
-  kable_styling(latex_options = c("striped", "hold_position")) %>%
-  add_header_above(c(" " = 1, " " = 1, "Model fit criteria" = 4)) %>%
-  pack_rows(index = table(df_tabsel$Effect)) %>%  # agrupa por Effect
-  column_spec(1, width = "5cm") %>%
-  column_spec(2:5, width = "1cm")
+# saveRDS(fxtow,file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/fxtow_tab1.rds")
+# save_as_image(fxtow, 
+#               path = "figuras/tabsel_efeitos.png")
+fxtow
 ```
 
 
-
+# Figures
 
 ```{r criação da figCong, eval=FALSE,include=FALSE,echo=FALSE}
 l_dfpred <- readRDS(file = "dados/csv_SoE/rds/l_dfpred_md_cong_absoluta.rds")
@@ -469,7 +457,7 @@ image_write(img,path = "figuras/descricao_congruencia_absoluta.png")
 ```{r captio figCong,eval=TRUE,echo=FALSE}
 vcap <- "Congruence between simulated and observed SADs (y-axis) across dispersal (x-axis) and landscape combinations (facet labels). Hexagonal bins show the density of plot‑level observations (lighter = fewer points, darker = up to 100 points). Gray lines: plot‑level predictions from the most plausible model with spatial coordinates set to zero. Red line: overall mean prediction; blue shading: 95% pointwise confidence interval. Mean congruence exceeded 75% in most simulations but declined under very weak dispersal limitation, especially in clumped and pristine landscapes."
 ```
-```{r figCong,fig.cap=vcap,fig.width=12,fig.height=7,eval=TRUE,include=TRUE}
+```{r figCong,fig.cap=vcap,fig.width=14,fig.height=5.5,eval=TRUE,include=TRUE}
 p <- readRDS(file = "1_to_compile_dissertacao_EM_USO/09_SI/RDS/p_interpretacao_cong.rds")
 p
 ```
@@ -596,183 +584,188 @@ saveRDS(p_efeitos,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_
 dfrange <- lret$range
 saveRDS(dfrange,file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/dfrange.rds")
 ```
-```{r}
-library(glue)
+```{r vcap p-efeitos,eval=TRUE,echo=FALSE}
 dfrange <- readRDS(file="1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/dfrange.rds")
 vlabel <- sapply(dfrange$value,round,digits=3)
 names(vlabel) <- paste0(rep(c("neg","pos"),2),dfrange$names)
 vcap <- glue("Proposed landscape effects described by the functional metric log Ui/Uj, shown as observed values and predictions from a hierarchical generalized additive model (HGAM). Differences in U reflect variation in the external replenishment required to sustain observed diversity patterns. The metric log(Ui/Uj) quantifies the relative change in this requirement and can thus be interpreted as a measure of landscape-induced vulnerability. Each point represents the comparison between two simulations, varying according to the landscape effect under evaluation (row titles). Forest Loss and Fragmentation (FLF): pristine vs  fragmented (joint change in forest amount and configuration); Fragmentation per se (FPS): clumped vs fragmented (change in configuration, constant forest amount); Loss of Forest Cover (LFC): pristine vs clumped (change in forest amount, constant aggregation). The x-axis represents dispersal limitation (k), the fraction of propagules dispersed within the immediate neighbourhood of the parent individual. Points are coloured according to the percentage of forest cover (%FC) observed within the 2-km landscape surrounding each focal plot. Columns correspond to classes of observed %FC for each plot (column titles). Plots with greater and equal 99% forest cover were excluded from the graphical display; only the amplitude (maximum = 0.075; minimum = -0.074) and the central 90% interval (95th quantile = 0.04; 5th quantile = -0.038 ) of log Ui/Uj are indicated on the y-axis. This variability reflects the stochasticity inherent to the spatially explicit neutral model. Boxplots summarise values for each level of k. The y-axis scale differs among landscape effects. Only plots classified as congruent are shown.")
 ```
-```{r p-efeitos, fig.cap=vcap,fig.width=14,fig.height=10,cache=TRUE}
+```{r p-efeitos, fig.cap=vcap,fig.width=14*1.2,fig.height=10*1.2}
 p_efeitos <- readRDS("1_to_compile_dissertacao_EM_USO/00_Resultados/figuras/p_efeitos_porclasseCF.rds")
 p_efeitos
 ```
 
 
-
-
-```{r cap fig 3}
-vcap <- ""
+```{r vcap fig3}
+vcap <- "Experimental landscapes used (Pristine, Clumped, Fragmented) and proposed (Matrix friction, Matrix edge, Matrix combined) to estimate effects of forest loss, fragmentation and matrix conversion. Each landscape is a schematic 8 × 8 mosaic of habitat (green) and matrix (grey), not to scale. Clumped, Fragmented and the three matrix landscapes have the same amount of habitat; Pristine has none lost. In the matrix landscapes, edge effects alter demography in habitat cells adjacent to the matrix (orange), and friction reduces dispersal through matrix cells (dark grey); Matrix combined has both. Arrows run from the landscape in the numerator to the landscape in the denominator of each contrast, log(U_numerator/U_denominator): forest loss and fragmentation (FLF = log[U_pristine/U_fragmented]), fragmentation per se (FPS = log[U_clumped/U_fragmented]), forest cover loss (LFC = log[U_pristine/U_clumped]) and matrix effects (M = log[U_fragmented/U_matrix landscape]). Because contrasts are log-ratios, they are additive: FLF = FPS + LFC, and the total effect of habitat conversion to matrix is FLF + M; the interaction between edge and friction is M_combined − M_friction − M_edge. Friction and edge are shown at a single intensity, but both may vary continuously."
 ```
-```{r fig3, fig.cap=vcap, include=FALSE,eval=FALSE,echo=FALSE}
-f_ggplot <- \(reldist_points = 0.25,
-              size_points,
-              reltam_prag = 2/3,
-              alpha_eixos_epist = 0.25,
-              reltam_epist = 1,
-              leg_top=-200,
-              legtexts=10,
-              relpos_legprag = 0.9,
-              vstext=10){
-  library(ggplot2)
-  # pontos de referência do programa de pesquisa
-  df_points <- data.frame(
-    x = c(0, 0, 0),
-    y = c(0, -1.5, 1.5) * reldist_points,
-    tipo = factor(c("origem", "validacao", "invalidacao"),
-                  levels=c("origem", "validacao", "invalidacao"))
-  )
-  # Eixos pragmáticos
-  eixo_prag <- data.frame(
-    x = c(-3, -3),
-    y = c(-1, 1),
-    xend = c(3, 3),
-    yend = c(1, -1)
-  ) * reltam_prag
-  eixo_prag_lab <- data.frame(
-    x = eixo_prag$xend * relpos_legprag,
-    y = eixo_prag$yend,
-    label = c("informação", "computações")
-  )
-  eixo_prag_lab[2,c("x","y")] <- eixo_prag_lab[2,c("x","y")]*(-1)
-  # Eixos epistemológicos
-  eixo_epist <- data.frame(
-    x = c(0, 0),
-    y = c(1.5, 1.5),
-    xend = c(1.5 * cos(pi/6), -1.5 * cos(pi/6)),  # 30° e 150°
-    yend = c(1.5 + 1.5 * sin(pi/6), 1.5 + 1.5 * sin(pi/6))
-  ) * reltam_epist
-  eixo_epist$y <- df_points$y[df_points$tipo=="invalidacao"]
-  eixo_epist_lab <- data.frame(
-    x = eixo_epist$xend,
-    y = eixo_epist$yend,
-    label = c("equivalência\nfuncional", "pressupostos\nauxiliares")
-  )
-  # ggplot2
-  ggplot() +
-    # padronizações
-    geom_segment(aes(x = 0, y = 0, xend = 0, yend = df_points$y[df_points$tipo=="validacao"]), color = "darkgrey", linewidth = 0.5) +
-    geom_segment(aes(x = 0, y = 0, xend = 0, yend = df_points$y[df_points$tipo=="invalidacao"]), color = "darkgrey", linewidth = 0.5) +
-    coord_fixed(xlim = c(-3.5, 3.5), ylim = c(-2.5, 3)) +
-    labs(x = NULL, y = NULL, color = NULL, shape = NULL) +
-    theme_void() +
-    guides(
-      fill = guide_legend(order = 1, ncol = 1),
-      ) +
-    # espaço pragmático - setas contínuas 
-    geom_segment(
-      data = eixo_prag,
-      aes(x = x, y = y, xend = xend, yend = yend),
-      arrow = arrow(length = unit(0.25, "cm")),
-      color = "black", size = 1.5
-    ) +
-    geom_text(
-      data = eixo_prag_lab,
-      aes(x = x, y = y, label = label),
-      hjust = 0.5, vjust = -0.5,
-      size = vstext
-    ) +
-    # espaço epistemológico - setas tracejadas
-    geom_segment(
-      data = eixo_epist,
-      aes(x = x, y = y, xend = xend, yend = yend),
-      arrow = arrow(length = unit(0.25, "cm")),
-      color = "black", size = 1, linetype = "dashed"
-    ) +
-    geom_segment(
-      data = eixo_epist,
-      aes(x = x, y = y, xend = xend, yend = yend),
-      arrow = arrow(length = unit(0.25, "cm")),
-      color = "black", size = 1, alpha=alpha_eixos_epist
-    ) +
-    geom_text(
-      data = eixo_epist_lab,
-      aes(x = x, y = y, label = label),
-      hjust = 0.5, vjust = -0.5,
-      size = vstext
-    ) +
-    # referências do programa - pontos
-    geom_point(
-      data = df_points,
-      aes(x = x, y = y, shape = tipo, fill = tipo),
-      color = "gray", 
-      size = rep(size_points,3)
-    ) +
-    # Escalas e temas
-    scale_shape_manual(
-      name = NULL,
-      values = c("invalidacao" = 25, "origem" = 21, "validacao" = 24),
-      labels = c(
-        "invalidacao" = "Invalidado empiricamente: modificar o modelo",
-        "origem" = "MNEE",
-        "validacao" = "Validado empiricamente: permite estimar efeitos")
-      ) +
-    scale_fill_manual(
-      name = NULL,
-      values = c("invalidacao" = "red", "origem" = "black", "validacao" = "green3"),
-      labels = c(
-        "invalidacao" = "Invalidado empiricamente: modificar o modelo",
-        "origem" = "MNEE",
-        "validacao" = "Validado empiricamente: permite estimar efeitos")
-      ) +
-    guides(
-      fill = guide_legend(order = 1, ncol = 1, override.aes = list(size = 6)),
-      shape = guide_legend(order = 1, ncol = 1, override.aes = list(size = 6))
-      ) + 
-    # tema
-    theme(
-      text = element_text(face="bold"),
-      legend.position = "bottom",
-      legend.text = element_text(size = legtexts,face="bold"),
-      legend.box = "vertical",   # garante empilhamento vertical
-      legend.title = element_blank(),
-      legend.margin = margin(t = leg_top, unit = "pt"),
-      plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt")
-    )
+```{r fig3display, eval=TRUE,include=TRUE,echo=FALSE,fig.cap=vcap,fig.width=6.8,fig.height=6.8}
+# Esquema das paisagens experimentais (grade 3 x 3)
+# Posição (linha x coluna): Pristine (1x1), Clumped (1x2), Fragmented (2x2),
+#                           Mdisp (2x3), Medge (3x2), Mde (3x3)
+# Autor do esquema: Danilo P. Mori | Script: ggplot2 apenas (sem dplyr)
+# setwd("~/Documentos/artigo_principal/")
+library(ggplot2)
+
+step <- 18   # distância entre origens das células da grade
+n    <- 8    # cada paisagem é um mosaico n x n (apenas esquemático)
+
+## 1. Mapas binários (1 = habitat, 0 = matriz) ---------------------------
+pristine <- matrix(1L, n, n)
+
+frag_chr <- c("11100000",
+              "11100110",
+              "00000110",
+              "01100000",
+              "01100011",
+              "00000011",
+              "10110000",
+              "10110000")
+fragmented <- do.call(rbind, lapply(strsplit(frag_chr, ""), as.integer))
+
+clumped <- matrix(0L, n, n)
+clumped[3:6, 2:7] <- 1L          # bloco central 4 x 6 = 24 células
+
+# mesma quantidade de habitat em Clumped e Fragmented (condição do desenho)
+stopifnot(sum(fragmented) == sum(clumped))
+
+## 2. Borda: habitat com ao menos 1 vizinho (4-conectado) de matriz ------
+is_edge <- function(m) {
+  nr <- nrow(m); nc <- ncol(m)
+  e <- matrix(FALSE, nr, nc)
+  for (i in seq_len(nr)) for (j in seq_len(nc)) {
+    if (m[i, j] == 1L) {
+      nb <- list(c(i - 1, j), c(i + 1, j), c(i, j - 1), c(i, j + 1))
+      e[i, j] <- any(vapply(nb, function(p) {
+        p[1] >= 1 && p[1] <= nr && p[2] >= 1 && p[2] <= nc && m[p[1], p[2]] == 0L
+      }, logical(1)))
+    }
+  }
+  e
 }
-p <- f_ggplot(
-  reldist_points=0.25,
-  size_points=15,
-  reltam_epist = 0.75,
-  reltam_prag = 3/5,
-  alpha_eixos_epist = 0.50,
-  vstext = 6.5,
-  legtexts = 12,
-  leg_top=-225,
-  relpos_legprag=0.9
-  )
-vs <- 0.675
-rect_grob <- rectGrob(
-  x = 0.5-0.005, y = 0.5+0.025, width = vs*(8.25/10), height = vs*(10/11),
-  gp = gpar(col = "black", fill = NA, lwd = 5)
+
+## 3. Tabela de células de uma paisagem ------------------------------------
+lev <- c("Habitat", "Habitat (edge effect)", "Matrix", "Matrix (friction)")
+
+glyph_df <- function(m, id, grow, gcol, edge = FALSE, friction = FALSE) {
+  e  <- if (edge) is_edge(m) else matrix(FALSE, nrow(m), ncol(m))
+  ij <- expand.grid(i = seq_len(nrow(m)), j = seq_len(ncol(m)))
+  hab <- m[cbind(ij$i, ij$j)] == 1L
+  edg <- e[cbind(ij$i, ij$j)]
+  ij$type <- ifelse(hab & edg, lev[2],
+             ifelse(hab,       lev[1],
+             ifelse(friction,  lev[4], lev[3])))
+  ij$x  <- (gcol - 1) * step + ij$j
+  ij$y  <- -(grow - 1) * step - ij$i
+  ij$id <- id
+  ij
+}
+
+lands <- rbind(
+  glyph_df(pristine,   "Pristine",   1, 1),
+  glyph_df(clumped,    "Clumped",    1, 2),
+  glyph_df(fragmented, "Fragmented", 2, 2),
+  glyph_df(fragmented, "Mdisp",      2, 3, friction = TRUE),
+  glyph_df(fragmented, "Medge",      3, 2, edge = TRUE),
+  glyph_df(fragmented, "Mde",        3, 3, edge = TRUE, friction = TRUE)
 )
-p_boxed <- p + 
-  annotation_custom(rect_grob,
-                    xmin = -Inf, xmax = Inf,
-                    ymin = -Inf, ymax = Inf)
-ggsave(filename="./1_to_compile_dissertacao_EM_USO/05_Discussao/esquema_final.png",
-       plot=p_boxed,
-       dpi=200,
-       width = 12,
-       height = 10,
-       bg = "white")
-img_obj <- image_read("./1_to_compile_dissertacao_EM_USO/05_Discussao/esquema_final.png") %>% 
-  image_trim
-image_write(image = img_obj,path = "./1_to_compile_dissertacao_EM_USO/05_Discussao/esquema_final.png")
+lands$type <- factor(lands$type, levels = lev)
+
+## 4. Molduras e nomes -----------------------------------------------------
+panels <- data.frame(
+  id   = c("Pristine", "Clumped", "Fragmented", "Mdisp", "Medge", "Mde"),
+  grow = c(1, 1, 2, 2, 3, 3),
+  gcol = c(1, 2, 2, 3, 2, 3),
+  name = c("Pristine", "Clumped", "Fragmented",
+           "Matrix friction", "Matrix edge", "Matrix combined")
+)
+panels$ox <- (panels$gcol - 1) * step
+panels$oy <- -(panels$grow - 1) * step
+# panels$base <- panels$id == "Fragmented"      # paisagem basal em moldura grossa
+
+## 5. Setas: sentido = direção da alteração da paisagem -------------------
+arr <- data.frame(
+  x    = c( 9.2, 22.5, 9.4,  27.2, 22.5, 40.5,  27.2, 27.2),
+  y    = c(-4.5, -11.1, -9.4, -22.5, -29.1, -29.1, -40.5, -27.2),
+  xend = c(16.8, 22.5, 17.6,  34.8, 22.5, 40.5,  34.8, 35.0),
+  yend = c(-4.5, -17.8, -17.6, -22.5, -35.8, -35.8, -40.5, -35.0)
+)
+arr_lab <- data.frame(
+  x = c(13.0, 23.3, 12.3, 31.0, 23.3, 41.3, 31.0, 31.6),
+  y = c(-3.2, -14.4, -14.8, -21.2, -32.4, -32.4, -39.2, -29.6),
+  lab = c("LFC", "FPS", "FLF", "friction", "edge", "+ edge", "+ friction", "both"),
+  hj  = c(0.5, 0, 1, 0.5, 0, 0, 0.5, 0)
+)
+
+## 6. Legenda e chave de contrastes (células vazias da grade) -------------
+leg <- data.frame(x = 37, y = -c(2, 4, 6, 8), type = factor(lev, levels = lev))
+key <- paste(
+  "Contrasts, log(U numerator / U denominator):",
+  "FLF = log(U_pristine / U_fragmented)",
+  "FPS = log(U_clumped / U_fragmented)",
+  "LFC = log(U_pristine / U_clumped)",
+  "M   = log(U_fragmented / U_matrix landscape)",
+  "Total (loss + matrix) = FLF + M",
+  "Arrows: direction of landscape contrast.",
+  "Bold frame: baseline (inert matrix).",
+  sep = "\n")
+key_df <- data.frame(
+  y = -20 - 1.15 * (0:6),
+  lab = c(
+    "'Contrasts: '*log(U[numerator]/U[denominator])",
+    "FLF == log(U[pristine]/U[fragmented])",
+    "FPS == log(U[clumped]/U[fragmented])",
+    "LFC == log(U[pristine]/U[clumped])",
+    "M == log(U[fragmented]/U[matrix~landscape])",
+    "'Total (loss + matrix)' == FLF + M",
+    "'Arrows: from numerator to denominator'" #,
+    # "'Bold frame: baseline (inert matrix)'"
+  )
+)
+
+pal <- c("Habitat" = "#4C9F70", "Habitat (edge effect)" = "#E69F00",
+         "Matrix" = "#E6E6E6", "Matrix (friction)" = "#8C8C8C")
+
+## 7. Figura ---------------------------------------------------------------
+p <- ggplot() +
+  geom_tile(data = lands, aes(x, y, fill = type),
+            width = 1, height = 1, colour = "white", linewidth = 0.25) +
+  geom_tile(data = leg, aes(x, y, fill = type),
+            width = 1.4, height = 1.4, colour = "grey40", linewidth = 0.2) +
+  # geom_rect(data = panels,
+  #           aes(xmin = ox + 0.5, xmax = ox + n + 0.5,
+  #               ymin = oy - n - 0.5, ymax = oy - 0.5, linewidth = base),
+  #           fill = NA, colour = "grey15") +
+  geom_text(data = panels, aes(x = ox + (n + 1) / 2, y = oy - n - 1.0, label = name),
+            size = 3.4, vjust = 1, fontface = "bold") +
+  geom_segment(data = arr, aes(x = x, y = y, xend = xend, yend = yend),
+               arrow = arrow(length = unit(2.2, "mm"), type = "closed"),
+               colour = "grey25", linewidth = 0.5) +
+  geom_text(data = arr_lab, aes(x = x, y = y, label = lab, hjust = hj),
+            size = 3.2, colour = "grey15") +
+  annotate("text", x = 39, y = -c(2, 4, 6, 8), label = lev,
+           hjust = 0, size = 3.0) +
+  annotate("text", x = 36.6, y = -0.2, label = "Cell type", hjust = 0,
+           vjust = 0, size = 3.2, fontface = "bold") +
+  # annotate("text", x = 0.5, y = -20, label = key, hjust = 0, vjust = 1,
+  #          size = 2.8, lineheight = 1.15) +
+  geom_text(data = key_df, aes(x = 0.5, y = y, label = lab),
+            parse = TRUE, hjust = 0, vjust = 1, size = 2.8) +
+  scale_fill_manual(values = pal, guide = "none") +
+  scale_linewidth_manual(values = c("TRUE" = 1.3, "FALSE" = 0.4), guide = "none") +
+  coord_fixed(xlim = c(-0.5, 48), ylim = c(-47.5, 1.5), expand = FALSE) +
+  theme_void() +
+  theme(plot.background = element_rect(fill = "white", colour = NA),
+        plot.margin = margin(4, 4, 4, 4))
+
+# ggsave("figuras/fig3.png", p, width = 8, height = 8, dpi = 300, bg = "white")
+# library(magick)
+# img <- image_trim(
+#   image_read("figuras/fig3.png")
+# )
+# image_write(img,path = "figuras/fig3.png")
+# ggsave("fig_paisagens_matriz.pdf", p, width = 8, height = 8)
+# saveRDS(p,file = "fig_paisagens_matriz.rds")
+p
 ```
 
-
-```{=latex}
-\bibliographystyle{plainnat}
-\bibliography{resources/citations2}
-```
