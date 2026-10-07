@@ -18,3 +18,5 @@ dados/
 *.md
 *.Rdata
 *.rds
+# LibreOffice lock files
+.~lock.*#
