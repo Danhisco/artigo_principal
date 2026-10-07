@@ -1,8 +1,11 @@
 ---
-title: ""
+title: "Dispersal constraints shape the sign and magnitude of biodiversity responses to forest loss and fragmentation"
 author: ""
 output:
-  bookdown::word_document2: default
+  bookdown::word_document2:
+    reference_docx: resources/refword.docx   # relativo ao Rmd, como o .bib
+    number_sections: false
+    fig_caption: true
   bookdown::pdf_document2:
     latex_engine: lualatex
     pandoc_args: [
@@ -84,12 +87,6 @@ download_file(file="compilacao_integral.Rmd",
               gpath = "mestrado/artigo_principal/secoes_texto/")
 ```
 
- 
-# Título
-
-Dispersal constraints shape the sign and magnitude of biodiversity responses to forest loss and fragmentation
-
-Revista pretendida: Ecography
  
 # Abstract {-}
 
