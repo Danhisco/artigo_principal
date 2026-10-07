@@ -98,7 +98,7 @@ Habitat loss and fragmentation are major drivers of biodiversity change in tropi
 
 Habitat loss and fragmentation are major drivers of biodiversity change in tropical forests (@diaz_pervasive_2019). Yet empirical estimates of the independent effect of fragmentation remain highly inconsistent, ranging from negative to neutral or even positive across systems (@fletcher2018habitat, @fahrig2019habitatA, @miller2019does, @valente2023toward). Part of this uncertainty may arise because landscape effects are often inferred from landscape configuration alone, despite connectivity being widely recognized as a fundamental process underlying biodiversity responses (@villard_beyond_2014; @hanski_2015; @rivaEbanskleite2024). Resolving this gap is not only a theoretical challenge but also a practical necessity for conservation planning, in which different traditions (from generalizable heuristics to context-specific mechanistic models) offer contrasting yet potentially complementary paths forward (@arroyo-rodriguez_designing_2020; @banks-leite_suggestion_2021; @arroyo-rodriguez_preserving_2021). 
 
-Functional connectivity is the movement of individuals through remaining habitat and emerges from the interaction between landscape structure and species dispersal ability (@auffret2017plant; @hatfield2018using). By regulating the exchange of individuals among local communities, connectivity modifies the demographic balance between local extinction and recolonization (@kindlmann2008connectivity; @pardini_beyond_2010; @may_dispersal_2012 @baguette2013individual; @campos2013; @chase_biodiversity_2020). Thus, for a given landscape configuration, different levels of dispersal limitation produce different connectivity regimes and thereby alter colonization, local replacement, and extinction dynamics. Understanding landscape effects therefore requires evaluating how variation in dispersal modifies the demographic consequences of landscape structure.
+Functional connectivity is the movement of individuals through remaining habitat and emerges from the interaction between landscape structure and species dispersal ability (@auffret2017plant; @hatfield2018using). By regulating the exchange of individuals among local communities, connectivity modifies the demographic balance between local extinction and recolonization (@kindlmann2008connectivity; @pardini_beyond_2010; @may_dispersal_2012; @baguette2013individual; @campos2013; @chase_biodiversity_2020). Thus, for a given landscape configuration, different levels of dispersal limitation produce different connectivity regimes and thereby alter colonization, local replacement, and extinction dynamics. Understanding landscape effects therefore requires evaluating how variation in dispersal modifies the demographic consequences of landscape structure.
 
 However, empirical studies typically estimate landscape effects by correlating structural landscape metrics with local biodiversity patterns (@frazier2017). This leaves the role of connectivity implicit, primarily because species dispersal is rarely known in real landscapes (@baguette2013individual; @bullock_synthesis_2017). As a result, there is little consensus on which configuration metrics best represent connectivity or which spatial extents are most relevant for estimating biodiversity responses to landscape change (@fletcher2018habitat; @fahrig2019habitatA; @miller2019does; @valente2023toward; @fletcher_jr_addressing_2023). Consequently, current approaches often infer ecological responses from landscape structure without explicitly representing the demographic processes through which functional connectivity regulates the maintenance of local biodiversity. 
 
@@ -123,10 +123,19 @@ We used a Spatially Explicit Neutral Model (SENM; @rosindell2008) as a mechanist
 ## Calibration, validation, and vulnerability metric
 We calibrated the SENM independently for each plot, dispersal scenario and experimental landscape, adjusting U so that simulated richness matched observed richness (semi-analytical method; @rosindell2008). Because dispersal is unknown for the communities studied, we explored 20 dispersal scenarios (k = 0.99 to 0.05), where k is the proportion of propagules landing within the distance to the nearest neighbour. For each scenario, the spatial extent was defined in pristine landscapes, where U is affected only by dispersal and extent, as the smallest extent accumulating 75% of the total reduction in U across extents (0.5–16 km); we assumed this extent to be sufficient for the other experimental landscapes (Supplementary material Appendix 2). Calibration, extent selection and validation against observed SADs covered the full range of scenarios, which allowed us to characterise where the model is adequate. Landscape effects, however, were estimated and interpreted only for 0.50 ≤ k ≤ 0.99, scenarios in which at least half of the propagules remain within the immediate neighbourhood of the parent tree [dispersal distance of X–Y m at the observed density], consistent with empirical dispersal kernels of trees (@bullock_synthesis_2017; @clark1999seed; Appendix 1 and 2).
 Before interpreting effects, we validated the SENM by testing whether simulated communities reproduced empirical species abundance distributions (SADs) using Kolmogorov-Smirnov tests with bootstrap resampling (@dowd_twosamples_2023). We retained only simulation batches in which ≥75% of replicate SADs were congruent across all three landscapes, and restricted interpretation to dispersal regimes with consistently high mean congruence (Supplementary material Appendix 3).
-Within the SENM, U measures the dependence of local diversity on external sources required to maintain richness under drift (@rosindell2008, @condit2012). Differences in U between landscapes therefore provide a mechanistic measure of vulnerability. For each plot and regime, we calculated log-ratios of U:
+Within the SENM, U measures the dependence of local diversity on external sources required to maintain richness under drift (@rosindell2008, @condit2012). Differences in U between landscapes therefore provide a mechanistic measure of vulnerability. For each plot and regime, we calculated log-ratios of U: 
+
+  
+    
 - **FLF** (total effect) = log(U_pristine / U_fragmented)
-- **FPS** (fragmentation per se) = log(U_clumped / U_fragmented)
-- **LFC** (forest cover loss) = log(U_pristine / U_clumped)
+  
+    
+- **FPS** (fragmentation per se) = log(U_clumped / U_fragmented)  
+  
+    
+- **LFC** (forest cover loss) = log(U_pristine / U_clumped)  
+  
+    
 These contrasts decompose the total effect additively: FLF = FPS + LFC.
 
 ## Statistical analyses
@@ -218,7 +227,7 @@ This metric provides a direct link between landscape configuration, functional c
 ## Forest loss dominates, but fragmentation shapes variability in the total forest loss and fragmentation effect
 
 <p>
-Forest cover loss was consistently associated with increased vulnerability in low-cover landscapes, whereas its effects were negligible in landscapes with high remaining forest cover (@swift2010critical; @villard_beyond_2014; @rivaEbanskleite2024; @haddad_habitat_2015; @fletcher_jr_is_2018; @puttker2020indirect; @gonccalves2025species; @fahrig_ecological_2017; @fahrig_SLOSS2020). The magnitude of this effect was lowest under intermediate dispersal limitation, mirroring the non-linear relationship between dispersal and U observed in pristine landscapes (@may_dispersal_2012). Under strong dispersal limitation, recruitment is dominated by nearby conspecifics, reducing stochastic species loss and therefore the need for external replenishment. As dispersal increases, heterospecific replacement becomes more frequent, increasing drift-driven species loss and raising U. Under weak dispersal limitation, however, distant populations increasingly contribute propagules to local communities, reducing local extinction and causing U to decline, at the cost of reducing landscape total biodiversity (@Mouquet2003Community). This mechanism may also explain why vulnerability to habitat loss was minimized under intermediate dispersal limitation. Because U is highest under these conditions, local diversity becomes less dependent on surrounding habitat as a source of biodiversity replenishment, weakening the ecological consequences of landscape structure (@campos2012, campos2013).
+Forest cover loss was consistently associated with increased vulnerability in low-cover landscapes, whereas its effects were negligible in landscapes with high remaining forest cover (@swift2010critical; @villard_beyond_2014; @rivaEbanskleite2024; @haddad_habitat_2015; @fletcher_jr_is_2018; @puttker2020indirect; @gonccalves2025species; @fahrig_ecological_2017; @fahrig_SLOSS2020). The magnitude of this effect was lowest under intermediate dispersal limitation, mirroring the non-linear relationship between dispersal and U observed in pristine landscapes (@may_dispersal_2012). Under strong dispersal limitation, recruitment is dominated by nearby conspecifics, reducing stochastic species loss and therefore the need for external replenishment. As dispersal increases, heterospecific replacement becomes more frequent, increasing drift-driven species loss and raising U. Under weak dispersal limitation, however, distant populations increasingly contribute propagules to local communities, reducing local extinction and causing U to decline, at the cost of reducing landscape total biodiversity (@Mouquet2003Community). This mechanism may also explain why vulnerability to habitat loss was minimized under intermediate dispersal limitation. Because U is highest under these conditions, local diversity becomes less dependent on surrounding habitat as a source of biodiversity replenishment, weakening the ecological consequences of landscape structure (@campos2012, @campos2013).
 </p>
 
 <p>
@@ -280,7 +289,7 @@ Consistent with this interpretation, variation in model congruence among plots w
 ## Future directions
 
 <p>
-Rather than defending neutrality as a description of tropical tree communities, we see the SENM as a first, tractable approximation, to be refined where and when is possible (@rosindell2012case; @leroi2020). Earlier assessments led to the expectation that neutral models would rarely reproduce biodiversity patterns in fragmented forests (@Gilbert2006; @laurance2008theory; @etienne_spatial_2011). Yet most of our plots showed good SAD congruence under at least one combination of dispersal limitation and landscape, although static patterns cannot address the temporal turnover examined by @Gilbert2006. Because richness and SADs carry little information about competitive hierarchies, this result does not indicate that species are equivalent (@adler2007niche; @chisholm_niche_2010; @hammal_when_2015). It indicates that these patterns cannot, by themselves, discriminate among such hypotheses about species differences, but can elucidate the influence of landscape features in the overall tree demography (@campos2012; campos2013; claudino_extinction_2015; @chisholm_speciesarea_2018; @thompson2019characterising; the present study). The question then shifts from whether neutrality holds to which auxiliary assumptions matter most for the inferences we want to draw, and how to relax them without losing practical value (@rosindell2012case; @bausman_aims_2019; @leroi2020; @thompsonPycoalescence2020). In this approach, plots where the SENM was systematically incongruent are not simply discarded; they are where refinements can be tested.
+Rather than defending neutrality as a description of tropical tree communities, we see the SENM as a first, tractable approximation, to be refined where and when is possible (@rosindell2012case; @leroi2020). Earlier assessments led to the expectation that neutral models would rarely reproduce biodiversity patterns in fragmented forests (@Gilbert2006; @laurance2008theory; @etienne_spatial_2011). Yet most of our plots showed good SAD congruence under at least one combination of dispersal limitation and landscape, although static patterns cannot address the temporal turnover examined by @Gilbert2006. Because richness and SADs carry little information about competitive hierarchies, this result does not indicate that species are equivalent (@adler2007niche; @chisholm_niche_2010; @hammal_when_2015). It indicates that these patterns cannot, by themselves, discriminate among such hypotheses about species differences, but can elucidate the influence of landscape features in the overall tree demography (@campos2012; @campos2013; @claudino_extinction_2015; @chisholm_speciesarea_2018; @thompson2019characterising; the present study). The question then shifts from whether neutrality holds to which auxiliary assumptions matter most for the inferences we want to draw, and how to relax them without losing practical value (@rosindell2012case; @bausman_aims_2019; @leroi2020; @thompsonPycoalescence2020). In this approach, plots where the SENM was systematically incongruent are not simply discarded; they are where refinements can be tested.
 </p>
 
 <p>
@@ -312,12 +321,15 @@ These estimates support a situated, mechanism-based counterfactual interpretatio
 
 # References
 
+<!-- <div id="refs"> -->
 
-```{=latex}
-\bibliographystyle{plainnat}
-\bibliography{resources/citations2}
-```
+<!-- ```{=latex} -->
+<!-- \bibliographystyle{plainnat} -->
+<!-- \bibliography{resources/citations2} -->
+<!-- ``` -->
 
+::: {#refs}
+:::
 
 <!-- código para construção e display dos eleentos textuais -->
 
