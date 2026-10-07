@@ -206,6 +206,34 @@ download_file(file = "secoes_texto/Resultados/Resultados.Rmd",
 
 <!-- # Validação empírica de MNEE e suas implicações para a estimatva de efeitos da paisagem {CongSAD} -->
 
+# Exploratory initial analysis
+
+```{r fig-exp-cong-sad-perplotland,fig.cap="",fig.width=,fig.height=}
+df_ad %>% 
+  mutate(cong75=nSAD>=75) %>% 
+  group_by(SiteCode,land) %>% 
+  summarise(nCONG = sum(cong75),
+            nINCONG = sum(!cong75)) %>% 
+  mutate(total=nCONG + nINCONG,
+         pCONG = 100*nCONG/total,
+         vlabel = case_when(
+           land=="cont"~"Fragmented",
+           land=="ideal"~"Pristine",
+           land=="non_frag"~"Clumped"),
+         vlabel = factor(vlabel,
+                         levels=c("Fragmented",
+                                  "Clumped",
+                                  "Pristine")
+                         )
+         ) %>% 
+  ggplot(aes(x=vlabel,y=pCONG)) +
+  geom_boxplot(outliers = TRUE) +
+  geom_jitter() +
+  labs(x="",y="% of simulations with more than 75% of congruent SADs per plot")
+```
+
+
+
 # Statistical description of congruence with the observed SAD
 
 <p>
